@@ -67,7 +67,13 @@ individual skill files change.
 - `References/refs.bib`: Project bibliography file for BibTeX-compatible
   citations.
 - Empty research folders may contain `.gitkeep` files so Git can track them.
+## Python Environment
 
+- For Python work under `Code/`, create and manage the environment with `uv`.
+- Start with a simple minimal environment. Add new libraries only when a task
+  requires them.
+- Prefer keeping environment files and dependency metadata local to `Code/`
+  unless the project later needs a repository-wide Python setup.
 ## Agent Rules
 
 1. Read this file first.
