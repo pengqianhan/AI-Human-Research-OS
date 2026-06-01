@@ -74,6 +74,12 @@ individual skill files change.
   requires them.
 - Prefer keeping environment files and dependency metadata local to `Code/`
   unless the project later needs a repository-wide Python setup.
+## Code Experiment Documentation
+
+- Treat `Code/README.md` as the English entry point for code, experiment setup, run commands, and current results.
+- Keep `Code/README_zh.md` as the Chinese counterpart to `Code/README.md`.
+- Whenever code, configuration, or experiment results under `Code/` are added or changed, update both `Code/README.md` and `Code/README_zh.md` in the same task so readers can understand the latest runnable workflow and results.
+- After updating documentation or indexed files, refresh `FILETREE.md` with the local filetree skill and run its lint check.
 ## Agent Rules
 
 1. Read this file first.
