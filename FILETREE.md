@@ -19,13 +19,14 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .agents/
 
-- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:efca7ebb-->
+- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:0b48a746-->
 
 ## .agents/skills/
 
 - `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:0a82c6f3-->
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
+- `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
 - `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
 ## Code/
