@@ -13,17 +13,19 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `.gitignore` - Ignores local environment files, editor settings, caches, scratch directories, and agent-local data. <!--hash:0cb2335a-->
 - `AGENTS.md` - Codex-style entry instruction directing agents to read INSTRUCTION.md and FILETREE.md. <!--hash:bdee8f0a-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md and FILETREE.md. <!--hash:bdee8f0a-->
-- `INSTRUCTION.md` - Primary guide for the research template structure, folder purposes, and agent collaboration rules. <!--hash:5c1bc6e7-->
+- `INSTRUCTION.md` - Primary guide for research workflow, Python environment, code documentation, and agent collaboration rules. <!--hash:4ff4d25a-->
 - `README.md` - Human-facing overview of the AI-Human Research OS template, startup workflow, folder layout, and roadmap. <!--hash:a3de3569-->
 - `setup.md` - One-time setup instructions for installing bundled research skills into Claude Code or Codex user directories. <!--hash:e5737980-->
 
 ## .agents/
 
-- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:d782d869-->
+- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:efca7ebb-->
 
 ## .agents/skills/
 
 - `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:0a82c6f3-->
+- `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
+- `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
 ## Code/
