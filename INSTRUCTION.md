@@ -7,33 +7,6 @@ Research is iterative. Ideas, references, experiments, figures, and writing ofte
 each other, so the folders are organized by material type instead of by a fixed sequence
 of steps.
 
-## File Tree
-
-Condensed from `git ls-files`, with `.gitkeep` placeholders omitted and
-`Research-skills-hub/` summarized so this file does not need updates when
-individual skill files change.
-
-```text
-.
-|-- .gitignore
-|-- AGENTS.md
-|-- CLAUDE.md
-|-- README.md
-|-- instruction.md
-|-- setup.md
-|-- Code/
-|   `-- Datasets/
-|-- Ideas/
-|-- Paper/
-|   |-- Figs/
-|   `-- paper_skeleton.md
-|-- References/
-|   |-- paper_notes.md
-|   `-- refs.bib
-`-- Research-skills-hub/
-    `-- README.md
-```
-
 ## What Goes Where
 
 - `.gitignore`: Ignore local, generated, or environment-specific files.
