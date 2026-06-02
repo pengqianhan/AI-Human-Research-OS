@@ -14,6 +14,13 @@ of steps.
   requires them.
 - Prefer keeping environment files and dependency metadata local to `Code/`
   unless the project later needs a repository-wide Python setup.
+
+## Documentation Links
+
+- Across this repository, when a file references another local file or directory,
+  use a clickable relative link in the file's native format, such as
+  `[name](path)` in Markdown or `<a href="path">name</a>` in HTML.
+  
 ## Code Experiment Documentation
 
 - Treat `Code/README.md` as the English entry point for code, experiment setup, run commands, and current results.
