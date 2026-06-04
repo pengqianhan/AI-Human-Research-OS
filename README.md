@@ -32,6 +32,7 @@ are organized by material type rather than by a fixed workflow.
 ## TODO
 
 - [ ] add find-research-skills, which can help the AI agent to find the right research skills in `Research-skills-hub/` folder or even online
+- [ ] create a skill which can access them markdown files of paper, such as 'hf cli', 'https://github.com/timf34/arxiv2md','deepxive cli' and so on.
 - [ ] in References/ folder, maintain a paper-wiki, which includes the summary, key points, and relation to the research project for each paper. The paper-wiki can be implemented as a markdown file or a simple database. The paper-wiki can help the AI agent to quickly find relevant papers and understand their content.
 - [ ] Design this template as a CLI so agents can use commands to understand the whole
    research project.
