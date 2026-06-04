@@ -31,6 +31,7 @@ are organized by material type rather than by a fixed workflow.
 
 ## TODO
 
+- [ ] add find-research-skills, which can help the AI agent to find the right research skills in `Research-skills-hub/` folder or even online
 - [ ] Design this template as a CLI so agents can use commands to understand the whole
    research project.
 - [ ] Design bash commands that make agents deterministically read specific files, such as `instruction.md`, at the start of each session.
