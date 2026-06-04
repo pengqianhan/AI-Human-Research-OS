@@ -11,15 +11,15 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `References/` - Bibliographic files, literature notes, source PDFs, and citation material. <!--hash:6f2b1f2b-->
 - `Research-skills-hub/` - Optional research skills and helper files available for installation. <!--hash:ef77791c-->
 - `.gitignore` - Ignores local environment files, editor settings, caches, scratch directories, and agent-local data. <!--hash:0cb2335a-->
-- `AGENTS.md` - Codex-style entry instruction directing agents to read INSTRUCTION.md and FILETREE.md. <!--hash:bdee8f0a-->
-- `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md and FILETREE.md. <!--hash:bdee8f0a-->
-- `INSTRUCTION.md` - Primary guide for research workflow, Python environment, code documentation, and agent collaboration rules. <!--hash:4ff4d25a-->
-- `README.md` - Human-facing overview of the AI-Human Research OS template, startup workflow, folder layout, and roadmap. <!--hash:a3de3569-->
+- `AGENTS.md` - Codex-style entry instruction directing agents to read INSTRUCTION.md and FILETREE.md. <!--hash:a14c3741-->
+- `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md and FILETREE.md. <!--hash:a14c3741-->
+- `INSTRUCTION.md` - Primary guide for research workflow, Python environment, code documentation, and agent collaboration rules. <!--hash:20ef47d0-->
+- `README.md` - Human-facing overview of the AI-Human Research OS template, startup workflow, folder layout, and roadmap. <!--hash:bdc2b2b1-->
 - `setup.md` - One-time setup instructions for installing bundled research skills into Claude Code or Codex user directories. <!--hash:e5737980-->
 
 ## .agents/
 
-- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:0b48a746-->
+- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:78bee326-->
 
 ## .agents/skills/
 
@@ -27,6 +27,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
+- `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
 - `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
 ## Code/
@@ -43,7 +44,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `Baselines/` - Baseline experiment notes, comparisons, and related materials. <!--hash:24fc2ad8-->
 - `Figs/` - Figures, tables, plots, screenshots, and visual outputs for writing. <!--hash:2f247e34-->
-- `paper_skeleton.md` - Starter outline for manuscripts, reports, or research notes. <!--hash:eacef85c-->
+- `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:42e96d9e-->
 
 ## Paper/Baselines/
 
