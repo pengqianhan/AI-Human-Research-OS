@@ -1,62 +1,54 @@
 # Paper Skeleton
 
-Use this as a reusable control document for a manuscript, report, or research
-note. Keep every important claim traceable to references, notes, data, code,
-figures, or experiment outputs.
+Reusable manuscript control sheet. Keep claims traceable to references, notes,
+data, code, figures, or experiment outputs.
 
-## Paper Metadata
+## Snapshot
 
 - Working title:
-- Short title:
 - Target venue or audience:
-- Research area:
-- Current status: idea / outline / draft / submitted / revised
+- Status: idea / outline / draft / submitted / revised
 - One-sentence thesis:
-- Main contributions:
+- Main research question:
+- Contributions:
   1.
   2.
   3.
 
 ## Source Map
 
-- Code and experiments: [../Code/](../Code/)
-- Datasets:
-- Figures and tables: [Figs/](Figs/)
-- Baseline notes and comparisons: [Baselines/](Baselines/)
-- Bibliography: [../References/refs.bib](../References/refs.bib)
-- Shared paper notes: [../References/paper_notes.md](../References/paper_notes.md)
-- Related ideas and meeting notes: [../Ideas/](../Ideas/)
+| Asset | Link or path | Notes |
+|---|---|---|
+| Code and experiments | [../Code/](../Code/) |  |
+| Datasets |  |  |
+| Figures and tables | [Figs/](Figs/) |  |
+| Baselines | [Baselines/](Baselines/) |  |
+| Bibliography | [../References/refs.bib](../References/refs.bib) |  |
+| Paper notes | [../References/paper_notes.md](../References/paper_notes.md) |  |
+| Ideas and meetings | [../Ideas/](../Ideas/) |  |
 
 ## Argument Map
 
-- Problem:
-- Gap in prior work:
-- Key idea:
-- Why now:
-- What is new:
-- What is empirically supported:
-- What remains speculative:
+| Element | Notes |
+|---|---|
+| Problem |  |
+| Gap in prior work |  |
+| Key idea |  |
+| What is new |  |
+| Empirical support |  |
+| Speculative or weak points |  |
 
 ## Abstract
 
-- Problem:
-- Prior limitation:
-- Method:
-- Main evidence:
-- Implication:
+- Problem -> gap -> method -> evidence -> implication:
 
 ## Introduction
 
-- Motivation:
-- Concrete task or setting:
-- Existing approaches:
-- Limitation of existing approaches:
+- Motivation and task:
+- Prior limitations:
 - Proposed approach:
 - Summary of results:
 - Contributions:
-  1.
-  2.
-  3.
 - Intro figure or table:
 
 ## Related Work
@@ -81,28 +73,17 @@ Use this section to position the paper, not just to list papers.
 
 ### Baseline Comparison Matrix
 
-| Method | Task | Inputs | Key assumption | Strength | Limitation | Used as baseline? | Citation key |
-|---|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |  |
-
-## Research Question
-
-- Main research question:
-- Sub-question 1:
-- Sub-question 2:
-- Sub-question 3:
-- Hypotheses:
+| Method | Task | Key assumption | Strength | Limitation | Citation key |
+|---|---|---|---|---|---|
+|  |  |  |  |  |  |
 
 ## Problem Formulation
 
+- Inputs and outputs:
 - Objects and variables:
-- Inputs:
-- Outputs:
-- Assumptions:
-- Constraints:
-- Evaluation target:
-- Source of definitions:
-- Notation table:
+- Assumptions and constraints:
+- Objective or evaluation target:
+- Definition sources:
 
 | Symbol | Meaning | Source or note |
 |---|---|---|
@@ -137,112 +118,49 @@ Use this section to position the paper, not just to list papers.
 
 ## Experiments
 
-### Research Questions
+| Study | Question | Data | Baselines | Metric | Output | Claim |
+|---|---|---|---|---|---|---|
+| Main result |  |  |  |  |  |  |
+| Robustness |  |  |  |  |  |  |
+| Ablation |  |  |  |  |  |  |
+| Real-world/generalization |  |  |  |  |  |  |
 
-- RQ1:
-- RQ2:
-- RQ3:
-
-### Experimental Setup
-
-- Datasets:
-- Baselines:
-- Metrics:
-- Models or configurations:
-- Hyperparameters:
-- Hardware or runtime:
-- Random seeds:
-- Reproducibility entry point:
-
-### Main Results
-
-- Table or figure label:
-- Expected claim:
-- Evidence source:
-- Interpretation:
-
-### Robustness
-
-- Stress factor:
-- Evaluation protocol:
-- Table or figure label:
-- Expected claim:
-
-### Ablation Study
-
-- Components removed or changed:
-- Table or figure label:
-- Expected claim:
-
-### Generalization or Real-World Evaluation
-
-- Setting:
-- Data source:
-- Evaluation protocol:
-- Expected claim:
-
-## Results
+## Results and Discussion
 
 - Main quantitative result:
 - Main qualitative result:
-- Unexpected result:
-- Negative result:
-- Result that needs verification:
+- Negative or unexpected result:
+- Interpretation:
+- Relation to prior work:
 
-## Claims and Evidence Tracker
+## Limitations
+
+- Method:
+- Data and evaluation:
+- Generalization:
+- Reproducibility:
+
+## Conclusion
+
+- Final answer:
+- Main evidence:
+- Takeaway:
+
+## Tracking
+
+### Claims and Evidence
 
 | Claim | Evidence | Source file or link | Citation/result | Status |
 |---|---|---|---|---|
 |  |  |  |  | planned / verified / weak / removed |
 
-## Figures and Tables Registry
+### Figures and Tables
 
 | Label | Purpose | Source data/code | Output file | Status |
 |---|---|---|---|---|
 |  |  |  |  | planned / drafted / final |
 
-## Discussion
+### Appendix and TODOs
 
-- Interpretation of main results:
-- Why the method works:
-- Where it fails:
-- Relation to prior work:
-- Practical implication:
-- Scientific implication:
-
-## Limitations
-
-- Method limitations:
-- Data limitations:
-- Evaluation limitations:
-- Generalization risks:
-- Reproducibility risks:
-
-## Conclusion
-
-- Restated problem:
-- Final answer:
-- Main evidence:
-- Takeaway:
-
-## References
-
-- Keep citation keys synchronized with [../References/refs.bib](../References/refs.bib).
-- Do not cite papers that are not in the bibliography or paper notes.
-
-## Appendix Plan
-
-- Extra experiments:
-- Extra proofs:
-- Dataset details:
-- Implementation details:
-- Prompt or agent details:
-- Additional qualitative examples:
-
-## Open TODOs
-
-- [ ] Fill metadata and one-sentence thesis.
-- [ ] Create baseline comparison matrix.
-- [ ] Connect each major claim to evidence.
-- [ ] Register all planned figures and tables.
-- [ ] Verify experiment outputs before writing results.
+- Appendix items:
+- Open TODOs:

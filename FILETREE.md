@@ -44,7 +44,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `Baselines/` - Baseline experiment notes, comparisons, and related materials. <!--hash:24fc2ad8-->
 - `Figs/` - Figures, tables, plots, screenshots, and visual outputs for writing. <!--hash:2f247e34-->
-- `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:42e96d9e-->
+- `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:f8163111-->
 
 ## Paper/Baselines/
 
