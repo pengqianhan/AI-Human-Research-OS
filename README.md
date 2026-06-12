@@ -19,3 +19,7 @@ are organized by material type rather than by a fixed workflow.
 - [ ] Add a workspace where holding a group meeting with humans and AI, humans discuss research with the AI. Because AI can search paper and read fast, they can point out if the idea is feasible or not, and they can also point out relevant papers that humans might miss. This can be a good way to brainstorm research ideas and get feedback on them. After discussion, the AI can implement the idea or feedback immediately.
 - [ ] The final goal of the repo is to build a Research OS.
 - [ ] add interface according to [AlookAI](https://github.com/alookai/alook) and [Wanman](https://github.com/chekusu/wanman)
+
+## Reference projects
+- [AutoR](https://github.com/AutoX-AI-Labs/AutoR)
+- [autolab](https://github.com/autolabhq/autolab)
