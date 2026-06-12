@@ -17,6 +17,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `INSTRUCTION.md` - Primary guide for research workflow, Python environment, documentation links, filetree maintenance, and agent collaboration rules. <!--hash:aab2846a-->
 - `README.md` - Human-facing overview, roadmap TODOs, and reference projects for the AI-Human Research OS template. <!--hash:0acaccce-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f39f189-->
+- `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:c9ee1439-->
 
 ## .agents/
 
