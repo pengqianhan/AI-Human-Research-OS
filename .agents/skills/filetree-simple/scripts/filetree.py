@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -285,7 +286,7 @@ def list_repo_files() -> list[str]:
     repo_files = [
         normalize_repo_path(f)
         for f in files
-        if f and f not in gitlinks
+        if f and f not in gitlinks and os.path.lexists(f)
     ]
     return sorted(set(repo_files))
 
