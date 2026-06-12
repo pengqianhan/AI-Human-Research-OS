@@ -25,7 +25,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .agents/
 
-- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:78bee326-->
+- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:3ea05546-->
 
 ## .agents/skills/
 
@@ -33,12 +33,13 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
+- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.html progress TODO and CHANGE_SUMMARY.html records for resuming work. <!--hash:fc396b60-->
 - `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
 - `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
 ## .claude/
 
-- `skills/` - Claude Code workspace skills mirrored from repository-local agent skills. <!--hash:abb90fdc-->
+- `skills/` - Claude Code workspace skills mirrored from repository-local agent skills. <!--hash:3481e1b5-->
 
 ## .claude/skills/
 
@@ -46,6 +47,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
+- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.html progress TODO and CHANGE_SUMMARY.html records for resuming work. <!--hash:fc396b60-->
 - `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
 - `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
