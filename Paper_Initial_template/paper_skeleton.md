@@ -17,9 +17,12 @@ data, code, figures, or experiment outputs.
 
 ## Source Map
 
+Relative links assume this project folder sits at the repository root, sibling of
+`References/` and `Ideas/` (see `INSTRUCTION.md`, workflow "Idea → Project").
+
 | Asset | Link or path | Notes |
 |---|---|---|
-| Code and experiments | [../Code/](../Code/) |  |
+| Code and experiments | [Code/](Code/) |  |
 | Datasets |  |  |
 | Figures and tables | [Figs/](Figs/) |  |
 | Baselines | [Baselines/](Baselines/) |  |

@@ -33,3 +33,6 @@ temp/
 
 # Code agent local data
 .antigravitycli/
+
+# LaTeX build output
+build/
