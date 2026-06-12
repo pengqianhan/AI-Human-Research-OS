@@ -24,7 +24,9 @@ TODO.
 %   \caption{...}\label{fig:example}
 % \end{figure}
 
-% Build: latexmk -pdf -interaction=nonstopmode -outdir=build main.tex
+% Build: latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=build main.tex
+% (-bibfudge- makes bibtex run in this directory, so the relative path below
+%  resolves the same way with or without -outdir.)
 % Bibliography: shared store at the repository root (project sits at root level).
 % Uncomment once the first \cite{...} exists in the text:
 % \bibliographystyle{plain}
