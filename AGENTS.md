@@ -1,1 +1,1 @@
-READ @INSTRUCTION.md and @FILETREE.md
+Read `INSTRUCTION.md` at the start of each new thread/session.

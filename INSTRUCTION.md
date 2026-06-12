@@ -20,7 +20,11 @@ of steps.
 - Across this repository, when a file references another local file or directory,
   use a clickable relative link in the file's native format, such as
   `[name](path)` in Markdown or `<a href="path">name</a>` in HTML.
-  
+
+## Repository Map
+
+`FILETREE.md` is an optional compact repository map; read it when useful.
+
 ## Code Experiment Documentation
 
 - Treat `Code/README.md` as the English entry point for code, experiment setup, run commands, and current results.
