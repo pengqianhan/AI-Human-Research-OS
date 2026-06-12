@@ -97,7 +97,7 @@ HTML deliverables + decision list → final acceptance check. No new tools, serv
 </nav>
 
 <!-- ============================================================ -->
-<h2 id="todo">Progress TODO <span class="small">(live — updated by the executing session; ⬜ pending · ✅ done · 🔶 partial/skipped-with-reason)</span></h2>
+<h2 id="todo">Progress TODO <span class="small">(live — updated by the executing session; ⬜ pending · ✅ done · 🔶 partial/skipped-with-reason · ⛔ standing guardrail, never checked off)</span></h2>
 <table>
   <tr><th>Step</th><th>Item</th><th>Status</th></tr>
   <tr><td>0.1</td><td>Preflight verification block (facts re-checked)</td><td>✅ <!--st:0.1--> all §1 facts confirmed</td></tr>
@@ -142,7 +142,22 @@ HTML deliverables + decision list → final acceptance check. No new tools, serv
   <tr><td>7.3</td><td>Memory/MEMORY.md progress + Active Projects row</td><td>✅ <!--st:7.3--></td></tr>
   <tr><td>7.4</td><td>FILETREE.md regen via filetree-simple + lint</td><td>✅ <!--st:7.4--></td></tr>
   <tr><td>7.5</td><td>Acceptance table executed → pasted into CHANGE_SUMMARY</td><td>✅ <!--st:7.5--> all 6 PASS</td></tr>
-  <tr><td>7.6</td><td>Commit Phase 7</td><td>✅ <!--st:7.6--> (final commit of this task)</td></tr>
+  <tr><td>7.6</td><td>Commit Phase 7</td><td>✅ <!--st:7.6--> <code>de5f11c</code></td></tr>
+  <tr><td colspan="3" style="background:#f6f8fa; font-size:0.85rem; color:#5b6472;">
+    <b>Phase 8 — plugin-model follow-ups</b>, added 2026-06-12 after the plugin-model evaluation
+    (outside the original normalization scope). Canonical source: <code>INSTRUCTION.md → Extending the OS</code>
+    (commit <code>101678f</code>); decision recorded in <code>Memory/MEMORY.md → Key Decisions</code>.
+    Future sessions: check these rows before doing any template- or plugin-related work.</td></tr>
+  <tr><td>8.1</td><td>Create <code>Templates/</code> container (mirroring <code>Research-skills-hub/</code>) and move
+    <code>Paper_Initial_template/</code> inside; in the same task update INSTRUCTION.md workflow 2
+    ("Idea → Project" path), the README directory table, and FILETREE.md. Instantiation stays
+    <code>cp -R</code> to the repository root (template-internal relative links depend on it).</td>
+    <td>⬜ <!--st:8.1--> <b>DEFERRED by design</b> — trigger: a <i>second</i> project template is actually added.
+    Do not execute earlier (premature abstraction; one element needs no container).</td></tr>
+  <tr><td>8.2</td><td>Guardrail: do <b>not</b> add a plugin manager, manifest format (JSON/YAML), versioning
+    system, auto-update, CLI, or git submodules for plugins. Plugins stay "a directory with a contract":
+    skills = <code>SKILL.md</code> standard; templates = the 4-point contract in INSTRUCTION.md.</td>
+    <td>⛔ <!--st:8.2--> standing rule — never check off; revisit only on explicit user request.</td></tr>
 </table>
 
 <!-- ============================================================ -->
