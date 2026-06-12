@@ -23,3 +23,4 @@ are organized by material type rather than by a fixed workflow.
 ## Reference projects
 - [AutoR](https://github.com/AutoX-AI-Labs/AutoR)
 - [autolab](https://github.com/autolabhq/autolab)
+- [awesome-AI-for-research](https://github.com/pengqianhan/awesome-AI-for-research)
