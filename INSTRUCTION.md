@@ -13,6 +13,8 @@ of steps.
 2. Unless the task is trivial, read `FILETREE.md` next to understand the current
    repository structure.
 3. For broad Research OS or template-design work, also read the relevant files under `Memory/`
+4. When working inside a specific project folder, also read that project's
+   `PROJECT_MEMORY.md`.
 
 ## Python Environment
 
@@ -37,6 +39,35 @@ task is too small to need repository context. After updating documentation or in
 files, refresh `FILETREE.md` with the local `filetree-simple` skill and run its
 lint check.
 
+## Core Workflows
+
+1. **Capture an idea**: append a new entry below the `---` line in
+   [Ideas/Ideas_log.md](Ideas/Ideas_log.md) (newest first), using the format
+   block in that file.
+2. **Idea → Project**: copy the template to the repository root:
+   `cp -R Paper_Initial_template <ProjectName>`. Fill the Snapshot sections of
+   `<ProjectName>/PROJECT_MEMORY.md` and `<ProjectName>/paper_skeleton.md`, set
+   the idea's status to `promoted` with a link to the project, add a row to
+   Active Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh
+   `FILETREE.md`. Projects sit at the root, sibling to `References/` and
+   `Ideas/`, so the template's relative links keep working.
+3. **Reference intake**: store the PDF in [References/](References/); append a
+   BibTeX entry to [References/refs.bib](References/refs.bib) — fetch metadata
+   with the literature-search skills, never invent fields; append a reading note
+   to [References/paper_notes.md](References/paper_notes.md) using
+   [paper_notes_template.md](References/paper_notes_template.md).
+4. **Experiments and artifacts**: code in `<Project>/Code/` with a `uv`-managed
+   environment at that folder's scope; datasets in `<Project>/Code/Datasets/`;
+   figures in `<Project>/Figs/`; baseline runs in `<Project>/Baselines/`. Update
+   the nearest README (both languages if a pair exists) in the same task.
+5. **Writing**: edit `<Project>/main.tex`; track claims and evidence in
+   `<Project>/paper_skeleton.md`; build with
+   `latexmk -pdf -interaction=nonstopmode -outdir=build main.tex` (`build/` is
+   gitignored).
+6. **Session end**: update the Progress Log in `<Project>/PROJECT_MEMORY.md`;
+   update [Memory/MEMORY.md](Memory/MEMORY.md) only if cross-project state
+   changed.
+
 ## Research Memory
 
 - Use `Memory/` for durable project context, long-term research goals, key
@@ -47,6 +78,31 @@ lint check.
 - Keep project-specific lessons in the project or repository memory. Promote a
   lesson to a reusable skill only when it is useful across multiple research
   projects.
+
+### Memory Layers
+
+| Layer | Lives in | Updated when / by | Hygiene |
+|---|---|---|---|
+| Global | `Memory/MEMORY.md` | Agent at the end of a session that changes project status or yields a cross-project lesson; human anytime | ≤ ~200 lines; prune aggressively |
+| Project | `<Project>/PROJECT_MEMORY.md` | Agent at the end of every session that changes project state | Progress log newest-first, ≤ ~30 lines |
+| Task | `scratch/` (gitignored) or the conversation itself | During a single task only | Distill durable findings upward at task end, then discard |
+
+## Skills
+
+- Installed skills live in `.agents/skills/` (Codex) and `.claude/skills/`
+  (Claude Code). The two directories must stay byte-identical: apply any change
+  to both.
+- [Research-skills-hub/](Research-skills-hub/) is the canonical store; its index
+  [skills_map.md](Research-skills-hub/skills_map.md) lists every skill and the
+  install procedure.
+- Promotion path: record lessons in `PROJECT_MEMORY.md` first; turn a lesson
+  into a project-local skill (`<Project>/.claude/skills/` plus
+  `<Project>/.agents/skills/`, created on demand) when it is procedural; add it
+  to the hub only when it is useful across multiple projects and
+  domain-independent or lightly coupled.
+- Every hub skill's `SKILL.md` must state scope, inputs, outputs, and
+  limitations. After adding or changing a skill, update `skills_map.md` and
+  refresh `FILETREE.md`.
 
 ## Code Experiment Documentation
 

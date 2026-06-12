@@ -1,11 +1,52 @@
 # AI-Human Research OS
 
+A lightweight, folder-based research operating system for humans working with
+code agents such as Codex and Claude Code. The agent is the execution core; the
+human steers in natural language. There is no database, server, or CLI — just a
+stable directory layout, a few conventions, and reusable skills, so agents can
+support long-term, iterative research with low token cost.
+
 The folder structure is intentionally simple and non-linear. Research ideas,
-references, experiments, figures, and writing often update each other, so the folders
-are organized by material type rather than by a fixed workflow.
+references, experiments, figures, and writing often update each other, so the
+folders are organized by material type rather than by a fixed workflow.
 
+## Quick Start
 
-## TODO
+1. Clone the repository and open it with Claude Code or Codex.
+2. The agent entry files ([CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md)) direct
+   the agent to [INSTRUCTION.md](INSTRUCTION.md), which defines startup order,
+   core workflows, memory rules, and research-material protection rules.
+3. Talk to the agent in natural language, e.g. "record this idea", "start a
+   project from idea X", "add this paper to the references".
+
+## Core Directories
+
+| Path | Purpose |
+|---|---|
+| [Ideas/](Ideas/) | Idea log: hypotheses, inspirations, early discussions |
+| [References/](References/) | Papers (PDF), `refs.bib`, reading notes |
+| [Paper_Initial_template/](Paper_Initial_template/) | Template copied to the root to start a new project/paper |
+| [Memory/](Memory/) | Global long-term memory across projects |
+| [Research-skills-hub/](Research-skills-hub/) | Store of reusable agent skills |
+| `.agents/skills/`, `.claude/skills/` | Installed skills (two identical copies) |
+| [INSTRUCTION.md](INSTRUCTION.md) | Agent operating guide (read first) |
+| [FILETREE.md](FILETREE.md) | Auto-maintained repository index |
+
+## Minimal Workflow
+
+idea → [Ideas/Ideas_log.md](Ideas/Ideas_log.md) → papers into
+[References/](References/) → copy [Paper_Initial_template/](Paper_Initial_template/)
+to `<ProjectName>/` at the root → experiments in `<ProjectName>/Code/`, figures in
+`Figs/` → write `main.tex` → memory updated in `PROJECT_MEMORY.md` and
+[Memory/MEMORY.md](Memory/MEMORY.md). Details: [INSTRUCTION.md](INSTRUCTION.md).
+A complete worked example (code → figure → compiled PDF) lives in
+[Example_Project/](Example_Project/).
+
+## Roadmap (original TODO list)
+
+> Note: the memory-mechanism items below are now partially implemented — see
+> INSTRUCTION.md → Memory Layers (global `Memory/MEMORY.md` + per-project
+> `PROJECT_MEMORY.md`). The rest remains open.
 
 - [ ] add find-research-skills, which can help the AI agent to find the right research skills in `Research-skills-hub/` folder or even online
 - [ ] create a skill which can access them markdown files of paper, such as 'hf cli', 'https://github.com/timf34/arxiv2md','deepxive cli' and so on.
@@ -21,6 +62,7 @@ are organized by material type rather than by a fixed workflow.
 - [ ] add interface according to [AlookAI](https://github.com/alookai/alook) and [Wanman](https://github.com/chekusu/wanman)
 
 ## Reference projects
+
 - [AutoR](https://github.com/AutoX-AI-Labs/AutoR)
 - [autolab](https://github.com/autolabhq/autolab)
 - [awesome-AI-for-research](https://github.com/pengqianhan/awesome-AI-for-research)
