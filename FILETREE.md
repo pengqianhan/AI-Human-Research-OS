@@ -14,7 +14,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `.gitignore` - Ignores local environment files, editor settings, caches, scratch directories, and agent-local data. <!--hash:0cb2335a-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
-- `INSTRUCTION.md` - Primary guide for research workflow, Python environment, documentation links, filetree maintenance, and agent collaboration rules. <!--hash:aab2846a-->
+- `INSTRUCTION.md` - Primary guide for agent startup, Python environments, memory, documentation links, filetree maintenance, and research safety rules. <!--hash:1593fe5a-->
 - `README.md` - Human-facing overview, roadmap TODOs, and reference projects for the AI-Human Research OS template. <!--hash:0acaccce-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f39f189-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:c9ee1439-->
