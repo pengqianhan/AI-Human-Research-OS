@@ -12,14 +12,20 @@
 
 | Project | Path | Status | Next action |
 |---|---|---|---|
+| Example_Project (OS smoke test) | `Example_Project/` | complete — kept as worked example | delete if unwanted (decision D6 in `CHANGE_SUMMARY.html`) |
 
 ## Key Decisions (cross-project)
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-06-12 | Research OS normalized: entry chain (AGENTS/CLAUDE → INSTRUCTION → FILETREE → memory), six core workflows, 3-layer memory, hub-as-store skill lifecycle | task_en.md normalization task; see `CHANGE_SUMMARY.html` |
+| 2026-06-12 | Projects are instantiated at the repository root (`cp -R Paper_Initial_template <Name>`) | keeps the template's relative links to `References/` and `Ideas/` working |
 
 ## Lessons and Principles
 
 <!-- promote to Research-skills-hub/ only when useful across multiple projects -->
 
--
+- latexmk ≥ 4.86 runs bibtex inside the output directory by default; with the
+  shared root bibliography (`\bibliography{../References/refs}`), build with
+  `-bibfudge-` so the path resolves from the project directory (found 2026-06-12
+  in the smoke test).

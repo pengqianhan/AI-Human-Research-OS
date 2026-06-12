@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Plan — Normalize the AI-Human Research OS</title>
+<style>
+  :root {
+    --ink: #1a1f2b; --muted: #5b6472; --bg: #ffffff; --panel: #f6f8fa;
+    --accent: #0b5fff; --accent-soft: #e8f0fe; --ok: #1a7f37; --warn: #b35900;
+    --danger: #b42318; --border: #d8dee6; --code-bg: #f0f2f5;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+         color: var(--ink); background: var(--bg); margin: 0; line-height: 1.55; }
+  main { max-width: 1020px; margin: 0 auto; padding: 32px 28px 80px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  h2 { font-size: 1.35rem; margin-top: 2.2em; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+  h3 { font-size: 1.08rem; margin-top: 1.6em; }
+  h4 { font-size: 0.98rem; margin-bottom: 0.3em; }
+  p.subtitle { color: var(--muted); margin-top: 0; }
+  .meta { font-size: 0.85rem; color: var(--muted); background: var(--panel);
+          border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin: 18px 0; }
+  .summary { background: var(--accent-soft); border: 1px solid #bcd2ff; border-radius: 8px; padding: 14px 18px; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--panel); }
+  code { background: var(--code-bg); border-radius: 4px; padding: 1px 5px; font-size: 0.86em;
+         font-family: "SF Mono", Menlo, Consolas, monospace; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; line-height: 1.45; }
+  pre code { background: none; padding: 0; }
+  .badge { display: inline-block; font-size: 0.72rem; font-weight: 600; border-radius: 10px;
+           padding: 1px 9px; vertical-align: middle; }
+  .b-high { background: #fde8e8; color: var(--danger); }
+  .b-med  { background: #fff3e0; color: var(--warn); }
+  .b-low  { background: #e6f4ea; color: var(--ok); }
+  .b-dec  { background: #efe6fd; color: #6531c9; }
+  .phase { border: 1px solid var(--border); border-left: 5px solid var(--accent); border-radius: 8px;
+           padding: 4px 20px 14px; margin: 22px 0; background: #fff; }
+  .phase h3 { margin-top: 14px; }
+  .step { margin: 14px 0 14px 0; padding-left: 12px; border-left: 3px solid var(--border); }
+  .step b.sid { color: var(--accent); }
+  .verify { font-size: 0.86rem; color: var(--ok); }
+  .decision-flag { color: #6531c9; font-weight: 600; font-size: 0.86rem; }
+  nav.toc { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px 22px; columns: 2; font-size: 0.92rem; }
+  nav.toc a { text-decoration: none; color: var(--accent); }
+  ul { padding-left: 1.3em; }
+  .small { font-size: 0.85rem; color: var(--muted); }
+  @media print { nav.toc { columns: 1; } .phase { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Task Plan: Explore &amp; Normalize the AI-Human Research OS</h1>
+<p class="subtitle">Detailed execution plan for the next Claude Code session, derived from
+<a href="task_en.md"><code>task_en.md</code></a> and a verified inspection of the repository.</p>
+
+<div class="meta">
+  <b>Generated:</b> 2026-06-12 &nbsp;|&nbsp; <b>By:</b> Claude Code (planning session, repo state at commit <code>a112398</code>, branch <code>forfable</code>, clean tree)<br>
+  <b>中文说明：</b>本文件是对 <code>task_en.md</code> 目标的详细执行计划，供下一个 Claude Code session 直接照此执行。
+  仓库现状已逐项核实（见 §2 问题清单）。执行顺序为 Phase 0 → 7，每步给出具体改动内容、命令与验收方式。
+  标注 <span class="decision-flag">⚠ DECISION</span> 的步骤采用计划推荐的默认做法，并在最终交付的决策清单中向用户报告。
+</div>
+
+<div class="summary">
+<b>Executive summary.</b> The repository is structurally sound but has (a)&nbsp;a broken agent entry
+point (<code>CLAUDE.md</code> is empty), (b)&nbsp;naming drift (git index casing, <code>READEME</code> typos,
+<code>references/</code> vs <code>References/</code>), (c)&nbsp;a skills hub whose index no longer matches its
+contents or the installed copies, (d)&nbsp;six 0-byte placeholder files with no defined format, and
+(e)&nbsp;no documented workflows for idea→project, reference intake, layered memory, or skill promotion.
+The plan fixes these in <b>8 phases / ~30 steps</b>: repair naming &amp; entry chain → seed minimal file
+skeletons → upgrade the project template (add <code>PROJECT_MEMORY.md</code> + <code>main.tex</code>) →
+rewrite the four entry documents → reconcile the skills hub → run a <b>bounded smoke test</b>
+(template → runnable code → figure → compiled PDF; local toolchain verified available) → produce the two
+HTML deliverables + decision list → final acceptance check. No new tools, services, CLI, or databases are introduced.
+</div>
+
+<h2 id="toc">Contents</h2>
+<nav class="toc">
+  <ol>
+    <li><a href="#todo">Progress TODO (live)</a></li>
+    <li><a href="#s0">§0 How to use this plan + ground rules</a></li>
+    <li><a href="#s1">§1 Verified current state</a></li>
+    <li><a href="#s2">§2 Problem inventory (P1–P14)</a></li>
+    <li><a href="#s3">§3 Target design</a></li>
+    <li><a href="#s4">§4 Execution phases 0–7</a></li>
+    <li><a href="#s5">§5 Smoke test protocol (bounded)</a></li>
+    <li><a href="#s6">§6 Deliverables checklist</a></li>
+    <li><a href="#s7">§7 Acceptance criteria → verification</a></li>
+    <li><a href="#s8">§8 User decision items (D1–D9)</a></li>
+    <li><a href="#s9">§9 Explicitly out of scope</a></li>
+    <li><a href="#s10">§10 Suggested commit sequence</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<h2 id="todo">Progress TODO <span class="small">(live — updated by the executing session; ⬜ pending · ✅ done · 🔶 partial/skipped-with-reason)</span></h2>
+<table>
+  <tr><th>Step</th><th>Item</th><th>Status</th></tr>
+  <tr><td>0.1</td><td>Preflight verification block (facts re-checked)</td><td>✅ <!--st:0.1--> all §1 facts confirmed</td></tr>
+  <tr><td>0.2</td><td>Skim INSTRUCTION.md / task_en.md</td><td>✅ <!--st:0.2--> (in planning context)</td></tr>
+  <tr><td>1.1</td><td>Unify <code>Paper_Initial_template</code> casing in git index</td><td>✅ <!--st:1.1--></td></tr>
+  <tr><td>1.2</td><td>Rename <code>READEME*.md</code> → <code>README*.md</code></td><td>✅ <!--st:1.2--></td></tr>
+  <tr><td>1.3</td><td>Restore CLAUDE.md pointer (D1)</td><td>✅ <!--st:1.3--></td></tr>
+  <tr><td>1.4</td><td>Fix paper_skeleton.md Source-Map link + convention note</td><td>✅ <!--st:1.4--></td></tr>
+  <tr><td>1.5</td><td>paper_notes_template.md: casing + de-domain Paper_VAE</td><td>✅ <!--st:1.5--></td></tr>
+  <tr><td>1.6</td><td>.gitignore: LaTeX <code>build/</code></td><td>✅ <!--st:1.6--></td></tr>
+  <tr><td>1.7</td><td>Commit Phase 1</td><td>✅ <!--st:1.7--> <code>1157410</code></td></tr>
+  <tr><td>2.1</td><td>Memory/MEMORY.md skeleton</td><td>✅ <!--st:2.1--></td></tr>
+  <tr><td>2.2</td><td>Ideas/Ideas_log.md skeleton</td><td>✅ <!--st:2.2--></td></tr>
+  <tr><td>2.3</td><td>References/paper_notes.md header</td><td>✅ <!--st:2.3--></td></tr>
+  <tr><td>2.4</td><td>Commit Phase 2</td><td>✅ <!--st:2.4--> <code>73ed6df</code></td></tr>
+  <tr><td>3.1</td><td>Template: PROJECT_MEMORY.md</td><td>✅ <!--st:3.1--></td></tr>
+  <tr><td>3.2</td><td>Template: main.tex (compiles out of the box)</td><td>✅ <!--st:3.2--> compile verified</td></tr>
+  <tr><td>3.3</td><td>Template: Code/README.md + README_zh.md content</td><td>✅ <!--st:3.3--></td></tr>
+  <tr><td>3.4</td><td>Remove empty .agents/.claude dirs in template</td><td>✅ <!--st:3.4--></td></tr>
+  <tr><td>3.5</td><td>Commit Phase 3</td><td>✅ <!--st:3.5--> <code>ab5a6e7</code></td></tr>
+  <tr><td>4.1</td><td>INSTRUCTION.md: workflows + memory layers + skills (≤180 lines)</td><td>✅ <!--st:4.1--> 129 lines</td></tr>
+  <tr><td>4.2</td><td>README.md rewrite (TODOs preserved verbatim)</td><td>✅ <!--st:4.2--></td></tr>
+  <tr><td>4.3</td><td>AGENTS.md / CLAUDE.md final check</td><td>✅ <!--st:4.3--> both contain pointer</td></tr>
+  <tr><td>4.4</td><td>Commit Phase 4</td><td>✅ <!--st:4.4--></td></tr>
+  <tr><td>5.1</td><td>Restore 4 missing hub skill sources</td><td>✅ <!--st:5.1--></td></tr>
+  <tr><td>5.2</td><td>Diff hub⇄installed overlap (prefer installed)</td><td>✅ <!--st:5.2--> both identical</td></tr>
+  <tr><td>5.3</td><td>Rewrite skills_map.md (verified against <code>ls</code>)</td><td>✅ <!--st:5.3--></td></tr>
+  <tr><td>5.4</td><td>Commit Phase 5</td><td>✅ <!--st:5.4--></td></tr>
+  <tr><td>6.1</td><td>Smoke: idea entry in Ideas_log.md</td><td>✅ <!--st:6.1--></td></tr>
+  <tr><td>6.2</td><td>Smoke: instantiate Example_Project/</td><td>✅ <!--st:6.2--></td></tr>
+  <tr><td>6.3</td><td>Smoke: fill PROJECT_MEMORY + paper_skeleton snapshots</td><td>✅ <!--st:6.3--></td></tr>
+  <tr><td>6.4</td><td>Smoke: uv env (numpy, matplotlib)</td><td>✅ <!--st:6.4--> numpy 2.4.6, mpl 3.11.0</td></tr>
+  <tr><td>6.5</td><td>Smoke: fit_line.py runs → Figs/linear_fit.png</td><td>✅ <!--st:6.5--> slope 2.0452, MSE 0.1402</td></tr>
+  <tr><td>6.6</td><td>Smoke: real arXiv reference → refs.bib (optional)</td><td>✅ <!--st:6.6--> 1706.03762 via skill</td></tr>
+  <tr><td>6.7</td><td>Smoke: main.tex (figure + real numbers + cite)</td><td>✅ <!--st:6.7--></td></tr>
+  <tr><td>6.8</td><td>Smoke: latexmk → build/main.pdf</td><td>✅ <!--st:6.8--> 144K, citations resolved; needed <code>-bibfudge-</code> (see CHANGE_SUMMARY deviation)</td></tr>
+  <tr><td>6.9</td><td>Smoke: Code READMEs updated with actual results</td><td>✅ <!--st:6.9--></td></tr>
+  <tr><td>6.10</td><td>Smoke: project memory updated + scope check</td><td>✅ <!--st:6.10--></td></tr>
+  <tr><td>6.11</td><td>Commit Phase 6</td><td>✅ <!--st:6.11--> <code>07c1357</code></td></tr>
+  <tr><td>7.1</td><td>OS_INTRO.html</td><td>✅ <!--st:7.1--></td></tr>
+  <tr><td>7.2</td><td>CHANGE_SUMMARY.html (incl. D1–D9 + deviations)</td><td>✅ <!--st:7.2--></td></tr>
+  <tr><td>7.3</td><td>Memory/MEMORY.md progress + Active Projects row</td><td>✅ <!--st:7.3--></td></tr>
+  <tr><td>7.4</td><td>FILETREE.md regen via filetree-simple + lint</td><td>✅ <!--st:7.4--></td></tr>
+  <tr><td>7.5</td><td>Acceptance table executed → pasted into CHANGE_SUMMARY</td><td>✅ <!--st:7.5--> all 6 PASS</td></tr>
+  <tr><td>7.6</td><td>Commit Phase 7</td><td>✅ <!--st:7.6--> (final commit of this task)</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s0">§0 How to use this plan</h2>
+<ol>
+  <li><b>Read order for the executing session:</b> <code>task_en.md</code> (goals/constraints) → this file → then execute Phase 0. Do <b>not</b> re-explore the whole repo from scratch; §1 records verified facts. Re-verify only via the Phase 0 preflight block.</li>
+  <li><b>Source of truth:</b> if the actual repository state diverges from §1 (user may have edited files after 2026-06-12), <b>the repository wins</b>. Adapt the step, and record the deviation in <code>CHANGE_SUMMARY.html</code> (Phase 7).</li>
+  <li><b>Ground rules</b> (inherited from <a href="task_en.md">task_en.md</a>, restated because they constrain every step):
+    <ul>
+      <li>Occam's razor — no new entities without necessity. No databases, services, CLIs, heavy frameworks.</li>
+      <li>Never invent citations, data, or results. The smoke test may only cite metadata fetched live from arXiv/OpenAlex, or cite nothing.</li>
+      <li>Never delete or substantially rewrite user-provided research material. The README TODO list and reference-project links are user content — <b>preserve them verbatim</b> inside a Roadmap section.</li>
+      <li>Small, reversible changes; commit per phase (§10).</li>
+      <li>Steps marked <span class="decision-flag">⚠ DECISION (Dx)</span> take the plan's recommended default <i>and</i> get reported in the decision list (§8) for the user to overturn.</li>
+    </ul>
+  </li>
+  <li><b>Token economy for the executing session:</b> all file contents needed for edits are sketched inline below; only re-read a file before editing it (Edit tool requires it). Skill directories under <code>.claude/skills/</code>, <code>.agents/skills/</code>, <code>Research-skills-hub/</code> do <b>not</b> need to be read — Phase 5 only copies/diffs them at the shell level.</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="s1">§1 Verified current state (2026-06-12)</h2>
+
+<h3>1.1 Actual top level</h3>
+<pre><code>.agents/skills/        # installed skills: filetree-simple, literature_search_arxiv,
+.claude/skills/        #   literature_search_openalex, science_skills_common, uv, uv-env
+                       #   (.agents/skills and .claude/skills verified byte-identical)
+Ideas/                 # Ideas_log.md (0 bytes), .gitkeep
+Memory/                # MEMORY.md (0 bytes)
+Paper_Initial_template/  # on disk; git index says "Paper_initial_template/" (P1)
+  ├─ paper_skeleton.md   # rich manuscript control sheet (good; one broken link, P5)
+  ├─ Code/  (READEME.md, READEME_zh.md both 0 bytes; Datasets/; empty .agents/ dir)
+  ├─ Figs/  Baselines/(Baseline_readme.md)
+  └─ .agents/ .claude/   # empty, untracked directories
+References/            # refs.bib (0B), paper_notes.md (0B), paper_notes_template.md (filled)
+Research-skills-hub/
+  ├─ skills_map.md       # stale index (P7)
+  ├─ science-skills/skills/{literature_search_biorxiv, literature_search_europepmc,
+  │                         science_skills_common, workflow_skill_creator}
+  └─ open-paper-skills/uv-env/   # verified identical to installed uv-env
+AGENTS.md              # one line: directs to INSTRUCTION.md ✔
+CLAUDE.md              # 0 bytes (P2)
+INSTRUCTION.md         # solid core: startup, uv, links rule, memory hygiene, 8 agent rules
+FILETREE.md            # auto-index; stale on CLAUDE.md + casing (P3)
+README.md              # TODO list + reference projects; not an overview (P9)
+task.md / task_en.md   # task prompts (leave untouched)</code></pre>
+
+<h3>1.2 Local environment (verified by command)</h3>
+<table>
+  <tr><th>Tool</th><th>Status</th><th>Implication</th></tr>
+  <tr><td><code>pdflatex</code>, <code>latexmk</code>, <code>xelatex</code></td><td>✔ /Library/TeX/texbin</td><td>Smoke-test PDF compile is feasible locally</td></tr>
+  <tr><td><code>tectonic</code></td><td>✘ not installed</td><td>Use <code>latexmk -pdf</code></td></tr>
+  <tr><td><code>uv</code></td><td>✔ 0.9.10</td><td>Use <code>uv</code> per INSTRUCTION.md; repo-local <code>uv-env</code> skill available</td></tr>
+  <tr><td><code>python3</code></td><td>✔ 3.11.5 (system)</td><td>uv manages project envs anyway</td></tr>
+  <tr><td><code>git config core.ignorecase</code></td><td><code>true</code></td><td>Casing fix needs index-level rename (Phase 1.1)</td></tr>
+</table>
+
+<h3>1.3 Git context</h3>
+<ul>
+  <li>Branch <code>forfable</code>, clean tree. Recent commit <code>a112398</code>: <i>"Remove redundant instruction to read INSTRUCTION.md … from CLAUDE.md"</i> — i.e. <b>CLAUDE.md was emptied deliberately</b>. This conflicts with task_en.md acceptance criterion #1 → handled as decision <b>D1</b> in Phase 1.3.</li>
+  <li>Template's <code>.agents/</code>, <code>.claude/</code>, <code>Code/.agents/</code> are empty and therefore untracked by git.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="s2">§2 Problem inventory</h2>
+<p>Every fix phase below references these IDs. Severity: <span class="badge b-high">HIGH</span> blocks an acceptance criterion; <span class="badge b-med">MED</span> causes agent confusion/waste; <span class="badge b-low">LOW</span> cosmetic.</p>
+
+<table>
+  <tr><th>ID</th><th>Sev</th><th>Location</th><th>Problem (verified)</th><th>Fixed in</th></tr>
+  <tr><td>P1</td><td><span class="badge b-high">HIGH</span></td><td>git index</td><td>Index stores <code>Paper_initial_template/</code> (lowercase i), disk has <code>Paper_Initial_template/</code>. Docs disagree with each other. Breaks "docs match actual directories" criterion on case-sensitive (Linux) checkouts.</td><td>1.1</td></tr>
+  <tr><td>P2</td><td><span class="badge b-high">HIGH</span></td><td><code>CLAUDE.md</code></td><td>0 bytes. Acceptance #1 requires it to direct agents to INSTRUCTION.md. Emptied deliberately in <code>a112398</code> → decision D1.</td><td>1.3</td></tr>
+  <tr><td>P3</td><td><span class="badge b-med">MED</span></td><td><code>FILETREE.md</code></td><td>Stale: claims CLAUDE.md contains the pointer (hash <code>306510c0</code>, actual file empty), uses lowercase template casing.</td><td>7.4 (regen)</td></tr>
+  <tr><td>P4</td><td><span class="badge b-med">MED</span></td><td><code>Paper_Initial_template/Code/</code></td><td><code>READEME.md</code> / <code>READEME_zh.md</code> typo'd filenames, both 0 bytes — no code/experiment doc convention.</td><td>1.2, 3.3</td></tr>
+  <tr><td>P5</td><td><span class="badge b-low">LOW</span></td><td><code>paper_skeleton.md:22</code></td><td>Source Map links <code>[../Code/]</code> — resolves to repo-root <code>Code/</code> which doesn't exist; the template's own dir is <code>Code/</code>. (Other links <code>../References/…</code>, <code>../Ideas/</code> are correct <i>given the root-level instantiation convention</i>, §3.4.)</td><td>1.4</td></tr>
+  <tr><td>P6</td><td><span class="badge b-med">MED</span></td><td><code>References/paper_notes_template.md</code></td><td>Says PDFs live under <code>references/</code> (wrong casing, lines 4/8/20/28) and references "<b>Paper_VAE</b>" (line 27) — a leftover from a specific past project; violates "keep global assets domain-general".</td><td>1.5</td></tr>
+  <tr><td>P7</td><td><span class="badge b-high">HIGH</span></td><td><code>Research-skills-hub/skills_map.md</code></td><td>(a) references a non-existent <code>setup.md</code> installer; (b) lists <code>uv/</code>, <code>literature_search_arxiv/</code>, <code>literature_search_openalex/</code> as present in <code>science-skills/</code> — they are <b>not</b> (only biorxiv, europepmc, science_skills_common, workflow_skill_creator exist there); (c) omits <code>science_skills_common</code> and the whole <code>open-paper-skills/</code> collection; (d) installed <code>filetree-simple</code> has no hub source at all. Hub ⇄ installed drift in both directions.</td><td>5.x</td></tr>
+  <tr><td>P8</td><td><span class="badge b-med">MED</span></td><td>6 files</td><td>0-byte placeholders with no format convention: <code>Memory/MEMORY.md</code>, <code>Ideas/Ideas_log.md</code>, <code>References/paper_notes.md</code>, <code>References/refs.bib</code>, the two Code READMEs. An agent landing on them cannot infer the expected structure.</td><td>2.x, 3.3</td></tr>
+  <tr><td>P9</td><td><span class="badge b-high">HIGH</span></td><td><code>README.md</code></td><td>Pure TODO/roadmap; a human cannot learn purpose + minimal workflow from it (acceptance #3).</td><td>4.2</td></tr>
+  <tr><td>P10</td><td><span class="badge b-high">HIGH</span></td><td><code>INSTRUCTION.md</code></td><td>Never mentions <code>Paper_Initial_template/</code>, <code>References/</code> intake, <code>Ideas/</code> capture, <code>Research-skills-hub/</code>, or how the two skills dirs relate. The 5 questions in task_en.md "Overall Goal" are not answerable from it. No layered-memory definition, no skill-promotion path.</td><td>4.1</td></tr>
+  <tr><td>P11</td><td><span class="badge b-low">LOW</span></td><td>template</td><td>Empty untracked <code>.agents/</code>, <code>.claude/</code>, <code>Code/.agents/</code> dirs inside the template suggest structure that doesn't exist (git won't even propagate them).</td><td>3.4</td></tr>
+  <tr><td>P12</td><td><span class="badge b-med">MED</span></td><td>template</td><td>No writing scaffold: deliverable #2 requires <code>main.tex</code> + PDF, but the template has no TeX entry point and no build-output ignore rule.</td><td>3.2</td></tr>
+  <tr><td>P13</td><td><span class="badge b-med">MED</span></td><td>repo-wide</td><td>No defined location/convention for <i>instantiated</i> projects (where does an idea-turned-project live?). Template's relative links silently assume root-level placement.</td><td>§3.4, 4.1</td></tr>
+  <tr><td>P14</td><td><span class="badge b-low">LOW</span></td><td><code>Memory/</code></td><td>Memory layers (global/project/task) named in task_en.md but undefined in the repo: no owner, update timing, or hygiene rules.</td><td>§3.3, 4.1</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s3">§3 Target design (what "normalized" means here)</h2>
+
+<h3>3.1 Entry-document chain (context-loading rule)</h3>
+<pre><code>Codex session            Claude Code session
+   │ reads AGENTS.md        │ reads CLAUDE.md          (1 line each: "Read INSTRUCTION.md…")
+   └────────────┬───────────┘
+                ▼
+        INSTRUCTION.md      — ALWAYS read. Core rules + workflows + memory/skill policy.
+                │             Budget: ≤ ~180 lines so the per-session cost stays low.
+                ▼
+        FILETREE.md         — read unless task is trivial (directory responsibilities).
+                ▼
+        Memory/MEMORY.md    — read for broad / cross-project work.
+                ▼
+        &lt;Project&gt;/PROJECT_MEMORY.md — read when working inside that project.</code></pre>
+<p class="small">Rationale: one canonical always-read doc maximizes rule delivery and keeps token cost
+bounded; deeper docs load on demand. Alternative (separate WORKFLOWS.md) rejected for now — only revisit
+if INSTRUCTION.md exceeds the 180-line budget after Phase 4.1.</p>
+
+<h3>3.2 Directory responsibilities (answers task_en.md question 2)</h3>
+<table>
+  <tr><th>Material</th><th>Goes to</th></tr>
+  <tr><td>New idea / hypothesis / meeting note</td><td><code>Ideas/Ideas_log.md</code> (append-at-top entry, §4 Phase 2.2 format)</td></tr>
+  <tr><td>Paper PDF, BibTeX, reading note</td><td><code>References/</code>: PDF in folder, entry appended to <code>refs.bib</code>, note appended to <code>paper_notes.md</code> via <code>paper_notes_template.md</code></td></tr>
+  <tr><td>New research project / paper draft</td><td>Copy of <code>Paper_Initial_template/</code> at <b>repo root</b>: <code>&lt;ProjectName&gt;/</code> (D8)</td></tr>
+  <tr><td>Experiment code, datasets</td><td><code>&lt;Project&gt;/Code/</code>, <code>&lt;Project&gt;/Code/Datasets/</code> (+ nearest README updated, both languages)</td></tr>
+  <tr><td>Figures / tables / plots</td><td><code>&lt;Project&gt;/Figs/</code></td></tr>
+  <tr><td>Baseline runs &amp; comparisons</td><td><code>&lt;Project&gt;/Baselines/</code></td></tr>
+  <tr><td>Manuscript</td><td><code>&lt;Project&gt;/main.tex</code> (+ <code>paper_skeleton.md</code> as the argument/claims control sheet)</td></tr>
+  <tr><td>Durable cross-project memory</td><td><code>Memory/MEMORY.md</code></td></tr>
+  <tr><td>Reusable skills (store)</td><td><code>Research-skills-hub/&lt;collection&gt;/…</code>; installed copies in <code>.agents/skills/</code> + <code>.claude/skills/</code> (kept identical, D7)</td></tr>
+</table>
+
+<h3>3.3 Layered memory (answers task_en.md questions 1 &amp; 5; fixes P14)</h3>
+<table>
+  <tr><th>Layer</th><th>Lives in</th><th>Updated when / by</th><th>Hygiene</th></tr>
+  <tr><td><b>Global</b></td><td><code>Memory/MEMORY.md</code> — long-term goals, Active Projects table, cross-project decisions, lessons</td><td>Agent: at end of any session that changes project status or yields a cross-project lesson. Human: anytime.</td><td>Keep ≤ ~200 lines; prune or archive; never store command output or anything already in code/refs/figures.</td></tr>
+  <tr><td><b>Project</b></td><td><code>&lt;Project&gt;/PROJECT_MEMORY.md</code> — snapshot, decisions, progress log, TODOs</td><td>Agent: end of every session that changes project state.</td><td>Progress log newest-first, ≤ ~30 lines, prune old; details belong in paper_skeleton.md / code READMEs.</td></tr>
+  <tr><td><b>Task</b></td><td><code>scratch/</code> (already gitignored) or the conversation itself — ephemeral</td><td>During a task only.</td><td>At task end: distill anything durable upward into project/global memory, then discard. No new mechanism is introduced.</td></tr>
+</table>
+
+<h3>3.4 Project instantiation convention (fixes P13) <span class="decision-flag">⚠ DECISION (D8)</span></h3>
+<p>Instantiated projects are placed at the <b>repository root</b>, sibling to <code>Paper_Initial_template/</code>
+(e.g. <code>Example_Project/</code>). Rationale: the template's relative links
+(<code>../References/refs.bib</code>, <code>../Ideas/</code>) then keep working unchanged, and FILETREE.md
+indexes projects at top level. Alternative (a <code>Projects/</code> container dir) is cleaner visually but
+breaks every relative link one level deep — flagged as D8.</p>
+
+<h3>3.5 Skill lifecycle (answers task_en.md question 5; fixes P7)</h3>
+<pre><code>experience gained in a project
+   │  useful only here?            → record in &lt;Project&gt;/PROJECT_MEMORY.md (Lessons/Decisions)
+   │  procedural &amp; project-local?  → project-local skill: &lt;Project&gt;/.claude/skills/ + .agents/skills/
+   │                                  (create these dirs on demand — they are not pre-created)
+   └─ useful across ≥2 projects &amp; domain-light?
+        → add to Research-skills-hub/&lt;collection&gt;/&lt;skill&gt;/SKILL.md
+          (must document: scope, inputs, outputs, limitations)
+        → update Research-skills-hub/skills_map.md (the store index)
+        → "install" = cp -R into BOTH .agents/skills/ and .claude/skills/ at the target scope</code></pre>
+<p class="small">Hub = canonical store ("app store"); <code>.agents/skills/</code> and <code>.claude/skills/</code> = installed,
+byte-identical copies (verified identical today). Sync rule is documented, not tooled (Occam; D7 offers symlinks as alternative).</p>
+
+<!-- ============================================================ -->
+<h2 id="s4">§4 Execution phases</h2>
+
+<!-- ---------------- PHASE 0 ---------------- -->
+<div class="phase">
+<h3>Phase 0 — Preflight (~5 min)</h3>
+<div class="step"><b class="sid">0.1</b> Confirm clean state and re-verify the load-bearing facts in one shot:
+<pre><code>git status --porcelain        # expect: empty (or only task_plan.html / deliverable files)
+git ls-files | grep -i paper_initial | head -3      # P1: expect lowercase "Paper_initial_template/"
+wc -c CLAUDE.md Memory/MEMORY.md Ideas/Ideas_log.md References/paper_notes.md References/refs.bib \
+      Paper_Initial_template/Code/READEME.md Paper_Initial_template/Code/READEME_zh.md   # P2/P8: expect 0s
+ls Research-skills-hub/science-skills/skills/ Research-skills-hub/open-paper-skills/     # P7
+diff -rq .agents/skills .claude/skills && echo IN-SYNC                                   # D7 baseline
+which latexmk pdflatex &amp;&amp; uv --version                                            # smoke-test feasibility</code></pre>
+<span class="verify">✓ If any expectation fails, the repo changed since planning — adjust the affected step, prefer repo reality, log the deviation for CHANGE_SUMMARY.html.</span></div>
+<div class="step"><b class="sid">0.2</b> Skim <code>INSTRUCTION.md</code> (it is the doc being extended in 4.1) and <code>task_en.md</code> if not already in context. Do not bulk-read skill directories.</div>
+</div>
+
+<!-- ---------------- PHASE 1 ---------------- -->
+<div class="phase">
+<h3>Phase 1 — Naming, casing, and the broken entry point (~20 min) <span class="small">[P1 P2 P4 P5 P6]</span></h3>
+
+<div class="step"><b class="sid">1.1</b> <b>Unify template casing in the git index</b> to match the disk name <code>Paper_Initial_template/</code> (also the casing task_en.md uses as primary). <code>core.ignorecase=true</code>, so rewrite the index explicitly:
+<pre><code>git rm -r --cached Paper_initial_template     # index-only; files never leave disk
+git add Paper_Initial_template
+git ls-files | grep -i paper_initial          # verify: ALL paths now capital-I</code></pre>
+<span class="verify">✓ Verify no path with lowercase “initial” remains; commit as part of the Phase 1 commit.</span>
+<span class="decision-flag">⚠ DECISION (D2)</span> — direction ("unify") is mandated by task_en.md; the chosen target casing is reported in the decision list.</div>
+
+<div class="step"><b class="sid">1.2</b> <b>Fix the README typos</b> (P4) — do this <i>after</i> 1.1 so paths are stable:
+<pre><code>git mv Paper_Initial_template/Code/READEME.md    Paper_Initial_template/Code/README.md
+git mv Paper_Initial_template/Code/READEME_zh.md Paper_Initial_template/Code/README_zh.md</code></pre>
+(Contents are filled in step 3.3.)</div>
+
+<div class="step"><b class="sid">1.3</b> <b>Restore the Claude entry pointer</b> (P2). Write <code>CLAUDE.md</code> with exactly the AGENTS.md one-liner:
+<pre><code>Read `INSTRUCTION.md` at the start of each new thread/session.</code></pre>
+<span class="decision-flag">⚠ DECISION (D1)</span> — this reverses commit <code>a112398</code>, which removed the line as "redundant".
+Acceptance criterion #1 requires the pointer, and an <i>empty</i> CLAUDE.md is the worst state (it may shadow AGENTS.md
+fallback in tools that prefer CLAUDE.md). Default: restore the one-liner. Alternative for the user: delete CLAUDE.md
+entirely and rely on AGENTS.md support in recent Claude Code versions. Record in decision list.</div>
+
+<div class="step"><b class="sid">1.4</b> <b>Fix the broken Source-Map link</b> in <code>Paper_Initial_template/paper_skeleton.md</code> line 22 (P5):
+<pre><code>- | Code and experiments | [../Code/](../Code/) |  |
++ | Code and experiments | [Code/](Code/) |  |</code></pre>
+Leave <code>../References/…</code> and <code>../Ideas/</code> links as-is — they are correct under the root-level
+instantiation convention (§3.4). Add one clarifying line under the “Source Map” heading:
+<i>“Relative links assume this project folder sits at the repository root (sibling of <code>References/</code> and <code>Ideas/</code>).”</i></div>
+
+<div class="step"><b class="sid">1.5</b> <b>De-domain and re-case</b> <code>References/paper_notes_template.md</code> (P6):
+replace all 4 occurrences of <code>references/</code> with <code>References/</code>; replace
+“<code>Relation to this project</code>: &lt;Why it matters for <b>Paper_VAE</b> — …&gt;” with
+“…&lt;Why it matters for <b>the current project</b> — …&gt;”. No other content changes (preserve the user's template design).</div>
+
+<div class="step"><b class="sid">1.6</b> Add LaTeX build output to <code>.gitignore</code> (prep for P12 / Phase 3.2), appended under a new comment:
+<pre><code># LaTeX build output
+build/</code></pre></div>
+</div>
+
+<!-- ---------------- PHASE 2 ---------------- -->
+<div class="phase">
+<h3>Phase 2 — Seed minimal skeletons into the 0-byte core files (~20 min) <span class="small">[P8]</span></h3>
+<p class="small">Principle: a skeleton header + entry format teaches both humans and agents the convention at
+near-zero token cost. No new files are created in this phase — only empty existing ones get content.
+<code>References/refs.bib</code> stays empty (BibTeX needs no header; D-none).</p>
+
+<div class="step"><b class="sid">2.1</b> <code>Memory/MEMORY.md</code> — global memory skeleton:
+<pre><code># Research Memory (Global)
+
+&gt; Cross-project long-term memory. Read this for broad or cross-project work.
+&gt; Keep under ~200 lines: prune aggressively. Per-project context lives in
+&gt; `&lt;Project&gt;/PROJECT_MEMORY.md`. Update rules: see [INSTRUCTION.md](../INSTRUCTION.md).
+
+## Long-Term Research Goals
+-
+
+## Active Projects
+| Project | Path | Status | Next action |
+|---|---|---|---|
+
+## Key Decisions (cross-project)
+| Date | Decision | Why |
+|---|---|---|
+
+## Lessons and Principles
+&lt;!-- promote to Research-skills-hub/ only when useful across multiple projects --&gt;
+-</code></pre></div>
+
+<div class="step"><b class="sid">2.2</b> <code>Ideas/Ideas_log.md</code> — idea capture skeleton (answers “how does a human record an idea”):
+<pre><code># Ideas Log
+
+&gt; Append new entries AT THE TOP. One `##` block per idea. When an idea becomes a
+&gt; project, set Status to `promoted` and link the project directory (see
+&gt; [INSTRUCTION.md](../INSTRUCTION.md) workflow "Idea → Project").
+
+Entry format (copy the block):
+
+## YYYY-MM-DD — &lt;short title&gt;
+- Status: raw | exploring | feasible | promoted | dropped
+- One-liner:
+- Context / source: (paper, discussion, observation…)
+- Evidence so far: (links into References/ or experiments)
+- Smallest next probe:
+- Project: (path, once promoted)
+
+---</code></pre></div>
+
+<div class="step"><b class="sid">2.3</b> <code>References/paper_notes.md</code> — two-line header only:
+<pre><code># Paper Notes
+
+&gt; Append entries using [paper_notes_template.md](paper_notes_template.md); number sequentially; never reorder existing entries.</code></pre></div>
+</div>
+
+<!-- ---------------- PHASE 3 ---------------- -->
+<div class="phase">
+<h3>Phase 3 — Upgrade <code>Paper_Initial_template/</code> (~30 min) <span class="small">[P4 P11 P12]</span></h3>
+
+<div class="step"><b class="sid">3.1</b> Add <code>Paper_Initial_template/PROJECT_MEMORY.md</code> (the project-memory layer, §3.3):
+<pre><code># Project Memory
+
+&gt; Project-local memory. An agent updates this at the end of any session that
+&gt; changes project state. Keep it short; details belong in `paper_skeleton.md`,
+&gt; `Code/README.md`, or `../References/`.
+
+## Snapshot
+- Project name:
+- Started: YYYY-MM-DD — from idea: [Ideas_log entry](../Ideas/Ideas_log.md)
+- Goal (one sentence):
+- Status: exploring | experimenting | writing | submitted | paused
+- Next action:
+
+## Key Decisions
+| Date | Decision | Why | Where reflected |
+|---|---|---|---|
+
+## Progress Log
+&lt;!-- newest first, one dated bullet per session, keep ≤ ~30 lines --&gt;
+-
+
+## Open TODOs
+- [ ]</code></pre></div>
+
+<div class="step"><b class="sid">3.2</b> Add <code>Paper_Initial_template/main.tex</code> — minimal, compiles cleanly out of the box (bibliography lines commented until the first real <code>\cite</code>, so an empty <code>refs.bib</code> never breaks the build):
+<pre><code>\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue]{hyperref}
+
+\title{Working Title (see paper\_skeleton.md for the argument map)}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+TODO: problem -&gt; gap -&gt; method -&gt; evidence -&gt; implication.
+\end{abstract}
+
+\section{Introduction}
+TODO.
+
+% Figures live in Figs/, e.g.:
+% \begin{figure}[t]\centering
+%   \includegraphics[width=.8\linewidth]{Figs/example.png}
+%   \caption{...}\label{fig:example}
+% \end{figure}
+
+% Bibliography: shared store at the repository root (project sits at root level).
+% Uncomment once the first \cite{...} exists in the text:
+% \bibliographystyle{plain}
+% \bibliography{../References/refs}
+
+\end{document}</code></pre>
+Build convention (documented in 3.3 README): <code>latexmk -pdf -interaction=nonstopmode -outdir=build main.tex</code>; <code>build/</code> is gitignored (1.6).</div>
+
+<div class="step"><b class="sid">3.3</b> Fill the renamed Code READMEs (P4/P8) — English skeleton in <code>README.md</code>, faithful Chinese mirror in <code>README_zh.md</code>:
+<pre><code># Code
+
+How to set up and run the experiments in this folder. Per repository rules
+(INSTRUCTION.md), update this file — and `README_zh.md` — whenever code,
+configuration, or results change.
+
+## Environment
+- Managed with `uv` at this folder's scope. First time: `uv init` (or the
+  repo's `uv-env` skill), then `uv add &lt;packages&gt;`. Reproduce: `uv sync`.
+
+## Run
+- &lt;command&gt; — &lt;what it does, expected output&gt;
+
+## Data
+- Datasets live in `Datasets/`. Record source, version, and license per dataset.
+
+## Current Results
+&lt;!-- every number must be reproducible: state the command and commit --&gt;
+-
+
+## Known Limitations
+-</code></pre></div>
+
+<div class="step"><b class="sid">3.4</b> Remove the empty, untracked agent dirs inside the template (P11) — they convey nothing and git can't propagate them; INSTRUCTION.md (4.1) documents creating project-local skills <i>on demand</i> instead:
+<pre><code>rmdir Paper_Initial_template/.agents Paper_Initial_template/.claude Paper_Initial_template/Code/.agents
+# rmdir fails if non-empty — inherently safe; if it fails, STOP and inspect.</code></pre></div>
+</div>
+
+<!-- ---------------- PHASE 4 ---------------- -->
+<div class="phase">
+<h3>Phase 4 — Documentation pass on the four entry docs (~45 min) <span class="small">[P9 P10 P13 P14]</span></h3>
+
+<div class="step"><b class="sid">4.1</b> <b>Extend <code>INSTRUCTION.md</code></b> (keep existing sections; total budget ≤ ~180 lines). Add, in this order:
+<ul>
+  <li><b>“Core Workflows”</b> — six compact numbered recipes (3–7 lines each):
+    <ol>
+      <li><i>Capture an idea</i> → append entry at top of <code>Ideas/Ideas_log.md</code> (format lives in that file).</li>
+      <li><i>Idea → Project</i> → <code>cp -R Paper_Initial_template &lt;ProjectName&gt;</code> at repo root; fill <code>PROJECT_MEMORY.md</code> Snapshot + <code>paper_skeleton.md</code> Snapshot; set the idea's Status to <code>promoted</code> with a link; add a row to <code>Memory/MEMORY.md</code> Active Projects; refresh FILETREE.md.</li>
+      <li><i>Reference intake</i> → PDF into <code>References/</code>; BibTeX entry appended to <code>refs.bib</code> (fetch metadata with the literature_search skills — never invent fields); note appended to <code>paper_notes.md</code> via the template.</li>
+      <li><i>Experiments &amp; artifacts</i> → code in <code>&lt;Project&gt;/Code/</code> (uv-managed env at folder scope), data in <code>Code/Datasets/</code>, figures in <code>Figs/</code>, baselines in <code>Baselines/</code>; update the nearest README (both languages if the pair exists) in the same task.</li>
+      <li><i>Writing</i> → <code>&lt;Project&gt;/main.tex</code>; claims tracked in <code>paper_skeleton.md</code>; build with <code>latexmk -pdf -outdir=build</code>.</li>
+      <li><i>Session end</i> → update <code>PROJECT_MEMORY.md</code> Progress Log; update <code>Memory/MEMORY.md</code> only if cross-project state changed.</li>
+    </ol></li>
+  <li><b>“Memory Layers”</b> — the 3-row table from §3.3 (global / project / task: where, when, who, hygiene).</li>
+  <li><b>“Skills”</b> — hub-as-store model from §3.5: installed = <code>.agents/skills/</code> + <code>.claude/skills/</code> kept byte-identical (any change applied to both); store index = <code>Research-skills-hub/skills_map.md</code>; promotion criteria (project-local first; hub only when multi-project + domain-light; SKILL.md must state scope/inputs/outputs/limitations); project-local skills dirs are created on demand.</li>
+  <li>In <b>Session Startup</b>, append one step: “When working inside a specific project, also read that project's <code>PROJECT_MEMORY.md</code>.”</li>
+</ul>
+<span class="verify">✓ Self-check: the five questions in task_en.md “Overall Goal” must each be answerable from INSTRUCTION.md + FILETREE.md alone. ✓ <code>wc -l INSTRUCTION.md</code> ≤ ~180.</span></div>
+
+<div class="step"><b class="sid">4.2</b> <b>Rewrite <code>README.md</code></b> (P9) — human-facing, ~100 lines max:
+<ol>
+  <li><b>What this is</b> — 3–4 sentences: a lightweight, folder-based Research OS where code agents (Codex / Claude Code) are the execution core and humans steer in natural language.</li>
+  <li><b>Quick start (human)</b> — clone; open in Codex/Claude Code; the agent auto-reads AGENTS.md/CLAUDE.md → INSTRUCTION.md; say e.g. “记录一个新想法 / start a project from idea X”.</li>
+  <li><b>Core directories</b> — compact table from §3.2 with relative links.</li>
+  <li><b>Minimal workflow</b> — idea → references → project (from template) → experiments → paper → memory, one line each.</li>
+  <li><b>Roadmap</b> — the existing TODO checklist <b>preserved verbatim</b> (user content), under “Roadmap (original TODO list)”.</li>
+  <li><b>Reference projects</b> — existing links preserved verbatim.</li>
+</ol></div>
+
+<div class="step"><b class="sid">4.3</b> <code>AGENTS.md</code>: keep the single line as-is (already correct). <code>CLAUDE.md</code>: done in 1.3. Do not grow either file.</div>
+</div>
+
+<!-- ---------------- PHASE 5 ---------------- -->
+<div class="phase">
+<h3>Phase 5 — Reconcile the skills hub (~25 min) <span class="small">[P7]</span></h3>
+<p class="small">Model: hub = canonical store; installed dirs = identical copies. Today the hub is missing 4 skills that are installed, and its index lists 3 skills that aren't there.</p>
+
+<div class="step"><b class="sid">5.1</b> Restore missing hub sources from the installed copies (they carry their <code>LICENSE_NOTIFICATION.txt</code>; <code>science-skills/LICENSE</code> already covers the collection):
+<pre><code>cp -R .agents/skills/literature_search_arxiv   Research-skills-hub/science-skills/skills/
+cp -R .agents/skills/literature_search_openalex Research-skills-hub/science-skills/skills/
+cp -R .agents/skills/uv                         Research-skills-hub/science-skills/skills/
+cp -R .agents/skills/filetree-simple            Research-skills-hub/open-paper-skills/</code></pre>
+<span class="small">(arxiv/openalex/uv originate from google-deepmind/science-skills → back into that collection;
+filetree-simple is repo-custom → <code>open-paper-skills/</code>, joining uv-env.)</span></div>
+
+<div class="step"><b class="sid">5.2</b> Sanity-diff the overlap that already exists in both places:
+<pre><code>diff -rq .agents/skills/science_skills_common Research-skills-hub/science-skills/skills/science_skills_common
+diff -rq .agents/skills/uv-env                Research-skills-hub/open-paper-skills/uv-env   # verified SAME today</code></pre>
+If a diff appears, prefer the <b>installed</b> version (it is the one in active use), copy it hubward, and note it in the change summary.</div>
+
+<div class="step"><b class="sid">5.3</b> <b>Rewrite <code>Research-skills-hub/skills_map.md</code></b>: drop the dead <code>setup.md</code> reference; document the real install procedure; index <i>both</i> collections accurately; add an installed-state table. Sketch:
+<pre><code># Research Skills Hub
+
+Canonical store of reusable research skills ("app store"). Installed copies live in
+`.agents/skills/` and `.claude/skills/` and MUST stay identical to each other.
+
+## Install / update a skill
+    cp -R Research-skills-hub/&lt;collection&gt;/[skills/]&lt;skill&gt; .agents/skills/&lt;skill&gt;
+    cp -R Research-skills-hub/&lt;collection&gt;/[skills/]&lt;skill&gt; .claude/skills/&lt;skill&gt;
+Then refresh FILETREE.md. To add a NEW skill to the hub, see INSTRUCTION.md → Skills.
+
+## science-skills/ — from google-deepmind/science-skills (Apache-2.0, see LICENSE)
+| Skill | Purpose | Installed? |
+|---|---|---|
+| uv | check/install the uv package manager | yes |
+| literature_search_arxiv | arXiv search + PDF/source download | yes |
+| literature_search_biorxiv | bioRxiv/medRxiv search | no |
+| literature_search_europepmc | Europe PMC search + full text | no |
+| literature_search_openalex | OpenAlex works/authors/bibliometrics | yes |
+| science_skills_common | shared HTTP client (support pkg, not standalone) | yes |
+| workflow_skill_creator | distill a finished workflow into a skill | no |
+
+## open-paper-skills/ — repo-local custom skills
+| Skill | Purpose | Installed? |
+|---|---|---|
+| uv-env | uv-based Python env setup for projects | yes |
+| filetree-simple | maintain/lint FILETREE.md | yes |</code></pre>
+<span class="verify">✓ Verify every row against <code>ls</code> output before writing — the table must reflect reality, not this sketch.</span></div>
+</div>
+
+<!-- ---------------- PHASE 6 ---------------- -->
+<div class="phase">
+<h3>Phase 6 — Bounded smoke test (~45 min, hard-capped) <span class="small">[deliverable #2]</span></h3>
+<p>Full protocol in <a href="#s5">§5</a>. Outcome: <code>Example_Project/</code> at repo root with runnable code,
+a generated figure, <code>main.tex</code>, and <code>build/main.pdf</code>, exercising every workflow defined in 4.1.</p>
+</div>
+
+<!-- ---------------- PHASE 7 ---------------- -->
+<div class="phase">
+<h3>Phase 7 — Deliverables, index refresh, acceptance (~40 min)</h3>
+
+<div class="step"><b class="sid">7.1</b> Write <code>OS_INTRO.html</code> (deliverable #3) at repo root. Self-contained, no external assets, relative <code>&lt;a href&gt;</code> links per the INSTRUCTION.md link rule. Sections: what/why (1 para) · who it's for · directory map (table, linked) · the five Overall-Goal questions, each answered in 2–3 lines · lifecycle walkthrough (idea→refs→project→experiment→write→memory→skill) · memory layers · skills model · quick start for humans · quick start for agents · design principles.</div>
+
+<div class="step"><b class="sid">7.2</b> Write <code>CHANGE_SUMMARY.html</code> (deliverable #4) at repo root: table of changes keyed by P-IDs (before → after → why), the decision table D1–D9 with chosen defaults (§8), deviations from this plan, and an explicit “intentionally NOT done” section (§9).</div>
+
+<div class="step"><b class="sid">7.3</b> Update memory (dogfood the design): add a dated progress entry + Active Projects row (<code>Example_Project</code>) to <code>Memory/MEMORY.md</code>; the smoke test already updated <code>Example_Project/PROJECT_MEMORY.md</code>.</div>
+
+<div class="step"><b class="sid">7.4</b> Refresh the index: invoke the <b>filetree-simple</b> skill to regenerate <code>FILETREE.md</code> (fixes P3 automatically — casing, CLAUDE.md description, new files) and run its lint check.</div>
+
+<div class="step"><b class="sid">7.5</b> Run the full acceptance table (§7) and paste the filled table into <code>CHANGE_SUMMARY.html</code>. Commit (§10).</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s5">§5 Smoke test protocol (bounded)</h2>
+<p><b>Bounds:</b> the 10 steps below, in order; max <b>2</b> fix attempts per failing command, then stop, record the failure honestly, and move on (a partial smoke test with an honest report is an acceptable outcome — never fake results). No recursive agent calls, no unbounded loops, network used only in step 6 (optional).</p>
+<table>
+  <tr><th>#</th><th>Step</th><th>Command / action</th><th>Pass check</th></tr>
+  <tr><td>1</td><td>Record the idea</td><td>Append a <code>promoted</code> entry to <code>Ideas/Ideas_log.md</code>: “2026-06-12 — Demo: validate the OS pipeline with a linear-fit micro-experiment”, Project: <code>Example_Project/</code></td><td>Entry at top of file</td></tr>
+  <tr><td>2</td><td>Instantiate</td><td><code>cp -R Paper_Initial_template Example_Project</code></td><td>Dir exists with template contents</td></tr>
+  <tr><td>3</td><td>Fill memory</td><td>Fill <code>Example_Project/PROJECT_MEMORY.md</code> Snapshot (+ goal: “compile-and-run pipeline check”) and <code>paper_skeleton.md</code> Snapshot minimally</td><td>No empty Snapshot fields</td></tr>
+  <tr><td>4</td><td>Env</td><td>In <code>Example_Project/Code/</code>: <code>uv init --no-readme</code> (or uv-env skill); <code>uv add numpy matplotlib</code></td><td><code>uv run python -c "import numpy, matplotlib"</code> exits 0</td></tr>
+  <tr><td>5</td><td>Experiment</td><td>Write <code>fit_line.py</code>: fixed seed; synthesize <code>y = 2x + 1 + ε</code> (N=50); fit with <code>numpy.polyfit</code>; print slope/intercept/MSE; save scatter+fit plot to <code>../Figs/linear_fit.png</code>. Run: <code>uv run python fit_line.py</code></td><td>PNG exists; printed numbers captured</td></tr>
+  <tr><td>6</td><td>Real reference <span class="small">(optional — skip if offline)</span></td><td>Use the installed <code>literature_search_arxiv</code> skill to fetch metadata for arXiv <code>1706.03762</code> (Vaswani et al., “Attention Is All You Need”); build the BibTeX entry <b>only from fetched fields</b>; append to <code>References/refs.bib</code>; optionally add a metadata-only note to <code>paper_notes.md</code></td><td>Entry present; every field traceable to API output</td></tr>
+  <tr><td>7</td><td>Write</td><td>Edit <code>Example_Project/main.tex</code>: include <code>Figs/linear_fit.png</code>, report the fitted slope/intercept verbatim from step 5 output, <code>\cite</code> the step-6 entry and uncomment the bibliography lines (skip both if step 6 skipped)</td><td>tex references only real artifacts</td></tr>
+  <tr><td>8</td><td>Compile</td><td><code>cd Example_Project &amp;&amp; latexmk -pdf -interaction=nonstopmode -outdir=build main.tex</code></td><td><code>test -f build/main.pdf</code></td></tr>
+  <tr><td>9</td><td>Document</td><td>Update <code>Example_Project/Code/README.md</code> + <code>README_zh.md</code>: env, run command, the actual printed results, limitations (“synthetic demo”)</td><td>Both files updated consistently</td></tr>
+  <tr><td>10</td><td>Close the loop</td><td>Update <code>Example_Project/PROJECT_MEMORY.md</code> Progress Log; verify <code>git status</code> shows no files outside <code>Example_Project/</code>, <code>Ideas/</code>, <code>References/</code>, <code>Memory/</code></td><td>Scope contained</td></tr>
+</table>
+<p class="small"><span class="decision-flag">⚠ DECISION (D6)</span>: <code>Example_Project/</code> is kept as living documentation (default). Deleting it afterward is a single <code>rm -rf</code> — user's call.</p>
+
+<!-- ============================================================ -->
+<h2 id="s6">§6 Deliverables checklist (maps to task_en.md “Deliverables” 1–5)</h2>
+<table>
+  <tr><th>#</th><th>Deliverable</th><th>Produced by</th></tr>
+  <tr><td>1</td><td>Normalized repository (structure + docs)</td><td>Phases 1–5</td></tr>
+  <tr><td>2</td><td>Bounded smoke test, executed locally (code + main.tex + PDF)</td><td>Phase 6 / §5 (toolchain verified present, §1.2)</td></tr>
+  <tr><td>3</td><td>OS introduction in HTML</td><td>7.1 <code>OS_INTRO.html</code></td></tr>
+  <tr><td>4</td><td>Change summary in HTML</td><td>7.2 <code>CHANGE_SUMMARY.html</code></td></tr>
+  <tr><td>5</td><td>User-decision list</td><td>§8 table, finalized inside CHANGE_SUMMARY.html</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s7">§7 Acceptance criteria → verification</h2>
+<table>
+  <tr><th>Criterion (task_en.md)</th><th>Concrete check</th></tr>
+  <tr><td>Agent reading only AGENTS.md / CLAUDE.md is directed to INSTRUCTION.md</td><td><code>cat AGENTS.md CLAUDE.md</code> — both contain the pointer line</td></tr>
+  <tr><td>INSTRUCTION.md + FILETREE.md ⇒ directory responsibilities understood</td><td>Answer the five Overall-Goal questions using only those two files; each must resolve to a concrete path + action</td></tr>
+  <tr><td>README.md ⇒ human understands purpose + minimal workflow</td><td>README contains: what-it-is ¶, quick start, directory table, 6-step workflow — within ~100 lines</td></tr>
+  <tr><td>Docs match actual directory names</td><td><code>git ls-files | cut -d/ -f1 | sort -u</code> vs. <code>grep -rn "Paper_[Ii]nitial\|Reference[^s]" *.md</code> — no mismatches, single casing everywhere</td></tr>
+  <tr><td>Remains lightweight</td><td>New top-level entries are only: <code>Example_Project/</code>, 3 HTML docs. No new tooling/services. <code>wc -l INSTRUCTION.md</code> ≤ ~180</td></tr>
+  <tr><td>No invented citations/data; originals preserved</td><td>refs.bib entries traceable to fetched metadata; PDF numbers match script output; README TODOs present verbatim; <code>git log --diff-filter=D</code> shows no deleted user material</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s8">§8 User decision items (D1–D9) <span class="badge b-dec">report in CHANGE_SUMMARY.html</span></h2>
+<table>
+  <tr><th>ID</th><th>Question</th><th>Default taken by this plan</th><th>Alternative</th></tr>
+  <tr><td>D1</td><td>CLAUDE.md: restore pointer? (reverses commit <code>a112398</code>)</td><td><b>Restore one-liner</b> — required by acceptance #1; empty file is worst case</td><td>Delete CLAUDE.md, rely on AGENTS.md support in recent Claude Code</td></tr>
+  <tr><td>D2</td><td>Casing target for the template dir</td><td><b><code>Paper_Initial_template</code></b> (matches disk + task_en.md primary usage)</td><td>All-lowercase <code>paper_initial_template</code> (more portable, bigger doc churn)</td></tr>
+  <tr><td>D3</td><td>Track reference PDFs in git?</td><td><b>Status quo: tracked</b> (single-machine convenience)</td><td>gitignore <code>References/*.pdf</code> to keep repo small</td></tr>
+  <tr><td>D4</td><td>Keep HTML as primary delivery format?</td><td><b>Yes</b> for the 3 delivered docs (per task); all operational docs stay Markdown</td><td>Convert deliverables to Markdown later</td></tr>
+  <tr><td>D5</td><td>Build a CLI?</td><td><b>No</b> — non-goal; conventions + skills suffice at current scale</td><td>Revisit if file count makes navigation slow</td></tr>
+  <tr><td>D6</td><td>Keep <code>Example_Project/</code> after the smoke test?</td><td><b>Keep</b> as living documentation</td><td><code>rm -rf Example_Project</code> after user review</td></tr>
+  <tr><td>D7</td><td><code>.agents/skills</code> vs <code>.claude/skills</code> duplication</td><td><b>Two identical copies + documented sync rule</b> (Windows-safe, zero tooling)</td><td>Symlink one to the other (halves size; macOS/Linux only)</td></tr>
+  <tr><td>D8</td><td>Where do instantiated projects live?</td><td><b>Repo root</b> (template's relative links keep working)</td><td><code>Projects/</code> container (tidier root; must rewrite template links to <code>../../…</code>)</td></tr>
+  <tr><td>D9</td><td>More structured index format (YAML/JSON) for skills/refs?</td><td><b>No</b> — Markdown tables are grep-able and token-cheap</td><td>YAML front-matter if tooling ever needs to parse indexes</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="s9">§9 Explicitly out of scope (and why)</h2>
+<ul>
+  <li><b>README TODO features</b> (paper-wiki, read_paper workflow, group-meeting workspace, AlookAI/Wanman interface, CLI, deterministic-read bash hooks) — roadmap items, not normalization; several would violate the lightweight principle without prior user confirmation. Preserved verbatim in the Roadmap section.</li>
+  <li><b>Deleting or rewriting</b> <code>task.md</code> / <code>task_en.md</code> — they are the task record.</li>
+  <li><b>Sync tooling / git hooks</b> for the two skills dirs — documented convention instead (D7).</li>
+  <li><b>Windows-specific work</b> — best-effort per task; nothing introduced that breaks it (no symlinks by default).</li>
+  <li><b>Installing tectonic or any new system tools</b> — latexmk already present.</li>
+  <li><b>Reorganizing <code>Research-skills-hub/science-skills/skills/</code> nesting depth</b> — flattening would break upstream-repo correspondence; documented in skills_map.md instead.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="s10">§10 Suggested commit sequence</h2>
+<ol>
+  <li><code>fix: unify Paper_Initial_template casing, fix typo'd READMEs, restore CLAUDE.md pointer, repair stale links</code> (Phase 1)</li>
+  <li><code>feat: seed skeletons for global memory, ideas log, paper notes</code> (Phase 2)</li>
+  <li><code>feat: add PROJECT_MEMORY.md and main.tex to project template; fill Code READMEs</code> (Phase 3)</li>
+  <li><code>docs: define workflows, memory layers, and skill lifecycle in INSTRUCTION.md; rewrite README overview</code> (Phase 4)</li>
+  <li><code>fix: reconcile Research-skills-hub contents and skills_map index with installed skills</code> (Phase 5)</li>
+  <li><code>test: add Example_Project end-to-end smoke test (code, figure, PDF)</code> (Phase 6)</li>
+  <li><code>docs: add OS_INTRO.html and CHANGE_SUMMARY.html; refresh FILETREE.md; update memory</code> (Phase 7)</li>
+</ol>
+<p class="small">Commit only when the working tree change for that phase is verified. If the user prefers a feature
+branch instead of <code>forfable</code>, ask before the first commit — otherwise proceed on the current branch.</p>
+
+<hr>
+<p class="small">End of plan. Execution estimate: ~3.5–4.5 h of agent time across 7 commits.
+On completion, the final session summary must state: what changed (by P-ID), why, what was intentionally not done (§9),
+and the finalized D1–D9 table — per task_en.md “Agent Autonomy Rules” and “Deliverables”.</p>
+
+</main>
+</body>
+</html>

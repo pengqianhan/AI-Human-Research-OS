@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Change Summary — Research OS Normalization (2026-06-12)</title>
+<style>
+  :root { --ink:#1a1f2b; --muted:#5b6472; --panel:#f6f8fa; --accent:#0b5fff;
+          --border:#d8dee6; --code-bg:#f0f2f5; --ok:#1a7f37; --warn:#b35900; --dec:#6531c9; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+         color:var(--ink); margin:0; line-height:1.55; }
+  main { max-width:1020px; margin:0 auto; padding:32px 28px 80px; }
+  h1 { font-size:1.8rem; margin:0 0 4px; }
+  h2 { font-size:1.3rem; margin-top:2em; border-bottom:2px solid var(--border); padding-bottom:6px; }
+  p.subtitle { color:var(--muted); margin-top:0; }
+  table { border-collapse:collapse; width:100%; margin:14px 0; font-size:0.89rem; }
+  th,td { border:1px solid var(--border); padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--panel); }
+  code { background:var(--code-bg); border-radius:4px; padding:1px 5px; font-size:0.87em;
+         font-family:"SF Mono",Menlo,Consolas,monospace; }
+  a { color:var(--accent); }
+  .ok { color:var(--ok); font-weight:600; }
+  .dec { color:var(--dec); font-weight:600; }
+  ul { padding-left:1.3em; }
+  .small { font-size:0.86rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Change Summary — Research OS Normalization</h1>
+<p class="subtitle">2026-06-12 · branch <code>forfable</code> · executed per
+<a href="task_plan.html">task_plan.html</a> (derived from <a href="task_en.md">task_en.md</a>) ·
+companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
+
+<h2>Commits</h2>
+<table>
+  <tr><th>Phase</th><th>Commit</th><th>Subject</th></tr>
+  <tr><td>1</td><td><code>1157410</code></td><td>Unify template casing, fix typo'd READMEs, restore CLAUDE.md pointer, repair stale links</td></tr>
+  <tr><td>2</td><td><code>73ed6df</code></td><td>Seed skeletons for global memory, ideas log, paper notes</td></tr>
+  <tr><td>3</td><td><code>ab5a6e7</code></td><td>Add PROJECT_MEMORY.md and main.tex to project template; fill Code READMEs</td></tr>
+  <tr><td>4</td><td><code>383cd27</code></td><td>Define workflows, memory layers, skill lifecycle in INSTRUCTION.md; rewrite README overview</td></tr>
+  <tr><td>5</td><td><code>d5c788b</code></td><td>Reconcile Research-skills-hub contents and skills_map index with installed skills</td></tr>
+  <tr><td>6</td><td><code>07c1357</code></td><td>Add Example_Project end-to-end smoke test (code, figure, PDF)</td></tr>
+  <tr><td>7</td><td><em>(final commit of this task)</em></td><td>OS_INTRO.html, CHANGE_SUMMARY.html, FILETREE.md refresh, memory update, task_plan.html progress</td></tr>
+</table>
+
+<h2>What changed and why (by problem ID from task_plan.html §2)</h2>
+<table>
+  <tr><th>ID</th><th>Before</th><th>After</th><th>Why</th></tr>
+  <tr><td>P1</td><td>git index stored <code>Paper_initial_template/</code> while disk had <code>Paper_Initial_template/</code></td><td>Index rewritten to match disk casing everywhere</td><td>Case-sensitive (Linux) checkouts and docs must agree on one name (acceptance criterion 4)</td></tr>
+  <tr><td>P2</td><td><code>CLAUDE.md</code> was a 0-byte file (emptied by commit <code>a112398</code>)</td><td>Restored the one-line pointer to INSTRUCTION.md (same as AGENTS.md)</td><td>Acceptance criterion 1; an empty CLAUDE.md is the worst state — it can shadow AGENTS.md fallback. <span class="dec">Reverses a deliberate user commit — see decision D1.</span></td></tr>
+  <tr><td>P3</td><td>FILETREE.md stale (CLAUDE.md description, lowercase casing)</td><td>Regenerated with the <code>filetree-simple</code> skill + lint</td><td>Index must reflect reality</td></tr>
+  <tr><td>P4</td><td><code>READEME.md</code>/<code>READEME_zh.md</code> typo'd and empty</td><td>Renamed to <code>README.md</code>/<code>README_zh.md</code>, filled with env/run/data/results/limitations skeleton (EN+ZH)</td><td>Code-documentation convention needs a home and a correct filename</td></tr>
+  <tr><td>P5</td><td><code>paper_skeleton.md</code> linked <code>../Code/</code> (nonexistent)</td><td>Fixed to <code>Code/</code>; added a note that links assume root-level project placement</td><td>Broken link; the placement convention was implicit</td></tr>
+  <tr><td>P6</td><td><code>paper_notes_template.md</code> said <code>references/</code> (wrong casing) and referenced "Paper_VAE"</td><td><code>References/</code> everywhere; "the current project"</td><td>Casing consistency; global templates must stay domain-general</td></tr>
+  <tr><td>P7</td><td>skills_map.md referenced a nonexistent <code>setup.md</code>, listed 3 skills not in the hub, omitted a whole collection; 4 installed skills had no hub source</td><td>Hub restored from installed copies (arxiv, openalex, uv → science-skills; filetree-simple → open-paper-skills); skills_map.md rewritten with real install commands and installed-state tables; overlap copies verified byte-identical</td><td>Hub = canonical store ("app store") only works if it actually contains the skills and the index is true</td></tr>
+  <tr><td>P8</td><td>6 zero-byte placeholder files with no format</td><td>Minimal skeletons: MEMORY.md, Ideas_log.md (+entry format), paper_notes.md header; refs.bib gained a 2-line convention comment with its first real entry</td><td>An agent landing on an empty file cannot infer the convention</td></tr>
+  <tr><td>P9</td><td>README.md was a raw TODO list</td><td>Human-facing overview: what it is, quick start, directory table, minimal workflow; original TODO list and reference projects preserved <b>verbatim</b> under "Roadmap"</td><td>Acceptance criterion 3; user content preserved per ground rules</td></tr>
+  <tr><td>P10</td><td>INSTRUCTION.md never mentioned the template, References intake, Ideas capture, the hub, or memory layers</td><td>+Core Workflows (6 recipes), +Memory Layers table, +Skills section, +startup step for PROJECT_MEMORY.md — 130 lines total (budget ≤180)</td><td>The five orientation questions must be answerable from INSTRUCTION.md + FILETREE.md alone (acceptance criterion 2)</td></tr>
+  <tr><td>P11</td><td>Empty untracked <code>.agents/.claude</code> dirs inside the template</td><td>Removed; INSTRUCTION.md documents on-demand creation of project-local skill dirs</td><td>Git cannot propagate empty dirs; they suggested structure that didn't exist</td></tr>
+  <tr><td>P12</td><td>No writing scaffold in the template</td><td><code>main.tex</code> added — compiles out of the box (bibliography commented until first cite); <code>build/</code> gitignored</td><td>Deliverable 2 requires the idea→PDF path to work from the template</td></tr>
+  <tr><td>P13</td><td>No defined location for instantiated projects</td><td>Convention documented: projects sit at the repo root (<code>cp -R Paper_Initial_template &lt;Name&gt;</code>)</td><td>Keeps the template's relative links to <code>References/</code>/<code>Ideas/</code> working unchanged (D8)</td></tr>
+  <tr><td>P14</td><td>Memory layers named in the task but undefined</td><td>3-layer model (global / project / task) with owner, timing, and hygiene rules in INSTRUCTION.md; PROJECT_MEMORY.md added to the template</td><td>Long-term, multi-project research needs bounded, layered memory</td></tr>
+</table>
+
+<h2>Smoke test result (deliverable 2)</h2>
+<ul>
+  <li class="ok">PASSED end to end, executed locally and bounded (10 steps, ≤2 fix attempts per failure).</li>
+  <li>Idea logged → <a href="Example_Project/">Example_Project/</a> instantiated → uv env
+      (numpy 2.4.6, matplotlib 3.11.0) → <code>fit_line.py</code>: fitted slope 2.0452 (true 2.0),
+      intercept 0.9325 (true 1.0), MSE 0.1402 → <code>Figs/linear_fit.png</code> →
+      real reference (arXiv 1706.03762) fetched live via the <code>literature_search_arxiv</code> skill →
+      <code>build/main.pdf</code> (144 KB) with all citations resolved.</li>
+  <li>Every number in the PDF and READMEs comes from the actual script run; the BibTeX entry contains
+      only API-fetched fields.</li>
+</ul>
+
+<h2>Deviations from the plan</h2>
+<table>
+  <tr><th>#</th><th>Deviation</th><th>Reason</th></tr>
+  <tr><td>1</td><td>Build command gained <code>-bibfudge-</code>; planned <code>\bibliography{../References/refs}</code> kept but latexmk invocation changed (template comment, Example_Project, INSTRUCTION.md workflow 5). Phase 6 therefore also touched INSTRUCTION.md and the template.</td><td>latexmk 4.86a runs bibtex inside <code>-outdir</code> by default; the explicitly-relative bib path is then unresolvable (kpathsea ignores BIBINPUTS for <code>../…</code> paths) — found and fixed during the smoke test (2 attempts), recorded as a lesson in <a href="Memory/MEMORY.md">Memory/MEMORY.md</a></td></tr>
+  <tr><td>2</td><td>Reference intake exercised bib-entry-only: no PDF downloaded, no paper_notes.md entry for 1706.03762</td><td>Keeps a ~2 MB binary out of git while D3 (track PDFs?) is undecided; the citation pipeline is fully exercised by the bib entry. The notes workflow remains documented and templated</td></tr>
+  <tr><td>3</td><td><code>uv init --bare</code> instead of the plan's <code>--no-readme</code></td><td>Creates only <code>pyproject.toml</code> — more minimal</td></tr>
+  <tr><td>4</td><td>Ideas_log entries go "below the <code>---</code> line, newest first" rather than literally at the top of the file</td><td>The file header + format block must stay above the entries</td></tr>
+  <tr><td>5</td><td>README Roadmap got a 3-line note that the memory TODO items are now partially implemented</td><td>Additive annotation only; original TODO text untouched</td></tr>
+</table>
+
+<h2>User decisions (D1–D9) — defaults taken, all reversible</h2>
+<table>
+  <tr><th>ID</th><th>Question</th><th>Default taken</th><th>To reverse / choose otherwise</th></tr>
+  <tr><td class="dec">D1</td><td>CLAUDE.md: restore the pointer? (your commit <code>a112398</code> had removed it as "redundant")</td><td><b>Restored</b> the one-liner — required by the task's acceptance criterion 1</td><td>Delete CLAUDE.md and rely on Claude Code's AGENTS.md support — confirm your Claude Code version reads AGENTS.md first</td></tr>
+  <tr><td class="dec">D2</td><td>Casing target</td><td><code>Paper_Initial_template</code> (matches disk + task_en.md usage)</td><td>Rename to all-lowercase; requires touching all docs again</td></tr>
+  <tr><td class="dec">D3</td><td>Track reference PDFs in git?</td><td>Status quo (tracked if added); none added yet</td><td>Add <code>References/*.pdf</code> to .gitignore to keep the repo small</td></tr>
+  <tr><td class="dec">D4</td><td>HTML as delivery format?</td><td>Kept for the 3 delivered docs; all operational docs are Markdown</td><td>Ask to convert OS_INTRO / CHANGE_SUMMARY / task_plan to Markdown</td></tr>
+  <tr><td class="dec">D5</td><td>Build a CLI?</td><td><b>No</b> — non-goal; conventions + skills suffice at this scale</td><td>Revisit if navigation becomes slow; would need explicit confirmation per task_en.md</td></tr>
+  <tr><td class="dec">D6</td><td>Keep Example_Project/?</td><td><b>Kept</b> as living documentation (README links to it)</td><td><code>rm -rf Example_Project</code> + remove its README/MEMORY/Ideas links and FILETREE rows</td></tr>
+  <tr><td class="dec">D7</td><td>.agents/skills vs .claude/skills duplication</td><td>Two identical copies + documented sync rule (Windows-safe, zero tooling); verified in-sync today</td><td>Symlink one to the other (macOS/Linux only)</td></tr>
+  <tr><td class="dec">D8</td><td>Where do projects live?</td><td>Repository root — template's relative links keep working</td><td>A <code>Projects/</code> container; requires rewriting template links one level deeper</td></tr>
+  <tr><td class="dec">D9</td><td>Structured (YAML/JSON) indexes?</td><td><b>No</b> — Markdown tables are grep-able and token-cheap</td><td>Add YAML front-matter later if tooling needs to parse indexes</td></tr>
+</table>
+
+<h2>Acceptance criteria — verified results</h2>
+<table>
+  <tr><th>Criterion</th><th>Result</th></tr>
+  <tr><td>Agent reading only AGENTS.md / CLAUDE.md is directed to INSTRUCTION.md</td><td class="ok">PASS — both contain the pointer line (verified by <code>cat</code>)</td></tr>
+  <tr><td>INSTRUCTION.md + FILETREE.md convey directory responsibilities</td><td class="ok">PASS — the five orientation questions are answered by INSTRUCTION.md §Core Workflows/§Memory Layers/§Skills + FILETREE.md (see <a href="OS_INTRO.html">OS_INTRO.html</a> for the answers)</td></tr>
+  <tr><td>README.md gives a human the purpose + minimal workflow</td><td class="ok">PASS — what-it-is, quick start, directory table, minimal workflow; ~75 lines</td></tr>
+  <tr><td>Docs match actual directory names</td><td class="ok">PASS — repo-wide grep finds <code>Paper_initial_template</code>/<code>READEME</code> only in the preserved task prompts (task.md / task_en.md); FILETREE.md regenerated</td></tr>
+  <tr><td>Remains lightweight</td><td class="ok">PASS — new top-level items: Example_Project/ + 3 HTML docs only; no tools/services/CLI; INSTRUCTION.md 130 lines (≤180 budget)</td></tr>
+  <tr><td>No invented citations/data; originals preserved</td><td class="ok">PASS — single bib entry built from live arXiv API fields; PDF numbers match the script run; README TODOs verbatim; <code>git log --diff-filter=D</code> since <code>a112398</code>: no deletions</td></tr>
+</table>
+
+<h2>Intentionally not done</h2>
+<ul>
+  <li><b>README roadmap features</b> (paper-wiki, read_paper workflow, group-meeting workspace, CLI,
+      deterministic-read bash hooks, AlookAI/Wanman interface) — roadmap, not normalization; several
+      would need the explicit confirmation task_en.md requires for heavier machinery.</li>
+  <li><b>PDF download for the smoke-test reference</b> — pending D3 (see deviation 2).</li>
+  <li><b>Sync tooling / git hooks</b> for the two installed-skills dirs — a documented convention is
+      enough at this scale (D7).</li>
+  <li><b>Flattening <code>science-skills/skills/</code> nesting</b> — would break correspondence with the
+      upstream google-deepmind repository; documented in skills_map.md instead.</li>
+  <li><b>Touching task.md / task_en.md</b> — they are the task record (their internal mentions of the old
+      casing are quotes, not live references).</li>
+  <li><b>Installing new system tools</b> (tectonic etc.) — latexmk was sufficient.</li>
+</ul>
+
+<p class="small">Execution tracker with per-step status lives in
+<a href="task_plan.html#todo">task_plan.html §Progress TODO</a>. Anything unchecked there is
+left for a future session by design.</p>
+
+</main>
+</body>
+</html>
