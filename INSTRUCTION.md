@@ -104,6 +104,35 @@ lint check.
 - Every hub skill's `SKILL.md` must state scope, inputs, outputs, and
   limitations. After adding or changing a skill, update `skills_map.md` and
   refresh `FILETREE.md`.
+- Skills contain runnable scripts. Skim a skill's `scripts/` before installing
+  it from outside this repository.
+
+## Extending the OS
+
+The OS separates a small fixed core from replaceable content (plugins):
+
+- **Core** (keep stable): the entry chain `AGENTS.md`/`CLAUDE.md` →
+  `INSTRUCTION.md` → `FILETREE.md` → memory, the three memory layers, and the
+  directory semantics in this file.
+- **Plugins** (open, addable): **skills** (reusable behaviors, see Skills
+  above) and **project templates** (instantiable scaffolds).
+
+Template contract — a directory is a valid project template when:
+
+1. it instantiates with `cp -R <template> <ProjectName>` at the repository
+   root;
+2. its internal relative links are written for that root-level position;
+3. it states which files to fill right after instantiation (for
+   `Paper_Initial_template`: the Snapshot sections of `PROJECT_MEMORY.md` and
+   `paper_skeleton.md`);
+4. shared conventions (build command, README pairing, memory rules) stay in
+   this file; templates reference them instead of restating them.
+
+`Paper_Initial_template/` is currently the only template. When a second
+template is added, create a `Templates/` container directory (mirroring
+`Research-skills-hub/`), move templates inside, and update the docs and
+`FILETREE.md` in the same task. Do not add a plugin manager, manifest format,
+versioning system, or CLI for plugins.
 
 ## Code Experiment Documentation
 

@@ -4,7 +4,8 @@ Canonical store of reusable research skills ("app store"). Installed copies live
 in `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code) at the
 repository root; the two installed directories must stay byte-identical. Use
 this file as the lightweight index; open an individual `SKILL.md` only when that
-skill is relevant to the current task.
+skill is relevant to the current task. Skills are one of the OS's two plugin
+types (the other is project templates); see `INSTRUCTION.md` → Extending the OS.
 
 ## Install / update a skill
 
@@ -16,7 +17,9 @@ cp -R Research-skills-hub/science-skills/skills/<skill> .claude/skills/<skill>
 
 Then refresh `FILETREE.md` with the `filetree-simple` skill. To add a new skill
 to the hub, see `INSTRUCTION.md` → Skills (scope, inputs, outputs, and
-limitations are required in its `SKILL.md`).
+limitations are required in its `SKILL.md`). Skills contain runnable scripts:
+skim a skill's `scripts/` before installing one that did not originate in this
+repository.
 
 ## science-skills/
 

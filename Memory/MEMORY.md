@@ -20,6 +20,7 @@
 |---|---|---|
 | 2026-06-12 | Research OS normalized: entry chain (AGENTS/CLAUDE → INSTRUCTION → FILETREE → memory), six core workflows, 3-layer memory, hub-as-store skill lifecycle | task_en.md normalization task; see `CHANGE_SUMMARY.html` |
 | 2026-06-12 | Projects are instantiated at the repository root (`cp -R Paper_Initial_template <Name>`) | keeps the template's relative links to `References/` and `Ideas/` working |
+| 2026-06-12 | Plugin model: small fixed core (entry chain, memory layers, directory semantics) + two plugin types — skills and project templates; `Templates/` container deferred until a second template exists; no plugin manager / manifest / versioning / CLI | keeps the OS open and extensible without machinery (INSTRUCTION.md → Extending the OS) |
 
 ## Lessons and Principles
 

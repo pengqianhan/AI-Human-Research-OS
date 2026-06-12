@@ -16,7 +16,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CHANGE_SUMMARY.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:fb88ce4e-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, Python environments, documentation links, and research safety rules. <!--hash:8c722efa-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:67aced84-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:4f5c9d90-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:f64ad651-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f39f189-->
@@ -68,7 +68,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Memory/
 
-- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:25134ce3-->
+- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:05e18a0c-->
 
 ## Paper_Initial_template/
 
