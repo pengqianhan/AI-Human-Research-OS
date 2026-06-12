@@ -1,6 +1,6 @@
-# AI-Human Research Template Instructions
+# AI-Human Research OS Instructions
 
-This repository is a lightweight template for research projects where humans work with
+This repository is a research OS for research projects where humans work with
 AI agents such as Codex or Claude Code.
 
 Research is iterative. Ideas, references, experiments, figures, and writing often update
@@ -12,10 +12,7 @@ of steps.
 1. Read this file first.
 2. Unless the task is trivial, read `FILETREE.md` next to understand the current
    repository structure.
-3. For broad Research OS or template-design work, also read `README.md` and the
-   relevant files under `Memory/` when they exist.
-4. If documentation conflicts with the real directory tree, prefer the real tree and
-   record the conflict as a follow-up or user-decision item.
+3. For broad Research OS or template-design work, also read the relevant files under `Memory/`
 
 ## Python Environment
 
@@ -23,8 +20,7 @@ of steps.
 - Start with a simple minimal environment. Add new libraries only when a task
   requires them.
 - Keep environment files and dependency metadata at the smallest useful scope for
-  the work, such as the current project, experiment, or code folder. Do not assume
-  a repository-level `Code/` directory exists.
+  the work, such as the current project, experiment, or code folder. 
 - Use a repository-wide Python setup only when multiple projects or workflows
   clearly need to share the same environment.
 
