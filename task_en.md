@@ -30,6 +30,8 @@ After normalization, the repository should help agents quickly answer these ques
 - Preserve original user-provided research materials. Do not delete or substantially rewrite them without confirmation.
 - Allow the Research OS to evolve through use, but keep global experience general and avoid overfitting it to one research domain or project.
 - This Research OS should have an open architecture, allowing users to easily develop plugins or extend its functionality.
+- AI in this Research OS should perform long-term tasks as much as possible, and should have self-correction capabilities during execution, otherwise the longer it executes, the less reliable the results will be.
+- AI in this Research OS should be able to perform parallel tasks, which is an important advantage over human researchers, and this should be fully utilized.
 
 ## Agent Autonomy Rules
 
