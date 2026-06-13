@@ -29,6 +29,7 @@ After normalization, the repository should help agents quickly answer these ques
 - All research claims, citations, data, and experiment results must be traceable. Do not invent citations, data, or results.
 - Preserve original user-provided research materials. Do not delete or substantially rewrite them without confirmation.
 - Allow the Research OS to evolve through use, but keep global experience general and avoid overfitting it to one research domain or project.
+- This Research OS should have an open architecture, allowing users to easily develop plugins or extend its functionality.
 
 ## Agent Autonomy Rules
 
