@@ -1,6 +1,6 @@
 ---
 name: filetree-simple
-description: Maintain a compact repository FILETREE.md index with one-line file purpose summaries and content hashes. Use this same skill when you are asked to create, update, or lint FILETREE.md. Claude Code project commands /filetree:init, /filetree:update, /filetree:lint wrap the same workflow.
+description: Maintain a compact repository FILETREE.md index with one-line file purpose summaries and content hashes. Use this same skill when you are asked to create, update, or lint FILETREE.md.
 license: MIT
 ---
 
