@@ -25,13 +25,11 @@ should both read this `SKILL.md` directly and run the same helper script:
 
 Run commands from the target repository root.
 
-There are three workflows, matching `/filetree:init`, `/filetree:update`, and
-`/filetree:lint` in Claude Code (wired as project commands under
-`.claude/commands/filetree/`): **Init** creates `FILETREE.md` from scratch,
+There are three workflows below: **Init** creates `FILETREE.md` from scratch,
 **Update** syncs an existing manifest with added/changed/removed/renamed
-files, and **Lint** is a read-only, no-LLM drift check. Codex has no slash
-commands, so run the same script invocations directly from the sections
-below.
+files, and **Lint** is a read-only, no-LLM drift check. Pick the matching
+section based on what the user asked for and run its script invocations
+directly — there are no separate slash commands wrapping these.
 
 ## Summary Rules
 

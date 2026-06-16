@@ -5,7 +5,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## (root)/
 
 - `.agents/` - Local agent configuration and workspace skills used by Codex and Claude workflows. <!--hash:c95340aa-->
-- `.claude/` - Local Claude Code configuration, workspace skills, and slash commands for this research template. <!--hash:a8d0cdb1-->
+- `.claude/` - Local Claude Code configuration and workspace skills for this research template. <!--hash:ec2eb0f6-->
 - `Example_Project/` - Worked example from the OS smoke test: idea to runnable code, generated figure, and compiled PDF. <!--hash:435ece8f-->
 - `Ideas/` - Research ideas, hypotheses, outlines, meeting notes, and reflections. <!--hash:bcb5bee2-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
@@ -29,7 +29,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .agents/skills/
 
-- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:81d2912e-->
+- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:b7f64a85-->
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
@@ -40,22 +40,11 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .claude/
 
-- `commands/` - Claude Code project-level slash commands available in this repository. <!--hash:e4996958-->
 - `skills/` - Claude Code workspace skills mirrored from repository-local agent skills. <!--hash:28ce3af1-->
-
-## .claude/commands/
-
-- `filetree/` - Slash commands wrapping the filetree-simple skill: /filetree:init, /filetree:update, /filetree:lint. <!--hash:95327675-->
-
-## .claude/commands/filetree/
-
-- `init.md` - Slash command: generate FILETREE.md from scratch via the filetree-simple skill. <!--hash:6eb06754-->
-- `lint.md` - Slash command: read-only drift check between FILETREE.md and the repo, no LLM calls. <!--hash:5e32aa06-->
-- `update.md` - Slash command: sync FILETREE.md with added/changed/removed/renamed files via the filetree-simple skill. <!--hash:a8d0754b-->
 
 ## .claude/skills/
 
-- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:81d2912e-->
+- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:b7f64a85-->
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
