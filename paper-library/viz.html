@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OKF Bundle Viewer</title>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  color: #0f172a;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+.title strong { font-size: 16px; margin-right: 8px; }
+.muted { color: #64748b; font-size: 12px; }
+.controls { display: flex; gap: 8px; }
+.controls input, .controls select, .controls button {
+  font-size: 13px;
+  padding: 5px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+}
+.controls input { width: 220px; }
+.controls button { cursor: pointer; background: #f1f5f9; }
+.controls button:hover { background: #e2e8f0; }
+
+main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+#graph {
+  flex: 1 1 60%;
+  background: #fff;
+  border-right: 1px solid #e2e8f0;
+  min-width: 0;
+  position: relative;
+}
+#detail {
+  flex: 0 0 40%;
+  overflow-y: auto;
+  padding: 18px 22px;
+  background: #fff;
+}
+#detail-empty {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.detail-header { margin-bottom: 12px; }
+.detail-header h1 {
+  font-size: 18px;
+  margin: 4px 0 2px;
+  font-weight: 600;
+}
+.type-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+dl.frontmatter {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  row-gap: 4px;
+  column-gap: 12px;
+  margin: 8px 0 12px;
+  font-size: 13px;
+}
+dl.frontmatter dt {
+  color: #64748b;
+  font-weight: 500;
+}
+dl.frontmatter dd { margin: 0; }
+dl.frontmatter a { color: #2563eb; word-break: break-all; }
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 0 4px 2px 0;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+}
+
+hr { border: none; border-top: 1px solid #e2e8f0; margin: 14px 0; }
+
+#detail-body { font-size: 13px; line-height: 1.55; }
+#detail-body h1 {
+  font-size: 16px; margin: 18px 0 6px;
+  padding-bottom: 4px; border-bottom: 1px solid #e2e8f0;
+}
+#detail-body h2 { font-size: 14px; margin: 14px 0 4px; }
+#detail-body h3 { font-size: 13px; margin: 12px 0 4px; }
+#detail-body p { margin: 6px 0; }
+#detail-body code {
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+}
+#detail-body pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 12px;
+}
+#detail-body pre code { background: transparent; color: inherit; padding: 0; }
+#detail-body ul, #detail-body ol { padding-left: 22px; margin: 6px 0; }
+#detail-body li { margin: 2px 0; }
+#detail-body table { border-collapse: collapse; margin: 8px 0; }
+#detail-body th, #detail-body td {
+  border: 1px solid #e2e8f0; padding: 4px 8px; font-size: 12px;
+}
+#detail-body a.internal { color: #2563eb; cursor: pointer; }
+#detail-body a.external { color: #2563eb; }
+
+#detail-backlinks { margin-top: 18px; }
+#detail-backlinks h2 { font-size: 13px; color: #64748b; margin-bottom: 6px; }
+#detail-backlinks ul { padding-left: 18px; }
+#detail-backlinks a { color: #2563eb; cursor: pointer; }
+
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <strong id="bundle-name"></strong>
+    <span class="muted">OKF bundle</span>
+  </div>
+  <div class="controls">
+    <input id="search" type="search" placeholder="Search title / id / tag">
+    <select id="filter-type">
+      <option value="">All types</option>
+    </select>
+    <select id="layout">
+      <option value="cose">cose (force)</option>
+      <option value="concentric">concentric</option>
+      <option value="breadthfirst">breadth-first</option>
+      <option value="circle">circle</option>
+      <option value="grid">grid</option>
+    </select>
+    <button id="reset">Reset view</button>
+  </div>
+</header>
+
+<main>
+  <section id="graph"></section>
+  <section id="detail">
+    <div id="detail-empty" class="muted">Click a node to see its details.</div>
+    <article id="detail-content" hidden>
+      <header class="detail-header">
+        <span class="type-chip" id="detail-type"></span>
+        <h1 id="detail-title"></h1>
+        <div class="muted" id="detail-id"></div>
+      </header>
+      <dl class="frontmatter">
+        <dt>Description</dt><dd id="detail-description"></dd>
+        <dt>Resource</dt><dd id="detail-resource"></dd>
+        <dt>Tags</dt><dd id="detail-tags"></dd>
+      </dl>
+      <hr>
+      <div id="detail-body"></div>
+      <section id="detail-backlinks" hidden>
+        <h2>Cited by</h2>
+        <ul id="backlinks-list"></ul>
+      </section>
+    </article>
+  </section>
+</main>
+
+<script>
+window.BUNDLE_NAME = "Paper Library";
+window.BUNDLE = {"nodes": [{"data": {"id": "papers/2605.22721", "label": "Self-Evolving Multi-Agent Systems via Decentralized Memory", "type": "Paper", "description": "Proposes DecentMem, a per-agent dual-pool memory framework that enables self-evolving MAS to outperform centralized memory by up to 23.8% while cutting token usage by up to 49%.", "resource": "https://arxiv.org/abs/2605.22721", "tags": ["multi-agent-systems", "agent-self-evolution", "decentralized-memory", "llm-agents", "llm-as-judge"], "color": "#94a3b8", "size": 45}}, {"data": {"id": "papers/2605.28655", "label": "AutoScientists: Self-Organizing Agent Teams for Long-Running Scientific Experimentation", "type": "Paper", "description": "A paper about decentralized AI agent teams for long-running scientific experimentation.", "resource": "https://arxiv.org/abs/2605.28655", "tags": ["ai-for-science", "multi-agent-systems", "self-organizing-agents", "scientific-discovery", "long-running-experiments"], "color": "#94a3b8", "size": 40}}, {"data": {"id": "papers/2606.06741", "label": "OpenSkill: Open-World Self-Evolution for LLM Agents", "type": "Paper", "description": "A paper about agents that build skills and verification signals from open-world resources without target-task supervision.", "resource": "https://arxiv.org/abs/2606.06741", "tags": ["llm-agents", "agent-skills", "self-evolution", "open-world-learning", "verification"], "color": "#94a3b8", "size": 39}}, {"data": {"id": "papers/2606.10662", "label": "Decentralized Multi-Agent Systems with Shared Context", "type": "Paper", "description": "A paper about decentralized language-model agents coordinating through shared verified context.", "resource": "https://arxiv.org/abs/2606.10662", "tags": ["multi-agent-systems", "llm-agents", "shared-context", "test-time-scaling", "software-engineering"], "color": "#94a3b8", "size": 40}}, {"data": {"id": "topics/agent-self-evolution", "label": "Agent self-evolution", "type": "Topic", "description": "Papers about agents that improve their own skills, verification signals, or behavior after deployment.", "resource": "", "tags": ["agent-self-evolution", "agent-skills", "verification"], "color": "#94a3b8", "size": 36}}, {"data": {"id": "topics/ai-for-science", "label": "AI for science", "type": "Topic", "description": "Papers about AI systems that design, run, and revise scientific experiments.", "resource": "", "tags": ["ai-for-science", "scientific-discovery", "experiments"], "color": "#94a3b8", "size": 32}}, {"data": {"id": "topics/llm-agents", "label": "LLM agents", "type": "Topic", "description": "Papers about language-model agents, skills, verification, and autonomous task execution.", "resource": "", "tags": ["llm-agents", "skills", "verification"], "color": "#94a3b8", "size": 33}}, {"data": {"id": "topics/multi-agent-systems", "label": "Multi-agent systems", "type": "Topic", "description": "Papers about multiple agents coordinating work, state, and reasoning.", "resource": "", "tags": ["multi-agent-systems", "coordination", "shared-state"], "color": "#94a3b8", "size": 37}}], "edges": [{"data": {"id": "papers/2605.22721__topics/multi-agent-systems", "source": "papers/2605.22721", "target": "topics/multi-agent-systems"}}, {"data": {"id": "papers/2605.22721__topics/agent-self-evolution", "source": "papers/2605.22721", "target": "topics/agent-self-evolution"}}, {"data": {"id": "papers/2605.22721__papers/2606.10662", "source": "papers/2605.22721", "target": "papers/2606.10662"}}, {"data": {"id": "papers/2605.22721__papers/2605.28655", "source": "papers/2605.22721", "target": "papers/2605.28655"}}, {"data": {"id": "papers/2605.28655__topics/ai-for-science", "source": "papers/2605.28655", "target": "topics/ai-for-science"}}, {"data": {"id": "papers/2605.28655__topics/multi-agent-systems", "source": "papers/2605.28655", "target": "topics/multi-agent-systems"}}, {"data": {"id": "papers/2605.28655__papers/2606.10662", "source": "papers/2605.28655", "target": "papers/2606.10662"}}, {"data": {"id": "papers/2605.28655__papers/2606.06741", "source": "papers/2605.28655", "target": "papers/2606.06741"}}, {"data": {"id": "papers/2606.06741__topics/llm-agents", "source": "papers/2606.06741", "target": "topics/llm-agents"}}, {"data": {"id": "papers/2606.06741__topics/agent-self-evolution", "source": "papers/2606.06741", "target": "topics/agent-self-evolution"}}, {"data": {"id": "papers/2606.06741__papers/2606.10662", "source": "papers/2606.06741", "target": "papers/2606.10662"}}, {"data": {"id": "papers/2606.06741__papers/2605.28655", "source": "papers/2606.06741", "target": "papers/2605.28655"}}, {"data": {"id": "papers/2606.10662__topics/multi-agent-systems", "source": "papers/2606.10662", "target": "topics/multi-agent-systems"}}, {"data": {"id": "papers/2606.10662__topics/llm-agents", "source": "papers/2606.10662", "target": "topics/llm-agents"}}, {"data": {"id": "papers/2606.10662__papers/2606.06741", "source": "papers/2606.10662", "target": "papers/2606.06741"}}, {"data": {"id": "papers/2606.10662__papers/2605.28655", "source": "papers/2606.10662", "target": "papers/2605.28655"}}, {"data": {"id": "topics/agent-self-evolution__papers/2606.06741", "source": "topics/agent-self-evolution", "target": "papers/2606.06741"}}, {"data": {"id": "topics/agent-self-evolution__papers/2605.22721", "source": "topics/agent-self-evolution", "target": "papers/2605.22721"}}, {"data": {"id": "topics/ai-for-science__papers/2605.28655", "source": "topics/ai-for-science", "target": "papers/2605.28655"}}, {"data": {"id": "topics/llm-agents__papers/2606.06741", "source": "topics/llm-agents", "target": "papers/2606.06741"}}, {"data": {"id": "topics/llm-agents__papers/2606.10662", "source": "topics/llm-agents", "target": "papers/2606.10662"}}, {"data": {"id": "topics/multi-agent-systems__papers/2606.10662", "source": "topics/multi-agent-systems", "target": "papers/2606.10662"}}, {"data": {"id": "topics/multi-agent-systems__papers/2605.28655", "source": "topics/multi-agent-systems", "target": "papers/2605.28655"}}, {"data": {"id": "topics/multi-agent-systems__papers/2605.22721", "source": "topics/multi-agent-systems", "target": "papers/2605.22721"}}], "bodies": {"papers/2605.22721": "# Summary\n\nThis paper introduces DecentMem, a decentralized memory framework for self-evolving multi-agent systems. Rather than sharing a single central memory repository across all agents, each agent maintains its own dual-pool memory: an **exploitation pool** of consolidated past trajectories, and an **exploration pool** of LLM-generated candidate responses for unseen contexts. An LLM-as-a-judge reweights the two pools online using stage-wise feedback.\n\nThe motivation is that centralized memory creates communication and coordination overhead, raises privacy concerns, and collapses agent diversity over time.\n\n# Key Ideas\n\n* Each agent keeps independent memory, eliminating cross-agent coordination overhead and preserving behavioral diversity.\n* Dual-pool design separates exploitation (reliable past solutions) from exploration (LLM-generated candidates for new contexts), allowing dynamic adaptation.\n* LLM-as-a-judge provides online reweighting of the two pools based on stage-wise performance feedback.\n* Theoretical analysis proves global reachability of the solution space and O(log T) cumulative regret, matching the stochastic bandit lower bound up to constants.\n\n# Method\n\nDecentMem assigns a dual-pool memory to every agent independently. During inference the agent queries both pools, and the LLM-as-a-judge scores each candidate to determine the pool mixing weight. Memory consolidation happens locally, avoiding synchronization across agents.\n\n# Experiments\n\n* Tested on three MAS frameworks: AutoGen, DyLAN, AgentNet.\n* Backbone models: Qwen3 (4B / 8B / 14B) and Gemma4 (E2B / E4B).\n* Five benchmarks spanning math, code, QA, and embodied tasks.\n* Improves average accuracy by up to 23.8% over the strongest centralized memory baseline.\n* Improves by up to 52.5% over a no-memory baseline.\n* Reduces token usage by up to 49% relative to centralized memory.\n\n# Limitations\n\n* Results depend on the quality of LLM-as-a-judge signals; a weak judge may misweight the two pools.\n* The exploration pool relies on LLM generation for unseen contexts, which may introduce hallucinated candidates.\n* Evaluation uses Qwen3 and Gemma4 families; generalization to other model families is not directly tested.\n\n# Notes\n\nReading questions:\n\n* How does the judge decide what counts as \"stage-wise feedback\" \u2014 is it task-level reward, step-level critique, or something else?\n* How do the exploitation and exploration pools interact when a context is only partially covered by past trajectories?\n* Does per-agent memory lead to inconsistent agent behaviors in tasks that require tight coordination?\n* How does DecentMem compare to 2606.10662 (DeLM), which uses decentralized agents with shared verified context instead of per-agent memory?\n\n# Related\n\n* [Multi-agent systems](../topics/multi-agent-systems.md)\n* [Agent self-evolution](../topics/agent-self-evolution.md)\n* [Decentralized Multi-Agent Systems with Shared Context](2606.10662.md) \u2014 complementary decentralized design that uses shared context instead of per-agent memory.\n* [AutoScientists](2605.28655.md) \u2014 another self-organizing MAS paper in the library.\n\n# Citations\n\n[1] [arXiv:2605.22721](https://arxiv.org/abs/2605.22721)", "papers/2605.28655": "# Summary\n\nThis paper introduces AutoScientists, a decentralized team of AI agents for long-running computational scientific experimentation. The system is designed to sustain multiple research directions, adapt to new experimental evidence, and preserve knowledge about failed attempts.\n\nThe paper frames scientific research as an iterative loop of hypothesis generation, experiment design, execution, and revision. Its central claim is that self-organizing teams can explore this loop more effectively than a single trajectory or a centrally planned agent.\n\n# Key Ideas\n\n* Agents interpret a shared experimental state and organize into teams around promising hypotheses.\n* Proposals are critiqued before consuming experimental compute.\n* Successes and failures are shared to reduce redundant exploration.\n* The system targets long-running experiments where evidence changes over time.\n\n# Experiments\n\n* BioML-Bench: reports a mean leaderboard percentile of 74.4 across 24 tasks, improving over the strongest AI agent by 8.33 percentage points.\n* GPT training optimization: reports reaching target validation bits-per-byte 1.9x faster than Autoresearch.\n* ProteinGym ACE2-Spike binding: reports a 12.5 percent improvement in Spearman correlation over the prior state of the art.\n* ProteinGym full sweep: reports a 6.5 percent Spearman correlation improvement across 217 assays.\n\n# Notes\n\nReading questions:\n\n* What coordination mechanism lets teams form and dissolve without central planning?\n* How is failed experimental knowledge represented so later agents can reuse it?\n* Which ideas transfer from scientific experimentation to OKF paper-library curation and long-running literature review?\n\n# Related\n\n* [AI for science](../topics/ai-for-science.md)\n* [Multi-agent systems](../topics/multi-agent-systems.md)\n* [Decentralized Multi-Agent Systems with Shared Context](2606.10662.md) is relevant for shared-context coordination.\n* [OpenSkill](2606.06741.md) is relevant for agents building transferable skills from open-world resources.\n\n# Citations\n\n[1] [arXiv:2605.28655](https://arxiv.org/abs/2605.28655)", "papers/2606.06741": "# Summary\n\nThis paper introduces OpenSkill, a framework for open-world self-evolution of LLM agents. The core setting assumes the deployed agent receives only a task prompt and cannot rely on curated skills, successful trajectories, verifier signals, or target-task supervision.\n\nOpenSkill bootstraps a learning loop by acquiring grounded knowledge and verification anchors from documentation, repositories, and the web. It synthesizes those anchors into transferable skills, then refines the skills against self-built virtual tasks.\n\n# Key Ideas\n\n* Treat open-world resources as the source of both knowledge and practice environments.\n* Build skills and verification signals from scratch rather than assuming they already exist.\n* Reserve target-task supervision for final evaluation rather than training.\n* Test whether learned skills transfer across target agents and models.\n\n# Experiments\n\n* Reports best automated pass rate across three benchmarks and two target agents while satisfying the no-supervision constraint.\n* Reports that learned skills transfer across models without model-specific adaptation.\n* Reports that the self-built verifier aligns with ground-truth outcomes despite not accessing them during skill construction.\n\n# Notes\n\nReading questions:\n\n* What counts as a verification anchor, and how does the framework judge anchor quality?\n* How are generated skills represented and versioned?\n* Which parts of OpenSkill are directly applicable to an OKF `paper-library-manager` workflow?\n\n# Related\n\n* [LLM agents](../topics/llm-agents.md)\n* [Agent self-evolution](../topics/agent-self-evolution.md)\n* [Decentralized Multi-Agent Systems with Shared Context](2606.10662.md) is relevant for shared context and multi-agent execution.\n* [AutoScientists](2605.28655.md) is relevant for self-organized, long-running agent work.\n\n# Citations\n\n[1] [arXiv:2606.06741](https://arxiv.org/abs/2606.06741)", "papers/2606.10662": "# Summary\n\nThis paper introduces Decentralized Language Models (DeLM), a multi-agent system design where parallel agents coordinate through shared verified context and a task queue instead of a single central controller. Agents claim subtasks asynchronously, read accumulated progress, reason locally, and write compact verified updates back to the shared context.\n\nThe motivation is that centralized multi-agent orchestration can become a communication and integration bottleneck as the number of subtasks grows.\n\n# Key Ideas\n\n* Replace centralized task assignment and result merging with decentralized workers using a shared context substrate.\n* Keep shared context compact and verified so agents can build on prior progress without forwarding every update through a controller.\n* Use the design for test-time scaling in software engineering and long-context reasoning.\n\n# Experiments\n\n* SWE-bench Verified: reports best performance across Avg.@1, Pass@2, and Pass@4, with gains up to 10.5 percentage points over the strongest baseline.\n* Cost: reports roughly 50 percent lower cost per task.\n* LongBench-v2 Multi-Doc QA: reports highest average accuracy across four frontier model families, with gains up to 5.7 percentage points over the strongest baseline.\n\n# Notes\n\nReading questions:\n\n* What exactly qualifies an update as \"verified\" before it enters shared context?\n* How does DeLM prevent stale or contradictory context from degrading downstream agents?\n* Can this design inform OKF paper-library maintenance workflows, where many small updates need to merge into durable shared notes?\n\n# Related\n\n* [Multi-agent systems](../topics/multi-agent-systems.md)\n* [LLM agents](../topics/llm-agents.md)\n* [OpenSkill](2606.06741.md) also treats reusable skills and verification signals as durable artifacts for agents.\n* [AutoScientists](2605.28655.md) also uses decentralized agent teams, but for scientific experimentation rather than software-engineering test-time scaling.\n\n# Citations\n\n[1] [arXiv:2606.10662](https://arxiv.org/abs/2606.10662)", "topics/agent-self-evolution": "# Scope\n\nThis topic tracks papers about agents that adapt after deployment by building skills, generating practice tasks, creating verification signals, or revising behavior from open-world resources.\n\n# Papers\n\n* [OpenSkill](../papers/2606.06741.md) - builds transferable skills and self-built verification anchors from documentation, repositories, and the web without target-task supervision.\n* [Self-Evolving Multi-Agent Systems via Decentralized Memory](../papers/2605.22721.md) - per-agent dual-pool memory (exploit past trajectories + explore LLM-generated candidates) with LLM-as-a-judge reweighting for continual improvement.\n\n# Synthesis\n\nOpenSkill and DecentMem both target continual agent improvement but differ in mechanism: OpenSkill builds reusable skill objects from external resources, while DecentMem accumulates and reweights trajectory-level memory within a multi-agent system. The two approaches are complementary and could potentially be combined.\n\n# Open Questions\n\n* How should generated skills be represented so they remain reusable and auditable?\n* What makes a self-built verifier reliable enough to guide agent improvement?\n* How can self-evolution workflows avoid overfitting to synthetic practice tasks?\n* Does per-agent memory evolution in DecentMem lead to agents that specialize or diverge in ways that reduce team coherence?\n", "topics/ai-for-science": "# Scope\n\nThis topic tracks papers about AI systems used to plan, run, and revise scientific experiments over repeated cycles.\n\n# Papers\n\n* [AutoScientists](../papers/2605.28655.md) - self-organizing agent teams for long-running computational scientific experimentation.\n\n# Open Questions\n\n* How should failed experiments be captured so future agents avoid repeating them?\n* Which parts of scientific experimentation map onto long-running literature review workflows?\n* How should compute budgets shape agent critique and proposal acceptance?\n", "topics/llm-agents": "# Scope\n\nThis topic tracks papers about LLM agents that execute tasks, build reusable skills, use verification signals, or coordinate with other agents.\n\n# Papers\n\n* [OpenSkill](../papers/2606.06741.md) - open-world self-evolution through skills and self-built verification anchors.\n* [Decentralized Multi-Agent Systems with Shared Context](../papers/2606.10662.md) - multi-agent test-time scaling through shared verified context.\n\n# Open Questions\n\n* What should a durable agent skill contain, and what should stay in the knowledge base?\n* How should agents validate generated skills before using them on real tasks?\n* How do skills, shared context, and OKF documents reinforce each other?\n", "topics/multi-agent-systems": "# Scope\n\nThis topic tracks papers where multiple agents coordinate reasoning, experimentation, or execution through shared state, task allocation, critique, or self-organization.\n\n# Papers\n\n* [Decentralized Multi-Agent Systems with Shared Context](../papers/2606.10662.md) - decentralized coordination through shared verified context and task queues.\n* [AutoScientists](../papers/2605.28655.md) - self-organizing agent teams for long-running scientific experimentation.\n* [Self-Evolving Multi-Agent Systems via Decentralized Memory](../papers/2605.22721.md) - per-agent dual-pool memory that outperforms centralized memory by up to 23.8% while cutting token usage by 49%.\n\n# Synthesis\n\nTwo complementary decentralization strategies appear in this set: 2606.10662 (DeLM) decentralizes agents while keeping a single shared verified context, whereas 2605.22721 (DecentMem) keeps context centralized per-agent and decentralizes memory. The trade-off is coordination overhead vs. agent diversity \u2014 shared context enables tight coherence; per-agent memory preserves behavioral variation and reduces synchronization cost.\n\n# Open Questions\n\n* How should shared state be represented so agents can reuse it without creating integration bottlenecks?\n* When is decentralized coordination better than a central planner?\n* What safeguards are needed when multiple agents update durable knowledge artifacts?\n* How do per-agent memory and shared-context approaches interact when combined in a single system?\n"}, "types": ["Paper", "Topic"], "palette": {"BigQuery Dataset": "#8b5cf6", "BigQuery Table": "#3b82f6", "Reference": "#10b981"}};
+</script>
+<script>
+(function () {
+  const bundle = window.BUNDLE;
+  const bundleName = window.BUNDLE_NAME;
+  document.title = `${bundleName} — OKF Viewer`;
+  document.getElementById("bundle-name").textContent = bundleName;
+
+  // Populate type filter
+  const typeSelect = document.getElementById("filter-type");
+  for (const t of bundle.types) {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    typeSelect.appendChild(opt);
+  }
+
+  // Build reverse-link index for backlinks
+  const backlinks = {};
+  for (const edge of bundle.edges) {
+    const { source, target } = edge.data;
+    (backlinks[target] ||= []).push(source);
+  }
+
+  // Look up node label/type by id
+  const nodeIndex = {};
+  for (const n of bundle.nodes) nodeIndex[n.data.id] = n.data;
+
+  const cy = cytoscape({
+    container: document.getElementById("graph"),
+    elements: [...bundle.nodes, ...bundle.edges],
+    style: [
+      {
+        selector: "node",
+        style: {
+          "background-color": "data(color)",
+          "label": "data(label)",
+          "color": "#0f172a",
+          "font-size": 11,
+          "text-valign": "bottom",
+          "text-margin-y": 4,
+          "text-wrap": "wrap",
+          "text-max-width": 120,
+          "width": "data(size)",
+          "height": "data(size)",
+          "border-width": 1,
+          "border-color": "#0f172a",
+        },
+      },
+      {
+        selector: "node:selected",
+        style: {
+          "border-width": 3,
+          "border-color": "#f59e0b",
+        },
+      },
+      {
+        selector: "edge",
+        style: {
+          "width": 1.5,
+          "line-color": "#cbd5e1",
+          "target-arrow-color": "#cbd5e1",
+          "target-arrow-shape": "triangle",
+          "curve-style": "bezier",
+          "arrow-scale": 0.9,
+        },
+      },
+      {
+        selector: "edge:selected",
+        style: {
+          "line-color": "#f59e0b",
+          "target-arrow-color": "#f59e0b",
+          "width": 2.5,
+        },
+      },
+      {
+        selector: ".dim",
+        style: { "opacity": 0.15 },
+      },
+    ],
+    layout: { name: "cose", animate: false, padding: 30 },
+    wheelSensitivity: 0.2,
+  });
+
+  cy.on("tap", "node", (evt) => showDetail(evt.target.id()));
+  cy.on("tap", (evt) => {
+    if (evt.target === cy) clearSelection();
+  });
+
+  document.getElementById("layout").addEventListener("change", (e) => {
+    cy.layout({ name: e.target.value, animate: false, padding: 30 }).run();
+  });
+
+  document.getElementById("reset").addEventListener("click", () => {
+    cy.fit(null, 30);
+    clearSelection();
+  });
+
+  document.getElementById("search").addEventListener("input", (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) {
+      cy.elements().removeClass("dim");
+      return;
+    }
+    cy.nodes().forEach((n) => {
+      const d = n.data();
+      const hay =
+        (d.label || "").toLowerCase() + " " +
+        d.id.toLowerCase() + " " +
+        (d.tags || []).join(" ").toLowerCase();
+      n.toggleClass("dim", !hay.includes(q));
+    });
+    cy.edges().forEach((edge) => {
+      const src = edge.source();
+      const tgt = edge.target();
+      edge.toggleClass("dim", src.hasClass("dim") || tgt.hasClass("dim"));
+    });
+  });
+
+  document.getElementById("filter-type").addEventListener("change", (e) => {
+    const t = e.target.value;
+    if (!t) {
+      cy.elements().removeClass("dim");
+      return;
+    }
+    cy.nodes().forEach((n) => {
+      n.toggleClass("dim", n.data("type") !== t);
+    });
+    cy.edges().forEach((edge) => {
+      edge.toggleClass("dim", edge.source().hasClass("dim") || edge.target().hasClass("dim"));
+    });
+  });
+
+  function clearSelection() {
+    cy.elements().unselect();
+    document.getElementById("detail-empty").hidden = false;
+    document.getElementById("detail-content").hidden = true;
+  }
+
+  function showDetail(conceptId) {
+    const data = nodeIndex[conceptId];
+    if (!data) return;
+    cy.elements().unselect();
+    const node = cy.getElementById(conceptId);
+    if (node) node.select();
+
+    document.getElementById("detail-empty").hidden = true;
+    const content = document.getElementById("detail-content");
+    content.hidden = false;
+
+    const chip = document.getElementById("detail-type");
+    chip.textContent = data.type;
+    chip.style.background = data.color;
+
+    document.getElementById("detail-title").textContent = data.label;
+    document.getElementById("detail-id").textContent = conceptId;
+    document.getElementById("detail-description").textContent = data.description || "—";
+
+    const resourceEl = document.getElementById("detail-resource");
+    resourceEl.innerHTML = "";
+    if (data.resource) {
+      const a = document.createElement("a");
+      a.href = data.resource;
+      a.textContent = data.resource;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.className = "external";
+      resourceEl.appendChild(a);
+    } else {
+      resourceEl.textContent = "—";
+    }
+
+    const tagsEl = document.getElementById("detail-tags");
+    tagsEl.innerHTML = "";
+    if (data.tags && data.tags.length) {
+      for (const t of data.tags) {
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = t;
+        tagsEl.appendChild(span);
+      }
+    } else {
+      tagsEl.textContent = "—";
+    }
+
+    const body = bundle.bodies[conceptId] || "";
+    const html = marked.parse(body, { breaks: false, gfm: true });
+    const bodyEl = document.getElementById("detail-body");
+    bodyEl.innerHTML = html;
+    rewriteInternalLinks(bodyEl);
+
+    const bl = backlinks[conceptId] || [];
+    const blSection = document.getElementById("detail-backlinks");
+    const blList = document.getElementById("backlinks-list");
+    blList.innerHTML = "";
+    if (bl.length) {
+      blSection.hidden = false;
+      for (const src of bl) {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.textContent = nodeIndex[src]?.label || src;
+        a.dataset.target = src;
+        a.addEventListener("click", () => showDetail(src));
+        li.appendChild(a);
+        const muted = document.createElement("span");
+        muted.className = "muted";
+        muted.textContent = ` (${src})`;
+        li.appendChild(muted);
+        blList.appendChild(li);
+      }
+    } else {
+      blSection.hidden = true;
+    }
+
+    cy.animate({ center: { eles: node }, zoom: Math.max(cy.zoom(), 1.0) }, { duration: 200 });
+  }
+
+  function rewriteInternalLinks(root) {
+    root.querySelectorAll("a[href]").forEach((a) => {
+      const href = a.getAttribute("href");
+      if (!href) return;
+      if (href.startsWith("/") && href.endsWith(".md")) {
+        const target = href.slice(1, -3);
+        if (nodeIndex[target]) {
+          a.className = "internal";
+          a.setAttribute("href", "javascript:void(0)");
+          a.addEventListener("click", (e) => {
+            e.preventDefault();
+            showDetail(target);
+          });
+          return;
+        }
+      }
+      a.className = "external";
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener");
+    });
+  }
+
+  // Auto-show the first node (a dataset if available, else first concept)
+  const initial =
+    bundle.nodes.find((n) => n.data.type === "BigQuery Dataset") ||
+    bundle.nodes[0];
+  if (initial) showDetail(initial.data.id);
+})();
+
+</script>
+</body>
+</html>
