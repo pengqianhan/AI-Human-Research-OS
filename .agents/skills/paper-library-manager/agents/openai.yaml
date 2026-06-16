@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Library Manager"
+  short_description: "Manage OKF research paper libraries"
+  default_prompt: "Use $paper-library-manager to add this arXiv paper to the current OKF paper library."

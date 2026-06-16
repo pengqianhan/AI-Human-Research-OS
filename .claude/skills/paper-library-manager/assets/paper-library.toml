@@ -1,0 +1,43 @@
+[paper_body]
+default_profile = "research-note"
+preserve_existing_layout = true
+required_sections = []
+recommended_sections = [
+  "Summary",
+  "Key Ideas",
+  "Notes",
+  "Related",
+  "Citations",
+]
+
+[paper_body.profiles.research-note]
+sections = [
+  "Summary",
+  "Key Ideas",
+  "Method",
+  "Experiments",
+  "Limitations",
+  "Notes",
+  "Related",
+  "Citations",
+]
+
+[paper_body.profiles.implementation]
+sections = [
+  "What To Reproduce",
+  "Algorithm",
+  "Data",
+  "Metrics",
+  "Engineering Notes",
+  "Failure Modes",
+]
+
+[paper_body.profiles.survey-card]
+sections = [
+  "One-line Takeaway",
+  "Research Context",
+  "Method Family",
+  "Compared With",
+  "Useful For",
+  "Open Questions",
+]
