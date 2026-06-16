@@ -9,8 +9,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Example_Project/` - Worked example from the OS smoke test: idea to runnable code, generated figure, and compiled PDF. <!--hash:435ece8f-->
 - `Ideas/` - Research ideas, hypotheses, outlines, meeting notes, and reflections. <!--hash:bcb5bee2-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
+- `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `Paper_Initial_template/` - Reusable project and paper starter template for developing feasible research ideas. <!--hash:417d33dd-->
-- `References/` - Bibliographic files, literature notes, source PDFs, and citation material. <!--hash:6f2b1f2b-->
 - `Research-skills-hub/` - Optional research skills and helper files available for installation. <!--hash:ef77791c-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:f443f281-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
@@ -19,19 +19,20 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:67aced84-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:4f5c9d90-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:f64ad651-->
-- `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f39f189-->
-- `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:c9ee1439-->
+- `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
+- `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
 - `task_plan.html` - Detailed executed normalization plan with verified problem inventory, phased steps, decisions, and a live progress TODO table. <!--hash:64fc61bf-->
 
 ## .agents/
 
-- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:3ea05546-->
+- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:19201c86-->
 
 ## .agents/skills/
 
 - `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:0a82c6f3-->
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
+- `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
 - `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
 - `session-handoff/` - Cross-session hand-off skill: maintain task_plan.html progress TODO and CHANGE_SUMMARY.html records for resuming work. <!--hash:fc396b60-->
 - `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
@@ -39,13 +40,14 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .claude/
 
-- `skills/` - Claude Code workspace skills mirrored from repository-local agent skills. <!--hash:3481e1b5-->
+- `skills/` - Claude Code workspace skills mirrored from repository-local agent skills. <!--hash:28ce3af1-->
 
 ## .claude/skills/
 
 - `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:0a82c6f3-->
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
+- `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
 - `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
 - `session-handoff/` - Cross-session hand-off skill: maintain task_plan.html progress TODO and CHANGE_SUMMARY.html records for resuming work. <!--hash:fc396b60-->
 - `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
@@ -85,8 +87,28 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `Baseline_readme.md` - Reminder note emphasizing optimized baselines for research comparisons. <!--hash:2efac95c-->
 
-## References/
+## paper-library/
 
-- `paper_notes.md` - Shared paper-reading notes; entries appended sequentially via paper_notes_template.md. <!--hash:dae35496-->
-- `paper_notes_template.md` - Template for adding structured paper-reading notes to paper_notes.md. <!--hash:9ef45e2b-->
-- `refs.bib` - Shared BibTeX bibliography for all projects; entries built only from fetched metadata. <!--hash:f24539cc-->
+- `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:ae27ef61-->
+- `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:dadb6b20-->
+- `index.md` - Top-level entry point linking to the papers and topics indexes of the paper library. <!--hash:2dd97dfd-->
+- `viz.html` - Generated interactive graph visualization of the paper library (papers, topics, and their links). <!--hash:923f839c-->
+
+## paper-library/papers/
+
+- `2605.22721.md` - Paper note: Self-Evolving Multi-Agent Systems via Decentralized Memory (DecentMem). <!--hash:c9fb039d-->
+- `2605.28655.md` - Paper note: AutoScientists, self-organizing agent teams for long-running scientific experimentation. <!--hash:af7b1562-->
+- `2605.31464.md` - Paper note: GPU Forecasters, LLM surrogates that forecast GPU kernel performance to speed up kernel search. <!--hash:d1150252-->
+- `2606.06741.md` - Paper note: OpenSkill, open-world self-evolution for LLM agents via self-built skills and verification. <!--hash:be7afa30-->
+- `2606.10662.md` - Paper note: decentralized multi-agent systems coordinating through shared verified context. <!--hash:c783e703-->
+- `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:2762fc7b-->
+
+## paper-library/topics/
+
+- `agent-self-evolution.md` - Topic: agents that improve their own skills, verification signals, or behavior after deployment. <!--hash:ac00bdb8-->
+- `ai-for-science.md` - Topic: AI systems that design, run, and revise scientific experiments. <!--hash:25c7dcf2-->
+- `gpu-kernel-optimization.md` - Topic: searching for and evaluating fast GPU kernels, including the cost of on-device measurement. <!--hash:633707a4-->
+- `index.md` - Index of all topic pages in the library, one line per topic. <!--hash:97cad1f2-->
+- `llm-agents.md` - Topic: language-model agents, skills, verification, and autonomous task execution. <!--hash:cca0d780-->
+- `llm-surrogate-models.md` - Topic: LLMs used as predictive surrogates that forecast outcomes instead of generating or acting directly. <!--hash:49f9bb25-->
+- `multi-agent-systems.md` - Topic: multiple agents coordinating work, state, and reasoning. <!--hash:c0be8304-->
