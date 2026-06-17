@@ -13,14 +13,16 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Research-skills-hub/` - Optional research skills and helper files available for installation. <!--hash:ef77791c-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:4c2a20c7-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
-- `CHANGE_SUMMARY.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:395482cb-->
+- `CHANGE_SUMMARY-2026-06.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:082d6347-->
+- `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:fb961bf7-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:8cffbd9b-->
-- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:85acb9f2-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:3eb0e42f-->
+- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:01f60a54-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:60aae52b-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
-- `task_plan.html` - Detailed executed normalization plan with verified problem inventory, phased steps, decisions, and a live progress TODO table. <!--hash:64fc61bf-->
+- `task_plan-2026-06.html` - Detailed executed normalization plan with verified problem inventory, phased steps, decisions, and a live progress TODO table. <!--hash:9486151a-->
+- `task_plan.md` - Forward-looking session hand-off: resume point, live Progress TODO, standing guardrails, and a pointer to the decisions record. <!--hash:0a915efb-->
 
 ## .agents/
 
@@ -33,7 +35,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
 - `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
-- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.html progress TODO and CHANGE_SUMMARY.html records for resuming work. <!--hash:fc396b60-->
+- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.md + CHANGE_SUMMARY.md (resume TODO, decisions, deviations) for resuming work. <!--hash:37837e8d-->
 - `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
 - `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
@@ -48,7 +50,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
 - `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
-- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.html progress TODO and CHANGE_SUMMARY.html records for resuming work. <!--hash:fc396b60-->
+- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.md + CHANGE_SUMMARY.md (resume TODO, decisions, deviations) for resuming work. <!--hash:37837e8d-->
 - `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
 - `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
@@ -66,7 +68,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Memory/
 
-- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:b3d11716-->
+- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:04cb026d-->
 
 ## paper-library/
 
@@ -109,7 +111,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:073cb790-->
 - `log.md` - Folder-level update log for the smoke-test project. <!--hash:570a64fe-->
 - `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:aebcb48c-->
-- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:8fe88b76-->
+- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:6a4cb44d-->
 
 ## projects-folder/Example_Project/Baselines/
 

@@ -10,10 +10,14 @@ of steps.
 ## Session Startup
 
 1. Read this file first.
-2. Unless the task is trivial, read `FILETREE.md` next to understand the current
+2. If [`task_plan.md`](task_plan.md) exists, read its **Progress TODO** before other
+   work — it is the resume point from the previous session. Skim
+   [`CHANGE_SUMMARY.md`](CHANGE_SUMMARY.md) Decisions before reopening a settled question.
+   Trust the repository over both (snapshots can be stale — re-verify with `git status`).
+3. Unless the task is trivial, read `FILETREE.md` next to understand the current
    repository structure.
-3. For broad Research OS or template-design work, also read the relevant files under `Memory/`
-4. When working inside a specific project folder, also read that project's
+4. For broad Research OS or template-design work, also read the relevant files under `Memory/`
+5. When working inside a specific project folder, also read that project's
    `PROJECT_MEMORY.md`.
 
 ## Python Environment

@@ -45,4 +45,4 @@ Repo-local custom skills. Sources live under [open-paper-skills/](open-paper-ski
 |---|---|---|
 | `uv-env` | uv-based Python environment setup for research projects | yes |
 | `filetree-simple` | Maintains and lints the compact `FILETREE.md` index | yes |
-| `session-handoff` | Maintains `task_plan.html` + `CHANGE_SUMMARY.html` as cross-session hand-off records (resume from the progress TODO, record changes/decisions/deviations) | yes |
+| `session-handoff` | Maintains `task_plan.md` + `CHANGE_SUMMARY.md` as cross-session hand-off records (resume from the progress TODO, record changes/decisions/deviations) | yes |

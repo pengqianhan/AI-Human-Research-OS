@@ -12,7 +12,7 @@
   template → runnable code → figure → compiled PDF — with everything traceable.
 - Status: experimenting
 - Next action: keep as a worked example; delete if the user prefers (decision D6
-  in ../task_plan.html).
+  in [../../CHANGE_SUMMARY.md](../../CHANGE_SUMMARY.md)).
 
 ## Key Decisions
 
