@@ -9,5 +9,5 @@ folder-shaped representation for a research idea.
 
 # Related Repository Assets
 
-* [Example Project](../../Example_Project/) - Project created from this promoted idea.
+* [Example Project](../../projects-folder/Example_Project/) - Project created from this promoted idea.
 * [Task prompt](../../task_en.md) - Source task that required the smoke-test deliverable.

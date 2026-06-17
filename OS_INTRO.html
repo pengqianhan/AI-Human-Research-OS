@@ -50,55 +50,54 @@ Markdown, BibTeX, and LaTeX.</p>
         └──→ <a href="INSTRUCTION.md">INSTRUCTION.md</a>   always read: rules, workflows, memory + skill policy
                 └──→ <a href="FILETREE.md">FILETREE.md</a>   directory index (skip only for trivial tasks)
                         └──→ <a href="Memory/MEMORY.md">Memory/MEMORY.md</a>   for broad / cross-project work
-                                └──→ &lt;Project&gt;/PROJECT_MEMORY.md   when inside a project</code></pre>
+                                └──→ projects-folder/&lt;Project&gt;/PROJECT_MEMORY.md   when inside a project</code></pre>
 
 <h2>Directory map</h2>
 <table>
   <tr><th>Path</th><th>Purpose</th></tr>
   <tr><td><a href="Ideas/">Ideas/</a></td><td>OKF bundle for research ideas; each idea is a Markdown concept or nested idea bundle with status (<code>raw → exploring → feasible → promoted / dropped</code>)</td></tr>
-  <tr><td><a href="References/">References/</a></td><td>Paper PDFs, the shared <code>refs.bib</code>, reading notes (<code>paper_notes.md</code> + its template)</td></tr>
-  <tr><td><a href="Paper_Initial_template/">Paper_Initial_template/</a></td><td>Template copied to the repo root to start a new project: <code>PROJECT_MEMORY.md</code>, <code>paper_skeleton.md</code>, <code>paper/main.tex</code>, <code>Code/</code> (+ bilingual READMEs), <code>Figs/</code>, <code>Baselines/</code></td></tr>
+  <tr><td><a href="projects-folder/">projects-folder/</a></td><td>Container for project instances and reusable templates.</td></tr>
+  <tr><td><a href="projects-folder/templates/Paper_Initial_template/">projects-folder/templates/Paper_Initial_template/</a></td><td>Machine-learning-oriented paper template copied to start a new project: <code>PROJECT_MEMORY.md</code>, <code>paper_skeleton.md</code>, <code>paper/main.tex</code>, <code>paper/references.bib</code>, <code>Code/</code>, <code>Figs/</code>, <code>Baselines/</code></td></tr>
   <tr><td><a href="Memory/MEMORY.md">Memory/MEMORY.md</a></td><td>Global memory: long-term goals, Active Projects table, cross-project decisions and lessons</td></tr>
   <tr><td><a href="Research-skills-hub/skills_map.md">Research-skills-hub/</a></td><td>Canonical store ("app store") of reusable agent skills; <code>skills_map.md</code> is the index with install instructions</td></tr>
   <tr><td><code>.agents/skills/</code> · <code>.claude/skills/</code></td><td>Installed skills for Codex / Claude Code — two byte-identical copies</td></tr>
-  <tr><td><a href="Example_Project/">Example_Project/</a></td><td>Worked example produced by the smoke test: idea → code → figure → compiled PDF</td></tr>
+  <tr><td><a href="projects-folder/Example_Project/">projects-folder/Example_Project/</a></td><td>Worked example produced by the smoke test: idea → code → figure → compiled PDF</td></tr>
 </table>
 
 <h2>The five orientation questions</h2>
 <div class="qa"><b>1. Where are the current goal, background, progress, and key memory?</b><br>
 Global state in <a href="Memory/MEMORY.md">Memory/MEMORY.md</a> (goals, Active Projects, decisions);
-per-project state in <code>&lt;Project&gt;/PROJECT_MEMORY.md</code> (snapshot, decisions, progress log, TODOs).</div>
+per-project state in <code>projects-folder/&lt;Project&gt;/PROJECT_MEMORY.md</code> (snapshot, decisions, progress log, TODOs).</div>
 <div class="qa"><b>2. Where do new ideas, references, code, figures, and writing go?</b><br>
-Ideas → <a href="Ideas/">Ideas/</a> OKF concept or nested idea bundle; references → <a href="References/">References/</a>
-(PDF + <code>refs.bib</code> + note); code → <code>&lt;Project&gt;/Code/</code>; figures → <code>&lt;Project&gt;/Figs/</code>;
-baselines → <code>&lt;Project&gt;/Baselines/</code>; writing → <code>&lt;Project&gt;/paper/main.tex</code>.</div>
+Ideas → <a href="Ideas/">Ideas/</a> OKF concept or nested idea bundle; project references → <code>projects-folder/&lt;Project&gt;/paper/references.bib</code>; code → <code>projects-folder/&lt;Project&gt;/Code/</code>; figures → <code>projects-folder/&lt;Project&gt;/Figs/</code>;
+baselines → <code>projects-folder/&lt;Project&gt;/Baselines/</code>; writing → <code>projects-folder/&lt;Project&gt;/paper/main.tex</code>.</div>
 <div class="qa"><b>3. Which files should an agent read first?</b><br>
 <a href="INSTRUCTION.md">INSTRUCTION.md</a>, then <a href="FILETREE.md">FILETREE.md</a>, then the relevant
 memory file(s) — see the chain above.</div>
 <div class="qa"><b>4. How does a feasible idea become a project or paper draft?</b><br>
-<code>cp -R Paper_Initial_template &lt;ProjectName&gt;</code> at the repository root; fill both Snapshot
-sections; mark the idea <code>promoted</code> with a link; add an Active Projects row; refresh
+<code>cp -R projects-folder/templates/Paper_Initial_template projects-folder/&lt;ProjectName&gt;</code>; fill both Snapshot
+sections and the project <code>index.md</code>; mark the idea <code>promoted</code> with a link; add an Active Projects row; refresh
 <code>FILETREE.md</code>. (Workflow 2 in <a href="INSTRUCTION.md">INSTRUCTION.md</a>.)</div>
 <div class="qa"><b>5. When does experience become memory vs. a skill?</b><br>
 Lesson → <code>PROJECT_MEMORY.md</code> first. Procedural and project-specific → project-local skill
-(<code>&lt;Project&gt;/.claude/skills/</code> + <code>.agents/skills/</code>, created on demand). Useful across
+(<code>projects-folder/&lt;Project&gt;/.claude/skills/</code> + <code>.agents/skills/</code>, created on demand). Useful across
 projects and domain-light → <a href="Research-skills-hub/skills_map.md">Research-skills-hub/</a> +
 install into both root skill dirs.</div>
 
 <h2>Lifecycle walkthrough (what the smoke test actually did)</h2>
 <ol>
   <li>Recorded the idea as an <a href="Ideas/idea_example/linear-fit-micro-experiment.md">OKF idea concept</a> and marked it <code>promoted</code>.</li>
-  <li>Instantiated <a href="Example_Project/">Example_Project/</a> from the template at the root.</li>
+  <li>Instantiated <a href="projects-folder/Example_Project/">Example_Project/</a> from the template under <code>projects-folder/</code>.</li>
   <li>Created a <code>uv</code> environment at <code>Code/</code> scope; wrote and ran
-      <a href="Example_Project/Code/fit_line.py">fit_line.py</a> (seeded synthetic linear fit).</li>
+      <a href="projects-folder/Example_Project/Code/fit_line.py">fit_line.py</a> (seeded synthetic linear fit).</li>
   <li>The script saved <code>Figs/linear_fit.png</code>; results recorded in the bilingual
-      <a href="Example_Project/Code/README.md">Code READMEs</a>.</li>
+      <a href="projects-folder/Example_Project/Code/README.md">Code READMEs</a>.</li>
   <li>Fetched a real reference (arXiv 1706.03762) live via the <code>literature_search_arxiv</code>
-      skill into <a href="Example_Project/paper/references.bib">paper/references.bib</a> — no invented fields.</li>
-  <li>Wrote <a href="Example_Project/paper/main.tex">paper/main.tex</a> citing it and including the figure; compiled
+      skill into <a href="projects-folder/Example_Project/paper/references.bib">paper/references.bib</a> — no invented fields.</li>
+  <li>Wrote <a href="projects-folder/Example_Project/paper/main.tex">paper/main.tex</a> citing it and including the figure; compiled
       with <code>cd paper &amp;&amp; latexmk -pdf -interaction=nonstopmode main.tex</code> →
       <code>paper/main.pdf</code> with all citations resolved.</li>
-  <li>Closed the loop in <a href="Example_Project/PROJECT_MEMORY.md">PROJECT_MEMORY.md</a> and
+  <li>Closed the loop in <a href="projects-folder/Example_Project/PROJECT_MEMORY.md">PROJECT_MEMORY.md</a> and
       <a href="Memory/MEMORY.md">Memory/MEMORY.md</a>.</li>
 </ol>
 

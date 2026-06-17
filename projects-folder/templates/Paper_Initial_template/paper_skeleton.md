@@ -5,23 +5,21 @@ data, code, figures, or experiment outputs.
 
 ## Snapshot
 
-- Working title: A Linear-Fit Micro-Experiment as a Research OS Smoke Test
-- Target venue or audience: internal — worked example for this repository
-- Status: draft
-- One-sentence thesis: The Research OS template supports a complete, traceable
-  idea-to-PDF loop with minimal overhead.
-- Main research question: Do the template conventions (Code/Figs/refs/memory)
-  hold up in a real end-to-end run?
+- Working title:
+- Target venue or audience:
+- Status: idea / outline / draft / submitted / revised
+- One-sentence thesis:
+- Main research question:
 - Contributions:
-  1. A minimal worked example of the full OS workflow.
+  1.
   2.
   3.
 
 ## Source Map
 
-Relative links assume this project folder sits at the repository root, sibling
-of `Ideas/` (see `INSTRUCTION.md`, workflow "Idea → Project"). Project-specific
-references live under `paper/`.
+Relative links assume this template has been copied to
+`projects-folder/<ProjectName>/` (see `INSTRUCTION.md`, workflow
+"Idea → Project"). Project-specific references live under `paper/`.
 
 | Asset | Link or path | Notes |
 |---|---|---|
@@ -32,7 +30,7 @@ references live under `paper/`.
 | Baselines | [Baselines/](Baselines/) |  |
 | Bibliography | [paper/references.bib](paper/references.bib) |  |
 | Paper notes |  | Add local notes when needed. |
-| Ideas and meetings | [../Ideas/](../Ideas/) |  |
+| Ideas and meetings | [../../Ideas/](../../Ideas/) |  |
 
 ## Argument Map
 

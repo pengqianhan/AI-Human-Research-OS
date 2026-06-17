@@ -47,14 +47,17 @@ lint check.
    Idea concepts use `type: Idea` with `title`, `description`, `status`,
    `created`, and optional `tags`. Update [Ideas/index.md](Ideas/index.md) and,
    for nested bundles, the local `index.md`.
-2. **Idea → Project**: copy the template to the repository root:
-   `cp -R Paper_Initial_template <ProjectName>`. Fill the project entrypoint
-   `<ProjectName>/index.md`, the Snapshot sections of
-   `<ProjectName>/PROJECT_MEMORY.md` and `<ProjectName>/paper_skeleton.md`, set
-   the idea concept's `status` to `promoted` with a link to the project, add a row to
-   Active Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh
-   `FILETREE.md`. Projects sit at the root, sibling to `References/` and
-   `Ideas/`, so the template's relative links keep working.
+2. **Idea → Project**: copy a template from [projects-folder/templates/](projects-folder/templates/)
+   into [projects-folder/](projects-folder/), for example:
+   `cp -R projects-folder/templates/Paper_Initial_template projects-folder/<ProjectName>`.
+   Fill the project entrypoint `projects-folder/<ProjectName>/index.md`, the
+   Snapshot sections of `projects-folder/<ProjectName>/PROJECT_MEMORY.md` and
+   `projects-folder/<ProjectName>/paper_skeleton.md`, set the idea concept's
+   `status` to `promoted` with a link to the project, add a row to Active
+   Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh `FILETREE.md`.
+   `Paper_Initial_template` is a machine-learning-oriented paper template;
+   add sibling templates under `projects-folder/templates/` for other
+   disciplines or outputs such as books and blogs.
 3. **Reference intake**: append project-specific BibTeX entries to
    `<Project>/paper/references.bib` — fetch metadata with the literature-search
    skills, never invent fields. Store PDFs and reading notes in a local project
@@ -89,7 +92,7 @@ lint check.
 | Layer | Lives in | Updated when / by | Hygiene |
 |---|---|---|---|
 | Global | `Memory/MEMORY.md` | Agent at the end of a session that changes project status or yields a cross-project lesson; human anytime | ≤ ~200 lines; prune aggressively |
-| Project | `<Project>/PROJECT_MEMORY.md` | Agent at the end of every session that changes project state | Progress log newest-first, ≤ ~30 lines |
+| Project | `projects-folder/<ProjectName>/PROJECT_MEMORY.md` | Agent at the end of every session that changes project state | Progress log newest-first, ≤ ~30 lines |
 | Task | `scratch/` (gitignored) or the conversation itself | During a single task only | Distill durable findings upward at task end, then discard |
 
 ## Skills
@@ -101,8 +104,9 @@ lint check.
   [skills_map.md](Research-skills-hub/skills_map.md) lists every skill and the
   install procedure.
 - Promotion path: record lessons in `PROJECT_MEMORY.md` first; turn a lesson
-  into a project-local skill (`<Project>/.claude/skills/` plus
-  `<Project>/.agents/skills/`, created on demand) when it is procedural; add it
+  into a project-local skill (`projects-folder/<ProjectName>/.claude/skills/`
+  plus `projects-folder/<ProjectName>/.agents/skills/`, created on demand) when
+  it is procedural; add it
   to the hub only when it is useful across multiple projects and
   domain-independent or lightly coupled.
 - Every hub skill's `SKILL.md` must state scope, inputs, outputs, and
@@ -123,9 +127,10 @@ The OS separates a small fixed core from replaceable content (plugins):
 
 Template contract — a directory is a valid project template when:
 
-1. it instantiates with `cp -R <template> <ProjectName>` at the repository
-   root;
-2. its internal relative links are written for that root-level position;
+1. it instantiates with
+   `cp -R projects-folder/templates/<TemplateName> projects-folder/<ProjectName>`;
+2. its internal relative links are written for the
+   `projects-folder/<ProjectName>/` position after copying;
 3. it states which files to fill right after instantiation (for
    `Paper_Initial_template`: the Snapshot sections of `PROJECT_MEMORY.md`,
    `paper_skeleton.md`, the folder entrypoint `index.md`, and the
@@ -133,10 +138,10 @@ Template contract — a directory is a valid project template when:
 4. shared conventions (build command, README pairing, memory rules) stay in
    this file; templates reference them instead of restating them.
 
-`Paper_Initial_template/` is currently the only template. When a second
-template is added, create a `Templates/` container directory (mirroring
-`Research-skills-hub/`), move templates inside, and update the docs and
-`FILETREE.md` in the same task. Do not add a plugin manager, manifest format,
+`projects-folder/templates/Paper_Initial_template/` is currently the bundled
+machine-learning paper template. Add future templates as sibling directories
+under `projects-folder/templates/` when other disciplines or output formats
+need different scaffolds. Do not add a plugin manager, manifest format,
 versioning system, or CLI for plugins.
 
 ## Code Experiment Documentation

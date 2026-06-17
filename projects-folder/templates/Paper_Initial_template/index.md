@@ -1,14 +1,15 @@
 # Paper Initial Template
 
-Reusable project template for turning a research idea into a traceable paper
-project with code, figures, local references, writing state, and project memory.
+Reusable machine-learning-oriented paper template for turning a research idea
+into a traceable project with code, figures, local references, writing state,
+and project memory.
 
 # How To Use
 
-Copy this directory to the repository root:
+Copy this directory into `projects-folder/`:
 
 ```bash
-cp -R Paper_Initial_template <ProjectName>
+cp -R projects-folder/templates/Paper_Initial_template projects-folder/<ProjectName>
 ```
 
 Then fill the project-specific placeholders in the copied project.

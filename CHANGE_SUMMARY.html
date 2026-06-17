@@ -61,14 +61,14 @@ companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
   <tr><td>P10</td><td>INSTRUCTION.md never mentioned the template, References intake, Ideas capture, the hub, or memory layers</td><td>+Core Workflows (6 recipes), +Memory Layers table, +Skills section, +startup step for PROJECT_MEMORY.md — 130 lines total (budget ≤180)</td><td>The five orientation questions must be answerable from INSTRUCTION.md + FILETREE.md alone (acceptance criterion 2)</td></tr>
   <tr><td>P11</td><td>Empty untracked <code>.agents/.claude</code> dirs inside the template</td><td>Removed; INSTRUCTION.md documents on-demand creation of project-local skill dirs</td><td>Git cannot propagate empty dirs; they suggested structure that didn't exist</td></tr>
   <tr><td>P12</td><td>No writing scaffold in the template</td><td><code>main.tex</code> added — compiles out of the box (bibliography commented until first cite); <code>build/</code> gitignored</td><td>Deliverable 2 requires the idea→PDF path to work from the template</td></tr>
-  <tr><td>P13</td><td>No defined location for instantiated projects</td><td>Convention documented: projects sit at the repo root (<code>cp -R Paper_Initial_template &lt;Name&gt;</code>)</td><td>Keeps the template's relative links to <code>References/</code>/<code>Ideas/</code> working unchanged (D8)</td></tr>
+  <tr><td>P13</td><td>No defined location for instantiated projects</td><td>Current convention: projects sit under <code>projects-folder/</code>; templates sit under <code>projects-folder/templates/</code></td><td>Keeps the root compact as project count grows while allowing multiple template families</td></tr>
   <tr><td>P14</td><td>Memory layers named in the task but undefined</td><td>3-layer model (global / project / task) with owner, timing, and hygiene rules in INSTRUCTION.md; PROJECT_MEMORY.md added to the template</td><td>Long-term, multi-project research needs bounded, layered memory</td></tr>
 </table>
 
 <h2>Smoke test result (deliverable 2)</h2>
 <ul>
   <li class="ok">PASSED end to end, executed locally and bounded (10 steps, ≤2 fix attempts per failure).</li>
-  <li>Idea logged → <a href="Example_Project/">Example_Project/</a> instantiated → uv env
+  <li>Idea logged → <a href="projects-folder/Example_Project/">Example_Project/</a> instantiated → uv env
       (numpy 2.4.6, matplotlib 3.11.0) → <code>fit_line.py</code>: fitted slope 2.0452 (true 2.0),
       intercept 0.9325 (true 1.0), MSE 0.1402 → <code>Figs/linear_fit.png</code> →
       real reference (arXiv 1706.03762) stored in <code>paper/references.bib</code> →
@@ -95,9 +95,9 @@ companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
   <tr><td class="dec">D3</td><td>Track reference PDFs in git?</td><td>Status quo (tracked if added); none added yet</td><td>Add <code>References/*.pdf</code> to .gitignore to keep the repo small</td></tr>
   <tr><td class="dec">D4</td><td>HTML as delivery format?</td><td>Kept for the 3 delivered docs; all operational docs are Markdown</td><td>Ask to convert OS_INTRO / CHANGE_SUMMARY / task_plan to Markdown</td></tr>
   <tr><td class="dec">D5</td><td>Build a CLI?</td><td><b>No</b> — non-goal; conventions + skills suffice at this scale</td><td>Revisit if navigation becomes slow; would need explicit confirmation per task_en.md</td></tr>
-  <tr><td class="dec">D6</td><td>Keep Example_Project/?</td><td><b>Kept</b> as living documentation (README links to it)</td><td><code>rm -rf Example_Project</code> + remove its README/MEMORY/Ideas links and FILETREE rows</td></tr>
+  <tr><td class="dec">D6</td><td>Keep Example_Project/?</td><td><b>Kept</b> as living documentation under <code>projects-folder/Example_Project/</code> (README links to it)</td><td><code>rm -rf projects-folder/Example_Project</code> + remove its README/MEMORY/Ideas links and FILETREE rows</td></tr>
   <tr><td class="dec">D7</td><td>.agents/skills vs .claude/skills duplication</td><td>Two identical copies + documented sync rule (Windows-safe, zero tooling); verified in-sync today</td><td>Symlink one to the other (macOS/Linux only)</td></tr>
-  <tr><td class="dec">D8</td><td>Where do projects live?</td><td>Repository root — template's relative links keep working</td><td>A <code>Projects/</code> container; requires rewriting template links one level deeper</td></tr>
+  <tr><td class="dec">D8</td><td>Where do projects live?</td><td><code>projects-folder/</code>, with reusable templates in <code>projects-folder/templates/</code></td><td>Move projects back to root; would require reverting links and FILETREE rows</td></tr>
   <tr><td class="dec">D9</td><td>Structured (YAML/JSON) indexes?</td><td><b>No</b> — Markdown tables are grep-able and token-cheap</td><td>Add YAML front-matter later if tooling needs to parse indexes</td></tr>
 </table>
 
@@ -108,7 +108,7 @@ companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
   <tr><td>INSTRUCTION.md + FILETREE.md convey directory responsibilities</td><td class="ok">PASS — the five orientation questions are answered by INSTRUCTION.md §Core Workflows/§Memory Layers/§Skills + FILETREE.md (see <a href="OS_INTRO.html">OS_INTRO.html</a> for the answers)</td></tr>
   <tr><td>README.md gives a human the purpose + minimal workflow</td><td class="ok">PASS — what-it-is, quick start, directory table, minimal workflow; ~75 lines</td></tr>
   <tr><td>Docs match actual directory names</td><td class="ok">PASS — repo-wide grep finds <code>Paper_initial_template</code>/<code>READEME</code> only in the preserved task prompts (task.md / task_en.md); FILETREE.md regenerated</td></tr>
-  <tr><td>Remains lightweight</td><td class="ok">PASS — new top-level items: Example_Project/ + 3 HTML docs only; no tools/services/CLI; INSTRUCTION.md 130 lines (≤180 budget)</td></tr>
+  <tr><td>Remains lightweight</td><td class="ok">PASS — project instances and templates are grouped under projects-folder/; no tools/services/CLI added</td></tr>
   <tr><td>No invented citations/data; originals preserved</td><td class="ok">PASS — single bib entry built from live arXiv API fields; PDF numbers match the script run; README TODOs verbatim; <code>git log --diff-filter=D</code> since <code>a112398</code>: no deletions</td></tr>
 </table>
 

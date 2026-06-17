@@ -6,7 +6,7 @@ status: promoted
 created: 2026-06-12
 timestamp: 2026-06-17T00:00:00+12:00
 tags: [research-os, smoke-test, linear-fit, promoted]
-project: ../../Example_Project/
+project: ../../projects-folder/Example_Project/
 source: ../../task_en.md
 ---
 
@@ -32,7 +32,7 @@ compiled PDF.
 
 # Project
 
-Promoted to [Example Project](../../Example_Project/).
+Promoted to [Example Project](../../projects-folder/Example_Project/).
 
 # Notes
 

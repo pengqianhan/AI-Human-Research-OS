@@ -6,4 +6,4 @@
 
 ## 2026-06-12
 
-* **Creation**: Promoted the linear-fit micro-experiment idea into [Example Project](../../Example_Project/).
+* **Creation**: Promoted the linear-fit micro-experiment idea into [Example Project](../../projects-folder/Example_Project/).

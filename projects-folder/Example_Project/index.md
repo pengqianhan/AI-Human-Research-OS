@@ -7,7 +7,7 @@ generated figure, local bibliography, LaTeX source, and compiled PDF.
 # Current State
 
 * Status: complete worked example, kept for reference.
-* Source idea: [linear-fit micro-experiment](../Ideas/idea_example/linear-fit-micro-experiment.md).
+* Source idea: [linear-fit micro-experiment](../../Ideas/idea_example/linear-fit-micro-experiment.md).
 * Main output: [paper/main.pdf](paper/main.pdf), generated from [paper/main.tex](paper/main.tex).
 * Bibliography: [paper/references.bib](paper/references.bib).
 

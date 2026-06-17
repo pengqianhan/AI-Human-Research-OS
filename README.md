@@ -24,8 +24,8 @@ folders are organized by material type rather than by a fixed workflow.
 | Path | Purpose |
 |---|---|
 | [Ideas/](Ideas/) | OKF bundle for research ideas, hypotheses, inspirations, and early discussions |
-| [References/](References/) | Papers (PDF), `refs.bib`, reading notes |
-| [Paper_Initial_template/](Paper_Initial_template/) | Template copied to the root to start a new project/paper |
+| [projects-folder/](projects-folder/) | Container for project instances and reusable project templates |
+| [projects-folder/templates/Paper_Initial_template/](projects-folder/templates/Paper_Initial_template/) | Machine-learning-oriented paper template copied to start a new project |
 | [Memory/](Memory/) | Global long-term memory across projects |
 | [Research-skills-hub/](Research-skills-hub/) | Store of reusable agent skills |
 | `.agents/skills/`, `.claude/skills/` | Installed skills (two identical copies) |
@@ -34,13 +34,15 @@ folders are organized by material type rather than by a fixed workflow.
 
 ## Minimal Workflow
 
-idea → [Ideas/](Ideas/) OKF concept or idea bundle → papers into
-[References/](References/) → copy [Paper_Initial_template/](Paper_Initial_template/)
-to `<ProjectName>/` at the root → experiments in `<ProjectName>/Code/`, figures in
-`Figs/` → write `paper/main.tex` → memory updated in `PROJECT_MEMORY.md` and
+idea → [Ideas/](Ideas/) OKF concept or idea bundle → copy
+[Paper_Initial_template/](projects-folder/templates/Paper_Initial_template/) to
+`projects-folder/<ProjectName>/` → experiments in
+`projects-folder/<ProjectName>/Code/`, figures in `Figs/` → write
+`paper/main.tex` with local references in `paper/references.bib` → memory updated in
+project `PROJECT_MEMORY.md` and
 [Memory/MEMORY.md](Memory/MEMORY.md). Details: [INSTRUCTION.md](INSTRUCTION.md).
 A complete worked example (code → figure → compiled PDF) lives in
-[Example_Project/](Example_Project/).
+[projects-folder/Example_Project/](projects-folder/Example_Project/).
 
 ## Roadmap (original TODO list)
 
