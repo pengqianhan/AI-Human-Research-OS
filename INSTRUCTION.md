@@ -48,7 +48,8 @@ lint check.
    `created`, and optional `tags`. Update [Ideas/index.md](Ideas/index.md) and,
    for nested bundles, the local `index.md`.
 2. **Idea → Project**: copy the template to the repository root:
-   `cp -R Paper_Initial_template <ProjectName>`. Fill the Snapshot sections of
+   `cp -R Paper_Initial_template <ProjectName>`. Fill the project entrypoint
+   `<ProjectName>/index.md`, the Snapshot sections of
    `<ProjectName>/PROJECT_MEMORY.md` and `<ProjectName>/paper_skeleton.md`, set
    the idea concept's `status` to `promoted` with a link to the project, add a row to
    Active Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh
@@ -127,7 +128,8 @@ Template contract — a directory is a valid project template when:
 2. its internal relative links are written for that root-level position;
 3. it states which files to fill right after instantiation (for
    `Paper_Initial_template`: the Snapshot sections of `PROJECT_MEMORY.md`,
-   `paper_skeleton.md`, and the title/abstract placeholders in `paper/main.tex`);
+   `paper_skeleton.md`, the folder entrypoint `index.md`, and the
+   title/abstract placeholders in `paper/main.tex`);
 4. shared conventions (build command, README pairing, memory rules) stay in
    this file; templates reference them instead of restating them.
 

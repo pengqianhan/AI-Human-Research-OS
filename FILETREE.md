@@ -6,17 +6,17 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `.agents/` - Local agent configuration and workspace skills used by Codex and Claude workflows. <!--hash:c95340aa-->
 - `.claude/` - Local Claude Code configuration and workspace skills for this research template. <!--hash:ec2eb0f6-->
-- `Example_Project/` - Worked example from the OS smoke test: idea to runnable code, generated figure, and compiled PDF. <!--hash:e6572540-->
+- `Example_Project/` - Worked example from the OS smoke test: idea to runnable code, generated figure, and compiled PDF. <!--hash:9f5046be-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
-- `Paper_Initial_template/` - Reusable project and paper starter template for developing feasible research ideas. <!--hash:7287a599-->
+- `Paper_Initial_template/` - Reusable project and paper starter template for developing feasible research ideas. <!--hash:d1b8cabf-->
 - `Research-skills-hub/` - Optional research skills and helper files available for installation. <!--hash:ef77791c-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:4f7e5dbb-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CHANGE_SUMMARY.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:ecb1323c-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:cdfeef40-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:a1e67a06-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:4bc5a98d-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:2e9d481b-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
@@ -59,6 +59,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Code/` - Linear-fit smoke-test experiment: uv environment, fit_line.py, run commands, and reproducible results in bilingual READMEs. <!--hash:d99584ba-->
 - `Figs/` - Generated figures for the example project, including the linear_fit.png output of fit_line.py. <!--hash:05d901fd-->
 - `paper/` - LaTeX source area for the worked example paper, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:dafb5e6a-->
+- `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:874e627e-->
+- `log.md` - Folder-level update log for the smoke-test project. <!--hash:dbe4b1f0-->
 - `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:3172bdcb-->
 - `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:23127da4-->
 
@@ -93,6 +95,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Code/` - Template code area with uv environment conventions, bilingual README skeletons, and Datasets placeholder. <!--hash:87d4fafb-->
 - `Figs/` - Template area for figures, tables, plots, screenshots, and visual outputs. <!--hash:5c8555d9-->
 - `paper/` - Template LaTeX source area for new project papers, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:68b3b283-->
+- `index.md` - Folder entry point for the reusable project template and its post-copy starting files. <!--hash:b21c36c0-->
+- `log.md` - Template-level update log for changes to the project starter. <!--hash:e10d8d5f-->
 - `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:d688c0bc-->
 - `PROJECT_MEMORY.md` - Project-memory template: snapshot, key decisions, progress log, and open TODOs. <!--hash:ef18e301-->
 
