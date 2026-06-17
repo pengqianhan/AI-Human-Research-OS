@@ -1,18 +1,3 @@
-# AI Research Template
-
-Reusable AI-research paper template for turning a research idea into a traceable
-project with code, figures, local references, writing state, and project memory.
-
-# How To Use
-
-Copy this directory into `projects-folder/`:
-
-```bash
-cp -R projects-folder/templates/ai_research_template projects-folder/<ProjectName>
-```
-
-Then fill the project-specific placeholders in the copied project.
-
 # Start Here After Copying
 
 * [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - Fill the Snapshot and keep durable project state.

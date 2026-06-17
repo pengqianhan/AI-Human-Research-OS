@@ -105,8 +105,8 @@ lint check.
   (Claude Code). The two directories must stay byte-identical: apply any change
   to both.
 - [Research-skills-hub/](Research-skills-hub/) is the canonical store; its index
-  [index.md](Research-skills-hub/index.md) lists every skill and the
-  install procedure.
+  [index.md](Research-skills-hub/index.md) links the skill collections (each with
+  its own `index.md`) and the install procedure.
 - Promotion path: record lessons in `PROJECT_MEMORY.md` first; turn a lesson
   into a project-local skill (`projects-folder/<ProjectName>/.claude/skills/`
   plus `projects-folder/<ProjectName>/.agents/skills/`, created on demand) when

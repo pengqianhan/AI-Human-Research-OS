@@ -15,7 +15,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:854bf478-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:66cfd040-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:f1c4bb60-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:d003ed31-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:60aae52b-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
@@ -55,12 +55,12 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## Ideas/
 
 - `idea_example/` - Nested OKF idea bundle demonstrating folder-shaped idea representation for the promoted linear-fit smoke test. <!--hash:bf5133ae-->
-- `index.md` - OKF bundle entry point for research ideas, status profile, and nested idea bundle links. <!--hash:aee4f0d0-->
+- `index.md` - OKF bundle entry point for research ideas, status profile, and nested idea bundle links. <!--hash:452de361-->
 - `log.md` - Chronological update log for the Ideas OKF bundle. <!--hash:85961789-->
 
 ## Ideas/idea_example/
 
-- `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:44d3a53f-->
+- `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:b84829fe-->
 - `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:05ab486d-->
 - `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:481b0659-->
 
@@ -70,7 +70,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Research-skills-hub/
 
-- `index.md` - Catalog and install guide for the Research Skills Hub: science-skills and open-paper-skills collections, with per-skill purpose and installed status. <!--hash:480586f1-->
+- `index.md` - Index of the Research Skills Hub: links to the science-skills and open-paper-skills collections plus the install procedure. <!--hash:85c1e3de-->
 
 ## paper-library/
 
@@ -102,7 +102,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `Example_Project/` - Worked example from the OS smoke test: idea to runnable code, generated figure, and compiled PDF. <!--hash:897b989b-->
 - `templates/` - Reusable project templates copied into projects-folder/ to start new projects, plus a template index. <!--hash:16fd6937-->
-- `index.md` - Project index linking each project instance and the reusable templates, with instructions for adding a project. <!--hash:3d92454a-->
+- `index.md` - Project index linking each project instance and the reusable templates, with instructions for adding a project. <!--hash:685b13fb-->
 
 ## projects-folder/Example_Project/
 
@@ -110,7 +110,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Code/` - Linear-fit smoke-test experiment: uv environment, fit_line.py, run commands, and reproducible results in bilingual READMEs. <!--hash:d99584ba-->
 - `Figs/` - Generated figures for the example project, including the linear_fit.png output of fit_line.py. <!--hash:8c1d3ba6-->
 - `paper/` - LaTeX source area for the worked example paper, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:a352390e-->
-- `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:073cb790-->
+- `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:bcfe90b9-->
 - `log.md` - Folder-level update log for the smoke-test project. <!--hash:570a64fe-->
 - `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:aebcb48c-->
 - `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:6a4cb44d-->
@@ -127,7 +127,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## projects-folder/templates/
 
 - `ai_research_template/` - Reusable AI-research paper starter template for turning a feasible idea into a traceable project. <!--hash:21492d4a-->
-- `index.md` - Index of available project templates with copy-to-start instructions. <!--hash:ab2e7907-->
+- `index.md` - Index of available project templates with copy-to-start instructions. <!--hash:d3f6409c-->
 
 ## projects-folder/templates/ai_research_template/
 
@@ -135,7 +135,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Code/` - Template code area with uv environment conventions, bilingual README skeletons, and Datasets placeholder. <!--hash:87d4fafb-->
 - `Figs/` - Template area for figures, tables, plots, screenshots, and visual outputs. <!--hash:bc34b778-->
 - `paper/` - Template LaTeX source area for new project papers, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:c729d852-->
-- `index.md` - Folder entry point for the reusable AI-research template and its post-copy starting files. <!--hash:c4e196c8-->
+- `index.md` - Folder entry point for the reusable AI-research template and its post-copy starting files. <!--hash:aacca729-->
 - `log.md` - Template-level update log for changes to the project starter. <!--hash:e10d8d5f-->
 - `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:38fc034f-->
 - `PROJECT_MEMORY.md` - Project-memory template: snapshot, key decisions, progress log, and open TODOs. <!--hash:78d9eb36-->

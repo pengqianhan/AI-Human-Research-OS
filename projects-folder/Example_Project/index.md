@@ -1,16 +1,3 @@
-# Example Project
-
-Worked example for the AI-Human Research OS smoke test. This project walks one
-idea through the full loop: idea capture, template instantiation, runnable code,
-generated figure, local bibliography, LaTeX source, and compiled PDF.
-
-# Current State
-
-* Status: complete worked example, kept for reference.
-* Source idea: [linear-fit micro-experiment](../../Ideas/idea_example/linear-fit-micro-experiment.md).
-* Main output: [paper/main.pdf](paper/main.pdf), generated from [paper/main.tex](paper/main.tex).
-* Bibliography: [paper/references.bib](paper/references.bib).
-
 # Start Here
 
 * [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - Durable project state, decisions, and progress log.
@@ -24,3 +11,8 @@ generated figure, local bibliography, LaTeX source, and compiled PDF.
 * [Figs/](Figs/) - Generated figure assets.
 * [paper/](paper/) - LaTeX source, local references, generated PDF.
 * [Baselines/](Baselines/) - Baseline notes area inherited from the template.
+
+# Related
+
+* [Source idea: linear-fit micro-experiment](../../Ideas/idea_example/linear-fit-micro-experiment.md) - Promoted idea this project was created from.
+* [paper/main.pdf](paper/main.pdf) - Compiled paper, generated from paper/main.tex.
