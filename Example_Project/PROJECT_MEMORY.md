@@ -2,7 +2,7 @@
 
 > Project-local memory. An agent updates this at the end of any session that
 > changes project state. Keep it short; details belong in `paper_skeleton.md`,
-> `Code/README.md`, or `../References/`.
+> `paper/main.tex`, `Code/README.md`, or `../References/`.
 
 ## Snapshot
 
@@ -18,7 +18,7 @@
 
 | Date | Decision | Why | Where reflected |
 |---|---|---|---|
-| 2026-06-12 | Build with `latexmk -bibfudge-` so the shared root `References/refs.bib` resolves from the project dir | latexmk 4.86a runs bibtex inside `build/` by default, which breaks the `../References/refs` path | `main.tex` comments; INSTRUCTION.md workflow 5 |
+| 2026-06-12 | Build from `paper/` with `latexmk -bibfudge-` so the shared root `References/refs.bib` resolves from the LaTeX source dir | latexmk 4.86a runs bibtex inside the output directory by default, which breaks relative bibliography paths without `-bibfudge-` | `paper/main.tex` comments; INSTRUCTION.md workflow 5 |
 
 ## Progress Log
 

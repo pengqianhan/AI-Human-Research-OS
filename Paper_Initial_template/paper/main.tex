@@ -18,18 +18,18 @@ TODO: problem -> gap -> method -> evidence -> implication.
 \section{Introduction}
 TODO.
 
-% Figures live in Figs/, e.g.:
+% Figures live in ../Figs/ when building from paper/, e.g.:
 % \begin{figure}[t]\centering
-%   \includegraphics[width=.8\linewidth]{Figs/example.png}
+%   \includegraphics[width=.8\linewidth]{../Figs/example.png}
 %   \caption{...}\label{fig:example}
 % \end{figure}
 
-% Build: latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=build main.tex
-% (-bibfudge- makes bibtex run in this directory, so the relative path below
-%  resolves the same way with or without -outdir.)
+% Build from the project root: cd paper && latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=../build main.tex
+% (-bibfudge- makes bibtex run from paper/, so the relative path below
+%  resolves against the paper/ directory even when output goes to ../build.)
 % Bibliography: shared store at the repository root (project sits at root level).
 % Uncomment once the first \cite{...} exists in the text:
 % \bibliographystyle{plain}
-% \bibliography{../References/refs}
+% \bibliography{../../References/refs}
 
 \end{document}

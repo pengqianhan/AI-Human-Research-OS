@@ -26,7 +26,7 @@
 
 - `uv run python fit_line.py`（2026-06-12，numpy 2.4.6）：
   拟合斜率 = 2.0452（真值 2.0），拟合截距 = 0.9325（真值 1.0），
-  MSE = 0.1402。图：`../Figs/linear_fit.png`；结果写入 `../main.tex`。
+  MSE = 0.1402。图：`../Figs/linear_fit.png`；结果写入 `../paper/main.tex`。
 
 ## 已知局限
 

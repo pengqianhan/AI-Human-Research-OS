@@ -26,7 +26,7 @@ How to set up and run the experiments in this folder. Per repository rules
 
 - `uv run python fit_line.py` (2026-06-12, numpy 2.4.6):
   fitted slope = 2.0452 (true 2.0), fitted intercept = 0.9325 (true 1.0),
-  MSE = 0.1402. Figure: `../Figs/linear_fit.png`; reported in `../main.tex`.
+  MSE = 0.1402. Figure: `../Figs/linear_fit.png`; reported in `../paper/main.tex`.
 
 ## Known Limitations
 

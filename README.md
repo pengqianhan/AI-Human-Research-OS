@@ -37,7 +37,7 @@ folders are organized by material type rather than by a fixed workflow.
 idea → [Ideas/](Ideas/) OKF concept or idea bundle → papers into
 [References/](References/) → copy [Paper_Initial_template/](Paper_Initial_template/)
 to `<ProjectName>/` at the root → experiments in `<ProjectName>/Code/`, figures in
-`Figs/` → write `main.tex` → memory updated in `PROJECT_MEMORY.md` and
+`Figs/` → write `paper/main.tex` → memory updated in `PROJECT_MEMORY.md` and
 [Memory/MEMORY.md](Memory/MEMORY.md). Details: [INSTRUCTION.md](INSTRUCTION.md).
 A complete worked example (code → figure → compiled PDF) lives in
 [Example_Project/](Example_Project/).

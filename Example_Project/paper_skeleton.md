@@ -24,6 +24,7 @@ Relative links assume this project folder sits at the repository root, sibling o
 
 | Asset | Link or path | Notes |
 |---|---|---|
+| Paper draft | [paper/main.tex](paper/main.tex) | LaTeX source. |
 | Code and experiments | [Code/](Code/) |  |
 | Datasets |  |  |
 | Figures and tables | [Figs/](Figs/) |  |

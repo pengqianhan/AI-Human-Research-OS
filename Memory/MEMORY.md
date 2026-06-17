@@ -19,7 +19,7 @@
 | Date | Decision | Why |
 |---|---|---|
 | 2026-06-12 | Research OS normalized: entry chain (AGENTS/CLAUDE → INSTRUCTION → FILETREE → memory), six core workflows, 3-layer memory, hub-as-store skill lifecycle | task_en.md normalization task; see `CHANGE_SUMMARY.html` |
-| 2026-06-12 | Projects are instantiated at the repository root (`cp -R Paper_Initial_template <Name>`) | keeps the template's relative links to `References/` and `Ideas/` working |
+| 2026-06-12 | Projects are instantiated at the repository root (`cp -R Paper_Initial_template <Name>`), with LaTeX sources under `<Project>/paper/` | keeps the template's relative links to `References/`, `Ideas/`, `Code/`, and `Figs/` predictable |
 | 2026-06-12 | Plugin model: small fixed core (entry chain, memory layers, directory semantics) + two plugin types — skills and project templates; `Templates/` container deferred until a second template exists; no plugin manager / manifest / versioning / CLI | keeps the OS open and extensible without machinery (INSTRUCTION.md → Extending the OS) |
 
 ## Lessons and Principles
@@ -27,6 +27,6 @@
 <!-- promote to Research-skills-hub/ only when useful across multiple projects -->
 
 - latexmk ≥ 4.86 runs bibtex inside the output directory by default; with the
-  shared root bibliography (`\bibliography{../References/refs}`), build with
-  `-bibfudge-` so the path resolves from the project directory (found 2026-06-12
-  in the smoke test).
+  shared root bibliography (`\bibliography{../../References/refs}` from
+  `<Project>/paper/main.tex`), build from `paper/` with `-bibfudge-` so the path
+  resolves from the paper directory (found 2026-06-12 in the smoke test).

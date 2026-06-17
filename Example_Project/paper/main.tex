@@ -13,7 +13,7 @@
 
 \begin{abstract}
 This note is the worked example for the AI-Human Research OS. It walks one idea
-through the full loop — idea log, project instantiation from the template,
+through the full loop — OKF idea concept, project instantiation from the template,
 a runnable experiment, a generated figure, and a compiled PDF — with every
 number traceable to code in \texttt{Code/}.
 \end{abstract}
@@ -33,16 +33,16 @@ fitted intercept $0.9325$ (true $1.0$), $\mathrm{MSE}=0.1402$
 fitted line.
 
 \begin{figure}[h]\centering
-  \includegraphics[width=.8\linewidth]{Figs/linear_fit.png}
+  \includegraphics[width=.8\linewidth]{../Figs/linear_fit.png}
   \caption{Synthetic data and least-squares linear fit (seed 42).}
   \label{fig:fit}
 \end{figure}
 
-% Build: latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=build main.tex
-% (-bibfudge- makes bibtex run in this directory, so the relative path below
-%  resolves the same way with or without -outdir.)
+% Build from the project root: cd paper && latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=../build main.tex
+% (-bibfudge- makes bibtex run from paper/, so the relative path below
+%  resolves against the paper/ directory even when output goes to ../build.)
 % Bibliography: shared store at the repository root (project sits at root level).
 \bibliographystyle{plain}
-\bibliography{../References/refs}
+\bibliography{../../References/refs}
 
 \end{document}

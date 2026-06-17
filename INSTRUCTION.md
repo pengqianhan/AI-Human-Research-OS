@@ -63,11 +63,11 @@ lint check.
    environment at that folder's scope; datasets in `<Project>/Code/Datasets/`;
    figures in `<Project>/Figs/`; baseline runs in `<Project>/Baselines/`. Update
    the nearest README (both languages if a pair exists) in the same task.
-5. **Writing**: edit `<Project>/main.tex`; track claims and evidence in
-   `<Project>/paper_skeleton.md`; build with
-   `latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=build main.tex`
-   (`build/` is gitignored; `-bibfudge-` keeps the shared-bibliography path
-   working from the project directory).
+5. **Writing**: edit `<Project>/paper/main.tex`; track claims and evidence in
+   `<Project>/paper_skeleton.md`; build from the project root with
+   `cd paper && latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=../build main.tex`
+   (`build/` is gitignored at the project root; `-bibfudge-` keeps the
+   shared-bibliography path working from the `paper/` directory).
 6. **Session end**: update the Progress Log in `<Project>/PROJECT_MEMORY.md`;
    update [Memory/MEMORY.md](Memory/MEMORY.md) only if cross-project state
    changed.
@@ -126,8 +126,8 @@ Template contract — a directory is a valid project template when:
    root;
 2. its internal relative links are written for that root-level position;
 3. it states which files to fill right after instantiation (for
-   `Paper_Initial_template`: the Snapshot sections of `PROJECT_MEMORY.md` and
-   `paper_skeleton.md`);
+   `Paper_Initial_template`: the Snapshot sections of `PROJECT_MEMORY.md`,
+   `paper_skeleton.md`, and the title/abstract placeholders in `paper/main.tex`);
 4. shared conventions (build command, README pairing, memory rules) stay in
    this file; templates reference them instead of restating them.
 

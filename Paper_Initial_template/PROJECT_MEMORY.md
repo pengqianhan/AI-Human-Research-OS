@@ -2,7 +2,7 @@
 
 > Project-local memory. An agent updates this at the end of any session that
 > changes project state. Keep it short; details belong in `paper_skeleton.md`,
-> `Code/README.md`, or `../References/`.
+> `paper/main.tex`, `Code/README.md`, or `../References/`.
 
 ## Snapshot
 
