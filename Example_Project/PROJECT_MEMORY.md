@@ -18,18 +18,21 @@
 
 | Date | Decision | Why | Where reflected |
 |---|---|---|---|
-| 2026-06-12 | Build from `paper/` with `latexmk -bibfudge-` so the shared root `References/refs.bib` resolves from the LaTeX source dir | latexmk 4.86a runs bibtex inside the output directory by default, which breaks relative bibliography paths without `-bibfudge-` | `paper/main.tex` comments; INSTRUCTION.md workflow 5 |
+| 2026-06-17 | Build in place from `paper/` with `latexmk`, so the final PDF is `paper/main.pdf` | the paper directory is the expected place to find the compiled PDF, and building from the source directory keeps figure and bibliography paths stable without an external output directory | `paper/main.tex` comments; INSTRUCTION.md workflow 5 |
 
 ## Progress Log
 
 <!-- newest first, one dated bullet per session, keep ≤ ~30 lines -->
 
+- 2026-06-17: Build convention updated so `latexmk` run from `paper/` writes
+  `paper/main.pdf` directly; `.gitignore` now ignores the generated PDF and
+  LaTeX auxiliary files under project `paper/` directories.
 - 2026-06-12: Smoke test completed end to end — idea concept recorded (promoted), project
   instantiated from template, uv env (numpy 2.4.6 / matplotlib 3.11.0),
   `fit_line.py` run (slope 2.0452, intercept 0.9325, MSE 0.1402),
   `Figs/linear_fit.png` generated, real arXiv reference (1706.03762) fetched via
   the literature_search_arxiv skill into `../References/refs.bib`,
-  `build/main.pdf` compiled with all citations resolved.
+  `paper/main.pdf` compiled with all citations resolved.
 
 ## Open TODOs
 

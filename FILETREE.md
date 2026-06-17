@@ -12,12 +12,12 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `Paper_Initial_template/` - Reusable project and paper starter template for developing feasible research ideas. <!--hash:7287a599-->
 - `Research-skills-hub/` - Optional research skills and helper files available for installation. <!--hash:ef77791c-->
-- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:f443f281-->
+- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:4f7e5dbb-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
-- `CHANGE_SUMMARY.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:fb88ce4e-->
+- `CHANGE_SUMMARY.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:ca7bd198-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:964c4a26-->
-- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:2580a2fb-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:6dd498e5-->
+- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:51a7db5e-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:2e9d481b-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
@@ -58,9 +58,9 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Baselines/` - Baseline notes area inherited from the template; unused in this synthetic example. <!--hash:5c93fd7e-->
 - `Code/` - Linear-fit smoke-test experiment: uv environment, fit_line.py, run commands, and reproducible results in bilingual READMEs. <!--hash:d99584ba-->
 - `Figs/` - Generated figures for the example project, including the linear_fit.png output of fit_line.py. <!--hash:05d901fd-->
-- `paper/` - LaTeX source area for the worked example paper, built from paper/ into the project build directory. <!--hash:da6232a8-->
+- `paper/` - LaTeX source area for the worked example paper; final PDF is generated in place as paper/main.pdf. <!--hash:da6232a8-->
 - `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:e6315997-->
-- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:db222ffa-->
+- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:07e0a7a2-->
 
 ## Example_Project/Baselines/
 
@@ -68,7 +68,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Example_Project/paper/
 
-- `main.tex` - Compiled smoke-test manuscript source reporting the linear-fit numbers with the shared bibliography. <!--hash:fc83eea8-->
+- `main.tex` - Compiled smoke-test manuscript source reporting the linear-fit numbers with the shared bibliography. <!--hash:3fb2e119-->
 
 ## Ideas/
 
@@ -84,14 +84,14 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Memory/
 
-- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:be07c6bc-->
+- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:0f1a5e66-->
 
 ## Paper_Initial_template/
 
 - `Baselines/` - Baseline experiment notes, comparisons, and related materials for new research projects. <!--hash:854903c4-->
 - `Code/` - Template code area with uv environment conventions, bilingual README skeletons, and Datasets placeholder. <!--hash:87d4fafb-->
 - `Figs/` - Template area for figures, tables, plots, screenshots, and visual outputs. <!--hash:5c8555d9-->
-- `paper/` - Template LaTeX source area for new project papers, built into the project-level build directory. <!--hash:b693761b-->
+- `paper/` - Template LaTeX source area for new project papers; final PDF is generated in place as paper/main.pdf. <!--hash:b693761b-->
 - `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:70d3f439-->
 - `PROJECT_MEMORY.md` - Project-memory template: snapshot, key decisions, progress log, and open TODOs. <!--hash:00c90db4-->
 
@@ -101,7 +101,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Paper_Initial_template/paper/
 
-- `main.tex` - Minimal LaTeX scaffold for project papers with figure and bibliography path conventions. <!--hash:a79b94ea-->
+- `main.tex` - Minimal LaTeX scaffold for project papers with figure and bibliography path conventions. <!--hash:b58edc8e-->
 
 ## paper-library/
 

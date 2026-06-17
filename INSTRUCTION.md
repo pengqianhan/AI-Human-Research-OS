@@ -65,9 +65,10 @@ lint check.
    the nearest README (both languages if a pair exists) in the same task.
 5. **Writing**: edit `<Project>/paper/main.tex`; track claims and evidence in
    `<Project>/paper_skeleton.md`; build from the project root with
-   `cd paper && latexmk -pdf -bibfudge- -interaction=nonstopmode -outdir=../build main.tex`
-   (`build/` is gitignored at the project root; `-bibfudge-` keeps the
-   shared-bibliography path working from the `paper/` directory).
+   `cd paper && latexmk -pdf -interaction=nonstopmode main.tex`
+   (`paper/main.pdf` is the expected PDF output path; LaTeX auxiliary files
+   created under `paper/` are gitignored; building from `paper/` keeps figure
+   and shared-bibliography paths stable).
 6. **Session end**: update the Progress Log in `<Project>/PROJECT_MEMORY.md`;
    update [Memory/MEMORY.md](Memory/MEMORY.md) only if cross-project state
    changed.

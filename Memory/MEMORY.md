@@ -26,7 +26,8 @@
 
 <!-- promote to Research-skills-hub/ only when useful across multiple projects -->
 
-- latexmk ≥ 4.86 runs bibtex inside the output directory by default; with the
-  shared root bibliography (`\bibliography{../../References/refs}` from
-  `<Project>/paper/main.tex`), build from `paper/` with `-bibfudge-` so the path
-  resolves from the paper directory (found 2026-06-12 in the smoke test).
+- latexmk >= 4.86 runs bibtex inside the output directory when `-outdir` is
+  used. The current project workflow avoids that relative-path issue by
+  building in place from `<Project>/paper/`, which writes
+  `<Project>/paper/main.pdf` directly. Use `-bibfudge-` only if an external
+  output directory is reintroduced.

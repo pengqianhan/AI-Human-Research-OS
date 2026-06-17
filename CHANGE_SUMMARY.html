@@ -72,7 +72,7 @@ companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
       (numpy 2.4.6, matplotlib 3.11.0) → <code>fit_line.py</code>: fitted slope 2.0452 (true 2.0),
       intercept 0.9325 (true 1.0), MSE 0.1402 → <code>Figs/linear_fit.png</code> →
       real reference (arXiv 1706.03762) fetched live via the <code>literature_search_arxiv</code> skill →
-      <code>build/main.pdf</code> (144 KB) with all citations resolved.</li>
+      <code>paper/main.pdf</code> (144 KB) with all citations resolved.</li>
   <li>Every number in the PDF and READMEs comes from the actual script run; the BibTeX entry contains
       only API-fetched fields.</li>
 </ul>
@@ -80,7 +80,7 @@ companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
 <h2>Deviations from the plan</h2>
 <table>
   <tr><th>#</th><th>Deviation</th><th>Reason</th></tr>
-  <tr><td>1</td><td>Build command gained <code>-bibfudge-</code>; planned <code>\bibliography{../References/refs}</code> kept but latexmk invocation changed (template comment, Example_Project, INSTRUCTION.md workflow 5). Phase 6 therefore also touched INSTRUCTION.md and the template.</td><td>latexmk 4.86a runs bibtex inside <code>-outdir</code> by default; the explicitly-relative bib path is then unresolvable (kpathsea ignores BIBINPUTS for <code>../…</code> paths) — found and fixed during the smoke test (2 attempts), recorded as a lesson in <a href="Memory/MEMORY.md">Memory/MEMORY.md</a></td></tr>
+  <tr><td>1</td><td>Build command runs in place from <code>paper/</code>, so <code>main.tex</code> writes <code>paper/main.pdf</code> directly (template comment, Example_Project, INSTRUCTION.md workflow 5).</td><td>The paper directory is the expected final artifact location; building in place avoids the <code>-outdir</code> BibTeX relative-path issue noted in <a href="Memory/MEMORY.md">Memory/MEMORY.md</a>.</td></tr>
   <tr><td>2</td><td>Reference intake exercised bib-entry-only: no PDF downloaded, no paper_notes.md entry for 1706.03762</td><td>Keeps a ~2 MB binary out of git while D3 (track PDFs?) is undecided; the citation pipeline is fully exercised by the bib entry. The notes workflow remains documented and templated</td></tr>
   <tr><td>3</td><td><code>uv init --bare</code> instead of the plan's <code>--no-readme</code></td><td>Creates only <code>pyproject.toml</code> — more minimal</td></tr>
   <tr><td>4</td><td>Ideas_log entries go "below the <code>---</code> line, newest first" rather than literally at the top of the file</td><td>The file header + format block must stay above the entries</td></tr>
