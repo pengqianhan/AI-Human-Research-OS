@@ -105,7 +105,7 @@ lint check.
   (Claude Code). The two directories must stay byte-identical: apply any change
   to both.
 - [Research-skills-hub/](Research-skills-hub/) is the canonical store; its index
-  [skills_map.md](Research-skills-hub/skills_map.md) lists every skill and the
+  [index.md](Research-skills-hub/index.md) lists every skill and the
   install procedure.
 - Promotion path: record lessons in `PROJECT_MEMORY.md` first; turn a lesson
   into a project-local skill (`projects-folder/<ProjectName>/.claude/skills/`
@@ -114,8 +114,8 @@ lint check.
   to the hub only when it is useful across multiple projects and
   domain-independent or lightly coupled.
 - Every hub skill's `SKILL.md` must state scope, inputs, outputs, and
-  limitations. After adding or changing a skill, update `skills_map.md` and
-  refresh `FILETREE.md`.
+  limitations. After adding or changing a skill, update `Research-skills-hub/index.md`
+  and refresh `FILETREE.md`.
 - Skills contain runnable scripts. Skim a skill's `scripts/` before installing
   it from outside this repository.
 

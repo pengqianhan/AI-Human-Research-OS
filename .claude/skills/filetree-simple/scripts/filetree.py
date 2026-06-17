@@ -17,9 +17,9 @@ MANIFEST_PATH = Path("FILETREE.md")
 ENTRYPOINT_FILENAMES = ("README.md", "SKILL.md")
 README_INDEXED_SUBTREES = {
     "Research-skills-hub": {
-        "files": ("README.md",),
-        "dirs": ("skills",),
-        "hash_source": "README.md",
+        "files": ("index.md",),
+        "dirs": (),
+        "hash_source": "index.md",
     },
 }
 

@@ -10,13 +10,13 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
-- `Research-skills-hub/` - Optional research skills and helper files available for installation. <!--hash:ef77791c-->
+- `Research-skills-hub/` - Canonical hub of reusable research skills (science-skills/, open-paper-skills/); see its index.md for the catalog and install steps. <!--hash:28c252a1-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:4c2a20c7-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:854bf478-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:3eb0e42f-->
-- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:f990e6f1-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:66cfd040-->
+- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:d003ed31-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:60aae52b-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
@@ -28,7 +28,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .agents/skills/
 
-- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:b7f64a85-->
+- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:372f3743-->
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
@@ -43,7 +43,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .claude/skills/
 
-- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:b7f64a85-->
+- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:372f3743-->
 - `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
 - `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
 - `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
@@ -67,6 +67,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## Memory/
 
 - `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:04cb026d-->
+
+## Research-skills-hub/
+
+- `index.md` - Catalog and install guide for the Research Skills Hub: science-skills and open-paper-skills collections, with per-skill purpose and installed status. <!--hash:480586f1-->
 
 ## paper-library/
 

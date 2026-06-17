@@ -59,7 +59,7 @@ Markdown, BibTeX, and LaTeX.</p>
   <tr><td><a href="projects-folder/">projects-folder/</a></td><td>Container for project instances and reusable templates.</td></tr>
   <tr><td><a href="projects-folder/templates/ai_research_template/">projects-folder/templates/ai_research_template/</a></td><td>AI-research paper template copied to start a new project: <code>PROJECT_MEMORY.md</code>, <code>paper_skeleton.md</code>, <code>paper/main.tex</code>, <code>paper/references.bib</code>, <code>Code/</code>, <code>Figs/</code>, <code>Baselines/</code></td></tr>
   <tr><td><a href="Memory/MEMORY.md">Memory/MEMORY.md</a></td><td>Global memory: long-term goals, Active Projects table, cross-project decisions and lessons</td></tr>
-  <tr><td><a href="Research-skills-hub/skills_map.md">Research-skills-hub/</a></td><td>Canonical store ("app store") of reusable agent skills; <code>skills_map.md</code> is the index with install instructions</td></tr>
+  <tr><td><a href="Research-skills-hub/index.md">Research-skills-hub/</a></td><td>Canonical store ("app store") of reusable agent skills; <code>index.md</code> is the index with install instructions</td></tr>
   <tr><td><code>.agents/skills/</code> · <code>.claude/skills/</code></td><td>Installed skills for Codex / Claude Code — two byte-identical copies</td></tr>
   <tr><td><a href="projects-folder/Example_Project/">projects-folder/Example_Project/</a></td><td>Worked example produced by the smoke test: idea → code → figure → compiled PDF</td></tr>
 </table>
@@ -81,7 +81,7 @@ sections and the project <code>index.md</code>; mark the idea <code>promoted</co
 <div class="qa"><b>5. When does experience become memory vs. a skill?</b><br>
 Lesson → <code>PROJECT_MEMORY.md</code> first. Procedural and project-specific → project-local skill
 (<code>projects-folder/&lt;Project&gt;/.claude/skills/</code> + <code>.agents/skills/</code>, created on demand). Useful across
-projects and domain-light → <a href="Research-skills-hub/skills_map.md">Research-skills-hub/</a> +
+projects and domain-light → <a href="Research-skills-hub/index.md">Research-skills-hub/</a> +
 install into both root skill dirs.</div>
 
 <h2>Lifecycle walkthrough (what the smoke test actually did)</h2>
@@ -111,14 +111,14 @@ install into both root skill dirs.</div>
 
 <h2>Skills model</h2>
 <ul>
-  <li><b>Store:</b> <a href="Research-skills-hub/skills_map.md">Research-skills-hub/</a> holds canonical
+  <li><b>Store:</b> <a href="Research-skills-hub/index.md">Research-skills-hub/</a> holds canonical
       sources — <code>science-skills/</code> (from google-deepmind/science-skills: literature search for
       arXiv / OpenAlex / bioRxiv / Europe PMC, uv bootstrap, workflow→skill distiller) and
       <code>open-paper-skills/</code> (repo-local: <code>uv-env</code>, <code>filetree-simple</code>).</li>
   <li><b>Install:</b> copy a skill into <em>both</em> <code>.agents/skills/</code> and
       <code>.claude/skills/</code>; the two must stay byte-identical.</li>
   <li><b>Promote:</b> project memory → project-local skill → hub, with scope/inputs/outputs/limitations
-      documented in <code>SKILL.md</code>; update <code>skills_map.md</code> after changes.</li>
+      documented in <code>SKILL.md</code>; update <code>Research-skills-hub/index.md</code> after changes.</li>
 </ul>
 
 <h2>Quick start — human</h2>

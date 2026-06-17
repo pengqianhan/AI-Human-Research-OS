@@ -10,8 +10,8 @@ types (the other is project templates); see `INSTRUCTION.md` → Extending the O
 ## Install / update a skill
 
 ```bash
-cp -R Research-skills-hub/science-skills/skills/<skill> .agents/skills/<skill>
-cp -R Research-skills-hub/science-skills/skills/<skill> .claude/skills/<skill>
+cp -R Research-skills-hub/science-skills/<skill> .agents/skills/<skill>
+cp -R Research-skills-hub/science-skills/<skill> .claude/skills/<skill>
 # (for open-paper-skills, the source is Research-skills-hub/open-paper-skills/<skill>)
 ```
 
@@ -25,7 +25,7 @@ repository.
 
 From [google-deepmind/science-skills](https://github.com/google-deepmind/science-skills/tree/main/skills)
 (see [science-skills/LICENSE](science-skills/LICENSE)). Sources live under
-[science-skills/skills/](science-skills/skills/).
+[science-skills/](science-skills/); see [science-skills/index.md](science-skills/index.md).
 
 | Skill | Purpose | Installed? |
 |---|---|---|
@@ -39,7 +39,8 @@ From [google-deepmind/science-skills](https://github.com/google-deepmind/science
 
 ## open-paper-skills/
 
-Repo-local custom skills. Sources live under [open-paper-skills/](open-paper-skills/).
+Repo-local custom skills. Sources live under [open-paper-skills/](open-paper-skills/);
+see [open-paper-skills/index.md](open-paper-skills/index.md).
 
 | Skill | Purpose | Installed? |
 |---|---|---|

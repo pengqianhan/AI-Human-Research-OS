@@ -57,10 +57,11 @@ directly — there are no separate slash commands wrapping these.
   below that directory from `FILETREE.md`.
 - If a directory has no `README.md` or `SKILL.md`, index its useful text/code
   files individually.
-- README-indexed subtrees may be configured in the script when one README is
-  intended to index a large, frequently changing subtree. For this repository,
-  `Research-skills-hub/` keeps only `README.md` and `skills/` visible; individual
-  skill directories are found through `Research-skills-hub/README.md`.
+- Index-file-backed subtrees may be configured in the script when one index file
+  is intended to index a large, frequently changing subtree. For this repository,
+  `Research-skills-hub/` is collapsed to its `index.md`; the skill subdirectories
+  `science-skills/` and `open-paper-skills/` are reached through it and their own
+  `index.md` files.
 - The script filters `FILETREE.md`, lock files, `.gitkeep`, and common
   binary/asset formats before applying these compacting rules.
 
