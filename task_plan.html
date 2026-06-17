@@ -158,6 +158,19 @@ HTML deliverables + decision list → final acceptance check. No new tools, serv
     system, auto-update, CLI, or git submodules for plugins. Plugins stay "a directory with a contract":
     skills = <code>SKILL.md</code> standard; templates = the 4-point contract in INSTRUCTION.md.</td>
     <td>⛔ <!--st:8.2--> standing rule — never check off; revisit only on explicit user request.</td></tr>
+  <tr><td colspan="3" style="background:#f6f8fa; font-size:0.85rem; color:#5b6472;">
+    <b>Phase 9 — Project/template indexes + template rename</b>, added 2026-06-17 (follow-up, all committed in
+    <code>31fca35</code>, branch <code>forfable</code>). Actions decision <b>D2</b> (rename template to all-lowercase)
+    and reinforces <b>D8</b> (projects/templates live under <code>projects-folder/</code>). Narrative + decisions:
+    <a href="CHANGE_SUMMARY.html">CHANGE_SUMMARY.html → Follow-up 2026-06-17</a>.
+    <b>Resume note:</b> nothing here is pending; the only standing item is guardrail 9.6.
+    Caveat: the repo's real commit hashes diverge from the §Commits table in CHANGE_SUMMARY.html — trust <code>git log</code>.</td></tr>
+  <tr><td>9.1</td><td>Create <code>projects-folder/index.md</code> (OKF project index)</td><td>✅ <!--st:9.1--> <code>31fca35</code></td></tr>
+  <tr><td>9.2</td><td>Create <code>projects-folder/templates/index.md</code> (OKF template index)</td><td>✅ <!--st:9.2--> <code>31fca35</code></td></tr>
+  <tr><td>9.3</td><td>Rename <code>Paper_Initial_template/</code> → <code>ai_research_template/</code> via <code>git mv</code> (all-lowercase)</td><td>✅ <!--st:9.3--> <code>31fca35</code></td></tr>
+  <tr><td>9.4</td><td>Update live refs: README.md, INSTRUCTION.md, OS_INTRO.html, both <code>index.md</code>, template index title → "AI Research Template"</td><td>✅ <!--st:9.4--> <code>31fca35</code></td></tr>
+  <tr><td>9.5</td><td>Regenerate FILETREE.md via <code>filetree-simple</code> + lint (also fixed pre-existing projects-folder reorg drift)</td><td>✅ <!--st:9.5--> lint clean (86=86, need_llm 0)</td></tr>
+  <tr><td>9.6</td><td>Leave historical task docs (<code>task.md</code>, <code>task_en.md</code>, <code>task_plan.html</code>, <code>CHANGE_SUMMARY.html</code>) referencing the old name as quotes</td><td>⛔ <!--st:9.6--> by design — do not bulk-rename historical records; revisit only on explicit user request.</td></tr>
 </table>
 
 <!-- ============================================================ -->

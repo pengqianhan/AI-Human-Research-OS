@@ -91,7 +91,7 @@ companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
 <table>
   <tr><th>ID</th><th>Question</th><th>Default taken</th><th>To reverse / choose otherwise</th></tr>
   <tr><td class="dec">D1</td><td>CLAUDE.md: restore the pointer? (your commit <code>a112398</code> had removed it as "redundant")</td><td><b>Restored</b> the one-liner — required by the task's acceptance criterion 1</td><td>Delete CLAUDE.md and rely on Claude Code's AGENTS.md support — confirm your Claude Code version reads AGENTS.md first</td></tr>
-  <tr><td class="dec">D2</td><td>Casing target</td><td><code>Paper_Initial_template</code> (matches disk + task_en.md usage)</td><td>Rename to all-lowercase; requires touching all docs again</td></tr>
+  <tr><td class="dec">D2</td><td>Casing target</td><td><code>Paper_Initial_template</code> (matches disk + task_en.md usage) <b>— superseded 2026-06-17: renamed to <code>ai_research_template</code> (all-lowercase); see <a href="#followup-20260617">Follow-up</a></b></td><td>Rename to all-lowercase; requires touching all docs again</td></tr>
   <tr><td class="dec">D3</td><td>Track reference PDFs in git?</td><td>Status quo (tracked if added); none added yet</td><td>Add <code>References/*.pdf</code> to .gitignore to keep the repo small</td></tr>
   <tr><td class="dec">D4</td><td>HTML as delivery format?</td><td>Kept for the 3 delivered docs; all operational docs are Markdown</td><td>Ask to convert OS_INTRO / CHANGE_SUMMARY / task_plan to Markdown</td></tr>
   <tr><td class="dec">D5</td><td>Build a CLI?</td><td><b>No</b> — non-goal; conventions + skills suffice at this scale</td><td>Revisit if navigation becomes slow; would need explicit confirmation per task_en.md</td></tr>
@@ -130,6 +130,53 @@ companion doc: <a href="OS_INTRO.html">OS_INTRO.html</a></p>
 <p class="small">Execution tracker with per-step status lives in
 <a href="task_plan.html#todo">task_plan.html §Progress TODO</a>. Anything unchecked there is
 left for a future session by design.</p>
+
+<h2 id="followup-20260617">Follow-up — 2026-06-17 · template indexes + rename (commit <code>31fca35</code>)</h2>
+<p class="subtitle">Added after the original normalization task. Branch <code>forfable</code>,
+working tree clean at <code>31fca35</code>. <b>This follow-up is fully committed and verified — no resume
+work is pending.</b> Plan rows: <a href="task_plan.html#todo">task_plan.html §Progress TODO → Phase 9</a>.</p>
+
+<p><b>⚠ History caveat for the next session:</b> the §Commits table near the top of this file lists hashes
+(<code>1157410</code>, <code>73ed6df</code>, …) that are <i>not</i> on the current branch — the repository was
+re-committed since 2026-06-12. Trust <code>git log</code> over those tables. The verified commit for this
+follow-up is <code>31fca35</code> (<code>git show 31fca35</code>).</p>
+
+<h3>Commits (follow-up)</h3>
+<table>
+  <tr><th>Commit</th><th>Subject</th></tr>
+  <tr><td><code>31fca35</code></td><td>feat: add AI research template and update project structure for improved organization</td></tr>
+</table>
+
+<h3>What changed and why (follow-up)</h3>
+<table>
+  <tr><th>Before</th><th>After</th><th>Why</th></tr>
+  <tr><td>No index for <code>projects-folder/</code> or <code>projects-folder/templates/</code></td>
+      <td>Added OKF <code>index.md</code> in both — each lists its projects/templates with one-line descriptions plus an "add a project/template" recipe</td>
+      <td>Mirrors the OKF pattern of <a href="paper-library/index.md">paper-library/</a>; gives a cold session a navigable entry point per folder</td></tr>
+  <tr><td>Template dir <code>Paper_Initial_template/</code> (mixed case; name implies "initial draft")</td>
+      <td><code>projects-folder/templates/ai_research_template/</code> (all-lowercase); display title "AI Research Template"</td>
+      <td>Permanently removes the casing ambiguity behind P1/D2; the name now states the template's purpose</td></tr>
+  <tr><td>Live refs to the old name in README.md, INSTRUCTION.md, OS_INTRO.html, the two new indexes, and the template's own index</td>
+      <td>All updated to <code>ai_research_template</code> (<code>git mv</code> kept rename history)</td>
+      <td>Docs must match the real directory name (acceptance criterion 4)</td></tr>
+  <tr><td>FILETREE.md still indexed <code>Example_Project/</code> and the template at the <b>repo root</b> — it predated the <code>projects-folder/</code> move</td>
+      <td>Regenerated with <code>filetree-simple</code>; the whole <code>projects-folder/</code> subtree is now indexed; <code>lint</code> exit 0 (86 = 86, need_llm 0)</td>
+      <td>The index was already stale before this task; the rename forced a full, correct regen</td></tr>
+</table>
+
+<h3>Decisions (follow-up) — defaults taken, all reversible</h3>
+<table>
+  <tr><th>Question</th><th>Default taken</th><th>To reverse</th></tr>
+  <tr><td class="dec"><b>Supersedes D2</b> — template casing</td><td><b>Renamed to all-lowercase <code>ai_research_template</code></b> — D2's listed "reverse" path, confirmed by the user this session</td><td><code>git mv</code> back and update the same live refs + regenerate FILETREE.md</td></tr>
+  <tr><td class="dec">FILETREE.md scope for the rename</td><td><b>Full regen</b> (re-index the whole projects-folder reorg), chosen by the user over a minimal rename-only patch</td><td>n/a — full sync is the correct state and <code>lint</code> enforces it</td></tr>
+  <tr><td class="dec">Historical task docs still naming <code>Paper_Initial_template</code></td><td><b>Left untouched</b> (<code>task.md</code>, <code>task_en.md</code>, <code>task_plan.html</code>, <code>CHANGE_SUMMARY.html</code>) — they are records/quotes, consistent with the original "Intentionally not done"</td><td>Add clarifying footnotes (not in-place renames) if one canonical name is wanted everywhere</td></tr>
+</table>
+
+<h3>Intentionally not done (follow-up)</h3>
+<ul>
+  <li><b>In-place rename inside the 4 historical docs</b> — would falsify the record of the 2026-06-12 task and its D2 decision; those strings are quotes, not live links.</li>
+  <li><b>Phase 8.1 root <code>Templates/</code> container</b> — still not created; the active container is <code>projects-folder/templates/</code>, and the "second template" trigger has not occurred.</li>
+</ul>
 
 </main>
 </body>
