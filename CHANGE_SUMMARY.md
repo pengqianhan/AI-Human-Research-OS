@@ -12,9 +12,9 @@ git show <hash>              # the actual diff for any change
 ```
 
 > Full detail of the completed 2026-06 normalization task (verified problem inventory P1–P14,
-> phased execution, smoke-test results, acceptance table) lives in git history and the archived
-> [CHANGE_SUMMARY-2026-06.html](CHANGE_SUMMARY-2026-06.html) /
-> [task_plan-2026-06.html](task_plan-2026-06.html). This file keeps only the durable, non-git content.
+> phased execution, smoke-test results, acceptance table) lives in git history —
+> `git show d4edf3f:CHANGE_SUMMARY-2026-06.html` (and `:task_plan-2026-06.html`).
+> This file keeps only the durable, non-git content.
 
 ## Decisions
 
@@ -45,9 +45,9 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 - **Build runs in place from `paper/`** — `main.tex` writes `paper/main.pdf` and reads
   `paper/references.bib`, avoiding repo-level reference-path assumptions.
 - **Reference intake was bib-entry-only** for the smoke test (no PDF downloaded), pending D3.
-- **History caveat:** the archived `CHANGE_SUMMARY-2026-06.html` lists commit hashes
-  (`1157410`, `73ed6df`, …) that are **not** on the current `forfable` branch — the repo was
-  re-committed since. Trust `git log`, never those frozen tables.
+- **History caveat:** the old change-summary (`git show d4edf3f:CHANGE_SUMMARY-2026-06.html`) lists
+  commit hashes (`1157410`, `73ed6df`, …) that are **not** on the current `forfable` branch — the
+  repo was re-committed since. Trust `git log`, never those frozen tables.
 
 ## Intentionally not done
 

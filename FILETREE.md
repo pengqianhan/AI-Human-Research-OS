@@ -13,16 +13,14 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Research-skills-hub/` - Optional research skills and helper files available for installation. <!--hash:ef77791c-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:4c2a20c7-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
-- `CHANGE_SUMMARY-2026-06.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:082d6347-->
-- `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:fb961bf7-->
+- `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:854bf478-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:3eb0e42f-->
-- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:01f60a54-->
+- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:f990e6f1-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:60aae52b-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
-- `task_plan-2026-06.html` - Detailed executed normalization plan with verified problem inventory, phased steps, decisions, and a live progress TODO table. <!--hash:9486151a-->
-- `task_plan.md` - Forward-looking session hand-off: resume point, live Progress TODO, standing guardrails, and a pointer to the decisions record. <!--hash:0a915efb-->
+- `task_plan.md` - Forward-looking session hand-off: resume point, live Progress TODO, standing guardrails, and a pointer to the decisions record. <!--hash:f45909cd-->
 
 ## .agents/
 

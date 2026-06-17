@@ -8,9 +8,8 @@ deferred, and where decisions live. Backward-looking record (what changed and wh
 **Trust the repository over this file** — it is a snapshot. Re-verify with `git log` /
 `git status` and a quick file check before acting on anything written here.
 
-> Full detail of the completed 2026-06 normalization task lives in git history and in the
-> archived [task_plan-2026-06.html](task_plan-2026-06.html) /
-> [CHANGE_SUMMARY-2026-06.html](CHANGE_SUMMARY-2026-06.html). Don't re-derive it.
+> Full detail of the completed 2026-06 normalization task lives in git history —
+> `git show d4edf3f:task_plan-2026-06.html` (and `:CHANGE_SUMMARY-2026-06.html`). Don't re-derive it.
 
 ## Resume here
 
