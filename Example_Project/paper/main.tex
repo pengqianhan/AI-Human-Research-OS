@@ -39,10 +39,10 @@ fitted line.
 \end{figure}
 
 % Build from the project root: cd paper && latexmk -pdf -interaction=nonstopmode main.tex
-% Building from paper/ keeps ../Figs and ../../References relative to this
-% source directory, and writes the final PDF to paper/main.pdf.
-% Bibliography: shared store at the repository root (project sits at root level).
+% Building from paper/ keeps ../Figs and references.bib relative to this source
+% directory, and writes the final PDF to paper/main.pdf.
+% Bibliography: project-local store next to main.tex.
 \bibliographystyle{plain}
-\bibliography{../../References/refs}
+\bibliography{references}
 
 \end{document}

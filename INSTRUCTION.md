@@ -54,11 +54,10 @@ lint check.
    Active Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh
    `FILETREE.md`. Projects sit at the root, sibling to `References/` and
    `Ideas/`, so the template's relative links keep working.
-3. **Reference intake**: store the PDF in [References/](References/); append a
-   BibTeX entry to [References/refs.bib](References/refs.bib) — fetch metadata
-   with the literature-search skills, never invent fields; append a reading note
-   to [References/paper_notes.md](References/paper_notes.md) using
-   [paper_notes_template.md](References/paper_notes_template.md).
+3. **Reference intake**: append project-specific BibTeX entries to
+   `<Project>/paper/references.bib` — fetch metadata with the literature-search
+   skills, never invent fields. Store PDFs and reading notes in a local project
+   reference area when needed.
 4. **Experiments and artifacts**: code in `<Project>/Code/` with a `uv`-managed
    environment at that folder's scope; datasets in `<Project>/Code/Datasets/`;
    figures in `<Project>/Figs/`; baseline runs in `<Project>/Baselines/`. Update

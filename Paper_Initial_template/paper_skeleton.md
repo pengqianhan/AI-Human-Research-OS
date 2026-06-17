@@ -17,8 +17,9 @@ data, code, figures, or experiment outputs.
 
 ## Source Map
 
-Relative links assume this project folder sits at the repository root, sibling of
-`References/` and `Ideas/` (see `INSTRUCTION.md`, workflow "Idea → Project").
+Relative links assume this project folder sits at the repository root, sibling
+of `Ideas/` (see `INSTRUCTION.md`, workflow "Idea → Project"). Project-specific
+references live under `paper/`.
 
 | Asset | Link or path | Notes |
 |---|---|---|
@@ -27,8 +28,8 @@ Relative links assume this project folder sits at the repository root, sibling o
 | Datasets |  |  |
 | Figures and tables | [Figs/](Figs/) |  |
 | Baselines | [Baselines/](Baselines/) |  |
-| Bibliography | [../References/refs.bib](../References/refs.bib) |  |
-| Paper notes | [../References/paper_notes.md](../References/paper_notes.md) |  |
+| Bibliography | [paper/references.bib](paper/references.bib) |  |
+| Paper notes |  | Add local notes when needed. |
 | Ideas and meetings | [../Ideas/](../Ideas/) |  |
 
 ## Argument Map
