@@ -49,13 +49,13 @@ lint check.
    for nested bundles, the local `index.md`.
 2. **Idea → Project**: copy a template from [projects-folder/templates/](projects-folder/templates/)
    into [projects-folder/](projects-folder/), for example:
-   `cp -R projects-folder/templates/Paper_Initial_template projects-folder/<ProjectName>`.
+   `cp -R projects-folder/templates/ai_research_template projects-folder/<ProjectName>`.
    Fill the project entrypoint `projects-folder/<ProjectName>/index.md`, the
    Snapshot sections of `projects-folder/<ProjectName>/PROJECT_MEMORY.md` and
    `projects-folder/<ProjectName>/paper_skeleton.md`, set the idea concept's
    `status` to `promoted` with a link to the project, add a row to Active
    Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh `FILETREE.md`.
-   `Paper_Initial_template` is a machine-learning-oriented paper template;
+   `ai_research_template` is an AI-research paper template;
    add sibling templates under `projects-folder/templates/` for other
    disciplines or outputs such as books and blogs.
 3. **Reference intake**: append project-specific BibTeX entries to
@@ -132,14 +132,14 @@ Template contract — a directory is a valid project template when:
 2. its internal relative links are written for the
    `projects-folder/<ProjectName>/` position after copying;
 3. it states which files to fill right after instantiation (for
-   `Paper_Initial_template`: the Snapshot sections of `PROJECT_MEMORY.md`,
+   `ai_research_template`: the Snapshot sections of `PROJECT_MEMORY.md`,
    `paper_skeleton.md`, the folder entrypoint `index.md`, and the
    title/abstract placeholders in `paper/main.tex`);
 4. shared conventions (build command, README pairing, memory rules) stay in
    this file; templates reference them instead of restating them.
 
-`projects-folder/templates/Paper_Initial_template/` is currently the bundled
-machine-learning paper template. Add future templates as sibling directories
+`projects-folder/templates/ai_research_template/` is currently the bundled
+AI-research paper template. Add future templates as sibling directories
 under `projects-folder/templates/` when other disciplines or output formats
 need different scaffolds. Do not add a plugin manager, manifest format,
 versioning system, or CLI for plugins.
