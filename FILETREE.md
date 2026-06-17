@@ -7,7 +7,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `.agents/` - Local agent configuration and workspace skills used by Codex and Claude workflows. <!--hash:c95340aa-->
 - `.claude/` - Local Claude Code configuration and workspace skills for this research template. <!--hash:ec2eb0f6-->
 - `Example_Project/` - Worked example from the OS smoke test: idea to runnable code, generated figure, and compiled PDF. <!--hash:435ece8f-->
-- `Ideas/` - Research ideas, hypotheses, outlines, meeting notes, and reflections. <!--hash:bcb5bee2-->
+- `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `Paper_Initial_template/` - Reusable project and paper starter template for developing feasible research ideas. <!--hash:417d33dd-->
@@ -16,9 +16,9 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CHANGE_SUMMARY.html` - HTML change summary of the 2026-06 normalization: commits, per-problem fixes, deviations, user decisions D1-D9, acceptance results. <!--hash:fb88ce4e-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:67aced84-->
-- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:4f5c9d90-->
-- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:f64ad651-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:287f9856-->
+- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:d00163a5-->
+- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:6e156469-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
 - `task_plan.html` - Detailed executed normalization plan with verified problem inventory, phased steps, decisions, and a live progress TODO table. <!--hash:64fc61bf-->
@@ -60,7 +60,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Figs/` - Generated figures for the example project, including the linear_fit.png output of fit_line.py. <!--hash:05d901fd-->
 - `main.tex` - Compiled smoke-test manuscript reporting the linear-fit numbers with a real arXiv citation from the shared bibliography. <!--hash:f203ae18-->
 - `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:6ec8f34a-->
-- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:60389ec6-->
+- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:ed8133d6-->
 
 ## Example_Project/Baselines/
 
@@ -68,7 +68,15 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Ideas/
 
-- `Ideas_log.md` - Append-style idea log with entry format; ideas tracked from raw to promoted with links to projects. <!--hash:91ffe95a-->
+- `idea_example/` - Nested OKF idea bundle demonstrating folder-shaped idea representation for the promoted linear-fit smoke test. <!--hash:bf5133ae-->
+- `index.md` - OKF bundle entry point for research ideas, status profile, and nested idea bundle links. <!--hash:aee4f0d0-->
+- `log.md` - Chronological update log for the Ideas OKF bundle. <!--hash:85961789-->
+
+## Ideas/idea_example/
+
+- `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:4922f417-->
+- `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:1fa0a80c-->
+- `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:951740e0-->
 
 ## Memory/
 
@@ -81,7 +89,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Figs/` - Template area for figures, tables, plots, screenshots, and visual outputs. <!--hash:5c8555d9-->
 - `main.tex` - Minimal LaTeX scaffold that compiles out of the box; documents the latexmk build command and shared-bibliography path. <!--hash:ea6430e8-->
 - `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:0bd9ac84-->
-- `PROJECT_MEMORY.md` - Project-memory template: snapshot, key decisions, progress log, and open TODOs. <!--hash:dd7664f3-->
+- `PROJECT_MEMORY.md` - Project-memory template: snapshot, key decisions, progress log, and open TODOs. <!--hash:6a08452c-->
 
 ## Paper_Initial_template/Baselines/
 

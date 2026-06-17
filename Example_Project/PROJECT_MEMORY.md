@@ -7,7 +7,7 @@
 ## Snapshot
 
 - Project name: Example_Project (OS pipeline smoke test)
-- Started: 2026-06-12 — from idea: [Ideas_log entry](../Ideas/Ideas_log.md)
+- Started: 2026-06-12 — from idea: [linear-fit micro-experiment](../Ideas/idea_example/linear-fit-micro-experiment.md)
 - Goal (one sentence): Validate the Research OS end-to-end — idea → project from
   template → runnable code → figure → compiled PDF — with everything traceable.
 - Status: experimenting
@@ -24,7 +24,7 @@
 
 <!-- newest first, one dated bullet per session, keep ≤ ~30 lines -->
 
-- 2026-06-12: Smoke test completed end to end — idea logged (promoted), project
+- 2026-06-12: Smoke test completed end to end — idea concept recorded (promoted), project
   instantiated from template, uv env (numpy 2.4.6 / matplotlib 3.11.0),
   `fit_line.py` run (slope 2.0452, intercept 0.9325, MSE 0.1402),
   `Figs/linear_fit.png` generated, real arXiv reference (1706.03762) fetched via

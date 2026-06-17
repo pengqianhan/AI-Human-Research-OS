@@ -41,13 +41,16 @@ lint check.
 
 ## Core Workflows
 
-1. **Capture an idea**: append a new entry below the `---` line in
-   [Ideas/Ideas_log.md](Ideas/Ideas_log.md) (newest first), using the format
-   block in that file.
+1. **Capture an idea**: add an OKF concept under [Ideas/](Ideas/). For a
+   lightweight idea, create `Ideas/<slug>.md`; for an idea that needs local
+   notes or examples, create a nested bundle such as [Ideas/idea_example/](Ideas/idea_example/).
+   Idea concepts use `type: Idea` with `title`, `description`, `status`,
+   `created`, and optional `tags`. Update [Ideas/index.md](Ideas/index.md) and,
+   for nested bundles, the local `index.md`.
 2. **Idea → Project**: copy the template to the repository root:
    `cp -R Paper_Initial_template <ProjectName>`. Fill the Snapshot sections of
    `<ProjectName>/PROJECT_MEMORY.md` and `<ProjectName>/paper_skeleton.md`, set
-   the idea's status to `promoted` with a link to the project, add a row to
+   the idea concept's `status` to `promoted` with a link to the project, add a row to
    Active Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh
    `FILETREE.md`. Projects sit at the root, sibling to `References/` and
    `Ideas/`, so the template's relative links keep working.

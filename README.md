@@ -23,7 +23,7 @@ folders are organized by material type rather than by a fixed workflow.
 
 | Path | Purpose |
 |---|---|
-| [Ideas/](Ideas/) | Idea log: hypotheses, inspirations, early discussions |
+| [Ideas/](Ideas/) | OKF bundle for research ideas, hypotheses, inspirations, and early discussions |
 | [References/](References/) | Papers (PDF), `refs.bib`, reading notes |
 | [Paper_Initial_template/](Paper_Initial_template/) | Template copied to the root to start a new project/paper |
 | [Memory/](Memory/) | Global long-term memory across projects |
@@ -34,7 +34,7 @@ folders are organized by material type rather than by a fixed workflow.
 
 ## Minimal Workflow
 
-idea → [Ideas/Ideas_log.md](Ideas/Ideas_log.md) → papers into
+idea → [Ideas/](Ideas/) OKF concept or idea bundle → papers into
 [References/](References/) → copy [Paper_Initial_template/](Paper_Initial_template/)
 to `<ProjectName>/` at the root → experiments in `<ProjectName>/Code/`, figures in
 `Figs/` → write `main.tex` → memory updated in `PROJECT_MEMORY.md` and

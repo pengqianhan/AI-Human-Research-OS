@@ -7,7 +7,7 @@
 ## Snapshot
 
 - Project name:
-- Started: YYYY-MM-DD — from idea: [Ideas_log entry](../Ideas/Ideas_log.md)
+- Started: YYYY-MM-DD — from idea: link the source OKF idea concept under [Ideas](../Ideas/)
 - Goal (one sentence):
 - Status: exploring | experimenting | writing | submitted | paused
 - Next action:
