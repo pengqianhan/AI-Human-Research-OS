@@ -286,7 +286,11 @@ def list_repo_files() -> list[str]:
     repo_files = [
         normalize_repo_path(f)
         for f in files
-        if f and f not in gitlinks and os.path.lexists(f)
+        if f
+        and f not in gitlinks
+        and not f.endswith("/")
+        and os.path.lexists(f)
+        and not os.path.isdir(f)
     ]
     return sorted(set(repo_files))
 
