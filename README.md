@@ -67,4 +67,5 @@ A complete worked example (code → figure → compiled PDF) lives in
 
 - [AutoR](https://github.com/AutoX-AI-Labs/AutoR)
 - [autolab](https://github.com/autolabhq/autolab)
+- [eve](https://github.com/vercel/eve)
 - [awesome-AI-for-research](https://github.com/pengqianhan/awesome-AI-for-research)
