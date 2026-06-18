@@ -4,8 +4,6 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## (root)/
 
-- `.agents/` - Local agent configuration and workspace skills used by Codex and Claude workflows. <!--hash:c95340aa-->
-- `.claude/` - Local Claude Code configuration and workspace skills for this research template. <!--hash:ec2eb0f6-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
@@ -17,40 +15,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:f1c4bb60-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:d003ed31-->
-- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:60aae52b-->
+- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:75c0c72c-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
 - `task_plan.md` - Forward-looking session hand-off: resume point, live Progress TODO, standing guardrails, and a pointer to the decisions record. <!--hash:f45909cd-->
-
-## .agents/
-
-- `skills/` - Repository-local agent skills available for this research workspace. <!--hash:19201c86-->
-
-## .agents/skills/
-
-- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:372f3743-->
-- `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
-- `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
-- `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
-- `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
-- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.md + CHANGE_SUMMARY.md (resume TODO, decisions, deviations) for resuming work. <!--hash:37837e8d-->
-- `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
-- `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
-
-## .claude/
-
-- `skills/` - Claude Code workspace skills mirrored from repository-local agent skills. <!--hash:28ce3af1-->
-
-## .claude/skills/
-
-- `filetree-simple/` - Compact FILETREE.md maintenance skill and helper script. <!--hash:372f3743-->
-- `literature_search_arxiv/` - arXiv paper search and retrieval skill with metadata and download scripts. <!--hash:d2895c25-->
-- `literature_search_openalex/` - OpenAlex scholarly database search skill for papers, authors, institutions, and bibliometrics. <!--hash:c7a1b779-->
-- `paper-library-manager/` - Repo-local OKF paper library manager skill: maintain paper/topic notes, indexes, schema, validation, and viz.html. <!--hash:6e6cfa51-->
-- `science_skills_common/` - Shared HTTP client package used by Science Skills literature search tools. <!--hash:f5f8923c-->
-- `session-handoff/` - Cross-session hand-off skill: maintain task_plan.md + CHANGE_SUMMARY.md (resume TODO, decisions, deviations) for resuming work. <!--hash:37837e8d-->
-- `uv/` - uv prerequisite skill for checking or installing the Python package manager used by science skills. <!--hash:08b9625a-->
-- `uv-env/` - uv-based Python environment setup skill for research projects. <!--hash:66b388be-->
 
 ## Ideas/
 

@@ -64,6 +64,11 @@ directly — there are no separate slash commands wrapping these.
   `index.md` files.
 - The script filters `FILETREE.md`, lock files, `.gitkeep`, and common
   binary/asset formats before applying these compacting rules.
+- The agent-tooling directories `.agents/` and `.claude/` are excluded from
+  `FILETREE.md` entirely — neither the directories nor anything beneath them is
+  indexed. They hold agent configuration and workspace skills that do not belong
+  in the human-facing navigation index. The excluded set is the `EXCLUDED_DIRS`
+  constant in `scripts/filetree.py`.
 
 ## Init
 

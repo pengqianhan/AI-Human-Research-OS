@@ -15,6 +15,10 @@ from pathlib import Path, PurePosixPath
 
 MANIFEST_PATH = Path("FILETREE.md")
 ENTRYPOINT_FILENAMES = ("README.md", "SKILL.md")
+# Top-level directories excluded from FILETREE.md entirely. These hold agent
+# tooling/configuration that does not belong in the human-facing navigation
+# index, so neither the directories nor anything beneath them is indexed.
+EXCLUDED_DIRS = (".agents", ".claude")
 README_INDEXED_SUBTREES = {
     "Research-skills-hub": {
         "files": ("index.md",),
@@ -56,6 +60,15 @@ def require_git() -> None:
             "Error: filetree requires a git repository.\n"
             "Run `git init` first, then rerun this command."
         )
+
+
+def is_excluded_dir(path: str) -> bool:
+    """Return whether path is an excluded directory or lives beneath one."""
+    normalized = normalize_repo_path(path).rstrip("/")
+    return any(
+        normalized == excluded or normalized.startswith(f"{excluded}/")
+        for excluded in EXCLUDED_DIRS
+    )
 
 
 def should_skip(path: str) -> bool:
@@ -289,6 +302,7 @@ def list_repo_files() -> list[str]:
         if f
         and f not in gitlinks
         and not f.endswith("/")
+        and not is_excluded_dir(f)
         and os.path.lexists(f)
         and not os.path.isdir(f)
     ]
