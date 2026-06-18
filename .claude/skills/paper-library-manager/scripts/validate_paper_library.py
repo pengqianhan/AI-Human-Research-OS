@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# ///
 """Validate an OKF paper library.
 
 This script is intentionally self-contained: it uses only the Python standard
@@ -419,7 +422,7 @@ def main() -> int:
         default=None,
         help=(
             "Path to paper-library.toml. Defaults to the skill asset at "
-            ".agents/skills/paper-library-manager/assets/paper-library.toml."
+            "assets/paper-library.toml."
         ),
     )
     args = parser.parse_args()
