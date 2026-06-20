@@ -22,19 +22,18 @@ When adding or updating a paper:
 3. Read `assets/paper-library.toml` from this skill and follow its paper body profile settings.
 4. Fetch or verify metadata from authoritative sources when network access is available. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
 5. Create or update one paper concept under `paper-library/papers/`.
-6. Identify 1 to 3 important themes from the paper's title, abstract, method, benchmarks, and contributions.
-7. Reuse existing topic pages when they cover those themes; otherwise create new `paper-library/topics/<slug>.md` topic summary pages without waiting for an explicit user request.
-8. Add concise topic links under the paper body and add the paper to each affected topic's `# Papers` section.
-9. Update `paper-library/papers/index.md`, `paper-library/topics/index.md`, and every affected `paper-library/topics/*.md`.
-10. Preserve user-curated fields and existing body layout following Metadata Rules and Paper Documents.
-11. Run the Finishing Commands after content edits.
-12. Cite only sources that were actually used.
+6. Identify and update 1 to 3 important themes following Topic Documents.
+7. Add concise topic links under the paper body and add the paper to each affected topic's `# Papers` section.
+8. Update `paper-library/papers/index.md`, `paper-library/topics/index.md`, and every affected `paper-library/topics/*.md`.
+9. Preserve user-curated fields and existing body layout following Metadata Rules and Paper Documents.
+10. Run the Finishing Commands after content edits.
+11. Cite only sources that were actually used.
 
 ## Paper Documents
 
 Use `references/SPEC.md` as the base OKF format reference and `references/schema.md` as the stricter paper-library profile.
 
-Paper bodies are user-customizable Markdown. Do not treat any one summarization template as part of the OKF contract. Use `assets/paper-library.toml` as the default paper body configuration for this skill. When reading the config, enumerate all `paper_body.profiles` entries. Use `paper_body.default_profile` by default, but choose another profile when the user requests it or when the paper clearly fits that profile better, such as implementation-focused papers, survey papers, benchmark papers, method papers, or future profile types added to the config. Use the selected `paper_body.profiles.<name>.sections` list for new paper bodies. Treat `paper_body.required_sections` as validation requirements only when the user configures them.
+Paper bodies are user-customizable Markdown. Do not treat any one summarization template as part of the OKF contract. Use `assets/paper-library.toml` as the default paper body configuration for this skill. When reading the config, enumerate all `paper_body.profiles` entries. Use `paper_body.default_profile` by default, but choose another configured profile when the user requests it or when the paper type clearly matches it. Use the selected `paper_body.profiles.<name>.sections` list for new paper bodies. Treat `paper_body.required_sections` as validation requirements only when the user configures them.
 Use `paper_body.section_descriptions` as drafting guidance for what each section should contain. Do not copy those descriptions into generated paper notes unless the user explicitly asks for visible prompts.
 
 If a specific paper needs a different summarization style, derive a temporary profile or template from the asset config for that paper, and persist the new profile only when the user asks. Keep generated summaries concise and distinguish paper claims from personal notes. If a paper has not been read in full, avoid presenting speculative critique as established fact. Preserve existing paper body layout when updating a paper unless the user explicitly asks to reorganize it.
@@ -76,7 +75,7 @@ Use `status: unread` for newly added papers unless the user says otherwise. Reco
 
 Before finishing paper-library edits:
 
-* Check that every paper has `type: Paper`, `title`, `description`, `resource`, `arxiv_id`, `pdf_url`, `doi`, `authors`, `submitted`, `tags`, `status`, `priority`, and `timestamp`.
+* Check required metadata fields from `references/schema.md`; the bundled validator is the executable check.
 * Check configured paper body sections only when `assets/paper-library.toml` sets `paper_body.required_sections`.
 * Check that internal Markdown links resolve within `paper-library/`.
 * Check that index entries point to existing files.
