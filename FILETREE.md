@@ -15,7 +15,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:f1c4bb60-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:d003ed31-->
-- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:75c0c72c-->
+- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:492d690b-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
 - `task_plan.md` - Forward-looking session hand-off: resume point, live Progress TODO, standing guardrails, and a pointer to the decisions record. <!--hash:f45909cd-->
@@ -42,10 +42,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## paper-library/
 
-- `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:ae27ef61-->
-- `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:dadb6b20-->
+- `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:ea02f764-->
+- `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:a3c4f8bf-->
 - `index.md` - Top-level entry point linking to the papers and topics indexes of the paper library. <!--hash:2dd97dfd-->
-- `viz.html` - Generated interactive graph visualization of the paper library (papers, topics, and their links). <!--hash:923f839c-->
+- `viz.html` - Generated interactive graph visualization of the paper library (papers, topics, and their links). <!--hash:d73b5259-->
 
 ## paper-library/papers/
 
@@ -54,15 +54,17 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `2605.31464.md` - Paper note: GPU Forecasters, LLM surrogates that forecast GPU kernel performance to speed up kernel search. <!--hash:d1150252-->
 - `2606.06741.md` - Paper note: OpenSkill, open-world self-evolution for LLM agents via self-built skills and verification. <!--hash:be7afa30-->
 - `2606.10662.md` - Paper note: decentralized multi-agent systems coordinating through shared verified context. <!--hash:c783e703-->
-- `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:2762fc7b-->
+- `2606.13662.md` - Paper note: EurekAgent, environment engineering for metric-driven autonomous scientific discovery with CLI agents. <!--hash:38a4b9a2-->
+- `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:454e86c8-->
 
 ## paper-library/topics/
 
+- `agent-environments.md` - Topic: environments, permissions, artifacts, budgets, and interfaces that shape agent behavior. <!--hash:a42cb900-->
 - `agent-self-evolution.md` - Topic: agents that improve their own skills, verification signals, or behavior after deployment. <!--hash:ac00bdb8-->
-- `ai-for-science.md` - Topic: AI systems that design, run, and revise scientific experiments. <!--hash:25c7dcf2-->
+- `ai-for-science.md` - Topic: AI systems that design, run, and revise scientific experiments. <!--hash:8f55f6b0-->
 - `gpu-kernel-optimization.md` - Topic: searching for and evaluating fast GPU kernels, including the cost of on-device measurement. <!--hash:633707a4-->
-- `index.md` - Index of all topic pages in the library, one line per topic. <!--hash:97cad1f2-->
-- `llm-agents.md` - Topic: language-model agents, skills, verification, and autonomous task execution. <!--hash:cca0d780-->
+- `index.md` - Index of all topic pages in the library, one line per topic. <!--hash:ea3ac381-->
+- `llm-agents.md` - Topic: language-model agents, skills, verification, and autonomous task execution. <!--hash:1fa02dda-->
 - `llm-surrogate-models.md` - Topic: LLMs used as predictive surrogates that forecast outcomes instead of generating or acting directly. <!--hash:49f9bb25-->
 - `multi-agent-systems.md` - Topic: multiple agents coordinating work, state, and reasoning. <!--hash:c0be8304-->
 

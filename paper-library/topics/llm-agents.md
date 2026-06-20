@@ -17,10 +17,15 @@ This topic tracks papers about LLM agents that execute tasks, build reusable ski
 
 * [OpenSkill](../papers/2606.06741.md) - open-world self-evolution through skills and self-built verification anchors.
 * [Decentralized Multi-Agent Systems with Shared Context](../papers/2606.10662.md) - multi-agent test-time scaling through shared verified context.
+* [EurekAgent](../papers/2606.13662.md) - CLI agents coordinated by an environment that manages permissions, artifacts, budgets, and human oversight.
+
+# Synthesis
+
+OpenSkill focuses on reusable skills and verification anchors, DeLM focuses on shared verified context across agents, and EurekAgent focuses on the environment around CLI agents. Together they suggest that durable agent capability depends on external structures as much as prompting: skills, shared memory, evaluators, budget controls, and artifacts.
 
 # Open Questions
 
 * What should a durable agent skill contain, and what should stay in the knowledge base?
 * How should agents validate generated skills before using them on real tasks?
 * How do skills, shared context, and OKF documents reinforce each other?
-
+* When should a system improve the agent itself, and when should it improve the environment around the agent?
