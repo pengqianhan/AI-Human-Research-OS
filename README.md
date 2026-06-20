@@ -62,6 +62,7 @@ A complete worked example (code → figure → compiled PDF) lives in
 - [ ] Add a workspace where holding a group meeting with humans and AI, humans discuss research with the AI. Because AI can search paper and read fast, they can point out if the idea is feasible or not, and they can also point out relevant papers that humans might miss. This can be a good way to brainstorm research ideas and get feedback on them. After discussion, the AI can implement the idea or feedback immediately.
 - [ ] The final goal of the repo is to build a Research OS.
 - [ ] add interface according to [AlookAI](https://github.com/alookai/alook) and [Wanman](https://github.com/chekusu/wanman)
+- [ ] update .agents/skills/paper-library-manager, 增加{添加自定义paper-body}的功能，这样如果用户需要不同格式的论文笔记，它可以自己定义论文笔记的格式，并且让AI按照这个格式来记录论文笔记。
 
 ## Reference projects
 
