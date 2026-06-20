@@ -35,6 +35,7 @@ When adding or updating a paper:
 Use `references/SPEC.md` as the base OKF format reference and `references/schema.md` as the stricter paper-library profile.
 
 Paper bodies are user-customizable Markdown. Do not treat any one summarization template as part of the OKF contract. Use `assets/paper-library.toml` as the default paper body configuration for this skill. Use `paper_body.default_profile` and the matching `paper_body.profiles.<name>.sections` list for new paper bodies. Treat `paper_body.required_sections` as validation requirements only when the user configures them.
+Use `paper_body.section_descriptions` as drafting guidance for what each section should contain. Do not copy those descriptions into generated paper notes unless the user explicitly asks for visible prompts.
 
 If a specific paper needs a different summarization style, derive a temporary profile or template from the asset config for that paper, and persist the new profile only when the user asks. Keep generated summaries concise and distinguish paper claims from personal notes. If a paper has not been read in full, avoid presenting speculative critique as established fact. Preserve existing paper body layout when updating a paper unless the user explicitly asks to reorganize it.
 

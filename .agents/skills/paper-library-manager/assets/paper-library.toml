@@ -10,6 +10,28 @@ recommended_sections = [
   "Citations",
 ]
 
+[paper_body.section_descriptions]
+"Summary" = "Concise overview of the paper's problem, approach, and main result."
+"Key Ideas" = "The central claims, mechanisms, or conceptual contributions worth remembering."
+"Method" = "How the proposed approach works, including model design, algorithm, training setup, or system architecture."
+"Experiments" = "Evaluation setup, datasets, baselines, metrics, and key empirical findings."
+"Limitations" = "Known weaknesses, assumptions, failure cases, and boundaries of the evidence."
+"Notes" = "Reader-owned observations, questions, interpretation, and follow-up thoughts."
+"Related" = "Links to related papers, topics, methods, datasets, benchmarks, or local notes."
+"Citations" = "Sources used for the note, including paper metadata, arXiv pages, project pages, or other references."
+"What To Reproduce" = "The concrete result, figure, table, benchmark, or behavior to reproduce."
+"Algorithm" = "Implementation-level steps, pseudocode, model components, or training procedure."
+"Data" = "Datasets, preprocessing, splits, licenses, and input/output formats needed for reproduction."
+"Metrics" = "Evaluation metrics, success criteria, reporting conventions, and comparison targets."
+"Engineering Notes" = "Practical setup details, dependencies, compute requirements, runtime issues, and implementation choices."
+"Failure Modes" = "Ways the implementation, method, or reproduction can fail, including debugging observations."
+"One-line Takeaway" = "A compact statement of the paper's main contribution or why it matters."
+"Research Context" = "Where the paper sits in the literature and what problem thread it contributes to."
+"Method Family" = "The broader class of methods, techniques, or research tradition the paper belongs to."
+"Compared With" = "Important contrasts with prior work, baselines, or nearby papers."
+"Useful For" = "Situations, projects, or research questions where this paper may be useful."
+"Open Questions" = "Unresolved questions, future work, and uncertainties raised by the paper."
+
 [paper_body.profiles.research-note]
 sections = [
   "Summary",

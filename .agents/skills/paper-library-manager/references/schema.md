@@ -65,11 +65,17 @@ The `[paper_body]` table defines:
 - `required_sections` — sections the validator enforces. Empty means the layout
   is fully personalized and nothing is enforced.
 - `recommended_sections` — guidance only; never a validation failure.
+- `section_descriptions` — optional descriptions keyed by section title. Agents
+  should use these descriptions to understand what each section is meant to
+  contain when drafting or updating paper notes.
 
 Each `[paper_body.profiles.<name>]` table defines a `sections` list. Use the
 `default_profile`'s `sections` to create new paper files, or another profile's
 `sections` when it fits the paper better. For a one-off paper style, derive a
 temporary profile from the asset config and persist it only when the user asks.
+When a profile section has a matching `section_descriptions` entry, use that
+description as drafting guidance; do not copy it into the paper body unless the
+user asks for visible prompts.
 
 If the asset config is unavailable during manual drafting, infer the body
 layout from existing papers before falling back to a simple research-note
