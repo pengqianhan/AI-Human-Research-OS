@@ -86,7 +86,7 @@ uv run scripts/generate_viz.py /absolute/path/to/paper-library
 uv run scripts/validate_paper_library.py /absolute/path/to/paper-library
 ```
 
-If `uv` is unavailable and the environment already has Python 3.11+, run the scripts directly with `python`:
+If `uv` is unavailable or blocked by sandbox/cache access and the environment already has Python 3.11+, run the scripts directly with `python`:
 
 ```bash
 python scripts/generate_viz.py /absolute/path/to/paper-library
