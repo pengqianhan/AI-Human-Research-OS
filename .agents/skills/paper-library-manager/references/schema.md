@@ -70,9 +70,11 @@ The `[paper_body]` table defines:
   contain when drafting or updating paper notes.
 
 Each `[paper_body.profiles.<name>]` table defines a `sections` list. Use the
-`default_profile`'s `sections` to create new paper files, or another profile's
-`sections` when it fits the paper better. For a one-off paper style, derive a
-temporary profile from the asset config and persist it only when the user asks.
+`default_profile`'s `sections` to create new paper files when no better match is
+clear. Agents should enumerate all configured profiles and may choose another
+profile when the user requests it or when the paper clearly fits that profile
+better. For a one-off paper style, derive a temporary profile from the asset
+config and persist it only when the user asks.
 When a profile section has a matching `section_descriptions` entry, use that
 description as drafting guidance; do not copy it into the paper body unless the
 user asks for visible prompts.
