@@ -81,6 +81,7 @@ Before finishing paper-library edits:
 * Check that internal Markdown links resolve within `paper-library/`.
 * Check that index entries point to existing files.
 * Regenerate the required graph artifact after content edits. Run bundled scripts from this skill's root directory, using paths relative to the directory that contains this `SKILL.md`. Pass the library root as an absolute path when the target repo is not the current working directory:
+  Do not run validation in parallel with graph generation; the validator reads `viz.html`, so generate the graph first and validate only after that command completes.
 
 ```bash
 uv run scripts/generate_viz.py /absolute/path/to/paper-library
