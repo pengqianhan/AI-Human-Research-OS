@@ -11,5 +11,5 @@ This OKF bundle tracks research papers, themes, reading status, and cross-paper 
 
 * Agent coordination and shared context.
 * Self-organizing AI research agents.
+* Autonomous research and hypothesis-tree refinement.
 * Open-world skill acquisition for LLM agents.
-

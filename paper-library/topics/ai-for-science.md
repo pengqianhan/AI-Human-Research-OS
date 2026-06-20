@@ -16,11 +16,12 @@ This topic tracks papers about AI systems used to plan, run, and revise scientif
 # Papers
 
 * [AutoScientists](../papers/2605.28655.md) - self-organizing agent teams for long-running computational scientific experimentation.
+* [Arbor](../papers/2606.11926.md) - hypothesis-tree refinement for autonomous optimization of research artifacts.
 * [EurekAgent](../papers/2606.13662.md) - environment engineering for metric-driven autonomous scientific discovery.
 
 # Synthesis
 
-AutoScientists emphasizes decentralized team organization for sustained experimentation, while EurekAgent emphasizes the surrounding execution environment: hidden evaluators, durable artifacts, budget controls, and supervision interfaces. Both treat scientific discovery as iterative agent work, but they put the main design pressure on different layers.
+AutoScientists emphasizes decentralized team organization for sustained experimentation, Arbor emphasizes persistent hypothesis management and held-out admission, while EurekAgent emphasizes the surrounding execution environment: hidden evaluators, durable artifacts, budget controls, and supervision interfaces. All three treat scientific discovery as iterative agent work, but they put the main design pressure on different layers.
 
 # Open Questions
 
@@ -28,3 +29,4 @@ AutoScientists emphasizes decentralized team organization for sustained experime
 * Which parts of scientific experimentation map onto long-running literature review workflows?
 * How should compute budgets shape agent critique and proposal acceptance?
 * Which environment boundaries are necessary before autonomous discovery results should be trusted?
+* How should hypothesis trees connect to project memory, paper skeletons, and durable experiment logs?

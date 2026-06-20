@@ -42,10 +42,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## paper-library/
 
-- `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:ea02f764-->
-- `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:a3c4f8bf-->
-- `index.md` - Top-level entry point linking to the papers and topics indexes of the paper library. <!--hash:2dd97dfd-->
-- `viz.html` - Generated interactive graph visualization of the paper library (papers, topics, and their links). <!--hash:d73b5259-->
+- `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:400c7e9d-->
+- `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:d6dee4f6-->
+- `index.md` - Top-level entry point linking to the papers and topics indexes of the paper library. <!--hash:63e89e83-->
+- `viz.html` - Generated interactive graph visualization of the paper library (papers, topics, and their links). <!--hash:4509f817-->
 
 ## paper-library/papers/
 
@@ -54,17 +54,19 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `2605.31464.md` - Paper note: GPU Forecasters, LLM surrogates that forecast GPU kernel performance to speed up kernel search. <!--hash:d1150252-->
 - `2606.06741.md` - Paper note: OpenSkill, open-world self-evolution for LLM agents via self-built skills and verification. <!--hash:be7afa30-->
 - `2606.10662.md` - Paper note: decentralized multi-agent systems coordinating through shared verified context. <!--hash:c783e703-->
+- `2606.11926.md` - Paper note: Arbor, hypothesis-tree refinement for long-horizon autonomous research and artifact optimization. <!--hash:3353b76b-->
 - `2606.13662.md` - Paper note: EurekAgent, environment engineering for metric-driven autonomous scientific discovery with CLI agents. <!--hash:38a4b9a2-->
-- `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:454e86c8-->
+- `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:a7b03298-->
 
 ## paper-library/topics/
 
 - `agent-environments.md` - Topic: environments, permissions, artifacts, budgets, and interfaces that shape agent behavior. <!--hash:a42cb900-->
 - `agent-self-evolution.md` - Topic: agents that improve their own skills, verification signals, or behavior after deployment. <!--hash:ac00bdb8-->
-- `ai-for-science.md` - Topic: AI systems that design, run, and revise scientific experiments. <!--hash:8f55f6b0-->
+- `ai-for-science.md` - Topic: AI systems that design, run, and revise scientific experiments. <!--hash:a94561e7-->
+- `autonomous-research.md` - Topic: AI systems that autonomously generate, test, and refine research hypotheses or artifacts. <!--hash:50f6352f-->
 - `gpu-kernel-optimization.md` - Topic: searching for and evaluating fast GPU kernels, including the cost of on-device measurement. <!--hash:633707a4-->
-- `index.md` - Index of all topic pages in the library, one line per topic. <!--hash:ea3ac381-->
-- `llm-agents.md` - Topic: language-model agents, skills, verification, and autonomous task execution. <!--hash:1fa02dda-->
+- `index.md` - Index of all topic pages in the library, one line per topic. <!--hash:13db165e-->
+- `llm-agents.md` - Topic: language-model agents, skills, verification, and autonomous task execution. <!--hash:c32df4b0-->
 - `llm-surrogate-models.md` - Topic: LLMs used as predictive surrogates that forecast outcomes instead of generating or acting directly. <!--hash:49f9bb25-->
 - `multi-agent-systems.md` - Topic: multiple agents coordinating work, state, and reasoning. <!--hash:c0be8304-->
 
