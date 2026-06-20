@@ -26,8 +26,8 @@ When adding or updating a paper:
 7. Reuse existing topic pages when they cover those themes; otherwise create new `paper-library/topics/<slug>.md` topic summary pages without waiting for an explicit user request.
 8. Add concise topic links under the paper body and add the paper to each affected topic's `# Papers` section.
 9. Update `paper-library/papers/index.md`, `paper-library/topics/index.md`, and every affected `paper-library/topics/*.md`.
-10. Preserve user notes, reading status, priority, body layout, and manually curated tags unless the user explicitly asks to change them.
-11. Regenerate `paper-library/viz.html` with the bundled visualization script.
+10. Preserve user-curated fields and existing body layout following Metadata Rules and Paper Documents.
+11. Run the Finishing Commands after content edits.
 12. Cite only sources that were actually used.
 
 ## Paper Documents
@@ -72,7 +72,7 @@ Preserve these user-curated fields when updating a paper:
 
 Use `status: unread` for newly added papers unless the user says otherwise. Recommended status values are `unread`, `skimmed`, `read`, and `summarized`.
 
-## Validation
+## Finishing Commands
 
 Before finishing paper-library edits:
 
@@ -80,16 +80,10 @@ Before finishing paper-library edits:
 * Check configured paper body sections only when `assets/paper-library.toml` sets `paper_body.required_sections`.
 * Check that internal Markdown links resolve within `paper-library/`.
 * Check that index entries point to existing files.
-* Regenerate the required graph artifact after content edits. Run bundled scripts from this skill's root directory, using paths relative to the directory that contains this `SKILL.md`. Pass the library root as an absolute path when the target repo is not the current working directory:
-  Do not run validation in parallel with graph generation; the validator reads `viz.html`, so generate the graph first and validate only after that command completes.
+* Run bundled scripts from this skill's root directory, using paths relative to the directory that contains this `SKILL.md`. Pass the library root as an absolute path when the target repo is not the current working directory. Generate `viz.html` before validation because the validator reads the generated graph file.
 
 ```bash
 uv run scripts/generate_viz.py /absolute/path/to/paper-library
-```
-
-* Run the bundled paper-library validator after content edits:
-
-```bash
 uv run scripts/validate_paper_library.py /absolute/path/to/paper-library
 ```
 
@@ -108,15 +102,7 @@ If your environment provides a skill validator, run it against this skill folder
 
 `paper-library/viz.html` is required. Use `viz.html` as the canonical filename; treat `vis.html` as a typo unless the user explicitly asks for a separate alias.
 
-Generate the graph view with the bundled self-contained script:
-
-```bash
-uv run scripts/generate_viz.py /absolute/path/to/paper-library
-```
-
 `scripts/generate_viz.py` renders the same Cytoscape graph + detail-pane viewer as the OKF reference (`enrichment_agent.viewer`) by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, and `scripts/static/viz.js`. Keep those sibling asset files alongside the script so the generated `viz.html` stays format-consistent with okf bundle viewers; only the bundle name and graph data differ.
-
-The final bundle must pass the bundled validator. This skill carries its own schema references and visualization script.
 
 ## Comparison Tasks
 
