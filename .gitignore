@@ -35,7 +35,6 @@ temp/
 .antigravitycli/
 
 # LaTeX build output
-**/build/
 *.aux
 *.bbl
 *.blg
