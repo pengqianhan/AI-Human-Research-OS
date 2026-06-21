@@ -10,11 +10,9 @@ of steps.
 ## Session Startup
 
 1. Read this file first.
-2. If an active `task_plan.md` exists, read its **Progress TODO** before other
-   work — it is the optional resume point for unfinished cross-session work.
-   Skim [`HANDOFF.md`](HANDOFF.md) Decisions before reopening a
-   settled question. Trust the repository over hand-off snapshots (re-verify
-   with `git status`).
+2. Read [`HANDOFF.md`](HANDOFF.md) for Active Work and Decisions before
+   reopening a settled question. Trust the repository over hand-off snapshots
+   (re-verify with `git status`).
 3. Unless the task is trivial, read `FILETREE.md` next to understand the current
    repository structure.
 4. For broad Research OS or template-design work, also read the relevant files under `Memory/`
