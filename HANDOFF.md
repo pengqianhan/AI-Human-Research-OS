@@ -1,9 +1,9 @@
-# Change Summary — AI-Human Research OS
+# Handoff — AI-Human Research OS
 
-Backward-looking record: the **decisions**, **deviations**, and **what was intentionally not done**
-that git history alone can't explain. There is currently no active forward-looking
-task plan; create `task_plan.md` only when unfinished work needs a cross-session
-resume point. Maintained by the `session-handoff` skill.
+Cross-session record for the **decisions**, **deviations**, and **what was intentionally
+not done** that git history alone can't explain. There is currently no active
+forward-looking task plan; create `task_plan.md` only when unfinished work needs a
+cross-session resume point. Maintained by the `session-handoff` skill.
 
 **Commits are not duplicated here** — read them from git, which is the source of truth:
 
@@ -26,7 +26,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | D1 | Restore the `CLAUDE.md` pointer (a prior commit had removed it as "redundant")? | **Restored** the one-line pointer to INSTRUCTION.md | Delete `CLAUDE.md` and rely on Claude Code reading `AGENTS.md` — confirm your version does so |
 | D2 | Template directory casing | ~~`Paper_Initial_template`~~ **— superseded 2026-06-17:** renamed to **`ai_research_template`** (all-lowercase) | `git mv` back and update README / INSTRUCTION / OS_INTRO / the index files, then regenerate FILETREE.md |
 | D3 | Track reference PDFs in git? | Status quo (tracked if added); none added yet | Add `References/*.pdf` to `.gitignore` |
-| D4 | HTML as the format for operating docs | **— superseded 2026-06-17 and narrowed later:** hand-off records are **Markdown** when present; `CHANGE_SUMMARY.md` is the durable record and `task_plan.md` is optional for unfinished work; `OS_INTRO.html` stays HTML as a static delivered intro | Convert hand-off records back to HTML (not recommended — Markdown is cheaper to read/edit/grep/diff) |
+| D4 | HTML as the format for operating docs | **— superseded 2026-06-17 and narrowed later:** hand-off records are **Markdown** when present; `HANDOFF.md` is the durable record and `task_plan.md` is optional for unfinished work; `OS_INTRO.html` stays HTML as a static delivered intro | Convert hand-off records back to HTML (not recommended — Markdown is cheaper to read/edit/grep/diff) |
 | D5 | Build a CLI? | **No** — non-goal; conventions + skills suffice at this scale | Revisit only with explicit confirmation if navigation becomes slow |
 | D6 | Keep `Example_Project/`? | **Kept** as living documentation under `projects-folder/Example_Project/` | `rm -rf projects-folder/Example_Project` + remove its README/MEMORY/Ideas links and FILETREE rows |
 | D7 | `.agents/skills` vs `.claude/skills` (vs hub) duplication | **Three** identical copies (two installed + the canonical `Research-skills-hub/` source) kept in sync by a documented rule | Symlink the installed dirs (macOS/Linux only) |

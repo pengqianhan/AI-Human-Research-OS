@@ -1,13 +1,13 @@
 ---
 name: session-handoff
-description: Maintain CHANGE_SUMMARY.md and, only when unfinished work must survive a session boundary, an active task_plan.md with a live Progress TODO. Use when asked to record progress, prepare a hand-off for the next session, continue earlier work, recall what was done previously, or plan a task that may span multiple sessions. Read task_plan.md only when it exists.
+description: Maintain HANDOFF.md and, only when unfinished work must survive a session boundary, an active task_plan.md with a live Progress TODO. Use when asked to record progress, prepare a hand-off for the next session, continue earlier work, recall what was done previously, or plan a task that may span multiple sessions. Read task_plan.md only when it exists.
 ---
 
 # Session Handoff
 
 Maintain lightweight repository-root Markdown hand-off records for agent work:
 
-- `CHANGE_SUMMARY.md` — backward-looking: decisions (with the default chosen and how to
+- `HANDOFF.md` — cross-session record: decisions (with the default chosen and how to
   reverse it), deviations from the plan, and what was intentionally not done.
 - `task_plan.md` — optional and forward-looking: the goal, any phased steps, and a
   **live Progress TODO table** for unfinished work that must survive a session boundary.
@@ -20,7 +20,7 @@ These files complement — never replace — the repository's memory files (e.g.
   out of sync with the real history. Point to `git log` / `git show <hash>` instead.
 - **memory files** hold durable cross-task / cross-project knowledge.
 - **these hand-off files** hold the state and reasoning of one task arc, in a form a cold
-  session can absorb quickly. `CHANGE_SUMMARY.md` may persist after the active plan is
+  session can absorb quickly. `HANDOFF.md` may persist after the active plan is
   deleted.
 
 ## Triggering — read this
@@ -39,7 +39,7 @@ until the skill is invoked:
 1. If `task_plan.md` exists, read its Progress TODO table first. ⬜ / 🔶 rows are the
    remaining work; ✅ rows carry commit hashes — inspect with `git show` instead of
    re-deriving.
-2. Read `CHANGE_SUMMARY.md`'s Decisions table before reopening any settled question — each
+2. Read `HANDOFF.md`'s Decisions table before reopening any settled question — each
    default records how to reverse it. Re-litigate only if the user asks.
 3. **Trust the repository over these files** — they are snapshots. Re-verify the
    load-bearing facts (`git log`, `git status`, key file checks) before acting on them.
@@ -56,12 +56,12 @@ until the skill is invoked:
 3. Status vocabulary: ⬜ pending · ✅ done (+ commit hash) · 🔶 partial/skipped (reason
    inline) · ⛔ standing guardrail (never checked off).
 4. When reality forces a deviation, take the sensible path and record it (what changed,
-   why) in `CHANGE_SUMMARY.md`. An honest record beats a flattering one; never tick an
+   why) in `HANDOFF.md`. An honest record beats a flattering one; never tick an
    unverified item.
-5. At task end — or before a planned stop — update `CHANGE_SUMMARY.md`: decisions,
+5. At task end — or before a planned stop — update `HANDOFF.md`: decisions,
    deviations, intentionally-not-done. **Do not add a commits table; link to `git log`.**
 6. When no execution steps remain, remove the active `task_plan.md` after durable
-   decisions and intentionally-not-done items are captured in `CHANGE_SUMMARY.md` or
+   decisions and intentionally-not-done items are captured in `HANDOFF.md` or
    memory.
 7. Related unfinished follow-up work: append rows/sections to the existing active plan.
    Unrelated new unfinished task: archive the current plan first (rename with a date
@@ -84,7 +84,7 @@ until the skill is invoked:
 ```markdown
 # Handoff — TASK NAME
 
-Resume point for the next session. Record of changes: CHANGE_SUMMARY.md.
+Resume point for the next session. Record of decisions and deviations: HANDOFF.md.
 **Repo state:** branch BRANCH · last commit HASH. Trust the repo over this file.
 
 ## Resume here
@@ -95,13 +95,13 @@ Legend: ⬜ pending · ✅ done · 🔶 partial/skipped · ⛔ guardrail
 | First step | ⬜ |
 
 ## Decisions
-See CHANGE_SUMMARY.md → Decisions. Don't duplicate here.
+See HANDOFF.md → Decisions. Don't duplicate here.
 ```
 
-`CHANGE_SUMMARY.md`:
+`HANDOFF.md`:
 
 ```markdown
-# Change Summary — TASK NAME
+# Handoff — TASK NAME
 
 Commits live in git: `git log` / `git show <hash>` (not duplicated here).
 
@@ -118,8 +118,8 @@ Commits live in git: `git log` / `git show <hash>` (not duplicated here).
 - **Scope**: a process and record-keeping convention; domain-independent; works in any git
   repository driven by code agents.
 - **Inputs**: the current repository state, the task being planned or resumed, and any
-  existing `task_plan.md` / `CHANGE_SUMMARY.md`.
-- **Outputs**: an updated `CHANGE_SUMMARY.md`, plus an optional `task_plan.md` at the repo
+  existing `task_plan.md` / `HANDOFF.md`.
+- **Outputs**: an updated `HANDOFF.md`, plus an optional `task_plan.md` at the repo
   root only while unfinished work needs a resume point.
 - **Limitations**: the files are snapshots, not ground truth — always re-verify against the
   repository; they do not replace memory files, commit messages, or git history; the skill

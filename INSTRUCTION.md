@@ -12,7 +12,7 @@ of steps.
 1. Read this file first.
 2. If an active `task_plan.md` exists, read its **Progress TODO** before other
    work — it is the optional resume point for unfinished cross-session work.
-   Skim [`CHANGE_SUMMARY.md`](CHANGE_SUMMARY.md) Decisions before reopening a
+   Skim [`HANDOFF.md`](HANDOFF.md) Decisions before reopening a
    settled question. Trust the repository over hand-off snapshots (re-verify
    with `git status`).
 3. Unless the task is trivial, read `FILETREE.md` next to understand the current

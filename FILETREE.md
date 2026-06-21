@@ -11,10 +11,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Research-skills-hub/` - Canonical hub of reusable research skills (science-skills/, open-paper-skills/); see its index.md for the catalog and install steps. <!--hash:28c252a1-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:ddb9130f-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
-- `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:9f63cb70-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:baacb76f-->
-- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:d003ed31-->
+- `HANDOFF.md` - Cross-session handoff record: decisions with how-to-reverse, deviations, intentionally-not-done, and optional active task-plan lifecycle. <!--hash:2b2f217b-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:62defffd-->
+- `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:0d9da7a3-->
 - `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:842fcf6d-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
@@ -33,7 +33,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Memory/
 
-- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:04cb026d-->
+- `MEMORY.md` - Global research memory: long-term goals, active projects table, cross-project decisions, and lessons. <!--hash:c967bc6a-->
 
 ## Research-skills-hub/
 
@@ -84,7 +84,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:bcfe90b9-->
 - `log.md` - Folder-level update log for the smoke-test project. <!--hash:570a64fe-->
 - `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:aebcb48c-->
-- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:6a4cb44d-->
+- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:db2fa93c-->
 
 ## projects-folder/Example_Project/Baselines/
 
