@@ -1,0 +1,190 @@
+# Collected Skills
+
+Academic skills collected or adapted from external projects for use with Open
+Paper and the AI-Human Research OS. These are not treated as original local
+work by default. Keep upstream attribution, inspect each `SKILL.md`, and verify
+license terms before redistributing or publishing modified copies.
+
+This README is the collected-skills split from
+`/Users/pengqianhan/Documents/GitHub/Opensource/open-paper-skills/README.md`
+at source commit `8f854bd`.
+
+## Skills
+
+| Skill | Description | Source |
+| --- | --- | --- |
+| [ml-paper-writing](ml-paper-writing/SKILL.md) | Write publication-ready ML/AI papers for NeurIPS, ICML, ICLR, ACL, AAAI, and COLM. | [Orchestra-Research/AI-Research-SKILLs](https://github.com/Orchestra-Research/AI-Research-SKILLs), MIT |
+| [pyzotero](pyzotero/SKILL.md) | Programmatically manage Zotero libraries: retrieve, create, update, export, and upload items. | [K-Dense-AI/claude-scientific-skills](https://github.com/K-Dense-AI/claude-scientific-skills), MIT |
+| [drawio](drawio/SKILL.md) | Generate and export draw.io diagrams as `.drawio`, PNG, SVG, or PDF. | [jgraph/drawio-mcp](https://github.com/jgraph/drawio-mcp) |
+| [hugging-face-paper-pages](hugging-face-paper-pages/SKILL.md) | Look up and read Hugging Face paper pages and structured AI paper metadata. | [huggingface/skills](https://github.com/huggingface/skills/blob/main/skills/hugging-face-paper-pages/SKILL.md) |
+| [paper-finder](paper-finder/SKILL.md) | Find and organize ML/AI research papers into a reusable topic knowledge base with summaries and BibTeX. | [bchao1/paper-finder](https://github.com/bchao1/paper-finder/tree/main), adapted |
+| [deepxiv-cli](deepxiv-cli/SKILL.md) | Access open-access academic papers via CLI with hybrid search and section-level reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
+| [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) | Build markdown baseline comparison tables from DeepXiv search and targeted section reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
+| [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) | Summarize trending papers into a concise markdown digest with deep-dive recommendations. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
+
+## Installation
+
+Install a skill into both agent skill directories:
+
+```bash
+cp -R Research-skills-hub/collected-skills/<skill> .agents/skills/<skill>
+cp -R Research-skills-hub/collected-skills/<skill> .claude/skills/<skill>
+```
+
+Keep `.agents/skills/` and `.claude/skills/` byte-identical.
+
+## Prerequisites
+
+- `ml-paper-writing`: LaTeX distribution such as TeX Live, plus optional Python
+  packages `semanticscholar`, `arxiv`, `habanero`, and `requests`.
+- `pyzotero`: `pyzotero` Python package and a Zotero API key.
+- `drawio`: draw.io desktop app for PNG, SVG, and PDF export.
+- `hugging-face-paper-pages`: no local setup for public paper pages.
+- `paper-finder`: web access is recommended for current paper discovery.
+- `deepxiv-cli`, `deepxiv-baseline-table`, and `deepxiv-trending-digest`:
+  DeepXiv CLI via `pip install deepxiv-sdk`.
+
+## ml-paper-writing
+
+Drafts ML/AI papers from research repositories, enforces citation checks, and
+provides templates for major venues.
+
+Supported venues include NeurIPS, ICML, ICLR, ACL, EMNLP, NAACL, AAAI, COLM,
+IEEE, and ACM formats. The skill includes templates under
+[ml-paper-writing/templates/](ml-paper-writing/templates/) and writing/citation
+guides under [ml-paper-writing/references/](ml-paper-writing/references/).
+
+Example requests:
+
+```text
+/ml-paper-writing write a NeurIPS paper from this repo
+/ml-paper-writing draft the related work section for ICLR
+/ml-paper-writing convert this NeurIPS submission to ICML format
+/ml-paper-writing verify and fix citations in main.tex
+```
+
+## pyzotero
+
+Uses the pyzotero Python client to manage Zotero libraries through the Zotero
+Web API.
+
+Setup:
+
+```bash
+export ZOTERO_LIBRARY_ID=your_user_id
+export ZOTERO_API_KEY=your_api_key
+export ZOTERO_LIBRARY_TYPE=user
+uv add pyzotero
+```
+
+Example requests:
+
+```text
+/pyzotero search my library for papers on transformers
+/pyzotero export all items in the "NeurIPS 2025" collection as BibTeX
+/pyzotero add a new journal article entry for this paper
+/pyzotero upload this PDF as an attachment to item ABC123
+```
+
+## drawio
+
+Generates native draw.io diagrams and optionally exports to PNG, SVG, or PDF.
+
+For export, the draw.io desktop app must be installed. The skill checks common
+CLI locations such as `/Applications/draw.io.app/Contents/MacOS/draw.io` on
+macOS.
+
+Example requests:
+
+```text
+/drawio create a system architecture diagram
+/drawio png flowchart for the training pipeline
+/drawio svg ER diagram for the database schema
+/drawio pdf overview of the model architecture
+```
+
+## hugging-face-paper-pages
+
+Fetches Hugging Face paper markdown and structured metadata such as authors,
+linked models, linked datasets, Spaces, GitHub repositories, and project pages.
+
+Example requests:
+
+```text
+/hugging-face-paper-pages summarize https://huggingface.co/papers/2602.08025
+/hugging-face-paper-pages explain paper 2602.08025
+/hugging-face-paper-pages find models linked to this paper
+```
+
+## paper-finder
+
+Finds, ranks, and organizes related papers into a persistent topic workspace.
+
+Default workspace layout:
+
+```text
+<topic-name>/
+  memory-bank.md
+  mind-graph.md
+  references.bib
+  summaries/
+  discussions/
+  pdfs/
+```
+
+Example requests:
+
+```text
+/paper-finder find papers on mixed-resolution diffusion transformers
+/paper-finder build a literature review workspace for efficient video generation
+/paper-finder compare recent CVPR and ICCV papers on 3D Gaussian splatting
+```
+
+## deepxiv-cli
+
+Uses the DeepXiv CLI for hybrid paper search and token-efficient paper reading.
+
+Example requests:
+
+```text
+/deepxiv-cli search papers about agent memory from this month
+/deepxiv-cli read arXiv 2409.05591 with --brief
+/deepxiv-cli show sections for 2409.05591 with --head
+/deepxiv-cli summarize the Introduction section of 2409.05591
+```
+
+## deepxiv-baseline-table
+
+Builds comparison-ready baseline tables by combining DeepXiv search, brief
+screening, structure inspection, and targeted experiment-section reads.
+
+Typical output columns:
+
+| Title | arXiv | URL | Open Source | Code URL | Datasets / Benchmarks | Metrics / Scores | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+
+Example requests:
+
+```text
+/deepxiv-baseline-table build a baseline table for agentic memory papers in the last 30 days
+/deepxiv-baseline-table compare datasets and benchmark scores for recent multimodal reasoning papers
+```
+
+## deepxiv-trending-digest
+
+Turns recent DeepXiv trending papers into a concise markdown digest with themes,
+per-paper takeaways, and deep-dive recommendations.
+
+Example requests:
+
+```text
+/deepxiv-trending-digest make a 7-day trending digest and highlight top 3 papers worth deeper reading
+/deepxiv-trending-digest summarize this week's hottest papers and suggest next sections to read
+```
+
+## Credits And License Boundary
+
+These skills keep the provenance listed in the table above. The repository-level
+MIT license does not override third-party or upstream license terms for collected
+skills. When a skill has no local license file, check the upstream project before
+redistributing it.

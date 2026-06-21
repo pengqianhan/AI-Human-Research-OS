@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Bible"
+  short_description: "Research habits for ML work"
+  default_prompt: "Use $research-bible to plan and run a focused ML research workflow."

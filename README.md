@@ -47,10 +47,12 @@ A complete worked example (code → figure → compiled PDF) lives in
 ## License
 
 Original content in this repository is licensed under the [MIT License](LICENSE).
-Third-party vendored content keeps its original license; currently
+Third-party vendored or collected content keeps its original license. Currently
 [Research-skills-hub/science-skills/](Research-skills-hub/science-skills/) is
 provided under Apache-2.0 via its own
-[LICENSE](Research-skills-hub/science-skills/LICENSE).
+[LICENSE](Research-skills-hub/science-skills/LICENSE), and
+[Research-skills-hub/collected-skills/](Research-skills-hub/collected-skills/)
+keeps per-skill upstream attribution and license terms.
 
 ## Roadmap (original TODO list)
 

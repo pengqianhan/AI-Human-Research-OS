@@ -1,0 +1,23 @@
+{
+  "skill_name": "drawio-paper",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a draw.io academic diagram for a multi-agent LLM framework. The method has three agents: a Planner that breaks down user queries, a Retriever that fetches relevant documents from a knowledge base, and a Generator that produces the final response. The Planner sends structured plans to both the Retriever and Generator. The Retriever returns retrieved context to the Generator. There's also a Critic agent that evaluates the Generator's output and can trigger re-generation. Caption: 'Figure 1: Overview of our multi-agent RAG framework with closed-loop refinement.'",
+      "expected_output": "A .drawio file containing a well-structured academic diagram with: (1) four agent nodes clearly labeled, (2) directional arrows showing data flow, (3) pastel academic color scheme, (4) proper container grouping, (5) no figure caption text in the diagram itself",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need a paper figure for my vision transformer architecture. The model takes an image input, splits it into patches, passes through a Patch Embedding layer, then through N stacked Transformer Encoder blocks (each containing Multi-Head Self-Attention and Feed-Forward Network with residual connections). The output goes to a classification head. There's also a [CLS] token prepended to the patch sequence. Make it as a drawio file. Caption: 'Figure 2: Architecture of our Vision Transformer model.'",
+      "expected_output": "A .drawio file containing a vertical architecture stack diagram with: (1) image input at top, (2) patch embedding layer, (3) transformer encoder block with internal MHSA + FFN detail, (4) classification head at bottom, (5) CLS token shown, (6) proper academic styling",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Generate an academic pipeline diagram in drawio format showing a three-stage training process: Stage 1 is 'Pre-training' where an encoder is trained on unlabeled data with a contrastive loss. Stage 2 is 'Fine-tuning' where the frozen encoder plus a trainable classifier head are fine-tuned on labeled data. Stage 3 is 'Inference' where the full model processes test inputs. Show the frozen/trainable status of each component. Caption: 'Figure 3: Our three-stage training pipeline.'",
+      "expected_output": "A .drawio file containing a horizontal pipeline diagram with: (1) three clearly separated stages with container grouping, (2) frozen/trainable indicators (snowflake/fire icons or visual cues), (3) dashed lines for gradient flow, (4) proper left-to-right flow, (5) academic pastel color scheme",
+      "files": []
+    }
+  ]
+}
