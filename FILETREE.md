@@ -9,16 +9,15 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills (science-skills/, open-paper-skills/); see its index.md for the catalog and install steps. <!--hash:28c252a1-->
-- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:4c2a20c7-->
+- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:ddb9130f-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
-- `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:854bf478-->
+- `CHANGE_SUMMARY.md` - Backward-looking record: decisions with how-to-reverse, deviations, and intentionally-not-done; commits are read from git, not duplicated. <!--hash:9f63cb70-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:f1c4bb60-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:baacb76f-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:d003ed31-->
-- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:492d690b-->
+- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:842fcf6d-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
-- `task_plan.md` - Forward-looking session hand-off: resume point, live Progress TODO, standing guardrails, and a pointer to the decisions record. <!--hash:f45909cd-->
 
 ## Ideas/
 
@@ -81,7 +80,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Baselines/` - Baseline notes area inherited from the template; unused in this synthetic example. <!--hash:2bfe64c6-->
 - `Code/` - Linear-fit smoke-test experiment: uv environment, fit_line.py, run commands, and reproducible results in bilingual READMEs. <!--hash:d99584ba-->
 - `Figs/` - Generated figures for the example project, including the linear_fit.png output of fit_line.py. <!--hash:8c1d3ba6-->
-- `paper/` - LaTeX source area for the worked example paper, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:a352390e-->
+- `paper/` - LaTeX source area for the worked example paper, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:e38e6585-->
 - `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:bcfe90b9-->
 - `log.md` - Folder-level update log for the smoke-test project. <!--hash:570a64fe-->
 - `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:aebcb48c-->
