@@ -15,6 +15,7 @@ at source commit `8f854bd`.
 | [research-bible](research-bible/SKILL.md) | Turn research-practice principles into concrete ML/AI research plans, experiment loops, logs, and debugging habits. | Original, Pengqian Han |
 | [drawio-paper](drawio-paper/SKILL.md) | Generate publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline. | Original; uses PaperBananaBench as an external reference dataset |
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Original workflow using AlphaXiv public endpoints |
+| [research-skill-installer](research-skill-installer/SKILL.md) | Install, update, list, inspect, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
 
@@ -29,11 +30,19 @@ cp -R Research-skills-hub/open-paper-skills/<skill> .claude/skills/<skill>
 
 Keep `.agents/skills/` and `.claude/skills/` byte-identical.
 
+The [research-skill-installer](research-skill-installer/SKILL.md) skill can do
+this deterministically:
+
+```bash
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install <skill>
+```
+
 ## Prerequisites
 
 - `research-bible`, `alphaxiv-paper-lookup`, and `task-file-builder`: no
   additional local setup required.
 - `uv-env`: requires or installs the `uv` Python package manager.
+- `research-skill-installer`: no additional local setup required.
 - `drawio-paper`: requires Python with `matplotlib`, `numpy`, and `pillow` for
   plots. Before first use, download the PaperBananaBench reference dataset as
   described in [drawio-paper/SKILL.md](drawio-paper/SKILL.md).
@@ -104,6 +113,20 @@ Example requests:
 ```text
 /alphaxiv-paper-lookup summarize 2401.12345
 /alphaxiv-paper-lookup explain https://arxiv.org/abs/2401.12345
+```
+
+## research-skill-installer
+
+Installs skills from `Research-skills-hub/` into both `.agents/skills/` and
+`.claude/skills/` so Codex and Claude Code see the same skill set.
+
+Example commands:
+
+```bash
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py list
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status research-bible
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --update
 ```
 
 ## task-file-builder

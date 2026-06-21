@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Skill Installer"
+  short_description: "Install hub skills for Codex and Claude"
+  default_prompt: "Use $research-skill-installer to install a Research-skills-hub skill into both Codex and Claude Code."
