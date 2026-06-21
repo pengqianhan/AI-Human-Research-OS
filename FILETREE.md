@@ -14,8 +14,9 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:714789f2-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:c2aa71ba-->
+- `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:0d9da7a3-->
-- `README.md` - Human-facing overview: quick start, core directory map, minimal workflow, preserved roadmap TODOs, and reference projects. <!--hash:842fcf6d-->
+- `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:a28c83e0-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
 

@@ -44,6 +44,14 @@ project `PROJECT_MEMORY.md` and
 A complete worked example (code → figure → compiled PDF) lives in
 [projects-folder/Example_Project/](projects-folder/Example_Project/).
 
+## License
+
+Original content in this repository is licensed under the [MIT License](LICENSE).
+Third-party vendored content keeps its original license; currently
+[Research-skills-hub/science-skills/](Research-skills-hub/science-skills/) is
+provided under Apache-2.0 via its own
+[LICENSE](Research-skills-hub/science-skills/LICENSE).
+
 ## Roadmap (original TODO list)
 
 > Note: the memory-mechanism items below are now partially implemented — see
