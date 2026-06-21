@@ -15,7 +15,7 @@ at source commit `8f854bd`.
 | [research-bible](research-bible/SKILL.md) | Turn research-practice principles into concrete ML/AI research plans, experiment loops, logs, and debugging habits. | Original, Pengqian Han |
 | [drawio-paper](drawio-paper/SKILL.md) | Generate publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline. | Original; uses PaperBananaBench as an external reference dataset |
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Original workflow using AlphaXiv public endpoints |
-| [research-skill-installer](research-skill-installer/SKILL.md) | Install, update, list, inspect, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
+| [research-skill-installer](research-skill-installer/SKILL.md) | Install, sync back, inspect, update, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
 
@@ -127,6 +127,7 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status research-bible
 python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible
 python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --update
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents
 ```
 
 ## task-file-builder

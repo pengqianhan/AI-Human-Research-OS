@@ -1,6 +1,6 @@
 ---
 name: research-skill-installer
-description: Install, update, list, inspect, or remove skills from this repository's Research-skills-hub into both Codex (.agents/skills) and Claude Code (.claude/skills). Use when the user wants Codex or Claude Code to use a hub skill, sync installed skills across both agent directories, check which research skills are installed, or manage Research-skills-hub collections.
+description: Install, update, sync back, list, inspect, or remove skills between this repository's Research-skills-hub and both Codex (.agents/skills) and Claude Code (.claude/skills). Use when the user wants Codex or Claude Code to use a hub skill, promote edits from an installed skill back to the hub, sync installed skills across both agent directories, check which research skills are installed, or manage Research-skills-hub collections.
 ---
 
 # Research Skill Installer
@@ -47,10 +47,26 @@ Update an already-installed skill:
 python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --update
 ```
 
+Promote edits from an installed copy back to the hub, then sync both installed
+copies:
+
+```bash
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from claude
+```
+
+If both installed copies changed differently, the command stops. To deliberately
+use one side as the source of truth:
+
+```bash
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents --force
+```
+
 Preview without writing:
 
 ```bash
 python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --dry-run
+python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents --dry-run
 ```
 
 Remove a skill from both installed locations:
@@ -64,12 +80,14 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 1. Use `list` or `status` first if the requested skill name is uncertain.
 2. Use `install <skill>` for new installs.
 3. Use `install <skill> --update` only when replacing an installed copy is intended.
-4. After installing or updating, run `status <skill>` to confirm both targets are installed and match the hub source.
-5. If repository documentation or indexed files changed in the same task, refresh `FILETREE.md` separately with `filetree-simple`.
+4. Use `sync-back <skill> --from agents|claude` when a skill was edited inside `.agents/skills/` or `.claude/skills/` and the hub should become the canonical copy.
+5. After installing, updating, or syncing back, run `status <skill>` to confirm both targets are installed and match the hub source.
+6. If repository documentation or indexed files changed in the same task, refresh `FILETREE.md` separately with `filetree-simple`.
 
 ## Guardrails
 
 - Do not manually copy a hub skill when this script can do it.
 - Do not use `--update` unless the user asked to update/reinstall or the installed copy is known to be stale.
+- Do not use `sync-back --force` unless the user chose which installed copy should win.
 - Do not remove a skill without an explicit user request; `remove` requires `--yes`.
 - Review a collected skill's `SKILL.md` and bundled scripts before installing it from `collected-skills` or another third-party collection.

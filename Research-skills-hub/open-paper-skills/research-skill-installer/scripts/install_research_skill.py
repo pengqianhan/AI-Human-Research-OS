@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install Research-skills-hub skills into both Codex and Claude Code."""
+"""Install and sync Research-skills-hub skills for Codex and Claude Code."""
 
 from __future__ import annotations
 
@@ -22,6 +22,10 @@ IGNORE_NAMES = {
 }
 IGNORE_PATTERNS = ("*.pyc", "*.pyo")
 TARGET_DIRS = (".agents/skills", ".claude/skills")
+SOURCE_TARGETS = {
+    "agents": ".agents/skills",
+    "claude": ".claude/skills",
+}
 
 
 @dataclass(frozen=True)
@@ -106,6 +110,25 @@ def ensure_safe_target(root: Path, target: Path) -> None:
         fail(f"refusing to modify unsafe target path: {target}")
 
 
+def ensure_safe_hub_target(root: Path, target: Path) -> None:
+    resolved = target.resolve()
+    hub = (root / "Research-skills-hub").resolve()
+    try:
+        relative = resolved.relative_to(hub)
+    except ValueError:
+        fail(f"refusing to modify unsafe hub path: {target}")
+    if len(relative.parts) != 2:
+        fail(f"refusing to replace non-skill hub path: {target}")
+
+
+def installed_path(root: Path, target_name: str, skill: str) -> Path:
+    try:
+        target_dir = SOURCE_TARGETS[target_name]
+    except KeyError:
+        fail(f"unknown installed source {target_name!r}; choose agents or claude")
+    return root / target_dir / skill
+
+
 def copy_skill(root: Path, source: SkillSource, update: bool, dry_run: bool) -> None:
     for target in target_paths(root, source.name):
         ensure_safe_target(root, target)
@@ -123,6 +146,18 @@ def copy_skill(root: Path, source: SkillSource, update: bool, dry_run: bool) -> 
         if target.exists():
             shutil.rmtree(target)
         shutil.copytree(source.path, target, ignore=ignore_for_copy)
+
+
+def copy_installed_to_hub(root: Path, installed: Path, source: SkillSource, dry_run: bool) -> None:
+    if not installed.is_dir() or not (installed / "SKILL.md").is_file():
+        fail(f"installed skill source does not exist or lacks SKILL.md: {installed}")
+    ensure_safe_hub_target(root, source.path)
+    print(f"sync-back: {installed} -> {source.path}")
+    if dry_run:
+        return
+    if source.path.exists():
+        shutil.rmtree(source.path)
+    shutil.copytree(installed, source.path, ignore=ignore_for_copy)
 
 
 def remove_skill(root: Path, skill: str, yes: bool, dry_run: bool) -> None:
@@ -187,6 +222,38 @@ def command_install(args: argparse.Namespace) -> None:
     copy_skill(root, source, update=args.update, dry_run=args.dry_run)
 
 
+def command_sync_back(args: argparse.Namespace) -> None:
+    root = repo_root(args)
+    source = resolve_source(root, args.skill, args.collection)
+    selected = installed_path(root, args.source_target, source.name)
+    selected_digest = directory_digest(selected)
+    if selected_digest is None:
+        fail(f"{args.source_target} copy is not installed: {selected}")
+
+    hub_digest = directory_digest(source.path)
+    other_diffs = []
+    for target_name in SOURCE_TARGETS:
+        if target_name == args.source_target:
+            continue
+        target = installed_path(root, target_name, source.name)
+        target_digest = directory_digest(target)
+        if target_digest is None:
+            continue
+        if target_digest not in {hub_digest, selected_digest}:
+            other_diffs.append(f"{target_name}:{target}")
+
+    if other_diffs and not args.force:
+        detail = ", ".join(other_diffs)
+        fail(
+            "another installed copy has changes that differ from both the hub "
+            f"and the selected source ({detail}); rerun with --force to use "
+            f"{args.source_target} as the source of truth"
+        )
+
+    copy_installed_to_hub(root, selected, source, dry_run=args.dry_run)
+    copy_skill(root, source, update=True, dry_run=args.dry_run)
+
+
 def command_remove(args: argparse.Namespace) -> None:
     root = repo_root(args)
     remove_skill(root, args.skill, yes=args.yes, dry_run=args.dry_run)
@@ -210,6 +277,27 @@ def build_parser() -> argparse.ArgumentParser:
     install_parser.add_argument("--update", action="store_true", help="replace existing installed copies")
     install_parser.add_argument("--dry-run", action="store_true", help="print actions without writing")
     install_parser.set_defaults(func=command_install)
+
+    sync_parser = subparsers.add_parser(
+        "sync-back",
+        help="promote an installed skill copy back to the hub, then sync both installed copies",
+    )
+    sync_parser.add_argument("skill")
+    sync_parser.add_argument("--collection", help="collection name when a skill name is ambiguous")
+    sync_parser.add_argument(
+        "--from",
+        dest="source_target",
+        required=True,
+        choices=sorted(SOURCE_TARGETS),
+        help="installed copy to promote: agents or claude",
+    )
+    sync_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="allow overwriting the other installed copy when it differs from the chosen source",
+    )
+    sync_parser.add_argument("--dry-run", action="store_true", help="print actions without writing")
+    sync_parser.set_defaults(func=command_sync_back)
 
     remove_parser = subparsers.add_parser("remove", help="remove an installed skill from both agent directories")
     remove_parser.add_argument("skill")
