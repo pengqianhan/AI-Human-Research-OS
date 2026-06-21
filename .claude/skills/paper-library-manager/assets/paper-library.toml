@@ -31,8 +31,15 @@ recommended_sections = [
 "Compared With" = "Important contrasts with prior work, baselines, or nearby papers."
 "Useful For" = "Situations, projects, or research questions where this paper may be useful."
 "Open Questions" = "Unresolved questions, future work, and uncertainties raised by the paper."
+"Q1 Research Problem" = "The core problem or research question the paper tries to solve, plus the concrete sub-questions that make the problem measurable."
+"Q2 Related Work" = "Prior work grouped by theme, including what each line of work claims and how this paper differs from it."
+"Q3 Approach" = "The paper's proposed method, mechanism, algorithm, or analysis workflow, written as a causal sequence rather than a loose summary."
+"Q4 Experiments and Evidence" = "Experimental setup, ablations, diagnostics, metrics, and results that support or weaken the paper's claims."
+"Q5 Future Directions" = "Follow-up research directions, missing experiments, possible extensions, and project-fit ideas prompted by the paper."
+"Q6 Main Takeaways" = "A compact synthesis of the paper's main contribution, key findings, and why the result matters."
 
 [paper_body.profiles.research-note]
+description = "General research note for most papers."
 sections = [
   "Summary",
   "Key Ideas",
@@ -45,6 +52,7 @@ sections = [
 ]
 
 [paper_body.profiles.implementation]
+description = "Implementation and reproduction oriented note."
 sections = [
   "What To Reproduce",
   "Algorithm",
@@ -55,6 +63,7 @@ sections = [
 ]
 
 [paper_body.profiles.survey-card]
+description = "Compact card for literature review and cross-paper comparison."
 sections = [
   "One-line Takeaway",
   "Research Context",
@@ -62,4 +71,17 @@ sections = [
   "Compared With",
   "Useful For",
   "Open Questions",
+]
+
+[paper_body.profiles.cool-paper-review]
+description = "Paper body template derived from the Cool Papers Q1-Q6 reading flow: problem, related work, approach, experiments, future directions, and main takeaways."
+sections = [
+  "Q1 Research Problem",
+  "Q2 Related Work",
+  "Q3 Approach",
+  "Q4 Experiments and Evidence",
+  "Q5 Future Directions",
+  "Q6 Main Takeaways",
+  "Related",
+  "Citations",
 ]

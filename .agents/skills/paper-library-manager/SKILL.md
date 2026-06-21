@@ -38,6 +38,43 @@ Use `paper_body.section_descriptions` as drafting guidance for what each section
 
 If a specific paper needs a different summarization style, derive a temporary profile or template from the asset config for that paper, and persist the new profile only when the user asks. Keep generated summaries concise and distinguish paper claims from personal notes. If a paper has not been read in full, avoid presenting speculative critique as established fact. Preserve existing paper body layout when updating a paper unless the user explicitly asks to reorganize it.
 
+## Custom Paper Body Profiles
+
+When the user asks for their own paper-note template, treat it as a custom `paper_body.profiles.<name>` profile, not a change to the OKF contract.
+
+Use `scripts/create_paper_body_profile.py` as the profile-generation interface. The user may describe the desired reading style in natural language; convert that request into a concise profile name, an ordered section list, and optional section descriptions. If the user's description explicitly names sections, preserve those names. If it does not, either let the script infer a draft from the description or pass agent-chosen sections with repeated `--section` flags. By default, the script saves the finished profile to this skill's bundled `assets/paper-library.toml` so it is reusable in later paper-library tasks.
+
+If the user asks for an English-only template, pass `--language english` and provide English `--description`, `--section`, and `--section-description` values. The script rejects non-ASCII profile text in that mode, so fix translated section names before saving or previewing the TOML.
+
+Create and save a reusable profile without changing the default paper body:
+
+```bash
+python scripts/create_paper_body_profile.py \
+  --name critique-card \
+  --description "Short review template focused on assumptions, evidence gaps, and follow-up questions" \
+  --section "Summary" \
+  --section "Assumptions" \
+  --section "Missing Evidence" \
+  --section "Questions"
+```
+
+Preview a generated TOML template without changing the config:
+
+```bash
+python scripts/create_paper_body_profile.py \
+  --name critique-card \
+  --description "Short review template focused on assumptions, evidence gaps, and follow-up questions" \
+  --section "Summary" \
+  --section "Assumptions" \
+  --section "Missing Evidence" \
+  --section "Questions" \
+  --preview
+```
+
+Do not change `paper_body.default_profile` after creating a custom template unless the user explicitly asks to make that template the default. If asked, rerun the script with `--set-default` for the intended profile.
+
+For a library-specific template, write to a separate config and pass it to validation with `--config <path/to/paper-library.toml>`. Avoid overwriting global `section_descriptions` for common section names unless the user explicitly asks for a different meaning; prefer unique section names for specialized templates.
+
 ## Topic Documents
 
 Use topic concepts for stable themes such as `multi-agent-systems`, `llm-agents`, `ai-for-science`, `agent-self-evolution`, `benchmarks`, or named methods. A topic page should list related papers and open questions, not duplicate each paper's full summary.

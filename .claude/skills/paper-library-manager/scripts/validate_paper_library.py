@@ -214,6 +214,11 @@ def _load_config(config_path: Path) -> tuple[LibraryConfig, list[str]]:
                 errors.append(
                     f"{config_label}: profile {profile_name!r} sections must be a string list"
                 )
+            description = profile.get("description")
+            if "description" in profile and not isinstance(description, str):
+                errors.append(
+                    f"{config_label}: profile {profile_name!r} description must be a string"
+                )
 
     return LibraryConfig(paper_required_sections=list(required_sections)), errors
 

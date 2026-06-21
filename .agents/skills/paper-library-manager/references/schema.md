@@ -74,10 +74,22 @@ Each `[paper_body.profiles.<name>]` table defines a `sections` list. Use the
 clear. Agents should enumerate all configured profiles and may choose another
 profile when the user requests it or when the paper clearly fits that profile
 better. For a one-off paper style, derive a temporary profile from the asset
-config and persist it only when the user asks.
+config and persist it only when the user asks. A profile may also define an
+optional `description` string so agents can choose among user-defined profiles
+without guessing from the profile name alone.
 When a profile section has a matching `section_descriptions` entry, use that
 description as drafting guidance; do not copy it into the paper body unless the
 user asks for visible prompts.
+
+Use `scripts/create_paper_body_profile.py` to create a profile from a user's
+plain-language template request. By default, the script writes the finished
+profile into the bundled `assets/paper-library.toml` so the profile is reusable
+later; use `--preview` only when the user wants a draft without saving. Use
+`--config` for library-specific configs. Do not change
+`paper_body.default_profile` unless the user explicitly asks; use `--set-default`
+only in that case. Use `--language english` when a user requires an English-only
+template; the script will reject non-ASCII profile descriptions, section names,
+and section guidance before any TOML is written.
 
 If the asset config is unavailable during manual drafting, infer the body
 layout from existing papers before falling back to a simple research-note
