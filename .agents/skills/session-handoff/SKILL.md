@@ -34,8 +34,9 @@ until the skill is invoked:
 
 ## When resuming
 
-1. Read `HANDOFF.md`'s Active Work section first. ⬜ / 🔶 rows are remaining work;
-   ✅ rows carry commit hashes — inspect with `git show` instead of re-deriving.
+1. Read `HANDOFF.md`'s Active Work section first. Unchecked Markdown task-list items
+   (`- [ ]`) are remaining work; checked and struck-through items (`- [x] ~~...~~`) are
+   completed context.
 2. Read `HANDOFF.md`'s Decisions table before reopening any settled question — each
    default records how to reverse it. Re-litigate only if the user asks.
 3. **Trust the repository over this file** — it is a snapshot. Re-verify the
@@ -45,20 +46,22 @@ until the skill is invoked:
 ## When recording
 
 1. Before work that may span sessions, create or extend `HANDOFF.md`'s Active Work
-   section: the goal and steps concrete enough for a cold session to execute — exact
-   paths, commands, verify checks — plus one row per step.
+   section as a Markdown task list. Each item should be concrete enough for a cold
+   session to execute — exact paths, commands, and verification checks when useful.
 2. Update Active Work **as you work, not in bulk at the end**. A session can be
-   interrupted at any point. Check an item off only after its verification actually ran,
-   and put the commit hash in the status cell when a commit exists.
-3. Status vocabulary: ⬜ pending · ✅ done (+ commit hash when committed) · 🔶
-   partial/skipped (reason inline) · ⛔ standing guardrail (never checked off).
+   interrupted at any point. Leave unfinished items unchecked for the next session.
+   Check an item off only after its verification actually ran, and strike through the
+   completed task text: `- [x] ~~Task~~ — verified with <command or evidence>`.
+3. For partial or blocked work, keep the item unchecked and add the blocker inline.
+   Standing guardrails belong in Decisions or Intentionally not done, not in the active
+   checklist.
 4. When reality forces a deviation, take the sensible path and record it in
    `HANDOFF.md` (what changed, why). An honest record beats a flattering one.
 5. At task end — or before a planned stop — update `HANDOFF.md`: decisions,
    deviations, intentionally-not-done. **Do not add a commits table; link to `git log`.**
-6. When no execution steps remain, set Active Work to `None` after durable decisions and
-   intentionally-not-done items are captured in `HANDOFF.md` or memory.
-7. Related unfinished follow-up work: append rows to Active Work. Unrelated new
+6. When no execution steps remain, set Active Work to `No active tasks.` after durable
+   decisions and intentionally-not-done items are captured in `HANDOFF.md` or memory.
+7. Related unfinished follow-up work: append checklist items to Active Work. Unrelated new
    unfinished task: replace Active Work with a fresh subsection for that task after
    preserving any durable decisions in the Decisions table.
 
@@ -81,7 +84,12 @@ Commits live in git: `git log` / `git show <hash>` (not duplicated here).
 
 ## Active Work
 
-None.
+No active tasks.
+
+When work is active, use a Markdown checklist:
+
+- [ ] Pending item — next action / verification needed.
+- [x] ~~Completed item~~ — verified.
 
 ## Decisions
 | ID | Decision | Default taken | To reverse |

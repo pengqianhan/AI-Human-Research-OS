@@ -19,7 +19,12 @@ git show <hash>              # the actual diff for any change
 
 ## Active Work
 
-None.
+No active tasks.
+
+When work is active, use a Markdown checklist:
+
+- [ ] Pending item — next action / verification needed.
+- [x] ~~Completed item~~ — verified.
 
 ## Decisions
 
