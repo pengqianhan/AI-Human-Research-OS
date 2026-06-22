@@ -1,3 +1,11 @@
+---
+type: Human Memory Inbox
+title: Human Memory Inbox
+description: Review queue for candidate facts, preferences, and workflow updates before durable promotion.
+tags: [human-context, memory, review]
+timestamp: 2026-06-22T01:24:11Z
+---
+
 # Human Memory Inbox
 
 Use this file for candidate facts, preferences, or workflow updates about the

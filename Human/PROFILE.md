@@ -1,3 +1,11 @@
+---
+type: Human Profile
+title: Human Profile
+description: Stable low-sensitivity profile, preferences, and recurring workflows for the human user.
+tags: [human-context, preferences, workflows]
+timestamp: 2026-06-22T01:24:11Z
+---
+
 # Human Profile
 
 Stable, low-sensitivity facts and preferences about the human user. Leave

@@ -17,15 +17,15 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `INSTRUCTION.md` - Primary agent guide: startup order including Human context, workflows, memory layers, skills lifecycle, plugin model, environments, and research safety rules. <!--hash:cfcb912b-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:0d9da7a3-->
-- `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:ebf2b3b3-->
+- `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:eeb56943-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
 
 ## Human/
 
-- `inbox.md` - Review queue for candidate human memories before they are promoted into the durable profile. <!--hash:1c7b442f-->
+- `inbox.md` - Review queue for candidate human memories before they are promoted into the durable profile. <!--hash:87bb035e-->
 - `index.md` - Entry point explaining Human folder read order, scope, boundaries, memory policy, and agent rules. <!--hash:d603a38f-->
-- `PROFILE.md` - Stable user profile combining low-sensitivity identity fields, collaboration preferences, recurring workflows, and entry templates. <!--hash:b42cdeed-->
+- `PROFILE.md` - Stable user profile combining low-sensitivity identity fields, collaboration preferences, recurring workflows, and entry templates. <!--hash:da9a3211-->
 
 ## Ideas/
 

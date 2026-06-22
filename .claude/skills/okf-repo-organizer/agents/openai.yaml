@@ -1,0 +1,4 @@
+interface:
+  display_name: "OKF Repo Organizer"
+  short_description: "Organize repositories into generic OKF bundles"
+  default_prompt: "Use $okf-repo-organizer to organize this repository into a generic OKF bundle and validate it."
