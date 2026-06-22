@@ -34,6 +34,9 @@ temp/
 # Code agent local data
 .antigravitycli/
 
+# Human-private local context
+Human/private/
+
 # LaTeX build output
 *.aux
 *.bbl

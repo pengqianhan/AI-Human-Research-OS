@@ -4,21 +4,28 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## (root)/
 
+- `Human/` - User context area with profile, policies, preferences, workflows, candidate updates, and ignored private context. <!--hash:9fb58371-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, and vendored science-skills. <!--hash:5ef6775e-->
-- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch directories, agent-local data, and LaTeX build output. <!--hash:ddb9130f-->
+- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:714789f2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, core workflows, memory layers, skills lifecycle, plugin model, Python environments, and research safety rules. <!--hash:c2aa71ba-->
+- `INSTRUCTION.md` - Primary agent guide: startup order including Human context, workflows, memory layers, skills lifecycle, plugin model, environments, and research safety rules. <!--hash:cfcb912b-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:0d9da7a3-->
-- `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:294acc3d-->
+- `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:ebf2b3b3-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
+
+## Human/
+
+- `inbox.md` - Review queue for candidate human memories before they are promoted into the durable profile. <!--hash:1c7b442f-->
+- `index.md` - Entry point explaining Human folder read order, scope, boundaries, memory policy, and agent rules. <!--hash:d603a38f-->
+- `PROFILE.md` - Stable user profile combining low-sensitivity identity fields, collaboration preferences, recurring workflows, and entry templates. <!--hash:b42cdeed-->
 
 ## Ideas/
 

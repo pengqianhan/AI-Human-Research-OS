@@ -15,8 +15,10 @@ of steps.
    (re-verify with `git status`).
 3. Unless the task is trivial, read `FILETREE.md` next to understand the current
    repository structure.
-4. For broad Research OS or template-design work, also read the relevant files under `Memory/`
-5. When working inside a specific project folder, also read that project's
+4. Read [`Human/index.md`](Human/index.md), when present, for stable user
+   context, collaboration preferences, and privacy boundaries.
+5. For broad Research OS or template-design work, also read the relevant files under `Memory/`
+6. When working inside a specific project folder, also read that project's
    `PROJECT_MEMORY.md`.
 
 ## Python Environment
