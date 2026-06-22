@@ -1,0 +1,145 @@
+---
+name: paper-library-manager
+description: Manage an OKF paper library under `paper-library/` or another user-named library root. Use when asked to add arXiv or research-paper URLs, update paper notes, maintain paper/topic indexes, automatically create or update topic summary pages for important new themes, normalize paper metadata, track reading status, compare papers, generate required `viz.html` visualizations, or validate the paper library.
+---
+
+# Paper Library Manager
+
+## Overview
+
+Maintain an OKF paper library as Markdown files with YAML frontmatter. Keep paper content in `paper-library/` unless the user names another library root; keep `<library-root>/viz.html` as the required generated graph. Treat `references/SPEC.md` as the bundled OKF format snapshot and `references/schema.md` as the stricter paper-library profile.
+
+## Scope
+
+Use `paper-library/` as the default library root unless the user names a different path. Treat every non-reserved `.md` file in that tree as an OKF concept.
+
+## Workflow
+
+When adding or updating a paper:
+
+1. Parse the arXiv ID from the URL or user input.
+2. Read the existing paper file if `paper-library/papers/<arxiv_id>.md` already exists.
+3. Read `assets/paper-library.toml` from this skill and follow its paper body profile settings.
+4. Fetch or verify metadata from authoritative sources when network access is available. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
+5. Create or update one paper concept under `paper-library/papers/`.
+6. Identify and update 1 to 3 important themes following Topic Documents.
+7. Add concise topic links under the paper body and add the paper to each affected topic's `# Papers` section.
+8. Update `paper-library/papers/index.md`, `paper-library/topics/index.md`, and every affected `paper-library/topics/*.md`.
+9. Preserve user-curated fields and existing body layout following Metadata Rules and Paper Documents.
+10. Run the Finishing Commands after content edits.
+11. Cite only sources that were actually used.
+
+## Paper Documents
+
+Use `references/SPEC.md` as the base OKF format reference and `references/schema.md` as the stricter paper-library profile.
+
+Paper bodies are user-customizable Markdown. Do not treat any one summarization template as part of the OKF contract. Use `assets/paper-library.toml` as the default paper body configuration for this skill. When reading the config, enumerate all `paper_body.profiles` entries. Use `paper_body.default_profile` by default, but choose another configured profile when the user requests it or when the paper type clearly matches it. Use the selected `paper_body.profiles.<name>.sections` list for new paper bodies. Treat `paper_body.required_sections` as validation requirements only when the user configures them.
+Use `paper_body.section_descriptions` as drafting guidance for what each section should contain. Do not copy those descriptions into generated paper notes unless the user explicitly asks for visible prompts.
+
+If a specific paper needs a different summarization style, derive a temporary profile or template from the asset config for that paper, and persist the new profile only when the user asks. Keep generated summaries concise and distinguish paper claims from personal notes. If a paper has not been read in full, avoid presenting speculative critique as established fact. Preserve existing paper body layout when updating a paper unless the user explicitly asks to reorganize it.
+
+## Custom Paper Body Profiles
+
+When the user asks for their own paper-note template, treat it as a custom `paper_body.profiles.<name>` profile, not a change to the OKF contract.
+
+Use `scripts/create_paper_body_profile.py` as the profile-generation interface. The user may describe the desired reading style in natural language; convert that request into a concise profile name, an ordered section list, and optional section descriptions. If the user's description explicitly names sections, preserve those names. If it does not, either let the script infer a draft from the description or pass agent-chosen sections with repeated `--section` flags. By default, the script saves the finished profile to this skill's bundled `assets/paper-library.toml` so it is reusable in later paper-library tasks.
+
+If the user asks for an English-only template, pass `--language english` and provide English `--description`, `--section`, and `--section-description` values. The script rejects non-ASCII profile text in that mode, so fix translated section names before saving or previewing the TOML.
+
+Create and save a reusable profile without changing the default paper body:
+
+```bash
+python scripts/create_paper_body_profile.py \
+  --name critique-card \
+  --description "Short review template focused on assumptions, evidence gaps, and follow-up questions" \
+  --section "Summary" \
+  --section "Assumptions" \
+  --section "Missing Evidence" \
+  --section "Questions"
+```
+
+Preview a generated TOML template without changing the config:
+
+```bash
+python scripts/create_paper_body_profile.py \
+  --name critique-card \
+  --description "Short review template focused on assumptions, evidence gaps, and follow-up questions" \
+  --section "Summary" \
+  --section "Assumptions" \
+  --section "Missing Evidence" \
+  --section "Questions" \
+  --preview
+```
+
+Do not change `paper_body.default_profile` after creating a custom template unless the user explicitly asks to make that template the default. If asked, rerun the script with `--set-default` for the intended profile.
+
+For a library-specific template, write to a separate config and pass it to validation with `--config <path/to/paper-library.toml>`. Avoid overwriting global `section_descriptions` for common section names unless the user explicitly asks for a different meaning; prefer unique section names for specialized templates.
+
+## Topic Documents
+
+Use topic concepts for stable themes such as `multi-agent-systems`, `llm-agents`, `ai-for-science`, `agent-self-evolution`, `benchmarks`, or named methods. A topic page should list related papers and open questions, not duplicate each paper's full summary.
+
+Create or update topic pages proactively whenever a new paper introduces an important theme. Important themes usually satisfy at least two of these conditions:
+
+* The theme appears in the title, abstract, method name, benchmark name, or central contribution.
+* The theme could group multiple current or future papers.
+* The theme is useful for retrieval, comparison, or literature-review synthesis.
+* The theme is more specific than a broad field label such as `ai` or `machine-learning`.
+
+Do not create a topic for every tag. Tags can be granular; topic pages should represent durable synthesis nodes. Prefer reusing an existing topic when the new theme is semantically equivalent to one already present.
+
+Every topic page should include `# Scope`, `# Papers`, and `# Open Questions`. When a topic has two or more papers, optionally add `# Synthesis` with concise cross-paper observations.
+
+When adding a new topic, update `paper-library/topics/index.md`. Ensure links are bidirectional: the paper links to the topic, and the topic links back to the paper.
+
+## Indexes
+
+Maintain index files as plain Markdown without frontmatter. Sort paper entries by arXiv ID or submitted date when the user does not specify a preference. Keep descriptions one sentence.
+
+## Metadata Rules
+
+Preserve these user-curated fields when updating a paper:
+
+* `status`
+* `priority`
+* `tags`
+* `# Notes`
+* any custom frontmatter keys not defined in `references/schema.md`
+
+Use `status: unread` for newly added papers unless the user says otherwise. Recommended status values are `unread`, `skimmed`, `read`, and `summarized`.
+
+## Finishing Commands
+
+Before finishing paper-library edits:
+
+* Check required metadata fields from `references/schema.md`; the bundled validator is the executable check.
+* Check configured paper body sections only when `assets/paper-library.toml` sets `paper_body.required_sections`.
+* Check that internal Markdown links resolve within `paper-library/`.
+* Check that index entries point to existing files.
+* Run bundled scripts from this skill's root directory, using paths relative to the directory that contains this `SKILL.md`. Pass the library root as an absolute path when the target repo is not the current working directory. Generate `viz.html` before validation because the validator reads the generated graph file.
+
+```bash
+uv run scripts/generate_viz.py /absolute/path/to/paper-library
+uv run scripts/validate_paper_library.py /absolute/path/to/paper-library
+```
+
+If `uv` is unavailable or blocked by sandbox/cache access and the environment already has Python 3.11+, run the scripts directly with `python`:
+
+```bash
+python scripts/generate_viz.py /absolute/path/to/paper-library
+python scripts/validate_paper_library.py /absolute/path/to/paper-library
+```
+
+Use `--config <path/to/paper-library.toml>` only for a temporary validation profile or another repo layout.
+
+If your environment provides a skill validator, run it against this skill folder after editing the skill itself.
+
+## Visualization
+
+`paper-library/viz.html` is required. Use `viz.html` as the canonical filename; treat `vis.html` as a typo unless the user explicitly asks for a separate alias.
+
+`scripts/generate_viz.py` renders the same Cytoscape graph + detail-pane viewer as the OKF reference (`enrichment_agent.viewer`) by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, and `scripts/static/viz.js`. Keep those sibling asset files alongside the script so the generated `viz.html` stays format-consistent with okf bundle viewers; only the bundle name and graph data differ.
+
+## Comparison Tasks
+
+When comparing papers, write the comparison as a separate note only if the user asks for a durable artifact. Otherwise answer in chat and reference the paper files. Compare along concrete axes such as problem framing, method, evidence, assumptions, failure modes, reusable artifacts, and relevance to the user's research direction.
