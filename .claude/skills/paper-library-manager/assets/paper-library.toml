@@ -1,5 +1,5 @@
 [paper_body]
-default_profile = "research-note"
+default_profile = "ten-question-review"
 preserve_existing_layout = true
 required_sections = []
 recommended_sections = [
@@ -37,6 +37,16 @@ recommended_sections = [
 "Q4 Experiments and Evidence" = "Experimental setup, ablations, diagnostics, metrics, and results that support or weaken the paper's claims."
 "Q5 Future Directions" = "Follow-up research directions, missing experiments, possible extensions, and project-fit ideas prompted by the paper."
 "Q6 Main Takeaways" = "A compact synthesis of the paper's main contribution, key findings, and why the result matters."
+"Q1 Problem Definition" = "The problem the paper addresses: define input X (e.g., a single RGB image, an image sequence), output Y (e.g., human pose), and any constraints on X or Y."
+"Q2 Problem Novelty" = "Whether this is a new problem. If new, why it matters; if not entirely new, why it is still important enough to work on."
+"Q3 Scientific Hypothesis" = "The scientific hypothesis being verified, phrased as 'if we do X in the method, we expect result Y', i.e., the new knowledge the paper advances."
+"Q4 Related Work and Key People" = "Key related works that inspired the paper, grouped into a taxonomy, plus the key authors and affiliations who would appreciate or criticize it."
+"Q5 Key Solution Idea" = "The key of the proposed solution: its main differentiation compared with prior related work."
+"Q6 Experiment Design" = "How the experiments are designed and whether they are built to validate every claim the paper makes."
+"Q7 Datasets and Code" = "Datasets built or used for quantitative evaluation, and whether the code is open sourced for reproducibility."
+"Q8 Evidence Quality" = "Whether the scientific hypothesis and the paper's claims are well supported by the experimental results."
+"Q9 Contributions" = "The paper's solid contributions: what knowledge is actually advanced."
+"Q10 Next Steps" = "Limitations of the proposed method and the future research they motivate, including new directions or links to other knowledge (the creative part)."
 
 [paper_body.profiles.research-note]
 description = "General research note for most papers."
@@ -82,6 +92,23 @@ sections = [
   "Q4 Experiments and Evidence",
   "Q5 Future Directions",
   "Q6 Main Takeaways",
+  "Related",
+  "Citations",
+]
+
+[paper_body.profiles.ten-question-review]
+description = "Reading template from the 'Ten questions to ask when reading a paper' flow: problem, hypothesis, related work, solution, experiments, evidence, contributions, next steps."
+sections = [
+  "Q1 Problem Definition",
+  "Q2 Problem Novelty",
+  "Q3 Scientific Hypothesis",
+  "Q4 Related Work and Key People",
+  "Q5 Key Solution Idea",
+  "Q6 Experiment Design",
+  "Q7 Datasets and Code",
+  "Q8 Evidence Quality",
+  "Q9 Contributions",
+  "Q10 Next Steps",
   "Related",
   "Citations",
 ]

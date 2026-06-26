@@ -15,12 +15,13 @@ This topic tracks papers about agents that adapt after deployment by building sk
 
 # Papers
 
+* [SkillFoundry](../papers/2604.03964.md) - a self-evolving framework that mines heterogeneous scientific resources into a validated skill library and maintains it through closed-loop expand/repair/merge/prune.
 * [OpenSkill](../papers/2606.06741.md) - builds transferable skills and self-built verification anchors from documentation, repositories, and the web without target-task supervision.
 * [Self-Evolving Multi-Agent Systems via Decentralized Memory](../papers/2605.22721.md) - per-agent dual-pool memory (exploit past trajectories + explore LLM-generated candidates) with LLM-as-a-judge reweighting for continual improvement.
 
 # Synthesis
 
-OpenSkill and DecentMem both target continual agent improvement but differ in mechanism: OpenSkill builds reusable skill objects from external resources, while DecentMem accumulates and reweights trajectory-level memory within a multi-agent system. The two approaches are complementary and could potentially be combined.
+OpenSkill and DecentMem both target continual agent improvement but differ in mechanism: OpenSkill builds reusable skill objects from external resources, while DecentMem accumulates and reweights trajectory-level memory within a multi-agent system. The two approaches are complementary and could potentially be combined. SkillFoundry pushes the skill-building view further by maintaining a whole domain library through closed-loop expansion, repair, merging, and pruning — adding a library-maintenance dimension to self-evolution that the per-skill and per-trajectory views do not address (see also [Agent skill libraries](agent-skill-libraries.md)).
 
 # Open Questions
 

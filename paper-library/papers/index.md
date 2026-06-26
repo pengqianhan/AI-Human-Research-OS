@@ -1,5 +1,6 @@
 # Paper
 
+* [SkillFoundry: Building Self-Evolving Agent Skill Libraries from Heterogeneous Scientific Resources](2604.03964.md) - A self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill packages and improves coding/scientific agents on MoSciBench and genomics tasks.
 * [Self-Evolving Multi-Agent Systems via Decentralized Memory](2605.22721.md) - Proposes DecentMem, per-agent dual-pool memory for self-evolving MAS with up to 23.8% accuracy gain over centralized memory.
 * [AutoScientists: Self-Organizing Agent Teams for Long-Running Scientific Experimentation](2605.28655.md) - A paper about decentralized AI agent teams for long-running scientific experimentation.
 * [GPU Forecasters: Language Models as Selective Surrogates for Kernel Runtime Optimization](2605.31464.md) - A paper about using LLMs as selective surrogate evaluators that forecast GPU kernel performance to accelerate kernel search.

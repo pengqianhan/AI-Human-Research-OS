@@ -18,6 +18,7 @@ This topic tracks papers about AI systems used to plan, run, and revise scientif
 * [AutoScientists](../papers/2605.28655.md) - self-organizing agent teams for long-running computational scientific experimentation.
 * [Arbor](../papers/2606.11926.md) - hypothesis-tree refinement for autonomous optimization of research artifacts.
 * [EurekAgent](../papers/2606.13662.md) - environment engineering for metric-driven autonomous scientific discovery.
+* [SkillFoundry](../papers/2604.03964.md) - mines scientific resources into validated agent skills and designs task-specific skills on demand for genomics workflows (cell type annotation, scDRS).
 
 # Synthesis
 
