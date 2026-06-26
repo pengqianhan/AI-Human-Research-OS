@@ -15,6 +15,8 @@ Read `references/SPEC.md` from this skill before changing files. Treat it as the
 
 Do not invent stricter required fields than the spec. For generic OKF conformance, every non-reserved `.md` concept document needs parseable YAML frontmatter with a non-empty `type`. `title`, `description`, `resource`, `tags`, and `timestamp` are recommended, not mandatory.
 
+Add frontmatter minimally and let content drive it. Always include `type`; add a recommended field only when it carries information the document body and the file's location do not already make obvious. Prefer the smallest frontmatter that satisfies OKF over a complete one.
+
 ## Workflow
 
 1. Establish scope and bundle boundaries.
@@ -30,18 +32,19 @@ Do not invent stricter required fields than the spec. For generic OKF conformanc
 3. Organize the bundle.
    - Add or update `index.md` at the bundle root and important subdirectories for progressive disclosure. Keep index files as plain Markdown; only a bundle-root `index.md` may use frontmatter, and only for `okf_version`.
    - Add or update `log.md` when the folder needs chronological history. Use `## YYYY-MM-DD` date headings, newest first.
-   - For each non-reserved `.md` concept file, add or normalize frontmatter:
+   - For each non-reserved `.md` concept file, add or normalize frontmatter. Only `type` is required; add the other keys only when they earn their place:
 
 ```markdown
 ---
-type: <self-explanatory type>
-title: <human-readable title>
-description: <one-sentence summary>
-tags: [optional, tags]
-timestamp: <ISO 8601 datetime>
+type: <self-explanatory type>        # required
+title: <human-readable title>        # recommended
+description: <one-sentence summary>   # recommended
+tags: [optional, tags]                # optional
+# add resource, timestamp, or other keys only when they carry non-redundant information
 ---
 ```
 
+   - Keep frontmatter minimal and content-driven. Do not add a field that merely duplicates the body or the file's position. For example, omit `timestamp` on a chronological, newest-first log whose top `## YYYY-MM-DD` heading already states the last-change date, and omit `created` when the oldest in-body entry already states it.
    - Keep `type` short and descriptive, such as `Idea`, `Project`, `Template`, `Reference`, `Runbook`, `Dataset`, `Note`, or `Decision`. Do not create a central type registry.
    - Leave code, data, images, PDFs, and other non-Markdown assets in normal project locations. When useful, create a concept `.md` that describes or links to the asset instead of modifying the asset.
    - Prefer bundle-relative Markdown links that begin with `/` when links should survive file moves. Relative links are fine for local neighbors.
