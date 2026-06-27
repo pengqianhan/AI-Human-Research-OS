@@ -17,10 +17,10 @@ Use `paper-library/` as the default library root unless the user names a differe
 
 When adding or updating a paper:
 
-1. Parse the arXiv ID from the URL or user input.
+1. Parse the arXiv ID from the URL, user input, or PDF filename/path. For a PDF, check the filename first (e.g., `2401.00001.pdf`); if the ID is not in the filename, extract it from the PDF header or `arxiv.org` URL embedded in the document.
 2. Read the existing paper file if `paper-library/papers/<arxiv_id>.md` already exists.
 3. Read `assets/paper-library.toml` from this skill and follow its paper body profile settings.
-4. Fetch or verify metadata from authoritative sources when network access is available. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
+4. Fetch metadata and paper content. Use the **HF CLI fast path** (see below) when `hf` is available — run `which hf` to check. Fall back to arXiv API or web fetch only when HF CLI is unavailable or returns no result. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
 5. Create or update one paper concept under `paper-library/papers/`.
 6. Identify and update 1 to 3 important themes following Topic Documents.
 7. Add concise topic links under the paper body and add the paper to each affected topic's `# Papers` section.
@@ -74,6 +74,26 @@ python scripts/create_paper_body_profile.py \
 Do not change `paper_body.default_profile` after creating a custom template unless the user explicitly asks to make that template the default. If asked, rerun the script with `--set-default` for the intended profile.
 
 For a library-specific template, write to a separate config and pass it to validation with `--config <path/to/paper-library.toml>`. Avoid overwriting global `section_descriptions` for common section names unless the user explicitly asks for a different meaning; prefer unique section names for specialized templates.
+
+## HF CLI Fast Path
+
+When `hf` is installed (`which hf` succeeds), use it as the primary fetch mechanism instead of browser or API calls.
+
+| Goal | Command |
+|---|---|
+| Structured metadata (title, authors, date, abstract) | `hf papers info ARXIV_ID` |
+| Full paper as Markdown | `hf papers read ARXIV_ID` |
+| Search by keyword when no ID is known | `hf papers search "QUERY" --limit 5` |
+
+**Input resolution:**
+
+* **arXiv URL** (`arxiv.org/abs/2401.00001` or `arxiv.org/pdf/2401.00001`): strip to `2401.00001`.
+* **HF paper URL** (`huggingface.co/papers/2401.00001`): strip to `2401.00001`.
+* **Bare ID** (`2401.00001` or `2401.00001v2`): drop the version suffix before passing to `hf papers`.
+* **PDF file path**: check the filename first; if no numeric ID is present, run `grep -a 'arxiv.org' "$PDF" | head -5` to extract an embedded URL.
+* **Natural-language title or description only**: run `hf papers search "QUERY" --limit 5 --format agent` to get candidate IDs, then confirm with the user or pick the best match.
+
+Use `hf papers read` output as the primary source for the paper body summary. Supplement with `hf papers info` fields to fill required frontmatter fields (`title`, `authors`, `date`, `abstract`). Do not reproduce the full `hf papers read` output verbatim in the paper note; distil it into the configured body sections.
 
 ## Topic Documents
 
