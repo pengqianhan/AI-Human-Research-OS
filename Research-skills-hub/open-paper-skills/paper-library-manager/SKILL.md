@@ -18,6 +18,7 @@ Use `paper-library/` as the default library root unless the user names a differe
 When adding or updating a paper:
 
 1. Parse the arXiv ID from the URL, user input, or PDF filename/path. For a PDF, check the filename first (e.g., `2401.00001.pdf`); if the ID is not in the filename, extract it from the PDF header or `arxiv.org` URL embedded in the document.
+   **If no ID can be extracted** (user provided only a title or keyword): run `hf papers search "TITLE" --limit 5 --format agent` (or fall back to the `literature_search_arxiv` skill if HF CLI is unavailable), show the top candidates to the user, and wait for confirmation before proceeding. Do not guess the ID.
 2. Read the existing paper file if `paper-library/papers/<arxiv_id>.md` already exists.
 3. Read `assets/paper-library.toml` from this skill and follow its paper body profile settings.
 4. Fetch metadata and paper content. Use the **HF CLI fast path** (see below) when `hf` is available — run `which hf` to check. Fall back to arXiv API or web fetch only when HF CLI is unavailable or returns no result. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
