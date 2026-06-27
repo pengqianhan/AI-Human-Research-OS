@@ -21,6 +21,7 @@ at source commit `8f854bd`.
 | [deepxiv-cli](deepxiv-cli/SKILL.md) | Access open-access academic papers via CLI with hybrid search and section-level reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) | Build markdown baseline comparison tables from DeepXiv search and targeted section reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) | Summarize trending papers into a concise markdown digest with deep-dive recommendations. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
+| [hf-cli](hf-cli/SKILL.md) | Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more. | [huggingface/skills](https://github.com/huggingface/skills/blob/main/skills/hf-cli/SKILL.md) |
 
 ## Installation
 
@@ -43,6 +44,7 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
 - `paper-finder`: web access is recommended for current paper discovery.
 - `deepxiv-cli`, `deepxiv-baseline-table`, and `deepxiv-trending-digest`:
   DeepXiv CLI via `pip install deepxiv-sdk`.
+- `hf-cli`: Hugging Face CLI via `curl -LsSf https://hf.co/cli/install.sh | bash -s`. Set `HF_TOKEN` for authenticated access.
 
 ## ml-paper-writing
 
@@ -180,6 +182,31 @@ Example requests:
 ```text
 /deepxiv-trending-digest make a 7-day trending digest and highlight top 3 papers worth deeper reading
 /deepxiv-trending-digest summarize this week's hottest papers and suggest next sections to read
+```
+
+## hf-cli
+
+Uses the Hugging Face Hub CLI (`hf`) to manage models, datasets, spaces, buckets,
+repos, papers, jobs, inference endpoints, and more.
+
+Install:
+
+```bash
+curl -LsSf https://hf.co/cli/install.sh | bash -s
+export HF_TOKEN=your_token   # optional but recommended
+```
+
+Example requests:
+
+```text
+/hf-cli download meta-llama/Llama-3.1-8B to ./models/
+/hf-cli upload my-org/my-dataset ./data/
+/hf-cli list my models
+/hf-cli search datasets for image classification
+/hf-cli read paper 2502.08025
+/hf-cli run a GPU job with image pytorch/pytorch
+/hf-cli deploy an inference endpoint for meta-llama/Llama-3.1-8B
+/hf-cli create a bucket and sync checkpoints
 ```
 
 ## Credits And License Boundary
