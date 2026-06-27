@@ -63,10 +63,16 @@ lint check.
    `ai_research_template` is an AI-research paper template;
    add sibling templates under `projects-folder/templates/` for other
    disciplines or outputs such as books and blogs.
-3. **Reference intake**: append project-specific BibTeX entries to
-   `<Project>/paper/references.bib` — fetch metadata with the literature-search
-   skills, never invent fields. Store PDFs and reading notes in a local project
-   reference area when needed.
+3. **Reference intake**: keep two reference layers distinct. Durable, project-
+   independent reading notes — one summary per paper, grouped into themes — live
+   in the repo-level [paper-library/](paper-library/) OKF library, maintained
+   with the `paper-library-manager` skill (per-paper notes in
+   [paper-library/papers/](paper-library/papers/), themes in
+   [paper-library/topics/](paper-library/topics/), graph in
+   `paper-library/viz.html`). Project-specific citations are appended as BibTeX
+   entries to `<Project>/paper/references.bib`. In both layers, fetch metadata
+   with the literature-search skills and never invent fields; store PDFs and
+   longer reading notes in a local project reference area when needed.
 4. **Experiments and artifacts**: code in `<Project>/Code/` with a `uv`-managed
    environment at that folder's scope; datasets in `<Project>/Code/Datasets/`;
    figures in `<Project>/Figs/`; baseline runs in `<Project>/Baselines/`. Update
@@ -100,11 +106,22 @@ lint check.
 | Project | `projects-folder/<ProjectName>/PROJECT_MEMORY.md` | Agent at the end of every session that changes project state | Progress log newest-first, ≤ ~30 lines |
 | Task | `scratch/` (gitignored) or the conversation itself | During a single task only | Distill durable findings upward at task end, then discard |
 
+## External References
+
+- [Resource/](Resource/) holds read-only external material for study and
+  inspiration: vendored copies of other agent and research repositories plus the
+  walk-through notes (`*-讲解与启发.md`) distilled from them. Treat it as reference
+  only — do not run or import its code into a project; reimplement an idea in your
+  own files instead. Each subdirectory is a separate upstream clone and keeps its
+  original license and attribution.
+
 ## Skills
 
 - Installed skills live in `.agents/skills/` (Codex) and `.claude/skills/`
-  (Claude Code). The two directories must stay byte-identical: apply any change
-  to both.
+  (Claude Code). The two directories must stay byte-identical: use the
+  `research-skill-installer` skill to install or sync them from
+  [Research-skills-hub/](Research-skills-hub/) so both copies update together, or
+  apply any manual change to both.
 - [Research-skills-hub/](Research-skills-hub/) is the canonical store; its index
   [index.md](Research-skills-hub/index.md) links the skill collections (each with
   its own `index.md`) and the install procedure.

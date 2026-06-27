@@ -10,14 +10,15 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, and vendored science-skills. <!--hash:5ef6775e-->
+- `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:a0f2ddbc-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:714789f2-->
-- `INSTRUCTION.md` - Primary agent guide: startup order including Human context, workflows, memory layers, skills lifecycle, plugin model, environments, and research safety rules. <!--hash:cfcb912b-->
+- `INSTRUCTION.md` - Primary agent guide: startup order including Human context, workflows, reference layers, memory layers, skills lifecycle, plugin model, external references, environments, and research safety rules. <!--hash:c2c30f10-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `OS_INTRO.html` - HTML introduction to the Research OS: orientation chain, directory map, five entry questions, workflows, memory layers, skills model. <!--hash:0d9da7a3-->
-- `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:eeb56943-->
+- `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:df3919e3-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
 - `tenq.md` - Ten questions to ask when reading a paper; source checklist behind the ten-question-review paper-note template. <!--hash:59533fb7-->
@@ -47,6 +48,11 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## Research-skills-hub/
 
 - `index.md` - Index of the Research Skills Hub: links to skill collections, provenance boundaries, and install procedure. <!--hash:6da8f9d9-->
+
+## Resource/
+
+- `agentos-讲解与启发.md` - Walk-through of the agentos in-process agent VM (Rivet) and what its kernel, permissions, and bindings design suggests for this Research OS. <!--hash:528a3daa-->
+- `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:b29b39d9-->
 
 ## paper-library/
 
