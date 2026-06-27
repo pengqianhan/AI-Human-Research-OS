@@ -38,3 +38,5 @@ A few patterns recur often enough to name: the *Kitchen Sink* (restructuring hal
 
 ---
 *© 2026 A. Karpathy. Personal use of this material is permitted. This is an independent reformatting of the author's working notes on LLM-assisted programming (CLAUDE.md, v260626) into a conference-style document. Freely available, rules subject to revision as the models change.* **[AK]**
+
+Source: https://x.com/Raytar/status/2070577723089768500

@@ -1,18 +1,10 @@
----
-name: karpathy-coding-rules
-description: >-
-  Andrej Karpathy's field notes (CLAUDE.md, v260626) on getting a language model
-  to write code you will NOT have to rewrite — ten earned rules covering
-  read-before-write, think-before-code, simplicity, minimal/surgical diffs,
-  verification, goal-driven execution, debugging, dependency hygiene,
-  communication, and the common failure modes. Read and apply these BEFORE
-  starting ANY coding task: writing new code, editing or refactoring existing
-  code, fixing a bug, adding a feature, implementing from a spec, reviewing a
-  diff, or scaffolding a project — even when the user does not explicitly ask for
-  "best practices" or "clean code." Whenever the task is to produce or change
-  source code, consult this skill first so the rules shape how you read, plan,
-  write, verify, and report.
----
+# CLAUDE.md: Field Notes on Getting a Language Model to Write Code You Will Not Rewrite
+*A Short List of Rules, Earned by Watching the Same Mistakes Twice*
+Andrej Karpathy
+
+**Abstract.** *This file exists because language models make predictable mistakes when they write code. Not random mistakes, just the same ones, over and over, often enough that it was worth writing them down. What follows is not a set of suggestions but a set of rules. The throughline is the same in every section: the model is fast at generating plausible code and slow to notice that plausible is not the same as correct, so the discipline has to come from the process around it.*
+
+**Index Terms.** *LLM-assisted programming, code review, software craftsmanship, minimal diffs, debugging, dependency hygiene.*
 
 ### I. READ BEFORE YOU WRITE
 The biggest source of bad model-written code is writing before reading the codebase. Read the files you are about to touch; read, not skim. Copy the patterns that already exist, and check the imports to see what the project actually depends on, so you do not reach for axios where everything is fetch. When you cannot find a pattern, ask instead of guessing.
@@ -45,4 +37,6 @@ Say what you did and why, not just a block of code. Flag concerns even when you 
 A few patterns recur often enough to name: the *Kitchen Sink* (restructuring half the codebase while you are at it), the *Wrong Abstraction* (copy-paste twice before you abstract), the *Optimistic Path* (the happy path handled and the 500 ignored), and the *Runaway Refactor* (a fix that cascades across files). Catch yourself in any of these and the right move is to stop, not to push through.
 
 ---
-Full notes — abstract, index terms, attribution, license, and source — are in [references/A_Karpathy_claude_share.md](references/A_Karpathy_claude_share.md) (Andrej Karpathy, *CLAUDE.md* v260626; source: https://x.com/Raytar/status/2070577723089768500).
+*© 2026 A. Karpathy. Personal use of this material is permitted. This is an independent reformatting of the author's working notes on LLM-assisted programming (CLAUDE.md, v260626) into a conference-style document. Freely available, rules subject to revision as the models change.* **[AK]**
+
+Source: https://x.com/Raytar/status/2070577723089768500
