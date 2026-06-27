@@ -14,3 +14,4 @@ skills.
 * [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) - Builds markdown baseline comparison tables from DeepXiv searches and targeted section reads.
 * [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) - Summarizes recent DeepXiv trending papers into markdown digests.
 * [hf-cli](hf-cli/SKILL.md) - Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more.
+* [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) - Andrej Karpathy's ten earned rules for getting an LLM to write code you won't rewrite; load before any coding task.
