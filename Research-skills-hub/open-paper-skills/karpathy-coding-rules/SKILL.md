@@ -45,4 +45,9 @@ Say what you did and why, not just a block of code. Flag concerns even when you 
 A few patterns recur often enough to name: the *Kitchen Sink* (restructuring half the codebase while you are at it), the *Wrong Abstraction* (copy-paste twice before you abstract), the *Optimistic Path* (the happy path handled and the 500 ignored), and the *Runaway Refactor* (a fix that cascades across files). Catch yourself in any of these and the right move is to stop, not to push through.
 
 ---
-Full notes — abstract, index terms, attribution, license, and source — are in [references/A_Karpathy_claude_share.md](references/A_Karpathy_claude_share.md) (Andrej Karpathy, *CLAUDE.md* v260626; source: https://x.com/Raytar/status/2070577723089768500).
+Skill packaging, trigger design, and operating workflow are original to this
+repository. Full reference notes — abstract, index terms, attribution, license,
+and source — are in
+[references/A_Karpathy_claude_share.md](references/A_Karpathy_claude_share.md)
+(Andrej Karpathy, *CLAUDE.md* v260626; source:
+https://x.com/Raytar/status/2070577723089768500).

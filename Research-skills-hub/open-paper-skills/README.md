@@ -15,6 +15,7 @@ at source commit `8f854bd`.
 | [research-bible](research-bible/SKILL.md) | Turn research-practice principles into concrete ML/AI research plans, experiment loops, logs, and debugging habits. | Original, Pengqian Han |
 | [drawio-paper](drawio-paper/SKILL.md) | Generate publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline. | Original; uses PaperBananaBench as an external reference dataset |
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Original workflow using AlphaXiv public endpoints |
+| [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) | Apply a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly. | Original skill, Pengqian Han; uses Andrej Karpathy's *CLAUDE.md* notes as attributed reference material |
 | [research-skill-installer](research-skill-installer/SKILL.md) | Install, sync back, inspect, update, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
@@ -39,8 +40,8 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 
 ## Prerequisites
 
-- `research-bible`, `alphaxiv-paper-lookup`, and `task-file-builder`: no
-  additional local setup required.
+- `research-bible`, `alphaxiv-paper-lookup`, `karpathy-coding-rules`, and
+  `task-file-builder`: no additional local setup required.
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
 - `drawio-paper`: requires Python with `matplotlib`, `numpy`, and `pillow` for
@@ -115,6 +116,25 @@ Example requests:
 /alphaxiv-paper-lookup explain https://arxiv.org/abs/2401.12345
 ```
 
+## karpathy-coding-rules
+
+Applies a compact coding-discipline checklist before coding work so agents read
+the relevant files first, state assumptions, keep diffs small, avoid premature
+dependencies or abstractions, verify behavior, and report uncertainty precisely.
+
+The skill packaging, trigger design, and operating workflow are original to this
+repository. The bundled reference notes preserve attribution to Andrej
+Karpathy's *CLAUDE.md* field notes.
+
+Example requests:
+
+```text
+/karpathy-coding-rules
+add input validation to the signup endpoint
+fix this null pointer crash in the parser
+refactor the auth middleware to support API keys
+```
+
 ## research-skill-installer
 
 Installs skills from `Research-skills-hub/` into both `.agents/skills/` and
@@ -156,4 +176,5 @@ Example requests:
 
 Original content in this collection follows the repository-level
 [MIT License](../../LICENSE), unless a skill states otherwise. External
-services and datasets used by a skill keep their own terms.
+services, datasets, and bundled reference material used by a skill keep their
+own terms.

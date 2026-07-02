@@ -22,7 +22,6 @@ at source commit `8f854bd`.
 | [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) | Build markdown baseline comparison tables from DeepXiv search and targeted section reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) | Summarize trending papers into a concise markdown digest with deep-dive recommendations. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [hf-cli](hf-cli/SKILL.md) | Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more. | [huggingface/skills](https://github.com/huggingface/skills/blob/main/skills/hf-cli/SKILL.md) |
-| [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) | Andrej Karpathy's ten earned rules for LLM-assisted coding — read-before-write, surgical diffs, verification, dependency hygiene, common failure modes. Load before any coding task. | Andrej Karpathy, *CLAUDE.md* (v260626), [x.com/Raytar/status/2070577723089768500](https://x.com/Raytar/status/2070577723089768500) |
 
 ## Installation
 
@@ -208,27 +207,6 @@ Example requests:
 /hf-cli run a GPU job with image pytorch/pytorch
 /hf-cli deploy an inference endpoint for meta-llama/Llama-3.1-8B
 /hf-cli create a bucket and sync checkpoints
-```
-
-## karpathy-coding-rules
-
-Loads Andrej Karpathy's working notes — *CLAUDE.md: Field Notes on Getting a
-Language Model to Write Code You Will Not Rewrite* (v260626) — into context
-before a coding task, so the ten rules shape how the agent reads, plans, writes,
-verifies, and reports. The full source text is reproduced verbatim in the skill
-with attribution ([source](https://x.com/Raytar/status/2070577723089768500)).
-
-This is behavioral guidance, not a tool — no setup or dependencies. It triggers
-on coding work (writing, editing, refactoring, debugging, reviewing diffs,
-scaffolding) even when the user does not explicitly ask for "best practices."
-
-Example requests:
-
-```text
-/karpathy-coding-rules
-add input validation to the signup endpoint
-fix this null pointer crash in the parser
-refactor the auth middleware to support API keys
 ```
 
 ## Credits And License Boundary

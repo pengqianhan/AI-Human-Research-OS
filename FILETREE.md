@@ -21,7 +21,6 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `README.md` - Human-facing overview: quick start, core directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:df3919e3-->
 - `task.md` - Structured exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:9f3ac318-->
 - `task_en.md` - English exploratory task prompt for normalizing the AI-Human Research OS with code agents. <!--hash:87862ef9-->
-- `tenq.md` - Ten questions to ask when reading a paper; source checklist behind the ten-question-review paper-note template. <!--hash:59533fb7-->
 
 ## Human/
 
