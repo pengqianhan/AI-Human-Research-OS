@@ -14,3 +14,4 @@ skills.
 * [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) - Builds markdown baseline comparison tables from DeepXiv searches and targeted section reads.
 * [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) - Summarizes recent DeepXiv trending papers into markdown digests.
 * [hf-cli](hf-cli/SKILL.md) - Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more.
+* [explain-diff-html](explain-diff-html/SKILL.md) - Explains code changes, diffs, branches, or PRs as rich interactive HTML.

@@ -22,6 +22,7 @@ at source commit `8f854bd`.
 | [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) | Build markdown baseline comparison tables from DeepXiv search and targeted section reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) | Summarize trending papers into a concise markdown digest with deep-dive recommendations. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [hf-cli](hf-cli/SKILL.md) | Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more. | [huggingface/skills](https://github.com/huggingface/skills/blob/main/skills/hf-cli/SKILL.md) |
+| [explain-diff-html](explain-diff-html/SKILL.md) | Explain code changes, diffs, branches, or PRs as rich interactive HTML. | [geoffreylitt/explain-diff](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
 
 ## Installation
 
@@ -45,6 +46,7 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
 - `deepxiv-cli`, `deepxiv-baseline-table`, and `deepxiv-trending-digest`:
   DeepXiv CLI via `pip install deepxiv-sdk`.
 - `hf-cli`: Hugging Face CLI via `curl -LsSf https://hf.co/cli/install.sh | bash -s`. Set `HF_TOKEN` for authenticated access.
+- `explain-diff-html`: no local setup required.
 
 ## ml-paper-writing
 
@@ -207,6 +209,20 @@ Example requests:
 /hf-cli run a GPU job with image pytorch/pytorch
 /hf-cli deploy an inference endpoint for meta-llama/Llama-3.1-8B
 /hf-cli create a bucket and sync checkpoints
+```
+
+## explain-diff-html
+
+Produces a rich, self-contained HTML explanation of a code change, diff, branch,
+or PR, with background, intuition, a code walkthrough, diagrams, and an
+interactive quiz.
+
+Example requests:
+
+```text
+/explain-diff-html explain the diff between HEAD and main
+/explain-diff-html explain PR #123 as an HTML walkthrough
+/explain-diff-html explain this branch's UI changes for a beginner reader
 ```
 
 ## Credits And License Boundary
