@@ -217,6 +217,8 @@ Produces a rich, self-contained HTML explanation of a code change, diff, branch,
 or PR, with background, intuition, a code walkthrough, diagrams, and an
 interactive quiz.
 
+Companion blog: [Understanding is the new bottleneck](https://www.geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck.html).
+
 Example requests:
 
 ```text
