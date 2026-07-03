@@ -47,7 +47,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Decision | Default taken | To reverse |
 |---|---|---|
 | FILETREE.md scope when renaming the template | **Full regen** (re-indexed the whole `projects-folder/` reorg that the manifest had missed) over a minimal rename-only patch | n/a — full sync is the correct state and `filetree.py lint` enforces it |
-| Historical task docs still naming `Paper_Initial_template` | **Left untouched** (`task.md`, `task_en.md`, archived plan/summary) — they are records/quotes | Add clarifying footnotes (not in-place renames) if one canonical name is wanted everywhere |
+| Role of `task.md` / `task_en.md` | **Superseded 2026-07-03:** treat them as live OS construction guides, not historical records; keep them aligned with current paths and design stance | Move them to an archive folder and create new live task files if a historical/original prompt record is needed |
 | Where decisions are recorded | **Deduped to this file** (durable cross-project subset mirrored in `Memory/MEMORY.md`) | Re-add a decisions table elsewhere (not recommended — invites drift) |
 | Active work lifecycle | **Retired separate plan files**; unfinished cross-session work now lives in this file under `## Active Work` | Restore the separate-plan convention from git if future tasks need a dedicated file |
 
@@ -80,8 +80,8 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 - **README roadmap features** (paper-wiki, read_paper workflow, group-meeting workspace, CLI,
   deterministic-read bash hooks) — roadmap, not normalization; several need explicit confirmation.
-- **In-place rename inside the historical task docs** — would falsify the record of the 2026-06-12
-  task and its D2 decision; those strings are quotes, not live links.
+- **Archive copy of the original 2026-06 task prompt** — not created. If needed later, recover it
+  from git history instead of keeping a duplicate live file.
 - **Root `Templates/` container** — deferred until a second project template exists.
 - **Sync tooling / git hooks for the three skill copies** — a documented convention suffices (D7).
 - **Evaluator implementation** — protocol recorded only; no evaluator script, grader service,

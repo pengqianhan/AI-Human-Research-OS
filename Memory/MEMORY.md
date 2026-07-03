@@ -33,6 +33,7 @@
 | 2026-07-03 | Shared paper library has three layers: paper notes, topic synthesis pages, and project-specific usage records | keeps paper understanding reusable across projects while preserving each project's claim/evidence trail |
 | 2026-07-03 | Unified evaluator protocol applies to human-led and agent-led research: hard checks + rubric scoring + LLM critique | avoids judging empty ideas or polished prose without runnable, traceable artifacts |
 | 2026-07-03 | Agent-led research is gated by `agent_led_research` (`off`, `scout_only`, `full_gated`) | preserves human-led research as the default while leaving room for controlled agent-owned research lanes |
+| 2026-07-03 | `task.md` and `task_en.md` are live construction guides for evolving this OS, not historical records | keeps build guidance aligned with current paths and design decisions; historical deviations belong in [`HANDOFF.md`](../HANDOFF.md) or git history |
 
 ## Lessons and Principles
 
