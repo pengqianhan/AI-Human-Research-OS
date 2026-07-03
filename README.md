@@ -80,6 +80,7 @@ keeps per-skill upstream attribution and license terms.
 > `PROJECT_MEMORY.md`). The rest remains open.
 
 - [ ] add find-research-skills, which can help the AI agent to find the right research skills in `Research-skills-hub/` folder or even online
+- [ ] A map of `research-skills-hub` or an index of all skills should be added to `research-skill-installer` so that the AI agent can quickly locate the required skills and install them into `.agents/skills/` or `.claude/skills/`. For this skill, please refer to [find-skills](https://github.com/vercel-labs/skills/blob/main/skills/find-skills/SKILL.md).
 - [ ] create a skill which can access them markdown files of paper, such as 'hf cli', 'https://github.com/timf34/arxiv2md','deepxive cli' and so on.
 - [ ] in References/ folder, maintain a paper-wiki, which includes the summary, key points, and relation to the research project for each paper. The paper-wiki can be implemented as a markdown file or a simple database. The paper-wiki can help the AI agent to quickly find relevant papers and understand their content.
 - [ ] Design this template as a CLI so agents can use commands to understand the whole
