@@ -10,7 +10,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, and vendored science-skills. <!--hash:5ef6775e-->
-- `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:5b6e24c7-->
+- `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:8d4f9a33-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
@@ -51,6 +51,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## Resource/
 
 - `agentos-讲解与启发.md` - Walk-through of the agentos in-process agent VM (Rivet) and what its kernel, permissions, and bindings design suggests for this Research OS. <!--hash:528a3daa-->
+- `EurekAgent-讲解与启发.md` - Walk-through of EurekAgent environment engineering for metric-driven research loops and lessons for evaluation contracts, artifacts, budgets, and snapshots. <!--hash:6f8be23b-->
 - `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:b29b39d9-->
 - `并行-自进化-经验共享-调研与启发.md` - GitHub survey note on parallel execution, self-evolution, and cross-agent experience sharing, with borrowing points and a recommended rollout path. <!--hash:3b4a09f0-->
 
