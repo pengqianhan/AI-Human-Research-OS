@@ -80,6 +80,13 @@ def discover_sources(root: Path) -> list[SkillSource]:
         for skill_dir in sorted(path for path in collection_dir.iterdir() if path.is_dir()):
             if (skill_dir / "SKILL.md").is_file():
                 sources.append(SkillSource(collection_dir.name, skill_dir.name, skill_dir))
+                continue
+            # No SKILL.md here: treat this folder as a bundle and look one
+            # level deeper for nested skills, e.g.
+            # collected-skills/productivity/grill-me/SKILL.md.
+            for nested_dir in sorted(path for path in skill_dir.iterdir() if path.is_dir()):
+                if (nested_dir / "SKILL.md").is_file():
+                    sources.append(SkillSource(collection_dir.name, nested_dir.name, nested_dir))
     return sources
 
 
@@ -117,7 +124,8 @@ def ensure_safe_hub_target(root: Path, target: Path) -> None:
         relative = resolved.relative_to(hub)
     except ValueError:
         fail(f"refusing to modify unsafe hub path: {target}")
-    if len(relative.parts) != 2:
+    # 2 parts = collection/skill; 3 parts = collection/bundle/skill.
+    if len(relative.parts) not in (2, 3):
         fail(f"refusing to replace non-skill hub path: {target}")
 
 

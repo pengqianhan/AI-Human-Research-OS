@@ -14,6 +14,13 @@ The installer always treats both agent directories as the target:
 
 Run commands from the repository root unless you pass `--repo`.
 
+Skills are discovered at `Research-skills-hub/<collection>/<skill>/SKILL.md`. A
+collection may also group skills into a **bundle** folder that has no `SKILL.md`
+of its own (for example `collected-skills/productivity/`); nested skills inside
+such a bundle (`collected-skills/productivity/grill-me/SKILL.md`) are discovered
+and installed by their own name (`grill-me`) into `.agents/skills/` and
+`.claude/skills/`.
+
 ## Commands
 
 List available hub skills:
