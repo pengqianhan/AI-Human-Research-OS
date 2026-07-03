@@ -15,3 +15,8 @@ skills.
 * [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) - Summarizes recent DeepXiv trending papers into markdown digests.
 * [hf-cli](hf-cli/SKILL.md) - Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more.
 * [explain-diff-html](explain-diff-html/SKILL.md) - Explains code changes, diffs, branches, or PRs as rich interactive HTML.
+* [grill-me](productivity/grill-me/SKILL.md) - Get relentlessly interviewed about a plan or design until every decision is resolved.
+* [grilling](productivity/grilling/SKILL.md) - Interview the user relentlessly to stress-test a plan or design before building.
+* [handoff](productivity/handoff/SKILL.md) - Compacts the current conversation into a handoff document for another agent.
+* [teach](productivity/teach/SKILL.md) - Teaches a new skill or concept over multiple sessions in a stateful workspace.
+* [writing-great-skills](productivity/writing-great-skills/SKILL.md) - Reference for writing and editing skills well: vocabulary and principles.

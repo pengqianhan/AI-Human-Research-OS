@@ -23,6 +23,11 @@ at source commit `8f854bd`.
 | [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) | Summarize trending papers into a concise markdown digest with deep-dive recommendations. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [hf-cli](hf-cli/SKILL.md) | Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more. | [huggingface/skills](https://github.com/huggingface/skills/blob/main/skills/hf-cli/SKILL.md) |
 | [explain-diff-html](explain-diff-html/SKILL.md) | Explain code changes, diffs, branches, or PRs as rich interactive HTML. | [geoffreylitt/a29df1b5f9865506e8952488eac3d524](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
+| [grill-me](productivity/grill-me/SKILL.md) | Run a relentless interview to sharpen a plan or design (user-invoked). | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/grill-me) |
+| [grilling](productivity/grilling/SKILL.md) | Interview the user relentlessly to stress-test a plan before building (model- or user-invoked). | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling) |
+| [handoff](productivity/handoff/SKILL.md) | Compact the current conversation into a handoff document for another agent. | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/handoff) |
+| [teach](productivity/teach/SKILL.md) | Teach a new skill or concept across sessions using a stateful teaching workspace. | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/teach) |
+| [writing-great-skills](productivity/writing-great-skills/SKILL.md) | Reference for the vocabulary and principles that make a skill predictable. | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-great-skills) |
 
 ## Installation
 
@@ -47,6 +52,9 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
   DeepXiv CLI via `pip install deepxiv-sdk`.
 - `hf-cli`: Hugging Face CLI via `curl -LsSf https://hf.co/cli/install.sh | bash -s`. Set `HF_TOKEN` for authenticated access.
 - `explain-diff-html`: no local setup required.
+- `grill-me`, `grilling`, `handoff`, `teach`, `writing-great-skills`
+  (productivity bundle): no local setup required. `teach` uses the current
+  directory as a stateful workspace.
 
 ## ml-paper-writing
 
@@ -225,6 +233,79 @@ Example requests:
 /explain-diff-html explain the diff between HEAD and main
 /explain-diff-html explain PR #123 as an HTML walkthrough
 /explain-diff-html explain this branch's UI changes for a beginner reader
+```
+
+## productivity bundle
+
+General workflow skills (not code-specific) from
+[mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity).
+The bundle lives under [productivity/](productivity/) with its own
+[README](productivity/README.md). No local setup required.
+
+### grill-me
+
+Runs a relentless interview to sharpen a plan or design, resolving every branch
+of the decision tree. User-invoked only.
+
+Example requests:
+
+```text
+/grill-me stress-test my migration plan
+/grill-me poke holes in this API design before I build it
+/grill-me interrogate the assumptions behind this experiment
+```
+
+### grilling
+
+Same relentless interview as `grill-me`, but with richer trigger phrasing so the
+model can also reach for it when the user wants to pressure-test a plan.
+
+Example requests:
+
+```text
+/grilling challenge this rollout plan
+grill me on this design before we commit
+stress-test the assumptions in my proposal
+```
+
+### handoff
+
+Compacts the current conversation into a handoff document so another agent can
+continue the work. User-invoked only.
+
+Example requests:
+
+```text
+/handoff prepare a handoff for the next session
+/handoff summarize progress so a fresh agent can take over
+/handoff write a handoff focused on the remaining test failures
+```
+
+### teach
+
+Teaches a new skill or concept across multiple sessions, using the current
+directory as a stateful teaching workspace (missions, lessons, learning records,
+references). User-invoked only.
+
+Example requests:
+
+```text
+/teach help me learn Rust ownership
+/teach start a workspace for learning linear algebra
+/teach continue my lessons on distributed systems
+```
+
+### writing-great-skills
+
+Reference for writing and editing skills well — the vocabulary and principles
+that make a skill predictable. User-invoked only.
+
+Example requests:
+
+```text
+/writing-great-skills review this SKILL.md
+/writing-great-skills help me write a description that triggers reliably
+/writing-great-skills tighten the instructions in my new skill
 ```
 
 ## Credits And License Boundary
