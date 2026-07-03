@@ -51,6 +51,19 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Where decisions are recorded | **Deduped to this file** (durable cross-project subset mirrored in `Memory/MEMORY.md`) | Re-add a decisions table elsewhere (not recommended — invites drift) |
 | Active work lifecycle | **Retired separate plan files**; unfinished cross-session work now lives in this file under `## Active Work` | Restore the separate-plan convention from git if future tasks need a dedicated file |
 
+**Research-environment decisions (2026-07-03):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| What is this OS primarily? | Treat it as a **file-system-native environment for long-horizon human-agent research**. The human user's own research practice is primary; reusable open-source templates are a byproduct; product/platform possibilities stay future-compatible but do not drive current complexity. | Reposition README/INSTRUCTION around an external product or template-first project, then revisit CLI/UI/database needs explicitly. |
+| Paper library boundary | Shared paper understanding lives in `paper-library/papers/` and `paper-library/topics/`; project-specific use of a paper lives in the project (`references.bib`, `paper_skeleton.md`, `PROJECT_MEMORY.md`). | Allow full project-local copies of paper notes, accepting duplicate-note drift. |
+| Topic pages | Topic pages are lightweight synthesis and research roadmaps, not mere tags or exhaustive surveys. | Downgrade topics to index-only pages, or promote them into full survey documents with a separate maintenance policy. |
+| Experience promotion | Project-only facts stay in project memory; cross-project principles go to global memory; repeatable procedures become skills only when another project agent can execute them without local context. | Skill-ify more aggressively, accepting skill-library churn and validation overhead. |
+| Agent-led research | Default `agent_led_research` is **`off`**. Optional modes are `scout_only` and `full_gated`; full gated agent-led work uses `scout → probe → develop → archived/passed`. | Change the value in `Memory/MEMORY.md` and add budget/evaluator controls before running agent-led projects. |
+| Parallelism | **Portfolio always on, intra-project parallelism on demand.** Multiple projects can be tracked, but project-internal multi-agent work starts only when decomposable, verifiable, and worth merge cost. | Make intra-project parallelism default, but add task queue, merge, budget, and evaluator machinery first. |
+| Project state source | Global state is the Active Projects table in `Memory/MEMORY.md`; per-project truth is `PROJECT_MEMORY.md`; project `index.md` is a navigation summary, not a state database. `HANDOFF.md` stays narrow. | Move state into a dashboard, CLI, issue tracker, or structured database after confirming Markdown tables are insufficient. |
+| Evaluator | Use one evaluator protocol for human-led and agent-led research: hard checks + rubric scoring + LLM critique. Final judgment targets complete artifacts, not empty ideas. | Replace with a lightweight LLM-only judge, accepting weaker guarantees on reproducibility and traceability. |
+
 ## Deviations from the original plan
 
 - **Build runs in place from `paper/`** — `main.tex` writes `paper/main.pdf` and reads
@@ -59,6 +72,9 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 - **History caveat:** the old change-summary (`git show d4edf3f:CHANGE_SUMMARY-2026-06.html`) lists
   commit hashes (`1157410`, `73ed6df`, …) that are **not** on the current `forfable` branch — the
   repo was re-committed since. Trust `git log`, never those frozen tables.
+- **2026-07-03 design discussion was documented as durable operating policy**, not as a
+  transcript. The full reasoning remains in the conversation; `INSTRUCTION.md` and
+  `Memory/MEMORY.md` carry the operational subset.
 
 ## Intentionally not done
 
@@ -68,3 +84,9 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
   task and its D2 decision; those strings are quotes, not live links.
 - **Root `Templates/` container** — deferred until a second project template exists.
 - **Sync tooling / git hooks for the three skill copies** — a documented convention suffices (D7).
+- **Evaluator implementation** — protocol recorded only; no evaluator script, grader service,
+  scoring schema, or hidden-evaluator machinery added yet.
+- **Agent-led project scaffolding** — policy recorded only; no new agent-led project, no
+  `Evaluations/` directory, and no `Tasks/` workspace created until real work needs them.
+- **EurekAgent-style controller/UI/Docker runtime** — intentionally not copied; current default
+  remains plain files plus agent conventions.

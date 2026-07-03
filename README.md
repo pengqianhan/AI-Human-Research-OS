@@ -10,6 +10,24 @@ The folder structure is intentionally simple and non-linear. Research ideas,
 references, experiments, figures, and writing often update each other, so the
 folders are organized by material type rather than by a fixed workflow.
 
+## Current Design Stance
+
+This OS is best understood as a file-system-native environment for long-horizon
+human-agent research. The human user's research practice is the primary target;
+reusable open-source templates are a byproduct, and product/platform ideas stay
+future-compatible without driving current complexity.
+
+The default operating policy is **portfolio always on, intra-project parallelism
+on demand**. Multiple projects can be tracked at once, but multi-agent execution
+inside a project should start only when the task is decomposable, verifiable, and
+worth the merge cost. Agent-led research is controlled by the `agent_led_research`
+policy in [Memory/MEMORY.md](Memory/MEMORY.md): `off`, `scout_only`, or
+`full_gated`.
+
+Human-led and agent-led work use the same evaluation stance: hard checks,
+rubric scoring, and LLM critique evaluate complete artifacts such as code,
+figures, references, and paper drafts, not empty ideas.
+
 ## Quick Start
 
 1. Clone the repository and open it with Claude Code or Codex.

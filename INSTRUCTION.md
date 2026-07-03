@@ -7,6 +7,31 @@ Research is iterative. Ideas, references, experiments, figures, and writing ofte
 each other, so the folders are organized by material type instead of by a fixed sequence
 of steps.
 
+## Research Environment Model
+
+Treat this repository as a file-system-native environment for long-horizon
+human-agent research. The primary goal is the human user's own research practice;
+reusable templates and open-source reuse are byproducts. Do not let future platform
+or product possibilities drive heavier machinery before local research needs require it.
+
+General-purpose agents should be controlled mostly by environment design rather than
+by an over-prescribed research workflow:
+
+- **Artifacts**: durable work lives in plain files, Git history, memory files,
+  paper notes, project code, figures, drafts, and evaluation reports.
+- **Permissions**: preserve user-provided research material; ask before deletion,
+  rewriting, publishing, or external sharing; keep evaluators and authoritative
+  result files protected when they exist.
+- **Budgets**: keep agent-led and parallel work gated by explicit user intent,
+  task scope, and useful stopping criteria.
+- **Human oversight**: the human chooses research directions and can redirect or
+  stop work; agents execute, surface evidence, and may propose or run gated ideas
+  only within the configured policy.
+
+Default autonomy policy: **portfolio always on, intra-project parallelism on demand**.
+Maintain a cross-project portfolio, but do not run every project or every possible
+parallel agent by default.
+
 ## Session Startup
 
 1. Read this file first.
@@ -20,6 +45,23 @@ of steps.
 5. For broad Research OS or template-design work, also read the relevant files under `Memory/`
 6. When working inside a specific project folder, also read that project's
    `PROJECT_MEMORY.md`.
+
+## Research Policy
+
+The global research policy lives in [Memory/MEMORY.md](Memory/MEMORY.md). In
+particular, read `agent_led_research` before allowing agents to initiate their
+own research ideas:
+
+- `off` — default. Do not start agent-led ideas; mention optional ideas only as
+  lightweight observations in the current task.
+- `scout_only` — agents may record idea cards and light literature pointers, but
+  should not create projects or run experiments for those ideas.
+- `full_gated` — agents may run agent-led ideas through staged gates:
+  `scout → probe → develop → archived/passed`.
+
+Human-led topics and tasks remain the default starting point. Agent-emergent
+ideas are agent-owned, but they still need provenance, stage labels, bounded
+resources, and the same evaluator protocol as human-led research.
 
 ## Python Environment
 
@@ -69,7 +111,11 @@ lint check.
    with the `paper-library-manager` skill (per-paper notes in
    [paper-library/papers/](paper-library/papers/), themes in
    [paper-library/topics/](paper-library/topics/), graph in
-   `paper-library/viz.html`). Project-specific citations are appended as BibTeX
+   `paper-library/viz.html`). Single-paper notes should start from the configured
+   minimal review profile; deeper reading is added only when a project question
+   requires it. Topic pages are lightweight literature synthesis and research
+   roadmaps, not mere tags; create or deepen them only when they help retrieval,
+   comparison, or next-step planning. Project-specific citations are appended as BibTeX
    entries to `<Project>/paper/references.bib`. In both layers, fetch metadata
    with the literature-search skills and never invent fields; store PDFs and
    longer reading notes in a local project reference area when needed.
@@ -86,6 +132,51 @@ lint check.
 6. **Session end**: update the Progress Log in `<Project>/PROJECT_MEMORY.md`;
    update [Memory/MEMORY.md](Memory/MEMORY.md) only if cross-project state
    changed.
+
+## Portfolio, Projects, and Parallel Work
+
+[Memory/MEMORY.md](Memory/MEMORY.md) is the portfolio dashboard. Its Active
+Projects table tracks cross-project state with at least these fields:
+`Project`, `Path`, `Owner`, `Stage`, `Priority`, `Status`, `Evaluator`, and
+`Next action`.
+
+Inside a project, `PROJECT_MEMORY.md` is the source of truth for project state.
+Its Snapshot should include, when applicable: `owner` (`human-led`, `agent-led`,
+or `mixed`), `origin`, `stage`, `priority`, `evaluator_status`,
+`current_question`, and `next_action`. The project `index.md` is only a human
+readable navigation summary; `paper_skeleton.md` tracks claims, evidence, and
+writing rather than portfolio management.
+
+Project-level stages are lightweight labels, not a heavyweight workflow engine.
+Use the smallest useful stage vocabulary, such as `scout`, `probe`, `develop`,
+`writing`, `paused`, `complete`, and `archived`.
+
+For intra-project parallel work, create isolated task workspaces only when the
+task is decomposable, verifiable, and worth the merge cost:
+`projects-folder/<ProjectName>/Tasks/<task-id>/`. Each task workspace should
+contain the task goal, inputs, success criteria, findings, and artifacts needed
+for review. Merge only verified outputs back into the project's main `Code/`,
+`Figs/`, `paper/`, and `PROJECT_MEMORY.md`.
+
+## Evaluator Protocol
+
+Use one evaluator protocol for human-led and agent-led research. The final
+evaluation target is the research artifact, not an empty idea: paper draft,
+code, figures, references, reproducibility notes, and project memory.
+
+The evaluator combines:
+
+- **Hard checks**: code runs when required, results are reproducible enough for
+  the stage, citations and metadata are real, claims map to evidence, and
+  experiments address the stated hypothesis.
+- **Rubric scoring**: novelty, significance, method soundness, evidence quality,
+  experimental rigor, writing clarity, reusability, and future potential.
+- **LLM critique**: structured review comments and revision requests, clearly
+  separated from hard facts.
+
+Store full evaluation reports inside the project under
+`projects-folder/<ProjectName>/Evaluations/`, one report per evaluation. Keep
+only summary status in `PROJECT_MEMORY.md` and the global Active Projects table.
 
 ## Research Memory
 
