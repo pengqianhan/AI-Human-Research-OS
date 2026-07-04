@@ -109,9 +109,12 @@ portfolio 并保有 `PROJECT_MEMORY.md`;项目是否 agent 锁定由 owner 在
   验收:一条命令把同一 hub skill 装进全部已注册 adapter 目录;新增 adapter 不改
   安装器逻辑。
 - **M4(闸门:OS Feedback 证据 + 人类逐项确认)— 更重的机制**
-  自动排队/调度、monitor UI、数据库、守护进程、每 adapter 强制机制矩阵、OS 级
-  secrets 方案、任何机器可读 manifest/CLI:每一项都必须先有 OS Feedback 中
-  "文件原生方案不够用"的具体证据,再经人类显式确认,才可开工。
+  自动排队/调度、monitor UI 的执行面与常驻服务、数据库、守护进程、每 adapter
+  强制机制矩阵、OS 级 secrets 方案、任何机器可读 manifest/CLI:每一项都必须先有
+  OS Feedback 中"文件原生方案不够用"的具体证据,再经人类显式确认,才可开工。
+  例外(已由人类开闸):**只读 monitor UI** 于 2026-07-04 经人类授权豁免证据
+  前置(设计见 `os-ui/DESIGN.md`,决策记录见 HANDOFF Decisions);其执行面、
+  SSE/常驻服务仍受本闸门约束。
 
 ## 5. 总验收(与里程碑一一对应)
 

@@ -15,8 +15,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:205171f4-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:3e6ecfeb-->
+- `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:9a065f26-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:b75104d1-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:8760f31b-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:dc5ee231-->
@@ -68,7 +68,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## os-ui/
 
 - `DESIGN.md` - Design spec for the read-only Research OS monitor UI: goals, architecture, pages, schema, and implementation plan. <!--hash:9ab177c9-->
-- `mockup.html` - Static clickable HTML mockup for the read-only Research OS monitor UI. <!--hash:27dc527b-->
+- `mockup.html` - Static clickable HTML mockup for the read-only Research OS monitor UI. <!--hash:0aa68be9-->
 
 ## paper-library/
 
