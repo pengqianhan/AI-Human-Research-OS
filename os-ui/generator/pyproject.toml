@@ -1,0 +1,9 @@
+[project]
+name = "os-ui-generator"
+version = "0.1.0"
+description = "Read-only repo scanner for the os-ui dashboard: writes os-ui/frontend/public/state.json from plain-file repo state. Standard library only."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+generate = "generate:main"

@@ -45,13 +45,25 @@ small explained steps (see `Human/inbox.md` candidate entry). Read-only only;
 execution surface stays behind GOAL.md M4.
 
 - [x] ~~Design doc + clickable mockup (3 pages, fake data)~~ — delivered 2026-07-04.
-- [ ] U0 — `os-ui/generator/` (Python, uv scope): schema v0.1 + `state.json`
-      from the real repo (portfolio + store first); gitignore `state.json`.
-- [ ] U1 — Vite + React + TS + Tailwind scaffold in `os-ui/frontend/`;
-      Dashboard page reads real `state.json`; gitignore `dist/`.
-- [ ] U2 — Project page (round score track; use real project data).
-- [ ] U3 — Store page (hub cards + 3-way hash sync check + copy-install-command).
-- [ ] U4 — polish + novice README + FILETREE/HANDOFF wrap-up.
+- [x] ~~U0 — `os-ui/generator/` (Python, uv, stdlib-only): schema v0.1 →
+      `frontend/public/state.json` (gitignored); `--watch` mtime polling~~ —
+      verified: built-in validate PASS (33 hub + 3 orphans, portfolio 1,
+      unregistered = Paper_VAE); independent schema-shape check passed.
+- [x] ~~U1 — Vite + React + TS + Tailwind scaffold; Dashboard reads real
+      state.json~~ — verified in browser: strips, unregistered alert,
+      active-work progress, policy, activity, governance; console clean.
+- [x] ~~U2 — Project page~~ — verified: honest nulls (未填写), round-track
+      empty state (real rounds land with circle_packing M2), fixture-tested
+      non-empty branch.
+- [x] ~~U3 — Store page~~ — verified: 36 cards (incl. hub skills added by a
+      parallel session — pipeline auto-picks-up), 4-state sync badges, orphan
+      filter, drawer (dialog semantics, focus, sync-back command for orphans).
+- [x] ~~U4 — novice README + wrap-up~~ — `os-ui/frontend/README.md`;
+      build/tsc clean; mobile breakpoint verified; committed.
+
+Run: `cd os-ui/generator && uv run python generate.py` (or `--watch`), then
+`npm run dev --prefix os-ui/frontend`. Next iteration ideas stay demand-driven
+(OS Feedback), per DESIGN.md.
 
 ### circle_packing — first real project / OS shakedown (planned 2026-07-03, grilling session)
 
@@ -153,6 +165,12 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Literature scope | Bounded: 3–5 sources; 1–2 paper-library notes (minimal profile, AlphaEvolve first); no new topic page until ≥ 3 related notes; provenance of 2.63598844 must be verified or honestly flagged | Skip paper-library entirely (bib-only) or run a fuller packing-literature survey |
 | Artifact-level review | Exactly two: mid-term hard-check review after the parallel round; final full review (hard checks + rubric + LLM critique) after `main.tex`. Reviewer = fresh read-only agent session; reports in project `Evaluations/` | Single final review, or per-round reviews (rejected: cost without new signal) |
 | Leaf defaults | Full idea→project path via `Ideas/`; lowercase project name; commits on `main` per round; `paper_skeleton.md` live from round 1, `main.tex` after stop condition; round wrap-up **not** skill-ified before round 3; two OS back-port batches | Each independently reversible; see Active Work items |
+
+**Orphan-skills decision (2026-07-04, user-set):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Orphan skills stay installed-only | The 3 skills present in `.claude/skills/` + `.agents/skills/` without a hub source (`session-handoff`, `filetree-simple`, `collected-skills-organizer`) are **intentionally not synced back to the hub**. D7's three-copy rule applies to hub-sourced skills only; the store UI shows orphans as `hub 无源`. | `install_research_skill.py sync-back <name> --from claude` for each, then remove this row |
 
 **Direction decisions (2026-07-04, user-set):**
 
