@@ -1,6 +1,6 @@
 # Collected Skills
 
-Academic skills collected or adapted from external sources. See
+Skills collected, adapted, or locally added for research workflows. See
 [README.md](README.md) for setup notes, usage examples, and provenance. Preserve
 upstream attribution and license terms when editing or redistributing these
 skills.
@@ -20,3 +20,4 @@ skills.
 * [handoff](productivity/handoff/SKILL.md) - Compacts the current conversation into a handoff document for another agent.
 * [teach](productivity/teach/SKILL.md) - Teaches a new skill or concept over multiple sessions in a stateful workspace.
 * [writing-great-skills](productivity/writing-great-skills/SKILL.md) - Reference for writing and editing skills well: vocabulary and principles.
+* [human-cognition-cache](human-cognition-cache/SKILL.md) - Maintains a project-local human cognition cache.

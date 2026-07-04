@@ -4,9 +4,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## (root)/
 
-- `Human/` - User context area with profile, policies, preferences, workflows, candidate updates, and ignored private context. <!--hash:9fb58371-->
+- `Human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:d1579e96-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
+- `os-ui/` - Read-only monitor UI design area for the Research OS, including design docs and mockups. <!--hash:3a09ded8-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, and vendored science-skills. <!--hash:5ef6775e-->
@@ -15,18 +16,27 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:205171f4-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:7ef7cf2e-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:baefe6de-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:3e6ecfeb-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:8760f31b-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
-- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:f1a97dff-->
+- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:dc5ee231-->
 - `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:2bc390ed-->
 - `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:e148560e-->
 
 ## Human/
 
-- `inbox.md` - Review queue for candidate human memories before they are promoted into the durable profile. <!--hash:87bb035e-->
-- `index.md` - Entry point explaining Human folder read order, scope, boundaries, memory policy, and agent rules. <!--hash:d603a38f-->
+- `human-cognition/` - Human cognition cache with OKF quadrant files and a navigation index. <!--hash:4f3b04c1-->
+- `inbox.md` - Review queue for candidate human memories before they are promoted into the durable profile. <!--hash:227e6291-->
+- `index.md` - Entry point explaining Human folder read order, scope, boundaries, memory policy, and agent rules. <!--hash:90ce833c-->
 - `PROFILE.md` - Stable user profile combining low-sensitivity identity fields, collaboration preferences, recurring workflows, and entry templates. <!--hash:da9a3211-->
+
+## Human/human-cognition/
+
+- `index.md` - Entry point for the human cognition cache: startup read instructions, quadrant links, focus, transitions, and privacy boundary. <!--hash:2d2286fb-->
+- `known_knowns.md` - Empty OKF quadrant for human-confirmed cognition the user can state clearly. <!--hash:77ecde10-->
+- `known_unknowns.md` - Empty OKF quadrant for questions and gaps the human knows they have. <!--hash:32d80f6f-->
+- `unknown_knowns.md` - Empty OKF quadrant for implicit human criteria and assumptions revealed through interaction. <!--hash:1ffefd95-->
+- `unknown_unknowns.md` - Empty OKF quadrant for candidate blind spots recorded as questions or hypotheses. <!--hash:a98fd852-->
 
 ## Ideas/
 
@@ -46,7 +56,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Research-skills-hub/
 
-- `index.md` - Index of the Research Skills Hub: links to skill collections, provenance boundaries, and install procedure. <!--hash:6da8f9d9-->
+- `index.md` - Index of the Research Skills Hub: links to skill collections, provenance boundaries, and install procedure. <!--hash:c0563802-->
 
 ## Resource/
 
@@ -54,6 +64,11 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `EurekAgent-讲解与启发.md` - Walk-through of EurekAgent environment engineering for metric-driven research loops and lessons for evaluation contracts, artifacts, budgets, and snapshots. <!--hash:6f8be23b-->
 - `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:b29b39d9-->
 - `并行-自进化-经验共享-调研与启发.md` - GitHub survey note on parallel execution, self-evolution, and cross-agent experience sharing, with borrowing points and a recommended rollout path. <!--hash:3b4a09f0-->
+
+## os-ui/
+
+- `DESIGN.md` - Design spec for the read-only Research OS monitor UI: goals, architecture, pages, schema, and implementation plan. <!--hash:9ab177c9-->
+- `mockup.html` - Static clickable HTML mockup for the read-only Research OS monitor UI. <!--hash:27dc527b-->
 
 ## paper-library/
 

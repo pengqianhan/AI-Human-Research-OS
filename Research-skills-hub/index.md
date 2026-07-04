@@ -2,7 +2,7 @@
 
 * [science-skills](science-skills/index.md) - Skills vendored from google-deepmind/science-skills: literature search (arXiv, bioRxiv, Europe PMC, OpenAlex), the uv prerequisite, and a workflow-to-skill creator.
 * [open-paper-skills](open-paper-skills/index.md) - Original or repo-maintained Open Paper skills, plus local support skills.
-* [collected-skills](collected-skills/index.md) - Academic skills collected or adapted from external sources; preserve upstream attribution and license terms.
+* [collected-skills](collected-skills/index.md) - Skills collected, adapted, or locally added for research workflows; preserve upstream attribution and license terms.
 
 # Installing a skill
 

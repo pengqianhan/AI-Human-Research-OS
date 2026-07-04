@@ -8,15 +8,20 @@ preferences, workflows, and boundaries.
 
 1. Read [PROFILE.md](PROFILE.md) for stable, low-sensitivity user context,
    preferences, and recurring workflows.
-2. Read this file's policy sections before actions involving privacy,
+2. Read [human-cognition/index.md](human-cognition/index.md), when present, to
+   skim the project-local human cognition cache and its privacy boundary.
+3. Read this file's policy sections before actions involving privacy,
    publishing, deletion, external sharing, or personal data.
-3. Read [inbox.md](inbox.md) only when proposing or reviewing candidate updates.
+4. Read [inbox.md](inbox.md) only when proposing or reviewing candidate updates.
 
 Do not read `Human/private/` unless the user explicitly asks.
 
 ## Scope
 
 Use `Human/` for stable information about the user as a person and collaborator.
+Use [human-cognition/](human-cognition/index.md) for the project-local cache of
+the human's current cognition state: known knowns, known unknowns, unknown knowns,
+and unknown unknowns.
 Use [Memory/](../Memory/) for project state, long-term research goals, and
 cross-project research decisions.
 

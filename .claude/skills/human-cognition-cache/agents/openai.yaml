@@ -1,0 +1,4 @@
+interface:
+  display_name: "Human Cognition Cache"
+  short_description: "Maintain a project-local human cognition cache"
+  default_prompt: "Use $human-cognition-cache to initialize or update my project-local human cognition cache."

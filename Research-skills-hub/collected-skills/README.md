@@ -1,9 +1,9 @@
 # Collected Skills
 
-Academic skills collected or adapted from external projects for use with Open
-Paper and the AI-Human Research OS. These are not treated as original local
-work by default. Keep upstream attribution, inspect each `SKILL.md`, and verify
-license terms before redistributing or publishing modified copies.
+Skills collected, adapted, or locally added for use with Open Paper and the
+AI-Human Research OS. For externally sourced skills, keep upstream attribution,
+inspect each `SKILL.md`, and verify license terms before redistributing or
+publishing modified copies.
 
 This README is the collected-skills split from
 `/Users/pengqianhan/Documents/GitHub/Opensource/open-paper-skills/README.md`
@@ -28,6 +28,7 @@ at source commit `8f854bd`.
 | [handoff](productivity/handoff/SKILL.md) | Compact the current conversation into a handoff document for another agent. | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/handoff) |
 | [teach](productivity/teach/SKILL.md) | Teach a new skill or concept across sessions using a stateful teaching workspace. | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/teach) |
 | [writing-great-skills](productivity/writing-great-skills/SKILL.md) | Reference for the vocabulary and principles that make a skill predictable. | [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-great-skills) |
+| [human-cognition-cache](human-cognition-cache/SKILL.md) | Maintain a project-local human cognition cache. | Original local skill, inspired by a user-provided blog excerpt, MIT |
 
 ## Installation
 
@@ -55,6 +56,7 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
 - `grill-me`, `grilling`, `handoff`, `teach`, `writing-great-skills`
   (productivity bundle): no local setup required. `teach` uses the current
   directory as a stateful workspace.
+- `human-cognition-cache`: no local setup required.
 
 ## ml-paper-writing
 
@@ -308,9 +310,26 @@ Example requests:
 /writing-great-skills tighten the instructions in my new skill
 ```
 
+## human-cognition-cache
+
+Maintains a project-local, git-trackable cache of the human's cognition using
+OKF Markdown files, preferably under `Human/human-cognition/` when a project has
+a `Human/` context folder. It separates known knowns, known unknowns, unknown
+knowns, and unknown unknowns, while preserving privacy boundaries and
+lightweight transition links.
+
+Example requests:
+
+```text
+/human-cognition-cache initialize the cache in this repo
+/human-cognition-cache update my cognition cache from this discussion
+/human-cognition-cache move cog-20260704-001 from unknown_unknowns to known_unknowns
+/human-cognition-cache skim my cognition cache before planning this task
+```
+
 ## Credits And License Boundary
 
 These skills keep the provenance listed in the table above. The repository-level
-MIT license does not override third-party or upstream license terms for collected
-skills. When a skill has no local license file, check the upstream project before
-redistributing it.
+MIT license covers original local skills but does not override third-party or
+upstream license terms for collected skills. When an externally sourced skill has
+no local license file, check the upstream project before redistributing it.

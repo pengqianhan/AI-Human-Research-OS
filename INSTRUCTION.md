@@ -35,15 +35,22 @@ parallel agent by default.
 ## Session Startup
 
 1. Read this file first.
-2. Read [`HANDOFF.md`](HANDOFF.md) for Active Work and Decisions before
+2. If [`Human/human-cognition/index.md`](Human/human-cognition/index.md)
+   exists, skim it, then skim the frontmatter and `Active Index` sections of
+   `known_knowns.md`, `known_unknowns.md`, `unknown_knowns.md`, and
+   `unknown_unknowns.md` in that directory. Read full entries only when relevant
+   to the current task. Before finishing, update the cache only for durable
+   human-cognition changes likely to help future sessions, respecting the
+   `human-cognition-cache` skill's privacy rules.
+3. Read [`HANDOFF.md`](HANDOFF.md) for Active Work and Decisions before
    reopening a settled question. Trust the repository over hand-off snapshots
    (re-verify with `git status`).
-3. Unless the task is trivial, read `FILETREE.md` next to understand the current
+4. Unless the task is trivial, read `FILETREE.md` next to understand the current
    repository structure.
-4. Read [`Human/index.md`](Human/index.md), when present, for stable user
+5. Read [`Human/index.md`](Human/index.md), when present, for stable user
    context, collaboration preferences, and privacy boundaries.
-5. For broad Research OS or template-design work, also read the relevant files under `Memory/`
-6. When working inside a specific project folder, also read that project's
+6. For broad Research OS or template-design work, also read the relevant files under `Memory/`
+7. When working inside a specific project folder, also read that project's
    `PROJECT_MEMORY.md`.
 
 ## Research Policy
