@@ -459,10 +459,11 @@
 <section class="page" id="page-store" role="tabpanel" aria-labelledby="tab-store">
 
   <div class="store-bar" role="group" aria-label="按集合筛选">
-    <button class="fchip" aria-pressed="true"  data-col="all">全部 · 10</button>
+    <button class="fchip" aria-pressed="true"  data-col="all">全部 · 36</button>
     <button class="fchip" aria-pressed="false" data-col="open-paper-skills">open-paper-skills</button>
     <button class="fchip" aria-pressed="false" data-col="science-skills">science-skills</button>
     <button class="fchip" aria-pressed="false" data-col="collected-skills">collected-skills</button>
+    <button class="fchip" aria-pressed="false" data-col="hub 无源">hub 无源</button>
     <input class="search" type="search" placeholder="搜索技能…(视觉稿未实现)" aria-label="搜索技能">
   </div>
 
@@ -495,18 +496,48 @@
 </footer>
 
 <script>
-/* ── 假数据:技能商店 ── */
+/* ── 真实库存:Research-skills-hub 三个 collection + 孤儿技能 ── */
 const SKILLS = [
-  {n:"research-skill-installer", c:"open-paper-skills", d:"在 hub 与 .agents/.claude 两个安装目录之间安装、更新、回同步技能。", lic:"MIT", s:true,  sync:"synced"},
-  {n:"paper-library-manager",    c:"open-paper-skills", d:"维护 OKF 论文库:单篇笔记、topic 综合页、阅读状态与 viz.html。",   lic:"MIT", s:true,  sync:"synced"},
-  {n:"okf-repo-organizer",       c:"open-paper-skills", d:"把仓库或知识语料整理为通用 OKF bundle,校验索引与 frontmatter。",  lic:"MIT", s:false, sync:"synced"},
-  {n:"session-handoff",          c:"open-paper-skills", d:"维护 HANDOFF.md:跨会话的 active work、决策、偏离与刻意未做。",   lic:"MIT", s:false, sync:"orphan"},
-  {n:"filetree-simple",          c:"open-paper-skills", d:"维护 FILETREE.md 紧凑索引:一行用途摘要 + 内容哈希 + lint。",      lic:"MIT", s:true,  sync:"drift"},
-  {n:"grilling",                 c:"open-paper-skills", d:"对计划或设计进行不留情面的逐项拷问,直到达成共享理解。",           lic:"MIT", s:false, sync:"synced"},
-  {n:"literature_search_arxiv",  c:"science-skills",    d:"检索 arXiv 论文,抽取元数据与摘要,下载全文 PDF/HTML。",           lic:"Apache-2.0", s:true, sync:"synced"},
-  {n:"literature_search_openalex",c:"science-skills",   d:"查询 OpenAlex 学术库:论文、作者、机构、引文计量与 DOI 解析。",    lic:"Apache-2.0", s:true, sync:"synced"},
-  {n:"uv-env",                   c:"open-paper-skills", d:"用 uv 创建和管理 Python 项目环境:初始化、加依赖、锁定同步。",     lic:"MIT", s:false, sync:"synced"},
-  {n:"deepxiv-cli",              c:"collected-skills",  d:"通过 DeepXiv 分层读取开放论文:章节级阅读与趋势论文。",            lic:"上游许可(见 attribution)", s:true, sync:"none"},
+  // open-paper-skills (9)
+  {n:"alphaxiv-paper-lookup",   c:"open-paper-skills", d:"在 alphaxiv.org 查询论文结构化 AI 摘要,比直接读 PDF 更快更稳。", lic:"MIT", s:false, sync:"none"},
+  {n:"drawio-paper",            c:"open-paper-skills", d:"按论文方法与图注生成 draw.io 图与 matplotlib 统计图,多智能体流水线。", lic:"MIT", s:true,  sync:"none"},
+  {n:"karpathy-coding-rules",   c:"open-paper-skills", d:"Karpathy 十条编码守则:读代码优先、最小改动、验证与调试习惯。", lic:"MIT", s:false, sync:"synced"},
+  {n:"okf-repo-organizer",      c:"open-paper-skills", d:"把仓库或知识语料整理为通用 OKF bundle,校验索引与 frontmatter。", lic:"MIT", s:true,  sync:"synced"},
+  {n:"paper-library-manager",   c:"open-paper-skills", d:"维护 OKF 论文库:单篇笔记、topic 综合页、阅读状态与 viz.html。", lic:"MIT", s:true,  sync:"synced"},
+  {n:"research-bible",          c:"open-paper-skills", d:"研究方法论指南:选题、实验回合设计、调试训练与评测、读书计划。", lic:"MIT", s:false, sync:"none"},
+  {n:"research-skill-installer",c:"open-paper-skills", d:"在 hub 与 .agents/.claude 两个安装目录之间安装、更新、回同步技能。", lic:"MIT", s:true,  sync:"synced"},
+  {n:"task-file-builder",       c:"open-paper-skills", d:"按 Objective/验收标准/相关文件等结构,交互式起草 task.md 任务书。", lic:"MIT", s:false, sync:"none"},
+  {n:"uv-env",                  c:"open-paper-skills", d:"用 uv 创建和管理 Python 项目环境:初始化、加依赖、锁定同步。", lic:"MIT", s:false, sync:"synced"},
+  // science-skills (7)
+  {n:"literature_search_arxiv",    c:"science-skills", d:"检索 arXiv 论文,抽取元数据与摘要,下载全文 PDF/HTML。", lic:"Apache-2.0", s:true,  sync:"synced"},
+  {n:"literature_search_biorxiv",  c:"science-skills", d:"按日期区间与关键词浏览、筛选、下载 bioRxiv/medRxiv 生命科学预印本。", lic:"Apache-2.0", s:true,  sync:"none"},
+  {n:"literature_search_europepmc",c:"science-skills", d:"检索 Europe PMC 文献,下载开放获取全文/PDF,取引文列表与参考文献。", lic:"Apache-2.0", s:true,  sync:"none"},
+  {n:"literature_search_openalex", c:"science-skills", d:"查询 OpenAlex 学术库:论文、作者、机构、引文计量与 DOI 解析。", lic:"Apache-2.0", s:true,  sync:"synced"},
+  {n:"science_skills_common",      c:"science-skills", d:"Science Skills 共享 Python 包:带限流重试退避的统一 HTTP 客户端,非独立技能。", lic:"Apache-2.0", s:false, sync:"synced"},
+  {n:"uv",                         c:"science-skills", d:"检查并在缺失时安装 uv 包管理器,确保其在 PATH 中,供其他技能依赖。", lic:"Apache-2.0", s:false, sync:"synced"},
+  {n:"workflow_skill_creator",     c:"science-skills", d:"把已完成的用户工作流蒸馏为可复用的 agent 技能。", lic:"Apache-2.0", s:false, sync:"none"},
+  // collected-skills (17,含 productivity/ 子目录)
+  {n:"arxiv2md",               c:"collected-skills", d:"把 arXiv 论文转换为干净的 Markdown,便于阅读、抓取与摘要。", lic:"上游许可", s:false, sync:"none"},
+  {n:"deepxiv-baseline-table", c:"collected-skills", d:"用 DeepXiv 搜索与章节读取,构建对比用的 Markdown 基线表。", lic:"上游许可", s:false, sync:"none"},
+  {n:"deepxiv-cli",            c:"collected-skills", d:"通过 CLI 混合检索与智能抽取访问 arXiv/PMC 等学术论文。", lic:"上游许可", s:false, sync:"none"},
+  {n:"deepxiv-trending-digest",c:"collected-skills", d:"汇总近期热门论文,生成带精读建议的 Markdown 摘要。", lic:"上游许可", s:false, sync:"none"},
+  {n:"drawio",                 c:"collected-skills", d:"生成 draw.io 图表文件,可选导出为内嵌 XML 的 PNG/SVG/PDF。", lic:"上游许可", s:false, sync:"none"},
+  {n:"explain-diff-html",      c:"collected-skills", d:"把代码改动、diff、分支或 PR 解释为富交互 HTML 页面。", lic:"上游许可", s:false, sync:"none"},
+  {n:"grill-me",               c:"collected-skills", d:"对计划或设计发起不留情面的追问,用户主动触发版。", lic:"上游许可", s:false, sync:"synced"},
+  {n:"grilling",               c:"collected-skills", d:"对计划或设计进行不留情面的逐项拷问,直到达成共享理解。", lic:"上游许可", s:false, sync:"synced"},
+  {n:"handoff",                c:"collected-skills", d:"把当前对话压缩为交接文档,供另一个 agent 接续工作。", lic:"上游许可", s:false, sync:"none"},
+  {n:"hf-cli",                 c:"collected-skills", d:"Hugging Face Hub CLI:下载上传管理模型、数据集、空间、仓库与任务。", lic:"上游许可", s:false, sync:"none"},
+  {n:"hugging-face-paper-pages",c:"collected-skills", d:"查阅 Hugging Face 论文页与结构化元数据:作者、关联模型/数据集/代码。", lic:"上游许可", s:false, sync:"none"},
+  {n:"human-cognition-cache",  c:"collected-skills", d:"维护项目级人类认知缓存:已知已知/未知与未知的未知等 OKF 文件。", lic:"MIT", s:false, sync:"synced"},
+  {n:"ml-paper-writing",       c:"collected-skills", d:"撰写 NeurIPS/ICML 等顶会可投稿 ML 论文,含模板与引用核验。", lic:"MIT", s:false, sync:"none"},
+  {n:"paper-finder",           c:"collected-skills", d:"按关键词跨 arXiv/顶会检索并整理论文,维护主题库与 BibTeX。", lic:"上游许可", s:false, sync:"none"},
+  {n:"pyzotero",               c:"collected-skills", d:"用 pyzotero 客户端管理 Zotero 文献库:条目、集合、标签与附件。", lic:"MIT", s:false, sync:"none"},
+  {n:"teach",                  c:"collected-skills", d:"在有状态工作区中,跨会话教用户一项新技能或概念。", lic:"上游许可", s:false, sync:"none"},
+  {n:"writing-great-skills",   c:"collected-skills", d:"关于如何写好技能的参考:让技能行为可预期的词汇与原则。", lic:"上游许可", s:false, sync:"none"},
+  // 孤儿技能:已安装于 .claude/.agents,但 hub 中无源
+  {n:"collected-skills-organizer", c:"hub 无源", d:"新技能加入 collected-skills 后,更新其 index.md 与 README.md 登记。", lic:"unknown", s:false, sync:"orphan"},
+  {n:"filetree-simple",            c:"hub 无源", d:"维护 FILETREE.md 紧凑索引:一行用途摘要 + 内容哈希 + lint。", lic:"unknown", s:true,  sync:"orphan"},
+  {n:"session-handoff",            c:"hub 无源", d:"维护 HANDOFF.md:跨会话的 active work、决策、偏离与刻意未做。", lic:"unknown", s:false, sync:"orphan"},
 ];
 const SYNC_BADGE = {
   synced:'<span class="badge b-ok">已安装 · 同步</span>',

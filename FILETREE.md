@@ -68,7 +68,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## os-ui/
 
 - `DESIGN.md` - Design spec for the read-only Research OS monitor UI: goals, architecture, pages, schema, and implementation plan. <!--hash:9ab177c9-->
-- `mockup.html` - Static clickable HTML mockup for the read-only Research OS monitor UI. <!--hash:0aa68be9-->
+- `mockup.html` - Static clickable HTML mockup for the read-only Research OS monitor UI. <!--hash:a74c9f5e-->
 
 ## paper-library/
 
