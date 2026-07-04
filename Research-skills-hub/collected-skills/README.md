@@ -316,7 +316,8 @@ Maintains a project-local, git-trackable cache of the human's cognition using
 OKF Markdown files, preferably under `Human/human-cognition/` when a project has
 a `Human/` context folder. It separates known knowns, known unknowns, unknown
 knowns, and unknown unknowns, while preserving privacy boundaries and
-lightweight transition links.
+lightweight transition links. Example-pattern inspiration:
+[Know your unknowns examples](https://thariqs.github.io/html-effectiveness/unknowns/).
 
 Example requests:
 

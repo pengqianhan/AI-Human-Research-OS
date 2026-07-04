@@ -88,6 +88,31 @@ skill.
 - `unknown_unknowns.md`: Candidate blind spots the human may not yet realize.
   Store these as questions or hypotheses, not facts.
 
+## Example Patterns
+
+Use [Know your unknowns examples](https://thariqs.github.io/html-effectiveness/unknowns/)
+as external inspiration for unknown-discovery workflows. Treat it as a reference,
+not vendored source: do not copy full HTML artifacts or long prompts into this
+skill or a public cache unless the project has permission.
+
+Map common workflows into the cache this way:
+- Blindspot pass: add candidate hypotheses to `unknown_unknowns.md`.
+- Teach or explainer pass: turn vague unfamiliarity into explicit questions in
+  `known_unknowns.md`; move understood concepts to `known_knowns.md`.
+- Brainstorm or prototype pass: capture the human's reactions, taste, and
+  unstated selection criteria in `unknown_knowns.md`.
+- Interview: record unresolved answers in `known_unknowns.md` and confirmed
+  decisions in `known_knowns.md`.
+- Reference pass: record the examples the human recognizes as relevant in
+  `known_knowns.md`, and note unresolved semantic gaps in `known_unknowns.md`.
+- Implementation plan: record high-impact decisions likely to change as
+  `known_unknowns.md` entries.
+- Implementation notes: record real constraints that force cognition transitions.
+- Pitch or explainer: consolidate reviewer-facing shared understanding in
+  `known_knowns.md` and leave remaining objections in `known_unknowns.md`.
+- Quiz: use correct answers as evidence that a prior known unknown has become a
+  known known.
+
 ## Entry Format
 
 Use stable IDs. Prefer `cog-YYYYMMDD-NNN` unless the project already has a
