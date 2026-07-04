@@ -103,3 +103,4 @@ keeps per-skill upstream attribution and license terms.
 - [awesome-AI-for-research](Resource/awesome-AI-for-research)
 - [duoduo](https://github.com/openduo/duoduo)
 - [FAROS](https://github.com/OpenNSWM-Lab/FAROS/tree/main)
+- [science-skills](https://github.com/JimLiu/science-skills)
