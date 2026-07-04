@@ -6,7 +6,7 @@ This repository is building a lightweight Research OS for human researchers and 
 
 The primary goal is the human user's own research practice. Reusable open-source templates are a byproduct, and future product or platform possibilities should remain compatible without driving current complexity. The goal is not to build a complex platform first; it is to help Codex, Claude Code, and similar code agents support long-term research with lower token cost, more stable path conventions, and clearer context-loading rules. Code agents can be understood as the execution core of this Research OS, while humans mainly interact with and supervise it through natural language.
 
-This file is a live guide for building and evolving this OS. It is not a historical record and not a strict checklist. Start here to understand the construction goals, then treat `INSTRUCTION.md`, `Memory/MEMORY.md`, `FILETREE.md`, and the actual directory structure as the current sources of truth. You may deviate from the specific suggestions in this file, but explain the reason, impact, and tradeoffs.
+The direction-layer long-term goal (an agent-agnostic, agent-native OS) lives in [GOAL.md](GOAL.md); this file is its operation-layer construction guide. This file is a live guide for building and evolving this OS. It is not a historical record and not a strict checklist. Start here to understand the construction goals, then treat `INSTRUCTION.md`, `Memory/MEMORY.md`, `FILETREE.md`, and the actual directory structure as the current sources of truth. You may deviate from the specific suggestions in this file, but explain the reason, impact, and tradeoffs.
 
 ## Overall Goal
 

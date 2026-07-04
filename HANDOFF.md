@@ -19,6 +19,24 @@ git show <hash>              # the actual diff for any change
 
 ## Active Work
 
+### Agent-native OS evolution ([GOAL.md](GOAL.md), 2026-07-04)
+
+User direction: evolve this repo into an **agent-agnostic, agent-native Research OS**
+(drivable by Codex, Claude Code, pi, and any file-reading shell-running agent).
+[GOAL.md](GOAL.md) is the direction-layer plan; execute its milestones in order.
+
+- [ ] M0 — governance alignment: fix stale `OS_INTRO.html` references in
+      task.md / task_en.md deliverables and decision D4; present the
+      **Paper_VAE status decision** (register in Active Projects + add
+      PROJECT_MEMORY.md, vs declare nested-repo exempt zone) to the human.
+- [ ] M1 — write the "Agent adapters" contract section in INSTRUCTION.md
+      (Extending the OS) and de-hardcode the two-agent assumptions in
+      INSTRUCTION.md Skills section and README; annotate D7.
+- [ ] M2 — run the circle_packing checklist below (it is the authoritative
+      work breakdown; its internal order wins).
+- [ ] M3/M4 — gated; see GOAL.md (real third agent / OS-Feedback evidence +
+      human confirmation required).
+
 ### circle_packing — first real project / OS shakedown (planned 2026-07-03, grilling session)
 
 Purpose: reimplement the `circle_packing` task from `Resource/EurekAgent/examples/circle_packing/`
@@ -119,6 +137,13 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Literature scope | Bounded: 3–5 sources; 1–2 paper-library notes (minimal profile, AlphaEvolve first); no new topic page until ≥ 3 related notes; provenance of 2.63598844 must be verified or honestly flagged | Skip paper-library entirely (bib-only) or run a fuller packing-literature survey |
 | Artifact-level review | Exactly two: mid-term hard-check review after the parallel round; final full review (hard checks + rubric + LLM critique) after `main.tex`. Reviewer = fresh read-only agent session; reports in project `Evaluations/` | Single final review, or per-round reviews (rejected: cost without new signal) |
 | Leaf defaults | Full idea→project path via `Ideas/`; lowercase project name; commits on `main` per round; `paper_skeleton.md` live from round 1, `main.tex` after stop condition; round wrap-up **not** skill-ified before round 3; two OS back-port batches | Each independently reversible; see Active Work items |
+
+**Direction decisions (2026-07-04, user-set):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](GOAL.md)). This **refines, not replaces**, the 2026-07-03 positioning: the user's research practice stays first; GOAL directly authorizes only documentation-layer work (M0/M1); machinery stays gated on OS-Feedback evidence (M4) or a real third agent (M3). | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
+| Document layering | `GOAL.md` = direction layer (north star); `task.md`/`task_en.md` = operation-layer construction guides; GOAL's milestones are the current work program (task.md's deliverables list belongs to the completed 2026-06 normalization). GOAL is revised only by the human or human-confirmed proposals. | Merge GOAL.md content into task.md and delete the file |
 
 ## Deviations from the original plan
 

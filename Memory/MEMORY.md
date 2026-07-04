@@ -34,6 +34,7 @@
 | 2026-07-03 | Unified evaluator protocol applies to human-led and agent-led research: hard checks + rubric scoring + LLM critique | avoids judging empty ideas or polished prose without runnable, traceable artifacts |
 | 2026-07-03 | Agent-led research is gated by `agent_led_research` (`off`, `scout_only`, `full_gated`) | preserves human-led research as the default while leaving room for controlled agent-owned research lanes |
 | 2026-07-03 | `task.md` and `task_en.md` are live construction guides for evolving this OS, not historical records | keeps build guidance aligned with current paths and design decisions; historical deviations belong in [`HANDOFF.md`](../HANDOFF.md) or git history |
+| 2026-07-04 | End goal repositioned by the user: evolve the repo into an agent-agnostic, agent-native Research OS — direction layer in [`GOAL.md`](../GOAL.md); research practice stays first, machinery stays evidence-gated | user direction; supersession details and milestones in [`HANDOFF.md`](../HANDOFF.md) |
 
 ## Lessons and Principles
 
