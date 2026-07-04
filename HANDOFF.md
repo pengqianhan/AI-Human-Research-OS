@@ -37,6 +37,22 @@ User direction: evolve this repo into an **agent-agnostic, agent-native Research
 - [ ] M3/M4 — gated; see GOAL.md (real third agent / OS-Feedback evidence +
       human confirmation required).
 
+### os-ui — read-only monitor UI (designed 2026-07-04, grilling session)
+
+Design settled in [os-ui/DESIGN.md](os-ui/DESIGN.md); pixel spec in
+[os-ui/mockup.html](os-ui/mockup.html). User is a frontend novice — implement in
+small explained steps (see `Human/inbox.md` candidate entry). Read-only only;
+execution surface stays behind GOAL.md M4.
+
+- [x] ~~Design doc + clickable mockup (3 pages, fake data)~~ — delivered 2026-07-04.
+- [ ] U0 — `os-ui/generator/` (Python, uv scope): schema v0.1 + `state.json`
+      from the real repo (portfolio + store first); gitignore `state.json`.
+- [ ] U1 — Vite + React + TS + Tailwind scaffold in `os-ui/frontend/`;
+      Dashboard page reads real `state.json`; gitignore `dist/`.
+- [ ] U2 — Project page (round score track; use real project data).
+- [ ] U3 — Store page (hub cards + 3-way hash sync check + copy-install-command).
+- [ ] U4 — polish + novice README + FILETREE/HANDOFF wrap-up.
+
 ### circle_packing — first real project / OS shakedown (planned 2026-07-03, grilling session)
 
 Purpose: reimplement the `circle_packing` task from `Resource/EurekAgent/examples/circle_packing/`
@@ -144,6 +160,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 |---|---|---|
 | End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](GOAL.md)). This **refines, not replaces**, the 2026-07-03 positioning: the user's research practice stays first; GOAL directly authorizes only documentation-layer work (M0/M1); machinery stays gated on OS-Feedback evidence (M4) or a real third agent (M3). | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
 | Document layering | `GOAL.md` = direction layer (north star); `task.md`/`task_en.md` = operation-layer construction guides; GOAL's milestones are the current work program (task.md's deliverables list belongs to the completed 2026-06 normalization). GOAL is revised only by the human or human-confirmed proposals. | Merge GOAL.md content into task.md and delete the file |
+| Monitor-UI gate opened (read-only only) | Human authorized a **read-only monitor UI** (2026-07-04 grilling session): `os-ui/` = Python generator → versioned `state.json` → static Vite/React frontend; 3 pages (dashboard / project / skills store); derived status only (no heartbeat; slot reserved with lease semantics); store shelves hub skills only; install = copy command. Design in [os-ui/DESIGN.md](os-ui/DESIGN.md), visual spec in [os-ui/mockup.html](os-ui/mockup.html). The **execution surface (real buttons) stays behind GOAL.md M4** (evidence + per-item human confirmation). | `rm -rf os-ui/` and remove this row + the Active Work entry; the OS has no dependency on os-ui |
 
 ## Deviations from the original plan
 
