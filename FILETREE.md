@@ -7,7 +7,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:d1579e96-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
-- `os-ui/` - Read-only monitor UI design area for the Research OS, including design docs and mockups. <!--hash:e1f052b6-->
+- `os-ui/` - Read-only desktop UI for the Research OS: intro/launch README, one-command start.sh, design spec and mockup, state.json generator, desktop-metaphor frontend. <!--hash:847aa8fc-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, and vendored science-skills. <!--hash:5ef6775e-->
@@ -16,7 +16,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:9a065f26-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:213e205f-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:da608758-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:8760f31b-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:a027e1e6-->
@@ -67,11 +67,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## os-ui/
 
-- `frontend/` - Vite + React + TypeScript read-only dashboard: three pages rendering state.json, with a novice-oriented README. <!--hash:de1cba32-->
+- `frontend/` - Vite + React + TypeScript read-only desktop UI: dock plus draggable app windows rendering state.json, with a novice-oriented README. <!--hash:9905c30d-->
 - `generator/` - Stdlib-only Python generator (uv) that scans the repo into schema-versioned state.json; supports --watch polling. <!--hash:7164b96b-->
-- `.gitignore` - Ignores generated state.json, node_modules, dist, .venv, and __pycache__ under os-ui. <!--hash:d211f4d5-->
-- `DESIGN.md` - Design spec for the read-only Research OS monitor UI: goals, architecture, pages, schema, and implementation plan. <!--hash:9ab177c9-->
-- `mockup.html` - Static clickable HTML mockup for the read-only Research OS monitor UI. <!--hash:a74c9f5e-->
 
 ## paper-library/
 

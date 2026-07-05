@@ -12,7 +12,8 @@ interface Props {
 
 export function DashboardPage({ state }: Props) {
   return (
-    <section id="page-dash" role="tabpanel" aria-labelledby="tab-dash" className="pt-7">
+    // the WindowFrame already provides the labeled region landmark
+    <section>
       <h2 className="section-heading">
         项目组合<span className="section-src">来源 Memory/MEMORY.md · Active Projects</span>
       </h2>
@@ -24,7 +25,8 @@ export function DashboardPage({ state }: Props) {
         <UnregisteredStrip key={entry.name} entry={entry} />
       ))}
 
-      <div className="cols mt-[26px] grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
+      {/* auto-fit: column count follows the window's real width, not the screen's */}
+      <div className="cols mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(330px,1fr))] gap-4">
         <div>
           <h2 className="section-heading">
             进行中的工作<span className="section-src">来源 HANDOFF.md · Active Work</span>

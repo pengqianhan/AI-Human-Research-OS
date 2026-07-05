@@ -13,6 +13,9 @@ export default {
         verify: "var(--verify)",
         warn: "var(--warn)",
         stale: "var(--stale)",
+        danger: "var(--danger)",
+        "paper-glass": "var(--paper-glass)",
+        "panel-glass": "var(--panel-glass)",
       },
       fontFamily: {
         mono: ["IBM Plex Mono", "ui-monospace", "SF Mono", "Menlo", "monospace"],

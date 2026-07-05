@@ -37,7 +37,7 @@ export function StorePage({ state }: Props) {
   }
 
   return (
-    <section id="page-store" role="tabpanel" aria-labelledby="tab-store" className="pt-7">
+    <section>
       <div className="store-bar mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="按集合筛选">
         <button
           type="button"
@@ -91,7 +91,7 @@ export function StorePage({ state }: Props) {
       {filtered.length === 0 ? (
         <p className="text-[13px] text-stale">没有匹配的技能。</p>
       ) : (
-        <div className="cards grid grid-cols-3 gap-3 max-[900px]:grid-cols-1">
+        <div className="cards grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">
           {filtered.map((s) => (
             <SkillCard
               key={`${s.collection}/${s.name}`}

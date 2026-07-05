@@ -20,7 +20,7 @@ export function ProjectPage({ state }: Props) {
   const project = projects.find((p) => p.name === selectedName) ?? projects[0] ?? null;
 
   return (
-    <section id="page-proj" role="tabpanel" aria-labelledby="tab-proj" className="pt-7">
+    <section>
       <div
         className="store-bar mb-4 flex flex-wrap items-center gap-2"
         role="group"
@@ -63,7 +63,7 @@ export function ProjectPage({ state }: Props) {
           <RoundTrack rounds={project.rounds} evaluation={project.evaluation} />
           <RoundCards rounds={project.rounds} />
 
-          <div className="cols mt-[26px] grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
+          <div className="cols mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(330px,1fr))] gap-4">
             <div>
               <h2 className="section-heading">
                 Evaluations<span className="section-src">projects-folder/&lt;P&gt;/Evaluations/</span>

@@ -12,9 +12,14 @@ export type OsStateStatus =
 /**
  * Fetches /state.json and re-polls every 5s. Polling pauses while the tab
  * is hidden (document.hidden) and resumes immediately on visibilitychange.
- * A 404 or any fetch failure is surfaced as `{ kind: "error" }` so the app
- * can render the full-page empty state instructing the human to run the
- * generator — the frontend never fabricates data.
+ * A 404 or any fetch failure before the first successful load is surfaced
+ * as `{ kind: "error" }` so the app can render the full-page empty state
+ * instructing the human to run the generator — the frontend never
+ * fabricates data. After a successful load, a transient poll failure (e.g.
+ * the generator mid-rewrite of state.json, or a dev-server hiccup) keeps
+ * the last good snapshot instead of tearing down the whole desktop: the
+ * data is still honestly dated by meta.generated_at, and the snapshot card
+ * turns amber once it is stale.
  */
 export function useOsState(): OsStateStatus {
   const [status, setStatus] = useState<OsStateStatus>({ kind: "loading" });
@@ -28,14 +33,21 @@ export function useOsState(): OsStateStatus {
       try {
         const res = await fetch(STATE_URL, { cache: "no-store" });
         if (!res.ok) {
-          if (mountedRef.current) setStatus({ kind: "error" });
+          fail();
           return;
         }
         const data = (await res.json()) as OsState;
         if (mountedRef.current) setStatus({ kind: "ok", state: data });
       } catch {
-        if (mountedRef.current) setStatus({ kind: "error" });
+        fail();
       }
+    }
+
+    function fail() {
+      if (!mountedRef.current) return;
+      // Only downgrade to the full-page error before the first success;
+      // afterwards keep the last good (honestly dated) snapshot.
+      setStatus((prev) => (prev.kind === "ok" ? prev : { kind: "error" }));
     }
 
     function scheduleNext() {

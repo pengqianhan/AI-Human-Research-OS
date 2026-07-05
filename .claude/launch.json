@@ -4,8 +4,8 @@
     {
       "name": "os-ui",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "os-ui/frontend"],
-      "port": 5173
+      "runtimeArgs": ["run", "dev", "--prefix", "os-ui/frontend", "--", "--port", "5199"],
+      "port": 5199
     }
   ]
 }

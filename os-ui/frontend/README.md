@@ -1,6 +1,8 @@
 # os-ui/frontend — 新手说明书
 
-这是"只读仪表盘"的网页部分。它自己不产生任何数据——所有内容都来自
+这是"只读桌面"的网页部分。界面模仿桌面操作系统:底部有一个"程序坞"(Dock),
+点图标会打开一个个可以拖动、缩放、最小化的窗口(总览/项目/技能商店),顶部
+有一条常驻的"菜单条"显示快照时间和研究策略。它自己不产生任何数据——所有内容都来自
 `public/state.json` 这一个文件,而这个文件是由 `os-ui/generator/` 里的 Python
 脚本读取仓库里的 Markdown 文档(`Memory/MEMORY.md`、`HANDOFF.md`、各项目的
 `PROJECT_MEMORY.md` 等)生成出来的。网页每隔 5 秒会重新读一次这个文件,所以
@@ -36,7 +38,7 @@ os-ui/frontend/
 │                             (这个文件本身不会被提交到 git 里)
 └── src/                     ← 真正的"图纸"都在这里
     ├── main.tsx             ← 整个网页程序的"总开关",把 App 挂到网页上
-    ├── App.tsx              ← 页面的总骨架:页头 + 三个标签页(总览/项目/商店)
+    ├── App.tsx              ← 程序入口的三岔路口:加载中 / 找不到数据 / 进入桌面
     ├── index.css            ← 全局样式:色板变量、字体、方格纸背景
     ├── types.ts             ← state.json 数据结构的"说明书"(TypeScript 类型)
     ├── useOsState.ts         ← 负责"每 5 秒去读一次 state.json"的逻辑
@@ -50,9 +52,14 @@ os-ui/frontend/
     │                        ← 仅供开发调试用的假回合数据,
     │                          用来在真实回合数据出现前预览"回合分数轨道"
     │                          长什么样;不会出现在正式页面或 state.json 里
+    ├── desktop/             ← "桌面外壳":窗口、程序坞、菜单条
+    │   ├── Desktop.tsx          桌面本体:哪些窗口开着、位置大小、谁在最上层
+    │   ├── WindowFrame.tsx      单个窗口的"外壳":标题栏、红/黄/绿按钮、拖拽缩放
+    │   ├── Dock.tsx             底部程序坞:应用图标 + 复制命令按钮
+    │   │                        (Claude Code / Codex 启动命令、刷新快照命令)
+    │   └── apps.tsx             应用注册表:每个应用的名字、图标、默认窗口大小
     ├── components/          ← 一个个可复用的小部件(卡片、徽章、图表……)
-    │   ├── SnapshotHeader.tsx    页头那张"快照牌"(生成时间/版本/commit)
-    │   ├── Tabs.tsx              总览/项目/商店 三个标签页切换
+    │   ├── SnapshotHeader.tsx    菜单条上那张"快照牌"(生成时间/版本/commit)
     │   ├── StateMissing.tsx      找不到 state.json 时的整页提示
     │   ├── Badge.tsx             四色小徽章(绿/橙/红/灰)
     │   ├── PortfolioStrip.tsx    总览页的项目"飞行进度条"
@@ -70,10 +77,10 @@ os-ui/frontend/
     │   ├── SkillCard.tsx         商店页里的一张技能卡片
     │   ├── SyncBadge.tsx         技能的四态同步徽章
     │   └── SkillDrawer.tsx       点击技能卡片后弹出的详情抽屉
-    └── pages/                ← 三个页面各自的"组装说明"
-        ├── DashboardPage.tsx     总览页
-        ├── ProjectPage.tsx       项目页
-        └── StorePage.tsx        技能商店页
+    └── pages/                ← 三个应用窗口里各自的内容
+        ├── DashboardPage.tsx     "总览"窗口的内容
+        ├── ProjectPage.tsx       "项目"窗口的内容
+        └── StorePage.tsx        "技能商店"窗口的内容
 ```
 
 ## 怎么启动(两条命令)
@@ -93,7 +100,7 @@ npm install   # 只有第一次跑,或者 package.json 变了才需要
 npm run dev
 ```
 
-跑完后终端会打印一个网址,通常是 `http://localhost:5173/`,用浏览器打开它就能看到仪表盘。
+跑完后终端会打印一个网址,通常是 `http://localhost:5173/`,用浏览器打开它就能看到桌面。
 开发服务器在你改代码时会自动刷新页面(热更新),不用自己重启。
 
 ## 怎么打包成"正式版"
@@ -122,7 +129,10 @@ npm run build
   是某个可复用小部件的一部分(比如空态提示、按钮文字),就去
   `src/components/` 下面同名的文件里改,比如"未找到 state.json"这句话在
   `src/components/StateMissing.tsx` 里。
-- **改标签页名字**(总览/项目/技能商店):去 `src/App.tsx` 里的 `TABS` 数组。
+- **改应用名字或图标**(总览/项目/技能商店):去 `src/desktop/apps.tsx` 里的
+  `APPS` 数组;每一项还带 `defaultW` / `defaultH`,就是这个应用窗口的默认宽高。
+- **改程序坞里"复制生成命令"复制的内容**:去 `src/desktop/Dock.tsx` 最上面的
+  `GENERATE_COMMAND` 常量。
 - **改安装命令的拼接规则**:去 `src/lib/skills.ts` 的 `installCommand` 函数。
 
 ## 常见问题

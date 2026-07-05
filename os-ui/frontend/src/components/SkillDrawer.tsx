@@ -139,7 +139,7 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
           {copyLabel ?? (skill ? copyButtonLabel(skill) : "复制安装命令")}
         </button>
         <p className="note mt-2.5 text-[11.5px] text-stale">
-          只读仪表盘不执行安装。把命令粘贴到终端运行。对第三方来源(collected-skills)技能,INSTRUCTION.md
+          只读桌面不执行安装。把命令粘贴到终端运行。对第三方来源(collected-skills)技能,INSTRUCTION.md
           要求装前浏览 scripts/;本界面从严,对所有含 scripts/ 的技能都给出提示。
         </p>
       </aside>

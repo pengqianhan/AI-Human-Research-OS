@@ -60,9 +60,24 @@ execution surface stays behind GOAL.md M4.
       filter, drawer (dialog semantics, focus, sync-back command for orphans).
 - [x] ~~U4 — novice README + wrap-up~~ — `os-ui/frontend/README.md`;
       build/tsc clean; mobile breakpoint verified; committed.
+- [x] ~~U5 (2026-07-05) — desktop-OS shell rewrite (user directive, referencing
+      wanman.ai): tab shell → menu bar + dock + draggable/zoomable/minimizable
+      windows (`frontend/src/desktop/`); pages/data contract untouched~~ —
+      verified in browser (spawn/cascade/zoom/minimize/dock indicators/mobile
+      375px), tsc + build clean; adversarial review confirmed 2 a11y defects
+      (focus loss on close/minimize; hover-only copy feedback) — both fixed,
+      plus glass tokens (Tailwind `/80` on var() colors silently no-ops) and
+      keep-last-good-state polling.
+- [x] ~~U6 (2026-07-05) — user-feedback polish: one-command `os-ui/start.sh`
+      (--watch mode, orphan-process bug found & fixed in testing); dock gains
+      Claude Code / Codex launch-command copy buttons (agent-driven hint, per
+      user, wanman-style); menu bar decluttered (details moved to hover
+      tooltips); `os-ui/README.md` created (intro/launch/philosophy/TODO)~~ —
+      verified in browser at 5199 (user's own 5173 untouched), tsc + build
+      clean.
 
-Run: `cd os-ui/generator && uv run python generate.py` (or `--watch`), then
-`npm run dev --prefix os-ui/frontend`. Next iteration ideas stay demand-driven
+Run: `./os-ui/start.sh` (or `--watch`); the manual two-step alternative is in
+`os-ui/README.md`. Next iteration ideas stay demand-driven
 (OS Feedback), per DESIGN.md.
 
 ### circle_packing — first real project / OS shakedown (planned 2026-07-03, grilling session)
@@ -138,6 +153,12 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Role of `task.md` / `task_en.md` | **Superseded 2026-07-03:** treat them as live OS construction guides, not historical records; keep them aligned with current paths and design stance | Move them to an archive folder and create new live task files if a historical/original prompt record is needed |
 | Where decisions are recorded | **Deduped to this file** (durable cross-project subset mirrored in `Memory/MEMORY.md`) | Re-add a decisions table elsewhere (not recommended — invites drift) |
 | Active work lifecycle | **Retired separate plan files**; unfinished cross-session work now lives in this file under `## Active Work` | Restore the separate-plan convention from git if future tasks need a dedicated file |
+
+**os-ui shell decision (2026-07-05):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| os-ui shell metaphor | **Desktop-OS shell** (menu bar + dock + draggable windows in `os-ui/frontend/src/desktop/`), per user directive referencing wanman.ai; supersedes the 2026-07-04 tab shell. Content pages, `state.json` contract, read-only semantics, and the token palette/fonts all unchanged (deliberately not cloning wanman's warm-cream look). `mockup.html` remains the in-window content spec; its tab-shell portion is superseded by DESIGN.md §3 note. | `git revert` the shell commit; the old tab shell lives in git history (`Tabs.tsx`, pre-2026-07-05 `App.tsx`) |
 
 **Research-environment decisions (2026-07-03):**
 

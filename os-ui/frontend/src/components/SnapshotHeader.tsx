@@ -28,31 +28,41 @@ export function SnapshotHeader({ meta, policy }: Props) {
   const ageMinutes = minutesSince(meta.generated_at);
   const isStale = ageMinutes !== null && ageMinutes > STALE_THRESHOLD_MINUTES;
 
+  // Kept deliberately sparse: name on the left, two quiet status chips on
+  // the right. Details (full timestamp, schema, HEAD, policy key) live in
+  // hover tooltips instead of crowding the bar.
   return (
-    <div className="head-in mx-auto flex max-w-[1080px] flex-wrap items-baseline gap-[18px] px-6 py-3.5">
-      <span className="font-mono-heading text-[15px] font-semibold tracking-[.04em]">
-        AI-HUMAN RESEARCH OS{" "}
-        <small className="font-normal text-ink-soft">/ 只读仪表盘</small>
-      </span>
-
+    <div className="head-in flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-[7px]">
       <span
-        className={
-          "font-mono-heading rounded-[3px] border px-2.5 py-[3px] text-[11.5px] " +
-          (isStale
-            ? "border-warn bg-[#F7EEDB] text-warn"
-            : "border-grid bg-panel text-ink-soft")
-        }
-        title={meta.generated_at}
+        className="font-mono-heading whitespace-nowrap text-[13px] font-semibold tracking-[.04em]"
+        title="只读桌面 —— 文件系统是唯一事实源;此界面不执行任何动作"
       >
-        快照 <b className={isStale ? "font-semibold text-warn" : "font-semibold text-verify"}>
-          {formatSnapshotTime(meta.generated_at)}
-        </b>{" "}
-        · schema v{meta.schema_version} · HEAD {meta.repo_head}
-        {isStale ? " · 快照可能过时" : ""}
+        AI-HUMAN RESEARCH OS
+        <small className="ml-2 hidden font-normal text-ink-soft sm:inline">只读桌面</small>
       </span>
 
-      <span className="font-mono-heading ml-auto rounded-[3px] border border-ink bg-panel px-2.5 py-[3px] text-[11.5px]">
-        agent_led_research: <b className="text-signal">{policy.agent_led_research}</b>
+      <span className="ml-auto flex items-center gap-2">
+        <span
+          className={
+            "font-mono-heading flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-[3px] text-[11.5px] " +
+            (isStale ? "border-warn text-warn" : "border-grid text-ink-soft")
+          }
+          title={`生成于 ${meta.generated_at} · schema v${meta.schema_version} · HEAD ${meta.repo_head}`}
+        >
+          <span
+            aria-hidden="true"
+            className={"h-[7px] w-[7px] rounded-full " + (isStale ? "bg-warn" : "bg-verify")}
+          />
+          快照 {formatSnapshotTime(meta.generated_at)}
+          {isStale && <b className="font-semibold">可能过时</b>}
+        </span>
+
+        <span
+          className="font-mono-heading whitespace-nowrap rounded-full border border-grid px-2.5 py-[3px] text-[11.5px] text-ink-soft"
+          title="研究策略 agent_led_research(来源 Memory/MEMORY.md)"
+        >
+          agent-led <b className="text-signal">{policy.agent_led_research}</b>
+        </span>
       </span>
     </div>
   );

@@ -18,6 +18,11 @@
   --verify: #2F7D6D;
   --warn: #B7791F;
   --stale: #8A979E;
+  --danger: #C4564A;   /* window-close traffic light (desktop shell) */
+  /* translucent "glass" surfaces for menu bar & dock. Tailwind's /80 opacity
+     suffix can't split a raw var() color, so the alpha is baked in here. */
+  --paper-glass: rgba(242, 244, 243, .82);
+  --panel-glass: rgba(255, 255, 255, .85);
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --sans: 'IBM Plex Sans', 'PingFang SC', 'Noto Sans SC', -apple-system, sans-serif;
 }
@@ -75,6 +80,16 @@ body {
   letter-spacing: 0;
   text-transform: none;
   margin-left: 10px;
+}
+
+/* floating desktop window shadow (soft ambient + tight contact) */
+.window-shadow {
+  box-shadow: 0 18px 50px rgba(23, 38, 46, .16), 0 2px 8px rgba(23, 38, 46, .08);
+}
+
+/* dock shadow — same ink tint, lighter than a window */
+.dock-shadow {
+  box-shadow: 0 10px 30px rgba(23, 38, 46, .14);
 }
 
 /* line-clamp fallback (Tailwind's line-clamp plugin isn't installed;
