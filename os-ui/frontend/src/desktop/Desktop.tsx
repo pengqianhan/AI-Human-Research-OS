@@ -46,7 +46,7 @@ export function Desktop({ state }: { state: OsState }) {
   const deskRef = useRef<HTMLDivElement | null>(null);
   const [wins, setWins] = useState<WinMap>({});
 
-  // Open 总览 once the desktop area actually has a size. Embedding iframes
+  // Open Dashboard once the desktop area actually has a size. Embedding iframes
   // can mount us at 0×0 and only get real dimensions a few frames later, so
   // retry per animation frame instead of trusting the first layout.
   // openApp is idempotent, so StrictMode's double effect run is harmless.

@@ -17,7 +17,7 @@ const FIELDS: { key: keyof ProjectSnapshot; label: string; mono?: boolean }[] = 
 
 /**
  * Snapshot field cards for the Project page. Any null field renders the
- * honest "未填写" (not filled in) placeholder in gray rather than inventing
+ * honest "not filled in" placeholder in gray rather than inventing
  * a value — per DESIGN.md's data-honesty rule.
  */
 export function SnapshotGrid({ snapshot }: Props) {
@@ -40,7 +40,7 @@ export function SnapshotGrid({ snapshot }: Props) {
                     : "text-[12.5px] font-medium")
               }
             >
-              {value === null ? "未填写" : stripInlineMarkdown(value)}
+              {value === null ? "not filled in" : stripInlineMarkdown(value)}
             </div>
           </div>
         );

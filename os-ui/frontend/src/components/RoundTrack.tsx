@@ -39,7 +39,7 @@ export function RoundTrack({ rounds, evaluation }: Props) {
     return (
       <div className="track-wrap rounded border border-grid bg-panel p-[18px]">
         <p className="text-[13px] text-stale">
-          暂无回合数据 — 回合数据随 circle_packing(M2)落地。
+          No round data yet. Round data will appear after circle_packing M2 lands.
         </p>
       </div>
     );
@@ -119,7 +119,7 @@ export function RoundTrack({ rounds, evaluation }: Props) {
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         role="img"
-        aria-label={`回合分数轨道:${rounds[0]?.id ?? ""} 至 ${rounds[rounds.length - 1]?.id ?? ""} 分数变化图`}
+        aria-label={`Round score track: score trend from ${rounds[0]?.id ?? ""} to ${rounds[rounds.length - 1]?.id ?? ""}`}
         className="block h-auto w-full"
       >
         {bestKnownNum !== null && (
@@ -134,8 +134,8 @@ export function RoundTrack({ rounds, evaluation }: Props) {
               strokeDasharray="2 3"
             />
             <text x={PAD_L - 18} y={yFor(bestKnownNum) - 6} className="text-[10px]" fill="var(--stale)">
-              已知最优 {bestKnownNum}
-              {evaluation.source ? `(来源:${evaluation.source})` : ""}
+              Best known {bestKnownNum}
+              {evaluation.source ? `(source: ${evaluation.source})` : ""}
             </text>
           </>
         )}
@@ -151,7 +151,7 @@ export function RoundTrack({ rounds, evaluation }: Props) {
               strokeDasharray="6 4"
             />
             <text x={PAD_L - 14} y={yFor(targetNum) - 5} className="text-[11px]" fill="var(--signal)">
-              目标 {targetNum}
+              Target {targetNum}
             </text>
           </>
         )}
@@ -221,7 +221,7 @@ export function RoundTrack({ rounds, evaluation }: Props) {
             className="font-mono-heading text-[11px]"
             fill={p.round === bestInFork?.round ? "var(--verify)" : "var(--stale)"}
           >
-            {p.round.id} {p.round.valid ? (p.round.score !== null ? `· ${p.round.score}` : "") : `· 无效${p.round.note ? `(${p.round.note})` : ""}`}
+            {p.round.id} {p.round.valid ? (p.round.score !== null ? `· ${p.round.score}` : "") : `· invalid${p.round.note ? ` (${p.round.note})` : ""}`}
             {p.round === bestInFork?.round ? " ★" : ""}
           </text>
         ))}

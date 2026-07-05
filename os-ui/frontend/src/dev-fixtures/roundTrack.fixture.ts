@@ -34,7 +34,7 @@ export const ROUND_TRACK_FIXTURE_ROUNDS: Round[] = [
     id: "R3c",
     score: null,
     valid: false,
-    note: "重叠 2 处",
+    note: "2 overlaps",
     artifacts: ["Code/runs/r3-hybrid/result.json"],
     tasks: ["Tasks/hybrid"],
   },

@@ -9,16 +9,16 @@ export function StateMissing() {
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="max-w-[560px] rounded border border-grid bg-panel p-8 text-center">
         <p className="font-mono-heading text-[13px] font-semibold uppercase tracking-[.08em] text-signal">
-          未找到 state.json
+          state.json not found
         </p>
         <p className="mt-3 text-[14px] text-ink-soft">
-          先运行生成器,再刷新本页面。
+          Run the generator first, then refresh this page.
         </p>
         <pre className="font-mono-heading mt-4 overflow-x-auto rounded bg-ink px-4 py-3 text-left text-[12.5px] text-[#E8EDEF]">
           cd os-ui/generator &amp;&amp; uv run python generate.py
         </pre>
         <p className="mt-4 text-[12px] text-stale">
-          本页面每 5 秒会自动重试;生成成功后无需手动刷新。
+          This page retries every 5 seconds; once generation succeeds, it updates automatically.
         </p>
       </div>
     </div>

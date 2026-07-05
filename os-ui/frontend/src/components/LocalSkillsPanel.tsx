@@ -8,7 +8,7 @@ interface Props {
 /** Project-local skills list (.claude/skills or .agents/skills inside the project). Empty state when none exist. */
 export function LocalSkillsPanel({ skills }: Props) {
   if (skills.length === 0) {
-    return <p className="text-[12.5px] text-stale">该项目暂无私有技能。</p>;
+    return <p className="text-[12.5px] text-stale">This project has no local skills.</p>;
   }
 
   return (
@@ -18,11 +18,11 @@ export function LocalSkillsPanel({ skills }: Props) {
           key={s.name}
           className="flex gap-3 border-b border-dashed border-grid py-[7px] text-[12.5px] last:border-b-0"
         >
-          <time className="font-mono-heading whitespace-nowrap pt-px text-[11px] text-stale">私有</time>
+          <time className="font-mono-heading whitespace-nowrap pt-px text-[11px] text-stale">local</time>
           <span className="font-mono-heading flex-1">{s.name}</span>
           {s.promotion_candidate === true && (
             <span className="ml-auto">
-              <Badge tone="warn">候选晋升</Badge>
+              <Badge tone="warn">promotion candidate</Badge>
             </span>
           )}
         </li>

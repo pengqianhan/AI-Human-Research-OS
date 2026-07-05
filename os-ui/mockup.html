@@ -1,643 +1,399 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI-Human Research OS — 只读仪表盘(视觉稿)</title>
+<title>AI-Human Research OS - Read-only Dashboard Mockup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --paper:#F2F4F3; --panel:#FFFFFF; --ink:#17262E; --ink-soft:#52646E;
-    --grid:#D9E0E2; --signal:#E8590C; --verify:#2F7D6D; --warn:#B7791F;
-    --stale:#8A979E; --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
-    --sans:'IBM Plex Sans','PingFang SC','Noto Sans SC',-apple-system,sans-serif;
+  :root {
+    --paper: #F2F4F3;
+    --panel: #FFFFFF;
+    --ink: #17262E;
+    --ink-soft: #52646E;
+    --grid: #D9E0E2;
+    --signal: #E8590C;
+    --verify: #2F7D6D;
+    --warn: #B7791F;
+    --stale: #8A979E;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    font-family:var(--sans); color:var(--ink); background:var(--paper);
-    background-image:radial-gradient(circle,var(--grid) 1px,transparent 1px);
-    background-size:24px 24px; font-size:14px; line-height:1.55;
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: var(--ink);
+    background: var(--paper);
+    background-image: radial-gradient(circle, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.55;
   }
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px}
-
-  /* ── 页头:快照牌是一等公民 ─────────────────────────── */
-  header{border-bottom:2px solid var(--ink);background:var(--paper);
-    position:sticky;top:0;z-index:10}
-  .head-in{max-width:1080px;margin:0 auto;padding:14px 24px;
-    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
-  .wordmark{font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:.04em}
-  .wordmark small{color:var(--ink-soft);font-weight:400}
-  .snapshot{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);
-    border:1px solid var(--grid);background:var(--panel);padding:3px 10px;border-radius:3px}
-  .snapshot b{color:var(--verify);font-weight:600}
-  .policy-chip{font-family:var(--mono);font-size:11.5px;margin-left:auto;
-    padding:3px 10px;border-radius:3px;border:1px solid var(--ink);background:var(--panel)}
-  .policy-chip b{color:var(--signal)}
-
-  nav{max-width:1080px;margin:0 auto;padding:0 24px}
-  .tablist{display:flex;gap:2px}
-  .tab{font-family:var(--mono);font-size:13px;padding:9px 18px;border:none;
-    background:transparent;color:var(--ink-soft);cursor:pointer;
-    border-bottom:3px solid transparent;margin-bottom:-2px}
-  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--signal);font-weight:600}
-  .tab:hover{color:var(--ink)}
-  .tab:focus-visible,button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
-
-  .page{display:none;padding-top:28px}
-  .page.active{display:block}
-  h2{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.08em;
-    color:var(--ink-soft);text-transform:uppercase;margin:30px 0 12px}
-  h2:first-child{margin-top:0}
-  .src{font-family:var(--mono);font-size:10.5px;color:var(--stale);font-weight:400;
-    letter-spacing:0;text-transform:none;margin-left:10px}
-
-  /* ── 飞行进度条(签名元素 ①)──────────────────────── */
-  .strip{display:grid;grid-template-columns:8px 200px 1fr 170px 190px;gap:0;
-    background:var(--panel);border:1px solid var(--grid);border-radius:4px;
-    margin-bottom:8px;overflow:hidden;transition:transform .12s,box-shadow .12s}
-  .strip:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(23,38,46,.08)}
-  .strip>.edge{background:var(--verify)}
-  .strip.s-probe>.edge{background:var(--signal)}
-  .strip.s-alert>.edge{background:var(--warn)}
-  .strip .cell{padding:12px 16px;border-left:1px dashed var(--grid)}
-  .strip>.edge+.cell{border-left:none}
-  .p-name{font-family:var(--mono);font-weight:600;font-size:13.5px}
-  .p-path{font-family:var(--mono);font-size:10.5px;color:var(--stale);margin-top:3px}
-  .stagebar{display:flex;gap:4px;align-items:center;margin-top:4px}
-  .stg{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:2px;
-    color:var(--stale);border:1px solid var(--grid)}
-  .stg.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .meta-line{font-size:12px;color:var(--ink-soft)}
-  .meta-line b{color:var(--ink);font-weight:500}
-  .next{font-size:12px}
-  .next .lbl{font-family:var(--mono);font-size:10px;color:var(--stale);display:block}
-  .evi{font-family:var(--mono);font-size:10px;color:var(--stale);margin-top:5px}
-  .badge{display:inline-block;font-family:var(--mono);font-size:10.5px;
-    padding:1px 8px;border-radius:2px;font-weight:500}
-  .b-ok{background:#E4F0ED;color:var(--verify)}
-  .b-warn{background:#F7EEDB;color:var(--warn)}
-  .b-signal{background:#FCE8DE;color:var(--signal)}
-  .b-mute{background:#EDF0F1;color:var(--stale)}
-
-  /* ── 面板与进度 ───────────────────────────────── */
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .panel{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:16px 18px}
-  .work-title{font-family:var(--mono);font-size:12.5px;font-weight:600;display:flex;
-    justify-content:space-between;align-items:baseline}
-  .bar{height:6px;background:var(--paper);border-radius:3px;margin:8px 0 10px;overflow:hidden}
-  .bar>i{display:block;height:100%;background:var(--verify);border-radius:3px}
-  .work li{list-style:none;font-size:12.5px;padding:3px 0;color:var(--ink-soft)}
-  .work li.done{text-decoration:line-through;color:var(--stale)}
-  .work li.now{color:var(--ink);font-weight:500}
-  .work li.now::before{content:"▸ ";color:var(--signal)}
-  .feed li{list-style:none;display:flex;gap:12px;padding:7px 0;
-    border-bottom:1px dashed var(--grid);font-size:12.5px}
-  .feed li:last-child{border-bottom:none}
-  .feed time{font-family:var(--mono);font-size:11px;color:var(--stale);
-    white-space:nowrap;padding-top:1px}
-  .feed .fsrc{font-family:var(--mono);font-size:10.5px;color:var(--stale);margin-left:auto;white-space:nowrap}
-  details.gov{margin-top:16px;background:var(--panel);border:1px solid var(--grid);border-radius:4px}
-  details.gov summary{font-family:var(--mono);font-size:12px;padding:11px 18px;cursor:pointer;color:var(--ink-soft)}
-  details.gov[open] summary{border-bottom:1px solid var(--grid)}
-  .gov-in{padding:12px 18px;font-size:12.5px}
-  .gov-in table{width:100%;border-collapse:collapse}
-  .gov-in td{padding:6px 10px 6px 0;border-bottom:1px dashed var(--grid);vertical-align:top}
-  .gov-in td:first-child{font-family:var(--mono);font-size:11px;color:var(--stale);white-space:nowrap}
-
-  /* ── 项目页 ───────────────────────────────────── */
-  .crumb{font-family:var(--mono);font-size:12px;color:var(--stale);margin-bottom:14px}
-  .crumb b{color:var(--ink)}
-  .snap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .snap-card{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:12px 14px}
-  .snap-card .k{font-family:var(--mono);font-size:10px;color:var(--stale);
-    text-transform:uppercase;letter-spacing:.06em}
-  .snap-card .v{font-size:14px;font-weight:500;margin-top:3px}
-  .snap-card .v.mono{font-family:var(--mono);font-size:13px}
-  .boundary{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-  .bd{font-family:var(--mono);font-size:11px;background:var(--panel);
-    border:1px solid var(--ink);border-radius:2px;padding:3px 10px}
-
-  /* ── 回合分数轨道(签名元素 ②)────────────────────── */
-  .track-wrap{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:18px}
-  .track-wrap svg{width:100%;height:auto;display:block}
-  .tk-line{stroke:var(--ink);stroke-width:1.6;fill:none}
-  .tk-branch{stroke:var(--stale);stroke-width:1.2;fill:none;stroke-dasharray:3 3}
-  .tk-branch.win{stroke:var(--verify);stroke-width:1.6;stroke-dasharray:none}
-  .tk-pt{fill:var(--panel);stroke:var(--ink);stroke-width:1.6}
-  .tk-pt.win{stroke:var(--verify);fill:var(--verify)}
-  .tk-pt.dead{stroke:var(--stale)}
-  .tk-lab{font-family:var(--mono);font-size:11px;fill:var(--ink)}
-  .tk-lab.soft{fill:var(--stale);font-size:10px}
-  .tk-lab.target{fill:var(--signal)}
-  .tk-lab.win{fill:var(--verify)}
-  .tk-target{stroke:var(--signal);stroke-width:1;stroke-dasharray:6 4}
-  .tk-best{stroke:var(--stale);stroke-width:1;stroke-dasharray:2 3}
-  .round-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
-  .rc{background:var(--panel);border:1px solid var(--grid);border-radius:4px;padding:12px 14px}
-  .rc .rid{font-family:var(--mono);font-size:11px;color:var(--stale)}
-  .rc .rscore{font-family:var(--mono);font-size:19px;font-weight:600;margin:2px 0 6px}
-  .rc .rscore small{font-size:11px;color:var(--stale);font-weight:400}
-  .rc p{font-size:12px;color:var(--ink-soft)}
-  .taskchips{margin-top:8px;display:flex;flex-direction:column;gap:4px}
-  .tc{font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:2px;
-    border:1px dashed var(--grid);color:var(--ink-soft)}
-  .tc b{font-weight:600}
-  .fb-table{width:100%;border-collapse:collapse;font-size:12.5px}
-  .fb-table th{font-family:var(--mono);font-size:10.5px;text-align:left;color:var(--stale);
-    padding:6px 10px;border-bottom:1px solid var(--grid);font-weight:500}
-  .fb-table td{padding:8px 10px;border-bottom:1px dashed var(--grid);vertical-align:top}
-  .fb-table td:first-child{font-family:var(--mono);font-size:11px;color:var(--stale);white-space:nowrap}
-
-  /* ── 商店 ─────────────────────────────────────── */
-  .store-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
-  .fchip{font-family:var(--mono);font-size:12px;padding:5px 14px;border-radius:99px;
-    border:1px solid var(--grid);background:var(--panel);cursor:pointer;color:var(--ink-soft)}
-  .fchip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .search{margin-left:auto;font-family:var(--mono);font-size:12px;padding:6px 12px;
-    border:1px solid var(--grid);border-radius:3px;background:var(--panel);width:220px;color:var(--ink)}
-  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .skill{background:var(--panel);border:1px solid var(--grid);border-radius:4px;
-    padding:14px 16px;cursor:pointer;text-align:left;font-family:var(--sans);
-    transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column;gap:8px}
-  .skill:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(23,38,46,.09)}
-  .skill .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-  .skill .nm{font-family:var(--mono);font-weight:600;font-size:13px;word-break:break-all}
-  .skill .desc{font-size:12px;color:var(--ink-soft);flex:1}
-  .skill .foot{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  .tag{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:2px;
-    border:1px solid var(--grid);color:var(--stale)}
-  .tag.scripts{border-color:var(--warn);color:var(--warn)}
-
-  /* ── 抽屉 ─────────────────────────────────────── */
-  .drawer{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:var(--panel);
-    border-left:2px solid var(--ink);z-index:30;visibility:hidden;
-    transition:right .22s ease,visibility .22s;
-    padding:24px;overflow-y:auto}
-  .drawer.open{right:0;visibility:visible;box-shadow:-8px 0 30px rgba(23,38,46,.15)}
-  .drawer .close{float:right;font-family:var(--mono);border:1px solid var(--grid);
-    background:var(--panel);border-radius:3px;padding:2px 10px;cursor:pointer;font-size:12px}
-  .drawer h3{font-family:var(--mono);font-size:16px;margin:4px 0 2px;word-break:break-all}
-  .drawer .dcol{font-family:var(--mono);font-size:11px;color:var(--stale);margin-bottom:14px}
-  .drawer dl{font-size:12.5px;margin:14px 0}
-  .drawer dt{font-family:var(--mono);font-size:10.5px;color:var(--stale);
-    text-transform:uppercase;letter-spacing:.05em;margin-top:10px}
-  .drawer dd{margin:2px 0 0}
-  .cmd{font-family:var(--mono);font-size:11px;background:var(--ink);color:#E8EDEF;
-    border-radius:4px;padding:12px 14px;margin-top:14px;word-break:break-all;line-height:1.6}
-  .copy-btn{display:block;width:100%;margin-top:8px;font-family:var(--mono);font-size:12.5px;
-    padding:9px;border-radius:3px;border:1px solid var(--ink);background:var(--panel);
-    cursor:pointer;font-weight:600}
-  .copy-btn:hover{background:var(--ink);color:#fff}
-  .drawer .note{font-size:11.5px;color:var(--stale);margin-top:10px}
-  .scrim{position:fixed;inset:0;background:rgba(23,38,46,.18);z-index:20;display:none}
-  .scrim.on{display:block}
-
-  footer{max-width:1080px;margin:40px auto 0;padding:16px 24px;border-top:1px solid var(--grid);
-    font-family:var(--mono);font-size:11px;color:var(--stale);display:flex;gap:18px;flex-wrap:wrap}
-
-  @media (max-width:900px){
-    .strip{grid-template-columns:8px 1fr}
-    .strip>.edge{grid-row:1/5}
-    .strip .cell{grid-column:2;border-left:none;border-top:1px dashed var(--grid)}
-    .strip>.edge+.cell{border-top:none}
-    .cols,.snap-grid,.round-cards,.cards{grid-template-columns:1fr}
-    .drawer{width:100vw;right:-100vw}
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 2px solid var(--ink);
+    background: rgba(242, 244, 243, .9);
+    backdrop-filter: blur(8px);
   }
-  @media (prefers-reduced-motion:reduce){
-    *{transition:none!important;animation:none!important}
+  .head-in {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .wordmark {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .04em;
+  }
+  .wordmark small {
+    color: var(--ink-soft);
+    font-weight: 400;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    border: 1px solid var(--grid);
+    background: var(--panel);
+    padding: 3px 10px;
+    border-radius: 3px;
+    color: var(--ink-soft);
+  }
+  .chip b { color: var(--verify); }
+  .chip.policy { margin-left: auto; border-color: var(--ink); }
+  .chip.policy b { color: var(--signal); }
+  nav {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .tablist { display: flex; gap: 2px; }
+  .tab {
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 9px 18px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .tab[aria-selected="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+    font-weight: 600;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+  .page { display: none; }
+  .page.active { display: block; }
+  h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 30px 0 12px;
+  }
+  h2:first-child { margin-top: 0; }
+  .src {
+    font-size: 10.5px;
+    color: var(--stale);
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-left: 10px;
+  }
+  .strip {
+    display: grid;
+    grid-template-columns: 8px 200px 1fr 170px 190px;
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--grid);
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .edge { background: var(--verify); }
+  .s-probe .edge { background: var(--signal); }
+  .s-alert .edge { background: var(--warn); }
+  .cell { padding: 12px 16px; border-left: 1px dashed var(--grid); }
+  .p-name { font-family: var(--mono); font-size: 13.5px; font-weight: 600; }
+  .p-path, .evi, .lbl {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--stale);
+  }
+  .stagebar { display: flex; gap: 4px; align-items: center; margin-top: 4px; }
+  .stg {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 7px;
+    border: 1px solid var(--grid);
+    border-radius: 2px;
+    color: var(--stale);
+  }
+  .stg.on { background: var(--ink); border-color: var(--ink); color: white; }
+  .meta-line { font-size: 12px; color: var(--ink-soft); }
+  .meta-line b { color: var(--ink); font-weight: 500; }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 1px 8px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .b-ok { background: #E4F0ED; color: var(--verify); }
+  .b-warn { background: #F7EEDB; color: var(--warn); }
+  .b-signal { background: #FCE8DE; color: var(--signal); }
+  .b-mute { background: #EDF0F1; color: var(--stale); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--grid);
+    border-radius: 4px;
+    padding: 16px 18px;
+  }
+  .feed li {
+    list-style: none;
+    display: flex;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--grid);
+    font-size: 12.5px;
+  }
+  .feed li:last-child { border-bottom: 0; }
+  .feed time, .feed .fsrc {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--stale);
+    white-space: nowrap;
+  }
+  .feed .fsrc { margin-left: auto; }
+  .snap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .snap-card {
+    background: var(--panel);
+    border: 1px solid var(--grid);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+  .snap-card .k {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--stale);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .snap-card .v { margin-top: 3px; font-weight: 500; }
+  .track-wrap {
+    background: var(--panel);
+    border: 1px solid var(--grid);
+    border-radius: 4px;
+    padding: 18px;
+  }
+  .track-wrap svg { width: 100%; height: auto; display: block; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .skill {
+    background: var(--panel);
+    border: 1px solid var(--grid);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-family: var(--sans);
+    text-align: left;
+  }
+  .skill .top { display: flex; justify-content: space-between; gap: 8px; }
+  .skill .nm { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .skill .desc { display: block; margin: 8px 0; font-size: 12px; color: var(--ink-soft); }
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 7px;
+    border: 1px solid var(--grid);
+    border-radius: 2px;
+    color: var(--stale);
+  }
+  footer {
+    max-width: 1080px;
+    margin: 40px auto 0;
+    padding: 16px 24px;
+    border-top: 1px solid var(--grid);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--stale);
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 900px) {
+    .strip { grid-template-columns: 8px 1fr; }
+    .edge { grid-row: 1 / 5; }
+    .cell { grid-column: 2; border-left: 0; border-top: 1px dashed var(--grid); }
+    .cols, .snap-grid, .cards { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
-
 <header>
   <div class="head-in">
-    <span class="wordmark">AI-HUMAN RESEARCH OS <small>/ 只读仪表盘</small></span>
-    <span class="snapshot">快照 <b>2026-07-04 15:42</b> · schema v0.1 · HEAD 486b02e</span>
-    <span class="policy-chip">agent_led_research: <b>off</b></span>
+    <span class="wordmark">AI-HUMAN RESEARCH OS <small>/ read-only dashboard</small></span>
+    <span class="chip">Snapshot <b>2026-07-04 15:42</b> · schema v0.1 · HEAD 486b02e</span>
+    <span class="chip policy">agent_led_research: <b>off</b></span>
   </div>
   <nav>
-    <div class="tablist" role="tablist" aria-label="页面切换">
-      <button class="tab" role="tab" id="tab-dash"  aria-controls="page-dash"  aria-selected="true"  tabindex="0"  data-page="dash">总览</button>
-      <button class="tab" role="tab" id="tab-proj"  aria-controls="page-proj"  aria-selected="false" tabindex="-1" data-page="proj">项目 · circle_packing</button>
-      <button class="tab" role="tab" id="tab-store" aria-controls="page-store" aria-selected="false" tabindex="-1" data-page="store">技能商店</button>
+    <div class="tablist" role="tablist" aria-label="Page switcher">
+      <button class="tab" role="tab" aria-selected="true" data-page="dash">Dashboard</button>
+      <button class="tab" role="tab" aria-selected="false" data-page="proj">Projects</button>
+      <button class="tab" role="tab" aria-selected="false" data-page="store">Skill Store</button>
     </div>
   </nav>
 </header>
 
-<div class="wrap">
+<main class="wrap">
+  <section class="page active" id="page-dash">
+    <h2>Portfolio<span class="src">Source: Memory/MEMORY.md · Active Projects</span></h2>
 
-<!-- ════════════ 页 1:总览 ════════════ -->
-<section class="page active" id="page-dash" role="tabpanel" aria-labelledby="tab-dash">
-
-  <h2>项目组合<span class="src">来源 Memory/MEMORY.md · Active Projects</span></h2>
-
-  <div class="strip s-probe">
-    <div class="edge"></div>
-    <div class="cell">
-      <div class="p-name">circle_packing</div>
-      <div class="p-path">projects-folder/circle_packing/</div>
-      <div class="stagebar">
-        <span class="stg">scout</span><span class="stg on">probe</span>
-        <span class="stg">develop</span><span class="stg">writing</span>
+    <div class="strip s-probe">
+      <div class="edge"></div>
+      <div class="cell">
+        <div class="p-name">circle_packing</div>
+        <div class="p-path">projects-folder/circle_packing/</div>
+        <div class="stagebar">
+          <span class="stg">scout</span><span class="stg on">probe</span><span class="stg">develop</span><span class="stg">writing</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="meta-line">owner <b>human-led</b> · priority <b>P1</b></div>
+        <div class="meta-line">best score <b>2.603</b> / target 2.60 <span class="badge b-ok">met</span></div>
+        <div class="evi">evidence Code/runs/r3-anneal/result.json · 3 hours ago</div>
+      </div>
+      <div class="cell">
+        <div class="meta-line">evaluator <span class="badge b-ok">frozen</span></div>
+        <div class="evi">Code/evaluator/ · commit e91c2af</div>
+      </div>
+      <div class="cell">
+        <span class="lbl">NEXT ACTION</span>
+        <div>Merge R3 winner, then prepare mid-term review.</div>
       </div>
     </div>
-    <div class="cell">
-      <div class="meta-line">owner <b>human-led</b> · 优先级 <b>P1</b></div>
-      <div class="meta-line" style="margin-top:4px">最优分 <b style="font-family:var(--mono)">2.603</b> / 目标 2.60 <span class="badge b-ok">已达标</span></div>
-      <div class="evi">证据 Code/runs/r3-anneal/result.json · 3 小时前</div>
-    </div>
-    <div class="cell">
-      <div class="meta-line">评测器 <span class="badge b-ok">已冻结 ✓</span></div>
-      <div class="evi">Code/evaluator/ · commit e91c2af</div>
-    </div>
-    <div class="cell next">
-      <span class="lbl">NEXT ACTION</span>
-      合并 R3 胜者,准备中期评审
-      <div class="evi">PROJECT_MEMORY.md · 3 小时前</div>
-    </div>
-  </div>
 
-  <div class="strip">
-    <div class="edge"></div>
-    <div class="cell">
-      <div class="p-name">Example_Project</div>
-      <div class="p-path">projects-folder/Example_Project/</div>
-      <div class="stagebar"><span class="stg on" style="background:var(--verify);border-color:var(--verify)">complete</span></div>
-    </div>
-    <div class="cell">
-      <div class="meta-line">owner <b>mixed</b> · 优先级 <b>P2</b></div>
-      <div class="evi">OS 冒烟测试 · 保留为工作示例</div>
-    </div>
-    <div class="cell"><div class="meta-line">评测器 <span class="badge b-mute">n/a</span></div></div>
-    <div class="cell next">
-      <span class="lbl">NEXT ACTION</span>
-      如不需要可删除(HANDOFF D6)
-    </div>
-  </div>
-
-  <div class="strip s-alert">
-    <div class="edge"></div>
-    <div class="cell">
-      <div class="p-name">Paper_VAE</div>
-      <div class="p-path">projects-folder/Paper_VAE/</div>
-      <div class="stagebar"><span class="badge b-warn">未登记</span></div>
-    </div>
-    <div class="cell">
-      <div class="meta-line">在磁盘上发现,但不在 portfolio 表中</div>
-      <div class="evi">无 PROJECT_MEMORY.md · 无 portfolio 行</div>
-    </div>
-    <div class="cell"><div class="meta-line"><span class="badge b-signal">待人类决策</span></div></div>
-    <div class="cell next">
-      <span class="lbl">GOAL.md M0</span>
-      登记入表,或声明为豁免区
-    </div>
-  </div>
-
-  <div class="cols" style="margin-top:26px">
-    <div>
-      <h2>进行中的工作<span class="src">来源 HANDOFF.md · Active Work</span></h2>
-      <div class="panel work">
-        <div class="work-title">circle_packing 启动清单 <span style="font-family:var(--mono);color:var(--verify)">6/11</span></div>
-        <div class="bar"><i style="width:55%"></i></div>
-        <ul>
-          <li class="done">建想法卡 + 实例化项目</li>
-          <li class="done">独立评测器:自测通过,已冻结</li>
-          <li class="done">R1–R2 单线程回合完成</li>
-          <li class="now">R3 并行回合:3 条路线,合并胜者</li>
-          <li>中期制品评审 → Evaluations/</li>
-          <li>OS 回灌第一批</li>
-          <li>… 其余 5 项未展开(共 11 项)</li>
-        </ul>
+    <div class="strip s-alert">
+      <div class="edge"></div>
+      <div class="cell">
+        <div class="p-name">Paper_VAE</div>
+        <div class="p-path">projects-folder/Paper_VAE/</div>
+        <span class="badge b-warn">unregistered</span>
       </div>
-      <div class="panel work" style="margin-top:12px">
-        <div class="work-title">Agent-native OS 演化(GOAL.md) <span style="font-family:var(--mono);color:var(--verify)">1/4</span></div>
-        <div class="bar"><i style="width:25%"></i></div>
-        <ul>
-          <li class="done">M0 治理对齐</li>
-          <li class="now">M1 适配器契约成文 + 内核去硬编码</li>
-          <li>M2 用户态实战(= 上方清单)</li>
-          <li>M3/M4 闸门:未开</li>
-        </ul>
+      <div class="cell">
+        <div class="meta-line">Found on disk, but missing from the portfolio table</div>
+        <div class="evi">No PROJECT_MEMORY.md · no portfolio row</div>
+      </div>
+      <div class="cell"><span class="badge b-signal">needs human decision</span></div>
+      <div class="cell"><span class="lbl">GOAL.md M0</span><div>Register it, or declare it exempt.</div></div>
+    </div>
+
+    <div class="cols" style="margin-top:26px">
+      <div>
+        <h2>Active Work<span class="src">Source: HANDOFF.md</span></h2>
+        <div class="panel">
+          <ul class="feed">
+            <li><time>now</time>R3 parallel round: merge the winning approach<span class="fsrc">Tasks/</span></li>
+            <li><time>next</time>Mid-term hard-check review<span class="fsrc">Evaluations/</span></li>
+            <li><time>later</time>Back-port the first OS feedback batch<span class="fsrc">PROJECT_MEMORY.md</span></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h2>Recent Activity<span class="src">Source: git log + progress logs</span></h2>
+        <div class="panel">
+          <ul class="feed">
+            <li><time>3 hours ago</time>R3 annealing approach won with 2.603<span class="fsrc">progress log</span></li>
+            <li><time>yesterday</time>Evaluator frozen after fixed self-tests<span class="fsrc">git e91c2af</span></li>
+            <li><time>2 days ago</time>Round score track fixture verified<span class="fsrc">frontend</span></li>
+          </ul>
+        </div>
       </div>
     </div>
-    <div>
-      <h2>最近活动<span class="src">来源 git log + progress logs</span></h2>
-      <div class="panel">
-        <ul class="feed">
-          <li><time>3 小时前</time>R3 并行回合完成:anneal 路线 2.603 胜出<span class="fsrc">progress log</span></li>
-          <li><time>5 小时前</time>Tasks/ 三个并行工作区启动(≤3 并行上限内)<span class="fsrc">Tasks/</span></li>
-          <li><time>昨天</time>feat: add skill index map to research-skill-installer<span class="fsrc">git 486b02e</span></li>
-          <li><time>昨天</time>R2 完成:SLSQP 局部优化 2.581,进度日志已更新<span class="fsrc">progress log</span></li>
-          <li><time>2 天前</time>评测器冻结:5 组固定测试全部通过<span class="fsrc">git e91c2af</span></li>
-        </ul>
-      </div>
-      <h2 style="margin-top:22px">研究策略<span class="src">来源 Memory/MEMORY.md</span></h2>
-      <div class="panel">
-        <ul class="feed">
-          <li><span style="font-family:var(--mono)">agent_led_research</span><span class="fsrc"><span class="badge b-signal">off</span></span></li>
-          <li>并行策略:portfolio 常开 · 项目内按需<span class="fsrc"><span class="badge b-ok">生效中</span></span></li>
-        </ul>
-      </div>
+  </section>
+
+  <section class="page" id="page-proj">
+    <h2>Project Snapshot<span class="src">Source: PROJECT_MEMORY.md</span></h2>
+    <div class="snap-grid">
+      <div class="snap-card"><div class="k">stage</div><div class="v">probe</div></div>
+      <div class="snap-card"><div class="k">owner</div><div class="v">human-led</div></div>
+      <div class="snap-card"><div class="k">evaluator</div><div class="v"><span class="badge b-ok">frozen</span></div></div>
+      <div class="snap-card"><div class="k">next action</div><div class="v">Prepare review</div></div>
     </div>
-  </div>
 
-  <details class="gov">
-    <summary>治理记录 — 最近决策(HANDOFF.md Decisions)</summary>
-    <div class="gov-in">
-      <table>
-        <tr><td>2026-07-04</td><td>终局目标重定位:演化为 agent-agnostic 的 agent-native OS;研究实践仍居首位,重机制仍按证据开闸</td></tr>
-        <tr><td>2026-07-04</td><td>人类授权只读 monitor UI(os-ui);执行面仍属 M4 闸门</td></tr>
-        <tr><td>2026-07-03</td><td>circle_packing 立项九项决策:三层成功标准 / 路线 B / 分阶段混合执行 / 档 2 评测器保护…</td></tr>
-      </table>
+    <h2>Round Score Track<span class="src">Scores read from evaluator-written result.json</span></h2>
+    <div class="track-wrap">
+      <svg viewBox="0 0 860 250" role="img" aria-label="Round score track mockup">
+        <line x1="40" y1="33" x2="820" y2="33" stroke="var(--stale)" stroke-dasharray="2 3"/>
+        <text x="42" y="27" font-family="var(--mono)" font-size="10" fill="var(--stale)">Best known 2.63598844</text>
+        <line x1="40" y1="53" x2="820" y2="53" stroke="var(--signal)" stroke-dasharray="6 4"/>
+        <text x="44" y="48" font-family="var(--mono)" font-size="11" fill="var(--signal)">Target 2.60</text>
+        <polyline points="90,210 300,158 510,64 720,52" stroke="var(--ink)" stroke-width="1.6" fill="none"/>
+        <circle cx="90" cy="210" r="5" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+        <circle cx="300" cy="158" r="5" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+        <circle cx="510" cy="64" r="5" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>
+        <circle cx="720" cy="52" r="6" fill="var(--verify)" stroke="var(--verify)" stroke-width="1.6"/>
+        <text x="76" y="232" font-family="var(--mono)" font-size="11" fill="var(--ink)">R0 · 2.318</text>
+        <text x="286" y="140" font-family="var(--mono)" font-size="11" fill="var(--ink)">R1 · 2.412</text>
+        <text x="452" y="48" font-family="var(--mono)" font-size="11" fill="var(--ink)">R2 · 2.581</text>
+        <text x="736" y="44" font-family="var(--mono)" font-size="11" fill="var(--verify)">R3a · 2.603 *</text>
+      </svg>
     </div>
-  </details>
+  </section>
 
-</section>
-
-<!-- ════════════ 页 2:项目详情 ════════════ -->
-<section class="page" id="page-proj" role="tabpanel" aria-labelledby="tab-proj">
-
-  <div class="crumb">项目组合 / <b>circle_packing</b> — 26 圆最大化半径和(EurekAgent 任务重实现 · OS 陪练项目)</div>
-
-  <div class="snap-grid">
-    <div class="snap-card"><div class="k">stage</div><div class="v mono">probe</div>
-      <div class="evi">PROJECT_MEMORY.md · 3 小时前</div></div>
-    <div class="snap-card"><div class="k">owner</div><div class="v mono">human-led</div>
-      <div class="evi">origin: EurekAgent example</div></div>
-    <div class="snap-card"><div class="k">evaluator</div><div class="v"><span class="badge b-ok">已冻结 ✓</span></div>
-      <div class="evi">5/5 固定测试 · e91c2af</div></div>
-    <div class="snap-card"><div class="k">current question</div><div class="v" style="font-size:12.5px">并行路线中哪类方法组合最接近 2.63598844?</div></div>
-  </div>
-
-  <div class="boundary">
-    <span class="bd">单次运行 ≤ 600s</span><span class="bd">单回合 ≤ 2h CPU</span>
-    <span class="bd">回合上限 8</span><span class="bd">并行 ≤ 3</span>
-    <span class="bd">停止:连续 5 轮增益 &lt; 0.001</span>
-  </div>
-
-  <h2 style="margin-top:26px">回合分数轨道<span class="src">分数只读 evaluator 落盘的 result.json</span></h2>
-  <div class="track-wrap">
-    <svg viewBox="0 0 860 250" role="img" aria-label="回合分数轨道:R0 至 R3 分数爬升图">
-      <!-- 参考线 -->
-      <line class="tk-best" x1="40" y1="33" x2="820" y2="33"/>
-      <text class="tk-lab soft" x="42" y="27">已知最优 2.63598844(出处待查证 · Evaluation Contract)</text>
-      <line class="tk-target" x1="40" y1="53" x2="820" y2="53"/>
-      <text class="tk-lab target" x="44" y="48">目标 2.60</text>
-      <!-- 主轨道 -->
-      <polyline class="tk-line" points="90,210 300,158 510,64"/>
-      <!-- R3 并行分叉 -->
-      <line class="tk-branch win" x1="510" y1="64" x2="720" y2="52"/>
-      <line class="tk-branch" x1="510" y1="64" x2="700" y2="56"/>
-      <line class="tk-branch" x1="510" y1="64" x2="700" y2="200"/>
-      <!-- 节点 -->
-      <circle class="tk-pt" cx="90"  cy="210" r="5"/>
-      <circle class="tk-pt" cx="300" cy="158" r="5"/>
-      <circle class="tk-pt" cx="510" cy="64"  r="5"/>
-      <circle class="tk-pt win" cx="720" cy="52" r="6"/>
-      <circle class="tk-pt dead" cx="700" cy="56" r="4"/>
-      <circle class="tk-pt dead" cx="700" cy="200" r="4"/>
-      <text class="tk-lab" x="76"  y="232">R0 · 2.318</text>
-      <text class="tk-lab soft" x="76" y="245">网格基线</text>
-      <text class="tk-lab" x="286" y="140">R1 · 2.412</text>
-      <text class="tk-lab" x="452" y="48">R2 · 2.581</text>
-      <text class="tk-lab win" x="736" y="44">R3a · 2.603 ★</text>
-      <text class="tk-lab soft" x="714" y="70">R3b · 2.597</text>
-      <text class="tk-lab soft" x="714" y="216">R3c · 无效(重叠)</text>
-    </svg>
-  </div>
-
-  <div class="round-cards">
-    <div class="rc">
-      <div class="rid">Code/runs/r3-anneal/ · Tasks/anneal</div>
-      <div class="rscore">2.603 <small>valid ✓</small></div>
-      <p>模拟退火 + 半径重分配。胜者,待合并回主线。</p>
-      <div class="taskchips">
-        <span class="tc"><b>✓</b> result.json 由 evaluator 写入</span>
-        <span class="tc"><b>✓</b> 工作区隔离,未触碰主线</span>
+  <section class="page" id="page-store">
+    <h2>Skill Store<span class="src">Source: Research-skills-hub</span></h2>
+    <div class="cards">
+      <div class="skill">
+        <span class="top"><span class="nm">paper-library-manager</span><span class="badge b-ok">installed · synced</span></span>
+        <span class="desc">Maintain the shared OKF paper library, topic pages, and graph visualization.</span>
+        <span class="tag">open-paper-skills</span>
+      </div>
+      <div class="skill">
+        <span class="top"><span class="nm">literature_search_arxiv</span><span class="badge b-ok">installed · synced</span></span>
+        <span class="desc">Search arXiv papers, metadata, abstracts, PDFs, and HTML versions.</span>
+        <span class="tag">science-skills</span>
+      </div>
+      <div class="skill">
+        <span class="top"><span class="nm">filetree-simple</span><span class="badge b-warn">installed · no hub source</span></span>
+        <span class="desc">Maintain FILETREE.md with compact summaries and content hashes.</span>
+        <span class="tag">no hub source</span>
       </div>
     </div>
-    <div class="rc">
-      <div class="rid">Code/runs/r3-force/ · Tasks/force-relax</div>
-      <div class="rscore">2.597 <small>valid ✓</small></div>
-      <p>力导向松弛。有效但落败,工作区归档。</p>
-    </div>
-    <div class="rc">
-      <div class="rid">Code/runs/r3-hybrid/ · Tasks/hybrid</div>
-      <div class="rscore" style="color:var(--stale)">无效 <small>重叠 2 处</small></div>
-      <p>混合构造触发重叠约束,evaluator 判无效。失败原因已记录。</p>
-    </div>
-  </div>
-
-  <div class="cols" style="margin-top:26px">
-    <div>
-      <h2>OS Feedback<span class="src">PROJECT_MEMORY.md · 每回合必录</span></h2>
-      <div class="panel">
-        <table class="fb-table">
-          <tr><th>日期</th><th>机制</th><th>期望 vs 实际</th><th>严重度</th></tr>
-          <tr><td>07-04</td><td>Tasks/ 合并</td><td>合并规则清楚,但败者工作区去留无约定</td><td><span class="badge b-warn">中</span></td></tr>
-          <tr><td>07-03</td><td>runs/ 结构</td><td>缺回合级元数据(时间/预算消耗)</td><td><span class="badge b-mute">低</span></td></tr>
-          <tr><td>07-02</td><td>—</td><td>本回合无 OS 摩擦(显式记录)</td><td><span class="badge b-ok">无</span></td></tr>
-        </table>
-      </div>
-    </div>
-    <div>
-      <h2>评审与私有技能</h2>
-      <div class="panel">
-        <ul class="feed">
-          <li><time>待办</time>中期制品评审(硬检查)→ Evaluations/<span class="fsrc"><span class="badge b-signal">R3 后触发</span></span></li>
-          <li><time>私有</time><span style="font-family:var(--mono)">round-wrapup</span> — 项目局部技能<span class="fsrc"><span class="badge b-warn">候选晋升</span></span></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-</section>
-
-<!-- ════════════ 页 3:技能商店 ════════════ -->
-<section class="page" id="page-store" role="tabpanel" aria-labelledby="tab-store">
-
-  <div class="store-bar" role="group" aria-label="按集合筛选">
-    <button class="fchip" aria-pressed="true"  data-col="all">全部 · 36</button>
-    <button class="fchip" aria-pressed="false" data-col="open-paper-skills">open-paper-skills</button>
-    <button class="fchip" aria-pressed="false" data-col="science-skills">science-skills</button>
-    <button class="fchip" aria-pressed="false" data-col="collected-skills">collected-skills</button>
-    <button class="fchip" aria-pressed="false" data-col="hub 无源">hub 无源</button>
-    <input class="search" type="search" placeholder="搜索技能…(视觉稿未实现)" aria-label="搜索技能">
-  </div>
-
-  <div class="cards" id="cards"></div>
-
-</section>
-</div>
-
-<!-- 抽屉 -->
-<div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="技能详情" aria-hidden="true">
-  <button class="close" id="drawer-close">关闭 ✕</button>
-  <h3 id="d-name">—</h3>
-  <div class="dcol" id="d-col">—</div>
-  <dl>
-    <dt>描述</dt><dd id="d-desc">—</dd>
-    <dt>同步状态(hub / .claude / .agents 三方哈希)</dt><dd id="d-sync">—</dd>
-    <dt>license / 上游</dt><dd id="d-lic">—</dd>
-    <dt>脚本</dt><dd id="d-scripts">—</dd>
-  </dl>
-  <div class="cmd" id="d-cmd">—</div>
-  <button class="copy-btn" id="copy-btn" aria-live="polite">复制安装命令</button>
-  <p class="note">只读仪表盘不执行安装。把命令粘贴到终端运行。对第三方来源(collected-skills)技能,INSTRUCTION.md 要求装前浏览 scripts/;本界面从严,对所有含 scripts/ 的技能都给出提示。</p>
-</aside>
+  </section>
+</main>
 
 <footer>
-  <span>只读快照 · 文件系统是唯一事实源</span>
-  <span>重新生成:python os-ui/generator/generate.py</span>
-  <span>os-ui mockup v0 · 本页为视觉稿,数据为演示用假数据</span>
+  <span>Read-only snapshot</span>
+  <span>Regenerate: cd os-ui/generator && uv run python generate.py</span>
+  <span>Mockup data is illustrative only</span>
 </footer>
 
 <script>
-/* ── 真实库存:Research-skills-hub 三个 collection + 孤儿技能 ── */
-const SKILLS = [
-  // open-paper-skills (9)
-  {n:"alphaxiv-paper-lookup",   c:"open-paper-skills", d:"在 alphaxiv.org 查询论文结构化 AI 摘要,比直接读 PDF 更快更稳。", lic:"MIT", s:false, sync:"none"},
-  {n:"drawio-paper",            c:"open-paper-skills", d:"按论文方法与图注生成 draw.io 图与 matplotlib 统计图,多智能体流水线。", lic:"MIT", s:true,  sync:"none"},
-  {n:"karpathy-coding-rules",   c:"open-paper-skills", d:"Karpathy 十条编码守则:读代码优先、最小改动、验证与调试习惯。", lic:"MIT", s:false, sync:"synced"},
-  {n:"okf-repo-organizer",      c:"open-paper-skills", d:"把仓库或知识语料整理为通用 OKF bundle,校验索引与 frontmatter。", lic:"MIT", s:true,  sync:"synced"},
-  {n:"paper-library-manager",   c:"open-paper-skills", d:"维护 OKF 论文库:单篇笔记、topic 综合页、阅读状态与 viz.html。", lic:"MIT", s:true,  sync:"synced"},
-  {n:"research-bible",          c:"open-paper-skills", d:"研究方法论指南:选题、实验回合设计、调试训练与评测、读书计划。", lic:"MIT", s:false, sync:"none"},
-  {n:"research-skill-installer",c:"open-paper-skills", d:"在 hub 与 .agents/.claude 两个安装目录之间安装、更新、回同步技能。", lic:"MIT", s:true,  sync:"synced"},
-  {n:"task-file-builder",       c:"open-paper-skills", d:"按 Objective/验收标准/相关文件等结构,交互式起草 task.md 任务书。", lic:"MIT", s:false, sync:"none"},
-  {n:"uv-env",                  c:"open-paper-skills", d:"用 uv 创建和管理 Python 项目环境:初始化、加依赖、锁定同步。", lic:"MIT", s:false, sync:"synced"},
-  // science-skills (7)
-  {n:"literature_search_arxiv",    c:"science-skills", d:"检索 arXiv 论文,抽取元数据与摘要,下载全文 PDF/HTML。", lic:"Apache-2.0", s:true,  sync:"synced"},
-  {n:"literature_search_biorxiv",  c:"science-skills", d:"按日期区间与关键词浏览、筛选、下载 bioRxiv/medRxiv 生命科学预印本。", lic:"Apache-2.0", s:true,  sync:"none"},
-  {n:"literature_search_europepmc",c:"science-skills", d:"检索 Europe PMC 文献,下载开放获取全文/PDF,取引文列表与参考文献。", lic:"Apache-2.0", s:true,  sync:"none"},
-  {n:"literature_search_openalex", c:"science-skills", d:"查询 OpenAlex 学术库:论文、作者、机构、引文计量与 DOI 解析。", lic:"Apache-2.0", s:true,  sync:"synced"},
-  {n:"science_skills_common",      c:"science-skills", d:"Science Skills 共享 Python 包:带限流重试退避的统一 HTTP 客户端,非独立技能。", lic:"Apache-2.0", s:false, sync:"synced"},
-  {n:"uv",                         c:"science-skills", d:"检查并在缺失时安装 uv 包管理器,确保其在 PATH 中,供其他技能依赖。", lic:"Apache-2.0", s:false, sync:"synced"},
-  {n:"workflow_skill_creator",     c:"science-skills", d:"把已完成的用户工作流蒸馏为可复用的 agent 技能。", lic:"Apache-2.0", s:false, sync:"none"},
-  // collected-skills (17,含 productivity/ 子目录)
-  {n:"arxiv2md",               c:"collected-skills", d:"把 arXiv 论文转换为干净的 Markdown,便于阅读、抓取与摘要。", lic:"上游许可", s:false, sync:"none"},
-  {n:"deepxiv-baseline-table", c:"collected-skills", d:"用 DeepXiv 搜索与章节读取,构建对比用的 Markdown 基线表。", lic:"上游许可", s:false, sync:"none"},
-  {n:"deepxiv-cli",            c:"collected-skills", d:"通过 CLI 混合检索与智能抽取访问 arXiv/PMC 等学术论文。", lic:"上游许可", s:false, sync:"none"},
-  {n:"deepxiv-trending-digest",c:"collected-skills", d:"汇总近期热门论文,生成带精读建议的 Markdown 摘要。", lic:"上游许可", s:false, sync:"none"},
-  {n:"drawio",                 c:"collected-skills", d:"生成 draw.io 图表文件,可选导出为内嵌 XML 的 PNG/SVG/PDF。", lic:"上游许可", s:false, sync:"none"},
-  {n:"explain-diff-html",      c:"collected-skills", d:"把代码改动、diff、分支或 PR 解释为富交互 HTML 页面。", lic:"上游许可", s:false, sync:"none"},
-  {n:"grill-me",               c:"collected-skills", d:"对计划或设计发起不留情面的追问,用户主动触发版。", lic:"上游许可", s:false, sync:"synced"},
-  {n:"grilling",               c:"collected-skills", d:"对计划或设计进行不留情面的逐项拷问,直到达成共享理解。", lic:"上游许可", s:false, sync:"synced"},
-  {n:"handoff",                c:"collected-skills", d:"把当前对话压缩为交接文档,供另一个 agent 接续工作。", lic:"上游许可", s:false, sync:"none"},
-  {n:"hf-cli",                 c:"collected-skills", d:"Hugging Face Hub CLI:下载上传管理模型、数据集、空间、仓库与任务。", lic:"上游许可", s:false, sync:"none"},
-  {n:"hugging-face-paper-pages",c:"collected-skills", d:"查阅 Hugging Face 论文页与结构化元数据:作者、关联模型/数据集/代码。", lic:"上游许可", s:false, sync:"none"},
-  {n:"human-cognition-cache",  c:"collected-skills", d:"维护项目级人类认知缓存:已知已知/未知与未知的未知等 OKF 文件。", lic:"MIT", s:false, sync:"synced"},
-  {n:"ml-paper-writing",       c:"collected-skills", d:"撰写 NeurIPS/ICML 等顶会可投稿 ML 论文,含模板与引用核验。", lic:"MIT", s:false, sync:"none"},
-  {n:"paper-finder",           c:"collected-skills", d:"按关键词跨 arXiv/顶会检索并整理论文,维护主题库与 BibTeX。", lic:"上游许可", s:false, sync:"none"},
-  {n:"pyzotero",               c:"collected-skills", d:"用 pyzotero 客户端管理 Zotero 文献库:条目、集合、标签与附件。", lic:"MIT", s:false, sync:"none"},
-  {n:"teach",                  c:"collected-skills", d:"在有状态工作区中,跨会话教用户一项新技能或概念。", lic:"上游许可", s:false, sync:"none"},
-  {n:"writing-great-skills",   c:"collected-skills", d:"关于如何写好技能的参考:让技能行为可预期的词汇与原则。", lic:"上游许可", s:false, sync:"none"},
-  // 孤儿技能:已安装于 .claude/.agents,但 hub 中无源
-  {n:"collected-skills-organizer", c:"hub 无源", d:"新技能加入 collected-skills 后,更新其 index.md 与 README.md 登记。", lic:"unknown", s:false, sync:"orphan"},
-  {n:"filetree-simple",            c:"hub 无源", d:"维护 FILETREE.md 紧凑索引:一行用途摘要 + 内容哈希 + lint。", lic:"unknown", s:true,  sync:"orphan"},
-  {n:"session-handoff",            c:"hub 无源", d:"维护 HANDOFF.md:跨会话的 active work、决策、偏离与刻意未做。", lic:"unknown", s:false, sync:"orphan"},
-];
-const SYNC_BADGE = {
-  synced:'<span class="badge b-ok">已安装 · 同步</span>',
-  drift :'<span class="badge b-warn">已安装 · 漂移 ⚠</span>',
-  orphan:'<span class="badge b-warn">已安装 · hub 无源 ⚠</span>',
-  none  :'<span class="badge b-mute">未安装</span>',
-};
-
-const cardsEl = document.getElementById('cards');
-function renderCards(col){
-  cardsEl.innerHTML = '';
-  SKILLS.filter(s => col==='all' || s.c===col).forEach(s => {
-    const b = document.createElement('button');
-    b.className = 'skill';
-    b.innerHTML = `
-      <span class="top"><span class="nm">${s.n}</span>${SYNC_BADGE[s.sync]}</span>
-      <span class="desc">${s.d}</span>
-      <span class="foot">
-        <span class="tag">${s.c}</span>
-        <span class="tag">${s.lic}</span>
-        ${s.s ? '<span class="tag scripts">含 scripts/ · 装前浏览</span>' : ''}
-      </span>`;
-    b.addEventListener('click', () => openDrawer(s, b));
-    cardsEl.appendChild(b);
-  });
-}
-renderCards('all');
-
-document.querySelectorAll('.fchip').forEach(ch => {
-  ch.addEventListener('click', () => {
-    document.querySelectorAll('.fchip').forEach(x => x.setAttribute('aria-pressed','false'));
-    ch.setAttribute('aria-pressed','true');
-    renderCards(ch.dataset.col);
-  });
-});
-
-/* ── 标签页切换(含漫游 tabindex 与方向键)── */
 const tabs = [...document.querySelectorAll('.tab')];
-function selectTab(t){
-  tabs.forEach(x => { x.setAttribute('aria-selected','false'); x.tabIndex = -1; });
-  t.setAttribute('aria-selected','true'); t.tabIndex = 0;
+function selectTab(tab) {
+  tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+  tab.setAttribute('aria-selected', 'true');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + t.dataset.page).classList.add('active');
-  closeDrawer();
-  window.scrollTo({top:0});
+  document.getElementById('page-' + tab.dataset.page).classList.add('active');
 }
-tabs.forEach(t => t.addEventListener('click', () => selectTab(t)));
-document.querySelector('.tablist').addEventListener('keydown', e => {
-  if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-  const i = tabs.indexOf(document.activeElement);
-  if(i < 0) return;
-  const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
-  next.focus(); selectTab(next);
-});
-
-/* ── 抽屉 ── */
-const drawer = document.getElementById('drawer');
-const scrim  = document.getElementById('scrim');
-const SYNC_NOTE = {
-  drift : ' — 副本与 hub 不一致,建议重新安装同步',
-  orphan: ' — 安装目录中有副本,但 hub 无源(违反 D7 三方一致),建议 sync-back 回灌 hub 或移除',
-};
-const INSTALLER = 'python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py';
-let lastTrigger = null;
-function openDrawer(s, trigger){
-  lastTrigger = trigger || document.activeElement;
-  document.getElementById('d-name').textContent = s.n;
-  document.getElementById('d-col').textContent  = 'Research-skills-hub / ' + s.c;
-  document.getElementById('d-desc').textContent = s.d;
-  document.getElementById('d-sync').innerHTML   = SYNC_BADGE[s.sync] + (SYNC_NOTE[s.sync] || '');
-  document.getElementById('d-lic').textContent  = s.lic;
-  document.getElementById('d-scripts').textContent = s.s ? '含 scripts/ — 安装前请先浏览脚本内容' : '无脚本,纯文档技能';
-  // 命令一律携带 --collection(消歧参数,任何时候都被安装器接受);孤儿技能给回灌命令
-  document.getElementById('d-cmd').textContent = s.sync === 'orphan'
-    ? `${INSTALLER} sync-back ${s.n} --from claude`
-    : `${INSTALLER} install ${s.n} --collection ${s.c}`;
-  const btn = document.getElementById('copy-btn');
-  btn.dataset.base = s.sync === 'orphan' ? '复制回灌命令' : '复制安装命令';
-  btn.textContent = btn.dataset.base;
-  drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false'); scrim.classList.add('on');
-  document.getElementById('drawer-close').focus();
-}
-function closeDrawer(){
-  if(!drawer.classList.contains('open')) return;
-  drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); scrim.classList.remove('on');
-  if(lastTrigger){ lastTrigger.focus(); lastTrigger = null; }
-}
-document.getElementById('drawer-close').addEventListener('click', closeDrawer);
-scrim.addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
-
-/* ── 复制命令 ── */
-let copyTimer = null;
-document.getElementById('copy-btn').addEventListener('click', async function(){
-  const cmd = document.getElementById('d-cmd').textContent;
-  try { await navigator.clipboard.writeText(cmd); this.textContent = '已复制 ✓'; }
-  catch { this.textContent = '复制失败 — 请手动选中命令'; }
-  clearTimeout(copyTimer);
-  copyTimer = setTimeout(() => this.textContent = this.dataset.base || '复制安装命令', 1600);
-});
+tabs.forEach(tab => tab.addEventListener('click', () => selectTab(tab)));
 </script>
 </body>
 </html>

@@ -22,7 +22,7 @@ export function RoundCards({ rounds }: Props) {
               </>
             ) : (
               <span className="text-stale">
-                无效{" "}
+                invalid{" "}
                 <small className="text-[11px] font-normal">
                   {r.note ?? "invalid"}
                 </small>

@@ -10,8 +10,8 @@ interface Props {
 }
 
 const SYNC_NOTE: Partial<Record<DisplaySkill["sync"], string>> = {
-  drift: "— 副本与 hub 不一致,建议重新安装同步",
-  installed_no_hub_source: "— 安装目录中有副本,但 hub 无源(违反 D7 三方一致),建议 sync-back 回灌 hub 或移除",
+  drift: "- installed copies differ from the hub; reinstall to resync",
+  installed_no_hub_source: "- installed copy has no hub source; sync it back into the hub or remove it",
 };
 
 /**
@@ -55,9 +55,9 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
     const cmd = installCommand(skill);
     try {
       await navigator.clipboard.writeText(cmd);
-      setCopyLabel("已复制 ✓");
+      setCopyLabel("Copied ✓");
     } catch {
-      setCopyLabel("复制失败 — 请手动选中命令");
+      setCopyLabel("Copy failed - select the command manually");
     }
     window.clearTimeout(copyTimerRef.current);
     copyTimerRef.current = window.setTimeout(() => setCopyLabel(null), 1600);
@@ -79,7 +79,7 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
         }
         role="dialog"
         aria-modal="true"
-        aria-label="技能详情"
+        aria-label="Skill details"
         aria-hidden={!isOpen}
       >
         <button
@@ -88,7 +88,7 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
           onClick={handleClose}
           className="close float-right rounded-[3px] border border-grid bg-panel px-2.5 py-0.5 font-mono-heading text-[12px]"
         >
-          关闭 ✕
+          Close
         </button>
         <h3 className="font-mono-heading mt-1 break-all text-[16px]">{skill?.name ?? "—"}</h3>
         <div className="font-mono-heading mb-3.5 text-[11px] text-stale">
@@ -97,12 +97,12 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
 
         <dl className="my-3.5 text-[12.5px]">
           <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
-            描述
+            Description
           </dt>
           <dd className="mt-0.5">{skill?.description ?? "—"}</dd>
 
           <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
-            同步状态(hub / .claude / .agents 三方哈希)
+            Sync status (hub / .claude / .agents hashes)
           </dt>
           <dd className="mt-0.5">
             {skill ? (
@@ -115,15 +115,15 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
           </dd>
 
           <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
-            license / 上游
+            license / upstream
           </dt>
-          <dd className="mt-0.5">{skill?.license ?? "unknown(见上游)"}</dd>
+          <dd className="mt-0.5">{skill?.license ?? "unknown (see upstream)"}</dd>
 
           <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
-            脚本
+            Scripts
           </dt>
           <dd className="mt-0.5">
-            {skill?.hasScripts ? "含 scripts/ — 安装前请先浏览脚本内容" : "无脚本,纯文档技能"}
+            {skill?.hasScripts ? "Has scripts/ - inspect them before installation" : "No scripts; documentation-only skill"}
           </dd>
         </dl>
 
@@ -136,11 +136,12 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
           aria-live="polite"
           className="copy-btn mt-2 block w-full rounded-[3px] border border-ink bg-panel py-2.5 font-mono-heading text-[12.5px] font-semibold hover:bg-ink hover:text-white"
         >
-          {copyLabel ?? (skill ? copyButtonLabel(skill) : "复制安装命令")}
+          {copyLabel ?? (skill ? copyButtonLabel(skill) : "Copy install command")}
         </button>
         <p className="note mt-2.5 text-[11.5px] text-stale">
-          只读桌面不执行安装。把命令粘贴到终端运行。对第三方来源(collected-skills)技能,INSTRUCTION.md
-          要求装前浏览 scripts/;本界面从严,对所有含 scripts/ 的技能都给出提示。
+          The read-only desktop does not install skills. Paste the command into a terminal.
+          INSTRUCTION.md requires script review before installing third-party collected skills;
+          this UI applies that warning to every skill with scripts/.
         </p>
       </aside>
     </>

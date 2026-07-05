@@ -15,7 +15,7 @@ export function DashboardPage({ state }: Props) {
     // the WindowFrame already provides the labeled region landmark
     <section>
       <h2 className="section-heading">
-        项目组合<span className="section-src">来源 Memory/MEMORY.md · Active Projects</span>
+        Portfolio<span className="section-src">Source: Memory/MEMORY.md · Active Projects</span>
       </h2>
 
       {state.portfolio.map((entry) => (
@@ -29,7 +29,7 @@ export function DashboardPage({ state }: Props) {
       <div className="cols mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(330px,1fr))] gap-4">
         <div>
           <h2 className="section-heading">
-            进行中的工作<span className="section-src">来源 HANDOFF.md · Active Work</span>
+            Active Work<span className="section-src">Source: HANDOFF.md · Active Work</span>
           </h2>
           <div className="flex flex-col gap-3">
             {state.active_work.map((section, idx) => (
@@ -40,11 +40,11 @@ export function DashboardPage({ state }: Props) {
 
         <div>
           <h2 className="section-heading">
-            最近活动<span className="section-src">来源 git log + progress logs</span>
+            Recent Activity<span className="section-src">Source: git log + progress logs</span>
           </h2>
           <ActivityFeed entries={state.activity} />
 
-          <h2 className="section-heading mt-[22px]">研究策略<span className="section-src">来源 Memory/MEMORY.md</span></h2>
+          <h2 className="section-heading mt-[22px]">Research Policy<span className="section-src">Source: Memory/MEMORY.md</span></h2>
           <PolicyPanel policy={state.policy} />
         </div>
       </div>

@@ -38,7 +38,7 @@ export function StorePage({ state }: Props) {
 
   return (
     <section>
-      <div className="store-bar mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="按集合筛选">
+      <div className="store-bar mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by collection">
         <button
           type="button"
           aria-pressed={activeFilter === ALL}
@@ -48,7 +48,7 @@ export function StorePage({ state }: Props) {
             (activeFilter === ALL ? "border-ink bg-ink text-white" : "border-grid bg-panel text-ink-soft")
           }
         >
-          全部 · {allSkills.length}
+          All · {allSkills.length}
         </button>
         {collectionNames.map((name) => (
           <button
@@ -82,14 +82,14 @@ export function StorePage({ state }: Props) {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="搜索技能…"
-          aria-label="搜索技能"
+          placeholder="Search skills..."
+          aria-label="Search skills"
           className="search font-mono-heading ml-auto w-[220px] rounded-[3px] border border-grid bg-panel px-3 py-1.5 text-[12px] text-ink max-[900px]:ml-0 max-[900px]:w-full"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-[13px] text-stale">没有匹配的技能。</p>
+        <p className="text-[13px] text-stale">No matching skills.</p>
       ) : (
         <div className="cards grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">
           {filtered.map((s) => (

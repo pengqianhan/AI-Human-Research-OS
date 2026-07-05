@@ -19,7 +19,7 @@ export function PolicyPanel({ policy }: Props) {
         <li className="flex gap-3 py-[7px] text-[12.5px] last:border-b-0">
           <span>{policy.parallelism}</span>
           <span className="ml-auto">
-            <Badge tone="ok">生效中</Badge>
+            <Badge tone="ok">active</Badge>
           </span>
         </li>
       </ul>

@@ -24,7 +24,7 @@ export function ProjectPage({ state }: Props) {
       <div
         className="store-bar mb-4 flex flex-wrap items-center gap-2"
         role="group"
-        aria-label="选择已登记项目"
+        aria-label="Select registered project"
       >
         {projects.map((p) => {
           const selected = p.name === project?.name;
@@ -48,17 +48,17 @@ export function ProjectPage({ state }: Props) {
       </div>
 
       {project === null ? (
-        <p className="text-[13px] text-stale">暂无已登记项目。</p>
+        <p className="text-[13px] text-stale">No registered projects.</p>
       ) : (
         <>
           <div className="crumb font-mono-heading mb-3.5 text-[12px] text-stale">
-            项目组合 / <b className="text-ink">{project.name}</b>
+            Portfolio / <b className="text-ink">{project.name}</b>
           </div>
 
           <SnapshotGrid snapshot={project.snapshot} />
 
           <h2 className="section-heading mt-[26px]">
-            回合分数轨道<span className="section-src">分数只读 evaluator 落盘的 result.json</span>
+            Round Score Track<span className="section-src">Scores are read only from evaluator-written result.json</span>
           </h2>
           <RoundTrack rounds={project.rounds} evaluation={project.evaluation} />
           <RoundCards rounds={project.rounds} />
@@ -74,13 +74,13 @@ export function ProjectPage({ state }: Props) {
             </div>
             <div>
               <h2 className="section-heading">
-                OS Feedback<span className="section-src">PROJECT_MEMORY.md · 每回合必录</span>
+                OS Feedback<span className="section-src">PROJECT_MEMORY.md · required each round</span>
               </h2>
               <OsFeedbackPanel entries={project.os_feedback} />
             </div>
           </div>
 
-          <h2 className="section-heading mt-[26px]">私有技能<span className="section-src">项目内 .claude/skills 或 .agents/skills</span></h2>
+          <h2 className="section-heading mt-[26px]">Local Skills<span className="section-src">Project .claude/skills or .agents/skills</span></h2>
           <div className="panel rounded border border-grid bg-panel p-4 px-[18px]">
             <LocalSkillsPanel skills={project.local_skills} />
           </div>

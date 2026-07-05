@@ -7,7 +7,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:d1579e96-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
-- `os-ui/` - Read-only desktop UI for the Research OS: intro/launch README, one-command start.sh, design spec and mockup, state.json generator, desktop-metaphor frontend. <!--hash:847aa8fc-->
+- `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, and vendored science-skills. <!--hash:5ef6775e-->
@@ -67,7 +67,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## os-ui/
 
-- `frontend/` - Vite + React + TypeScript read-only desktop UI: dock plus draggable app windows rendering state.json, with a novice-oriented README. <!--hash:9905c30d-->
+- `frontend/` - Vite + React + TypeScript read-only desktop UI: dock plus draggable app windows rendering state.json, with an English frontend README. <!--hash:43a0a270-->
 - `generator/` - Stdlib-only Python generator (uv) that scans the repo into schema-versioned state.json; supports --watch polling. <!--hash:7164b96b-->
 
 ## paper-library/

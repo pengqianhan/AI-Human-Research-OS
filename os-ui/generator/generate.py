@@ -641,7 +641,7 @@ def build_projects(repo_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
 COLLECTION_LICENSE_FALLBACK = {
     "science-skills": None,  # resolved by reading its LICENSE file (Apache-2.0)
     "open-paper-skills": "MIT",
-    "collected-skills": "上游许可",
+    "collected-skills": "upstream license",
 }
 
 

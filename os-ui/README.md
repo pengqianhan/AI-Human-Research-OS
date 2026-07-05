@@ -1,130 +1,112 @@
-# os-ui — Research OS 只读桌面
+# os-ui - Research OS Read-only Desktop
 
-给这座"AI-Human Research OS"装的一块**只读观察窗**:在浏览器里以"桌面操作
-系统"的形态呈现仓库的真实状态。它不执行任何动作、不写任何文件——文件系统
-仍是唯一事实源;删掉整个 `os-ui/` 目录,OS 本体毫无感知。
+`os-ui/` is a read-only observation window for the AI-Human Research OS. It
+renders the repository's current state in a browser using a desktop-OS
+metaphor. It does not execute actions or write source files; the filesystem
+remains the only source of truth. Removing `os-ui/` does not affect the OS
+itself.
 
-## 界面是什么样子
+A Chinese copy of the previous overview is kept at [README_zh.md](README_zh.md).
+The current build direction is English-first; Chinese UI support can be added
+later when the OS is more mature.
 
-打开后是一张点阵网格"桌面",自上而下三层:
+## Interface
 
-- **菜单条(顶部常驻)**:左边是 OS 名字,右侧两枚安静的状态徽章:
-  **快照牌**——绿点 = 数据新鲜,`state.json` 超过 10 分钟没刷新会变琥珀色
-  并写明"可能过时"(诚实的陈旧胜过撒谎的实时),完整生成时间 / schema
-  版本 / 仓库 HEAD 悬停可见;**`agent-led` 研究策略徽章**。
-- **应用窗口(中间)**:三个功能各自是一个 macOS 风格的浮动窗口,可以
-  拖动标题栏移动、拖右下角改大小、层叠切换:
-  - **总览** — 项目组合飞行条、进行中的工作、最近活动、研究策略、治理记录;
-  - **项目** — 每个已登记项目的 Snapshot 字段卡、回合分数轨道、评审报告、
-    OS Feedback、私有技能;
-  - **技能商店** — Research-skills-hub 的技能货架:四态同步徽章、license、
-    scripts 提示、"安装"= 复制真实安装命令。
-  窗口标题栏左侧是三颗"交通灯":红 = 关闭、琥珀 = 最小化、青绿 = 缩放
-  (双击标题栏也可缩放),颜色正好复用本 OS 的语义色板。
-- **程序坞 Dock(底部)**:毛玻璃圆角条,点图标开窗口;图标下的实心点 =
-  已打开、空心点 = 已最小化。分隔线右侧是三枚"复制命令"按钮:
-  **Claude Code** 与 **Codex** 图标(复制各自的启动命令——暗示本 OS 由
-  这两类 code agent 在仓库根目录驱动)和**终端**图标(复制刷新快照的
-  命令)。它们是全站仅有的"动作",而且都**只复制、不执行**。
+The UI opens as a dot-grid desktop with three layers:
 
-所有数据都来自一个文件:`frontend/public/state.json`(gitignored 的缓存),
-由生成器扫描仓库的 Markdown 文档产出;前端每 5 秒重新读取一次。数据缺失时
-一律渲染诚实空态("暂无回合数据"),生成器与前端都不编造。
+- **Menu bar**: the OS name, a snapshot freshness chip, and the
+  `agent_led_research` policy chip. Hover the snapshot chip to see the full
+  generated timestamp, schema version, and repository HEAD.
+- **Windows**: three draggable, resizable, minimizable macOS-style windows:
+  **Dashboard**, **Projects**, and **Skill Store**.
+- **Dock**: app icons on the left and copy-only command buttons on the right
+  for Claude Code, Codex, and snapshot regeneration.
 
-## 怎么启动
+All displayed data comes from one cache file:
+`frontend/public/state.json`. The generator creates that file by scanning the
+repository's Markdown files. The frontend polls it every five seconds. Missing
+data renders as honest empty states; neither generator nor frontend invents
+facts.
 
-### 最快方式:一条命令
+## Quick Start
+
+Run from the repository root:
 
 ```bash
-./os-ui/start.sh            # 生成快照 → 首次自动装依赖 → 启动前端
-./os-ui/start.sh --watch    # 同上,并让快照持续跟踪仓库变化(推荐开发时用)
+./os-ui/start.sh
+./os-ui/start.sh --watch
 ```
 
-脚本会先检查 uv 和 Node 是否已安装(缺了会给出安装链接),前台运行,
-Ctrl-C 一次性停掉所有进程。下面是它背后的两步,想手动控制时用:
+`--watch` keeps the generator running in the foreground so changes in the
+repository are reflected in `state.json`. Ctrl-C stops both generator and
+frontend.
 
-### 手动方式(两步)
-
-**第 1 步 — 生成数据快照**(需要 [uv](https://docs.astral.sh/uv/);首次运行
-或想刷新数据时执行):
+Manual two-step flow:
 
 ```bash
 cd os-ui/generator
-uv run python generate.py            # 一次性生成 + 自检
-# 或者,开发时让它持续跟踪仓库变化(前台运行,Ctrl-C 停止):
+uv run python generate.py
+# or:
 uv run python generate.py --watch
 ```
 
-**第 2 步 — 启动前端**(需要 Node.js 18+,推荐 22):
-
 ```bash
 cd os-ui/frontend
-npm install     # 只有第一次、或 package.json 变化后需要
+npm install
 npm run dev
 ```
 
-终端会打印网址(通常 `http://localhost:5173/`),浏览器打开即见桌面。改了
-代码热更新,重跑生成器后页面 5 秒内自动吸收新数据,都不用手动刷新。
+The dev server prints a URL, usually `http://localhost:5173/`.
 
-要打包成静态站点:`npm run build`,产物在 `frontend/dist/`(gitignored),
-可用任意静态服务器托管。更多新手向说明(每个文件是干什么的、想改颜色/文案
-去哪里)见 [frontend/README.md](frontend/README.md);生成器细节见
-[generator/README.md](generator/README.md);完整施工图见 [DESIGN.md](DESIGN.md)。
+Build a static bundle:
 
-## 理念与灵感来源
-
-**理念**(详见 [DESIGN.md](DESIGN.md),2026-07-04 grilling 会话定稿):
-
-1. **只读仪表盘,不是控制台**——前端渲染仓库状态,所有"操作"以"复制这条
-   命令去终端跑"的形式呈现;执行面(真按钮)属 [GOAL.md](../GOAL.md) M4
-   闸门,需逐项证据 + 人类确认。
-2. **`state.json` 是前后端唯一接触面**——生成器不懂 React,前端不懂
-   Markdown;两侧可独立迭代、独立删除。
-3. **诚实的状态语义**——每个状态带证据来源和时间戳;不显示"运行中",
-   显示"最后活动 3 小时前(来源:progress log)";数据缺失走空态。
-4. **气质:空管飞行进度条 × 工程方格纸**——人类是调度员,项目是进度条。
-   色板(冷灰绿方格纸 + 石油墨 + 国际橙/青绿/琥珀语义色)与 IBM Plex Mono
-   标题字是这套 UI 的身份,签名元素是总览页的 portfolio 飞行条和项目页的
-   回合分数轨道。
-
-**灵感来源**:桌面外壳(2026-07-05 起)参考了
-[wanman.ai](https://wanman.ai/)(开源项目
-[chekusu/wanman](https://github.com/chekusu/wanman) 的前端)的**桌面 OS
-隐喻**——浮动窗口 + 交通灯按钮 + 底部 Dock + 点阵桌面,这种形态比标签页
-更贴近"操作系统"的直觉。我们借鉴的是**隐喻与交互**,刻意没有照搬其暖奶油
-色视觉:色板、字体、语义色沿用本项目已定稿的身份,交通灯的红/琥珀/青绿
-也直接复用了 OS 语义色板,让"窗口控制"和"状态徽章"说同一种颜色语言。
-
-## 后续迭代 TODO
-
-按"需求驱动、每步小而可逆"的原则排队;带 ⛔ 的项受
-[GOAL.md](../GOAL.md) M4 闸门约束(常驻服务/执行面需逐项证据 + 人类确认):
-
-- [ ] **窗口布局持久化**——刷新后记住每个窗口的位置/大小/开关状态
-      (localStorage 即可,不引入后端)。
-- [ ] **键盘操作窗口**——用键盘移动/调整窗口大小(方向键 + 修饰键),
-      补齐无鼠标场景的可达性(目前键盘可以开/关/最小化/缩放,不能移动)。
-- [ ] **回合分数轨道吃到真实数据**——依赖 circle_packing 项目 M2 落盘
-      `Code/runs/<round-id>/result.json`;前端已实现空态与非空分支
-      (fixture 验证过),数据一到即点亮。
-- [ ] **更多"应用"的探索**——治理记录、最近活动是否值得从总览窗口拆成
-      独立 Dock 应用;等真实使用反馈(OS Feedback)再决定,不预先拆。
-- [ ] ⛔ **实时推送**——文件监听小服务 + SSE 替代 5 秒轮询(属常驻服务,
-      M4 闸门;DESIGN.md §2 已预留升级路径,前端组件层零改动)。
-- [ ] ⛔ **执行面**——同一 schema 增加 actions 端点,"复制命令"升级为
-      真按钮(M4 之后,逐项证据 + 人类确认)。
-- [ ] ⛔ **agent_activity 心跳**——若 OS Feedback 出现"看不到 agent 在干嘛"
-      的真实证据,再启用带租约语义(`expires_at` 过期自动降级 stale)的
-      心跳槽位,杜绝永远绿灯(DESIGN.md §4)。
-
-## 目录结构
-
+```bash
+cd os-ui/frontend
+npm run build
 ```
+
+The output goes to `frontend/dist/`, which is gitignored.
+
+## Design Stance
+
+1. **Read-only dashboard, not a console**. Every apparent action copies a
+   command for the human to run elsewhere. Real execution buttons remain behind
+   GOAL.md M4.
+2. **`state.json` is the only contract** between generator and frontend. The
+   generator knows Markdown; the frontend knows schema.
+3. **Honest state beats fake realtime**. The UI shows evidence sources,
+   timestamps, staleness, and empty states instead of pretending to know more
+   than the files contain.
+4. **Desktop shell, research cockpit content**. The visual identity is
+   engineering graph paper plus flight-progress strips, not a generic product
+   dashboard.
+
+The desktop shell was inspired by [wanman.ai](https://wanman.ai/) and
+[chekusu/wanman](https://github.com/chekusu/wanman), but keeps this OS's own
+palette, typography, and read-only semantics.
+
+## Follow-up Queue
+
+- [ ] Persist window layout in `localStorage`.
+- [ ] Add keyboard move/resize controls for windows.
+- [ ] Feed the round score track from real `Code/runs/<round-id>/result.json`
+      files after circle_packing M2 lands.
+- [ ] Split governance or activity into separate dock apps only if real use
+      shows that the Dashboard is too dense.
+- [ ] M4-gated: replace polling with a small file-watching service plus SSE.
+- [ ] M4-gated: add real execution endpoints and buttons.
+- [ ] M4-gated: add `agent_activity` heartbeat semantics only if OS Feedback
+      proves that observed repository state is insufficient.
+
+## Directory
+
+```text
 os-ui/
-  README.md          # 本文件:界面介绍、启动流程、理念与 TODO
-  start.sh           # 一键启动脚本(可选 --watch)
-  DESIGN.md          # 施工图:架构、schema、状态语义、视觉规格(含桌面外壳注记)
-  mockup.html        # 2026-07-04 视觉稿(窗口内内容的像素规格;标签页外壳部分已被桌面外壳取代)
-  generator/         # Python + uv 只读扫描器 → state.json(gitignored)
-  frontend/          # Vite + React + TS + Tailwind 桌面前端;含新手 README
+  README.md          # English overview and launch guide
+  README_zh.md       # Chinese overview retained for reference
+  start.sh           # one-command launcher
+  DESIGN.md          # architecture, schema, state semantics, and visual spec
+  mockup.html        # static visual mockup with fake data
+  generator/         # Python read-only scanner -> state.json
+  frontend/          # Vite + React + TypeScript + Tailwind desktop UI
 ```

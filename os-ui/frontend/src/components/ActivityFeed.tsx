@@ -10,7 +10,7 @@ export function ActivityFeed({ entries }: Props) {
   if (entries.length === 0) {
     return (
       <div className="panel rounded border border-grid bg-panel p-4 px-[18px] text-[12.5px] text-stale">
-        暂无活动记录。
+        No activity yet.
       </div>
     );
   }

@@ -23,13 +23,13 @@ function severityTone(sev: string): "ok" | "warn" | "signal" | "mute" {
 function severityLabel(sev: string): string {
   switch (sev) {
     case "high":
-      return "高";
+      return "high";
     case "medium":
-      return "中";
+      return "medium";
     case "low":
-      return "低";
+      return "low";
     case "none":
-      return "无";
+      return "none";
     default:
       return sev;
   }
@@ -40,7 +40,7 @@ export function OsFeedbackPanel({ entries }: Props) {
   if (entries.length === 0) {
     return (
       <div className="panel rounded border border-grid bg-panel p-4 px-[18px] text-[12.5px] text-stale">
-        暂无 OS Feedback 记录 — 每回合应在 PROJECT_MEMORY.md 的 OS Feedback 区记一条(或显式记"无")。
+        No OS Feedback records yet. Each round should add one PROJECT_MEMORY.md OS Feedback entry, or explicitly record none.
       </div>
     );
   }
@@ -51,16 +51,16 @@ export function OsFeedbackPanel({ entries }: Props) {
         <thead>
           <tr>
             <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
-              日期
+              Date
             </th>
             <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
-              机制
+              Mechanism
             </th>
             <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
-              期望 vs 实际
+              Expected vs Actual
             </th>
             <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
-              严重度
+              Severity
             </th>
           </tr>
         </thead>

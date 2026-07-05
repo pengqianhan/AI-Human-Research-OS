@@ -4,14 +4,14 @@ import type { OrphanSkill, Store, StoreSkill, SyncStatus } from "../types";
 export interface DisplaySkill {
   name: string;
   description: string;
-  /** Collection name, or "hub 无源" for orphans (no hub source). */
+  /** Collection name, or "no hub source" for orphans. */
   collection: string;
   license: string | null;
   hasScripts: boolean;
   sync: SyncStatus;
 }
 
-export const ORPHAN_COLLECTION_LABEL = "hub 无源";
+export const ORPHAN_COLLECTION_LABEL = "no hub source";
 
 function fromStoreSkill(collection: string, s: StoreSkill): DisplaySkill {
   return {
@@ -56,5 +56,5 @@ export function installCommand(skill: DisplaySkill): string {
 }
 
 export function copyButtonLabel(skill: DisplaySkill): string {
-  return skill.sync === "installed_no_hub_source" ? "复制回灌命令" : "复制安装命令";
+  return skill.sync === "installed_no_hub_source" ? "Copy sync-back command" : "Copy install command";
 }

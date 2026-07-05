@@ -64,7 +64,7 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
     } catch {
       // Clipboard can be unavailable (e.g. non-HTTPS); fall back to a prompt
       // the human can read and copy from manually.
-      window.prompt("复制这条命令去终端运行:", command);
+      window.prompt("Copy this command and run it in a terminal:", command);
       return;
     }
     setCopiedId(id);
@@ -77,7 +77,7 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
 
   return (
     <nav
-      aria-label="程序坞"
+      aria-label="Dock"
       className="dock-shadow absolute bottom-4 left-1/2 z-[9000] flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-grid bg-panel-glass px-3 py-1.5 backdrop-blur"
     >
       {apps.map((app) => {
@@ -88,7 +88,7 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
             type="button"
             data-dock-app={app.id}
             onClick={() => onAppClick(app.id)}
-            aria-label={app.title + (open ? (open.minimized ? "(已最小化)" : "(已打开)") : "")}
+            aria-label={app.title + (open ? (open.minimized ? " (minimized)" : " (open)") : "")}
             className="group relative flex h-11 w-11 flex-col items-center justify-center rounded-xl text-ink transition-colors hover:bg-paper"
           >
             <span className="[&>svg]:h-[19px] [&>svg]:w-[19px]">{app.icon}</span>
@@ -116,7 +116,7 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
           key={agent.id}
           type="button"
           onClick={() => copyCommand(agent.id, agent.command)}
-          aria-label={`复制 ${agent.name} 的启动命令`}
+          aria-label={`Copy ${agent.name} launch command`}
           className="group relative flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-paper"
         >
           <span
@@ -128,15 +128,15 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
           </span>
           <span className={tooltipClass}>
             {copiedId === agent.id ? (
-              <b className="text-verify">已复制,在仓库根目录的终端运行</b>
+              <b className="text-verify">Copied. Run it from the repository root.</b>
             ) : (
               <>
-                用 {agent.name} 驱动本 OS <span className="text-stale">· 复制 {agent.command}</span>
+                Drive this OS with {agent.name} <span className="text-stale">· copy {agent.command}</span>
               </>
             )}
           </span>
           <span aria-live="polite" className="sr-only">
-            {copiedId === agent.id ? `已复制 ${agent.name} 启动命令` : ""}
+            {copiedId === agent.id ? `Copied ${agent.name} launch command` : ""}
           </span>
         </button>
       ))}
@@ -144,7 +144,7 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
       <button
         type="button"
         onClick={() => copyCommand("generate", GENERATE_COMMAND)}
-        aria-label="复制重新生成快照的命令"
+        aria-label="Copy snapshot regeneration command"
         className="group relative flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-paper"
       >
         <span
@@ -158,15 +158,15 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
             getting clipped at the right screen edge */}
         <span className={tooltipClass + " right-0"}>
           {copiedId === "generate" ? (
-            <b className="text-verify">已复制,去终端运行</b>
+            <b className="text-verify">Copied. Run it in a terminal.</b>
           ) : (
             <>
-              刷新数据快照 <span className="text-stale">· 复制 {GENERATE_COMMAND}</span>
+              Refresh data snapshot <span className="text-stale">· copy {GENERATE_COMMAND}</span>
             </>
           )}
         </span>
         <span aria-live="polite" className="sr-only">
-          {copiedId === "generate" ? "已复制生成命令,去终端运行" : ""}
+          {copiedId === "generate" ? "Copied generation command; run it in a terminal" : ""}
         </span>
       </button>
     </nav>

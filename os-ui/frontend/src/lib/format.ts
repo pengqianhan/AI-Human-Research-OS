@@ -23,7 +23,7 @@ export function stripInlineMarkdown(input: string): string {
 
 /**
  * Render a timestamp (or plain date string) as a human relative-time label
- * in Chinese, matching the mockup's "3 小时前" / "昨天" / "2 天前" idiom.
+ * in compact English, matching the mockup's "3 hours ago" / "yesterday" idiom.
  * Returns "—" for null/unparseable input rather than guessing.
  */
 export function relativeTime(iso: string | null | undefined, now: Date = new Date()): string {
@@ -38,11 +38,20 @@ export function relativeTime(iso: string | null | undefined, now: Date = new Dat
   const hour = 60 * minute;
   const day = 24 * hour;
 
-  if (diffMs < minute) return "刚刚";
-  if (diffMs < hour) return `${Math.floor(diffMs / minute)} 分钟前`;
-  if (diffMs < day) return `${Math.floor(diffMs / hour)} 小时前`;
-  if (diffMs < 2 * day) return "昨天";
-  if (diffMs < 30 * day) return `${Math.floor(diffMs / day)} 天前`;
+  if (diffMs < minute) return "just now";
+  if (diffMs < hour) {
+    const n = Math.floor(diffMs / minute);
+    return `${n} minute${n === 1 ? "" : "s"} ago`;
+  }
+  if (diffMs < day) {
+    const n = Math.floor(diffMs / hour);
+    return `${n} hour${n === 1 ? "" : "s"} ago`;
+  }
+  if (diffMs < 2 * day) return "yesterday";
+  if (diffMs < 30 * day) {
+    const n = Math.floor(diffMs / day);
+    return `${n} days ago`;
+  }
   return formatAbsoluteDate(then);
 }
 

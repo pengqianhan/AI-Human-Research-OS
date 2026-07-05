@@ -19,24 +19,24 @@ export function UnregisteredStrip({ entry }: Props) {
         <div className="font-mono-heading text-[13.5px] font-semibold">{entry.name}</div>
         <div className="font-mono-heading mt-[3px] text-[10.5px] text-stale">{entry.path}</div>
         <div className="mt-1">
-          <Badge tone="warn">未登记</Badge>
+          <Badge tone="warn">unregistered</Badge>
         </div>
       </div>
 
       <div className="cell border-l border-dashed border-grid p-3 px-4 max-[900px]:col-start-2 max-[900px]:border-l-0 max-[900px]:border-t">
-        <div className="text-[12px] text-ink-soft">在磁盘上发现,但不在 portfolio 表中</div>
+        <div className="text-[12px] text-ink-soft">Found on disk, but missing from the portfolio table</div>
         <div className="font-mono-heading mt-[5px] text-[10px] text-stale">
-          无 PROJECT_MEMORY.md · 无 portfolio 行
+          No PROJECT_MEMORY.md · no portfolio row
         </div>
       </div>
 
       <div className="cell border-l border-dashed border-grid p-3 px-4 max-[900px]:col-start-2 max-[900px]:border-l-0 max-[900px]:border-t">
-        <Badge tone="signal">待人类决策</Badge>
+        <Badge tone="signal">needs human decision</Badge>
       </div>
 
       <div className="cell border-l border-dashed border-grid p-3 px-4 text-[12px] max-[900px]:col-start-2 max-[900px]:border-l-0 max-[900px]:border-t">
         <span className="font-mono-heading block text-[10px] text-stale">GOAL.md M0</span>
-        登记入表,或声明为豁免区
+        Register it, or declare it an exempt zone
       </div>
     </div>
   );

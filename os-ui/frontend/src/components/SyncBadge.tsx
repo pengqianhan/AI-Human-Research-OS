@@ -2,10 +2,10 @@ import type { SyncStatus } from "../types";
 import { Badge } from "./Badge";
 
 const LABELS: Record<SyncStatus, string> = {
-  synced: "已安装 · 同步",
-  drift: "已安装 · 漂移 ⚠",
-  not_installed: "未安装",
-  installed_no_hub_source: "已安装 · hub 无源 ⚠",
+  synced: "installed · synced",
+  drift: "installed · drift ⚠",
+  not_installed: "not installed",
+  installed_no_hub_source: "installed · no hub source ⚠",
 };
 
 const TONES: Record<SyncStatus, "ok" | "warn" | "mute"> = {

@@ -8,7 +8,7 @@ export function App() {
   if (status.kind === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="font-mono-heading text-[13px] text-stale">加载中…</p>
+        <p className="font-mono-heading text-[13px] text-stale">Loading...</p>
       </div>
     );
   }

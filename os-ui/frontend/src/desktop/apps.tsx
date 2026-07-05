@@ -17,8 +17,8 @@ export interface AppDef {
 }
 
 /* Inline line icons (18px grid, stroke = currentColor). Each one echoes the
-   app's actual content: flight strips for 总览, a folder for 项目, a shelf
-   grid for 技能商店. */
+   app's actual content: flight strips for Dashboard, a folder for Projects,
+   and a shelf grid for Store. */
 
 const stripsIcon = (
   <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -46,7 +46,7 @@ const storeIcon = (
 export const APPS: AppDef[] = [
   {
     id: "dash",
-    title: "总览",
+    title: "Dashboard",
     icon: stripsIcon,
     defaultW: 1000,
     defaultH: 660,
@@ -54,7 +54,7 @@ export const APPS: AppDef[] = [
   },
   {
     id: "proj",
-    title: "项目",
+    title: "Projects",
     icon: folderIcon,
     defaultW: 960,
     defaultH: 640,
@@ -62,7 +62,7 @@ export const APPS: AppDef[] = [
   },
   {
     id: "store",
-    title: "技能商店",
+    title: "Skill Store",
     icon: storeIcon,
     defaultW: 1000,
     defaultH: 660,

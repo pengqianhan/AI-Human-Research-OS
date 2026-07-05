@@ -141,8 +141,8 @@ export function WindowFrame({
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            aria-label={`关闭 ${title}`}
-            title="关闭"
+            aria-label={`Close ${title}`}
+            title="Close"
             onClick={onClose}
             className="flex h-5 w-5 items-center justify-center rounded-full hover:brightness-90"
           >
@@ -150,8 +150,8 @@ export function WindowFrame({
           </button>
           <button
             type="button"
-            aria-label={`最小化 ${title}`}
-            title="最小化"
+            aria-label={`Minimize ${title}`}
+            title="Minimize"
             onClick={onMinimize}
             className="flex h-5 w-5 items-center justify-center rounded-full hover:brightness-90"
           >
@@ -159,8 +159,8 @@ export function WindowFrame({
           </button>
           <button
             type="button"
-            aria-label={`缩放 ${title}`}
-            title="缩放"
+            aria-label={`Zoom ${title}`}
+            title="Zoom"
             onClick={onZoom}
             className="flex h-5 w-5 items-center justify-center rounded-full hover:brightness-90"
           >

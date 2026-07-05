@@ -24,11 +24,11 @@ export function SkillCard({ skill, onOpen }: Props) {
           {skill.collection}
         </span>
         <span className="font-mono-heading rounded-[2px] border border-grid px-[7px] py-px text-[10px] text-stale">
-          {skill.license ?? "unknown(见上游)"}
+          {skill.license ?? "unknown (see upstream)"}
         </span>
         {skill.hasScripts && (
           <span className="font-mono-heading rounded-[2px] border border-warn px-[7px] py-px text-[10px] text-warn">
-            含 scripts/ · 装前浏览
+            has scripts/ · inspect first
           </span>
         )}
       </span>

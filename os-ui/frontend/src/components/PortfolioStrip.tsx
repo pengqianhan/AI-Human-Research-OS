@@ -54,18 +54,18 @@ export function PortfolioStrip({ entry }: Props) {
 
       <div className="cell border-l border-dashed border-grid p-3 px-4 max-[900px]:col-start-2 max-[900px]:border-l-0 max-[900px]:border-t">
         <div className="text-[12px] text-ink-soft">
-          owner <b className="font-medium text-ink">{entry.owner}</b> · 优先级{" "}
+          owner <b className="font-medium text-ink">{entry.owner}</b> · priority{" "}
           <b className="font-medium text-ink">{entry.priority}</b>
         </div>
         <div className="mt-1 text-[12px] text-ink-soft">{entry.status}</div>
         <div className="font-mono-heading mt-[5px] text-[10px] text-stale">
-          证据 {entry.evidence.source} · {relativeTime(entry.evidence.mtime)}
+          evidence {entry.evidence.source} · {relativeTime(entry.evidence.mtime)}
         </div>
       </div>
 
       <div className="cell border-l border-dashed border-grid p-3 px-4 max-[900px]:col-start-2 max-[900px]:border-l-0 max-[900px]:border-t">
         <div className="text-[12px] text-ink-soft">
-          评测器{" "}
+          evaluator{" "}
           {entry.evaluator === "n/a" ? (
             <Badge tone="mute">n/a</Badge>
           ) : (

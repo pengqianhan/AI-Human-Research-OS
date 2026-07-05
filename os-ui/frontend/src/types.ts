@@ -84,7 +84,7 @@ export interface GovernanceEntry {
 /**
  * Per-project Snapshot fields, field names per INSTRUCTION.md's convention.
  * Any field the generator could not find in PROJECT_MEMORY.md is null —
- * the UI must render "未填写" (not filled in) rather than invent a value.
+ * the UI must render "not filled in" rather than invent a value.
  */
 export interface ProjectSnapshot {
   owner: string | null;
