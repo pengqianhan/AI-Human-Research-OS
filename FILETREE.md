@@ -10,7 +10,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
-- `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, and vendored science-skills. <!--hash:5ef6775e-->
+- `Research-skills-hub/` - Canonical hub of reusable research skills: original Open Paper skills, collected skills, Claude Science skills, and vendored science-skills. <!--hash:8d41982c-->
 - `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:8d4f9a33-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
@@ -56,7 +56,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Research-skills-hub/
 
-- `index.md` - Index of the Research Skills Hub: links to skill collections, provenance boundaries, and install procedure. <!--hash:c0563802-->
+- `index.md` - Index of the Research Skills Hub: links to skill collections, provenance boundaries, and install procedure. <!--hash:1fef0540-->
 
 ## Resource/
 
