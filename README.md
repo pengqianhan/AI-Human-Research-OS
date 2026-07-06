@@ -96,7 +96,7 @@ keeps per-skill upstream attribution and license terms.
 
 ## Reference projects
 
-- [AutoR](https://github.com/AutoX-AI-Labs/AutoR)
+- [AutoR](https://github.com/AutoX-AI-Labs/AutoR): [code](Resource/AutoR)
 - [autolab](https://github.com/autolabhq/autolab)
 - [eve](https://github.com/vercel/eve)
 - [maka-agent](https://github.com/jackwener/maka-agent)
@@ -104,3 +104,4 @@ keeps per-skill upstream attribution and license terms.
 - [duoduo](https://github.com/openduo/duoduo)
 - [FAROS](https://github.com/OpenNSWM-Lab/FAROS/tree/main)
 - [science-skills](https://github.com/JimLiu/science-skills)
+- [openscience](https://github.com/synthetic-sciences/openscience)
