@@ -22,10 +22,8 @@ Usage examples:
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#   "science-skills-common",
+#   "polite-http",
 # ]
-# [tool.uv.sources]
-# science-skills-common = { path = "../../science_skills_common" }
 # ///
 
 from __future__ import annotations
@@ -38,16 +36,20 @@ import sys
 import urllib.parse
 import xml.etree.ElementTree as ET
 
-from science_skills.science_skills_common import http_client
+from polite_http import http_client
 
 _API_BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
 _PDF_BASE = "https://europepmc.org/"
 
 _API_CLIENT = http_client.HttpClient(
-    _API_BASE, qps=1.0, referer_skill="literature-search-europepmc"
+    _API_BASE,
+    qps=1.0,
+    referer="https://github.com/google-deepmind/science-skills/tree/main/literature-search-europepmc",
 )
 _PDF_CLIENT = http_client.HttpClient(
-    _PDF_BASE, qps=1.0, referer_skill="literature-search-europepmc"
+    _PDF_BASE,
+    qps=1.0,
+    referer="https://github.com/google-deepmind/science-skills/tree/main/literature-search-europepmc",
 )
 
 

@@ -56,7 +56,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Research-skills-hub/
 
-- `index.md` - Index of the Research Skills Hub: links to skill collections, provenance boundaries, and install procedure. <!--hash:1fef0540-->
+- `index.md` - Index of the Research Skills Hub: links to skill collections, provenance boundaries, and install procedure. <!--hash:1b2a7179-->
 
 ## Resource/
 

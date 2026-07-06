@@ -10,4 +10,5 @@
 
 # Source
 
-* [LICENSE](LICENSE) - Apache-2.0 license; skills vendored from google-deepmind/science-skills.
+* Upstream: [google-deepmind/science-skills `main`](https://github.com/google-deepmind/science-skills/tree/main).
+* License: upstream declares Apache-2.0 for software and CC-BY for other materials; preserve upstream license and terms when using or adapting these skills.
