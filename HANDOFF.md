@@ -191,7 +191,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| Orphan skills stay installed-only | The 3 skills present in `.claude/skills/` + `.agents/skills/` without a hub source (`session-handoff`, `filetree-simple`, `collected-skills-organizer`) are **intentionally not synced back to the hub**. D7's three-copy rule applies to hub-sourced skills only; the store UI shows orphans as `hub 无源`. | `install_research_skill.py sync-back <name> --from claude` for each, then remove this row |
+| Orphan skills stay installed-only | The 3 skills present in `.claude/skills/` + `.agents/skills/` without a hub source (`session-handoff`, `filetree-simple`, `skill-organizer`) are **intentionally not synced back to the hub**. D7's three-copy rule applies to hub-sourced skills only; the store UI shows orphans as `hub 无源`. | `install_research_skill.py sync-back <name> --from claude` for each, then remove this row |
 
 **Direction decisions (2026-07-04, user-set):**
 
