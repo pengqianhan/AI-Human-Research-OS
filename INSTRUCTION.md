@@ -114,15 +114,20 @@ lint check.
    disciplines or outputs such as books and blogs.
 3. **Reference intake**: keep two reference layers distinct. Durable, project-
    independent reading notes — one summary per paper, grouped into themes — live
-   in the repo-level [paper-library/](paper-library/) OKF library, maintained
-   with the `paper-library-manager` skill (per-paper notes in
-   [paper-library/papers/](paper-library/papers/), themes in
-   [paper-library/topics/](paper-library/topics/), graph in
-   `paper-library/viz.html`). Single-paper notes should start from the configured
+   in the repo-level [paper-wiki/](paper-wiki/) OKF paper wiki, maintained
+   with the `paper-wiki-manager` skill (per-paper notes in
+   [paper-wiki/papers/](paper-wiki/papers/), themes in
+   [paper-wiki/topics/](paper-wiki/topics/), entity pages for named
+   methods, datasets, benchmarks, metrics, terms, and tools in
+   [paper-wiki/concepts/](paper-wiki/concepts/), graph in
+   `paper-wiki/viz.html`). Single-paper notes should start from the configured
    minimal review profile; deeper reading is added only when a project question
    requires it. Topic pages are lightweight literature synthesis and research
    roadmaps, not mere tags; create or deepen them only when they help retrieval,
-   comparison, or next-step planning. Project-specific citations are appended as BibTeX
+   comparison, or next-step planning. Concept pages are for entities referenced
+   by two or more papers or durable field-level entities; a paper may point to
+   the projects that use it via an optional `# Used In Projects` section.
+   Project-specific citations are appended as BibTeX
    entries to `<Project>/paper/references.bib`. In both layers, fetch metadata
    with the literature-search skills and never invent fields; store PDFs and
    longer reading notes in a local project reference area when needed.

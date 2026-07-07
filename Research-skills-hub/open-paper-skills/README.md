@@ -17,6 +17,7 @@ at source commit `8f854bd`.
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Original workflow using AlphaXiv public endpoints |
 | [explain-anything-html](explain-anything-html/SKILL.md) | Produce a rich, self-contained interactive HTML explanation (background, intuition, walkthrough, quiz) of a paper, blog post, or hard concept. | Adapted from `explain-diff-html`, based on [Geoffrey Litt's original skill](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
 | [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) | Apply a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly. | Original skill, Pengqian Han; uses Andrej Karpathy's *CLAUDE.md* notes as attributed reference material |
+| [paper-wiki-manager](paper-wiki-manager/SKILL.md) | Maintain an OKF paper wiki with paper, topic, and concept pages, project links, graph visualization, and validation. | Original, Pengqian Han; supersedes `paper-library-manager` |
 | [research-skill-installer](research-skill-installer/SKILL.md) | Install, sync back, inspect, update, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
@@ -44,6 +45,8 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 - `research-bible`, `alphaxiv-paper-lookup`, `explain-anything-html`,
   `karpathy-coding-rules`, and `task-file-builder`: no additional local setup
   required.
+- `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
+  `hf` CLI is optional for faster paper fetching.
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
 - `drawio-paper`: requires Python with `matplotlib`, `numpy`, and `pillow` for
@@ -193,6 +196,24 @@ Example requests:
 /task-file-builder help me draft a task for refactoring the paper search pipeline
 /task-file-builder turn this bug report into a task.md
 /task-file-builder prepare a brief for a fresh Claude Code session
+```
+
+## paper-wiki-manager
+
+Maintains an OKF paper wiki (default root `paper-wiki/`): one Markdown page
+per paper, topic pages for research themes, and concept pages for named
+methods, datasets, benchmarks, metrics, terms, and tools — all bidirectionally
+linked, with optional links from papers to the repo projects that use them, a
+generated `viz.html` knowledge graph, and an executable validator. Supersedes
+`paper-library-manager`.
+
+Example requests:
+
+```text
+/paper-wiki-manager add https://arxiv.org/abs/2606.13662 to the paper wiki
+/paper-wiki-manager create a concept page for MLE-Bench Lite and link the papers that use it
+/paper-wiki-manager mark 2604.03964 as read and refresh its topic links
+/paper-wiki-manager validate the paper wiki and regenerate viz.html
 ```
 
 ## License

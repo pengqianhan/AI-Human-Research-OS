@@ -51,7 +51,7 @@ This OS should help agents quickly answer these questions:
 The following list describes the current design intent. Use the repository's actual paths as the source of truth, and fix naming inconsistencies in documentation when needed.
 
 - `Ideas/`: Stores research ideas, inspirations, hypotheses, early discussions, and idea logs.
-- `paper-library/`: Repo-level shared paper library for single-paper notes, topic synthesis, and `viz.html`. Project-specific citations live in each project's `paper/references.bib`.
+- `paper-wiki/`: Repo-level shared paper wiki for single-paper notes, topic synthesis, and `viz.html`. Project-specific citations live in each project's `paper/references.bib`.
 - `Memory/`: Stores long-term research memory, project memory, important background, and progress notes.
 - `projects-folder/`: Stores project instances and reusable project templates.
 - `projects-folder/templates/ai_research_template/`: Current template for starting an AI research paper project from a feasible idea.
@@ -77,7 +77,7 @@ Prefer documenting these workflows:
 - Which files a new agent session should read first, and in what order.
 - How a human should record a new idea in `Ideas/`.
 - How a feasible idea should be used to start a new research project or paper draft from `projects-folder/templates/ai_research_template/`.
-- How papers should enter the shared `paper-library/`, and how to update single-paper notes, topic synthesis, project-local BibTeX, and claim/evidence records.
+- How papers should enter the shared `paper-wiki/`, and how to update single-paper notes, topic synthesis, project-local BibTeX, and claim/evidence records.
 - Where to archive code, data, figures, baselines, and writing materials produced during research.
 - How research experience should be saved to `Memory/`, project-local `.agents` / `.claude`, or global `Research-skills-hub/`.
 - How the portfolio should be maintained in `Memory/MEMORY.md`, how project truth should live in `PROJECT_MEMORY.md`, and how `HANDOFF.md` should stay narrow.

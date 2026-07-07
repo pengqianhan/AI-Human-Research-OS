@@ -51,7 +51,7 @@
 以下是当前设计意图的参考。请以仓库中实际存在的路径为准，并在必要时修正文档中的命名不一致问题。
 
 - `Ideas/`：保存研究想法、灵感、假设、初步讨论和 idea 日志。
-- `paper-library/`：repo 级共享论文库，保存单篇论文笔记、topic synthesis 和 `viz.html`。项目特定引用放在项目内 `paper/references.bib`。
+- `paper-wiki/`：repo 级共享论文 wiki，保存单篇论文笔记、topic synthesis 和 `viz.html`。项目特定引用放在项目内 `paper/references.bib`。
 - `Memory/`：保存长期研究记忆、项目记忆、重要背景和阶段性进展。
 - `projects-folder/`：保存项目实例和 reusable project templates。
 - `projects-folder/templates/ai_research_template/`：从可行 idea 启动 AI research paper 项目的当前模板。
@@ -77,7 +77,7 @@
 - agent 新会话启动时应该读取哪些文件，以及读取顺序是什么。
 - 人类如何把一个新想法记录到 `Ideas/`。
 - 一个 idea 被判断为可行后，如何基于 `projects-folder/templates/ai_research_template/` 启动新的研究项目或论文草稿。
-- 论文如何进入共享 `paper-library/`，如何更新单篇笔记、topic synthesis、项目内 BibTeX 和 claim/evidence 记录。
+- 论文如何进入共享 `paper-wiki/`，如何更新单篇笔记、topic synthesis、项目内 BibTeX 和 claim/evidence 记录。
 - 研究过程中产生的代码、数据、图表、baseline、写作材料应该如何归档。
 - 研究经验如何沉淀到 `Memory/`、项目内 `.agents` / `.claude`，或全局 `Research-skills-hub/`。
 - portfolio 如何在 `Memory/MEMORY.md` 中维护，项目事实源如何放在 `PROJECT_MEMORY.md`，以及 `HANDOFF.md` 如何保持窄边界。

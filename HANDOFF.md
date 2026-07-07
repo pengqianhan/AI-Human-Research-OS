@@ -112,7 +112,7 @@ the math result is secondary. Decisions table: see "circle_packing kickoff decis
 - [ ] Verify provenance of best-known 2.63598844 with the literature-search skills; cite it in
       Evaluation Contract "Baselines or known best" (or record honestly as "taken from
       EurekAgent task definition, provenance unverified"). Add AlphaEvolve note to
-      [paper-library/papers/](paper-library/papers/) (minimal profile) + bib entry in project
+      [paper-wiki/papers/](paper-wiki/papers/) (minimal profile) + bib entry in project
       `paper/references.bib`. Bounded intake: 3–5 sources total, no new topic page.
 - [ ] Rounds 1–2 (single-threaded): baseline construction (grid/greedy) then one improvement
       round; artifacts under `Code/runs/<round-id>/`. Round wrap-up (manual, not yet a skill):
@@ -165,7 +165,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Decision | Default taken | To reverse |
 |---|---|---|
 | What is this OS primarily? | Treat it as a **file-system-native environment for long-horizon human-agent research**. The human user's own research practice is primary; reusable open-source templates are a byproduct; product/platform possibilities stay future-compatible but do not drive current complexity. | Reposition README/INSTRUCTION around an external product or template-first project, then revisit CLI/UI/database needs explicitly. |
-| Paper library boundary | Shared paper understanding lives in `paper-library/papers/` and `paper-library/topics/`; project-specific use of a paper lives in the project (`references.bib`, `paper_skeleton.md`, `PROJECT_MEMORY.md`). | Allow full project-local copies of paper notes, accepting duplicate-note drift. |
+| Paper library boundary | Shared paper understanding lives in `paper-wiki/papers/` and `paper-wiki/topics/`; project-specific use of a paper lives in the project (`references.bib`, `paper_skeleton.md`, `PROJECT_MEMORY.md`). | Allow full project-local copies of paper notes, accepting duplicate-note drift. |
 | Topic pages | Topic pages are lightweight synthesis and research roadmaps, not mere tags or exhaustive surveys. | Downgrade topics to index-only pages, or promote them into full survey documents with a separate maintenance policy. |
 | Experience promotion | Project-only facts stay in project memory; cross-project principles go to global memory; repeatable procedures become skills only when another project agent can execute them without local context. | Skill-ify more aggressively, accepting skill-library churn and validation overhead. |
 | Agent-led research | Default `agent_led_research` is **`off`**. Optional modes are `scout_only` and `full_gated`; full gated agent-led work uses `scout → probe → develop → archived/passed`. | Change the value in `Memory/MEMORY.md` and add budget/evaluator controls before running agent-led projects. |
@@ -183,7 +183,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Execution model | Phased hybrid: rounds 1–2 single-threaded; round 3+ one deliberate parallel round via `Tasks/<approach-id>/` (≤ 3 approaches, same frozen evaluator ranks, merge winner only) | All-sequential (defer `Tasks/` test to a later project) or EurekAgent-style parallel from round 1 |
 | Evaluator protection | Tier 2: freeze after self-tests + project-local `.claude/settings.json` deny rules on `Code/evaluator/**` and `runs/**/result.json`; scores only from evaluator-written files | Tier 1 (convention only) or tier 3 (PreToolUse hook script) — escalate to 3 only on an observed bypass, recorded as an OS lesson |
 | OS friction capture | `## OS Feedback` section in project `PROJECT_MEMORY.md`, fixed one-line format, mandatory entry (or explicit "none") every round; survivors promoted at phase ends | Ad-hoc progress-log notes, or logging straight into global memory (rejected: pollutes ≤200-line budget) |
-| Literature scope | Bounded: 3–5 sources; 1–2 paper-library notes (minimal profile, AlphaEvolve first); no new topic page until ≥ 3 related notes; provenance of 2.63598844 must be verified or honestly flagged | Skip paper-library entirely (bib-only) or run a fuller packing-literature survey |
+| Literature scope | Bounded: 3–5 sources; 1–2 paper-wiki notes (minimal profile, AlphaEvolve first); no new topic page until ≥ 3 related notes; provenance of 2.63598844 must be verified or honestly flagged | Skip paper-wiki entirely (bib-only) or run a fuller packing-literature survey |
 | Artifact-level review | Exactly two: mid-term hard-check review after the parallel round; final full review (hard checks + rubric + LLM critique) after `main.tex`. Reviewer = fresh read-only agent session; reports in project `Evaluations/` | Single final review, or per-round reviews (rejected: cost without new signal) |
 | Leaf defaults | Full idea→project path via `Ideas/`; lowercase project name; commits on `main` per round; `paper_skeleton.md` live from round 1, `main.tex` after stop condition; round wrap-up **not** skill-ified before round 3; two OS back-port batches | Each independently reversible; see Active Work items |
 
@@ -201,6 +201,15 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Document layering | `GOAL.md` = direction layer (north star); `task.md`/`task_en.md` = operation-layer construction guides; GOAL's milestones are the current work program (task.md's deliverables list belongs to the completed 2026-06 normalization). GOAL is revised only by the human or human-confirmed proposals. | Merge GOAL.md content into task.md and delete the file |
 | Monitor-UI gate opened (read-only only) | Human authorized a **read-only monitor UI** (2026-07-04 grilling session): `os-ui/` = Python generator → schema-versioned `state.json` (gitignored) → static Vite/React frontend; 3 pages (dashboard / project / skills store); derived status only (no heartbeat; slot reserved with lease semantics); store shelves hub skills only; install = copy command. Design in [os-ui/DESIGN.md](os-ui/DESIGN.md), visual spec in [os-ui/mockup.html](os-ui/mockup.html). **This supersedes GOAL.md M4's evidence precondition for the read-only monitor UI only** (GOAL.md M4 annotated accordingly); the execution surface, SSE/resident services stay behind M4 (evidence + per-item human confirmation). | `rm -rf os-ui/`, remove this row + the Active Work entry, and drop the M4 exception note in GOAL.md; the OS has no dependency on os-ui |
 
+**Paper-wiki decisions (2026-07-07, user-confirmed):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Skill rename | `paper-library-manager` → **`paper-wiki-manager`** in `Research-skills-hub/open-paper-skills/` and both installs (`.claude/skills/`, `.agents/skills/`); old skill removed everywhere; hub index/README, INSTRUCTION.md reference-intake, and README roadmap item checked off accordingly | `mv` the hub dir back, revert SKILL.md/schema/scripts naming, `install_research_skill.py remove paper-wiki-manager --yes` + reinstall old name, revert doc references |
+| Wiki data root | ~~Keep `paper-library/` as the bundle root~~ **— superseded 2026-07-07 (user request): renamed to `paper-wiki/`.** Skill default root, config asset (now `assets/paper-wiki.toml`), validator script (now `scripts/validate_paper_wiki.py`), INSTRUCTION.md, README, task.md/task_en.md, and FILETREE.md all updated; wiki re-validated after the rename | `mv paper-wiki paper-library` and revert the path/name updates in the skill and docs |
+| Concept entity pages | New third collection `paper-wiki/concepts/` with `type` ∈ Method/Dataset/Benchmark/Metric/Term/Tool; body needs `# Definition` + `# Papers`; create only for entities referenced by ≥ 2 papers, durable field-level entities, or on user request — **not** for a method only its own paper describes. Validator enforces fields, sections, `concepts/index.md`, and bidirectional paper↔concept links | Delete `concepts/` and revert the validator/schema/SKILL.md concept sections (single hub commit) |
+| Paper→project links | Optional `# Used In Projects` paper-body section links a project's `index.md` (must end in `.md` — the validator skips bare-directory links); target existence checked, no project backlink required. The 2026-07-03 "Paper library boundary" decision stands: the wiki stores only the pointer, project-specific use stays in the project | Drop the section from schema/SKILL.md and remove any such sections from paper pages |
+
 ## Deviations from the original plan
 
 - **Build runs in place from `paper/`** — `main.tex` writes `paper/main.pdf` and reads
@@ -215,8 +224,9 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 ## Intentionally not done
 
-- **README roadmap features** (paper-wiki, read_paper workflow, group-meeting workspace, CLI,
-  deterministic-read bash hooks) — roadmap, not normalization; several need explicit confirmation.
+- **README roadmap features** (read_paper workflow, group-meeting workspace, CLI,
+  deterministic-read bash hooks) — roadmap, not normalization; several need explicit
+  confirmation. The paper-wiki item was implemented 2026-07-07 (see Paper-wiki decisions).
 - **Archive copy of the original 2026-06 task prompt** — not created. If needed later, recover it
   from git history instead of keeping a duplicate live file.
 - **Root `Templates/` container** — deferred until a second project template exists.

@@ -8,7 +8,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
-- `paper-library/` - OKF-style paper library: paper and topic notes, indexes, and a generated graph visualization (viz.html). <!--hash:ce8d5022-->
+- `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, indexes, and a generated graph visualization (viz.html). <!--hash:3b019e81-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, and claude-science-skills (JimLiu bundle plus AcademicForge skills). <!--hash:d94ab5de-->
 - `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:8d4f9a33-->
@@ -16,12 +16,12 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:9a065f26-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:da608758-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:8760f31b-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:235a0e81-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:fdbf3370-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
-- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:a027e1e6-->
-- `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:2bc390ed-->
-- `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:e148560e-->
+- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:0af1fcb5-->
+- `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:3687fae6-->
+- `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:1645f4f0-->
 
 ## Human/
 
@@ -70,26 +70,34 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `frontend/` - Vite + React + TypeScript read-only desktop UI: dock plus draggable app windows rendering state.json, with an English frontend README. <!--hash:43a0a270-->
 - `generator/` - Stdlib-only Python generator (uv) that scans the repo into schema-versioned state.json; supports --watch polling. <!--hash:7164b96b-->
 
-## paper-library/
+## paper-wiki/
 
-- `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:cb1f547a-->
-- `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:c853119c-->
-- `index.md` - Top-level entry point linking to the papers and topics indexes of the paper library. <!--hash:63e89e83-->
-- `viz.html` - Generated interactive graph visualization of the paper library (papers, topics, and their links). <!--hash:3666f5c1-->
+- `concepts/` - Concept entity pages naming methods, datasets, benchmarks, metrics, terms, and tools referenced across papers. <!--hash:7178e9b2-->
+- `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:6a927189-->
+- `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:ab46f887-->
+- `index.md` - Wiki home linking the papers, topics, and concepts indexes of the paper wiki. <!--hash:841d366d-->
+- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:cc361a75-->
 
-## paper-library/papers/
+## paper-wiki/concepts/
+
+- `index.md` - Index of concept entity pages with one-line descriptions. <!--hash:7f1505be-->
+- `llm-as-a-judge.md` - Term page: LLM-as-a-judge evaluation, defining the technique and linking papers that rely on it. <!--hash:cf72f061-->
+- `mle-bench-lite.md` - Benchmark page: MLE-Bench Lite, linking papers reporting any-medal results on it. <!--hash:458774c4-->
+- `swe-bench-verified.md` - Benchmark page: SWE-bench Verified, linking papers reporting repository-level issue-resolution results. <!--hash:d0c04e3e-->
+
+## paper-wiki/papers/
 
 - `2604.03964.md` - Paper note: SkillFoundry, a self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill libraries. <!--hash:4c9f5362-->
-- `2605.22721.md` - Paper note: Self-Evolving Multi-Agent Systems via Decentralized Memory (DecentMem). <!--hash:c9fb039d-->
+- `2605.22721.md` - Paper note: Self-Evolving Multi-Agent Systems via Decentralized Memory (DecentMem). <!--hash:133f8121-->
 - `2605.28655.md` - Paper note: AutoScientists, self-organizing agent teams for long-running scientific experimentation. <!--hash:af7b1562-->
 - `2605.31464.md` - Paper note: GPU Forecasters, LLM surrogates that forecast GPU kernel performance to speed up kernel search. <!--hash:d1150252-->
 - `2606.06741.md` - Paper note: OpenSkill, open-world self-evolution for LLM agents via self-built skills and verification. <!--hash:e4650a67-->
-- `2606.10662.md` - Paper note: decentralized multi-agent systems coordinating through shared verified context. <!--hash:c783e703-->
-- `2606.11926.md` - Paper note: Arbor, hypothesis-tree refinement for long-horizon autonomous research and artifact optimization. <!--hash:3353b76b-->
-- `2606.13662.md` - Paper note: EurekAgent, environment engineering for metric-driven autonomous scientific discovery with CLI agents. <!--hash:38a4b9a2-->
+- `2606.10662.md` - Paper note: decentralized multi-agent systems coordinating through shared verified context. <!--hash:795be480-->
+- `2606.11926.md` - Paper note: Arbor, hypothesis-tree refinement for long-horizon autonomous research and artifact optimization. <!--hash:f42f851f-->
+- `2606.13662.md` - Paper note: EurekAgent, environment engineering for metric-driven autonomous scientific discovery with CLI agents. <!--hash:7d873772-->
 - `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:5041c89a-->
 
-## paper-library/topics/
+## paper-wiki/topics/
 
 - `agent-environments.md` - Topic: environments, permissions, artifacts, budgets, and interfaces that shape agent behavior. <!--hash:a42cb900-->
 - `agent-self-evolution.md` - Topic: agents that improve their own skills, verification signals, or behavior after deployment. <!--hash:df07eb44-->
