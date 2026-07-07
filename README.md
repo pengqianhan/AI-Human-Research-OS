@@ -135,3 +135,4 @@ keeps per-skill upstream attribution and license terms.
 - [FAROS](https://github.com/OpenNSWM-Lab/FAROS/tree/main)
 - [science-skills](https://github.com/JimLiu/science-skills)
 - [openscience](https://github.com/synthetic-sciences/openscience)
+- [How to Make Codebases AI Agents Love](https://www.aihero.dev/how-to-make-codebases-ai-agents-love)
