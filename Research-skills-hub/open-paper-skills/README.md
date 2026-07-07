@@ -15,6 +15,7 @@ at source commit `8f854bd`.
 | [research-bible](research-bible/SKILL.md) | Turn research-practice principles into concrete ML/AI research plans, experiment loops, logs, and debugging habits. | Original, Pengqian Han |
 | [drawio-paper](drawio-paper/SKILL.md) | Generate publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline. | Original; uses PaperBananaBench as an external reference dataset |
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Original workflow using AlphaXiv public endpoints |
+| [explain-anything-html](explain-anything-html/SKILL.md) | Produce a rich, self-contained interactive HTML explanation (background, intuition, walkthrough, quiz) of a paper, blog post, or hard concept. | Adapted from `explain-diff-html`, based on [Geoffrey Litt's original skill](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
 | [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) | Apply a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly. | Original skill, Pengqian Han; uses Andrej Karpathy's *CLAUDE.md* notes as attributed reference material |
 | [research-skill-installer](research-skill-installer/SKILL.md) | Install, sync back, inspect, update, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
@@ -40,8 +41,9 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 
 ## Prerequisites
 
-- `research-bible`, `alphaxiv-paper-lookup`, `karpathy-coding-rules`, and
-  `task-file-builder`: no additional local setup required.
+- `research-bible`, `alphaxiv-paper-lookup`, `explain-anything-html`,
+  `karpathy-coding-rules`, and `task-file-builder`: no additional local setup
+  required.
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
 - `drawio-paper`: requires Python with `matplotlib`, `numpy`, and `pillow` for
@@ -114,6 +116,27 @@ Example requests:
 ```text
 /alphaxiv-paper-lookup summarize 2401.12345
 /alphaxiv-paper-lookup explain https://arxiv.org/abs/2401.12345
+```
+
+## explain-anything-html
+
+Produces a single self-contained HTML file that deeply explains a paper, blog
+post, article, documentation, or hard concept. The output is one long,
+responsive page with a table of contents and four sections: **Background**
+(deep for beginners, then narrow), **Intuition** (core idea with toy examples
+and HTML diagrams), **Walkthrough** (methods, arguments, results), and an
+interactive multiple-choice **Quiz**.
+
+The file is written outside the code repo with a `YYYY-MM-DD-` filename prefix
+so explanations stay time-sorted and out of version control (e.g.
+`/tmp/2026-01-12-explanation-<slug>.html`).
+
+Example requests:
+
+```text
+/explain-anything-html explain this paper: https://arxiv.org/abs/2401.12345
+help me understand this blog post
+break down the intuition behind diffusion models
 ```
 
 ## karpathy-coding-rules
