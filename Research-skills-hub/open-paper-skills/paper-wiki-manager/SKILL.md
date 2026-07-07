@@ -193,7 +193,15 @@ If your environment provides a skill validator, run it against this skill folder
 
 `paper-wiki/viz.html` is required. Use `viz.html` as the canonical filename; treat `vis.html` as a typo unless the user explicitly asks for a separate alias.
 
-`scripts/generate_viz.py` renders the same Cytoscape graph + detail-pane viewer as the OKF reference (`enrichment_agent.viewer`) by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, and `scripts/static/viz.js`. Keep those sibling asset files alongside the script so the generated `viz.html` stays format-consistent with okf bundle viewers; only the bundle name and graph data differ. Papers, topics, and each concept type get distinct node colors.
+`scripts/generate_viz.py` renders a self-contained Cytoscape graph + detail-pane viewer by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, `scripts/static/viz.js`, and the vendored libraries in `scripts/vendor/`. Keep all of these alongside the script; the generated `viz.html` inlines the vendored libraries so it works fully offline (no CDN). Papers, topics, and each concept type get distinct node colors. The viewer UI and text are English.
+
+The viewer is a paper-wiki knowledge map, not a flat force graph:
+
+* **Collapsed by default.** It opens showing only topics and concepts on a deterministic grid (same layout every time), each labelled with its paper count. Papers stay hidden until a topic is opened, so the first view is a readable index rather than a hairball.
+* **Expand on demand.** Double-clicking a topic (or the "Expand N papers" button in the detail pane) fans that topic's papers around it without moving the other topics. "Expand all" runs the fcose force layout to lay out the whole clustered map; "Collapse all" and "Reset view" return to the grid.
+* **Focus.** Clicking any node highlights it and its direct neighbors and dims the rest; the type legend (top-left) filters to one type; search reveals matching hidden papers.
+
+These are viewer behaviors baked into the bundled assets — regenerating `viz.html` is all that is needed to pick up viewer changes; no per-paper edits are involved.
 
 ## Comparison Tasks
 

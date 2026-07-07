@@ -16,7 +16,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:9a065f26-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:235a0e81-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:604673d0-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:fdbf3370-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:0af1fcb5-->
@@ -76,7 +76,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:6a927189-->
 - `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:ab46f887-->
 - `index.md` - Wiki home linking the papers, topics, and concepts indexes of the paper wiki. <!--hash:841d366d-->
-- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:cc361a75-->
+- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:af3f1a0a-->
 
 ## paper-wiki/concepts/
 

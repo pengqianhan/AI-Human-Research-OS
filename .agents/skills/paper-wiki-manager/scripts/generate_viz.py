@@ -39,11 +39,22 @@ TYPE_PALETTE = {
 }
 DEFAULT_NODE_COLOR = "#64748b"
 
-# Injection markers used by templates/viz.html (kept identical to the okf viewer).
+# Injection markers used by templates/viz.html.
 _CSS_MARKER = "/*__VIZ_CSS__*/"
 _JS_MARKER = "/*__VIZ_JS__*/"
+_LIBS_MARKER = "/*__VIZ_LIBS__*/"
 _NAME_MARKER = "__BUNDLE_NAME__"
 _DATA_MARKER = "__BUNDLE_DATA__"
+
+# Vendored viewer libraries, inlined so viz.html works fully offline.
+# Load order matters: layout-base and cose-base are dependencies of fcose.
+_VENDOR_LIBS = [
+    "cytoscape.min.js",
+    "layout-base.js",
+    "cose-base.js",
+    "cytoscape-fcose.js",
+    "marked.min.js",
+]
 
 
 @dataclass
@@ -232,12 +243,22 @@ def _load_asset(name: str) -> str:
     return (Path(__file__).parent / "static" / name).read_text(encoding="utf-8")
 
 
+def _load_libs() -> str:
+    vendor = Path(__file__).parent / "vendor"
+    return "\n;\n".join(
+        (vendor / name).read_text(encoding="utf-8") for name in _VENDOR_LIBS
+    )
+
+
 def _render_html(bundle_name: str, graph: dict[str, Any]) -> str:
     template = _load_template()
     css = _load_asset("viz.css")
     js = _load_asset("viz.js")
+    libs = _load_libs()
+    # Inject libraries first so a marker never lands inside library source.
     return (
-        template.replace(_CSS_MARKER, css)
+        template.replace(_LIBS_MARKER, libs)
+        .replace(_CSS_MARKER, css)
         .replace(_JS_MARKER, js)
         .replace(_NAME_MARKER, json.dumps(bundle_name, ensure_ascii=False))
         .replace(_DATA_MARKER, json.dumps(graph, ensure_ascii=False))
