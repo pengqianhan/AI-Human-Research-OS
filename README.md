@@ -1,12 +1,25 @@
 # AI-Human Research OS
-"Be Water, My Friend.
-Empty your mind.
-Be formless, shapeless, like water.
-You put water into a cup, it becomes the cup.
-You put water into a bottle, it becomes the bottle.
-You put it into a teapot, it becomes the teapot.
-Now water can flow or it can crash.
-Be water, my friend." -BruceLee
+
+> "Be Water, My Friend.
+> Empty your mind.
+> Be formless, shapeless, like water.
+> You put water into a cup, it becomes the cup.
+> You put water into a bottle, it becomes the bottle.
+> You put it into a teapot, it becomes the teapot.
+> Now water can flow or it can crash.
+> Be water, my friend."
+>
+> — Bruce Lee
+
+An agent is like water: it has no fixed form, and takes on the abilities of
+whatever container holds it. This repository is a container shaped for agents —
+a stable environment that lets a code agent flow into long-horizon research and
+do its best work.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Agents: Claude Code · Codex](https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex-blue.svg)](#quick-start)
+[![No DB · No server · No CLI](https://img.shields.io/badge/stack-folders%20%2B%20conventions-lightgrey.svg)](#core-directories)
+
 A lightweight, folder-based research operating system for humans working with
 code agents such as Codex and Claude Code. The agent is the execution core; the
 human steers in natural language. There is no database, server, or CLI — just a
@@ -16,6 +29,16 @@ support long-term, iterative research with low token cost.
 The folder structure is intentionally simple and non-linear. Research ideas,
 references, experiments, figures, and writing often update each other, so the
 folders are organized by material type rather than by a fixed workflow.
+
+## Table of Contents
+
+- [Current Design Stance](#current-design-stance)
+- [Quick Start](#quick-start)
+- [Core Directories](#core-directories)
+- [Minimal Workflow](#minimal-workflow)
+- [License](#license)
+- [Roadmap](#roadmap-original-todo-list)
+- [Reference Projects](#reference-projects)
 
 ## Current Design Stance
 
@@ -101,7 +124,7 @@ keeps per-skill upstream attribution and license terms.
 - [ ] The final goal of the repo is to build a Research OS.
 - [ ] add interface according to [AlookAI](https://github.com/alookai/alook) and [Wanman](https://github.com/chekusu/wanman)
 
-## Reference projects
+## Reference Projects
 
 - [AutoR](https://github.com/AutoX-AI-Labs/AutoR): [code](Resource/AutoR)
 - [autolab](https://github.com/autolabhq/autolab)
