@@ -93,14 +93,14 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## paper-wiki/papers/
 
-- `2604.03964.md` - Paper note: SkillFoundry, a self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill libraries. <!--hash:4c9f5362-->
-- `2605.22721.md` - Paper note: Self-Evolving Multi-Agent Systems via Decentralized Memory (DecentMem). <!--hash:133f8121-->
-- `2605.28655.md` - Paper note: AutoScientists, self-organizing agent teams for long-running scientific experimentation. <!--hash:af7b1562-->
-- `2605.31464.md` - Paper note: GPU Forecasters, LLM surrogates that forecast GPU kernel performance to speed up kernel search. <!--hash:d1150252-->
-- `2606.06741.md` - Paper note: OpenSkill, open-world self-evolution for LLM agents via self-built skills and verification. <!--hash:e4650a67-->
-- `2606.10662.md` - Paper note: decentralized multi-agent systems coordinating through shared verified context. <!--hash:795be480-->
-- `2606.11926.md` - Paper note: Arbor, hypothesis-tree refinement for long-horizon autonomous research and artifact optimization. <!--hash:f42f851f-->
-- `2606.13662.md` - Paper note: EurekAgent, environment engineering for metric-driven autonomous scientific discovery with CLI agents. <!--hash:7d873772-->
+- `2604.03964.md` - Paper note: SkillFoundry, a self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill libraries. <!--hash:c91c9c41-->
+- `2605.22721.md` - Paper note: Self-Evolving Multi-Agent Systems via Decentralized Memory (DecentMem). <!--hash:73316a45-->
+- `2605.28655.md` - Paper note: AutoScientists, self-organizing agent teams for long-running scientific experimentation. <!--hash:38d77a69-->
+- `2605.31464.md` - Paper note: GPU Forecasters, LLM surrogates that forecast GPU kernel performance to speed up kernel search. <!--hash:74b18429-->
+- `2606.06741.md` - Paper note: OpenSkill, open-world self-evolution for LLM agents via self-built skills and verification. <!--hash:e8a4b288-->
+- `2606.10662.md` - Paper note: decentralized multi-agent systems coordinating through shared verified context. <!--hash:1c72f720-->
+- `2606.11926.md` - Paper note: Arbor, hypothesis-tree refinement for long-horizon autonomous research and artifact optimization. <!--hash:87f46f44-->
+- `2606.13662.md` - Paper note: EurekAgent, environment engineering for metric-driven autonomous scientific discovery with CLI agents. <!--hash:3581df4a-->
 - `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:5041c89a-->
 
 ## paper-wiki/topics/

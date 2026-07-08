@@ -21,13 +21,9 @@ title: Paper title
 description: One sentence summary for indexes and search.
 resource: https://arxiv.org/abs/<arxiv_id>
 arxiv_id: "<arxiv_id>"
-pdf_url: https://arxiv.org/pdf/<arxiv_id>
-doi: https://doi.org/10.48550/arXiv.<arxiv_id>
 authors:
 - Author One
 submitted: YYYY-MM-DD
-subjects:
-- cs.AI
 tags:
 - short-topic-tag
 status: unread
@@ -36,7 +32,14 @@ timestamp: YYYY-MM-DDTHH:MM:SSZ
 ---
 ```
 
-Optional fields:
+Keep the frontmatter lean: `arxiv_id` is the paper's key, and `resource`
+(`https://arxiv.org/abs/<arxiv_id>`) is the one canonical link kept because the
+viewer and generic OKF tools consume it. Do not store `pdf_url` or `doi` — both
+are pure functions of `arxiv_id`, so derive them on demand instead of
+denormalizing them into every file. `subjects` (arXiv categories) is likewise
+omitted by default; add it only if a task needs category filtering.
+
+Optional fields (add only when they carry real information):
 
 ```yaml
 project_url: https://example.com

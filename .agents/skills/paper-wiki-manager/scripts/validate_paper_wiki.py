@@ -29,8 +29,6 @@ PAPER_REQUIRED = {
     "description",
     "resource",
     "arxiv_id",
-    "pdf_url",
-    "doi",
     "authors",
     "submitted",
     "tags",
