@@ -83,7 +83,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `sources/` - Non-paper reading (blogs, docs, talks) captured with the experimental synthesis-source lens. <!--hash:aa7ddbc7-->
 - `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:ab46f887-->
 - `index.md` - Wiki home linking the papers, topics, concepts, and sources indexes of the paper wiki. <!--hash:4f04fdb1-->
-- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:2d368bd8-->
+- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:db9ae599-->
 
 ## paper-wiki/concepts/
 
@@ -107,7 +107,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## paper-wiki/sources/
 
 - `index.md` - Index of non-paper reading sources. <!--hash:a96e332b-->
-- `llm-powered-autonomous-agents.md` - Reference note: Lilian Weng's synthesis of LLM-agent architecture — planning, memory, tool use, case studies, and open challenges. <!--hash:dfa311f6-->
+- `llm-powered-autonomous-agents.md` - Reference note: Lilian Weng's synthesis of LLM-agent architecture — planning, memory, tool use, case studies, and open challenges. <!--hash:8e812bdb-->
 
 ## paper-wiki/topics/
 

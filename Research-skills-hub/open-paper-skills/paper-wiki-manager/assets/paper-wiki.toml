@@ -48,8 +48,8 @@ recommended_sections = [
 "Q9 Contributions" = "The paper's solid contributions: what knowledge is actually advanced."
 "Q10 Next Steps" = "Limitations of the proposed method and the future research they motivate, including new directions or links to other knowledge (the creative part)."
 "Overview" = "What the source covers, why it matters, and its one-line thesis; note that it synthesizes others' work rather than presenting original experiments."
-"Framework" = "The organizing taxonomy or structure the source proposes, which is the main value of a synthesis piece."
-"Key Techniques" = "The named methods, tools, or ideas the source surveys, grouped by the framework branches."
+"Framework" = "The organizing taxonomy or structure the source proposes, which is the main value of a synthesis piece; explain what each branch is for, not just its name."
+"Key Techniques" = "The named methods, tools, or ideas the source surveys, grouped by the framework branches. Give load-bearing techniques 2-4 sentences each (problem, mechanism, key insight) so the note stands alone without the source; keep peripheral ones to one line. A map of names is too thin."
 "Case Studies" = "Concrete example systems or applications the source discusses."
 "Takeaways" = "Reader-owned notes on what to carry into one's own research."
 
