@@ -4,6 +4,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## (root)/
 
+- `docs/` - Narrative and presentation drafts about the Research OS. <!--hash:14b16388-->
 - `Human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:d1579e96-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
@@ -17,11 +18,12 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:9a065f26-->
 - `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:604673d0-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:fdbf3370-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:c6d2f68f-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:0af1fcb5-->
 - `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:3687fae6-->
 - `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:1645f4f0-->
+- `verify.sh` - Read-only, agent-neutral consistency check: paper-wiki validator, FILETREE lint, and three-copy skill-sync diff; reports drift without fixing. <!--hash:e576a400-->
 
 ## Human/
 
@@ -64,6 +66,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `EurekAgent-讲解与启发.md` - Walk-through of EurekAgent environment engineering for metric-driven research loops and lessons for evaluation contracts, artifacts, budgets, and snapshots. <!--hash:6f8be23b-->
 - `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:b29b39d9-->
 - `并行-自进化-经验共享-调研与启发.md` - GitHub survey note on parallel execution, self-evolution, and cross-agent experience sharing, with borrowing points and a recommended rollout path. <!--hash:3b4a09f0-->
+
+## docs/
+
+- `presentAHROS.md` - Narrative draft on the OS's motivation and design: manual paper reading to an agent-friendly OKF environment, skills hub, and orchestrator. <!--hash:c5701e64-->
 
 ## os-ui/
 

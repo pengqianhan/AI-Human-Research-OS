@@ -292,3 +292,8 @@ versioning system, or CLI for plugins.
 7. Ask before deleting or rewriting user-provided research materials.
 8. Prefer small, reversible changes. Avoid adding heavyweight structure unless the
    task clearly requires it.
+9. Before finishing a change that touches `paper-wiki/`, an installed skill, or an
+   indexed doc, run [`./verify.sh`](verify.sh) from the repo root. It is a read-only,
+   agent-neutral consistency check (paper-wiki validator, `FILETREE.md` lint, and the
+   three-copy skill-sync diff). It reports drift; it does not fix it — resolve any
+   reported item before committing.
