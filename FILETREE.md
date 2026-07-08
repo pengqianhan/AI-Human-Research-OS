@@ -11,7 +11,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, non-paper sources, indexes, and a generated graph visualization (viz.html). <!--hash:0d0a0b2f-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
-- `Research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, and claude-science-skills (JimLiu bundle plus AcademicForge skills). <!--hash:d94ab5de-->
+- `Research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, claude-science-skills, and the read-only mattpocock-skills upstream mirror. <!--hash:e1002422-->
 - `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:8d4f9a33-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
@@ -20,7 +20,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:3bf6b99e-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:c6d2f68f-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
-- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:0af1fcb5-->
+- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:de55f870-->
 - `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:3687fae6-->
 - `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:1645f4f0-->
 - `verify.sh` - Read-only, agent-neutral consistency check: paper-wiki validator, FILETREE lint, and three-copy skill-sync diff; reports drift without fixing. <!--hash:e576a400-->
@@ -58,7 +58,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Research-skills-hub/
 
-- `index.md` - Hub index linking skill collections (science-skills, open-paper-skills, collected-skills, claude-science-skills) and install steps. <!--hash:92e8d955-->
+- `index.md` - Hub index linking skill collections (science-skills, open-paper-skills, collected-skills, mattpocock-skills, claude-science-skills) and install steps. <!--hash:1f49d9d5-->
 
 ## Resource/
 
