@@ -9,7 +9,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
 - `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
-- `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, indexes, and a generated graph visualization (viz.html). <!--hash:3b019e81-->
+- `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, non-paper sources, indexes, and a generated graph visualization (viz.html). <!--hash:0d0a0b2f-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `Research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, and claude-science-skills (JimLiu bundle plus AcademicForge skills). <!--hash:d94ab5de-->
 - `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:8d4f9a33-->
@@ -17,7 +17,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:9a065f26-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:604673d0-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:3bf6b99e-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:c6d2f68f-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:0af1fcb5-->
@@ -80,9 +80,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `concepts/` - Concept entity pages naming methods, datasets, benchmarks, metrics, terms, and tools referenced across papers. <!--hash:7178e9b2-->
 - `papers/` - Individual paper notes (one Markdown file per arXiv paper) plus an index of all papers. <!--hash:6a927189-->
+- `sources/` - Non-paper reading (blogs, docs, talks) captured with the experimental synthesis-source lens. <!--hash:aa7ddbc7-->
 - `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:ab46f887-->
-- `index.md` - Wiki home linking the papers, topics, and concepts indexes of the paper wiki. <!--hash:841d366d-->
-- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:af3f1a0a-->
+- `index.md` - Wiki home linking the papers, topics, concepts, and sources indexes of the paper wiki. <!--hash:4f04fdb1-->
+- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:2d368bd8-->
 
 ## paper-wiki/concepts/
 
@@ -102,6 +103,11 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `2606.11926.md` - Paper note: Arbor, hypothesis-tree refinement for long-horizon autonomous research and artifact optimization. <!--hash:87f46f44-->
 - `2606.13662.md` - Paper note: EurekAgent, environment engineering for metric-driven autonomous scientific discovery with CLI agents. <!--hash:3581df4a-->
 - `index.md` - Index of all paper notes in the library, one line per paper. <!--hash:5041c89a-->
+
+## paper-wiki/sources/
+
+- `index.md` - Index of non-paper reading sources. <!--hash:a96e332b-->
+- `llm-powered-autonomous-agents.md` - Reference note: Lilian Weng's synthesis of LLM-agent architecture — planning, memory, tool use, case studies, and open challenges. <!--hash:dfa311f6-->
 
 ## paper-wiki/topics/
 

@@ -39,6 +39,16 @@ PAPER_REQUIRED = {
 TOPIC_REQUIRED = {"type", "title", "description", "tags", "timestamp"}
 CONCEPT_REQUIRED = {"type", "title", "description", "tags", "timestamp"}
 CONCEPT_TYPES = {"Method", "Dataset", "Benchmark", "Metric", "Term", "Tool"}
+SOURCE_REQUIRED = {
+    "type",
+    "title",
+    "description",
+    "resource",
+    "tags",
+    "status",
+    "priority",
+    "timestamp",
+}
 STATUS_VALUES = {"unread", "skimmed", "read", "summarized"}
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+\.md(?:#[^)]+)?)\)")
 
@@ -380,6 +390,18 @@ def validate(root: Path, config_path: Path | None = None) -> list[str]:
                 if not _has_section(doc.body, section):
                     errors.append(f"{doc.rel}: missing body section {section}")
 
+        elif doc.rel.parts and doc.rel.parts[0] == "sources":
+            # Non-paper reading (blogs, docs, talks). A lighter tier than papers:
+            # only frontmatter is checked, and topic links are one-way (not
+            # enforced bidirectional below).
+            missing = _missing(fm, SOURCE_REQUIRED)
+            if missing:
+                errors.append(f"{doc.rel}: missing source fields: {', '.join(missing)}")
+            if fm.get("type") != "Reference":
+                errors.append(f"{doc.rel}: expected type Reference, got {fm.get('type')!r}")
+            if fm.get("status") and fm.get("status") not in STATUS_VALUES:
+                errors.append(f"{doc.rel}: unexpected status {fm.get('status')!r}")
+
     paper_to_topics: set[tuple[str, str]] = set()
     topic_to_papers: set[tuple[str, str]] = set()
     paper_to_concepts: set[tuple[str, str]] = set()
@@ -439,6 +461,8 @@ def validate(root: Path, config_path: Path | None = None) -> list[str]:
     required_indexes = ["papers/index", "topics/index"]
     if any(doc.rel.parts and doc.rel.parts[0] == "concepts" for doc in docs):
         required_indexes.append("concepts/index")
+    if any(doc.rel.parts and doc.rel.parts[0] == "sources" for doc in docs):
+        required_indexes.append("sources/index")
     for required_index in required_indexes:
         if required_index not in by_rel_no_suffix and not (root / f"{required_index}.md").exists():
             errors.append(f"{required_index}.md: missing index file")

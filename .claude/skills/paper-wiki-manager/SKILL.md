@@ -1,6 +1,6 @@
 ---
 name: paper-wiki-manager
-description: Maintain an OKF paper wiki under `paper-wiki/` or another user-named wiki root. Use when asked to add arXiv or research-paper URLs, update paper notes, maintain paper/topic/concept indexes, automatically create or update topic summary pages for important new themes, maintain concept entity pages for methods, datasets, benchmarks, metrics, terms, or tools, link papers to research projects, normalize paper metadata, track reading status, compare papers, generate required `viz.html` visualizations, or validate the paper wiki.
+description: Maintain an OKF paper wiki under `paper-wiki/` or another user-named wiki root. Use when asked to add arXiv or research-paper URLs, capture non-paper sources such as blog posts, docs, or talks, update paper notes, maintain paper/topic/concept/source indexes, automatically create or update topic summary pages for important new themes, maintain concept entity pages for methods, datasets, benchmarks, metrics, terms, or tools, link papers to research projects, normalize paper metadata, track reading status, compare papers, generate required `viz.html` visualizations, or validate the paper wiki.
 ---
 
 # Paper Wiki Manager
@@ -13,7 +13,7 @@ This skill supersedes `paper-library-manager`, which managed the same kind of bu
 
 ## Scope
 
-Use `paper-wiki/` as the default wiki root unless the user names a different path. Treat every non-reserved `.md` file in that tree as an OKF concept. The wiki has three page collections: `papers/` (one page per paper), `topics/` (thematic synthesis pages), and `concepts/` (entity pages for named methods, datasets, benchmarks, metrics, terms, and tools).
+Use `paper-wiki/` as the default wiki root unless the user names a different path. Treat every non-reserved `.md` file in that tree as an OKF concept. The wiki has four page collections: `papers/` (one page per arXiv paper), `topics/` (thematic synthesis pages), `concepts/` (entity pages for named methods, datasets, benchmarks, metrics, terms, and tools), and `sources/` (non-paper reading — blogs, docs, talks — as `type: Reference`).
 
 ## Workflow
 
@@ -132,6 +132,14 @@ Do not create a concept page for a method that only its own paper describes — 
 Every concept page should include `# Definition` (what the entity is, in a few sentences) and `# Papers` (links to wiki papers that use or reference it, each with a one-line note on how). Optional sections: `# Notes`, `# Related`.
 
 Ensure links are bidirectional: the paper links to the concept (typically in its `# Related` section), and the concept lists the paper under `# Papers`. When adding a new concept, update `paper-wiki/concepts/index.md`.
+
+## Source Documents
+
+When the input is a non-paper source (a blog post, documentation page, or talk) with no arXiv ID, add it under `paper-wiki/sources/<slug>.md` instead of `papers/`. Fetch it with a web request (the HF CLI / arXiv fast path does not apply). Use `type: Reference` and the source frontmatter in `references/schema.md`: `resource` is the source URL (its identity), `authors`/`published`/`medium` are optional, and the filename is a lowercase hyphenated slug derived from the title.
+
+For a blog, survey, or tutorial that organizes others' work rather than presenting one contribution, use the `synthesis-source` body profile from `assets/paper-wiki.toml` (Overview / Framework / Key Techniques / Case Studies / Takeaways / Open Questions / Related / Citations). That profile keys on the content type (synthesis), so an arXiv **survey paper** can use it too — do not treat it as blog-specific.
+
+Sources are a lighter tier than papers. Link a source to the topics and concepts it covers, but these links are **one-way**: do not add the source to a topic's `# Papers` list, and the validator does not require a backlink. When a new source is added, update `paper-wiki/sources/index.md` and, if `sources/` is new, add a `Sources` line to the wiki home. A source that references many methods is a natural hub — the techniques it surveys may later become their own paper or concept pages.
 
 ## Project Links
 

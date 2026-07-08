@@ -194,6 +194,56 @@ hyphenated, for example `mle-bench-lite.md` or `llm-as-a-judge.md`.
 Links must be bidirectional: a paper that links to a concept must appear in
 that concept's `# Papers` section, and vice versa.
 
+## Source Frontmatter
+
+Non-paper reading (blogs, docs, talks) lives in `paper-wiki/sources/<slug>.md`.
+Sources are a lighter tier than papers: they capture durable reading that has no
+arXiv identity.
+
+```yaml
+---
+type: Reference
+title: Source title
+description: One sentence summary for indexes and search.
+resource: https://example.com/post
+tags:
+- topic-tag
+status: read
+priority: normal
+timestamp: YYYY-MM-DDTHH:MM:SSZ
+---
+```
+
+`type` must be `Reference`. `resource` (the source URL) is the source's identity,
+replacing `arxiv_id` — there is no arXiv ID, so the validator does not check the
+filename against any ID. Required fields are `type`, `title`, `description`,
+`resource`, `tags`, `status`, `priority`, and `timestamp`. Optional fields:
+
+```yaml
+authors:
+- Author Name
+published: YYYY-MM-DD
+medium: blog        # blog | doc | talk | video — the sub-kind, for filtering
+```
+
+`authors` and `published` are optional because org docs and undated pages often
+lack a clean author or date; do not invent them. Name the file as a lowercase
+hyphenated slug derived from the title (for example
+`llm-powered-autonomous-agents.md`); this is a convention, not validated.
+
+Sources may link to topics and concepts, but these links are **one-way and not
+enforced bidirectional**: a `Reference` that links to a topic does not require
+the topic to link back. Papers stay the wiki's first-class research objects
+(their topic/concept links are bidirectional); sources are supplementary
+reading, reachable from the wiki home and the graph without polluting a topic's
+`# Papers` list.
+
+Source bodies are user-customizable Markdown like paper bodies. A blog, survey,
+or tutorial that organizes others' work fits the `synthesis-source` body profile
+in [`../assets/paper-wiki.toml`](../assets/paper-wiki.toml) — that profile keys
+on the content type (synthesis), not the medium, so an arXiv **survey paper** can
+use it too. The validator does not enforce source body sections.
+
 ## Used In Projects
 
 A paper may record where it is used in the surrounding repository's research
@@ -259,8 +309,9 @@ python scripts/generate_viz.py /absolute/path/to/paper-wiki
 python scripts/validate_paper_wiki.py /absolute/path/to/paper-wiki
 ```
 
-The script checks OKF frontmatter; paper, topic, and concept required fields;
-configured paper body requirements; topic and concept body sections; internal
-links; outside-bundle project links; bidirectional paper-topic and
-paper-concept links; required index files (`concepts/index.md` is required once
-any concept page exists); and the required `viz.html` graph artifact.
+The script checks OKF frontmatter; paper, topic, concept, and source required
+fields; configured paper body requirements; topic and concept body sections;
+internal links; outside-bundle project links; bidirectional paper-topic and
+paper-concept links (source-topic links are one-way and not enforced); required
+index files (`concepts/index.md` and `sources/index.md` are each required once a
+page of that kind exists); and the required `viz.html` graph artifact.

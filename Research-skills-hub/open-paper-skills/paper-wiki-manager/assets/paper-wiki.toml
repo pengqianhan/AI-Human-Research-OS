@@ -47,6 +47,11 @@ recommended_sections = [
 "Q8 Evidence Quality" = "Whether the scientific hypothesis and the paper's claims are well supported by the experimental results."
 "Q9 Contributions" = "The paper's solid contributions: what knowledge is actually advanced."
 "Q10 Next Steps" = "Limitations of the proposed method and the future research they motivate, including new directions or links to other knowledge (the creative part)."
+"Overview" = "What the source covers, why it matters, and its one-line thesis; note that it synthesizes others' work rather than presenting original experiments."
+"Framework" = "The organizing taxonomy or structure the source proposes, which is the main value of a synthesis piece."
+"Key Techniques" = "The named methods, tools, or ideas the source surveys, grouped by the framework branches."
+"Case Studies" = "Concrete example systems or applications the source discusses."
+"Takeaways" = "Reader-owned notes on what to carry into one's own research."
 
 [paper_body.profiles.research-note]
 description = "General research note for most papers."
@@ -109,6 +114,19 @@ sections = [
   "Q8 Evidence Quality",
   "Q9 Contributions",
   "Q10 Next Steps",
+  "Related",
+  "Citations",
+]
+
+[paper_body.profiles.synthesis-source]
+description = "Reading lens for a synthesis source (blog, survey, or tutorial) that organizes others' work rather than presenting one contribution."
+sections = [
+  "Overview",
+  "Framework",
+  "Key Techniques",
+  "Case Studies",
+  "Takeaways",
+  "Open Questions",
   "Related",
   "Citations",
 ]
