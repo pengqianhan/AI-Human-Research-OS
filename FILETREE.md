@@ -12,7 +12,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, non-paper sources, indexes, and a generated graph visualization (viz.html). <!--hash:0d0a0b2f-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
-- `Research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, claude-science-skills, and the read-only mattpocock-skills upstream mirror. <!--hash:e1002422-->
+- `Research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, claude-science-skills, and the read-only mattpocock-skills upstream mirror. <!--hash:8c37c742-->
 - `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:8d4f9a33-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->

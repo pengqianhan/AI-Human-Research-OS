@@ -23,6 +23,7 @@ at source commit `8f854bd`.
 | [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) | Summarize trending papers into a concise markdown digest with deep-dive recommendations. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [hf-cli](hf-cli/SKILL.md) | Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more. | [huggingface/skills](https://github.com/huggingface/skills/blob/main/skills/hf-cli/SKILL.md) |
 | [explain-diff-html](explain-diff-html/SKILL.md) | Explain code changes, diffs, branches, or PRs as rich interactive HTML. | [geoffreylitt/a29df1b5f9865506e8952488eac3d524](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
+| [arxiv2md](arxiv2md/SKILL.md) | Convert arXiv papers to clean, LLM-ready Markdown (math, tables, sections) via a REST API. | [timf34/arxiv2md](https://github.com/timf34/arxiv2md), MIT |
 | [human-cognition-cache](human-cognition-cache/SKILL.md) | Maintain a project-local human cognition cache. | Original local skill, inspired by a user-provided blog excerpt, MIT |
 
 ## Installation
@@ -48,6 +49,7 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
   DeepXiv CLI via `pip install deepxiv-sdk`.
 - `hf-cli`: Hugging Face CLI via `curl -LsSf https://hf.co/cli/install.sh | bash -s`. Set `HF_TOKEN` for authenticated access.
 - `explain-diff-html`: no local setup required.
+- `arxiv2md`: no local setup required; calls the public `https://arxiv2md.org` REST API (30 requests/min per IP, no key).
 - `human-cognition-cache`: no local setup required.
 
 ## ml-paper-writing
@@ -253,6 +255,20 @@ Example requests:
 /human-cognition-cache update my cognition cache from this discussion
 /human-cognition-cache move cog-20260704-001 from unknown_unknowns to known_unknowns
 /human-cognition-cache skim my cognition cache before planning this task
+```
+
+## arxiv2md
+
+Converts arXiv papers into clean, LLM-ready Markdown by parsing arXiv's native
+HTML (not PDFs), preserving math, tables, and section structure. Backed by the
+public `https://arxiv2md.org` REST API — no auth or key.
+
+Example requests:
+
+```text
+/arxiv2md convert 2501.11120 to markdown
+/arxiv2md fetch the markdown for https://arxiv.org/abs/2501.11120
+/arxiv2md get arxiv2md JSON with metadata for 2501.11120
 ```
 
 ## Credits And License Boundary

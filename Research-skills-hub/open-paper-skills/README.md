@@ -21,6 +21,7 @@ at source commit `8f854bd`.
 | [research-skill-installer](research-skill-installer/SKILL.md) | Install, sync back, inspect, update, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
+| [discover-academic-skills](discover-academic-skills/SKILL.md) | Discover and strictly filter research/academic skills from skills.sh, scoring survivors with reasons for human-gated intake. | Original, Pengqian Han |
 
 ## Installation
 
@@ -49,6 +50,8 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
   `hf` CLI is optional for faster paper fetching.
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
+- `discover-academic-skills`: Node/npx for `npx skills find`, and an
+  authenticated `gh` for the license gate and repo metadata.
 - `drawio-paper`: requires Python with `matplotlib`, `numpy`, and `pillow` for
   plots. Before first use, download the PaperBananaBench reference dataset as
   described in [drawio-paper/SKILL.md](drawio-paper/SKILL.md).
@@ -214,6 +217,25 @@ Example requests:
 /paper-wiki-manager create a concept page for MLE-Bench Lite and link the papers that use it
 /paper-wiki-manager mark 2604.03964 as read and refresh its topic links
 /paper-wiki-manager validate the paper wiki and regenerate viz.html
+```
+
+## discover-academic-skills
+
+Scouts the skills.sh registry (and candidates you paste from social media) for
+research/academic skills, runs them through deterministic hard gates and a strict
+academic-relevance gate, scores the survivors with a four-part rubric, and hands
+back a ranked report with reasons. It only reports — accepting a skill stays a
+manual, human-gated step. Uses the unauthenticated `skills` CLI, so no skills.sh
+token is needed.
+
+Prerequisites: Node/npx and an authenticated `gh`.
+
+Example requests:
+
+```text
+/discover-academic-skills find new academic skills worth adding
+/discover-academic-skills scout skills.sh for literature-review tools
+/discover-academic-skills score this one I saw on X: owner/repo@skill
 ```
 
 ## License

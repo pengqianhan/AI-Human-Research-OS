@@ -4,6 +4,7 @@ Original or repo-maintained skills for Open Paper and this Research OS. See
 [README.md](README.md) for setup notes, usage examples, and provenance.
 
 * [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) - Looks up arXiv papers on AlphaXiv for structured AI-generated overviews.
+* [discover-academic-skills](discover-academic-skills/SKILL.md) - Discovers and strictly filters research/academic skills from skills.sh, scoring survivors with reasons for human-gated intake.
 * [drawio-paper](drawio-paper/SKILL.md) - Generates publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline.
 * [explain-anything-html](explain-anything-html/SKILL.md) - Produces a rich, self-contained interactive HTML explanation of a paper, blog post, or hard concept, with background, intuition, walkthrough, and quiz.
 * [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) - Applies a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly.
