@@ -4,6 +4,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## (root)/
 
+- `.github/` - GitHub repository configuration, including Actions automation workflows. <!--hash:b7b0effb-->
 - `docs/` - Narrative and presentation drafts about the Research OS. <!--hash:14b16388-->
 - `Human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:d1579e96-->
 - `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
@@ -24,6 +25,14 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:3687fae6-->
 - `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:1645f4f0-->
 - `verify.sh` - Read-only, agent-neutral consistency check: paper-wiki validator, FILETREE lint, and three-copy skill-sync diff; reports drift without fixing. <!--hash:e576a400-->
+
+## .github/
+
+- `workflows/` - GitHub Actions workflow definitions. <!--hash:cecfbb42-->
+
+## .github/workflows/
+
+- `sync-mattpocock-skills.yml` - Weekly workflow that refreshes the read-only mattpocock-skills mirror from upstream and opens a review PR (never auto-merges). <!--hash:c397668a-->
 
 ## Human/
 
