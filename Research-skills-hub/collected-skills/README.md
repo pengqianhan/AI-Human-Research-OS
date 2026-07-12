@@ -25,6 +25,7 @@ at source commit `8f854bd`.
 | [explain-diff-html](explain-diff-html/SKILL.md) | Explain code changes, diffs, branches, or PRs as rich interactive HTML. | [geoffreylitt/a29df1b5f9865506e8952488eac3d524](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
 | [arxiv2md](arxiv2md/SKILL.md) | Convert arXiv papers to clean, LLM-ready Markdown (math, tables, sections) via a REST API. | [timf34/arxiv2md](https://github.com/timf34/arxiv2md), MIT |
 | [human-cognition-cache](human-cognition-cache/SKILL.md) | Maintain a project-local human cognition cache. | Original local skill, inspired by a user-provided blog excerpt, MIT |
+| [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Source unknown — moved from `open-paper-skills`, upstream not yet identified |
 
 ## Installation
 
@@ -51,6 +52,8 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
 - `explain-diff-html`: no local setup required.
 - `arxiv2md`: no local setup required; calls the public `https://arxiv2md.org` REST API (30 requests/min per IP, no key).
 - `human-cognition-cache`: no local setup required.
+- `alphaxiv-paper-lookup`: no local setup required; calls the public
+  `https://alphaxiv.org` endpoints, no auth or key.
 
 ## ml-paper-writing
 
@@ -269,6 +272,25 @@ Example requests:
 /arxiv2md convert 2501.11120 to markdown
 /arxiv2md fetch the markdown for https://arxiv.org/abs/2501.11120
 /arxiv2md get arxiv2md JSON with metadata for 2501.11120
+```
+
+## alphaxiv-paper-lookup
+
+Fetches structured AI-generated overviews from AlphaXiv for arXiv papers. It
+can fall back to AlphaXiv's full extracted paper text when the overview is not
+detailed enough.
+
+Supported inputs include arXiv URLs, AlphaXiv URLs, and raw arXiv IDs.
+
+> Provenance note: moved here from `open-paper-skills` — the original upstream
+> source (if any) hasn't been identified yet. Update the Source column above if
+> it surfaces.
+
+Example requests:
+
+```text
+/alphaxiv-paper-lookup summarize 2401.12345
+/alphaxiv-paper-lookup explain https://arxiv.org/abs/2401.12345
 ```
 
 ## Credits And License Boundary
