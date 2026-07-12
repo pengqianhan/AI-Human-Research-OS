@@ -22,6 +22,7 @@ at source commit `8f854bd`.
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
 | [discover-academic-skills](discover-academic-skills/SKILL.md) | Discover and strictly filter research/academic skills from skills.sh, scoring survivors with reasons for human-gated intake. | Original, Pengqian Han |
+| [codex-paper-figure-skill](codex-paper-figure-skill/SKILL.md) | Turn paper text or figure concepts into editable draw.io academic figures, using an image-generation pass for composition reference. | [Original, Pengqian Han](https://github.com/pengqianhan/codex-paper-figure-skill) |
 
 ## Installation
 
@@ -55,6 +56,9 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 - `drawio-paper`: requires Python with `matplotlib`, `numpy`, and `pillow` for
   plots. Before first use, download the PaperBananaBench reference dataset as
   described in [drawio-paper/SKILL.md](drawio-paper/SKILL.md).
+- `codex-paper-figure-skill`: no additional local setup required; relies on
+  Codex's built-in `image_gen` and `Browser` tools. The draw.io desktop CLI is
+  optional, needed only to export `.png`/`.svg`/`.pdf` previews.
 
 ## research-bible
 
@@ -236,6 +240,26 @@ Example requests:
 /discover-academic-skills find new academic skills worth adding
 /discover-academic-skills scout skills.sh for literature-review tools
 /discover-academic-skills score this one I saw on X: owner/repo@skill
+```
+
+## codex-paper-figure-skill
+
+Turns paper text, a methods/results section, or a figure concept into a
+publication-style **editable** diagram. First generates a raster reference
+image with Codex's `image_gen` tool to explore composition and visual style,
+then recreates the figure as native draw.io `.drawio` mxGraphModel XML so every
+label, shape, connector, and icon stays editable. Can pull icons via Codex's
+built-in `Browser` plugin (defaulting to Flaticon) when licensing and
+attribution are clear. Self-contained — it embeds its own draw.io generation
+rules rather than depending on another skill.
+
+Example requests:
+
+```text
+/codex-paper-figure-skill turn this methods paragraph into a mechanism figure
+/codex-paper-figure-skill create a model architecture diagram from this section
+/codex-paper-figure-skill draft a graphical abstract for this paper's workflow
+/codex-paper-figure-skill build a multi-panel figure comparing these two conditions
 ```
 
 ## License
