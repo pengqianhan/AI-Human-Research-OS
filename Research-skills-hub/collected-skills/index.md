@@ -13,6 +13,7 @@ skills.
 * [deepxiv-cli](deepxiv-cli/SKILL.md) - Searches and reads open-access academic papers through the DeepXiv CLI.
 * [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) - Builds markdown baseline comparison tables from DeepXiv searches and targeted section reads.
 * [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) - Summarizes recent DeepXiv trending papers into markdown digests.
+* [grill-for-unknowns](grill-for-unknowns/SKILL.md) - Interrogates a plan against docs/source evidence and surfaces unknown unknowns before implementation.
 * [hf-cli](hf-cli/SKILL.md) - Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more.
 * [explain-diff-html](explain-diff-html/SKILL.md) - Explains code changes, diffs, branches, or PRs as rich interactive HTML.
 * [arxiv2md](arxiv2md/SKILL.md) - Converts arXiv papers to clean, LLM-ready Markdown via the arxiv2md.org REST API.

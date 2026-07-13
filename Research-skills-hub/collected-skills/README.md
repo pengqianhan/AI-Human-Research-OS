@@ -21,6 +21,7 @@ at source commit `8f854bd`.
 | [deepxiv-cli](deepxiv-cli/SKILL.md) | Access open-access academic papers via CLI with hybrid search and section-level reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) | Build markdown baseline comparison tables from DeepXiv search and targeted section reads. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
 | [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) | Summarize trending papers into a concise markdown digest with deep-dive recommendations. | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk/tree/main), adapted |
+| [grill-for-unknowns](grill-for-unknowns/SKILL.md) | Interrogate a plan against docs/source evidence, surface unknown unknowns, and avoid rushing into build mode. | [nicobailon/grill-for-unknowns](https://github.com/nicobailon/grill-for-unknowns), MIT |
 | [hf-cli](hf-cli/SKILL.md) | Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more. | [huggingface/skills](https://github.com/huggingface/skills/blob/main/skills/hf-cli/SKILL.md) |
 | [explain-diff-html](explain-diff-html/SKILL.md) | Explain code changes, diffs, branches, or PRs as rich interactive HTML. | [geoffreylitt/a29df1b5f9865506e8952488eac3d524](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
 | [arxiv2md](arxiv2md/SKILL.md) | Convert arXiv papers to clean, LLM-ready Markdown (math, tables, sections) via a REST API. | [timf34/arxiv2md](https://github.com/timf34/arxiv2md), MIT |
@@ -48,6 +49,8 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
 - `paper-finder`: web access is recommended for current paper discovery.
 - `deepxiv-cli`, `deepxiv-baseline-table`, and `deepxiv-trending-digest`:
   DeepXiv CLI via `pip install deepxiv-sdk`.
+- `grill-for-unknowns`: no additional local setup required; it is a planning/interview
+  workflow that reads docs, source, and existing files already in the repo.
 - `hf-cli`: Hugging Face CLI via `curl -LsSf https://hf.co/cli/install.sh | bash -s`. Set `HF_TOKEN` for authenticated access.
 - `explain-diff-html`: no local setup required.
 - `arxiv2md`: no local setup required; calls the public `https://arxiv2md.org` REST API (30 requests/min per IP, no key).
@@ -291,6 +294,23 @@ Example requests:
 ```text
 /alphaxiv-paper-lookup summarize 2401.12345
 /alphaxiv-paper-lookup explain https://arxiv.org/abs/2401.12345
+```
+
+## grill-for-unknowns
+
+Interrogates a plan against docs/source evidence before implementation begins,
+combining docs-grounded grilling, one-question-at-a-time interviewing, domain
+modeling, and a four-quadrant known/unknown pass (known knowns, known
+unknowns, unknown knowns, unknown unknowns) to find the few answers that would
+materially change the plan.
+
+Example requests:
+
+```text
+/grill-for-unknowns grill this implementation plan before I start building
+/grill-for-unknowns run a blindspot pass over the new payments integration
+/grill-for-unknowns pressure-test my design against the API docs before I commit
+/grill-for-unknowns prepare a launch packet for the subagent that will build this
 ```
 
 ## Credits And License Boundary
