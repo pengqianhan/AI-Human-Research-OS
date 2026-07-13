@@ -1,6 +1,8 @@
 ---
 name: human-cognition-cache
 description: Maintain a project-local, git-trackable human cognition cache, preferably in Human/human-cognition/ when the project has a Human context folder, with OKF Markdown files for known_knowns, known_unknowns, unknown_knowns, and unknown_unknowns. Use when the user asks to initialize, read, update, migrate, or use their cognition cache; record durable human background, understanding state, preferences, blind spots, or unstated criteria; reduce repeated context in future prompts; or work explicitly with known knowns, known unknowns, unknown knowns, or unknown unknowns.
+author: Pengqian Han
+license: MIT
 ---
 
 # Human Cognition Cache

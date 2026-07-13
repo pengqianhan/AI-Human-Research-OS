@@ -16,6 +16,7 @@ at source commit `8f854bd`.
 | [drawio-paper](drawio-paper/SKILL.md) | Generate publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline. | Original; uses PaperBananaBench as an external reference dataset |
 | [explain-anything-html](explain-anything-html/SKILL.md) | Produce a rich, self-contained interactive HTML explanation (background, intuition, walkthrough, quiz) of a paper, blog post, or hard concept. | Adapted from `explain-diff-html`, based on [Geoffrey Litt's original skill](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
 | [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) | Apply a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly. | Original skill, Pengqian Han; uses Andrej Karpathy's *CLAUDE.md* notes as attributed reference material |
+| [human-cognition-cache](human-cognition-cache/SKILL.md) | Maintain a project-local, git-trackable cache of the human's cognition state. | Original, Pengqian Han |
 | [paper-wiki-manager](paper-wiki-manager/SKILL.md) | Maintain an OKF paper wiki with paper, topic, and concept pages, project links, graph visualization, and validation. | Original, Pengqian Han; supersedes `paper-library-manager` |
 | [research-skill-installer](research-skill-installer/SKILL.md) | Install, sync back, inspect, update, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
@@ -43,8 +44,9 @@ python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 
 ## Prerequisites
 
-- `research-bible`, `explain-anything-html`, `karpathy-coding-rules`, and
-  `task-file-builder`: no additional local setup required.
+- `research-bible`, `explain-anything-html`, `human-cognition-cache`,
+  `karpathy-coding-rules`, and `task-file-builder`: no additional local setup
+  required.
 - `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
   `hf` CLI is optional for faster paper fetching.
 - `uv-env`: requires or installs the `uv` Python package manager.
@@ -243,6 +245,22 @@ Example requests:
 /codex-paper-figure-skill create a model architecture diagram from this section
 /codex-paper-figure-skill draft a graphical abstract for this paper's workflow
 /codex-paper-figure-skill build a multi-panel figure comparing these two conditions
+```
+
+## human-cognition-cache
+
+Maintains a project-local, git-trackable cache of the human's cognition using
+OKF Markdown files, preferably under `Human/human-cognition/`. It separates
+known knowns, known unknowns, unknown knowns, and unknown unknowns while
+preserving privacy boundaries and lightweight transition links.
+
+Example requests:
+
+```text
+/human-cognition-cache initialize the cache in this repo
+/human-cognition-cache update my cognition cache from this discussion
+/human-cognition-cache move cog-20260704-001 from unknown_unknowns to known_unknowns
+/human-cognition-cache skim my cognition cache before planning this task
 ```
 
 ## License
