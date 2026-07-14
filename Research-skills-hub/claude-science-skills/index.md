@@ -6,6 +6,9 @@ It bundles the Claude Science style system prompt, agent profiles, MCP servers,
 and domain skills as a full scientific-computing assistant asset tree.
 
 Read [README.md](README.md) for layout, MCP servers, and maintenance notes.
+See [SKILL_CATALOG.md](SKILL_CATALOG.md) for the English classification of all
+skills and agents, including machine-learning relevance labels. A
+[Chinese version](SKILL_CATALOG_zh.md) is also available.
 
 ## Skills from AcademicForge
 

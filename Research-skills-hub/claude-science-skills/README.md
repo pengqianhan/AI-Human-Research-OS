@@ -23,6 +23,11 @@ servers expose scientific data and chemistry tools.
 | `agents/` | Agent profile metadata and prompts for specialized roles such as onboarding, transcript review, bookmarking, and the general science agent. |
 | `mcp-servers/` | Bundled MCP servers and widgets used by the agent for external scientific data and chemistry workflows. |
 
+For an exhaustive classification of every skill and agent profile, including
+`ML-CORE`, domain-specific ML, general research, and support labels, see
+[SKILL_CATALOG.md](SKILL_CATALOG.md). A
+[Chinese version](SKILL_CATALOG_zh.md) is also available.
+
 ## Skill Catalog
 
 The `skills/` directory includes workflows for several broad areas:
