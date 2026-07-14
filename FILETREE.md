@@ -67,7 +67,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## Research-skills-hub/
 
-- `index.md` - Hub index linking skill collections (science-skills, open-paper-skills, collected-skills, mattpocock-skills, claude-science-skills) and install steps. <!--hash:1f49d9d5-->
+- `index.md` - Hub index linking skill collections (science-skills, open-paper-skills, collected-skills, mattpocock-skills, claude-science-skills) and install steps. <!--hash:54c5b70d-->
 
 ## Resource/
 

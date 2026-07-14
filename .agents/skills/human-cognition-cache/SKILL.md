@@ -1,197 +1,155 @@
 ---
 name: human-cognition-cache
-description: Maintain a project-local, git-trackable human cognition cache, preferably in Human/human-cognition/ when the project has a Human context folder, with OKF Markdown files for known_knowns, known_unknowns, unknown_knowns, and unknown_unknowns. Use when the user asks to initialize, read, update, migrate, or use their cognition cache; record durable human background, understanding state, preferences, blind spots, or unstated criteria; reduce repeated context in future prompts; or work explicitly with known knowns, known unknowns, unknown knowns, or unknown unknowns.
-author: Pengqian Han
-license: MIT
+description: Scaffold human cognition with a project-local, git-trackable four-quadrant cache. Use when (1) initializing, reading, updating, or migrating the cache; (2) completing a task beyond the human's confirmed understanding, where cognition should guide agent autonomy and decision escalation; or (3) explaining a verified artifact at the human's level and recording evidence-backed cognitive growth.
 ---
 
 # Human Cognition Cache
 
-Install: no local setup required.
+Use the human's current cognition as a **scaffold**, not a ceiling. Help the
+human complete tasks beyond their present knowledge, preserve human authority
+over goals and consequential choices, and turn verified delivery into durable
+understanding when the task calls for it.
 
-## Scope
+## Contract
 
-Maintain a cache of the human's cognition, not the agent's knowledge. Record
-what the human has stated, realized, is unsure about, or appears to use as an
-unstated judgment criterion in this project. Do not use this as a general
-project knowledge base, chat log, or private personal profile.
+Scope:
+- Model the human's cognition in this project: what they can state, know they
+  do not know, reveal through judgment, or may not yet realize.
+- Use that model to choose when to act, ask, explain, or teach.
+- Keep project facts and agent knowledge in their own project artifacts.
 
 Inputs:
-- Current user request and relevant conversation context.
-- Existing files under the selected cognition cache path, usually
-  `Human/human-cognition/`, when present.
-- User confirmation for sensitive, inferred, or long-term personal claims.
+- The current request, conversation, and verified task artifacts.
+- The relevant entries in the project-local cognition cache.
+- Human confirmation for sensitive or durable personal claims.
 
 Outputs:
-- A project-local Markdown cache under the selected cognition cache path.
-- Updated active indexes, entries, links, and transition stubs when cognition
-  moves between quadrants.
+- A maintained Markdown cognition cache with indexed, evidence-labelled entries.
+- For cognition-aware tasks, an explicit allocation of agent-owned work and
+  human-owned decisions.
+- When understanding matters, an artifact-grounded cognitive handoff and any
+  evidence-backed cognition transitions.
 
 Limitations:
-- The cache is only as accurate as the human-provided evidence.
-- The cache may be git-tracked; treat it as potentially publishable unless the
-  repository says otherwise.
-- Do not record secrets or high-sensitivity personal data.
+- The cache is an open-world, fallible model. Missing entries mean
+  `unobserved`, not ignorance.
+- Agent expertise is also fallible; verify technical claims through source,
+  documentation, tests, or experiments.
+- Cognitive growth requires evidence within a stated scope. One successful
+  action does not establish broad mastery.
 
-## File Layout
+## Core Model
 
-Use this preferred layout when a project has a `Human/` context directory:
+- `known_knowns.md`: cognition the human can state or demonstrate clearly.
+- `known_unknowns.md`: questions or gaps the human recognizes.
+- `unknown_knowns.md`: implicit criteria or knowledge revealed through
+  reactions, corrections, examples, or repeated choices.
+- `unknown_unknowns.md`: candidate blind spots, stored as questions or
+  hypotheses rather than facts.
+- `unobserved`: a runtime classification for relevant concepts with no adequate
+  evidence. Do not persist it merely because the cache is silent.
 
-```text
-Human/human-cognition/
-  index.md
-  known_knowns.md
-  known_unknowns.md
-  unknown_knowns.md
-  unknown_unknowns.md
-```
+Keep the same stable cognition ID when an entry moves between quadrants.
 
-If the project has no `Human/` or equivalent human-context directory, use a
-project-level fallback such as `human-cognition/`, or `cache/human-cognition/`
-only when that matches the repository's conventions. Never store runtime
-cognition files inside a skill installation directory such as
-`.agents/skills/human-cognition-cache/` or
-`.claude/skills/human-cognition-cache/`; those directories hold tool code and
-may be overwritten during skill updates.
+## Branches and Context Pointers
 
-If the directory is missing and the user asks to initialize or use this cache,
-create the five files with OKF frontmatter, an `Active Index`, and empty
-entries. Default to English. Use another language only when the user explicitly
-requests it.
+- **Cache maintenance**: when initializing, migrating, writing, or moving
+  entries, read [references/cache-schema.md](references/cache-schema.md) before
+  editing. It is the single source of truth for layout, fields, indexes, and
+  transition stubs.
+- **Beyond-cognition execution**: when the task may exceed the human's confirmed
+  understanding or creates consequential cognitive debt, read
+  [references/cognition-aware-execution.md](references/cognition-aware-execution.md)
+  before deciding what to ask or execute.
+- **Cognitive handoff**: when the human needs to understand, operate, review,
+  maintain, or extend a delivered artifact, read
+  [references/artifact-grounded-teaching.md](references/artifact-grounded-teaching.md)
+  before explaining or updating cognition levels.
 
-## Startup Read
+Load only the references reached by the active branch.
 
-When a project has a cognition cache, first skim its `index.md`. Then skim the
-frontmatter and `Active Index` sections of the four quadrant files. Read full
-entries only when they are relevant to the current task.
+## Steps
 
-Reusable startup snippet for project instruction files:
+### 1. Bound the relevant cognition
 
-```markdown
-At session start, if `Human/human-cognition/index.md` exists, skim it first.
-Then skim the frontmatter and `Active Index` sections of:
-- `Human/human-cognition/known_knowns.md`
-- `Human/human-cognition/known_unknowns.md`
-- `Human/human-cognition/unknown_knowns.md`
-- `Human/human-cognition/unknown_unknowns.md`
+Locate the cache, skim `index.md`, then skim the frontmatter and `Active Index`
+of all four quadrant files. Build a small relevance set from concepts and
+decisions that materially affect the current task. Read full entries only for
+that set. When initialization is the active branch and no cache exists, record
+the absence and continue to the schema reference.
 
-Read full entries only when relevant to the current task. Before finishing,
-update the cache only for durable human-cognition changes likely to help future
-sessions, while respecting the privacy rules of the `human-cognition-cache`
-skill.
-```
+Classify each relevant concept as confirmed known, declared unknown, inferred
+implicit, suspected blind spot, or unobserved. Preserve the entry's evidence,
+scope, confidence, and freshness.
 
-## Quadrants
+Complete when every material concept has a supported classification or is
+explicitly marked unobserved.
 
-- `known_knowns.md`: Human-confirmed cognition the human can state clearly.
-- `known_unknowns.md`: Questions or gaps the human knows they have.
-- `unknown_knowns.md`: Human criteria or assumptions that were unstated until
-  revealed through reaction, correction, examples, or repeated choices.
-- `unknown_unknowns.md`: Candidate blind spots the human may not yet realize.
-  Store these as questions or hypotheses, not facts.
+### 2. Select and run the branch
 
-## Example Patterns
+For cache maintenance, apply the schema reference and preserve stable IDs.
 
-Use [Know your unknowns examples](https://thariqs.github.io/html-effectiveness/unknowns/)
-as external inspiration for unknown-discovery workflows. Treat it as a reference,
-not vendored source: do not copy full HTML artifacts or long prompts into this
-skill or a public cache unless the project has permission.
+For beyond-cognition execution, treat a gap as a reason for greater agent
+initiative, not a reason to shrink the goal. Assign technical investigation and
+reversible implementation choices to the agent. Escalate goals, values,
+permissions, budgets, irreversible actions, and material risk choices to the
+human, supplying the minimum background needed to decide.
 
-Map common workflows into the cache this way:
-- Blindspot pass: add candidate hypotheses to `unknown_unknowns.md`.
-- Teach or explainer pass: turn vague unfamiliarity into explicit questions in
-  `known_unknowns.md`; move understood concepts to `known_knowns.md`.
-- Brainstorm or prototype pass: capture the human's reactions, taste, and
-  unstated selection criteria in `unknown_knowns.md`.
-- Interview: record unresolved answers in `known_unknowns.md` and confirmed
-  decisions in `known_knowns.md`.
-- Reference pass: record the examples the human recognizes as relevant in
-  `known_knowns.md`, and note unresolved semantic gaps in `known_unknowns.md`.
-- Implementation plan: record high-impact decisions likely to change as
-  `known_unknowns.md` entries.
-- Implementation notes: record real constraints that force cognition transitions.
-- Pitch or explainer: consolidate reviewer-facing shared understanding in
-  `known_knowns.md` and leave remaining objections in `known_unknowns.md`.
-- Quiz: use correct answers as evidence that a prior known unknown has become a
-  known known.
+For a cognitive handoff, choose the target capability and explanation depth,
+then teach from the verified artifact, its evidence, and the human's existing
+known knowns.
 
-## Entry Format
+Complete when each material unknown has an owner, each required human decision
+is informed, and the active branch's completion criterion is met.
 
-Use stable IDs. Prefer `cog-YYYYMMDD-NNN` unless the project already has a
-different convention.
+### 3. Deliver both required outcomes
 
-```markdown
-## cog-YYYYMMDD-NNN Short title
+Verify the task artifact independently of the cognition cache. When human
+understanding is part of the task, also deliver the cognitive handoff and
+collect proportionate evidence of understanding through explanation,
+operation, diagnosis, modification, or transfer.
 
-- content:
-- source: user-confirmed | inferred
-- confidence: high | medium | low
-- evidence:
-- created: YYYY-MM-DD
-- last_updated: YYYY-MM-DD
-- status: active | superseded | disputed
-- derived_from:
-  - [cog-YYYYMMDD-NNN](other_file.md#cog-yyyymmdd-nnn-short-title)
-- related:
-  - [cog-YYYYMMDD-NNN](other_file.md#cog-yyyymmdd-nnn-short-title)
-```
+Report these fields separately:
 
-Keep each file's `Active Index` short:
+- `artifact_status`: verified, partially verified, or unverified;
+- `target_capability`: awareness, operator, interpreter, modifier, builder, or
+  not required;
+- `cognition_evidence`: observed evidence or `not assessed`;
+- `cognitive_status`: complete, partial, or not assessed;
+- `remaining_debt`: unresolved assumptions and accepted cognitive debt.
 
-```markdown
-## Active Index
+Complete when every field is reported and cognitive completion is claimed only
+at the scope supported by observed evidence.
 
-- cog-YYYYMMDD-NNN - Short title: one-sentence summary.
-```
+### 4. Persist durable cognition
 
-## Updating Workflow
+Review candidate changes at the end of the task. Persist only human-scoped,
+durable cognition that will improve future collaboration. Label inferred
+observations conservatively and preserve the narrowest scope supported by the
+evidence. A read-only or inconclusive task may correctly produce no cache edit.
 
-1. Read `index.md`, then skim the four active indexes.
-2. Read full entries only when they matter for the task.
-3. During work, track possible cognition changes mentally or in task notes.
-4. Before finishing, update only durable changes likely to help future sessions.
-5. Ask before solidifying inferred claims about identity, long-term preference,
-   capability, private life, health, finances, or other sensitive areas.
-6. Keep `index.md` current only at the navigation level: current focus, recent
-   transitions, links, and privacy reminders. Do not duplicate full entries.
+Complete when every persisted entry has a stable ID, source, confidence,
+evidence, dates, status, and current index entry; every move has a transition
+stub; and sensitive or long-term claims have explicit human confirmation.
 
-## Transitions
+## Boundaries
 
-Treat the cache as a lightweight cognition graph. When cognition moves between
-quadrants, keep the same stable ID.
+- Store source facts, API constraints, implementation details, and agent
+  uncertainty in project documentation, plans, ADRs, or task notes.
+- Store stable personal context and collaboration preferences in the project's
+  human profile when one exists; use this cache for cognition state.
+- Treat behavioral signals such as pauses, cursor movement, or repeated edits as
+  low-confidence candidate evidence until corroborated.
+- Preserve human choice over whether a low-risk delivery also needs teaching.
+- Before publishing or pushing a tracked cache, warn that it may expose the
+  human's cognition state.
 
-Common transitions:
-- `unknown_unknowns.md` -> `known_unknowns.md`: the human now sees the gap.
-- `known_unknowns.md` -> `known_knowns.md`: the human can now state the concept.
-- `unknown_knowns.md` -> `known_knowns.md`: an implicit criterion became explicit.
-- `known_knowns.md` -> `known_unknowns.md`: a former certainty now has a gap.
+## Privacy Guardrails
 
-When moving an entry, keep the full current entry in the new file. In the old
-file, leave only a short stub:
-
-```markdown
-## cog-YYYYMMDD-NNN Short title
-
-- status: superseded
-- moved_to: [known_unknowns.md#cog-yyyymmdd-nnn-short-title](known_unknowns.md#cog-yyyymmdd-nnn-short-title)
-- reason:
-- last_updated: YYYY-MM-DD
-```
-
-Update both files' `Active Index` sections and add a one-line note to
-`index.md` under `Recent Transitions`.
-
-## Privacy Rules
-
-Hard rules:
-- Do not record API keys, passwords, tokens, private keys, recovery codes, or
-  credentials.
-- Do not record government IDs, bank details, medical records, or other
-  high-sensitivity personal data.
-- Do not turn one-off emotions, casual remarks, or unconfirmed personality
-  judgments into durable facts.
+- Never record credentials, recovery material, government IDs, bank details,
+  medical records, or other high-sensitivity personal data.
+- Ask before recording identifying, sensitive, capability-related, or long-term
+  personal claims.
 - Mark agent-derived observations as `source: inferred` and keep confidence
   conservative.
-- Ask before recording sensitive, identifying, or long-term personal claims.
-- Remind the user that this cache may expose their cognition state before
-  publishing or pushing it to a public repository.
+- Record candidate blind spots as questions or hypotheses, never diagnoses.
