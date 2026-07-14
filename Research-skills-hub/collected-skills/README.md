@@ -27,6 +27,7 @@ at source commit `8f854bd`.
 | [arxiv2md](arxiv2md/SKILL.md) | Convert arXiv papers to clean, LLM-ready Markdown (math, tables, sections) via a REST API. | [timf34/arxiv2md](https://github.com/timf34/arxiv2md), MIT |
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Source unknown — moved from `open-paper-skills`, upstream not yet identified |
 | [Deli_AutoResearch](Deli_AutoResearch/SKILL.md) | Provide state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks. | [Deli AutoResearch framework](https://victorchen96.github.io/auto_research/framework.html#fullmd) |
+| [baseline-selector](baseline-selector-main/SKILL.md) | Select reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks. | [RyanZhou168/baseline-selector](https://github.com/RyanZhou168/baseline-selector/tree/main), MIT |
 
 ## Installation
 
@@ -58,6 +59,8 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
   `https://alphaxiv.org` endpoints, no auth or key.
 - `Deli_AutoResearch`: no additional local setup required; it is a self-contained
   protocol specification with no executable code.
+- `baseline-selector`: no additional local setup required; Codex alone is enough
+  to use the skill.
 
 ## ml-paper-writing
 
@@ -309,6 +312,22 @@ Example requests:
 /Deli_AutoResearch add stall detection and structural pivot rules to this autonomous loop
 /Deli_AutoResearch design a three-layer heartbeat watchdog for unattended agent work
 /Deli_AutoResearch audit this orchestration plan for cognitive loops and runtime fragility
+```
+
+## baseline-selector
+
+Selects, audits, and justifies experimental baselines for research ideas,
+benchmarks, paper drafts, and experiment plans. It admits only candidates with
+usable GitHub implementations, then builds compute-aware baseline sets and
+checks reviewer risk.
+
+Example requests:
+
+```text
+/baseline-selector choose baselines for my AAAI 2027 multimodal retrieval project
+/baseline-selector audit this paper draft for missing reviewer-expected baselines
+/baseline-selector build a minimal baseline set for a four-A100 compute budget
+/baseline-selector verify whether these candidate methods have reproducible GitHub repositories
 ```
 
 ## Credits And License Boundary

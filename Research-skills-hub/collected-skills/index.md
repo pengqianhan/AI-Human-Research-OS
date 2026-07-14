@@ -7,6 +7,7 @@ skills.
 
 * [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) - Looks up arXiv papers on AlphaXiv for structured AI-generated overviews.
 * [arxiv2md](arxiv2md/SKILL.md) - Converts arXiv papers to clean, LLM-ready Markdown via the arxiv2md.org REST API.
+* [baseline-selector](baseline-selector-main/SKILL.md) - Selects reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks.
 * [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) - Builds markdown baseline comparison tables from DeepXiv searches and targeted section reads.
 * [deepxiv-cli](deepxiv-cli/SKILL.md) - Searches and reads open-access academic papers through the DeepXiv CLI.
 * [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) - Summarizes recent DeepXiv trending papers into markdown digests.
