@@ -28,6 +28,7 @@ at source commit `8f854bd`.
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Source unknown — moved from `open-paper-skills`, upstream not yet identified |
 | [Deli_AutoResearch](Deli_AutoResearch/SKILL.md) | Provide state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks. | [Deli AutoResearch framework](https://victorchen96.github.io/auto_research/framework.html#fullmd) |
 | [baseline-selector](baseline-selector-main/SKILL.md) | Select reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks. | [RyanZhou168/baseline-selector](https://github.com/RyanZhou168/baseline-selector/tree/main), MIT |
+| [academic-rebuttal](Rebuttal-Skill/SKILL.md) | Triage reviews, prioritize rebuttal experiments, draft evidence-grounded responses, and plan resubmission when needed. | [TobiasLee/Rebuttal-Skill](https://github.com/TobiasLee/Rebuttal-Skill) |
 
 ## Installation
 
@@ -61,6 +62,8 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
   protocol specification with no executable code.
 - `baseline-selector`: no additional local setup required; Codex alone is enough
   to use the skill.
+- `academic-rebuttal`: no additional local setup required; it is a standalone
+  skill definition for compatible AI coding assistants.
 
 ## ml-paper-writing
 
@@ -328,6 +331,22 @@ Example requests:
 /baseline-selector audit this paper draft for missing reviewer-expected baselines
 /baseline-selector build a minimal baseline set for a four-A100 compute budget
 /baseline-selector verify whether these candidate methods have reproducible GitHub repositories
+```
+
+## academic-rebuttal
+
+Uses a two-stage workflow to diagnose reviewer concerns, assess whether rebuttal
+is worth the available time, prioritize experiments and analyses, and draft an
+evidence-grounded response only after results are available. It can also audit
+an existing rebuttal or produce a structured resubmission plan.
+
+Example requests:
+
+```text
+/academic-rebuttal triage these reviews and produce a prioritized rebuttal experiment plan
+/academic-rebuttal integrate these completed results and draft the full rebuttal
+/academic-rebuttal audit this rebuttal draft for unsupported claims and missing direct answers
+/academic-rebuttal diagnose the rejection mechanism and produce a resubmission plan
 ```
 
 ## Credits And License Boundary

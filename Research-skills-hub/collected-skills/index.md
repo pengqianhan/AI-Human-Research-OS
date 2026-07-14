@@ -5,6 +5,7 @@ Skills collected, adapted, or locally added for research workflows. See
 upstream attribution and license terms when editing or redistributing these
 skills.
 
+* [academic-rebuttal](Rebuttal-Skill/SKILL.md) - Triages reviews, prioritizes rebuttal experiments, drafts evidence-grounded responses, and plans resubmission when needed.
 * [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) - Looks up arXiv papers on AlphaXiv for structured AI-generated overviews.
 * [arxiv2md](arxiv2md/SKILL.md) - Converts arXiv papers to clean, LLM-ready Markdown via the arxiv2md.org REST API.
 * [baseline-selector](baseline-selector-main/SKILL.md) - Selects reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks.
