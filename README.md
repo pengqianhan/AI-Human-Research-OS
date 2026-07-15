@@ -138,3 +138,5 @@ keeps per-skill upstream attribution and license terms.
 - [science-skills](https://github.com/JimLiu/science-skills)
 - [openscience](https://github.com/synthetic-sciences/openscience)
 - [How to Make Codebases AI Agents Love](https://www.aihero.dev/how-to-make-codebases-ai-agents-love)
+- [Microsoft Research Studio](https://github.com/microsoft/ResearchStudio/tree/main)
+- [openscience](https://github.com/synthetic-sciences/openscience)
