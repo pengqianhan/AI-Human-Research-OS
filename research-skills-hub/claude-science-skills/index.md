@@ -57,5 +57,6 @@ The following skills are not in the JimLiu bundle; they were migrated from
 ## Other assets
 
 - [SYSTEM_PROMPT.md](SYSTEM_PROMPT.md) — base system prompt for the science agent.
+- [SYSTEM_PROMPT_ML.md](SYSTEM_PROMPT_ML.md) — runtime-agnostic system prompt for machine-learning research with code agents.
 - `agents/` — agent profiles (`operon`, `onboarding`, `reviewer`, `bookmarker`).
 - `mcp-servers/` — bundled MCP integrations (`bio-tools`, `ketcher-chemistry`).

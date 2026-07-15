@@ -19,6 +19,7 @@ servers expose scientific data and chemistry tools.
 | Path | Purpose |
 | --- | --- |
 | `SYSTEM_PROMPT.md` | Base system prompt and operating rules for the scientific computing agent. |
+| `SYSTEM_PROMPT_ML.md` | Runtime-agnostic system prompt for reproducible machine-learning research with code agents. |
 | `skills/` | Skill packages. Each skill is centered on a `SKILL.md` file, with optional helper code, references, requirements, and provider metadata. |
 | `agents/` | Agent profile metadata and prompts for specialized roles such as onboarding, transcript review, bookmarking, and the general science agent. |
 | `mcp-servers/` | Bundled MCP servers and widgets used by the agent for external scientific data and chemistry workflows. |
