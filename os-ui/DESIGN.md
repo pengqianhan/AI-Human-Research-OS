@@ -106,10 +106,10 @@ plain repository files -> generator (Python, uv) -> state.json -> frontend
 
 | UI element | Source | Current state |
 |---|---|---|
-| Portfolio strips | `Memory/MEMORY.md` Active Projects table | available |
-| Policy panel | `Memory/MEMORY.md` Research Policy table | available |
+| Portfolio strips | `memory/MEMORY.md` Active Projects table | available |
+| Policy panel | `memory/MEMORY.md` Research Policy table | available |
 | Active Work | `HANDOFF.md` Active Work checklists | available |
-| Governance log | `HANDOFF.md` Decisions + `Memory/MEMORY.md` decisions | available |
+| Governance log | `HANDOFF.md` Decisions + `memory/MEMORY.md` decisions | available |
 | Project snapshot | `projects-folder/<P>/PROJECT_MEMORY.md` Snapshot | available |
 | Evaluation lines | `PROJECT_MEMORY.md` Evaluation Contract | pending circle_packing M2 |
 | Round track | `projects-folder/<P>/Code/runs/<round-id>/result.json` | pending circle_packing M2 |
@@ -117,7 +117,7 @@ plain repository files -> generator (Python, uv) -> state.json -> frontend
 | Review reports | `projects-folder/<P>/Evaluations/` | pending circle_packing M2 |
 | OS Feedback | `PROJECT_MEMORY.md` OS Feedback section | pending circle_packing M2 |
 | Local skills | project-local `.claude/skills` / `.agents/skills` | partial |
-| Skill Store | `Research-skills-hub/*/index.md` + `SKILL.md` frontmatter | available |
+| Skill Store | `research-skills-hub/*/index.md` + `SKILL.md` frontmatter | available |
 | License | skill LICENSE -> collection LICENSE/README -> fallback | available |
 | Sync status | hub / `.claude/skills` / `.agents/skills` byte comparison | available |
 | Activity | `git log` + project progress logs | available |

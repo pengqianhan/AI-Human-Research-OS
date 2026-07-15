@@ -96,7 +96,7 @@ a design mirror:
   "environment engineering is all you need."
 * **"File system as persistent memory" is literally the OKF / paper-wiki design.**
   Durable notes on disk, retrieved on demand, escaping the context window — the
-  wiki, `PROJECT_MEMORY.md`, and `Memory/MEMORY.md` are this pattern.
+  wiki, `PROJECT_MEMORY.md`, and `memory/MEMORY.md` are this pattern.
 * **The optimization ladder is a promotion path we already have:** instructions
   (`INSTRUCTION.md`) → prompts → structured context (OKF) → workflow → harness
   code (skills) → optimizer. Our "lesson → project memory → skill" promotion is

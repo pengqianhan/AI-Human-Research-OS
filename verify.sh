@@ -23,7 +23,7 @@ if [ -z "$PYTHON" ]; then
 fi
 
 # Canonical (hub) copy of the hub-sourced skill; agent-neutral.
-PWM_HUB="Research-skills-hub/open-paper-skills/paper-wiki-manager"
+PWM_HUB="research-skills-hub/open-paper-skills/paper-wiki-manager"
 # filetree-simple is an orphan skill (installed-only, no hub copy), so its
 # script is referenced from an installed copy. The 3-copy check does not apply
 # to it — it is intentionally not synced to the hub.

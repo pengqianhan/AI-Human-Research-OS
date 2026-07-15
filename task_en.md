@@ -6,7 +6,7 @@ This repository is building a lightweight Research OS for human researchers and 
 
 The primary goal is the human user's own research practice. Reusable open-source templates are a byproduct, and future product or platform possibilities should remain compatible without driving current complexity. The goal is not to build a complex platform first; it is to help Codex, Claude Code, and similar code agents support long-term research with lower token cost, more stable path conventions, and clearer context-loading rules. Code agents can be understood as the execution core of this Research OS, while humans mainly interact with and supervise it through natural language.
 
-The direction-layer long-term goal (an agent-agnostic, agent-native OS) lives in [GOAL.md](GOAL.md); this file is its operation-layer construction guide. This file is a live guide for building and evolving this OS. It is not a historical record and not a strict checklist. Start here to understand the construction goals, then treat `INSTRUCTION.md`, `Memory/MEMORY.md`, `FILETREE.md`, and the actual directory structure as the current sources of truth. You may deviate from the specific suggestions in this file, but explain the reason, impact, and tradeoffs.
+The direction-layer long-term goal (an agent-agnostic, agent-native OS) lives in [GOAL.md](GOAL.md); this file is its operation-layer construction guide. This file is a live guide for building and evolving this OS. It is not a historical record and not a strict checklist. Start here to understand the construction goals, then treat `INSTRUCTION.md`, `memory/MEMORY.md`, `FILETREE.md`, and the actual directory structure as the current sources of truth. You may deviate from the specific suggestions in this file, but explain the reason, impact, and tradeoffs.
 
 ## Overall Goal
 
@@ -34,13 +34,13 @@ This OS should help agents quickly answer these questions:
 - This Research OS should remain open, so users can extend it through project templates, skills, and lightweight conventions.
 - Treat the OS as an agent environment: constrain agents through artifacts, permissions, budgets, human oversight, and evaluators, not only through prompts.
 - The default policy is `portfolio always on, intra-project parallelism on demand`: many projects may exist and queue in the portfolio, but intra-project multi-agent execution should start only when the task is decomposable, verifiable, and worth the merge cost.
-- Agent-led research is controlled by `agent_led_research` in `Memory/MEMORY.md`; the default is `off`, with optional `scout_only` and `full_gated` modes.
+- Agent-led research is controlled by `agent_led_research` in `memory/MEMORY.md`; the default is `off`, with optional `scout_only` and `full_gated` modes.
 - Human-led and agent-led research should use the same evaluator protocol: hard checks + rubric scoring + LLM critique, with final judgment on complete artifacts rather than empty ideas.
 
 ## Agent Autonomy Rules
 
 - `task.md` and `task_en.md` provide construction direction; they do not replace inspection of the actual repository.
-- When `task.md`, `task_en.md`, `INSTRUCTION.md`, `Memory/MEMORY.md`, `README.md`, `FILETREE.md`, or the actual directory structure conflict, prefer the actual directory structure, `INSTRUCTION.md`, and `Memory/MEMORY.md`, then record the conflict as an item for user decision.
+- When `task.md`, `task_en.md`, `INSTRUCTION.md`, `memory/MEMORY.md`, `README.md`, `FILETREE.md`, or the actual directory structure conflict, prefer the actual directory structure, `INSTRUCTION.md`, and `memory/MEMORY.md`, then record the conflict as an item for user decision.
 - Prefer small, reversible changes. Do not create many empty directories, complex scripts, or heavy frameworks just to make the template feel complete.
 - If you find a simpler and clearer design than the one suggested here, use your own judgment.
 - For uncertain issues, make a conservative implementation or document the recommendation. Do not pretend the issue has been fully solved.
@@ -50,14 +50,14 @@ This OS should help agents quickly answer these questions:
 
 The following list describes the current design intent. Use the repository's actual paths as the source of truth, and fix naming inconsistencies in documentation when needed.
 
-- `Ideas/`: Stores research ideas, inspirations, hypotheses, early discussions, and idea logs.
+- `ideas/`: Stores research ideas, inspirations, hypotheses, early discussions, and idea logs.
 - `paper-wiki/`: Repo-level shared paper wiki for single-paper notes, topic synthesis, and `viz.html`. Project-specific citations live in each project's `paper/references.bib`.
-- `Memory/`: Stores long-term research memory, project memory, important background, and progress notes.
+- `memory/`: Stores long-term research memory, project memory, important background, and progress notes.
 - `projects-folder/`: Stores project instances and reusable project templates.
 - `projects-folder/templates/ai_research_template/`: Current template for starting an AI research paper project from a feasible idea.
-- `Research-skills-hub/`: Stores reusable research skills, similar to an app store for research skills.
+- `research-skills-hub/`: Stores reusable research skills, similar to an app store for research skills.
 - `INSTRUCTION.md`: Global operating guide that agents must read first when entering the repository.
-- `Memory/MEMORY.md`: Global research policy, Active Projects portfolio, cross-project decisions, and lessons.
+- `memory/MEMORY.md`: Global research policy, Active Projects portfolio, cross-project decisions, and lessons.
 - `FILETREE.md`: Repository navigation index that helps agents understand directory purposes quickly.
 - `README.md`: Human-facing project overview, current capabilities, and roadmap.
 - `AGENTS.md` / `CLAUDE.md`: Entry instructions for Codex and Claude Code.
@@ -75,12 +75,12 @@ The following list describes the current design intent. Use the repository's act
 Prefer documenting these workflows:
 
 - Which files a new agent session should read first, and in what order.
-- How a human should record a new idea in `Ideas/`.
+- How a human should record a new idea in `ideas/`.
 - How a feasible idea should be used to start a new research project or paper draft from `projects-folder/templates/ai_research_template/`.
 - How papers should enter the shared `paper-wiki/`, and how to update single-paper notes, topic synthesis, project-local BibTeX, and claim/evidence records.
 - Where to archive code, data, figures, baselines, and writing materials produced during research.
-- How research experience should be saved to `Memory/`, project-local `.agents` / `.claude`, or global `Research-skills-hub/`.
-- How the portfolio should be maintained in `Memory/MEMORY.md`, how project truth should live in `PROJECT_MEMORY.md`, and how `HANDOFF.md` should stay narrow.
+- How research experience should be saved to `memory/`, project-local `.agents` / `.claude`, or global `research-skills-hub/`.
+- How the portfolio should be maintained in `memory/MEMORY.md`, how project truth should live in `PROJECT_MEMORY.md`, and how `HANDOFF.md` should stay narrow.
 - How agent-led research should be controlled by `off` / `scout_only` / `full_gated`.
 - How the unified evaluator should assess complete research artifacts, with full reports stored in each project's `Evaluations/` folder.
 
@@ -99,7 +99,7 @@ Explain where each memory layer should live, when it should be updated, who shou
 Define a path from experience to reusable skills:
 
 - If an experience only applies to the current project, save it in project memory or a project-local agent skill.
-- If an experience has value across multiple research projects, then consider adding it to `Research-skills-hub/` or a global agent skill.
+- If an experience has value across multiple research projects, then consider adding it to `research-skills-hub/` or a global agent skill.
 - Global skills must remain domain-independent or only lightly coupled to a specific domain. They should document scope, inputs, outputs, and limitations.
 - When adding or modifying skills, update the relevant index documents so agents can discover and install them.
 
@@ -114,7 +114,7 @@ While keeping plain files and low complexity, define the four control surfaces o
 
 ### 6. Normalize Portfolio, Parallelism, and Evaluation
 
-- The Active Projects table in `Memory/MEMORY.md` is the portfolio dashboard and should include owner, stage, priority, status, evaluator, and next action.
+- The Active Projects table in `memory/MEMORY.md` is the portfolio dashboard and should include owner, stage, priority, status, evaluator, and next action.
 - `PROJECT_MEMORY.md` is the source of truth for project state; `index.md` is only a navigation summary.
 - Intra-project parallel work should use isolated task workspaces such as `projects-folder/<Project>/Tasks/<task-id>/`, and only verified results should merge back into the project mainline.
 - The evaluator should run hard checks first, then rubric scoring and LLM critique. The final evaluation target is paper/code/figures/references/reproducibility notes, not an idea description.
@@ -126,7 +126,7 @@ Based on the exploration results, update or supplement these documents with mini
 - `README.md`: Explain what the Research OS is, how to start using it, and what the core directories are.
 - `INSTRUCTION.md`: Define agent startup order, file read/write rules, memory rules, and research-material protection rules.
 - `FILETREE.md`: Refresh the index if directory or file descriptions change.
-- `Memory/MEMORY.md`: Update when research policy, portfolio, cross-project decisions, or general lessons change.
+- `memory/MEMORY.md`: Update when research policy, portfolio, cross-project decisions, or general lessons change.
 - `HANDOFF.md`: Record cross-session active work, reversible decisions, deviations, and intentionally-not-done items; do not turn it into a research dashboard.
 - `AGENTS.md` and `CLAUDE.md`: Update only if needed, and keep them concise.
 - If changes affect code, configuration, or experiment documentation under `projects-folder/templates/ai_research_template/Code/`, update both the English and Chinese README files there.

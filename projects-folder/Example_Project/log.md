@@ -15,6 +15,6 @@ Newest entries first. Keep this log compact; durable decisions belong in
 ## 2026-06-12
 
 * Created the worked example from the promoted
-  [linear-fit micro-experiment](../../Ideas/idea_example/linear-fit-micro-experiment.md).
+  [linear-fit micro-experiment](../../ideas/idea_example/linear-fit-micro-experiment.md).
 * Ran the synthetic linear-fit code, generated [Figs/linear_fit.png](Figs/linear_fit.png),
   wrote [paper/main.tex](paper/main.tex), and compiled the PDF.

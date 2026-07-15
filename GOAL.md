@@ -6,12 +6,12 @@
 >
 > 文档分层:本文件 = 方向层;[task.md](task.md) / [task_en.md](task_en.md) =
 > 操作层构建指南;运行事实源 = 实际目录结构、[INSTRUCTION.md](INSTRUCTION.md)、
-> [Memory/MEMORY.md](Memory/MEMORY.md)、[HANDOFF.md](HANDOFF.md)(Decisions)、
+> [memory/MEMORY.md](memory/MEMORY.md)、[HANDOFF.md](HANDOFF.md)(Decisions)、
 > [FILETREE.md](FILETREE.md)。task.md 的交付物清单属于已完成的 2026-06 规范化任务;
 > 本文件的里程碑是当前的 OS 演化工作程序。
 >
 > 本文与事实源冲突时,按 task.md 自主判断规则处理:优先相信实际目录结构、
-> INSTRUCTION.md 和 Memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的里程碑。
+> INSTRUCTION.md 和 memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的里程碑。
 > 本文件只能由人类(或经人类逐条确认的 agent 提案)修订。
 
 ## 1. 最终目的
@@ -40,12 +40,12 @@ agent 执行(当前实际由 Claude Code 承担),人类定方向、授权与审�
 |---|---|---|
 | 内核 | 入口链 + 三层记忆 + 目录语义(INSTRUCTION.md 定义的 core)| 已有;但 INSTRUCTION.md Skills 节(两处)与 README 仍硬编码两个 agent 目录,尚不满足铁律 1,由 M1 认领 |
 | 文件系统 | 仓库本身(git 版本化)| 已有 |
-| 引导协议 | 入口文件 → INSTRUCTION.md →(完整启动序列见 INSTRUCTION.md Session Startup,含 HANDOFF.md、Human/index.md)| 链条已有;adapter 契约未成文(M1)|
+| 引导协议 | 入口文件 → INSTRUCTION.md →(完整启动序列见 INSTRUCTION.md Session Startup,含 HANDOFF.md、human/index.md)| 链条已有;adapter 契约未成文(M1)|
 | 驱动(adapter)| 每 agent 一个一行入口指针文件 + 适配目录(`CLAUDE.md`+`.claude/`、`AGENTS.md`+`.agents/`)| 已注册两个;`.gitignore` 中 `.antigravitycli/` 痕迹表明存在第三个未注册 agent;项目层存在深度 Claude 锁定且未登记的 `projects-folder/Paper_VAE/`(M0 待决策)|
 | 进程 | 有边界的 agent 任务:`Tasks/<task-id>/` 工作区 + 预算 + 状态 | 工作区约定已写(INSTRUCTION.md);预算/回合制词汇目前仅存在于 HANDOFF 的 circle_packing 计划;均未实战(M2)|
-| 调度器 | 人类 + `Memory/MEMORY.md` Active Projects 表 | 人工调度可用;自动排队属 M4 闸门 |
+| 调度器 | 人类 + `memory/MEMORY.md` Active Projects 表 | 人工调度可用;自动排队属 M4 闸门 |
 | 内存管理 | 全局/项目/任务三层记忆 + 卫生规则 | 已有;progress log 已在 Example_Project 实战 |
-| 权限 | 保护规则(评测器、权威结果、用户材料、`Human/private/`)| 纯约定;唯一已部署的强制机制是 `.gitignore` 对 `Human/private/` 的忽略(agent 无关);项目级 settings deny 已决策未部署(HANDOFF circle_packing tier-2),且为 Claude 专属 |
+| 权限 | 保护规则(评测器、权威结果、用户材料、`human/private/`)| 纯约定;唯一已部署的强制机制是 `.gitignore` 对 `human/private/` 的忽略(agent 无关);项目级 settings deny 已决策未部署(HANDOFF circle_packing tier-2),且为 Claude 专属 |
 | 系统调用/标准库 | skills(hub 为源,装进各 adapter 目录)| 安装器硬编码两个目录(`TARGET_DIRS`);`SKILL.md` frontmatter 是事实上的跨 agent 格式但未成文;5 个 hub 技能带 per-agent 附件(`agents/openai.yaml`)(M1 成文,M3 泛化)|
 | secrets / 外部工具 | `.env` 约定痕迹 + 各 agent 的 MCP/工具与凭据机制 | 无 OS 级约定;adapter 契约应声明外部工具能力与凭据机制(M1 给一行定位,更多属 M4 闸门)|
 | IPC | HANDOFF.md、结构化 artifacts | 已有;任务工作区同"进程"行(未实战)|
@@ -53,7 +53,7 @@ agent 执行(当前实际由 Claude Code 承担),人类定方向、授权与审�
 
 ## 3. Agent-Agnostic 三条铁律
 
-1. **内核不新增专属假设**:内核文件(INSTRUCTION.md、Memory/MEMORY.md、各入口指针
+1. **内核不新增专属假设**:内核文件(INSTRUCTION.md、memory/MEMORY.md、各入口指针
    文件、目录语义)不得**新增**任何特定 agent 的假设;存量硬编码由 M1 一次性迁往
    adapter 契约表。FILETREE.md 的例行刷新不计为内核改动。
 2. **统一引导契约**:所有 agent 走同一条引导链;每个 agent 的原生入口文件只允许是

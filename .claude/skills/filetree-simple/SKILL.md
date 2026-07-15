@@ -59,7 +59,7 @@ directly — there are no separate slash commands wrapping these.
   files individually.
 - Index-file-backed subtrees may be configured in the script when one index file
   is intended to index a large, frequently changing subtree. For this repository,
-  `Research-skills-hub/` is collapsed to its `index.md`; the skill subdirectories
+  `research-skills-hub/` is collapsed to its `index.md`; the skill subdirectories
   `science-skills/` and `open-paper-skills/` are reached through it and their own
   `index.md` files.
 - The script filters `FILETREE.md`, lock files, `.gitkeep`, and common

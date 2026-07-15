@@ -52,7 +52,7 @@ promoted in the cognition map.
 The default project layout is:
 
 ```text
-Human/human-cognition/
+human/human-cognition/
   index.md
   known_knowns.md
   known_unknowns.md

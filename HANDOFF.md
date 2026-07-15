@@ -41,7 +41,7 @@ User direction: evolve this repo into an **agent-agnostic, agent-native Research
 
 Design settled in [os-ui/DESIGN.md](os-ui/DESIGN.md); pixel spec in
 [os-ui/mockup.html](os-ui/mockup.html). User is a frontend novice — implement in
-small explained steps (see `Human/inbox.md` candidate entry). Read-only only;
+small explained steps (see `human/inbox.md` candidate entry). Read-only only;
 execution surface stays behind GOAL.md M4.
 
 - [x] ~~Design doc + clickable mockup (3 pages, fake data)~~ — delivered 2026-07-04.
@@ -82,17 +82,17 @@ Run: `./os-ui/start.sh` (or `--watch`); the manual two-step alternative is in
 
 ### circle_packing — first real project / OS shakedown (planned 2026-07-03, grilling session)
 
-Purpose: reimplement the `circle_packing` task from `Resource/EurekAgent/examples/circle_packing/`
+Purpose: reimplement the `circle_packing` task from `resource/EurekAgent/examples/circle_packing/`
 inside the OS as its first real project. **Primary goal is stress-testing and refining the OS**;
 the math result is secondary. Decisions table: see "circle_packing kickoff decisions" below.
 
-- [ ] Create idea card `Ideas/circle-packing-os-shakedown.md` (OKF concept, `type: Idea`);
-      update [Ideas/index.md](Ideas/index.md); set `status: promoted` at instantiation.
+- [ ] Create idea card `ideas/circle-packing-os-shakedown.md` (OKF concept, `type: Idea`);
+      update [ideas/index.md](ideas/index.md); set `status: promoted` at instantiation.
 - [ ] Instantiate: `cp -R projects-folder/templates/ai_research_template projects-folder/circle_packing`
       (template unchanged — route B). Fill `index.md`, `PROJECT_MEMORY.md` Snapshot
       (`owner: human-led`, `origin: EurekAgent example task`, `stage: probe`),
       `paper_skeleton.md` Snapshot; add row to Active Projects in
-      [Memory/MEMORY.md](Memory/MEMORY.md); refresh `FILETREE.md` (filetree-simple + lint).
+      [memory/MEMORY.md](memory/MEMORY.md); refresh `FILETREE.md` (filetree-simple + lint).
 - [ ] Add project-experimental sections to `PROJECT_MEMORY.md`:
       `## Evaluation Contract` (3-tier goals below; stop condition: 5 consecutive rounds
       with best-score gain < 0.001 → switch to writing),
@@ -103,7 +103,7 @@ the math result is secondary. Decisions table: see "circle_packing kickoff decis
 - [ ] Phase 0 — independent evaluator at `projects-folder/circle_packing/Code/evaluator/evaluate.py`:
       spec = n=26, shapes (26,2)/(26,), radii ≥ 0, reported vs actual sum atol 1e-6,
       circles inside unit square, pairwise non-overlap tol 1e-6, score = sum of radii.
-      Reimplement from the problem spec — **no code copied from `Resource/EurekAgent/` (AGPL)**.
+      Reimplement from the problem spec — **no code copied from `resource/EurekAgent/` (AGPL)**.
       Fixed self-tests before freeze: single circle r=0.5, k×k grid, overlapping pair,
       out-of-bounds, sum-mismatch. Freeze = git commit after tests pass.
 - [ ] Protection (tier 2): project-local `.claude/settings.json` deny rules for Edit/Write on
@@ -126,7 +126,7 @@ the math result is secondary. Decisions table: see "circle_packing kickoff decis
 - [ ] Writing phase after stop condition: `paper/main.tex` (claims table in
       `paper_skeleton.md` is live from round 1). Final review = full protocol (hard checks +
       8-dimension rubric + LLM critique), isolated session → `Evaluations/`.
-- [ ] Project end: OS back-port batch 2 + update HANDOFF / Memory/MEMORY.md; paper is an
+- [ ] Project end: OS back-port batch 2 + update HANDOFF / memory/MEMORY.md; paper is an
       honest methods + experiment report (not a record-attempt paper).
 
 ## Decisions
@@ -141,7 +141,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | D4 | HTML as the format for operating docs | **— superseded 2026-06-17 and narrowed later:** `HANDOFF.md` is the durable Markdown hand-off record; `OS_INTRO.html` stays HTML as a static delivered intro | Convert hand-off records back to HTML (not recommended — Markdown is cheaper to read/edit/grep/diff) |
 | D5 | Build a CLI? | **No** — non-goal; conventions + skills suffice at this scale | Revisit only with explicit confirmation if navigation becomes slow |
 | D6 | Keep `Example_Project/`? | **Kept** as living documentation under `projects-folder/Example_Project/` | `rm -rf projects-folder/Example_Project` + remove its README/MEMORY/Ideas links and FILETREE rows |
-| D7 | `.agents/skills` vs `.claude/skills` (vs hub) duplication | **Three** identical copies (two installed + the canonical `Research-skills-hub/` source) kept in sync by a documented rule | Symlink the installed dirs (macOS/Linux only) |
+| D7 | `.agents/skills` vs `.claude/skills` (vs hub) duplication | **Three** identical copies (two installed + the canonical `research-skills-hub/` source) kept in sync by a documented rule | Symlink the installed dirs (macOS/Linux only) |
 | D8 | Where do instantiated projects live? | `projects-folder/<ProjectName>/`; reusable templates in `projects-folder/templates/<TemplateName>/` | Move projects back to the repo root and revert links + FILETREE rows |
 | D9 | Structured (YAML/JSON) indexes? | **No** — Markdown tables are grep-able and token-cheap | Add YAML front-matter later if tooling needs to parse indexes |
 
@@ -151,7 +151,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 |---|---|---|
 | FILETREE.md scope when renaming the template | **Full regen** (re-indexed the whole `projects-folder/` reorg that the manifest had missed) over a minimal rename-only patch | n/a — full sync is the correct state and `filetree.py lint` enforces it |
 | Role of `task.md` / `task_en.md` | **Superseded 2026-07-03:** treat them as live OS construction guides, not historical records; keep them aligned with current paths and design stance | Move them to an archive folder and create new live task files if a historical/original prompt record is needed |
-| Where decisions are recorded | **Deduped to this file** (durable cross-project subset mirrored in `Memory/MEMORY.md`) | Re-add a decisions table elsewhere (not recommended — invites drift) |
+| Where decisions are recorded | **Deduped to this file** (durable cross-project subset mirrored in `memory/MEMORY.md`) | Re-add a decisions table elsewhere (not recommended — invites drift) |
 | Active work lifecycle | **Retired separate plan files**; unfinished cross-session work now lives in this file under `## Active Work` | Restore the separate-plan convention from git if future tasks need a dedicated file |
 
 **os-ui shell decision (2026-07-05):**
@@ -168,9 +168,9 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Paper library boundary | Shared paper understanding lives in `paper-wiki/papers/` and `paper-wiki/topics/`; project-specific use of a paper lives in the project (`references.bib`, `paper_skeleton.md`, `PROJECT_MEMORY.md`). | Allow full project-local copies of paper notes, accepting duplicate-note drift. |
 | Topic pages | Topic pages are lightweight synthesis and research roadmaps, not mere tags or exhaustive surveys. | Downgrade topics to index-only pages, or promote them into full survey documents with a separate maintenance policy. |
 | Experience promotion | Project-only facts stay in project memory; cross-project principles go to global memory; repeatable procedures become skills only when another project agent can execute them without local context. | Skill-ify more aggressively, accepting skill-library churn and validation overhead. |
-| Agent-led research | Default `agent_led_research` is **`off`**. Optional modes are `scout_only` and `full_gated`; full gated agent-led work uses `scout → probe → develop → archived/passed`. | Change the value in `Memory/MEMORY.md` and add budget/evaluator controls before running agent-led projects. |
+| Agent-led research | Default `agent_led_research` is **`off`**. Optional modes are `scout_only` and `full_gated`; full gated agent-led work uses `scout → probe → develop → archived/passed`. | Change the value in `memory/MEMORY.md` and add budget/evaluator controls before running agent-led projects. |
 | Parallelism | **Portfolio always on, intra-project parallelism on demand.** Multiple projects can be tracked, but project-internal multi-agent work starts only when decomposable, verifiable, and worth merge cost. | Make intra-project parallelism default, but add task queue, merge, budget, and evaluator machinery first. |
-| Project state source | Global state is the Active Projects table in `Memory/MEMORY.md`; per-project truth is `PROJECT_MEMORY.md`; project `index.md` is a navigation summary, not a state database. `HANDOFF.md` stays narrow. | Move state into a dashboard, CLI, issue tracker, or structured database after confirming Markdown tables are insufficient. |
+| Project state source | Global state is the Active Projects table in `memory/MEMORY.md`; per-project truth is `PROJECT_MEMORY.md`; project `index.md` is a navigation summary, not a state database. `HANDOFF.md` stays narrow. | Move state into a dashboard, CLI, issue tracker, or structured database after confirming Markdown tables are insufficient. |
 | Evaluator | Use one evaluator protocol for human-led and agent-led research: hard checks + rubric scoring + LLM critique. Final judgment targets complete artifacts, not empty ideas. | Replace with a lightweight LLM-only judge, accepting weaker guarantees on reproducibility and traceability. |
 
 **circle_packing kickoff decisions (2026-07-03, grilling session):**
@@ -185,7 +185,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | OS friction capture | `## OS Feedback` section in project `PROJECT_MEMORY.md`, fixed one-line format, mandatory entry (or explicit "none") every round; survivors promoted at phase ends | Ad-hoc progress-log notes, or logging straight into global memory (rejected: pollutes ≤200-line budget) |
 | Literature scope | Bounded: 3–5 sources; 1–2 paper-wiki notes (minimal profile, AlphaEvolve first); no new topic page until ≥ 3 related notes; provenance of 2.63598844 must be verified or honestly flagged | Skip paper-wiki entirely (bib-only) or run a fuller packing-literature survey |
 | Artifact-level review | Exactly two: mid-term hard-check review after the parallel round; final full review (hard checks + rubric + LLM critique) after `main.tex`. Reviewer = fresh read-only agent session; reports in project `Evaluations/` | Single final review, or per-round reviews (rejected: cost without new signal) |
-| Leaf defaults | Full idea→project path via `Ideas/`; lowercase project name; commits on `main` per round; `paper_skeleton.md` live from round 1, `main.tex` after stop condition; round wrap-up **not** skill-ified before round 3; two OS back-port batches | Each independently reversible; see Active Work items |
+| Leaf defaults | Full idea→project path via `ideas/`; lowercase project name; commits on `main` per round; `paper_skeleton.md` live from round 1, `main.tex` after stop condition; round wrap-up **not** skill-ified before round 3; two OS back-port batches | Each independently reversible; see Active Work items |
 
 **Orphan-skills decision (2026-07-04, user-set):**
 
@@ -205,7 +205,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| Skill rename | `paper-library-manager` → **`paper-wiki-manager`** in `Research-skills-hub/open-paper-skills/` and both installs (`.claude/skills/`, `.agents/skills/`); old skill removed everywhere; hub index/README, INSTRUCTION.md reference-intake, and README roadmap item checked off accordingly | `mv` the hub dir back, revert SKILL.md/schema/scripts naming, `install_research_skill.py remove paper-wiki-manager --yes` + reinstall old name, revert doc references |
+| Skill rename | `paper-library-manager` → **`paper-wiki-manager`** in `research-skills-hub/open-paper-skills/` and both installs (`.claude/skills/`, `.agents/skills/`); old skill removed everywhere; hub index/README, INSTRUCTION.md reference-intake, and README roadmap item checked off accordingly | `mv` the hub dir back, revert SKILL.md/schema/scripts naming, `install_research_skill.py remove paper-wiki-manager --yes` + reinstall old name, revert doc references |
 | Wiki data root | ~~Keep `paper-library/` as the bundle root~~ **— superseded 2026-07-07 (user request): renamed to `paper-wiki/`.** Skill default root, config asset (now `assets/paper-wiki.toml`), validator script (now `scripts/validate_paper_wiki.py`), INSTRUCTION.md, README, task.md/task_en.md, and FILETREE.md all updated; wiki re-validated after the rename | `mv paper-wiki paper-library` and revert the path/name updates in the skill and docs |
 | Concept entity pages | New third collection `paper-wiki/concepts/` with `type` ∈ Method/Dataset/Benchmark/Metric/Term/Tool; body needs `# Definition` + `# Papers`; create only for entities referenced by ≥ 2 papers, durable field-level entities, or on user request — **not** for a method only its own paper describes. Validator enforces fields, sections, `concepts/index.md`, and bidirectional paper↔concept links | Delete `concepts/` and revert the validator/schema/SKILL.md concept sections (single hub commit) |
 | Paper→project links | Optional `# Used In Projects` paper-body section links a project's `index.md` (must end in `.md` — the validator skips bare-directory links); target existence checked, no project backlink required. The 2026-07-03 "Paper library boundary" decision stands: the wiki stores only the pointer, project-specific use stays in the project | Drop the section from schema/SKILL.md and remove any such sections from paper pages |
@@ -222,7 +222,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
   repo was re-committed since. Trust `git log`, never those frozen tables.
 - **2026-07-03 design discussion was documented as durable operating policy**, not as a
   transcript. The full reasoning remains in the conversation; `INSTRUCTION.md` and
-  `Memory/MEMORY.md` carry the operational subset.
+  `memory/MEMORY.md` carry the operational subset.
 
 ## Intentionally not done
 

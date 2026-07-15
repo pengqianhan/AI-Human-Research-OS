@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: Refresh mirror from upstream
-        run: bash Research-skills-hub/mattpocock-skills/scripts/refresh.sh
+        run: bash research-skills-hub/mattpocock-skills/scripts/refresh.sh
 
       - name: Open or update PR when upstream changed
         env:

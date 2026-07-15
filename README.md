@@ -51,7 +51,7 @@ The default operating policy is **portfolio always on, intra-project parallelism
 on demand**. Multiple projects can be tracked at once, but multi-agent execution
 inside a project should start only when the task is decomposable, verifiable, and
 worth the merge cost. Agent-led research is controlled by the `agent_led_research`
-policy in [Memory/MEMORY.md](Memory/MEMORY.md): `off`, `scout_only`, or
+policy in [memory/MEMORY.md](memory/MEMORY.md): `off`, `scout_only`, or
 `full_gated`.
 
 Human-led and agent-led work use the same evaluation stance: hard checks,
@@ -71,25 +71,25 @@ figures, references, and paper drafts, not empty ideas.
 
 | Path | Purpose |
 |---|---|
-| [Ideas/](Ideas/) | OKF bundle for research ideas, hypotheses, inspirations, and early discussions |
-| [Human/](Human/) | Stable user context, collaboration preferences, workflows, and privacy boundaries |
+| [ideas/](ideas/) | OKF bundle for research ideas, hypotheses, inspirations, and early discussions |
+| [human/](human/) | Stable user context, collaboration preferences, workflows, and privacy boundaries |
 | [projects-folder/](projects-folder/) | Container for project instances and reusable project templates |
 | [projects-folder/templates/ai_research_template/](projects-folder/templates/ai_research_template/) | AI-research paper template copied to start a new project |
-| [Memory/](Memory/) | Global long-term memory across projects |
-| [Research-skills-hub/](Research-skills-hub/) | Store of reusable agent skills |
+| [memory/](memory/) | Global long-term memory across projects |
+| [research-skills-hub/](research-skills-hub/) | Store of reusable agent skills |
 | `.agents/skills/`, `.claude/skills/` | Installed skills (two identical copies) |
 | [INSTRUCTION.md](INSTRUCTION.md) | Agent operating guide (read first) |
 | [FILETREE.md](FILETREE.md) | Auto-maintained repository index |
 
 ## Minimal Workflow
 
-idea → [Ideas/](Ideas/) OKF concept or idea bundle → copy
+idea → [ideas/](ideas/) OKF concept or idea bundle → copy
 [ai_research_template/](projects-folder/templates/ai_research_template/) to
 `projects-folder/<ProjectName>/` → experiments in
 `projects-folder/<ProjectName>/Code/`, figures in `Figs/` → write
 `paper/main.tex` with local references in `paper/references.bib` → memory updated in
 project `PROJECT_MEMORY.md` and
-[Memory/MEMORY.md](Memory/MEMORY.md). Details: [INSTRUCTION.md](INSTRUCTION.md).
+[memory/MEMORY.md](memory/MEMORY.md). Details: [INSTRUCTION.md](INSTRUCTION.md).
 A complete worked example (code → figure → compiled PDF) lives in
 [projects-folder/Example_Project/](projects-folder/Example_Project/).
 
@@ -97,16 +97,16 @@ A complete worked example (code → figure → compiled PDF) lives in
 
 Original content in this repository is licensed under the [MIT License](LICENSE).
 Third-party vendored or collected content keeps its original license. Currently
-[Research-skills-hub/science-skills/](Research-skills-hub/science-skills/) is
+[research-skills-hub/science-skills/](research-skills-hub/science-skills/) is
 provided under Apache-2.0 via its own
-[LICENSE](Research-skills-hub/science-skills/LICENSE), and
-[Research-skills-hub/collected-skills/](Research-skills-hub/collected-skills/)
+[LICENSE](research-skills-hub/science-skills/LICENSE), and
+[research-skills-hub/collected-skills/](research-skills-hub/collected-skills/)
 keeps per-skill upstream attribution and license terms.
 
 ## Roadmap (original TODO list)
 
 > Note: the memory-mechanism items below are now partially implemented — see
-> INSTRUCTION.md → Memory Layers (global `Memory/MEMORY.md` + per-project
+> INSTRUCTION.md → Memory Layers (global `memory/MEMORY.md` + per-project
 > `PROJECT_MEMORY.md`). The rest remains open.
 
 
@@ -119,19 +119,19 @@ keeps per-skill upstream attribution and license terms.
 - [ ] Add a workspace where holding a group meeting with humans and AI, humans discuss research with the AI. Because AI can search paper and read fast, they can point out if the idea is feasible or not, and they can also point out relevant papers that humans might miss. This can be a good way to brainstorm research ideas and get feedback on them. After discussion, the AI can implement the idea or feedback immediately.
 - [ ] The final goal of the repo is to build a Research OS.
 - [ ] add interface according to [AlookAI](https://github.com/alookai/alook) and [Wanman](https://github.com/chekusu/wanman) and [不二的主页](https://hiesther.me/#home)
-- [x] in References/ folder, maintain a paper-wiki, which includes the summary, key points, and relation to the research project for each paper. The paper-wiki can be implemented as a markdown file or a simple database. The paper-wiki can help the AI agent to quickly find relevant papers and understand their content. — Implemented as the [paper-wiki/](paper-wiki/) OKF paper wiki maintained by the `paper-wiki-manager` skill: per-paper pages, topic pages, concept entity pages (methods/datasets/benchmarks/metrics/terms/tools), optional `# Used In Projects` links, a generated `viz.html` graph, and an executable validator. - add `paper-wiki-manager` skill, which can help the AI agent to manage the paper-wiki, including adding new papers, updating existing papers, and deleting old papers. The skill can also help the AI agent to generate the `viz.html` graph and validate the paper-wiki. The skill can be used in both `Ideas/` and `paper/` folders. remove the 'References/' folder, and move all the papers to `paper-wiki/` folder. 
-- [x] Add `read_paper` workflow， which manages the process of reading a paper, including summarizing it, extracting key points, and relating it to the research project. The workflow can be used in both `Ideas/` and `References/` folders. Besides, when AI meet a problem that it cannot solve, it can use this workflow to read relevant papers and find solutions. All the new reading papers will be stored in `References/` folder, and the summary and key points will be stored in `Ideas/` folder. - add `paper-wiki-manager` skill, which can help the AI agent to manage papers in paper-wiki.
-- [x] add find-research-skills, which can help the AI agent to find the right research skills in `Research-skills-hub/` folder or even online
+- [x] in References/ folder, maintain a paper-wiki, which includes the summary, key points, and relation to the research project for each paper. The paper-wiki can be implemented as a markdown file or a simple database. The paper-wiki can help the AI agent to quickly find relevant papers and understand their content. — Implemented as the [paper-wiki/](paper-wiki/) OKF paper wiki maintained by the `paper-wiki-manager` skill: per-paper pages, topic pages, concept entity pages (methods/datasets/benchmarks/metrics/terms/tools), optional `# Used In Projects` links, a generated `viz.html` graph, and an executable validator. - add `paper-wiki-manager` skill, which can help the AI agent to manage the paper-wiki, including adding new papers, updating existing papers, and deleting old papers. The skill can also help the AI agent to generate the `viz.html` graph and validate the paper-wiki. The skill can be used in both `ideas/` and `paper/` folders. remove the 'References/' folder, and move all the papers to `paper-wiki/` folder.
+- [x] Add `read_paper` workflow， which manages the process of reading a paper, including summarizing it, extracting key points, and relating it to the research project. The workflow can be used in both `ideas/` and `References/` folders. Besides, when AI meet a problem that it cannot solve, it can use this workflow to read relevant papers and find solutions. All the new reading papers will be stored in `References/` folder, and the summary and key points will be stored in `ideas/` folder. - add `paper-wiki-manager` skill, which can help the AI agent to manage papers in paper-wiki.
+- [x] add find-research-skills, which can help the AI agent to find the right research skills in `research-skills-hub/` folder or even online
 - [x] Add memory mechanisim. Doing research is a long-term process, and the AI agent needs to remember the research progress, including the ideas, references, and experiments. The memory can be implemented as a simple database or a more complex knowledge graph. The memory can also be used to track the research progress and provide feedback to the human researcher. 
-   - [x] The memory should include global memory, which stores the overall research progress and important information, and local memory, which stores the right now research project. Because the research always can be cross domain. And for ADHDers, they may have multiple research projects at the same time, so the local memory can help them to focus on the current project.- `Memory/MEMORY.md` is the global memory, and `PROJECT_MEMORY.md` is the local memory for each project. `Human`in this folder, there are some files to store the human's preferences.
+   - [x] The memory should include global memory, which stores the overall research progress and important information, and local memory, which stores the right now research project. Because the research always can be cross domain. And for ADHDers, they may have multiple research projects at the same time, so the local memory can help them to focus on the current project.- `memory/MEMORY.md` is the global memory, and `PROJECT_MEMORY.md` is the local memory for each project. `human` in this folder, there are some files to store the human's preferences.
 
 ## Reference Projects
 
-- [AutoR](https://github.com/AutoX-AI-Labs/AutoR): [code](Resource/AutoR)
+- [AutoR](https://github.com/AutoX-AI-Labs/AutoR): [code](resource/AutoR)
 - [autolab](https://github.com/autolabhq/autolab)
 - [eve](https://github.com/vercel/eve)
 - [maka-agent](https://github.com/jackwener/maka-agent)
-- [awesome-AI-for-research](Resource/awesome-AI-for-research)
+- [awesome-AI-for-research](resource/awesome-AI-for-research)
 - [duoduo](https://github.com/openduo/duoduo)
 - [FAROS](https://github.com/OpenNSWM-Lab/FAROS/tree/main)
 - [science-skills](https://github.com/JimLiu/science-skills)

@@ -12,7 +12,7 @@ Maintain one lightweight repository-root Markdown hand-off record for agent work
   what was intentionally not done.
 
 This file complements — never replaces — the repository's memory files (e.g.
-`Memory/MEMORY.md`) and git history. The division of labor is strict:
+`memory/MEMORY.md`) and git history. The division of labor is strict:
 
 - **git** holds commits and diffs. Do **not** hand-maintain a commits table — it drifts
   out of sync with the real history. Point to `git log` / `git show <hash>` instead.

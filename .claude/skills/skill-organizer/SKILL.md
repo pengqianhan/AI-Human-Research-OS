@@ -1,17 +1,17 @@
 ---
 name: skill-organizer
-description: "Registers a newly added skill into a Research-skills-hub collection by updating that collection's index.md and README.md. Handles two collections: collected-skills/ (external skills — needs a source URL and optional license) and open-paper-skills/ (skills the repo owner authored — provenance is Original or Adapted, no external URL required). Use whenever: a new SKILL.md has been dropped into Research-skills-hub/collected-skills/ or Research-skills-hub/open-paper-skills/; the user says they added a new skill (with or without a source URL); the user asks to update a collection's index or README. Always invoke when the user adds a skill to either collection — even if the request is phrased as 'update the index' or 'register this skill'."
+description: "Registers a newly added skill into a Research-skills-hub collection by updating that collection's index.md and README.md. Handles two collections: collected-skills/ (external skills — needs a source URL and optional license) and open-paper-skills/ (skills the repo owner authored — provenance is Original or Adapted, no external URL required). Use whenever: a new SKILL.md has been dropped into research-skills-hub/collected-skills/ or research-skills-hub/open-paper-skills/; the user says they added a new skill (with or without a source URL); the user asks to update a collection's index or README. Always invoke when the user adds a skill to either collection — even if the request is phrased as 'update the index' or 'register this skill'."
 ---
 
 ## What this skill does
 
 After a new skill folder is placed under a Research-skills-hub collection —
-`Research-skills-hub/<collection>/<skill-name>/` — this skill:
+`research-skills-hub/<collection>/<skill-name>/` — this skill:
 
 1. Reads the skill's `SKILL.md` frontmatter (`name`, `description`) and body
    (install instructions, attribution, example commands).
-2. Updates `Research-skills-hub/<collection>/index.md` — adds a bullet entry.
-3. Updates `Research-skills-hub/<collection>/README.md` — adds a table row, a
+2. Updates `research-skills-hub/<collection>/index.md` — adds a bullet entry.
+3. Updates `research-skills-hub/<collection>/README.md` — adds a table row, a
    Prerequisites line, and a `## <skill-name>` usage section.
 
 It does **not** install the skill into `.claude/skills/` or `.agents/skills/`;
@@ -26,7 +26,7 @@ that stays a separate, explicit step (see [After updating](#after-updating)).
 
 Pick the collection from where the skill folder was actually dropped. If a new
 `SKILL.md` exists in both, or the target is ambiguous, ask which collection
-before editing. Other collections under `Research-skills-hub/` (e.g.
+before editing. Other collections under `research-skills-hub/` (e.g.
 `science-skills/`, `claude-science-skills/`) are vendored bundles maintained by
 their own upstream sync, not by this skill — do not register into them here.
 
@@ -46,7 +46,7 @@ their own upstream sync, not by this skill — do not register into them here.
 
 ### 1. Read the skill's SKILL.md
 
-Read `Research-skills-hub/<collection>/<skill-name>/SKILL.md`.
+Read `research-skills-hub/<collection>/<skill-name>/SKILL.md`.
 
 Extract:
 - `name` from frontmatter.
@@ -64,7 +64,7 @@ Extract:
 
 ### 2. Update index.md
 
-File: `Research-skills-hub/<collection>/index.md`
+File: `research-skills-hub/<collection>/index.md`
 
 Insert a bullet in the existing order (these indexes are kept **alphabetical**
 by skill name — place it accordingly, not blindly at the end):
@@ -77,7 +77,7 @@ Keep the summary to one short sentence (≤ 20 words).
 
 ### 3. Update README.md — table row
 
-File: `Research-skills-hub/<collection>/README.md`
+File: `research-skills-hub/<collection>/README.md`
 
 Append a row to the Skills table. The last column differs by collection:
 
@@ -152,8 +152,8 @@ Confirm to the user:
   table row, README Prerequisites line, README `## <name>` section).
 - The provenance recorded (source URL + license for `collected-skills`, or
   Original/Adapted attribution for `open-paper-skills`).
-- That the top-level `Research-skills-hub/index.md` and `FILETREE.md` list
+- That the top-level `research-skills-hub/index.md` and `FILETREE.md` list
   collections only, so they need no per-skill edit.
 - Optionally remind them to install the skill:
-  `cp -R Research-skills-hub/<collection>/<name> .claude/skills/<name>` and the
+  `cp -R research-skills-hub/<collection>/<name> .claude/skills/<name>` and the
   matching `.agents/skills/<name>` copy (keep both byte-identical).

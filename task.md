@@ -6,7 +6,7 @@
 
 这个系统的第一目标是服务人类用户自己的研究实践；可复用开源模板是副产物，未来产品化可能性保持兼容但不驱动当前复杂度。它不是优先构建一个复杂平台，而是让 Codex、Claude Code 等 code agent 能够用更少 token、更稳定的路径约定、更清晰的上下文读取方式，协助人类完成长期研究任务。可以把 code agent 理解为这个 Research OS 的执行核心，人类主要通过自然语言与它交互和监督。
 
-方向层的长期目标（agent-agnostic 的 agent-native OS）见 [GOAL.md](GOAL.md)；本文件是其操作层构建指南。本文件是构建和演化这个 OS 的活指导文件，不是历史记录，也不是逐条执行清单。请从这里开始理解构建目标，再以 `INSTRUCTION.md`、`Memory/MEMORY.md`、`FILETREE.md` 和实际目录为当前事实源。可以偏离本文的具体建议，但需要说明偏离原因、影响和权衡。
+方向层的长期目标（agent-agnostic 的 agent-native OS）见 [GOAL.md](GOAL.md)；本文件是其操作层构建指南。本文件是构建和演化这个 OS 的活指导文件，不是历史记录，也不是逐条执行清单。请从这里开始理解构建目标，再以 `INSTRUCTION.md`、`memory/MEMORY.md`、`FILETREE.md` 和实际目录为当前事实源。可以偏离本文的具体建议，但需要说明偏离原因、影响和权衡。
 
 ## 总目标
 
@@ -34,13 +34,13 @@
 - 这个 Research OS 需要开放，方便用户通过 project templates、skills 和轻量约定扩展功能。
 - 把 OS 视为 agent environment：通过 artifacts、permissions、budgets、human oversight 和 evaluator 约束 agent，而不是只靠提示词。
 - 默认策略是 `portfolio always on, intra-project parallelism on demand`：多个项目可同时存在和排队，但项目内多 agent 并行只在任务可拆解、可验证、值得合并成本时启动。
-- agent-led research 由 `Memory/MEMORY.md` 中的 `agent_led_research` 控制，默认 `off`，可选 `scout_only` 或 `full_gated`。
+- agent-led research 由 `memory/MEMORY.md` 中的 `agent_led_research` 控制，默认 `off`，可选 `scout_only` 或 `full_gated`。
 - human-led 和 agent-led research 都应使用同一个统一评委协议：硬检查 + rubric scoring + LLM critique，最终评价完整 artifact 而不是空 idea。
 
 ## 自主判断规则
 
 - `task.md` 提供构建方向，不替代对仓库现状的检查。
-- 当 `task.md`、`INSTRUCTION.md`、`Memory/MEMORY.md`、`README.md`、`FILETREE.md` 或实际目录结构冲突时，优先相信实际目录结构、`INSTRUCTION.md` 和 `Memory/MEMORY.md`，并把冲突记录为待决策事项。
+- 当 `task.md`、`INSTRUCTION.md`、`memory/MEMORY.md`、`README.md`、`FILETREE.md` 或实际目录结构冲突时，优先相信实际目录结构、`INSTRUCTION.md` 和 `memory/MEMORY.md`，并把冲突记录为待决策事项。
 - 优先做小而可逆的改动；不要为了“完整”创建大量空目录、复杂脚本或重型框架。
 - 如果发现比本文建议更简单、更清晰的设计，可以采用自己的方案。
 - 对不确定事项先给出保守实现或文档化建议，不要假装已经解决。
@@ -50,14 +50,14 @@
 
 以下是当前设计意图的参考。请以仓库中实际存在的路径为准，并在必要时修正文档中的命名不一致问题。
 
-- `Ideas/`：保存研究想法、灵感、假设、初步讨论和 idea 日志。
+- `ideas/`：保存研究想法、灵感、假设、初步讨论和 idea 日志。
 - `paper-wiki/`：repo 级共享论文 wiki，保存单篇论文笔记、topic synthesis 和 `viz.html`。项目特定引用放在项目内 `paper/references.bib`。
-- `Memory/`：保存长期研究记忆、项目记忆、重要背景和阶段性进展。
+- `memory/`：保存长期研究记忆、项目记忆、重要背景和阶段性进展。
 - `projects-folder/`：保存项目实例和 reusable project templates。
 - `projects-folder/templates/ai_research_template/`：从可行 idea 启动 AI research paper 项目的当前模板。
-- `Research-skills-hub/`：保存可复用研究技能，类似 research skills 的 app store。
+- `research-skills-hub/`：保存可复用研究技能，类似 research skills 的 app store。
 - `INSTRUCTION.md`：agent 每次进入仓库后必须优先读取的全局操作指南。
-- `Memory/MEMORY.md`：全局 research policy、Active Projects portfolio、跨项目决策和经验。
+- `memory/MEMORY.md`：全局 research policy、Active Projects portfolio、跨项目决策和经验。
 - `FILETREE.md`：仓库结构导航索引，供 agent 快速理解目录用途。
 - `README.md`：面向人类的项目概览、当前能力和 roadmap。
 - `AGENTS.md` / `CLAUDE.md`：分别面向 Codex 和 Claude Code 的入口说明。
@@ -75,12 +75,12 @@
 优先考虑在文档中明确以下流程：
 
 - agent 新会话启动时应该读取哪些文件，以及读取顺序是什么。
-- 人类如何把一个新想法记录到 `Ideas/`。
+- 人类如何把一个新想法记录到 `ideas/`。
 - 一个 idea 被判断为可行后，如何基于 `projects-folder/templates/ai_research_template/` 启动新的研究项目或论文草稿。
 - 论文如何进入共享 `paper-wiki/`，如何更新单篇笔记、topic synthesis、项目内 BibTeX 和 claim/evidence 记录。
 - 研究过程中产生的代码、数据、图表、baseline、写作材料应该如何归档。
-- 研究经验如何沉淀到 `Memory/`、项目内 `.agents` / `.claude`，或全局 `Research-skills-hub/`。
-- portfolio 如何在 `Memory/MEMORY.md` 中维护，项目事实源如何放在 `PROJECT_MEMORY.md`，以及 `HANDOFF.md` 如何保持窄边界。
+- 研究经验如何沉淀到 `memory/`、项目内 `.agents` / `.claude`，或全局 `research-skills-hub/`。
+- portfolio 如何在 `memory/MEMORY.md` 中维护，项目事实源如何放在 `PROJECT_MEMORY.md`，以及 `HANDOFF.md` 如何保持窄边界。
 - agent-led research 如何受 `off` / `scout_only` / `full_gated` 控制。
 - 统一评委如何评估完整 research artifact，并把完整报告放入项目内 `Evaluations/`。
 
@@ -99,7 +99,7 @@
 请定义从经验到 skill 的沉淀流程：
 
 - 如果经验只适用于当前项目，应保存在该项目的记忆或项目内 agent skill 中。
-- 如果经验对多个研究项目有通用价值，才考虑进入 `Research-skills-hub/` 或全局 agent skill。
+- 如果经验对多个研究项目有通用价值，才考虑进入 `research-skills-hub/` 或全局 agent skill。
 - 全局 skill 必须保持领域无关或低领域耦合，并说明适用范围、输入、输出和限制。
 - 新增或修改 skill 时，应同步更新相关索引文档，方便 agent 发现和安装。
 
@@ -114,7 +114,7 @@
 
 ### 6. 规范 portfolio、并行和评估
 
-- `Memory/MEMORY.md` 的 Active Projects 表是 portfolio dashboard，应包含 owner、stage、priority、status、evaluator、next action。
+- `memory/MEMORY.md` 的 Active Projects 表是 portfolio dashboard，应包含 owner、stage、priority、status、evaluator、next action。
 - `PROJECT_MEMORY.md` 是项目状态事实源，`index.md` 只是导航摘要。
 - 项目内并行应使用独立 task workspace，例如 `projects-folder/<Project>/Tasks/<task-id>/`，只把可验证结果合并回主线。
 - evaluator 应先做硬检查，再做 rubric scoring 和 LLM critique；最终评价对象是 paper/code/figures/references/reproducibility notes，而不是 idea 描述。
@@ -126,7 +126,7 @@
 - `README.md`：面向人类解释 Research OS 是什么、如何开始使用、核心目录是什么。
 - `INSTRUCTION.md`：面向 agent 明确启动顺序、文件读写规则、记忆规则和研究材料保护规则。
 - `FILETREE.md`：如果目录或文件说明发生变化，需要刷新索引。
-- `Memory/MEMORY.md`：当 research policy、portfolio、跨项目决策或通用经验发生变化时更新。
+- `memory/MEMORY.md`：当 research policy、portfolio、跨项目决策或通用经验发生变化时更新。
 - `HANDOFF.md`：记录跨 session 的 active work、可逆决策、偏离和 intentionally not done；不要让它变成研究 dashboard。
 - 必要时更新 `AGENTS.md` 和 `CLAUDE.md`，但保持它们简洁。
 - 如涉及 `projects-folder/templates/ai_research_template/Code/` 下的代码、配置或实验说明，需同步更新英文和中文 README。

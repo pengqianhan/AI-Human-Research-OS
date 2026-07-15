@@ -7,7 +7,7 @@
 ## Snapshot
 
 - Project name: Example_Project (OS pipeline smoke test)
-- Started: 2026-06-12 — from idea: [linear-fit micro-experiment](../../Ideas/idea_example/linear-fit-micro-experiment.md)
+- Started: 2026-06-12 — from idea: [linear-fit micro-experiment](../../ideas/idea_example/linear-fit-micro-experiment.md)
 - Goal (one sentence): Validate the Research OS end-to-end — idea → project from
   template → runnable code → figure → compiled PDF — with everything traceable.
 - Status: experimenting

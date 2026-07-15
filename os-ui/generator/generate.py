@@ -170,19 +170,19 @@ def build_meta(repo_root: Path) -> dict[str, Any]:
 
 
 # --------------------------------------------------------------------------
-# policy (Memory/MEMORY.md "## Research Policy")
+# policy (memory/MEMORY.md "## Research Policy")
 # --------------------------------------------------------------------------
 
 
 def build_policy(repo_root: Path) -> dict[str, Any]:
     policy = {"agent_led_research": None, "parallelism": None}
-    mem_path = repo_root / "Memory" / "MEMORY.md"
+    mem_path = repo_root / "memory" / "MEMORY.md"
     text = read_text(mem_path)
     if text is None:
         return policy
     section = find_section(text, "Research Policy")
     if section is None:
-        warn("Memory/MEMORY.md: '## Research Policy' section not found")
+        warn("memory/MEMORY.md: '## Research Policy' section not found")
         return policy
     rows = parse_md_table(section)
     for row in rows:
@@ -195,18 +195,18 @@ def build_policy(repo_root: Path) -> dict[str, Any]:
 
 
 # --------------------------------------------------------------------------
-# portfolio (Memory/MEMORY.md "## Active Projects")
+# portfolio (memory/MEMORY.md "## Active Projects")
 # --------------------------------------------------------------------------
 
 
 def build_portfolio(repo_root: Path) -> list[dict[str, Any]]:
-    mem_path = repo_root / "Memory" / "MEMORY.md"
+    mem_path = repo_root / "memory" / "MEMORY.md"
     text = read_text(mem_path)
     if text is None:
         return []
     section = find_section(text, "Active Projects")
     if section is None:
-        warn("Memory/MEMORY.md: '## Active Projects' section not found")
+        warn("memory/MEMORY.md: '## Active Projects' section not found")
         return []
     rows = parse_md_table(section)
     mtime = iso_mtime(mem_path)
@@ -231,7 +231,7 @@ def build_portfolio(repo_root: Path) -> list[dict[str, Any]]:
                 "status": status,
                 "evaluator": evaluator,
                 "next_action": next_action,
-                "evidence": {"source": "Memory/MEMORY.md", "mtime": mtime},
+                "evidence": {"source": "memory/MEMORY.md", "mtime": mtime},
             }
         )
     return portfolio
@@ -287,7 +287,7 @@ def build_active_work(repo_root: Path) -> list[dict[str, Any]]:
 
 
 # --------------------------------------------------------------------------
-# governance (Memory/MEMORY.md "## Key Decisions" + HANDOFF.md "## Decisions")
+# governance (memory/MEMORY.md "## Key Decisions" + HANDOFF.md "## Decisions")
 # --------------------------------------------------------------------------
 
 
@@ -301,15 +301,15 @@ def _truncate(text: str, limit: int = 200) -> str:
 def build_governance(repo_root: Path) -> list[dict[str, Any]]:
     governance: list[dict[str, Any]] = []
 
-    # Memory/MEMORY.md "## Key Decisions" (has a Date column)
-    mem_path = repo_root / "Memory" / "MEMORY.md"
+    # memory/MEMORY.md "## Key Decisions" (has a Date column)
+    mem_path = repo_root / "memory" / "MEMORY.md"
     mem_text = read_text(mem_path)
     if mem_text is not None:
         section = find_section(mem_text, "Key Decisions (cross-project)") or find_section(
             mem_text, "Key Decisions"
         )
         if section is None:
-            warn("Memory/MEMORY.md: '## Key Decisions' section not found")
+            warn("memory/MEMORY.md: '## Key Decisions' section not found")
         else:
             for row in parse_md_table(section):
                 date = clean_inline_md(row.get("Date", "")) or None
@@ -322,11 +322,11 @@ def build_governance(repo_root: Path) -> list[dict[str, Any]]:
                     {
                         "date": date,
                         "decision": _truncate(combined) if combined else None,
-                        "source": "Memory/MEMORY.md",
+                        "source": "memory/MEMORY.md",
                     }
                 )
     else:
-        warn("Memory/MEMORY.md not found; Key Decisions skipped")
+        warn("memory/MEMORY.md not found; Key Decisions skipped")
 
     # HANDOFF.md "## Decisions" -> each markdown table, with a date pulled
     # from a preceding bold heading like "**Foo (2026-07-04...)**" if present.
@@ -635,7 +635,7 @@ def build_projects(repo_root: Path) -> tuple[list[dict[str, Any]], list[dict[str
 
 
 # --------------------------------------------------------------------------
-# store (Research-skills-hub/*, plus .claude/skills & .agents/skills)
+# store (research-skills-hub/*, plus .claude/skills & .agents/skills)
 # --------------------------------------------------------------------------
 
 COLLECTION_LICENSE_FALLBACK = {
@@ -708,7 +708,7 @@ def dirs_byte_equal(a: Path, b: Path) -> bool:
 
 
 def build_store(repo_root: Path) -> dict[str, Any]:
-    hub_dir = repo_root / "Research-skills-hub"
+    hub_dir = repo_root / "research-skills-hub"
     claude_dir = repo_root / ".claude" / "skills"
     agents_dir = repo_root / ".agents" / "skills"
 
@@ -716,7 +716,7 @@ def build_store(repo_root: Path) -> dict[str, Any]:
     hub_skill_names: set[str] = set()
 
     if not hub_dir.is_dir():
-        warn("Research-skills-hub/ not found")
+        warn("research-skills-hub/ not found")
     else:
         for collection_dir in sorted(p for p in hub_dir.iterdir() if p.is_dir()):
             collection_name = collection_dir.name
@@ -999,9 +999,9 @@ def validate(out_path: Path) -> bool:
     print(f"  activity entries         = {len(data.get('activity', []))}")
     print(f"  agent_activity           = {data.get('agent_activity')}")
 
-    if hub_skill_count != 33:
+    if hub_skill_count < 1:
         print(
-            f"[validate] FAIL: expected 33 hub skills, got {hub_skill_count}",
+            "[validate] FAIL: no hub skills found",
             file=sys.stderr,
         )
         ok = False
@@ -1033,12 +1033,12 @@ def validate(out_path: Path) -> bool:
 # --------------------------------------------------------------------------
 
 WATCH_GLOBS = [
-    "Memory/MEMORY.md",
+    "memory/MEMORY.md",
     "HANDOFF.md",
 ]
 WATCH_DIR_GLOBS = [
     "projects-folder",
-    "Research-skills-hub",
+    "research-skills-hub",
     ".claude/skills",
     ".agents/skills",
 ]

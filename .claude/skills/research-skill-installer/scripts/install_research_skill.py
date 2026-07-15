@@ -42,7 +42,7 @@ def fail(message: str) -> None:
 
 def find_repo_root(start: Path) -> Path:
     for candidate in (start.resolve(), *start.resolve().parents):
-        if (candidate / "Research-skills-hub").is_dir():
+        if (candidate / "research-skills-hub").is_dir():
             return candidate
     fail("could not find Research-skills-hub; run from the repository root or pass --repo")
 
@@ -50,7 +50,7 @@ def find_repo_root(start: Path) -> Path:
 def repo_root(args: argparse.Namespace) -> Path:
     if args.repo:
         root = Path(args.repo).expanduser().resolve()
-        if not (root / "Research-skills-hub").is_dir():
+        if not (root / "research-skills-hub").is_dir():
             fail(f"{root} does not contain Research-skills-hub")
         return root
     return find_repo_root(Path.cwd())
@@ -74,7 +74,7 @@ def ignore_for_copy(directory: str, names: list[str]) -> set[str]:
 
 
 def discover_sources(root: Path) -> list[SkillSource]:
-    hub = root / "Research-skills-hub"
+    hub = root / "research-skills-hub"
     sources: list[SkillSource] = []
     for collection_dir in sorted(path for path in hub.iterdir() if path.is_dir()):
         for skill_dir in sorted(path for path in collection_dir.iterdir() if path.is_dir()):
@@ -119,7 +119,7 @@ def ensure_safe_target(root: Path, target: Path) -> None:
 
 def ensure_safe_hub_target(root: Path, target: Path) -> None:
     resolved = target.resolve()
-    hub = (root / "Research-skills-hub").resolve()
+    hub = (root / "research-skills-hub").resolve()
     try:
         relative = resolved.relative_to(hub)
     except ValueError:

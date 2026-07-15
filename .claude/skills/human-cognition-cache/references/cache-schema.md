@@ -5,10 +5,10 @@ entries.
 
 ## Location and layout
 
-Prefer this layout when the project has a `Human/` context directory:
+Prefer this layout when the project has a `human/` context directory:
 
 ```text
-Human/human-cognition/
+human/human-cognition/
   index.md
   known_knowns.md
   known_unknowns.md

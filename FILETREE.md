@@ -6,25 +6,26 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `.github/` - GitHub repository configuration, including Actions automation workflows. <!--hash:b7b0effb-->
 - `docs/` - Narrative and presentation drafts about the Research OS. <!--hash:14b16388-->
-- `Human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:d1579e96-->
-- `Ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:4da8f0bb-->
-- `Memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:c62422af-->
+- `human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:546515d3-->
+- `ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:e38f67ea-->
+- `inbox/` - Temporary intake workspace with drop, archive, and processing-script subdirectories. <!--hash:f0eb06bd-->
+- `memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:39f15197-->
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, non-paper sources, indexes, and a generated graph visualization (viz.html). <!--hash:0d0a0b2f-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
-- `Research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, claude-science-skills, and the read-only mattpocock-skills upstream mirror. <!--hash:8c37c742-->
-- `Resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:8d4f9a33-->
-- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:4538b82e-->
+- `research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, claude-science-skills, and the read-only mattpocock-skills upstream mirror. <!--hash:86f71cfe-->
+- `resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:5450ee7b-->
+- `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:d6fc7790-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:9a065f26-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:3bf6b99e-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:c6d2f68f-->
+- `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:68ded4b4-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:ad5a42cb-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:19af5b56-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
-- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:f5996a74-->
-- `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:3687fae6-->
-- `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:1645f4f0-->
-- `verify.sh` - Read-only, agent-neutral consistency check: paper-wiki validator, FILETREE lint, and three-copy skill-sync diff; reports drift without fixing. <!--hash:e576a400-->
+- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:f41164fe-->
+- `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:2020a8fd-->
+- `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:8b489810-->
+- `verify.sh` - Read-only, agent-neutral consistency check: paper-wiki validator, FILETREE lint, and three-copy skill-sync diff; reports drift without fixing. <!--hash:5313ad5b-->
 
 ## .github/
 
@@ -32,16 +33,20 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## .github/workflows/
 
-- `sync-mattpocock-skills.yml` - Weekly workflow that refreshes the read-only mattpocock-skills mirror from upstream and opens a review PR (never auto-merges). <!--hash:c397668a-->
+- `sync-mattpocock-skills.yml` - Weekly workflow that refreshes the read-only mattpocock-skills mirror from upstream and opens a review PR (never auto-merges). <!--hash:013c1db8-->
 
-## Human/
+## docs/
 
-- `human-cognition/` - Human cognition cache with OKF quadrant files and a navigation index. <!--hash:4f3b04c1-->
+- `presentAHROS.md` - Narrative draft on the OS's motivation and design: manual paper reading to an agent-friendly OKF environment, skills hub, and orchestrator. <!--hash:c5701e64-->
+
+## human/
+
+- `human-cognition/` - Human cognition cache with OKF quadrant files and a navigation index. <!--hash:7d1f016a-->
 - `inbox.md` - Review queue for candidate human memories before they are promoted into the durable profile. <!--hash:227e6291-->
-- `index.md` - Entry point explaining Human folder read order, scope, boundaries, memory policy, and agent rules. <!--hash:90ce833c-->
-- `PROFILE.md` - Stable user profile combining low-sensitivity identity fields, collaboration preferences, recurring workflows, and entry templates. <!--hash:da9a3211-->
+- `index.md` - Entry point explaining Human folder read order, scope, boundaries, memory policy, and agent rules. <!--hash:7fec06a8-->
+- `PROFILE.md` - Stable user profile combining low-sensitivity identity fields, collaboration preferences, recurring workflows, and entry templates. <!--hash:170a3ac1-->
 
-## Human/human-cognition/
+## human/human-cognition/
 
 - `index.md` - Entry point for the human cognition cache: startup read instructions, quadrant links, focus, transitions, and privacy boundary. <!--hash:2d2286fb-->
 - `known_knowns.md` - Empty OKF quadrant for human-confirmed cognition the user can state clearly. <!--hash:77ecde10-->
@@ -49,41 +54,26 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `unknown_knowns.md` - Empty OKF quadrant for implicit human criteria and assumptions revealed through interaction. <!--hash:1ffefd95-->
 - `unknown_unknowns.md` - Empty OKF quadrant for candidate blind spots recorded as questions or hypotheses. <!--hash:a98fd852-->
 
-## Ideas/
+## ideas/
 
-- `idea_example/` - Nested OKF idea bundle demonstrating folder-shaped idea representation for the promoted linear-fit smoke test. <!--hash:bf5133ae-->
+- `idea_example/` - Nested OKF idea bundle demonstrating folder-shaped idea representation for the promoted linear-fit smoke test. <!--hash:4a8c0b4d-->
 - `index.md` - OKF bundle entry point for research ideas, status profile, and nested idea bundle links. <!--hash:452de361-->
 - `log.md` - Chronological update log for the Ideas OKF bundle. <!--hash:85961789-->
 
-## Ideas/idea_example/
+## ideas/idea_example/
 
 - `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:b84829fe-->
 - `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:05ab486d-->
 - `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:481b0659-->
 
-## Memory/
+## memory/
 
-- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:8c64dcdd-->
-
-## Research-skills-hub/
-
-- `index.md` - Hub index linking skill collections (science-skills, open-paper-skills, collected-skills, mattpocock-skills, claude-science-skills) and install steps. <!--hash:54c5b70d-->
-
-## Resource/
-
-- `agentos-讲解与启发.md` - Walk-through of the agentos in-process agent VM (Rivet) and what its kernel, permissions, and bindings design suggests for this Research OS. <!--hash:528a3daa-->
-- `EurekAgent-讲解与启发.md` - Walk-through of EurekAgent environment engineering for metric-driven research loops and lessons for evaluation contracts, artifacts, budgets, and snapshots. <!--hash:6f8be23b-->
-- `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:b29b39d9-->
-- `并行-自进化-经验共享-调研与启发.md` - GitHub survey note on parallel execution, self-evolution, and cross-agent experience sharing, with borrowing points and a recommended rollout path. <!--hash:3b4a09f0-->
-
-## docs/
-
-- `presentAHROS.md` - Narrative draft on the OS's motivation and design: manual paper reading to an agent-friendly OKF environment, skills hub, and orchestrator. <!--hash:c5701e64-->
+- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:3e2dd521-->
 
 ## os-ui/
 
 - `frontend/` - Vite + React + TypeScript read-only desktop UI: dock plus draggable app windows rendering state.json, with an English frontend README. <!--hash:43a0a270-->
-- `generator/` - Stdlib-only Python generator (uv) that scans the repo into schema-versioned state.json; supports --watch polling. <!--hash:7164b96b-->
+- `generator/` - Stdlib-only Python generator (uv) that scans the repo into schema-versioned state.json; supports --watch polling. <!--hash:0fa15dc6-->
 
 ## paper-wiki/
 
@@ -92,7 +82,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `sources/` - Non-paper reading (blogs, docs, talks) captured with the experimental synthesis-source lens. <!--hash:0233f545-->
 - `topics/` - Topic summary pages grouping related papers by durable research theme, plus a topics index. <!--hash:ab46f887-->
 - `index.md` - Wiki home linking the papers, topics, concepts, and sources indexes of the paper wiki. <!--hash:4f04fdb1-->
-- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:bddf7ba5-->
+- `viz.html` - Generated interactive graph visualization of the paper wiki (papers, topics, concepts, and their links). <!--hash:94fa3c27-->
 
 ## paper-wiki/concepts/
 
@@ -103,7 +93,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## paper-wiki/papers/
 
-- `2604.03964.md` - Paper note: SkillFoundry, a self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill libraries. <!--hash:c91c9c41-->
+- `2604.03964.md` - Paper note: SkillFoundry, a self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill libraries. <!--hash:1ffeb9f5-->
 - `2605.22721.md` - Paper note: Self-Evolving Multi-Agent Systems via Decentralized Memory (DecentMem). <!--hash:73316a45-->
 - `2605.28655.md` - Paper note: AutoScientists, self-organizing agent teams for long-running scientific experimentation. <!--hash:38d77a69-->
 - `2605.31464.md` - Paper note: GPU Forecasters, LLM surrogates that forecast GPU kernel performance to speed up kernel search. <!--hash:74b18429-->
@@ -115,7 +105,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## paper-wiki/sources/
 
-- `harness-engineering-for-self-improvement.md` - Reference note: Lilian Weng's synthesis on harness engineering — evolving the harness (workflow, memory, tools, evaluators) as the near-term path to self-improvement. <!--hash:5e3a373d-->
+- `harness-engineering-for-self-improvement.md` - Reference note: Lilian Weng's synthesis on harness engineering — evolving the harness (workflow, memory, tools, evaluators) as the near-term path to self-improvement. <!--hash:dc286198-->
 - `index.md` - Index of non-paper reading sources. <!--hash:f262cc63-->
 - `llm-powered-autonomous-agents.md` - Reference note: Lilian Weng's synthesis of LLM-agent architecture — planning, memory, tool use, case studies, and open challenges. <!--hash:8e812bdb-->
 
@@ -144,10 +134,10 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `Code/` - Linear-fit smoke-test experiment: uv environment, fit_line.py, run commands, and reproducible results in bilingual READMEs. <!--hash:d99584ba-->
 - `Figs/` - Generated figures for the example project, including the linear_fit.png output of fit_line.py. <!--hash:8c1d3ba6-->
 - `paper/` - LaTeX source area for the worked example paper, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:e38e6585-->
-- `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:bcfe90b9-->
-- `log.md` - Folder-level update log for the smoke-test project. <!--hash:570a64fe-->
-- `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:aebcb48c-->
-- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:db2fa93c-->
+- `index.md` - Folder entry point for the smoke-test project, linking state, source map, code, paper, references, and log. <!--hash:cb133d4e-->
+- `log.md` - Folder-level update log for the smoke-test project. <!--hash:7d3285a5-->
+- `paper_skeleton.md` - Manuscript control sheet filled with the smoke-test example's snapshot and source map. <!--hash:0645c99d-->
+- `PROJECT_MEMORY.md` - Project memory for the smoke-test example: snapshot, build-convention decision, progress log. <!--hash:9d206b39-->
 
 ## projects-folder/Example_Project/Baselines/
 
@@ -171,8 +161,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `paper/` - Template LaTeX source area for new project papers, including local references; final PDF is generated in place as paper/main.pdf. <!--hash:c729d852-->
 - `index.md` - Folder entry point for the reusable AI-research template and its post-copy starting files. <!--hash:aacca729-->
 - `log.md` - Template-level update log for changes to the project starter. <!--hash:e10d8d5f-->
-- `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:38fc034f-->
-- `PROJECT_MEMORY.md` - Project-memory template: snapshot, key decisions, progress log, and open TODOs. <!--hash:78d9eb36-->
+- `paper_skeleton.md` - Reusable manuscript control template with source maps, baselines, experiments, claim tracking, and writing TODOs. <!--hash:fec8d3c5-->
+- `PROJECT_MEMORY.md` - Project-memory template: snapshot, key decisions, progress log, and open TODOs. <!--hash:e9dbaba8-->
 
 ## projects-folder/templates/ai_research_template/Baselines/
 
@@ -182,3 +172,14 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 - `main.tex` - Minimal LaTeX scaffold for project papers with figure and bibliography path conventions. <!--hash:64ffa6bf-->
 - `references.bib` - Placeholder project-local BibTeX bibliography for new project papers. <!--hash:64796636-->
+
+## research-skills-hub/
+
+- `index.md` - Hub index linking skill collections (science-skills, open-paper-skills, collected-skills, mattpocock-skills, claude-science-skills) and install steps. <!--hash:8691082e-->
+
+## resource/
+
+- `agentos-讲解与启发.md` - Walk-through of the agentos in-process agent VM (Rivet) and what its kernel, permissions, and bindings design suggests for this Research OS. <!--hash:2c15c7d0-->
+- `EurekAgent-讲解与启发.md` - Walk-through of EurekAgent environment engineering for metric-driven research loops and lessons for evaluation contracts, artifacts, budgets, and snapshots. <!--hash:5050ec4e-->
+- `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:56490406-->
+- `并行-自进化-经验共享-调研与启发.md` - GitHub survey note on parallel execution, self-evolution, and cross-agent experience sharing, with borrowing points and a recommended rollout path. <!--hash:2251349f-->
