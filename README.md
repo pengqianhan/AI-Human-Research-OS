@@ -111,6 +111,7 @@ keeps per-skill upstream attribution and license terms.
 
 
 - [ ] A map of `research-skills-hub` or an index of all skills should be added to `research-skill-installer` so that the AI agent can quickly locate the required skills and install them into `.agents/skills/` or `.claude/skills/`. For this skill, please refer to [find-skills](https://github.com/vercel-labs/skills/blob/main/skills/find-skills/SKILL.md).
+- [ ] Regarding skills, is it sufficient to install them globally and activate them on demand for different projects? This way, a single configuration file can manage the installation and activation of skills, avoiding redundant installations and saving disk space.
 - [ ] This OS should be able to accept any kind of input from users, such as an idea, a codebase, a paper draft, and so on. After users add these materials to the OS, it should automatically archive them, place them into the appropriate folders, and integrate them into the overall system.
 - [ ] create a skill which can access them markdown files of paper, such as 'hf cli', 'https://github.com/timf34/arxiv2md','deepxive cli' and so on.
 
