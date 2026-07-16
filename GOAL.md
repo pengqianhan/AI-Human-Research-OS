@@ -4,18 +4,20 @@
 > 把本仓库演化为 agent-agnostic 的 agent-native Research OS(决策记录见
 > [HANDOFF.md](HANDOFF.md) Decisions)。
 >
-> **统一方向与构建层**:本文件合并原 `task.md` / `task_en.md` 的仍有效构建原则,
-> 同时承担长期方向、治理闸门与演化程序。两个旧 task 文件已删除,原文保存在 Git commit
-> `38d79be74b463dc41b0b651e5510ac7346502cbd`;不再承载独立规范。
-> [build_phases/](build_phases/) 是经人类逐项确认的 `research-os` 薄启动器
-> 任务弧执行合同。运行事实源 = 实际目录结构、[INSTRUCTION.md](INSTRUCTION.md)、
+> **长期愿景层**:本文件描述 Long-term Research OS 的方向、长期设计原则与战略
+> 治理闸门,不充当当前 MVP 的逐步实施说明。两个旧 task 文件已删除,其仍有效原则已
+> 吸收为本文的长期约束,原文保存在 Git commit
+> `38d79be74b463dc41b0b651e5510ac7346502cbd`。[build_phases/](build_phases/)
+> 是 Research OS MVP 的阶段执行合同;MVP 的正式定义见 [CONTEXT.md](CONTEXT.md)。
+> 运行事实源 = 实际目录结构、[INSTRUCTION.md](INSTRUCTION.md)、
 > [memory/MEMORY.md](memory/MEMORY.md)、[HANDOFF.md](HANDOFF.md)(Decisions)、
 > [FILETREE.md](FILETREE.md)。
 >
 > 本文与运行事实源冲突时,优先相信实际目录结构、INSTRUCTION.md 和
-> memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的工作。对 `research-os`
-> 薄启动器任务弧,若本文与 `build_phases/` 有执行范围、顺序或验收冲突,以
-> `build_phases/` 为准并回写本文;该优先级不自动扩展到其他 OS 工作。实际实现完成后
+> memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的工作。对 Research OS MVP,
+> 若本文与完成设计后的 `build_phases/` 有执行范围、顺序或验收冲突,以
+> `build_phases/` 为准并回写本文;该优先级不自动扩展到 Long-term Research OS 的
+> 其他工作。实际实现完成后
 > 仍以仓库制品和验证结果为事实。本文只能由人类(或经人类逐条确认的 agent 提案)修订。
 
 ## 1. 最终目的
@@ -41,7 +43,7 @@ Claude Code 承担),人类定方向、授权与审查。
 research 的开闸条件;完整 artifact 的统一评估方式。具体操作契约以
 [INSTRUCTION.md](INSTRUCTION.md) 为准,当前目录以 [FILETREE.md](FILETREE.md) 为准。
 
-## 2. 构建原则与自主判断
+## 2. 长期设计原则与自主判断
 
 以下内容由原 task 构建指南归并而来,作为长期演化约束:
 

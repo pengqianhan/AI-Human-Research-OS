@@ -1,8 +1,15 @@
-# `research-os` Build Phases
+# Research OS MVP Build Phases
 
-This directory contains copy-ready implementation prompts for building the thin
-pi launcher agreed in the 2026-07-16 grilling session. Send each phase to a code
-agent in order, preferably in a fresh session.
+> **Status: redesign required — do not execute the current phase prompts.**
+>
+> `Research OS MVP` now means the smallest end-to-end system that accepts partial
+> research state, places and understands it, continues bounded research, produces
+> traceable artifacts, and returns control to the human. The four current prompts
+> cover only the native-pi launcher bootstrap slice and are not a complete MVP plan.
+> They will be replaced after the MVP autonomy and acceptance boundaries are confirmed.
+
+This directory is the execution-contract layer for building the Research OS MVP.
+Each final phase must be directly executable by a code agent in a fresh session.
 
 ## Execution order
 
@@ -25,9 +32,9 @@ file link in a tutorial must be a real relative link from `build_phases/`, such
 as `<a href="../bin/research-os">bin/research-os</a>`, and the phase agent must
 validate that each linked local target exists.
 
-## Scope boundary
+## Current gap
 
-These phases build only the repo-local, read-only `bin/research-os` launcher.
-They do not build a workflow CLI, pi extension, SDK integration, local server,
-GUI execution surface, Electron/Tauri package, database, telemetry, or sandbox.
-The existing `os-ui` remains read-only.
+The existing launcher phases remain useful evidence for one bootstrap slice, but they
+omit the MVP's intake, project continuation, research tools, evaluation, experience
+promotion, bounded autonomy, and human handoff. Do not treat successful launcher
+construction as successful Research OS MVP delivery.

@@ -38,34 +38,32 @@ User direction: evolve this repo into an **agent-agnostic, agent-native Research
 - [ ] M3/M4 — gated; see GOAL.md (real third agent / OS-Feedback evidence +
       human confirmation required).
 
-### `research-os` — thin pi launcher (planned 2026-07-16, grilling session)
+### Research OS MVP — architecture and phase redesign (reopened 2026-07-16)
 
-Purpose: add a minimal, removable product adapter around native pi while the
-Research OS continues to evolve. The launcher itself is read-only and does not
-encode research workflows. Copy-ready execution prompts live in
-[`build_phases/`](build_phases/) and must run in numbered order; each phase produces
-a Chinese HTML tutorial grounded in the final real files.
+Canonical definition: the smallest end-to-end system that accepts a partial Research
+Input Artifact, places and understands it, continues bounded research, produces traceable
+Research Artifacts, captures experience at the correct scope, and returns control to the
+human. Domain language lives in [CONTEXT.md](CONTEXT.md).
 
-- [ ] Governance — revise D5 and annotate GOAL.md M4 with the human-approved narrow
-      exception: a read-only, stateless launcher is allowed; workflow CLI, resident
-      services, and GUI execution remain gated.
-- [ ] Implement executable `bin/research-os` as a dependency-free POSIX shell script,
-      validated on macOS (Linux best effort; no Windows support): accept current directory
-      or an explicit path, discover the git root, validate the Research OS entry chain,
-      detect native `pi`, warn below tested version 0.80.7 with `pi update` guidance,
-      show cwd/root/version/Git status and a non-sandbox notice, then `exec` pi with
-      passthrough arguments and exit behavior.
-- [ ] Preserve native pi behavior — no SDK embedding, extension, `.pi/`, custom system
-      prompt, automatic session resume, installation/update, workflow subcommands,
-      logging, telemetry, network check, or repository write by the launcher.
-- [ ] Add concise usage/setup documentation, including manual pi install/update commands,
-      native-permission warning, invocation examples, and current platform limits.
-- [ ] Add dependency-free, offline shell smoke tests using temporary git repositories and
-      a fake `pi`; cover root/nested launch, invalid repo, missing/old pi, argument and exit
-      passthrough, and dirty-tree warning without invoking a model.
-- [ ] Refresh FILETREE.md and run its lint plus `./verify.sh`; do not commit automatically.
-- [ ] Use the launcher for one real research-project stage and record concrete OS Feedback.
-      GUI execution opens only after that evidence and renewed human confirmation.
+The existing [`build_phases/`](build_phases/) pack covers only a thin-launcher bootstrap
+slice and is explicitly marked **do not execute** until replaced by a complete MVP phase
+contract.
+
+- [x] ~~Define Long-term Research OS vs Research OS MVP and record the human's relevant
+      cognition~~ — user-confirmed; captured in CONTEXT.md and human cognition cache.
+- [x] ~~Confirm the MVP autonomy boundary~~ — human-initiated bounded Research Runs;
+      non-destructive intake, literature work, local code/experiments, project memory, and
+      Project Skill candidates may proceed autonomously. Destructive/external/paid/global
+      promotion actions require approval; baseline precedes a maximum-two-task parallel round.
+- [ ] Define one end-to-end MVP acceptance scenario from intake through continuation,
+      evaluation, experience capture, and human handoff.
+- [ ] Select the smallest architecture and technology path; technical reversible choices
+      are agent-owned, while consequential governance choices remain human-owned.
+- [ ] Replace the launcher-only phase prompts with standalone Research OS MVP build phases;
+      every phase must generate a verified Chinese HTML tutorial grounded in real files and
+      teach unfamiliar mechanisms through Python/PyTorch analogies.
+- [ ] Execute and verify the replacement phases in order; do not open the long-term GUI or
+      unrestricted multi-agent autonomy merely because the MVP passes.
 
 ### os-ui — read-only monitor UI (designed 2026-07-04, grilling session)
 
@@ -222,7 +220,8 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Decision | Default taken | To reverse |
 |---|---|---|
 | Product boundary | Keep plain Research OS files + Git as the source of truth; product surfaces are removable adapters, not a database-backed replacement | Introduce a new authoritative store only after defining migration, synchronization, and conflict semantics |
-| First delivery | Build a repo-local, unpublished `bin/research-os` thin launcher before any GUI execution: it invokes native pi as a subprocess, preserves pi's default permissions/session behavior/resource discovery, and remains read-only/stateless | Embed the pi SDK or add workflow commands only after real-use evidence and a new human decision |
+| MVP autonomy | Human initiates a bounded Research Run; agents may autonomously perform non-destructive intake, literature work, local code/experiments, project-memory updates, and Project Skill candidate creation. Destructive/external/publishing/paid/global-policy/Hub-promotion actions require approval. A baseline must precede at most two parallel Research Tasks under shared evaluation and stopping criteria | Expand autonomy only after a verified MVP run and a new human decision; reduce it by making intake or every experiment human-gated |
+| First delivery | ~~Treat `bin/research-os` thin launcher as the first product delivery~~ **— superseded 2026-07-16:** the launcher is only a possible bootstrap slice. `build_phases/` must deliver the full Research OS MVP end-to-end acceptance loop defined in CONTEXT.md | Restore the launcher-only phase pack and accept that it does not prove intake, continuation, evaluation, experience capture, or handoff |
 | Existing CLI gate | Narrow exception to D5/GOAL M4: the thin launcher is authorized without prior OS Feedback; heavier workflow CLI remains gated | Remove `bin/research-os` and restore the absolute no-CLI wording |
 | GUI gate and shape | Existing `os-ui` stays read-only until one real project stage yields specific OS Feedback and the human reauthorizes execution. Then add a localhost-only Agent Console to the existing shell: TypeScript server + pi SDK + HTTP/SSE, with repository snapshots and live runtime state internally separated; no IDE, credential store, transcript DB, or remote access in the first GUI | Open the execution gate earlier only through a new explicit human decision; replace SDK with RPC if process isolation or a non-Node backend becomes required |
 | Desktop future work | After the browser GUI stabilizes, evaluate one desktop wrapper rather than promise both; Electron is the initial candidate because pi SDK is Node-native, with Tauri + Node sidecar considered if its trade-offs become worthwhile | Select Tauri first if measured packaging/resource/security requirements justify the sidecar complexity |
@@ -238,7 +237,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Decision | Default taken | To reverse |
 |---|---|---|
 | End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](GOAL.md)). This refines, not replaces, the 2026-07-03 positioning: the user's research practice stays first; machinery remains evidence-gated except for the explicitly recorded M0/M1, read-only monitor, and thin-launcher exceptions. | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
-| Document layering | **Superseded 2026-07-16:** `GOAL.md` is the unified direction + construction layer after absorbing the durable parts of the now-deleted task files. `build_phases/` is authoritative only inside its named task arc; INSTRUCTION/memory/actual artifacts remain operating truth. | Restore the task files from commit `38d79be` and re-establish separate direction/construction ownership |
+| Document layering | **Superseded again 2026-07-16:** `GOAL.md` is the Long-term Research OS vision and strategic-governance layer; `build_phases/` is the Research OS MVP execution-contract layer; CONTEXT.md defines their shared language; INSTRUCTION/memory/actual artifacts remain operating truth. | Merge MVP implementation detail back into GOAL.md and remove the scoped execution layer |
 | Monitor-UI gate opened (read-only only) | Human authorized a **read-only monitor UI** (2026-07-04 grilling session): `os-ui/` = Python generator → schema-versioned `state.json` (gitignored) → static Vite/React frontend; 3 pages (dashboard / project / skills store); derived status only (no heartbeat; slot reserved with lease semantics); store shelves hub skills only; install = copy command. Design in [os-ui/DESIGN.md](os-ui/DESIGN.md), visual spec in [os-ui/mockup.html](os-ui/mockup.html). **This supersedes GOAL.md M4's evidence precondition for the read-only monitor UI only** (GOAL.md M4 annotated accordingly); the execution surface, SSE/resident services stay behind M4 (evidence + per-item human confirmation). | `rm -rf os-ui/`, remove this row + the Active Work entry, and drop the M4 exception note in GOAL.md; the OS has no dependency on os-ui |
 
 **Paper-wiki decisions (2026-07-07, user-confirmed):**

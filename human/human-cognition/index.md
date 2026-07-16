@@ -23,7 +23,8 @@ current task.
 
 ## Current Focus
 
-- None yet.
+- Use the human's Python/PyTorch knowledge as the teaching bridge while building the Research OS MVP.
+- Grow bounded operator-to-modifier capability in TypeScript, pi SDK, and frontend architecture from verified phase artifacts.
 
 ## Recent Transitions
 

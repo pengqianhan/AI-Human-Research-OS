@@ -33,7 +33,7 @@
 | 2026-07-03 | Shared paper library has three layers: paper notes, topic synthesis pages, and project-specific usage records | keeps paper understanding reusable across projects while preserving each project's claim/evidence trail |
 | 2026-07-03 | Unified evaluator protocol applies to human-led and agent-led research: hard checks + rubric scoring + LLM critique | avoids judging empty ideas or polished prose without runnable, traceable artifacts |
 | 2026-07-03 | Agent-led research is gated by `agent_led_research` (`off`, `scout_only`, `full_gated`) | preserves human-led research as the default while leaving room for controlled agent-owned research lanes |
-| 2026-07-16 | Durable construction guidance is unified in [`GOAL.md`](../GOAL.md); the old task files are deleted, and scoped execution contracts live under `build_phases/` | removes duplicated live guides; historical task provenance is pinned to commit `38d79be`, while operating truth remains INSTRUCTION, memory, and actual artifacts |
+| 2026-07-16 | [`GOAL.md`](../GOAL.md) is the Long-term Research OS vision; `build_phases/` is the Research OS MVP execution layer; [`CONTEXT.md`](../CONTEXT.md) defines shared domain language; old task files remain deleted | separates long-term intent from executable MVP contracts while operating truth remains INSTRUCTION, memory, and actual artifacts |
 | 2026-07-04 | End goal repositioned by the user: evolve the repo into an agent-agnostic, agent-native Research OS — direction layer in [`GOAL.md`](../GOAL.md); research practice stays first, machinery stays evidence-gated | user direction; supersession details and milestones in [`HANDOFF.md`](../HANDOFF.md) |
 
 ## Lessons and Principles

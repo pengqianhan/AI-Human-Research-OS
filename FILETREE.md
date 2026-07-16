@@ -5,7 +5,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## (root)/
 
 - `.github/` - GitHub repository configuration, including Actions automation workflows. <!--hash:b7b0effb-->
-- `build_phases/` - Copy-ready phased prompts for building, testing, documenting, and teaching the thin native-pi research-os launcher. <!--hash:ebd51473-->
+- `build_phases/` - Research OS MVP execution-contract prompts; current launcher-only draft is blocked pending end-to-end autonomy and acceptance redesign. <!--hash:484577b9-->
 - `docs/` - Narrative and presentation drafts about the Research OS. <!--hash:14b16388-->
 - `human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:546515d3-->
 - `ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:e38f67ea-->
@@ -19,8 +19,9 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:d6fc7790-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `GOAL.md` - Unified direction and construction guide: principles, milestones, iron rules, gates, and scoped build-phase precedence for the agent-native Research OS. <!--hash:b17c1cef-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:7869e7bf-->
+- `CONTEXT.md` - Domain glossary for Long-term Research OS, Research OS MVP, research artifacts, continuation, skills, tasks, parallel rounds, and experience promotion. <!--hash:9d960dde-->
+- `GOAL.md` - Long-term Research OS vision: strategic principles, milestones, agent-agnostic rules, governance gates, and the boundary with MVP execution contracts. <!--hash:793c7ca0-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:3e322967-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:19af5b56-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:c6f42de7-->
@@ -47,9 +48,9 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## human/human-cognition/
 
-- `index.md` - Entry point for the human cognition cache: startup read instructions, quadrant links, focus, transitions, and privacy boundary. <!--hash:2d2286fb-->
-- `known_knowns.md` - Empty OKF quadrant for human-confirmed cognition the user can state clearly. <!--hash:77ecde10-->
-- `known_unknowns.md` - Empty OKF quadrant for questions and gaps the human knows they have. <!--hash:32d80f6f-->
+- `index.md` - Entry point for the human cognition cache: startup read instructions, quadrant links, focus, transitions, and privacy boundary. <!--hash:3367986a-->
+- `known_knowns.md` - Human-confirmed Python/PyTorch familiarity and outcome-level Research OS vision capability, with scoped evidence. <!--hash:60c2fb0b-->
+- `known_unknowns.md` - Human-recognized learning gaps in TypeScript, pi SDK, frontend design, and autonomous research-runtime architecture. <!--hash:1bcde5b3-->
 - `unknown_knowns.md` - Empty OKF quadrant for implicit human criteria and assumptions revealed through interaction. <!--hash:1ffefd95-->
 - `unknown_unknowns.md` - Empty OKF quadrant for candidate blind spots recorded as questions or hypotheses. <!--hash:a98fd852-->
 
@@ -67,7 +68,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## memory/
 
-- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:a0c05fbf-->
+- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:2a3354b0-->
 
 ## os-ui/
 
