@@ -30,6 +30,19 @@ trailing HTML comment: `<!-- ← N7.acceptance -->`. The annotations teach the
 human the map→prompt correspondence by example; keep them in the stored file —
 they are inert when the prompt is pasted into a session.
 
+## Recompile rule
+
+A prompt file is a compiled artifact of the map, never a second source. The
+compilation chain is: map ledger fields → (assembly) → prompt → (agent
+execution) → territory code. When an edge's fields or either endpoint's
+`state`/`acceptance` change, reassemble the prompt from the map — set the edge
+back to `drafted`, regenerate the file, and repeat human review when the
+target is directional. Hand-editing a prompt away from the map falsifies its
+provenance annotations; if the prompt needs different content, the map needs
+the edit first. Territory work already compiled from a superseded prompt is
+re-run under the new one (the execution-loop reference governs how its
+verdicts are superseded).
+
 ## Packet requirements
 
 A prompt file is complete only when a fresh session, with no access to the

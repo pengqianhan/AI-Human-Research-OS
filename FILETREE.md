@@ -10,6 +10,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:546515d3-->
 - `ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:e38f67ea-->
 - `inbox/` - Temporary intake workspace with drop, archive, and processing-script subdirectories. <!--hash:f0eb06bd-->
+- `maps/` - Route maps drawn with the map-then-territory skill; each subfolder is one endeavor map bundle. <!--hash:074af7c5-->
 - `memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:39f15197-->
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, non-paper sources, indexes, and a generated graph visualization (viz.html). <!--hash:0d0a0b2f-->
@@ -65,6 +66,26 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:1fa13f60-->
 - `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:e04f927e-->
 - `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:de04ef17-->
+
+## maps/
+
+- `research-os/` - Map bundle for building the Research OS itself: waypoints, edges, tutorials, and edge prompts. <!--hash:a739d685-->
+
+## maps/research-os/
+
+- `prompts/` - New-session-ready launch prompts, one per assembled map edge, with provenance annotations. <!--hash:34696c1e-->
+- `tutorials/` - Pre-decision tutorials for directional waypoints, written at the human's level. <!--hash:dc4b8500-->
+- `index.md` - Canonical Research OS route map: Mermaid overview plus waypoint/edge ledgers from normalized repo to verified MVP. <!--hash:09996052-->
+
+## maps/research-os/prompts/
+
+- `E1-governance-m0.md` - Launch prompt for edge E1: clear GOAL M0 governance debt and record the Paper_VAE decision. <!--hash:6ee3792a-->
+- `E2-adapter-contract-m1.md` - Launch prompt for edge E2: write the Agent adapters contract and de-hardcode the kernel (GOAL M1). <!--hash:b6deaf06-->
+- `E3-acceptance-scenario.md` - Launch prompt for edge E3: interactively draft and approve the MVP acceptance scenario checklist. <!--hash:91b8a65c-->
+
+## maps/research-os/tutorials/
+
+- `N4-architecture-options.md` - Tutorial behind waypoint N4: the three MVP architecture candidates explained with Python analogies. <!--hash:1ce3d8cb-->
 
 ## memory/
 
