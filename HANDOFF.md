@@ -23,9 +23,9 @@ git show <hash>              # the actual diff for any change
 
 All OS-construction work formerly tracked here as "Agent-native OS evolution"
 (GOAL M0–M4) and "Research OS MVP — architecture and phase redesign" now lives
-in the route map [maps/research-os/index.md](maps/research-os/index.md):
+in the route map [os-build/map/index.md](os-build/map/index.md):
 waypoints N1–N12 carry states, human-runnable acceptance checks, dual verdicts,
-and per-edge launch prompts under `maps/research-os/prompts/`. Mapping:
+and per-edge launch prompts under `os-build/map/prompts/`. Mapping:
 M0 → N1, M1 → N2, MVP scenario/architecture/phase-contract → N3/N4/N5
 (N3 and N4 decided 2026-07-17 — see the route-map Decisions block below),
 circle_packing arc → N6–N9, end-to-end acceptance → N10, M3/M4 gates → N11/N12.
@@ -190,7 +190,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 |---|---|---|
 | Product boundary | Keep plain Research OS files + Git as the source of truth; product surfaces are removable adapters, not a database-backed replacement | Introduce a new authoritative store only after defining migration, synchronization, and conflict semantics |
 | MVP autonomy | Human initiates a bounded Research Run; agents may autonomously perform non-destructive intake, literature work, local code/experiments, project-memory updates, and Project Skill candidate creation. Destructive/external/publishing/paid/global-policy/Hub-promotion actions require approval. A baseline must precede at most two parallel Research Tasks under shared evaluation and stopping criteria | Expand autonomy only after a verified MVP run and a new human decision; reduce it by making intake or every experiment human-gated |
-| First delivery | ~~Treat `bin/research-os` thin launcher as the first product delivery~~ **— superseded 2026-07-16:** the launcher is only a possible bootstrap slice. `build_phases/` must deliver the full Research OS MVP end-to-end acceptance loop defined in CONTEXT.md | Restore the launcher-only phase pack and accept that it does not prove intake, continuation, evaluation, experience capture, or handoff |
+| First delivery | ~~Treat `bin/research-os` thin launcher as the first product delivery~~ **— superseded 2026-07-16:** the launcher is only a possible bootstrap slice. `os-build/build_phases/` must deliver the full Research OS MVP end-to-end acceptance loop defined in CONTEXT.md | Restore the launcher-only phase pack and accept that it does not prove intake, continuation, evaluation, experience capture, or handoff |
 | Existing CLI gate | Narrow exception to D5/GOAL M4: the thin launcher is authorized without prior OS Feedback; heavier workflow CLI remains gated | Remove `bin/research-os` and restore the absolute no-CLI wording |
 | GUI gate and shape | Existing `os-ui` stays read-only until one real project stage yields specific OS Feedback and the human reauthorizes execution. Then add a localhost-only Agent Console to the existing shell: TypeScript server + pi SDK + HTTP/SSE, with repository snapshots and live runtime state internally separated; no IDE, credential store, transcript DB, or remote access in the first GUI | Open the execution gate earlier only through a new explicit human decision; replace SDK with RPC if process isolation or a non-Node backend becomes required |
 | Desktop future work | After the browser GUI stabilizes, evaluate one desktop wrapper rather than promise both; Electron is the initial candidate because pi SDK is Node-native, with Tauri + Node sidecar considered if its trade-offs become worthwhile | Select Tauri first if measured packaging/resource/security requirements justify the sidecar complexity |
@@ -205,8 +205,8 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](GOAL.md)). This refines, not replaces, the 2026-07-03 positioning: the user's research practice stays first; machinery remains evidence-gated except for the explicitly recorded M0/M1, read-only monitor, and thin-launcher exceptions. | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
-| Document layering | **Superseded again 2026-07-16:** `GOAL.md` is the Long-term Research OS vision and strategic-governance layer; `build_phases/` is the Research OS MVP execution-contract layer; CONTEXT.md defines their shared language; INSTRUCTION/memory/actual artifacts remain operating truth. | Merge MVP implementation detail back into GOAL.md and remove the scoped execution layer |
+| End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](os-build/GOAL.md)). This refines, not replaces, the 2026-07-03 positioning: the user's research practice stays first; machinery remains evidence-gated except for the explicitly recorded M0/M1, read-only monitor, and thin-launcher exceptions. | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
+| Document layering | **Superseded again 2026-07-16:** `os-build/GOAL.md` is the Long-term Research OS vision and strategic-governance layer; `os-build/build_phases/` is the Research OS MVP execution-contract layer; CONTEXT.md defines their shared language; INSTRUCTION/memory/actual artifacts remain operating truth. | Merge MVP implementation detail back into GOAL.md and remove the scoped execution layer |
 | Monitor-UI gate opened (read-only only) | Human authorized a **read-only monitor UI** (2026-07-04 grilling session): `os-ui/` = Python generator → schema-versioned `state.json` (gitignored) → static Vite/React frontend; 3 pages (dashboard / project / skills store); derived status only (no heartbeat; slot reserved with lease semantics); store shelves hub skills only; install = copy command. Design in [os-ui/DESIGN.md](os-ui/DESIGN.md), visual spec in [os-ui/mockup.html](os-ui/mockup.html). **This supersedes GOAL.md M4's evidence precondition for the read-only monitor UI only** (GOAL.md M4 annotated accordingly); the execution surface, SSE/resident services stay behind M4 (evidence + per-item human confirmation). | `rm -rf os-ui/`, remove this row + the Active Work entry, and drop the M4 exception note in GOAL.md; the OS has no dependency on os-ui |
 
 **Paper-wiki decisions (2026-07-07, user-confirmed):**
@@ -245,13 +245,13 @@ gaps before install: fail path for self-verification, edge reversion on verdict
 disagreement, `ready` = prompt assembled + reviewed + source reached, bundle-status
 vocabulary, Mermaid-update duty in the launch packet.
 
-**Research OS route-map decisions (2026-07-17, maps/research-os, user-confirmed):**
+**Research OS route-map decisions (2026-07-17, os-build/map, user-confirmed):**
 
 | Decision | Default taken | To reverse |
 |---|---|---|
 | MVP acceptance-scenario vehicle (map N3) | **circle_packing** carries the MVP acceptance scenario; paper-reproduction and synthetic scenarios rejected; the N10 final acceptance run uses a fresh Research Input Artifact to prove the loop is reusable beyond the vehicle | Directional deviation on N3: stop the N6–N9 lane, pick a new vehicle, redraw the map |
-| MVP architecture path (map N4) | **Pure session protocol** — the MVP loop is carried by the rewritten `build_phases/` contract + existing skills, zero new machinery; the authorized thin-launcher arc stays dormant (GOAL M4 narrow exception retained, not scheduled); tutorial: `maps/research-os/tutorials/N4-architecture-options.md` | Reopen N4; the launcher arc can restart anytime as a parallel adapter task without touching the MVP trunk |
-| OS-construction tracking | `maps/research-os/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation); launcher phase prompts archived to `build_phases/archive-launcher/` | Restore the two Active Work sections from git history, un-archive the phase prompts, and mark the map bundle `paused` |
+| MVP architecture path (map N4) | **Pure session protocol** — the MVP loop is carried by the rewritten `build_phases/` contract + existing skills, zero new machinery; the authorized thin-launcher arc stays dormant (GOAL M4 narrow exception retained, not scheduled); tutorial: `os-build/map/tutorials/N4-architecture-options.md` | Reopen N4; the launcher arc can restart anytime as a parallel adapter task without touching the MVP trunk |
+| OS-construction tracking | `os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation); launcher phase prompts archived to `os-build/build_phases/archive-launcher/` | Restore the two Active Work sections from git history, un-archive the phase prompts, and mark the map bundle `paused` |
 
 ## Deviations from the original plan
 

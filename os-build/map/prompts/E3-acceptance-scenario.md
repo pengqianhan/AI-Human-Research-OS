@@ -1,6 +1,6 @@
 # E3: 起草 MVP 验收场景文档（N0 → N3 ★directional）
 
-Map: `maps/research-os/index.md` — read the N0 and N3 entries before starting. <!-- ← bundle path -->
+Map: `os-build/map/index.md` — read the N0 and N3 entries before starting. <!-- ← bundle path -->
 
 > 本边指向方向性节点：会话是交互式的，用户在场逐题确认；文档未经用户批准不得定稿。
 
@@ -12,7 +12,7 @@ launch）, updating the Mermaid overview in the same edit.
 
 ## Outcome
 
-产出 `build_phases/mvp-acceptance-scenario.md`：把 CONTEXT.md 的 Research OS MVP 定义
+产出 `os-build/build_phases/mvp-acceptance-scenario.md`：把 CONTEXT.md 的 Research OS MVP 定义
 翻译成可判定的验收清单。<!-- ← N3.state -->
 
 - 载体已定（不重开）：**circle_packing**（2026-07-17 用户选定，记录在地图 N3 条目）。
@@ -30,8 +30,8 @@ launch）, updating the Mermaid overview in the same edit.
 - [HANDOFF.md](../../../HANDOFF.md) — 「Research OS MVP」Active Work 条目、
   「pi product-shell decisions」中 MVP autonomy 行（自治边界是清单第 4 步的输入）、
   circle_packing kickoff decisions（评测器、并行、评审既有决策，不得与之冲突）。
-- [GOAL.md](../../../GOAL.md) M2 与非目标条款。
-- [maps/research-os/index.md](../index.md) — N3、N10 的 state 与 acceptance。
+- [GOAL.md](../../GOAL.md) M2 与非目标条款。
+- [os-build/map/index.md](../index.md) — N3、N10 的 state 与 acceptance。
 
 ## Approach
 

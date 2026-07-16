@@ -1,6 +1,6 @@
 # E2: Agent adapter 契约成文 — GOAL M1（N0 → N2）
 
-Map: `maps/research-os/index.md` — read the N0 and N2 entries before starting. <!-- ← bundle path -->
+Map: `os-build/map/index.md` — read the N0 and N2 entries before starting. <!-- ← bundle path -->
 
 ## Start of work
 
@@ -24,7 +24,7 @@ launch）, updating the Mermaid overview in the same edit.
 
 先读，后动手：<!-- ← N0.state + survey -->
 
-- [GOAL.md](../../../GOAL.md) M1 全文与第 4 节三条铁律 — 授权与验收来源。
+- [GOAL.md](../../GOAL.md) M1 全文与第 4 节三条铁律 — 授权与验收来源。
 - [INSTRUCTION.md](../../../INSTRUCTION.md) Skills 节 — 两处 `.agents/skills/`、`.claude/skills/` 硬编码。
 - [README.md](../../../README.md) — 对应硬编码段落。
 - [HANDOFF.md](../../../HANDOFF.md) D7 行与 Orphan-skills 决策行。

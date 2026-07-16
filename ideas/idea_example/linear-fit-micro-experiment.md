@@ -18,7 +18,7 @@ Walk one idea through the full OS loop: idea to project, code, figure, and PDF.
 
 This idea came from the smoke-test deliverable in the
 [Git-pinned historical task](https://github.com/pengqianhan/AI-Human-Research-OS/blob/38d79be74b463dc41b0b651e5510ac7346502cbd/task_en.md).
-The old root task files were later consolidated into [GOAL.md](../../GOAL.md)
+The old root task files were later consolidated into [GOAL.md](../../os-build/GOAL.md)
 and deleted. The goal was to verify that the template and repository conventions
 work end to end with a deliberately small experiment.
 

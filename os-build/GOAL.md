@@ -2,16 +2,16 @@
 
 > **方向层目标(北极星)**。2026-07-04 由用户确立:在"服务用户自身研究实践"的前提下,
 > 把本仓库演化为 agent-agnostic 的 agent-native Research OS(决策记录见
-> [HANDOFF.md](HANDOFF.md) Decisions)。
+> [HANDOFF.md](../HANDOFF.md) Decisions)。
 >
 > **长期愿景层**:本文件描述 Long-term Research OS 的方向、长期设计原则与战略
 > 治理闸门,不充当当前 MVP 的逐步实施说明。两个旧 task 文件已删除,其仍有效原则已
 > 吸收为本文的长期约束,原文保存在 Git commit
 > `38d79be74b463dc41b0b651e5510ac7346502cbd`。[build_phases/](build_phases/)
-> 是 Research OS MVP 的阶段执行合同;MVP 的正式定义见 [CONTEXT.md](CONTEXT.md)。
-> 运行事实源 = 实际目录结构、[INSTRUCTION.md](INSTRUCTION.md)、
-> [memory/MEMORY.md](memory/MEMORY.md)、[HANDOFF.md](HANDOFF.md)(Decisions)、
-> [FILETREE.md](FILETREE.md)。
+> 是 Research OS MVP 的阶段执行合同;MVP 的正式定义见 [CONTEXT.md](../CONTEXT.md)。
+> 运行事实源 = 实际目录结构、[INSTRUCTION.md](../INSTRUCTION.md)、
+> [memory/MEMORY.md](../memory/MEMORY.md)、[HANDOFF.md](../HANDOFF.md)(Decisions)、
+> [FILETREE.md](../FILETREE.md)。
 >
 > 本文与运行事实源冲突时,优先相信实际目录结构、INSTRUCTION.md 和
 > memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的工作。对 Research OS MVP,
@@ -41,7 +41,7 @@ Claude Code 承担),人类定方向、授权与审查。
 这个 OS 应让新进入的 agent 能快速定位:启动入口;当前 portfolio 与项目事实;idea、
 论文、代码、图表和写作材料的归属;经验向 memory/skill 的晋升边界;并行与 agent-led
 research 的开闸条件;完整 artifact 的统一评估方式。具体操作契约以
-[INSTRUCTION.md](INSTRUCTION.md) 为准,当前目录以 [FILETREE.md](FILETREE.md) 为准。
+[INSTRUCTION.md](../INSTRUCTION.md) 为准,当前目录以 [FILETREE.md](../FILETREE.md) 为准。
 
 ## 2. 长期设计原则与自主判断
 
@@ -110,7 +110,7 @@ OS 内核演化主线顺序:M0 → M1 → M2;M3、M4 是条件闸门,不排期�
 N4 决策**暂不推进**:原四阶段 launcher 提示已归档至
 [build_phases/archive-launcher/](build_phases/archive-launcher/),
 [build_phases/](build_phases/) 将按路线图边 E5 重写为完整 MVP 阶段合同。跨会话进度
-以 [maps/research-os/index.md](maps/research-os/index.md) 为唯一追踪器
+以 [map/index.md](map/index.md) 为唯一追踪器
 (HANDOFF Active Work 仅保留指针)。
 
 - **M0 — 治理对齐(纯文档)**
@@ -135,7 +135,7 @@ N4 决策**暂不推进**:原四阶段 launcher 提示已归档至
   或已留下 `.antigravitycli/` 痕迹的 agent)——仅凭其一行入口文件完成一个只读任务
   (如"总结当前 portfolio 状态");不做人工模拟。
 - **M2 — 用户态实战(circle_packing)**
-  按 [HANDOFF.md](HANDOFF.md) Active Work 的 circle_packing 清单执行——**该清单
+  按 [HANDOFF.md](../HANDOFF.md) Active Work 的 circle_packing 清单执行——**该清单
   是权威工作分解,其内部顺序优先于本文件**(含 rounds 开始前的 tier-2 评测器保护、
   并行回合、两次制品评审、OS Feedback、两批回灌)。可观测性不单独立项:在两批回灌
   中依据 OS Feedback 判断 round wrap-up 产物(progress log 条目 + `result.json` +

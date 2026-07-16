@@ -1,10 +1,10 @@
 # Research OS MVP Build Phases
 
 > **Status: awaiting rewrite — tracked as edge E5 in
-> [../maps/research-os/index.md](../maps/research-os/index.md).**
+> [../map/index.md](../map/index.md).**
 >
 > This directory is the execution-contract layer for the Research OS MVP. The
-> MVP definition lives in [../CONTEXT.md](../CONTEXT.md) (entry "Research OS
+> MVP definition lives in [../CONTEXT.md](../../CONTEXT.md) (entry "Research OS
 > MVP") and is not restated here. Per the route map's N4 decision (2026-07-17,
 > pure session protocol), the rewritten phases will carry the full MVP loop
 > with zero new machinery; each final phase must be directly executable by a

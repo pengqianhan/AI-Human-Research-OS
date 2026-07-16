@@ -9,7 +9,7 @@ The product vision: an AI-native research environment in which agents can indepe
 _Avoid_: current build, MVP, launcher
 
 **Research OS MVP**:
-The smallest end-to-end version that proves a human can provide a partial research state, an agent can place and understand it, continue bounded research, produce traceable artifacts, and return control to the human. `build_phases/` is its execution contract.
+The smallest end-to-end version that proves a human can provide a partial research state, an agent can place and understand it, continue bounded research, produce traceable artifacts, and return control to the human. `os-build/build_phases/` is its execution contract.
 _Avoid_: thin launcher, demo, final Research OS
 
 **Research Input Artifact**:

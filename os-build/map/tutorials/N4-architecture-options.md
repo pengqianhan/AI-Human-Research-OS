@@ -1,10 +1,10 @@
 # N4 教程：MVP 架构路径的三个候选，到底各是什么东西
 
 > 目的：让你不懂 shell/TypeScript 也能对 N4 做出知情选择，并能向别人复述所选路径和排除理由。
-> 锚定的真实文件：[INSTRUCTION.md](../../../INSTRUCTION.md)、[GOAL.md](../../../GOAL.md)、
+> 锚定的真实文件：[INSTRUCTION.md](../../../INSTRUCTION.md)、[GOAL.md](../../GOAL.md)、
 > [HANDOFF.md](../../../HANDOFF.md)（pi product-shell decisions）、
-> [build_phases/README.md](../../../build_phases/README.md)、
-> [build_phases/phase-02-launcher.md](../../../build_phases/archive-launcher/phase-02-launcher.md)。
+> [build_phases/README.md](../../build_phases/README.md)、
+> [build_phases/phase-02-launcher.md](../../build_phases/archive-launcher/phase-02-launcher.md)。
 
 ## 你要做的选择是什么
 
@@ -30,7 +30,7 @@ map-then-territory 管路线）。
 
 ## 候选 2：薄启动器 bootstrap（bin/research-os）
 
-**物理上是什么**：[phase-02-launcher.md](../../../build_phases/archive-launcher/phase-02-launcher.md) 定义的
+**物理上是什么**：[phase-02-launcher.md](../../build_phases/archive-launcher/phase-02-launcher.md) 定义的
 一个 POSIX shell 脚本 `bin/research-os`。它做三件事：① 校验仓库是合法 Research OS
 （AGENTS.md、INSTRUCTION.md、FILETREE.md、memory/MEMORY.md 四个文件存在）；② 打印
 preflight（根目录、git 分支、pi 版本）；③ 用 `exec` 把自己替换成 **pi** 进程。
@@ -43,7 +43,7 @@ preflight（根目录、git 分支、pi 版本）；③ 用 `exec` 把自己替�
 再 `os.execvp("pi", ...)` 把当前进程换成另一个程序。它是"门廊"，不是"房子"。
 
 **优点**：入口统一成一条命令；结构校验从"自觉"变成"强制"。
-**缺点**：[build_phases/README.md](../../../build_phases/README.md)（2026-07-17 起
+**缺点**：[build_phases/README.md](../../build_phases/README.md)（2026-07-17 起
 launcher 阶段已归档至 `archive-launcher/`）承认：四个 launcher 阶段不覆盖 MVP 的
 intake、project continuation、research tools、evaluation、experience promotion、
 bounded autonomy、human handoff——即 MVP 七步它一步不碰；
@@ -55,7 +55,7 @@ bounded autonomy、human handoff——即 MVP 七步它一步不碰；
 **物理上是什么**：在候选 2 之上，再为每个 Research Run 维护机器可读的运行状态/清单文件，
 向自动调度靠拢。
 
-**为什么现在不可选**：[GOAL.md](../../../GOAL.md) M4 闸门和非目标条款明确：机器可读
+**为什么现在不可选**：[GOAL.md](../../GOAL.md) M4 闸门和非目标条款明确：机器可读
 manifest、工作流 CLI、自动排队，每一项都要先有 OS Feedback 里"文件原生方案不够用"的
 具体证据，再经你逐项确认。现在一条证据都没有——这条路被你自己定的规则挡住了。
 

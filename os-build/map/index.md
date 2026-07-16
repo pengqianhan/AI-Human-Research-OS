@@ -186,7 +186,7 @@ flowchart LR
 - action: 起草端到端验收场景文档，与我逐题 grill 确认载体与每步证据项。
 - transition_logic: MVP 定义已在 CONTEXT.md，但"何时算通过"没有可判定清单；先定验收再动工，避免为假想需求造机制（GOAL 原则）。
 - prompt: [prompts/E3-acceptance-scenario.md](prompts/E3-acceptance-scenario.md)
-- status: drafted（prompt 已组装，待用户审阅后 → ready：目标为方向性节点）
+- status: ready（prompt 经用户审阅通过，2026-07-17）
 - deviations: —
 
 ### E4 — N3 → N4

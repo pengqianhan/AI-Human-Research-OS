@@ -286,7 +286,7 @@ Example requests:
 /map-then-territory I know the start and the goal but cannot draw the path — map building the Research OS with me
 /map-then-territory draw a route map for projects-folder/MyProject
 /map-then-territory the map is approved — assemble launch prompts for the ready edges
-/map-then-territory write this session's results and deviations back into maps/research-os
+/map-then-territory write this session's results and deviations back into os-build/map
 /map-then-territory I ran the acceptance check — record my verdict and update the calibration ledger
 ```
 

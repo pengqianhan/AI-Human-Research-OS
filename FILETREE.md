@@ -5,13 +5,12 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## (root)/
 
 - `.github/` - GitHub repository configuration, including Actions automation workflows. <!--hash:b7b0effb-->
-- `build_phases/` - Research OS MVP execution-contract layer awaiting the E5 rewrite; frozen launcher-slice prompts archived under archive-launcher/. <!--hash:77539046-->
 - `docs/` - Narrative and presentation drafts about the Research OS. <!--hash:14b16388-->
 - `human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:546515d3-->
 - `ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:e38f67ea-->
 - `inbox/` - Temporary intake workspace with drop, archive, and processing-script subdirectories. <!--hash:f0eb06bd-->
-- `maps/` - Route maps drawn with the map-then-territory skill; each subfolder is one endeavor map bundle. <!--hash:074af7c5-->
 - `memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:39f15197-->
+- `os-build/` - Construction layer for the Research OS itself: long-term vision, MVP phase contracts, and the route map. <!--hash:17001914-->
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, non-paper sources, indexes, and a generated graph visualization (viz.html). <!--hash:0d0a0b2f-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
@@ -20,9 +19,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:d6fc7790-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `CONTEXT.md` - Domain glossary for Long-term Research OS, Research OS MVP, research artifacts, continuation, skills, tasks, parallel rounds, and experience promotion. <!--hash:9d960dde-->
-- `GOAL.md` - Long-term Research OS vision: strategic principles, milestones, agent-agnostic rules, governance gates, and the boundary with MVP execution contracts. <!--hash:20b3123d-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:4be1c09d-->
+- `CONTEXT.md` - Domain glossary for Long-term Research OS, Research OS MVP, research artifacts, continuation, skills, tasks, parallel rounds, and experience promotion. <!--hash:bcb54f3f-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:e043176b-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:19af5b56-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:c6f42de7-->
@@ -63,33 +61,35 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## ideas/idea_example/
 
-- `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:1fa13f60-->
-- `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:e04f927e-->
-- `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:de04ef17-->
-
-## maps/
-
-- `research-os/` - Map bundle for building the Research OS itself: waypoints, edges, tutorials, and edge prompts. <!--hash:a739d685-->
-
-## maps/research-os/
-
-- `prompts/` - New-session-ready launch prompts, one per assembled map edge, with provenance annotations. <!--hash:34696c1e-->
-- `tutorials/` - Pre-decision tutorials for directional waypoints, written at the human's level. <!--hash:dc4b8500-->
-- `index.md` - Canonical Research OS route map: Mermaid overview plus waypoint/edge ledgers from normalized repo to verified MVP. <!--hash:09996052-->
-
-## maps/research-os/prompts/
-
-- `E1-governance-m0.md` - Launch prompt for edge E1: clear GOAL M0 governance debt and record the Paper_VAE decision. <!--hash:6ee3792a-->
-- `E2-adapter-contract-m1.md` - Launch prompt for edge E2: write the Agent adapters contract and de-hardcode the kernel (GOAL M1). <!--hash:b6deaf06-->
-- `E3-acceptance-scenario.md` - Launch prompt for edge E3: interactively draft and approve the MVP acceptance scenario checklist. <!--hash:91b8a65c-->
-
-## maps/research-os/tutorials/
-
-- `N4-architecture-options.md` - Tutorial behind waypoint N4: the three MVP architecture candidates explained with Python analogies. <!--hash:43876045-->
+- `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:82374eba-->
+- `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:7f437c41-->
+- `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:ca46074e-->
 
 ## memory/
 
-- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:2a3354b0-->
+- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:98425bce-->
+
+## os-build/
+
+- `build_phases/` - Research OS MVP execution-contract layer awaiting the E5 rewrite; frozen launcher-slice prompts archived under archive-launcher/. <!--hash:06b5fe37-->
+- `map/` - Route-map bundle for building the Research OS: waypoint/edge ledgers, tutorials, and edge prompts. <!--hash:190ce68a-->
+- `GOAL.md` - Long-term Research OS vision: strategic principles, milestones, agent-agnostic rules, governance gates, and the boundary with MVP execution contracts. <!--hash:ee7f64d4-->
+
+## os-build/map/
+
+- `prompts/` - New-session-ready launch prompts, one per assembled map edge, with provenance annotations. <!--hash:5a1cf27d-->
+- `tutorials/` - Pre-decision tutorials for directional waypoints, written at the human's level. <!--hash:7702c41f-->
+- `index.md` - Canonical Research OS route map: Mermaid overview plus waypoint/edge ledgers from normalized repo to verified MVP. <!--hash:7a91dea7-->
+
+## os-build/map/prompts/
+
+- `E1-governance-m0.md` - Launch prompt for edge E1: clear GOAL M0 governance debt and record the Paper_VAE decision. <!--hash:72cccc2f-->
+- `E2-adapter-contract-m1.md` - Launch prompt for edge E2: write the Agent adapters contract and de-hardcode the kernel (GOAL M1). <!--hash:bcf67fb1-->
+- `E3-acceptance-scenario.md` - Launch prompt for edge E3: interactively draft and approve the MVP acceptance scenario checklist. <!--hash:0c9c7626-->
+
+## os-build/map/tutorials/
+
+- `N4-architecture-options.md` - Tutorial behind waypoint N4: the three MVP architecture candidates explained with Python analogies. <!--hash:7c98f59a-->
 
 ## os-ui/
 

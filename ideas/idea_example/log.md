@@ -2,7 +2,7 @@
 
 ## 2026-07-16
 
-* **Provenance migration**: Replaced the deleted root `task_en.md` link with an exact Git commit permalink; current durable construction guidance lives in [GOAL.md](../../GOAL.md).
+* **Provenance migration**: Replaced the deleted root `task_en.md` link with an exact Git commit permalink; current durable construction guidance lives in [GOAL.md](../../os-build/GOAL.md).
 
 ## 2026-06-17
 

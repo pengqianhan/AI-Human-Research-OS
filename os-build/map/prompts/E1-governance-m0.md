@@ -1,6 +1,6 @@
 # E1: 清零治理债务 — GOAL M0（N0 → N1）
 
-Map: `maps/research-os/index.md` — read the N0 and N1 entries before starting. <!-- ← bundle path -->
+Map: `os-build/map/index.md` — read the N0 and N1 entries before starting. <!-- ← bundle path -->
 
 ## Start of work
 
@@ -24,8 +24,8 @@ launch）, updating the Mermaid overview in the same edit.
 先读，后动手：<!-- ← N0.state + survey -->
 
 - [INSTRUCTION.md](../../../INSTRUCTION.md) — 会话启动序列与 Agent Rules。
-- [GOAL.md](../../../GOAL.md) M0 — 本任务的授权与验收来源（纯文档工作，无需 OS Feedback 证据）。
-- [HANDOFF.md](../../../HANDOFF.md) — Active Work「Agent-native OS evolution」条目 + Decisions D4 行。
+- [GOAL.md](../../GOAL.md) M0 — 本任务的授权与验收来源（纯文档工作，无需 OS Feedback 证据）。
+- [HANDOFF.md](../../../HANDOFF.md) — Active Work 的路线图指针段 + Decisions D4 行。
 - `grep -rni OS_INTRO --include='*.md' .` — 找全残留引用。
 - `projects-folder/Paper_VAE/` — 调查其内容、大小、git 状态、Claude 锁定程度，作为二选一的证据。
 
