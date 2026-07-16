@@ -5,14 +5,14 @@ Skills collected, adapted, or locally added for research workflows. See
 upstream attribution and license terms when editing or redistributing these
 skills.
 
-* [academic-rebuttal](Rebuttal-Skill/SKILL.md) - Triages reviews, prioritizes rebuttal experiments, drafts evidence-grounded responses, and plans resubmission when needed.
+* [academic-rebuttal](academic-rebuttal/SKILL.md) - Triages reviews, prioritizes rebuttal experiments, drafts evidence-grounded responses, and plans resubmission when needed.
 * [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) - Looks up arXiv papers on AlphaXiv for structured AI-generated overviews.
 * [arxiv2md](arxiv2md/SKILL.md) - Converts arXiv papers to clean, LLM-ready Markdown via the arxiv2md.org REST API.
 * [baseline-selector](baseline-selector/SKILL.md) - Selects reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks.
 * [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) - Builds markdown baseline comparison tables from DeepXiv searches and targeted section reads.
 * [deepxiv-cli](deepxiv-cli/SKILL.md) - Searches and reads open-access academic papers through the DeepXiv CLI.
 * [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) - Summarizes recent DeepXiv trending papers into markdown digests.
-* [Deli_AutoResearch](Deli_AutoResearch/SKILL.md) - Provides state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks.
+* [deli-auto-research](deli-auto-research/SKILL.md) - Provides state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks.
 * [drawio](drawio/SKILL.md) - Generates native draw.io diagrams and exports PNG, SVG, or PDF.
 * [explain-diff-html](explain-diff-html/SKILL.md) - Explains code changes, diffs, branches, or PRs as rich interactive HTML.
 * [grill-for-unknowns](grill-for-unknowns/SKILL.md) - Interrogates a plan against docs/source evidence and surfaces unknown unknowns before implementation.

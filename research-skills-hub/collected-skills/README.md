@@ -26,9 +26,9 @@ at source commit `8f854bd`.
 | [explain-diff-html](explain-diff-html/SKILL.md) | Explain code changes, diffs, branches, or PRs as rich interactive HTML. | [geoffreylitt/a29df1b5f9865506e8952488eac3d524](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
 | [arxiv2md](arxiv2md/SKILL.md) | Convert arXiv papers to clean, LLM-ready Markdown (math, tables, sections) via a REST API. | [timf34/arxiv2md](https://github.com/timf34/arxiv2md), MIT |
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Source unknown — moved from `open-paper-skills`, upstream not yet identified |
-| [Deli_AutoResearch](Deli_AutoResearch/SKILL.md) | Provide state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks. | [Deli AutoResearch framework](https://victorchen96.github.io/auto_research/framework.html#fullmd) |
+| [deli-auto-research](deli-auto-research/SKILL.md) | Provide state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks. | [Deli AutoResearch framework](https://victorchen96.github.io/auto_research/framework.html#fullmd) |
 | [baseline-selector](baseline-selector-main/SKILL.md) | Select reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks. | [RyanZhou168/baseline-selector](https://github.com/RyanZhou168/baseline-selector/tree/main), MIT |
-| [academic-rebuttal](Rebuttal-Skill/SKILL.md) | Triage reviews, prioritize rebuttal experiments, draft evidence-grounded responses, and plan resubmission when needed. | [TobiasLee/Rebuttal-Skill](https://github.com/TobiasLee/Rebuttal-Skill) |
+| [academic-rebuttal](academic-rebuttal/SKILL.md) | Triage reviews, prioritize rebuttal experiments, draft evidence-grounded responses, and plan resubmission when needed. | [TobiasLee/Rebuttal-Skill](https://github.com/TobiasLee/Rebuttal-Skill) |
 
 ## Installation
 
@@ -58,7 +58,7 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
 - `arxiv2md`: no local setup required; calls the public `https://arxiv2md.org` REST API (30 requests/min per IP, no key).
 - `alphaxiv-paper-lookup`: no local setup required; calls the public
   `https://alphaxiv.org` endpoints, no auth or key.
-- `Deli_AutoResearch`: no additional local setup required; it is a self-contained
+- `deli-auto-research`: no additional local setup required; it is a self-contained
   protocol specification with no executable code.
 - `baseline-selector`: no additional local setup required; Codex alone is enough
   to use the skill.
@@ -302,7 +302,7 @@ Example requests:
 /grill-for-unknowns prepare a launch packet for the subagent that will build this
 ```
 
-## Deli_AutoResearch
+## deli-auto-research
 
 Provides a protocol framework for long-horizon autonomous tasks, including
 file-backed state, quantitative stall detection, structural pivots, and layered
@@ -311,10 +311,10 @@ heartbeat watchdogs. It ships no executable code.
 Example requests:
 
 ```text
-/Deli_AutoResearch design a file-backed state protocol for this week-long research task
-/Deli_AutoResearch add stall detection and structural pivot rules to this autonomous loop
-/Deli_AutoResearch design a three-layer heartbeat watchdog for unattended agent work
-/Deli_AutoResearch audit this orchestration plan for cognitive loops and runtime fragility
+/deli-auto-research design a file-backed state protocol for this week-long research task
+/deli-auto-research add stall detection and structural pivot rules to this autonomous loop
+/deli-auto-research design a three-layer heartbeat watchdog for unattended agent work
+/deli-auto-research audit this orchestration plan for cognitive loops and runtime fragility
 ```
 
 ## baseline-selector

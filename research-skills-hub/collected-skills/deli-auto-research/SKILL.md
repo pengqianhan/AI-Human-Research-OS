@@ -1,11 +1,11 @@
 ---
-name: Deli_AutoResearch
+name: deli-auto-research
 description: A protocol framework for long-horizon autonomous tasks. Targets three empirically-observed failure modes — cognitive loops, stalling, runtime fragility — by prescribing state management, stall detection, and watchdog mechanisms. Validated on multiple task types including paper writing (4 ICLR-format surveys, in-framework self-rating 8.0-8.6/10).
 type: Agent Framework
 tags: autonomous, long-horizon, zero-interaction, anti-loop, heartbeat-watchdog, loop, multi-agent, unattended, orchestration
 ---
 
-# Deli_AutoResearch
+# Deli AutoResearch
 
 This skill is a protocol framework for long-horizon autonomous tasks (days to weeks). It ships no executable code; instead it prescribes a set of battle-tested conventions: how state is persisted, how stalls are detected, how guardians are layered, and what constraints bind agent behavior. Implementation details are left to the adopter's environment.
 
