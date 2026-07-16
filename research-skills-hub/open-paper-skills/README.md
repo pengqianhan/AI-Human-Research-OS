@@ -23,6 +23,8 @@ at source commit `8f854bd`.
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
 | [discover-academic-skills](discover-academic-skills/SKILL.md) | Discover and strictly filter research/academic skills from skills.sh, scoring survivors with reasons for human-gated intake. | Original, Pengqian Han |
 | [codex-paper-figure-skill](codex-paper-figure-skill/SKILL.md) | Turn paper text or figure concepts into editable draw.io academic figures, using an image-generation pass for composition reference. | [Original, Pengqian Han](https://github.com/pengqianhan/codex-paper-figure-skill) |
+| [map-then-territory](map-then-territory/SKILL.md) | Draw a human-verifiable route map from start to destination, then drive agents through the territory edge by edge. | Original, Pengqian Han |
+| [writing-great-prompt](writing-great-prompt/SKILL.md) | Turn an intent into a lean, copy-ready prompt contract with destination, evidence, authority, and completion bar. | Original, Pengqian Han |
 
 ## Installation
 
@@ -51,6 +53,9 @@ python research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
   `hf` CLI is optional for faster paper fetching.
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
+- `map-then-territory`: no local setup, but requires the `grilling`,
+  `human-cognition-cache`, and `writing-great-prompt` skills to be installed.
+- `writing-great-prompt`: no additional local setup required.
 - `discover-academic-skills`: Node/npx for `npx skills find`, and an
   authenticated `gh` for the license gate and repo metadata.
 - `drawio-paper`: requires Python with `matplotlib`, `numpy`, and `pillow` for
@@ -264,6 +269,40 @@ Example requests:
 /human-cognition-cache decide what you should handle and what I must decide
 /human-cognition-cache explain this artifact at the level I need to maintain it
 /human-cognition-cache update my cognition map using evidence from this task
+```
+
+## map-then-territory
+
+Draws and maintains a directed route map — waypoints as human-verifiable
+states, edges carrying transition logic — from a known start to a desired
+destination, then drives agents through the territory edge by edge: per-edge
+launch prompts with provenance annotations, dual (agent + human) verification,
+tiered deviation handling, and a trust-calibration ledger. Requires the
+`grilling`, `human-cognition-cache`, and `writing-great-prompt` skills.
+
+Example requests:
+
+```text
+/map-then-territory I know the start and the goal but cannot draw the path — map building the Research OS with me
+/map-then-territory draw a route map for projects-folder/MyProject
+/map-then-territory the map is approved — assemble launch prompts for the ready edges
+/map-then-territory write this session's results and deviations back into maps/research-os
+/map-then-territory I ran the acceptance check — record my verdict and update the calibration ledger
+```
+
+## writing-great-prompt
+
+Turns an intent into a **prompt contract**: a lean, copy-ready task that
+defines the destination, evidence, authority, and completion bar while leaving
+the agent freedom to choose an efficient route. Used by `map-then-territory`
+to assemble per-edge launch prompts.
+
+Example requests:
+
+```text
+/writing-great-prompt draft an implementation prompt for this feature
+/writing-great-prompt turn this plan into a copy-ready phased agent task
+/writing-great-prompt upgrade this prompt so it works across model providers
 ```
 
 ## License

@@ -9,8 +9,10 @@ Original or repo-maintained skills for Open Paper and this Research OS. See
 * [explain-anything-html](explain-anything-html/SKILL.md) - Produces a rich, self-contained interactive HTML explanation of a paper, blog post, or hard concept, with background, intuition, walkthrough, and quiz.
 * [human-cognition-cache](human-cognition-cache/README.md) - Scaffolds tasks beyond current understanding with a project-local cognition map, decision routing, and artifact-grounded teaching.
 * [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) - Applies a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly.
+* [map-then-territory](map-then-territory/SKILL.md) - Draws a human-verifiable route map from start to destination, then drives agents through the territory edge by edge.
 * [paper-wiki-manager](paper-wiki-manager/SKILL.md) - Maintains an OKF paper wiki with paper, topic, and concept pages, project links, graph visualization, and validation.
 * [research-bible](research-bible/SKILL.md) - Turns research-practice principles into concrete ML/AI research plans, loops, logs, and debugging habits.
 * [research-skill-installer](research-skill-installer/SKILL.md) - Installs and syncs Research-skills-hub skills into both Codex and Claude Code. Installed.
 * [task-file-builder](task-file-builder/SKILL.md) - Drafts context-rich `task.md` briefs for fresh Claude Code sessions.
 * [uv-env](uv-env/SKILL.md) - uv-based Python environment setup for research projects. Installed.
+* [writing-great-prompt](writing-great-prompt/SKILL.md) - Turns an intent into a lean, copy-ready prompt contract with destination, evidence, authority, and completion bar.

@@ -21,7 +21,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `CONTEXT.md` - Domain glossary for Long-term Research OS, Research OS MVP, research artifacts, continuation, skills, tasks, parallel rounds, and experience promotion. <!--hash:9d960dde-->
 - `GOAL.md` - Long-term Research OS vision: strategic principles, milestones, agent-agnostic rules, governance gates, and the boundary with MVP execution contracts. <!--hash:793c7ca0-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:3e322967-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:8386bf03-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:19af5b56-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:c6f42de7-->

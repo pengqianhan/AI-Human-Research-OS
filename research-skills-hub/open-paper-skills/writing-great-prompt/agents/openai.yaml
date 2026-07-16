@@ -1,0 +1,4 @@
+interface:
+  display_name: "Writing Great Prompts"
+  short_description: "Draft lean, evidence-grounded agent prompts"
+  default_prompt: "Use $writing-great-prompt to turn this task into a copy-ready prompt for a frontier coding agent."
