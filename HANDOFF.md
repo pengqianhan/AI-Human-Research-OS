@@ -25,8 +25,9 @@ User direction: evolve this repo into an **agent-agnostic, agent-native Research
 (drivable by Codex, Claude Code, pi, and any file-reading shell-running agent).
 [GOAL.md](GOAL.md) is the direction-layer plan; execute its milestones in order.
 
-- [ ] M0 — governance alignment: fix stale `OS_INTRO.html` references in
-      task.md / task_en.md deliverables and decision D4; present the
+- [ ] M0 — governance alignment: task.md / task_en.md were deleted after their durable
+      guidance merged into GOAL.md (historical source: commit `38d79be`); fix the remaining
+      stale `OS_INTRO.html` wording in decision D4; present the
       **Paper_VAE status decision** (register in Active Projects + add
       PROJECT_MEMORY.md, vs declare nested-repo exempt zone) to the human.
 - [ ] M1 — write the "Agent adapters" contract section in INSTRUCTION.md
@@ -36,6 +37,35 @@ User direction: evolve this repo into an **agent-agnostic, agent-native Research
       work breakdown; its internal order wins).
 - [ ] M3/M4 — gated; see GOAL.md (real third agent / OS-Feedback evidence +
       human confirmation required).
+
+### `research-os` — thin pi launcher (planned 2026-07-16, grilling session)
+
+Purpose: add a minimal, removable product adapter around native pi while the
+Research OS continues to evolve. The launcher itself is read-only and does not
+encode research workflows. Copy-ready execution prompts live in
+[`build_phases/`](build_phases/) and must run in numbered order; each phase produces
+a Chinese HTML tutorial grounded in the final real files.
+
+- [ ] Governance — revise D5 and annotate GOAL.md M4 with the human-approved narrow
+      exception: a read-only, stateless launcher is allowed; workflow CLI, resident
+      services, and GUI execution remain gated.
+- [ ] Implement executable `bin/research-os` as a dependency-free POSIX shell script,
+      validated on macOS (Linux best effort; no Windows support): accept current directory
+      or an explicit path, discover the git root, validate the Research OS entry chain,
+      detect native `pi`, warn below tested version 0.80.7 with `pi update` guidance,
+      show cwd/root/version/Git status and a non-sandbox notice, then `exec` pi with
+      passthrough arguments and exit behavior.
+- [ ] Preserve native pi behavior — no SDK embedding, extension, `.pi/`, custom system
+      prompt, automatic session resume, installation/update, workflow subcommands,
+      logging, telemetry, network check, or repository write by the launcher.
+- [ ] Add concise usage/setup documentation, including manual pi install/update commands,
+      native-permission warning, invocation examples, and current platform limits.
+- [ ] Add dependency-free, offline shell smoke tests using temporary git repositories and
+      a fake `pi`; cover root/nested launch, invalid repo, missing/old pi, argument and exit
+      passthrough, and dirty-tree warning without invoking a model.
+- [ ] Refresh FILETREE.md and run its lint plus `./verify.sh`; do not commit automatically.
+- [ ] Use the launcher for one real research-project stage and record concrete OS Feedback.
+      GUI execution opens only after that evidence and renewed human confirmation.
 
 ### os-ui — read-only monitor UI (designed 2026-07-04, grilling session)
 
@@ -150,7 +180,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Decision | Default taken | To reverse |
 |---|---|---|
 | FILETREE.md scope when renaming the template | **Full regen** (re-indexed the whole `projects-folder/` reorg that the manifest had missed) over a minimal rename-only patch | n/a — full sync is the correct state and `filetree.py lint` enforces it |
-| Role of `task.md` / `task_en.md` | **Superseded 2026-07-03:** treat them as live OS construction guides, not historical records; keep them aligned with current paths and design stance | Move them to an archive folder and create new live task files if a historical/original prompt record is needed |
+| Role of `task.md` / `task_en.md` | ~~Treat them as live guides, then compatibility entrypoints~~ **— superseded 2026-07-16:** durable construction guidance is merged into `GOAL.md`, both files are deleted, and the historical originals remain at commit `38d79be74b463dc41b0b651e5510ac7346502cbd` | Restore either file from the recorded commit; if restoring it as a live guide, split direction/construction ownership out of GOAL.md again |
 | Where decisions are recorded | **Deduped to this file** (durable cross-project subset mirrored in `memory/MEMORY.md`) | Re-add a decisions table elsewhere (not recommended — invites drift) |
 | Active work lifecycle | **Retired separate plan files**; unfinished cross-session work now lives in this file under `## Active Work` | Restore the separate-plan convention from git if future tasks need a dedicated file |
 
@@ -187,6 +217,16 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Artifact-level review | Exactly two: mid-term hard-check review after the parallel round; final full review (hard checks + rubric + LLM critique) after `main.tex`. Reviewer = fresh read-only agent session; reports in project `Evaluations/` | Single final review, or per-round reviews (rejected: cost without new signal) |
 | Leaf defaults | Full idea→project path via `ideas/`; lowercase project name; commits on `main` per round; `paper_skeleton.md` live from round 1, `main.tex` after stop condition; round wrap-up **not** skill-ified before round 3; two OS back-port batches | Each independently reversible; see Active Work items |
 
+**pi product-shell decisions (2026-07-16, user-confirmed grilling session):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Product boundary | Keep plain Research OS files + Git as the source of truth; product surfaces are removable adapters, not a database-backed replacement | Introduce a new authoritative store only after defining migration, synchronization, and conflict semantics |
+| First delivery | Build a repo-local, unpublished `bin/research-os` thin launcher before any GUI execution: it invokes native pi as a subprocess, preserves pi's default permissions/session behavior/resource discovery, and remains read-only/stateless | Embed the pi SDK or add workflow commands only after real-use evidence and a new human decision |
+| Existing CLI gate | Narrow exception to D5/GOAL M4: the thin launcher is authorized without prior OS Feedback; heavier workflow CLI remains gated | Remove `bin/research-os` and restore the absolute no-CLI wording |
+| GUI gate and shape | Existing `os-ui` stays read-only until one real project stage yields specific OS Feedback and the human reauthorizes execution. Then add a localhost-only Agent Console to the existing shell: TypeScript server + pi SDK + HTTP/SSE, with repository snapshots and live runtime state internally separated; no IDE, credential store, transcript DB, or remote access in the first GUI | Open the execution gate earlier only through a new explicit human decision; replace SDK with RPC if process isolation or a non-Node backend becomes required |
+| Desktop future work | After the browser GUI stabilizes, evaluate one desktop wrapper rather than promise both; Electron is the initial candidate because pi SDK is Node-native, with Tauri + Node sidecar considered if its trade-offs become worthwhile | Select Tauri first if measured packaging/resource/security requirements justify the sidecar complexity |
+
 **Orphan-skills decision (2026-07-04, user-set):**
 
 | Decision | Default taken | To reverse |
@@ -197,8 +237,8 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](GOAL.md)). This **refines, not replaces**, the 2026-07-03 positioning: the user's research practice stays first; GOAL directly authorizes only documentation-layer work (M0/M1); machinery stays gated on OS-Feedback evidence (M4) or a real third agent (M3). | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
-| Document layering | `GOAL.md` = direction layer (north star); `task.md`/`task_en.md` = operation-layer construction guides; GOAL's milestones are the current work program (task.md's deliverables list belongs to the completed 2026-06 normalization). GOAL is revised only by the human or human-confirmed proposals. | Merge GOAL.md content into task.md and delete the file |
+| End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](GOAL.md)). This refines, not replaces, the 2026-07-03 positioning: the user's research practice stays first; machinery remains evidence-gated except for the explicitly recorded M0/M1, read-only monitor, and thin-launcher exceptions. | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
+| Document layering | **Superseded 2026-07-16:** `GOAL.md` is the unified direction + construction layer after absorbing the durable parts of the now-deleted task files. `build_phases/` is authoritative only inside its named task arc; INSTRUCTION/memory/actual artifacts remain operating truth. | Restore the task files from commit `38d79be` and re-establish separate direction/construction ownership |
 | Monitor-UI gate opened (read-only only) | Human authorized a **read-only monitor UI** (2026-07-04 grilling session): `os-ui/` = Python generator → schema-versioned `state.json` (gitignored) → static Vite/React frontend; 3 pages (dashboard / project / skills store); derived status only (no heartbeat; slot reserved with lease semantics); store shelves hub skills only; install = copy command. Design in [os-ui/DESIGN.md](os-ui/DESIGN.md), visual spec in [os-ui/mockup.html](os-ui/mockup.html). **This supersedes GOAL.md M4's evidence precondition for the read-only monitor UI only** (GOAL.md M4 annotated accordingly); the execution surface, SSE/resident services stay behind M4 (evidence + per-item human confirmation). | `rm -rf os-ui/`, remove this row + the Active Work entry, and drop the M4 exception note in GOAL.md; the OS has no dependency on os-ui |
 
 **Paper-wiki decisions (2026-07-07, user-confirmed):**
@@ -206,7 +246,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Decision | Default taken | To reverse |
 |---|---|---|
 | Skill rename | `paper-library-manager` → **`paper-wiki-manager`** in `research-skills-hub/open-paper-skills/` and both installs (`.claude/skills/`, `.agents/skills/`); old skill removed everywhere; hub index/README, INSTRUCTION.md reference-intake, and README roadmap item checked off accordingly | `mv` the hub dir back, revert SKILL.md/schema/scripts naming, `install_research_skill.py remove paper-wiki-manager --yes` + reinstall old name, revert doc references |
-| Wiki data root | ~~Keep `paper-library/` as the bundle root~~ **— superseded 2026-07-07 (user request): renamed to `paper-wiki/`.** Skill default root, config asset (now `assets/paper-wiki.toml`), validator script (now `scripts/validate_paper_wiki.py`), INSTRUCTION.md, README, task.md/task_en.md, and FILETREE.md all updated; wiki re-validated after the rename | `mv paper-wiki paper-library` and revert the path/name updates in the skill and docs |
+| Wiki data root | ~~Keep `paper-library/` as the bundle root~~ **— superseded 2026-07-07 (user request): renamed to `paper-wiki/`.** Skill default root, config asset (now `assets/paper-wiki.toml`), validator script (now `scripts/validate_paper_wiki.py`), INSTRUCTION.md, README, the then-live task guides, and FILETREE.md were updated; wiki re-validated after the rename. The task guides were later merged into GOAL.md and deleted. | `mv paper-wiki paper-library` and revert the path/name updates in the skill and current docs |
 | Concept entity pages | New third collection `paper-wiki/concepts/` with `type` ∈ Method/Dataset/Benchmark/Metric/Term/Tool; body needs `# Definition` + `# Papers`; create only for entities referenced by ≥ 2 papers, durable field-level entities, or on user request — **not** for a method only its own paper describes. Validator enforces fields, sections, `concepts/index.md`, and bidirectional paper↔concept links | Delete `concepts/` and revert the validator/schema/SKILL.md concept sections (single hub commit) |
 | Paper→project links | Optional `# Used In Projects` paper-body section links a project's `index.md` (must end in `.md` — the validator skips bare-directory links); target existence checked, no project backlink required. The 2026-07-03 "Paper library boundary" decision stands: the wiki stores only the pointer, project-specific use stays in the project | Drop the section from schema/SKILL.md and remove any such sections from paper pages |
 | Non-paper sources (2026-07-08) | Wiki gains a 4th collection `paper-wiki/sources/` for blogs/docs/talks, `type: Reference` (single type; `medium` is an optional field, not a type enum). `SOURCE_REQUIRED` = type/title/description/resource/tags/status/priority/timestamp; `authors`/`published`/`medium` optional; `resource` (URL) is identity; filename = title→kebab-slug (convention, unvalidated). Source→topic links are **one-way** (not bidirectional-enforced) — sources are a lighter tier than papers. New `synthesis-source` body profile (keyed on content type, so arXiv surveys use it too); default profile unchanged. Decided in a grilling session; validator branch negative-tested. | Delete `sources/`, revert the validator `SOURCE_REQUIRED`/branch/index-check, the schema.md Source Frontmatter section, the SKILL.md Source Documents section, and remove the `synthesis-source` profile from `paper-wiki.toml` |

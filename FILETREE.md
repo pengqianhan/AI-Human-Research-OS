@@ -5,6 +5,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## (root)/
 
 - `.github/` - GitHub repository configuration, including Actions automation workflows. <!--hash:b7b0effb-->
+- `build_phases/` - Copy-ready phased prompts for building, testing, documenting, and teaching the thin native-pi research-os launcher. <!--hash:ebd51473-->
 - `docs/` - Narrative and presentation drafts about the Research OS. <!--hash:14b16388-->
 - `human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:546515d3-->
 - `ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:e38f67ea-->
@@ -18,13 +19,11 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:d6fc7790-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
-- `GOAL.md` - Direction-layer north star: milestones, iron rules, and gates for evolving the repo into an agent-agnostic, agent-native research OS. <!--hash:68ded4b4-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:ad5a42cb-->
+- `GOAL.md` - Unified direction and construction guide: principles, milestones, iron rules, gates, and scoped build-phase precedence for the agent-native Research OS. <!--hash:b17c1cef-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:7869e7bf-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:19af5b56-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:c6f42de7-->
-- `task.md` - Live Chinese construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:2020a8fd-->
-- `task_en.md` - Live English construction guide for building and evolving the AI-Human Research OS with code agents. <!--hash:8b489810-->
 - `verify.sh` - Read-only, agent-neutral consistency check: paper-wiki validator, FILETREE lint, and three-copy skill-sync diff; reports drift without fixing. <!--hash:5313ad5b-->
 
 ## .github/
@@ -62,13 +61,13 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## ideas/idea_example/
 
-- `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:b84829fe-->
-- `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:05ab486d-->
-- `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:481b0659-->
+- `index.md` - Entry point listing the example idea concept and related project/task assets. <!--hash:1fa13f60-->
+- `linear-fit-micro-experiment.md` - OKF Idea concept for the promoted linear-fit micro-experiment that validates the OS pipeline. <!--hash:e04f927e-->
+- `log.md` - Chronological update log for the nested idea_example OKF bundle. <!--hash:de04ef17-->
 
 ## memory/
 
-- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:3e2dd521-->
+- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:a0c05fbf-->
 
 ## os-ui/
 

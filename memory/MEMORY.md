@@ -26,14 +26,14 @@
 
 | Date | Decision | Why |
 |---|---|---|
-| 2026-06-12 | Research OS normalized: entry chain (AGENTS/CLAUDE → INSTRUCTION → FILETREE → memory), six core workflows, 3-layer memory, hub-as-store skill lifecycle | task_en.md normalization task; see [`HANDOFF.md`](../HANDOFF.md) |
+| 2026-06-12 | Research OS normalized: entry chain (AGENTS/CLAUDE → INSTRUCTION → FILETREE → memory), six core workflows, 3-layer memory, hub-as-store skill lifecycle | historical normalization brief at Git commit `38d79be`; see [`HANDOFF.md`](../HANDOFF.md) |
 | 2026-06-17 | Projects live under `projects-folder/<ProjectName>/`; templates live under `projects-folder/templates/<TemplateName>/` | keeps the repository root compact as project count grows, while leaving room for discipline- or format-specific templates |
 | 2026-06-12 | Plugin model: small fixed core (entry chain, memory layers, directory semantics) + two plugin types — skills and project templates; `Templates/` container deferred until a second template exists; no plugin manager / manifest / versioning / CLI | keeps the OS open and extensible without machinery (INSTRUCTION.md → Extending the OS) |
 | 2026-07-03 | Research OS positioned as a file-system-native environment for long-horizon human-agent research | aligns with the environment-engineering lesson from EurekAgent while keeping the repository plain-file and human-steered |
 | 2026-07-03 | Shared paper library has three layers: paper notes, topic synthesis pages, and project-specific usage records | keeps paper understanding reusable across projects while preserving each project's claim/evidence trail |
 | 2026-07-03 | Unified evaluator protocol applies to human-led and agent-led research: hard checks + rubric scoring + LLM critique | avoids judging empty ideas or polished prose without runnable, traceable artifacts |
 | 2026-07-03 | Agent-led research is gated by `agent_led_research` (`off`, `scout_only`, `full_gated`) | preserves human-led research as the default while leaving room for controlled agent-owned research lanes |
-| 2026-07-03 | `task.md` and `task_en.md` are live construction guides for evolving this OS, not historical records | keeps build guidance aligned with current paths and design decisions; historical deviations belong in [`HANDOFF.md`](../HANDOFF.md) or git history |
+| 2026-07-16 | Durable construction guidance is unified in [`GOAL.md`](../GOAL.md); the old task files are deleted, and scoped execution contracts live under `build_phases/` | removes duplicated live guides; historical task provenance is pinned to commit `38d79be`, while operating truth remains INSTRUCTION, memory, and actual artifacts |
 | 2026-07-04 | End goal repositioned by the user: evolve the repo into an agent-agnostic, agent-native Research OS — direction layer in [`GOAL.md`](../GOAL.md); research practice stays first, machinery stays evidence-gated | user direction; supersession details and milestones in [`HANDOFF.md`](../HANDOFF.md) |
 
 ## Lessons and Principles
