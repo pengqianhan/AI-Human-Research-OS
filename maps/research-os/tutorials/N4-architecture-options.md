@@ -4,7 +4,7 @@
 > 锚定的真实文件：[INSTRUCTION.md](../../../INSTRUCTION.md)、[GOAL.md](../../../GOAL.md)、
 > [HANDOFF.md](../../../HANDOFF.md)（pi product-shell decisions）、
 > [build_phases/README.md](../../../build_phases/README.md)、
-> [build_phases/phase-02-launcher.md](../../../build_phases/phase-02-launcher.md)。
+> [build_phases/phase-02-launcher.md](../../../build_phases/archive-launcher/phase-02-launcher.md)。
 
 ## 你要做的选择是什么
 
@@ -30,7 +30,7 @@ map-then-territory 管路线）。
 
 ## 候选 2：薄启动器 bootstrap（bin/research-os）
 
-**物理上是什么**：[phase-02-launcher.md](../../../build_phases/phase-02-launcher.md) 定义的
+**物理上是什么**：[phase-02-launcher.md](../../../build_phases/archive-launcher/phase-02-launcher.md) 定义的
 一个 POSIX shell 脚本 `bin/research-os`。它做三件事：① 校验仓库是合法 Research OS
 （AGENTS.md、INSTRUCTION.md、FILETREE.md、memory/MEMORY.md 四个文件存在）；② 打印
 preflight（根目录、git 分支、pi 版本）；③ 用 `exec` 把自己替换成 **pi** 进程。
@@ -43,9 +43,10 @@ preflight（根目录、git 分支、pi 版本）；③ 用 `exec` 把自己替�
 再 `os.execvp("pi", ...)` 把当前进程换成另一个程序。它是"门廊"，不是"房子"。
 
 **优点**：入口统一成一条命令；结构校验从"自觉"变成"强制"。
-**缺点**：[build_phases/README.md](../../../build_phases/README.md) 原文承认：现有四个
-launcher 阶段"omit the MVP's intake, project continuation, research tools, evaluation,
-experience promotion, bounded autonomy, and human handoff"——即 MVP 七步它一步不碰；
+**缺点**：[build_phases/README.md](../../../build_phases/README.md)（2026-07-17 起
+launcher 阶段已归档至 `archive-launcher/`）承认：四个 launcher 阶段不覆盖 MVP 的
+intake、project continuation、research tools、evaluation、experience promotion、
+bounded autonomy、human handoff——即 MVP 七步它一步不碰；
 且它是 pi 专属 adapter，对你的 Claude Code 日常零增益。HANDOFF 2026-07-16 已把它降级为
 "只是可能的 bootstrap 切片"。
 

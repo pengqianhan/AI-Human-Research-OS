@@ -5,7 +5,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## (root)/
 
 - `.github/` - GitHub repository configuration, including Actions automation workflows. <!--hash:b7b0effb-->
-- `build_phases/` - Research OS MVP execution-contract prompts; current launcher-only draft is blocked pending end-to-end autonomy and acceptance redesign. <!--hash:484577b9-->
+- `build_phases/` - Research OS MVP execution-contract layer awaiting the E5 rewrite; frozen launcher-slice prompts archived under archive-launcher/. <!--hash:77539046-->
 - `docs/` - Narrative and presentation drafts about the Research OS. <!--hash:14b16388-->
 - `human/` - User context area with profile, policies, preferences, workflows, human cognition cache, candidate updates, and ignored private context. <!--hash:546515d3-->
 - `ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:e38f67ea-->
@@ -21,8 +21,8 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `CONTEXT.md` - Domain glossary for Long-term Research OS, Research OS MVP, research artifacts, continuation, skills, tasks, parallel rounds, and experience promotion. <!--hash:9d960dde-->
-- `GOAL.md` - Long-term Research OS vision: strategic principles, milestones, agent-agnostic rules, governance gates, and the boundary with MVP execution contracts. <!--hash:793c7ca0-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:8386bf03-->
+- `GOAL.md` - Long-term Research OS vision: strategic principles, milestones, agent-agnostic rules, governance gates, and the boundary with MVP execution contracts. <!--hash:20b3123d-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:4be1c09d-->
 - `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:19af5b56-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
 - `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:c6f42de7-->
@@ -85,7 +85,7 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## maps/research-os/tutorials/
 
-- `N4-architecture-options.md` - Tutorial behind waypoint N4: the three MVP architecture candidates explained with Python analogies. <!--hash:1ce3d8cb-->
+- `N4-architecture-options.md` - Tutorial behind waypoint N4: the three MVP architecture candidates explained with Python analogies. <!--hash:43876045-->
 
 ## memory/
 

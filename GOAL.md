@@ -105,11 +105,13 @@ portfolio 并保有 `PROJECT_MEMORY.md`;项目是否 agent 锁定由 owner 在
 
 ## 5. 里程碑
 
-OS 内核演化主线顺序:M0 → M1 → M2;M3、M4 是条件闸门,不排期。另有一个经人类
-授权、可并行执行的 adapter 任务弧:按 [build_phases/](build_phases/) 的编号顺序完成
-薄启动器治理对齐 → launcher → offline smoke tests → 文档与总验证。该任务弧不改变
-M0–M4 的内部顺序,但不必等待 M0/M1/M2 完成。跨会话进度记录在
-[HANDOFF.md](HANDOFF.md) Active Work 对应条目下。
+OS 内核演化主线顺序:M0 → M1 → M2;M3、M4 是条件闸门,不排期。薄启动器 adapter
+任务弧的授权保留(M4 窄例外),但按 2026-07-16 HANDOFF pi 决策与 2026-07-17 路线图
+N4 决策**暂不推进**:原四阶段 launcher 提示已归档至
+[build_phases/archive-launcher/](build_phases/archive-launcher/),
+[build_phases/](build_phases/) 将按路线图边 E5 重写为完整 MVP 阶段合同。跨会话进度
+以 [maps/research-os/index.md](maps/research-os/index.md) 为唯一追踪器
+(HANDOFF Active Work 仅保留指针)。
 
 - **M0 — 治理对齐(纯文档)**
   1) 原 task 构建指南归并进本文并删除旧入口后,修正 HANDOFF D4 中
@@ -153,9 +155,11 @@ M0–M4 的内部顺序,但不必等待 M0/M1/M2 完成。跨会话进度记录�
   已由人类开闸的窄例外只有:
   1) **只读 monitor UI**(2026-07-04):设计见 `os-ui/DESIGN.md`;其执行面、SSE 与
      常驻服务仍受本闸门约束;
-  2) **只读、无状态薄启动器**(2026-07-16):仅按 [build_phases/](build_phases/)
-     构建 repo-local `bin/research-os`,调用原生 pi,不嵌入 SDK、不编码研究工作流、
-     不创建服务/数据库/manifest,不改变 pi 默认权限与 session 行为。
+  2) **只读、无状态薄启动器**(2026-07-16):仅按
+     [build_phases/archive-launcher/](build_phases/archive-launcher/) 的归档规格
+     构建 repo-local `bin/research-os`(授权保留、暂不推进,见路线图 N4),调用原生
+     pi,不嵌入 SDK、不编码研究工作流、不创建服务/数据库/manifest,不改变 pi 默认
+     权限与 session 行为。
   GUI 执行面仍需先用启动器完成一个真实项目阶段,记录具体 OS Feedback,再由人类重新
   确认。开闸后的首选方向是扩展现有 `os-ui`:localhost-only TypeScript server + pi SDK
   + HTTP/SSE Agent Console;持久仓库快照与 pi 实时状态内部隔离。Electron/Tauri 仅在
@@ -169,8 +173,8 @@ M0–M4 的内部顺序,但不必等待 M0/M1/M2 完成。跨会话进度记录�
 - M2:circle_packing 全清单完成,OS Feedback 产出并回灌。
 - 文档归并:长期方向与构建原则只在 GOAL.md 维护;原 task.md/task_en.md 已删除,
   历史原文可由记录的 Git commit 恢复。
-- 薄启动器任务弧:`build_phases/` 四阶段按序完成;每阶段的真实制品、验证与中文 HTML
-  教程齐备;这不等于 GUI 执行闸门已经通过。
+- `build_phases/`:重写后的 MVP 阶段合同按序完成;每阶段的真实制品、验证与中文 HTML
+  教程齐备(`archive-launcher/` 归档包不是验收对象);这不等于 GUI 执行闸门已经通过。
 - 全程:仓库仍是 plain files + git;除上述两项窄例外外,M3/M4 闸门未凭空打开;所有
   被推翻的既有决策在 HANDOFF Decisions 有显式 supersession 行。
 

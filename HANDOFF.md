@@ -19,51 +19,20 @@ git show <hash>              # the actual diff for any change
 
 ## Active Work
 
-### Agent-native OS evolution ([GOAL.md](GOAL.md), 2026-07-04)
+### Research OS construction — tracked in the route map (since 2026-07-17)
 
-User direction: evolve this repo into an **agent-agnostic, agent-native Research OS**
-(drivable by Codex, Claude Code, pi, and any file-reading shell-running agent).
-[GOAL.md](GOAL.md) is the direction-layer plan; execute its milestones in order.
-
-- [ ] M0 — governance alignment: task.md / task_en.md were deleted after their durable
-      guidance merged into GOAL.md (historical source: commit `38d79be`); fix the remaining
-      stale `OS_INTRO.html` wording in decision D4; present the
-      **Paper_VAE status decision** (register in Active Projects + add
-      PROJECT_MEMORY.md, vs declare nested-repo exempt zone) to the human.
-- [ ] M1 — write the "Agent adapters" contract section in INSTRUCTION.md
-      (Extending the OS) and de-hardcode the two-agent assumptions in
-      INSTRUCTION.md Skills section and README; annotate D7.
-- [ ] M2 — run the circle_packing checklist below (it is the authoritative
-      work breakdown; its internal order wins).
-- [ ] M3/M4 — gated; see GOAL.md (real third agent / OS-Feedback evidence +
-      human confirmation required).
-
-### Research OS MVP — architecture and phase redesign (reopened 2026-07-16)
-
-Canonical definition: the smallest end-to-end system that accepts a partial Research
-Input Artifact, places and understands it, continues bounded research, produces traceable
-Research Artifacts, captures experience at the correct scope, and returns control to the
-human. Domain language lives in [CONTEXT.md](CONTEXT.md).
-
-The existing [`build_phases/`](build_phases/) pack covers only a thin-launcher bootstrap
-slice and is explicitly marked **do not execute** until replaced by a complete MVP phase
-contract.
-
-- [x] ~~Define Long-term Research OS vs Research OS MVP and record the human's relevant
-      cognition~~ — user-confirmed; captured in CONTEXT.md and human cognition cache.
-- [x] ~~Confirm the MVP autonomy boundary~~ — human-initiated bounded Research Runs;
-      non-destructive intake, literature work, local code/experiments, project memory, and
-      Project Skill candidates may proceed autonomously. Destructive/external/paid/global
-      promotion actions require approval; baseline precedes a maximum-two-task parallel round.
-- [ ] Define one end-to-end MVP acceptance scenario from intake through continuation,
-      evaluation, experience capture, and human handoff.
-- [ ] Select the smallest architecture and technology path; technical reversible choices
-      are agent-owned, while consequential governance choices remain human-owned.
-- [ ] Replace the launcher-only phase prompts with standalone Research OS MVP build phases;
-      every phase must generate a verified Chinese HTML tutorial grounded in real files and
-      teach unfamiliar mechanisms through Python/PyTorch analogies.
-- [ ] Execute and verify the replacement phases in order; do not open the long-term GUI or
-      unrestricted multi-agent autonomy merely because the MVP passes.
+All OS-construction work formerly tracked here as "Agent-native OS evolution"
+(GOAL M0–M4) and "Research OS MVP — architecture and phase redesign" now lives
+in the route map [maps/research-os/index.md](maps/research-os/index.md):
+waypoints N1–N12 carry states, human-runnable acceptance checks, dual verdicts,
+and per-edge launch prompts under `maps/research-os/prompts/`. Mapping:
+M0 → N1, M1 → N2, MVP scenario/architecture/phase-contract → N3/N4/N5
+(N3 and N4 decided 2026-07-17 — see the route-map Decisions block below),
+circle_packing arc → N6–N9, end-to-end acceptance → N10, M3/M4 gates → N11/N12.
+Read the map before opening any construction task; do not re-add construction
+checklists here. The circle_packing checklist below remains the authoritative
+work breakdown (referenced by map edge E6) until the project is instantiated.
+Historical section text: git history of this file.
 
 ### os-ui — read-only monitor UI (designed 2026-07-04, grilling session)
 
@@ -275,6 +244,14 @@ Post-build multi-agent review (4 lenses + adversarial verification) fixed state-
 gaps before install: fail path for self-verification, edge reversion on verdict
 disagreement, `ready` = prompt assembled + reviewed + source reached, bundle-status
 vocabulary, Mermaid-update duty in the launch packet.
+
+**Research OS route-map decisions (2026-07-17, maps/research-os, user-confirmed):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| MVP acceptance-scenario vehicle (map N3) | **circle_packing** carries the MVP acceptance scenario; paper-reproduction and synthetic scenarios rejected; the N10 final acceptance run uses a fresh Research Input Artifact to prove the loop is reusable beyond the vehicle | Directional deviation on N3: stop the N6–N9 lane, pick a new vehicle, redraw the map |
+| MVP architecture path (map N4) | **Pure session protocol** — the MVP loop is carried by the rewritten `build_phases/` contract + existing skills, zero new machinery; the authorized thin-launcher arc stays dormant (GOAL M4 narrow exception retained, not scheduled); tutorial: `maps/research-os/tutorials/N4-architecture-options.md` | Reopen N4; the launcher arc can restart anytime as a parallel adapter task without touching the MVP trunk |
+| OS-construction tracking | `maps/research-os/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation); launcher phase prompts archived to `build_phases/archive-launcher/` | Restore the two Active Work sections from git history, un-archive the phase prompts, and mark the map bundle `paused` |
 
 ## Deviations from the original plan
 
