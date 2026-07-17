@@ -15,6 +15,7 @@ skills.
 * [deli-auto-research](deli-auto-research/SKILL.md) - Provides state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks.
 * [drawio](drawio/SKILL.md) - Generates native draw.io diagrams and exports PNG, SVG, or PDF.
 * [explain-diff-html](explain-diff-html/SKILL.md) - Explains code changes, diffs, branches, or PRs as rich interactive HTML.
+* [explain-this](explain-this/SKILL.md) - Explains digital artifacts using learner profiles, comprehension quizzes, and spaced repetition.
 * [grill-for-unknowns](grill-for-unknowns/SKILL.md) - Interrogates a plan against docs/source evidence and surfaces unknown unknowns before implementation.
 * [hf-cli](hf-cli/SKILL.md) - Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more.
 * [hugging-face-paper-pages](hugging-face-paper-pages/SKILL.md) - Reads Hugging Face paper pages and paper metadata.
