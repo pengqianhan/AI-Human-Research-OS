@@ -18,8 +18,9 @@ data, code, figures, or experiment outputs.
 ## Source Map
 
 Relative links assume this template has been copied to
-`projects-folder/<ProjectName>/` (see `INSTRUCTION.md`, workflow
-"Idea → Project"). Project-specific references live under `paper/`.
+`projects-folder/<ProjectName>/`; follow the copied
+[project entrypoint](index.md). Project-specific references live under
+`paper/`.
 
 | Asset | Link or path | Notes |
 |---|---|---|

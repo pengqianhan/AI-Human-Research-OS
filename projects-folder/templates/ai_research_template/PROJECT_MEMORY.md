@@ -9,7 +9,13 @@
 - Project name:
 - Started: YYYY-MM-DD — from idea: link the source OKF idea concept under [Ideas](../../ideas/)
 - Goal (one sentence):
-- Status: exploring | experimenting | writing | submitted | paused
+- Owner: human-led | agent-led | mixed
+- Origin:
+- Stage: scout | probe | develop | writing | paused | complete | archived
+- Priority:
+- Status:
+- Evaluator status:
+- Current question:
 - Next action:
 
 ## Key Decisions

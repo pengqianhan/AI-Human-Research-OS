@@ -1,7 +1,14 @@
-# Paper Initial Template Update Log
+# AI Research Project Template Update Log
 
 Newest entries first. This log records template-level changes; copied projects
 should maintain their own local `log.md`.
+
+## 2026-07-17
+
+* Expanded [index.md](index.md) into the copied project's workflow authority
+  for setup, experiments, writing, evaluation, parallel work, and session end.
+* Aligned [PROJECT_MEMORY.md](PROJECT_MEMORY.md) with the portfolio and project
+  state fields previously maintained in the root instruction contract.
 
 ## 2026-06-17
 

@@ -13,7 +13,7 @@
 
 | Policy | Value | Notes |
 |---|---|---|
-| `agent_led_research` | `off` | Options: `off`, `scout_only`, `full_gated`. Human-led research is the default; agent-led ideas require the configured gate. |
+| `agent_led_research` | `off` | Options: `off`, `scout_only`, `full_gated`. Human-led research is the default; agent-led ideas require the configured gate, provenance, a stage, bounded resources, and the same evaluator protocol. |
 | `parallelism` | portfolio always on; intra-project parallelism on demand | Track multiple projects in the portfolio, but start intra-project multi-agent work only when a task is decomposable, verifiable, and worth the merge cost. |
 
 ## Active Projects
