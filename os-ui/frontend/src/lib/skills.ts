@@ -46,7 +46,7 @@ export function flattenStore(store: Store): DisplaySkill[] {
 
 /** Real install command for a skill, per DESIGN.md §3 — always carries --collection. */
 const INSTALLER_PATH =
-  "Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py";
+  "research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py";
 
 export function installCommand(skill: DisplaySkill): string {
   if (skill.sync === "installed_no_hub_source") {

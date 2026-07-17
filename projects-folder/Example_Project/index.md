@@ -14,5 +14,5 @@
 
 # Related
 
-* [Source idea: linear-fit micro-experiment](../../Ideas/idea_example/linear-fit-micro-experiment.md) - Promoted idea this project was created from.
+* [Source idea: linear-fit micro-experiment](../../ideas/idea_example/linear-fit-micro-experiment.md) - Promoted idea this project was created from.
 * [paper/main.pdf](paper/main.pdf) - Compiled paper, generated from paper/main.tex.

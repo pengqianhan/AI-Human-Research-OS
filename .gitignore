@@ -35,7 +35,7 @@ temp/
 .antigravitycli/
 
 # Human-private local context
-Human/private/
+human/private/
 
 # LaTeX build output
 *.aux

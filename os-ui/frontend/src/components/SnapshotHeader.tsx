@@ -59,7 +59,7 @@ export function SnapshotHeader({ meta, policy }: Props) {
 
         <span
           className="font-mono-heading whitespace-nowrap rounded-full border border-grid px-2.5 py-[3px] text-[11.5px] text-ink-soft"
-          title="Research policy agent_led_research (source: Memory/MEMORY.md)"
+          title="Research policy agent_led_research (source: memory/MEMORY.md)"
         >
           agent-led <b className="text-signal">{policy.agent_led_research}</b>
         </span>

@@ -32,7 +32,7 @@ under `paper/`.
 | Baselines | [Baselines/](Baselines/) |  |
 | Bibliography | [paper/references.bib](paper/references.bib) |  |
 | Paper notes |  | Add local notes when needed. |
-| Ideas and meetings | [../../Ideas/](../../Ideas/) |  |
+| Ideas and meetings | [../../ideas/](../../ideas/) |  |
 
 ## Argument Map
 

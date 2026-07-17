@@ -20,7 +20,7 @@ ENTRYPOINT_FILENAMES = ("README.md", "SKILL.md")
 # index, so neither the directories nor anything beneath them is indexed.
 EXCLUDED_DIRS = (".agents", ".claude")
 README_INDEXED_SUBTREES = {
-    "Research-skills-hub": {
+    "research-skills-hub": {
         "files": ("index.md",),
         "dirs": (),
         "hash_source": "index.md",

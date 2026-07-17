@@ -5,7 +5,7 @@ description: Install, update, sync back, list, inspect, or remove skills between
 
 # Research Skill Installer
 
-Use this skill to manage skills stored under `Research-skills-hub/`.
+Use this skill to manage skills stored under `research-skills-hub/`.
 
 The installer always treats both agent directories as the target:
 
@@ -14,7 +14,7 @@ The installer always treats both agent directories as the target:
 
 Run commands from the repository root unless you pass `--repo`.
 
-Skills are discovered at `Research-skills-hub/<collection>/<skill>/SKILL.md`. A
+Skills are discovered at `research-skills-hub/<collection>/<skill>/SKILL.md`. A
 collection may also group skills into a **bundle** folder that has no `SKILL.md`
 of its own (for example `collected-skills/productivity/`); nested skills inside
 such a bundle (`collected-skills/productivity/grill-me/SKILL.md`) are discovered
@@ -26,60 +26,60 @@ and installed by their own name (`grill-me`) into `.agents/skills/` and
 List available hub skills:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py list
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py list
 ```
 
 Check installed status:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status research-bible
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status research-bible
 ```
 
 Install a skill into both Codex and Claude Code:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible
 ```
 
 If the skill exists in more than one collection, specify the collection:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install uv --collection science-skills
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install uv --collection science-skills
 ```
 
 Update an already-installed skill:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --update
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --update
 ```
 
 Promote edits from an installed copy back to the hub, then sync both installed
 copies:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from claude
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from claude
 ```
 
 If both installed copies changed differently, the command stops. To deliberately
 use one side as the source of truth:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents --force
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents --force
 ```
 
 Preview without writing:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --dry-run
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents --dry-run
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --dry-run
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents --dry-run
 ```
 
 Remove a skill from both installed locations:
 
 ```bash
-python Research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py remove research-bible --yes
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py remove research-bible --yes
 ```
 
 ## Workflow

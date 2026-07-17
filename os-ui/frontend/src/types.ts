@@ -2,7 +2,7 @@
  * Hand-written TypeScript types for os-ui state.json, schema v0.1.
  *
  * The frontend only knows about this schema — it has no awareness of the
- * Markdown files (Memory/MEMORY.md, HANDOFF.md, PROJECT_MEMORY.md, ...) that
+ * Markdown files (memory/MEMORY.md, HANDOFF.md, PROJECT_MEMORY.md, ...) that
  * the Python generator reads to produce state.json. Fields that the
  * generator could not find in the source files are emitted as `null`; the
  * UI must render an honest empty state for those, never invent data.

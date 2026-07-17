@@ -35,7 +35,7 @@ parallel agent by default.
 ## Session Startup
 
 1. Read this file first.
-2. If [`Human/human-cognition/index.md`](Human/human-cognition/index.md)
+2. If [`human/human-cognition/index.md`](human/human-cognition/index.md)
    exists, skim it, then skim the frontmatter and `Active Index` sections of
    `known_knowns.md`, `known_unknowns.md`, `unknown_knowns.md`, and
    `unknown_unknowns.md` in that directory. Read full entries only when relevant
@@ -47,15 +47,15 @@ parallel agent by default.
    (re-verify with `git status`).
 4. Unless the task is trivial, read `FILETREE.md` next to understand the current
    repository structure.
-5. Read [`Human/index.md`](Human/index.md), when present, for stable user
+5. Read [`human/index.md`](human/index.md), when present, for stable user
    context, collaboration preferences, and privacy boundaries.
-6. For broad Research OS or template-design work, also read the relevant files under `Memory/`
+6. For broad Research OS or template-design work, also read the relevant files under `memory/`
 7. When working inside a specific project folder, also read that project's
    `PROJECT_MEMORY.md`.
 
 ## Research Policy
 
-The global research policy lives in [Memory/MEMORY.md](Memory/MEMORY.md). In
+The global research policy lives in [memory/MEMORY.md](memory/MEMORY.md). In
 particular, read `agent_led_research` before allowing agents to initiate their
 own research ideas:
 
@@ -95,11 +95,11 @@ lint check.
 
 ## Core Workflows
 
-1. **Capture an idea**: add an OKF concept under [Ideas/](Ideas/). For a
-   lightweight idea, create `Ideas/<slug>.md`; for an idea that needs local
-   notes or examples, create a nested bundle such as [Ideas/idea_example/](Ideas/idea_example/).
+1. **Capture an idea**: add an OKF concept under [ideas/](ideas/). For a
+   lightweight idea, create `ideas/<slug>.md`; for an idea that needs local
+   notes or examples, create a nested bundle such as [ideas/idea_example/](ideas/idea_example/).
    Idea concepts use `type: Idea` with `title`, `description`, `status`,
-   `created`, and optional `tags`. Update [Ideas/index.md](Ideas/index.md) and,
+   `created`, and optional `tags`. Update [ideas/index.md](ideas/index.md) and,
    for nested bundles, the local `index.md`.
 2. **Idea → Project**: copy a template from [projects-folder/templates/](projects-folder/templates/)
    into [projects-folder/](projects-folder/), for example:
@@ -108,7 +108,7 @@ lint check.
    Snapshot sections of `projects-folder/<ProjectName>/PROJECT_MEMORY.md` and
    `projects-folder/<ProjectName>/paper_skeleton.md`, set the idea concept's
    `status` to `promoted` with a link to the project, add a row to Active
-   Projects in [Memory/MEMORY.md](Memory/MEMORY.md), and refresh `FILETREE.md`.
+   Projects in [memory/MEMORY.md](memory/MEMORY.md), and refresh `FILETREE.md`.
    `ai_research_template` is an AI-research paper template;
    add sibling templates under `projects-folder/templates/` for other
    disciplines or outputs such as books and blogs.
@@ -142,12 +142,12 @@ lint check.
    created under `paper/` are gitignored; building from `paper/` keeps figure
    and shared-bibliography paths stable).
 6. **Session end**: update the Progress Log in `<Project>/PROJECT_MEMORY.md`;
-   update [Memory/MEMORY.md](Memory/MEMORY.md) only if cross-project state
+   update [memory/MEMORY.md](memory/MEMORY.md) only if cross-project state
    changed.
 
 ## Portfolio, Projects, and Parallel Work
 
-[Memory/MEMORY.md](Memory/MEMORY.md) is the portfolio dashboard. Its Active
+[memory/MEMORY.md](memory/MEMORY.md) is the portfolio dashboard. Its Active
 Projects table tracks cross-project state with at least these fields:
 `Project`, `Path`, `Owner`, `Stage`, `Priority`, `Status`, `Evaluator`, and
 `Next action`.
@@ -192,7 +192,7 @@ only summary status in `PROJECT_MEMORY.md` and the global Active Projects table.
 
 ## Research Memory
 
-- Use `Memory/` for durable project context, long-term research goals, key
+- Use `memory/` for durable project context, long-term research goals, key
   decisions, progress summaries, and lessons that should survive across sessions.
 - Update memory only when the information is likely to be useful later. Avoid
   storing noisy command output, transient observations, or details already captured
@@ -205,13 +205,13 @@ only summary status in `PROJECT_MEMORY.md` and the global Active Projects table.
 
 | Layer | Lives in | Updated when / by | Hygiene |
 |---|---|---|---|
-| Global | `Memory/MEMORY.md` | Agent at the end of a session that changes project status or yields a cross-project lesson; human anytime | ≤ ~200 lines; prune aggressively |
+| Global | `memory/MEMORY.md` | Agent at the end of a session that changes project status or yields a cross-project lesson; human anytime | ≤ ~200 lines; prune aggressively |
 | Project | `projects-folder/<ProjectName>/PROJECT_MEMORY.md` | Agent at the end of every session that changes project state | Progress log newest-first, ≤ ~30 lines |
 | Task | `scratch/` (gitignored) or the conversation itself | During a single task only | Distill durable findings upward at task end, then discard |
 
 ## External References
 
-- [Resource/](Resource/) holds read-only external material for study and
+- [resource/](resource/) holds read-only external material for study and
   inspiration: vendored copies of other agent and research repositories plus the
   walk-through notes (`*-讲解与启发.md`) distilled from them. Treat it as reference
   only — do not run or import its code into a project; reimplement an idea in your
@@ -223,10 +223,10 @@ only summary status in `PROJECT_MEMORY.md` and the global Active Projects table.
 - Installed skills live in `.agents/skills/` (Codex) and `.claude/skills/`
   (Claude Code). The two directories must stay byte-identical: use the
   `research-skill-installer` skill to install or sync them from
-  [Research-skills-hub/](Research-skills-hub/) so both copies update together, or
+  [research-skills-hub/](research-skills-hub/) so both copies update together, or
   apply any manual change to both.
-- [Research-skills-hub/](Research-skills-hub/) is the canonical store; its index
-  [index.md](Research-skills-hub/index.md) links the skill collections (each with
+- [research-skills-hub/](research-skills-hub/) is the canonical store; its index
+  [index.md](research-skills-hub/index.md) links the skill collections (each with
   its own `index.md`) and the install procedure.
 - Promotion path: record lessons in `PROJECT_MEMORY.md` first; turn a lesson
   into a project-local skill (`projects-folder/<ProjectName>/.claude/skills/`
@@ -235,7 +235,7 @@ only summary status in `PROJECT_MEMORY.md` and the global Active Projects table.
   to the hub only when it is useful across multiple projects and
   domain-independent or lightly coupled.
 - Every hub skill's `SKILL.md` must state scope, inputs, outputs, and
-  limitations. After adding or changing a skill, update `Research-skills-hub/index.md`
+  limitations. After adding or changing a skill, update `research-skills-hub/index.md`
   and refresh `FILETREE.md`.
 - Skills contain runnable scripts. Skim a skill's `scripts/` before installing
   it from outside this repository.

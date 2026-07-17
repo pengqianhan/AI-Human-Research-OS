@@ -15,7 +15,7 @@ export function DashboardPage({ state }: Props) {
     // the WindowFrame already provides the labeled region landmark
     <section>
       <h2 className="section-heading">
-        Portfolio<span className="section-src">Source: Memory/MEMORY.md · Active Projects</span>
+        Portfolio<span className="section-src">Source: memory/MEMORY.md · Active Projects</span>
       </h2>
 
       {state.portfolio.map((entry) => (
@@ -44,7 +44,7 @@ export function DashboardPage({ state }: Props) {
           </h2>
           <ActivityFeed entries={state.activity} />
 
-          <h2 className="section-heading mt-[22px]">Research Policy<span className="section-src">Source: Memory/MEMORY.md</span></h2>
+          <h2 className="section-heading mt-[22px]">Research Policy<span className="section-src">Source: memory/MEMORY.md</span></h2>
           <PolicyPanel policy={state.policy} />
         </div>
       </div>

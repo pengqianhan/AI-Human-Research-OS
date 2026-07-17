@@ -16,4 +16,6 @@ uv run python generate.py --watch    # foreground dev tool: re-generate every
 
 `state.json` is gitignored (see `../.gitignore`) — it is a cache, not a
 source of truth. Missing or unparseable repository sections become `null` or
-`[]` rather than invented data; warnings go to stderr.
+`[]` rather than invented data; warnings go to stderr. Validation checks the
+generated schema and repository invariants without pinning the changing skill
+catalog to a fixed item count.

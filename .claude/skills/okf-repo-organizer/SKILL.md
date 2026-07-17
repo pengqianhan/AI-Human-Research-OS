@@ -22,7 +22,7 @@ Add frontmatter minimally and let content drive it. Always include `type`; add a
 1. Establish scope and bundle boundaries.
    - Use the path the user names. If none is named, inspect the repo and choose the smallest sensible scope.
    - Prefer treating knowledge-oriented folders as OKF bundles. Do not force a whole software repo to be one OKF bundle unless the user asks for that or the repo is already markdown-first.
-   - A nested folder can be its own bundle when it has independent context, for example an `Ideas/idea_example/` folder with its own `index.md`, `log.md`, and concept files.
+   - A nested folder can be its own bundle when it has independent context, for example an `ideas/idea_example/` folder with its own `index.md`, `log.md`, and concept files.
 
 2. Inventory before editing.
    - Use `rg --files` to inspect Markdown, source, asset, generated, and vendor paths.
