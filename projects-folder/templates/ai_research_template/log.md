@@ -1,20 +1,10 @@
-# AI Research Project Template Update Log
+# Project Update Log
 
-Newest entries first. This log records template-level changes; copied projects
-should maintain their own local `log.md`.
+Record project-level changes after copying this template. Keep dated entries
+newest first and use `## YYYY-MM-DD` headings.
 
-## 2026-07-17
+<!--
+## YYYY-MM-DD
 
-* Expanded [index.md](index.md) into the copied project's workflow authority
-  for setup, experiments, writing, evaluation, parallel work, and session end.
-* Aligned [PROJECT_MEMORY.md](PROJECT_MEMORY.md) with the portfolio and project
-  state fields previously maintained in the root instruction contract.
-
-## 2026-06-17
-
-* Added [index.md](index.md) and this log to make the template easier for agents
-  to inspect incrementally.
-* Added [paper/references.bib](paper/references.bib) as the project-local
-  bibliography placeholder.
-* Updated the LaTeX convention so copied projects build from `paper/` and write
-  `paper/main.pdf` directly.
+* **Update**: Describe the project-level change and link its artifact.
+-->

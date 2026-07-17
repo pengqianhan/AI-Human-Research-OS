@@ -50,4 +50,4 @@ project's main areas.
 * [Figs/](Figs/) - Generated figures, tables, screenshots, and visual outputs.
 * [paper/](paper/) - Paper source, project bibliography, and generated PDF.
 * [Baselines/](Baselines/) - Baseline notes and comparison materials.
-* [log.md](log.md) - Folder-level update history for quick orientation.
+* [log.md](log.md) - Blank newest-first project update log to fill after copying.
