@@ -21,22 +21,37 @@ platform infrastructure.
   choices, publication, and final verification. Agents execute bounded work,
   surface evidence, and propose options within policy.
 
+## Execution contract
+
+- Match the user's requested layer: answer and review tasks inspect and report
+  without changing scoped artifacts unless explicitly requested; diagnosis
+  identifies causes; change requests include implementation and proportionate
+  validation.
+- Inspect repository evidence, perform safe in-scope local work, and continue
+  without asking for routine confirmation.
+- Ask only for a missing user choice or before destructive, external,
+  protected-data, substantial-cost, or material-expansion actions that the
+  current request does not explicitly authorize.
+- Complete only when the requested outcome exists and relevant checks pass.
+  Report required checks as passed, failed, or unrun.
+- When a required condition is missing, preserve useful findings and report
+  `blocked` with the missing condition and the smallest next probe.
+
 ## Session startup
 
-1. Read this file first.
-2. If [`human/human-cognition/index.md`](human/human-cognition/index.md)
+1. If [`human/human-cognition/index.md`](human/human-cognition/index.md)
    exists, skim it and the frontmatter plus `Active Index` of its four quadrant
    files. Read full entries only when relevant. Before finishing, update the
    cache only for durable cognition changes, following the
    `human-cognition-cache` privacy rules.
-3. Read [HANDOFF.md](HANDOFF.md), especially Active Work and Decisions, before
+2. Read [HANDOFF.md](HANDOFF.md), especially Active Work and Decisions, before
    reopening settled questions; re-check its claims with repository evidence
    such as `git status`.
-4. Unless the task is trivial, read [FILETREE.md](FILETREE.md), then follow the
+3. Unless the task is trivial, read [FILETREE.md](FILETREE.md), then follow the
    nearest directory `index.md` for local detail.
-5. Read [human/index.md](human/index.md), when present, for stable user context,
+4. Read [human/index.md](human/index.md), when present, for stable user context,
    collaboration preferences, and privacy boundaries.
-6. For broad OS or template work, read the relevant files under `memory/`. For
+5. For broad OS or template work, read the relevant files under `memory/`. For
    project work, read that project's `PROJECT_MEMORY.md`.
 
 ## Sources of truth
@@ -58,8 +73,9 @@ Link to an authority instead of mirroring its changing state elsewhere.
 ## Research integrity and permissions
 
 - Preserve original datasets, references, and user-provided research material.
-- Ask before deleting, materially rewriting, publishing, or externally sharing
-  user material.
+- Treat the current request as authorization for its exact scope. Ask before
+  deleting, materially rewriting, publishing, or externally sharing user
+  material beyond what the request explicitly authorizes.
 - Protect frozen evaluators and authoritative result files when they exist.
 - Keep every claim traceable to references, notes, data, code, figures, or
   evaluator output.
@@ -158,5 +174,6 @@ python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py
 Before finishing a change that touches `paper-wiki/`, an installed skill, a
 public top-level `index.md`, or [FILETREE.md](FILETREE.md), run
 [`./verify.sh`](verify.sh) from the repository root. It is a read-only,
-agent-neutral check for paper-wiki validity, FILETREE drift, and installed-skill
-sync. Resolve every reported inconsistency before committing.
+agent-neutral check for paper-wiki validity, FILETREE drift, and installed-copy
+sync for `paper-wiki-manager` and `filetree-simple`. Resolve every reported
+inconsistency before committing.
