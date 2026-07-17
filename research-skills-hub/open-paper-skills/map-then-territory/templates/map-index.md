@@ -10,6 +10,12 @@ created: <YYYY-MM-DD>
 **Start:** <what exists now>
 **Destination:** <what must become true>
 
+## Idea ledger
+
+| ID | Idea (verbatim) | Disposition |
+| --- | --- | --- |
+| I1 | <preserve the human's original wording> | unresolved |
+
 ## Overview
 
 ```mermaid

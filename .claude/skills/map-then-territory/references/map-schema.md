@@ -32,17 +32,39 @@ created: <YYYY-MM-DD>
 ```
 
 Bundle `status` transitions: `drafting` → `approved` when the human approves
-the map (SKILL.md step 2); `approved` → `executing` when the first edge
-launches; `executing` ⇄ `paused` at the human's word; `executing` →
-`complete` when the destination waypoint is `verified`; any state →
-`abandoned` only together with a written record of why.
+the map and its idea ledger has no `unresolved` disposition (SKILL.md step 2);
+`approved` → `executing` when the first edge launches; `executing` ⇄ `paused`
+at the human's word; `executing` → `complete` when the destination waypoint is
+`verified`; any state → `abandoned` only together with a written record of why.
 
 ## Stable IDs
 
-- Waypoints are `N1, N2, …`; edges are `E1, E2, …`, numbered in order of first
-  appearance.
-- An ID is assigned once and never reused, even after the waypoint or edge
-  dies. Renaming keeps the ID.
+- Idea fragments are `I1, I2, …`; waypoints are `N1, N2, …`; edges are
+  `E1, E2, …`, each numbered in order of first appearance.
+- An ID is assigned once and never reused after its entity is retired. Renaming
+  keeps the ID.
+
+## Idea ledger
+
+Preserve every human-supplied idea fragment before translating it into route
+structure:
+
+```markdown
+## Idea ledger
+
+| ID | Idea (verbatim) | Disposition |
+| --- | --- | --- |
+| I1 | <the human's words> | unresolved |
+```
+
+Set `Disposition` to the destination, one or more waypoint or edge IDs, or
+`out-of-scope — <human-approved rationale>`. Use `unresolved` only while the
+bundle is `drafting`; approval requires every row to have a final disposition.
+One row may point to several IDs when an idea shapes multiple route elements.
+
+When revising an older map that has no ledger, begin one with newly supplied
+fragments. Preserve repository evidence instead of reconstructing missing
+ideas from an unavailable conversation.
 
 ## Waypoint entry
 

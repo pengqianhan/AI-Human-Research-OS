@@ -7,7 +7,9 @@ Skeleton: [../templates/edge-prompt.md](../templates/edge-prompt.md).
 
 Assemble the prompt with the `writing-great-prompt` skill. The map supplies
 the prompt contract's raw material — if a contract element has no map source,
-the map is missing a field, not the prompt:
+the map is missing a field, not the prompt. Before assembly, confirm that every
+idea-ledger row disposed to this edge is represented in its `action` or
+`transition_logic`:
 
 | Prompt-contract element | Map source |
 | --- | --- |

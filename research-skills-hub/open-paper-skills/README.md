@@ -24,7 +24,7 @@ at source commit `8f854bd`.
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
 | [discover-academic-skills](discover-academic-skills/SKILL.md) | Discover and strictly filter research/academic skills from skills.sh, scoring survivors with reasons for human-gated intake. | Original, Pengqian Han |
 | [codex-paper-figure-skill](codex-paper-figure-skill/SKILL.md) | Turn paper text or figure concepts into editable draw.io academic figures, using an image-generation pass for composition reference. | [Original, Pengqian Han](https://github.com/pengqianhan/codex-paper-figure-skill) |
-| [map-then-territory](map-then-territory/SKILL.md) | Draw a human-verifiable route map from start to destination, then drive agents through the territory edge by edge. | Original, Pengqian Han |
+| [map-then-territory](map-then-territory/SKILL.md) | Map scattered ideas into a human-approved route of verifiable states, then drive agents through the territory edge by edge. | Original, Pengqian Han |
 | [writing-great-prompt](writing-great-prompt/SKILL.md) | Turn an intent into a lean, copy-ready prompt contract with destination, evidence, authority, and completion bar. | Original, Pengqian Han |
 
 ## Installation
@@ -275,17 +275,18 @@ Example requests:
 
 ## map-then-territory
 
-Draws and maintains a directed route map — waypoints as human-verifiable
-states, edges carrying transition logic — from a known start to a desired
-destination, then drives agents through the territory edge by edge: per-edge
-launch prompts with provenance annotations, dual (agent + human) verification,
-tiered deviation handling, and a trust-calibration ledger. Requires the
-`grilling`, `human-cognition-cache`, and `writing-great-prompt` skills.
+Turns a human's destination and scattered ideas into a directed route map. The
+agent surveys the unfamiliar territory and proposes missing waypoints and
+edges; the human owns intent, directional choices, and verification. Approved
+edges become provenance-annotated launch prompts, with dual (agent + human)
+verification, tiered deviation handling, and a trust-calibration ledger.
+Requires the `grilling`, `human-cognition-cache`, and `writing-great-prompt`
+skills.
 
 Example requests:
 
 ```text
-/map-then-territory I know the start and the goal but cannot draw the path — map building the Research OS with me
+/map-then-territory I want to build a Research OS but only have these scattered ideas — survey the territory and map them with me
 /map-then-territory draw a route map for projects-folder/MyProject
 /map-then-territory the map is approved — assemble launch prompts for the ready edges
 /map-then-territory write this session's results and deviations back into os-build/map
