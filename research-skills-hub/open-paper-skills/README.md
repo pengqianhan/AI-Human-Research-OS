@@ -15,6 +15,7 @@ at source commit `8f854bd`.
 | [research-bible](research-bible/SKILL.md) | Turn research-practice principles into concrete ML/AI research plans, experiment loops, logs, and debugging habits. | Original, Pengqian Han |
 | [drawio-paper](drawio-paper/SKILL.md) | Generate publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline. | Original; uses PaperBananaBench as an external reference dataset |
 | [explain-anything-html](explain-anything-html/SKILL.md) | Produce a rich, self-contained interactive HTML explanation (background, intuition, walkthrough, quiz) of a paper, blog post, or hard concept. | Adapted from `explain-diff-html`, based on [Geoffrey Litt's original skill](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524) |
+| [filetree-simple](filetree-simple/SKILL.md) | Generate and lint a compact top-level FILETREE.md navigation map from directory-owned entrypoints. | Repo-local support skill; inspired by nekocode/filetree-skill |
 | [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) | Apply a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly. | Original skill, Pengqian Han; uses Andrej Karpathy's *CLAUDE.md* notes as attributed reference material |
 | [human-cognition-cache](human-cognition-cache/README.md) | Scaffold tasks beyond current understanding with a project-local cognition map, decision routing, and artifact-grounded teaching. | Original, Pengqian Han |
 | [paper-wiki-manager](paper-wiki-manager/SKILL.md) | Maintain an OKF paper wiki with paper, topic, and concept pages, project links, graph visualization, and validation. | Original, Pengqian Han; supersedes `paper-library-manager` |
@@ -51,6 +52,7 @@ python research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
   required.
 - `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
   `hf` CLI is optional for faster paper fetching.
+- `filetree-simple`: Python 3.9+ standard library; Git is not required.
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
 - `map-then-territory`: no local setup, but requires the `grilling`,

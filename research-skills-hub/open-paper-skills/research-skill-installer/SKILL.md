@@ -89,7 +89,7 @@ python research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 3. Use `install <skill> --update` only when replacing an installed copy is intended.
 4. Use `sync-back <skill> --from agents|claude` when a skill was edited inside `.agents/skills/` or `.claude/skills/` and the hub should become the canonical copy.
 5. After installing, updating, or syncing back, run `status <skill>` to confirm both targets are installed and match the hub source.
-6. If repository documentation or indexed files changed in the same task, refresh `FILETREE.md` separately with `filetree-simple`.
+6. If public top-level entrypoints changed in the same task, run `filetree-simple generate`, then `filetree-simple lint`.
 
 ## Guardrails
 

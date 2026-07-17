@@ -88,10 +88,16 @@ resources, and the same evaluator protocol as human-led research.
 
 ## Repository Map
 
-`FILETREE.md` is the compact repository map. Read it after this file unless the
-task is too small to need repository context. After updating documentation or indexed
-files, refresh `FILETREE.md` with the local `filetree-simple` skill and run its
-lint check.
+`FILETREE.md` is the generated cold-start map of core files and public top-level
+areas. Read it after this file unless the task is too small to need repository
+context. Every public top-level directory owns an English `index.md`: its H1 is
+followed by one plain English summary sentence of at most 20 words. After adding,
+removing, or renaming a public top-level directory, or changing that summary, run:
+
+```bash
+python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py generate
+python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py lint
+```
 
 ## Core Workflows
 
@@ -107,8 +113,8 @@ lint check.
    Fill the project entrypoint `projects-folder/<ProjectName>/index.md`, the
    Snapshot sections of `projects-folder/<ProjectName>/PROJECT_MEMORY.md` and
    `projects-folder/<ProjectName>/paper_skeleton.md`, set the idea concept's
-   `status` to `promoted` with a link to the project, add a row to Active
-   Projects in [memory/MEMORY.md](memory/MEMORY.md), and refresh `FILETREE.md`.
+   `status` to `promoted` with a link to the project, and add a row to Active
+   Projects in [memory/MEMORY.md](memory/MEMORY.md).
    `ai_research_template` is an AI-research paper template;
    add sibling templates under `projects-folder/templates/` for other
    disciplines or outputs such as books and blogs.
@@ -236,8 +242,8 @@ only summary status in `PROJECT_MEMORY.md` and the global Active Projects table.
   to the hub only when it is useful across multiple projects and
   domain-independent or lightly coupled.
 - Every hub skill's `SKILL.md` must state scope, inputs, outputs, and
-  limitations. After adding or changing a skill, update `research-skills-hub/index.md`
-  and refresh `FILETREE.md`.
+  limitations. After adding or changing a skill, update the relevant collection
+  index under `research-skills-hub/`.
 - Skills contain runnable scripts. Skim a skill's `scripts/` before installing
   it from outside this repository.
 
@@ -293,8 +299,9 @@ versioning system, or CLI for plugins.
 7. Ask before deleting or rewriting user-provided research materials.
 8. Prefer small, reversible changes. Avoid adding heavyweight structure unless the
    task clearly requires it.
-9. Before finishing a change that touches `paper-wiki/`, an installed skill, or an
-   indexed doc, run [`./verify.sh`](verify.sh) from the repo root. It is a read-only,
+9. Before finishing a change that touches `paper-wiki/`, an installed skill, a
+   public top-level `index.md`, or `FILETREE.md`, run [`./verify.sh`](verify.sh)
+   from the repo root. It is a read-only,
    agent-neutral consistency check (paper-wiki validator, `FILETREE.md` lint, and the
    three-copy skill-sync diff). It reports drift; it does not fix it — resolve any
    reported item before committing.

@@ -1,8 +1,6 @@
 # Paper Wiki
 
-This OKF bundle is a paper wiki: one page per paper, topic pages for research
-themes, and concept pages for named entities, all cross-linked with reading
-status and cross-paper notes.
+Shared paper notes, topic syntheses, concepts, sources, and graph navigation.
 
 # Sections
 

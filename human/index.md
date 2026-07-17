@@ -1,8 +1,6 @@
 # Human Context
 
-This folder describes the human user of this Research OS. It helps Codex,
-Claude Code, and other agents understand stable user context, collaboration
-preferences, workflows, and boundaries.
+Stable user context, collaboration preferences, cognition notes, and privacy boundaries.
 
 ## Read Order
 

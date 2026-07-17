@@ -79,7 +79,7 @@ figures, references, and paper drafts, not empty ideas.
 | [research-skills-hub/](research-skills-hub/) | Store of reusable agent skills |
 | `.agents/skills/`, `.claude/skills/` | Installed skills (two identical copies) |
 | [INSTRUCTION.md](INSTRUCTION.md) | Agent operating guide (read first) |
-| [FILETREE.md](FILETREE.md) | Auto-maintained repository index |
+| [FILETREE.md](FILETREE.md) | Auto-generated top-level navigation map |
 
 ## Minimal Workflow
 

@@ -89,7 +89,7 @@ the math result is secondary. Decisions table: see "circle_packing kickoff decis
       (template unchanged — route B). Fill `index.md`, `PROJECT_MEMORY.md` Snapshot
       (`owner: human-led`, `origin: EurekAgent example task`, `stage: probe`),
       `paper_skeleton.md` Snapshot; add row to Active Projects in
-      [memory/MEMORY.md](memory/MEMORY.md); refresh `FILETREE.md` (filetree-simple + lint).
+      [memory/MEMORY.md](memory/MEMORY.md).
 - [ ] Add project-experimental sections to `PROJECT_MEMORY.md`:
       `## Evaluation Contract` (3-tier goals below; stop condition: 5 consecutive rounds
       with best-score gain < 0.001 → switch to writing),
@@ -199,7 +199,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| Orphan skills stay installed-only | The 3 skills present in `.claude/skills/` + `.agents/skills/` without a hub source (`session-handoff`, `filetree-simple`, `skill-organizer`) are **intentionally not synced back to the hub**. D7's three-copy rule applies to hub-sourced skills only; the store UI shows orphans as `hub 无源`. | `install_research_skill.py sync-back <name> --from claude` for each, then remove this row |
+| Orphan skills stay installed-only | The 2 skills present in `.claude/skills/` + `.agents/skills/` without a hub source (`session-handoff`, `skill-organizer`) are **intentionally not synced back to the hub**. `filetree-simple` was promoted to `research-skills-hub/open-paper-skills/` on 2026-07-17 and now follows D7's three-copy rule. The store UI shows the remaining orphans as `hub 无源`. | `install_research_skill.py sync-back <name> --from claude` for each remaining orphan, then remove this row |
 
 **Direction decisions (2026-07-04, user-set):**
 
@@ -253,6 +253,12 @@ vocabulary, Mermaid-update duty in the launch packet.
 | MVP architecture path (map N4) | **Pure session protocol** — the MVP loop is carried by the rewritten `build_phases/` contract + existing skills, zero new machinery; the authorized thin-launcher arc stays dormant (GOAL M4 narrow exception retained, not scheduled); tutorial: `os-build/map/tutorials/N4-architecture-options.md` | Reopen N4; the launcher arc can restart anytime as a parallel adapter task without touching the MVP trunk |
 | OS-construction tracking | `os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation); launcher phase prompts archived to `os-build/build_phases/archive-launcher/` | Restore the two Active Work sections from git history, un-archive the phase prompts, and mark the map bundle `paused` |
 | OS-build reference location | External repositories used to design and build the Research OS, together with their walk-through notes, live under `os-build/references/`; the former top-level `resource/` boundary is retired | Move `os-build/references/` back to `resource/` and restore all repository-owned links plus `FILETREE.md` |
+
+**Navigation-index decisions (2026-07-17, user-confirmed):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| FILETREE role and scope | `FILETREE.md` is an auto-generated, Git-independent cold-start map: five core files plus public top-level areas only. Every public top-level directory owns an English `index.md` summary of at most 20 words; true skill directories may fall back to `SKILL.md`. Hashes and nested inventory rows are removed. `filetree-simple generate` writes atomically; `lint` is read-only and runs from `verify.sh`. The canonical skill lives in `research-skills-hub/open-paper-skills/` and is synced to both installed copies. | Restore the previous detailed generator and manifest from Git history, then restore hash and nested-entry maintenance rules in `INSTRUCTION.md` and `verify.sh` |
 
 ## Deviations from the original plan
 

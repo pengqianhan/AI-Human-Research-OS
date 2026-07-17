@@ -1,128 +1,31 @@
 ---
 name: filetree-simple
-description: Maintain a compact repository FILETREE.md index with one-line file purpose summaries and content hashes. Use this same skill when you are asked to create, update, or lint FILETREE.md.
+description: Generate or lint a compact top-level FILETREE.md navigation map. Use when repository structure changes or FILETREE.md needs creation, regeneration, or validation.
 license: MIT
 ---
 
 # Filetree
 
-Maintain `FILETREE.md`: a compact navigation index grouped by directory, with
-folder and file entries. Each indexed entry carries an 8-character hash.
+Generate `FILETREE.md` as a deterministic cold-start map: core repository files
+plus public top-level areas. Each area owns its meaning in `index.md`; the map
+links to that entrypoint and stops there.
 
-Prefer folder entries over exhaustive file listings. If a directory has a
-`README.md` or `SKILL.md`, `FILETREE.md` should list the directory itself
-(`folder/`) and use that entrypoint file as the source for its hash. Auxiliary
-files below that directory are omitted. Nested directories with their own
-`README.md` or `SKILL.md` remain indexed as folder entries because they are
-entrypoints for their own subtrees. Files in directories without an entrypoint
-are still listed individually.
+Run commands from the target repository root, or pass `--repo` before the
+subcommand. The helper is [scripts/filetree.py](scripts/filetree.py).
 
-This is a plain shared skill, not a Claude Code plugin. Codex and Claude Code
-should both read this `SKILL.md` directly and run the same helper script:
-`scripts/filetree.py`, found next to wherever this `SKILL.md` lives (e.g.
-`.agents/skills/filetree-simple/scripts/filetree.py` or
-`.claude/skills/filetree-simple/scripts/filetree.py`).
-
-Run commands from the target repository root.
-
-There are three workflows below: **Init** creates `FILETREE.md` from scratch,
-**Update** syncs an existing manifest with added/changed/removed/renamed
-files, and **Lint** is a read-only, no-LLM drift check. Pick the matching
-section based on what the user asked for and run its script invocations
-directly — there are no separate slash commands wrapping these.
-
-## Summary Rules
-
-- One line, max 25 words.
-- Describe what the file is for, not its internal implementation details.
-- Summarize folder entries by what belongs in that folder, not by the entrypoint
-  filename.
-- Match the language of existing entries when updating an existing manifest.
-- For changed files, output `UNCHANGED` when the old summary still describes the
-  file purpose. Prefer `git diff HEAD -- <path>` before reading the full file.
-- Write a new summary only when the file purpose meaningfully changed.
-
-## Index Selection Rules
-
-- Always index root-level useful text/code files.
-- Always index repository directories as `folder/` entries unless they are
-  auxiliary directories covered by an ancestor entrypoint.
-- If a non-root directory has `README.md` or `SKILL.md`, index the directory as
-  `folder/`, not the entrypoint file itself.
-- Use `README.md` before `SKILL.md` when both exist in a directory.
-- If a folder entry has an entrypoint file, its hash is the entrypoint file hash.
-- If a folder entry has no entrypoint file, its hash is a deterministic
-  structural hash of its immediate children.
-- If a non-root directory has `README.md` or `SKILL.md`, omit auxiliary files
-  below that directory from `FILETREE.md`.
-- If a directory has no `README.md` or `SKILL.md`, index its useful text/code
-  files individually.
-- Index-file-backed subtrees may be configured in the script when one index file
-  is intended to index a large, frequently changing subtree. For this repository,
-  `research-skills-hub/` is collapsed to its `index.md`; the skill subdirectories
-  `science-skills/` and `open-paper-skills/` are reached through it and their own
-  `index.md` files.
-- The script filters `FILETREE.md`, lock files, `.gitkeep`, and common
-  binary/asset formats before applying these compacting rules.
-- The agent-tooling directories `.agents/` and `.claude/` are excluded from
-  `FILETREE.md` entirely — neither the directories nor anything beneath them is
-  indexed. They hold agent configuration and workspace skills that do not belong
-  in the human-facing navigation index. The excluded set is the `EXCLUDED_DIRS`
-  constant in `scripts/filetree.py`.
-
-## Init
-
-Use when `FILETREE.md` does not exist yet (or the user wants to regenerate it
-from scratch).
-
-1. If `FILETREE.md` already exists, confirm with the user before overwriting —
-   they may have meant **Update** instead. Stop if they decline.
-2. Run:
-   ```bash
-   python scripts/filetree.py todo
-   ```
-   With no prior manifest, every indexed item appears under `added`.
-3. For every `added` item, read the file (or its `README.md`/`SKILL.md`
-   entrypoint for folder entries) and write a fresh one-line summary per
-   Summary Rules. `UNCHANGED` is never valid here — there is no prior summary
-   to refresh.
-4. Apply:
-   ```bash
-   python scripts/filetree.py apply
-   ```
-   stdin shape:
-   ```json
-   {"updates": [{"path": "...", "hash": "...", "summary": "..."}], "removals": [], "renames": []}
-   ```
-5. Run **Lint** to confirm exit code `0`.
-
-## Update
-
-Use when `FILETREE.md` already exists and the repo has since changed.
+## Generate
 
 1. Run:
+
    ```bash
-   python scripts/filetree.py todo
+   python scripts/filetree.py generate
    ```
-2. For each `added` indexed item, read the file and write a fresh summary.
-3. For each `changed` indexed item, prefer `git diff HEAD -- <path>` over
-   reading the whole file, and use `UNCHANGED` unless the old summary no
-   longer describes the file's purpose.
-4. Pass decisions to `apply`, including any `removed`/`renamed` paths from the
-   `todo` output:
-   ```bash
-   python scripts/filetree.py apply
-   ```
-   stdin shape:
-   ```json
-   {
-     "updates": [{"path": "...", "hash": "...", "summary": "..." }],
-     "removals": ["..."],
-     "renames": [{"old_path": "...", "new_path": "..."}]
-   }
-   ```
-   `summary` may be `UNCHANGED` for changed files.
-5. Run **Lint** to confirm exit code `0`.
+
+2. If validation fails, fix every reported entrypoint and rerun `generate`.
+3. Run `lint` after generation.
+
+Completion criterion: `FILETREE.md` contains the complete two-section map and
+`lint` exits `0`.
 
 ## Lint
 
@@ -132,34 +35,47 @@ Run:
 python scripts/filetree.py lint
 ```
 
-Exit code `0` means clean. Exit code `1` means `FILETREE.md` has drift. This
-check is read-only and never requires an LLM call — if there is drift, run
-**Update** (or **Init** if no manifest exists yet) to fix it.
+`lint` builds the expected map in memory and compares it with `FILETREE.md`.
+It never writes files. Exit `0` means current; exit `1` means invalid inputs or
+drift that `generate` must resolve.
 
-## Agent Wiring
+## Contract
 
-To make agents discover this skill, reference this file from both instruction
-entry points:
+- Output is English Markdown with `Core Files` and `Main Areas` sections.
+- Core files use the script's stable ordered descriptions and appear when
+  present as regular files.
+- A public area is a non-hidden direct child directory outside the conventional
+  temporary-directory exclusions in the script.
+- A public area uses `index.md`. Only a skill directory may fall back to
+  `SKILL.md`.
+- An `index.md` entrypoint starts with an English H1 followed by one plain
+  English sentence of at most 20 words. That sentence becomes the map summary.
+- A `SKILL.md` entrypoint supplies single-line `name` and `description`
+  frontmatter; `description` follows the same summary rules.
+- Top-level directory symlinks are rejected. The generator does not traverse
+  nested directories.
+- Generation validates the complete map before atomically replacing
+  `FILETREE.md`; a failed run leaves the existing file unchanged.
 
-```markdown
-- `.agents/skills/filetree-simple/SKILL.md` (or `.claude/skills/filetree-simple/SKILL.md`
-  in Claude Code) - FILETREE.md maintenance skill. Read it before creating,
-  updating, or linting FILETREE.md.
+## Scope, Inputs, Outputs, and Limitations
+
+- **Scope:** compact top-level navigation, not an exhaustive file inventory or
+  content-integrity manifest.
+- **Inputs:** the target root, conventional core files, and top-level
+  `index.md` or skill `SKILL.md` entrypoints.
+- **Output:** one generated `FILETREE.md`; no sidecar manifest or hashes.
+- **Runtime:** Python 3.9+ standard library; Git and third-party packages are not
+  required.
+- **Limitations:** full OKF conformance, nested bundle navigation, file history,
+  and content integrity remain separate concerns.
+
+Run the standard-library test suite after changing the skill:
+
+```bash
+python -m unittest discover -s tests -v
 ```
-
-## Guardrails
-
-- Do not commit automatically.
-- Do not summarize skipped or compacted-away files; entrypoint files should
-  cover their subtree at a navigational level.
-- Do not rewrite summaries just because hashes changed.
-- Do not overwrite an existing `FILETREE.md` in **Init** without the user's
-  confirmation.
-- Do not output `UNCHANGED` during **Init** — every item is new.
 
 ## Credits
 
 Inspired by [nekocode/filetree-skill](https://github.com/nekocode/filetree-skill),
-an MIT-licensed Claude Code plugin for maintaining `FILETREE.md`. This local
-version adapts the idea for a compact, README/SKILL-first repository navigation
-index.
+an MIT-licensed Claude Code plugin.

@@ -24,10 +24,8 @@ fi
 
 # Canonical (hub) copy of the hub-sourced skill; agent-neutral.
 PWM_HUB="research-skills-hub/open-paper-skills/paper-wiki-manager"
-# filetree-simple is an orphan skill (installed-only, no hub copy), so its
-# script is referenced from an installed copy. The 3-copy check does not apply
-# to it — it is intentionally not synced to the hub.
-FILETREE=".claude/skills/filetree-simple/scripts/filetree.py"
+FILETREE_HUB="research-skills-hub/open-paper-skills/filetree-simple"
+FILETREE="$FILETREE_HUB/scripts/filetree.py"
 
 fail=0
 check() {
@@ -60,6 +58,10 @@ check "skill sync: hub == .claude" \
   diff -rq "$PWM_HUB" .claude/skills/paper-wiki-manager
 check "skill sync: hub == .agents" \
   diff -rq "$PWM_HUB" .agents/skills/paper-wiki-manager
+check "filetree-simple sync: hub == .claude" \
+  diff -rq "$FILETREE_HUB" .claude/skills/filetree-simple
+check "filetree-simple sync: hub == .agents" \
+  diff -rq "$FILETREE_HUB" .agents/skills/filetree-simple
 
 if [ "$fail" -eq 0 ]; then
   echo "verify: all checks passed"
