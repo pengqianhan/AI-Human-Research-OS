@@ -211,12 +211,13 @@ only summary status in `PROJECT_MEMORY.md` and the global Active Projects table.
 
 ## External References
 
-- [resource/](resource/) holds read-only external material for study and
-  inspiration: vendored copies of other agent and research repositories plus the
-  walk-through notes (`*-讲解与启发.md`) distilled from them. Treat it as reference
-  only — do not run or import its code into a project; reimplement an idea in your
-  own files instead. Each subdirectory is a separate upstream clone and keeps its
-  original license and attribution.
+- [os-build/references/](os-build/references/) holds read-only external material
+  used to design and build the Research OS: vendored copies of other agent and
+  research repositories plus the walk-through notes (`*-讲解与启发.md`) distilled
+  from them. Treat it as reference only — do not run or import its code into a
+  project; reimplement an idea in your own files instead. Each repository
+  subdirectory is a separate upstream clone and keeps its original license and
+  attribution.
 
 ## Skills
 

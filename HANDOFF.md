@@ -79,7 +79,7 @@ Run: `./os-ui/start.sh` (or `--watch`); the manual two-step alternative is in
 
 ### circle_packing — first real project / OS shakedown (planned 2026-07-03, grilling session)
 
-Purpose: reimplement the `circle_packing` task from `resource/EurekAgent/examples/circle_packing/`
+Purpose: reimplement the `circle_packing` task from `os-build/references/EurekAgent/examples/circle_packing/`
 inside the OS as its first real project. **Primary goal is stress-testing and refining the OS**;
 the math result is secondary. Decisions table: see "circle_packing kickoff decisions" below.
 
@@ -100,7 +100,7 @@ the math result is secondary. Decisions table: see "circle_packing kickoff decis
 - [ ] Phase 0 — independent evaluator at `projects-folder/circle_packing/Code/evaluator/evaluate.py`:
       spec = n=26, shapes (26,2)/(26,), radii ≥ 0, reported vs actual sum atol 1e-6,
       circles inside unit square, pairwise non-overlap tol 1e-6, score = sum of radii.
-      Reimplement from the problem spec — **no code copied from `resource/EurekAgent/` (AGPL)**.
+      Reimplement from the problem spec — **no code copied from `os-build/references/EurekAgent/` (AGPL)**.
       Fixed self-tests before freeze: single circle r=0.5, k×k grid, overlapping pair,
       out-of-bounds, sum-mismatch. Freeze = git commit after tests pass.
 - [ ] Protection (tier 2): project-local `.claude/settings.json` deny rules for Edit/Write on
@@ -252,6 +252,7 @@ vocabulary, Mermaid-update duty in the launch packet.
 | MVP acceptance-scenario vehicle (map N3) | **circle_packing** carries the MVP acceptance scenario; paper-reproduction and synthetic scenarios rejected; the N10 final acceptance run uses a fresh Research Input Artifact to prove the loop is reusable beyond the vehicle | Directional deviation on N3: stop the N6–N9 lane, pick a new vehicle, redraw the map |
 | MVP architecture path (map N4) | **Pure session protocol** — the MVP loop is carried by the rewritten `build_phases/` contract + existing skills, zero new machinery; the authorized thin-launcher arc stays dormant (GOAL M4 narrow exception retained, not scheduled); tutorial: `os-build/map/tutorials/N4-architecture-options.md` | Reopen N4; the launcher arc can restart anytime as a parallel adapter task without touching the MVP trunk |
 | OS-construction tracking | `os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation); launcher phase prompts archived to `os-build/build_phases/archive-launcher/` | Restore the two Active Work sections from git history, un-archive the phase prompts, and mark the map bundle `paused` |
+| OS-build reference location | External repositories used to design and build the Research OS, together with their walk-through notes, live under `os-build/references/`; the former top-level `resource/` boundary is retired | Move `os-build/references/` back to `resource/` and restore all repository-owned links plus `FILETREE.md` |
 
 ## Deviations from the original plan
 

@@ -35,6 +35,7 @@
 | 2026-07-03 | Agent-led research is gated by `agent_led_research` (`off`, `scout_only`, `full_gated`) | preserves human-led research as the default while leaving room for controlled agent-owned research lanes |
 | 2026-07-16 | [`GOAL.md`](../os-build/GOAL.md) is the Long-term Research OS vision; `os-build/build_phases/` is the Research OS MVP execution layer; [`CONTEXT.md`](../CONTEXT.md) defines shared domain language; old task files remain deleted | separates long-term intent from executable MVP contracts while operating truth remains INSTRUCTION, memory, and actual artifacts |
 | 2026-07-04 | End goal repositioned by the user: evolve the repo into an agent-agnostic, agent-native Research OS — direction layer in [`GOAL.md`](../os-build/GOAL.md); research practice stays first, machinery stays evidence-gated | user direction; supersession details and milestones in [`HANDOFF.md`](../HANDOFF.md) |
+| 2026-07-17 | External repositories and walk-through notes used to build the Research OS live under [`os-build/references/`](../os-build/references/) | co-locates construction evidence with the OS-build layer while preserving a read-only reference boundary |
 
 ## Lessons and Principles
 

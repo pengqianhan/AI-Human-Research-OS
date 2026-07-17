@@ -10,20 +10,19 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 - `ideas/` - OKF bundle for research ideas, including nested idea bundles, concept notes, and update logs. <!--hash:e38f67ea-->
 - `inbox/` - Temporary intake workspace with drop, archive, and processing-script subdirectories. <!--hash:f0eb06bd-->
 - `memory/` - Research memory area for long-term context, project notes, decisions, and progress. <!--hash:39f15197-->
-- `os-build/` - Construction layer for the Research OS itself: long-term vision, MVP phase contracts, and the route map. <!--hash:17001914-->
+- `os-build/` - Construction layer for the Research OS: long-term vision, MVP phase contracts, route map, and external design references. <!--hash:e34186e5-->
 - `os-ui/` - English-first read-only desktop UI for the Research OS: launch README, retained Chinese README, design spec, mockup, generator, and frontend. <!--hash:49a97eab-->
 - `paper-wiki/` - OKF paper wiki: paper, topic, and concept entity pages, non-paper sources, indexes, and a generated graph visualization (viz.html). <!--hash:0d0a0b2f-->
 - `projects-folder/` - Container for project instances and reusable project templates, with an index of all projects. <!--hash:01eb9fbf-->
 - `research-skills-hub/` - Canonical hub of reusable research skills: Open Paper, collected, vendored science-skills, claude-science-skills, and the read-only mattpocock-skills upstream mirror. <!--hash:86f71cfe-->
-- `resource/` - Read-only external reference area: vendored copies of other agent and research repositories plus walk-through notes distilled from them for study and inspiration. <!--hash:5450ee7b-->
 - `.gitignore` - Ignores OS files, editor settings, local environments, caches, scratch, private human context, agent-local data, and LaTeX build output. <!--hash:d6fc7790-->
 - `AGENTS.md` - Codex entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:306510c0-->
 - `CLAUDE.md` - Claude Code entry instruction directing agents to read INSTRUCTION.md at session start. <!--hash:b5dc49b2-->
 - `CONTEXT.md` - Domain glossary for Long-term Research OS, Research OS MVP, research artifacts, continuation, skills, tasks, parallel rounds, and experience promotion. <!--hash:bcb54f3f-->
-- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:e043176b-->
-- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:19af5b56-->
+- `HANDOFF.md` - Cross-session handoff record: active work, decisions with how-to-reverse, deviations, and intentionally-not-done. <!--hash:1462d418-->
+- `INSTRUCTION.md` - Primary agent guide: startup order, research-environment policy, workflows, portfolio/evaluator rules, memory layers, skills, references, and safety. <!--hash:3b6b7d1a-->
 - `LICENSE` - MIT license for the repository's original content. <!--hash:498c3fd3-->
-- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:c6f42de7-->
+- `README.md` - Human-facing overview: design stance, quick start, directory map, workflow, license, roadmap TODOs, and reference projects. <!--hash:d8e9b97b-->
 - `verify.sh` - Read-only, agent-neutral consistency check: paper-wiki validator, FILETREE lint, and three-copy skill-sync diff; reports drift without fixing. <!--hash:5313ad5b-->
 
 ## .github/
@@ -67,12 +66,13 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 
 ## memory/
 
-- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:98425bce-->
+- `MEMORY.md` - Global research memory: research policy, active project portfolio, cross-project decisions, and lessons. <!--hash:07174578-->
 
 ## os-build/
 
 - `build_phases/` - Research OS MVP execution-contract layer awaiting the E5 rewrite; frozen launcher-slice prompts archived under archive-launcher/. <!--hash:06b5fe37-->
 - `map/` - Route-map bundle for building the Research OS: waypoint/edge ledgers, tutorials, and edge prompts. <!--hash:190ce68a-->
+- `references/` - Read-only external repositories and walk-through notes used to design and build the Research OS. <!--hash:15e05a56-->
 - `GOAL.md` - Long-term Research OS vision: strategic principles, milestones, agent-agnostic rules, governance gates, and the boundary with MVP execution contracts. <!--hash:ee7f64d4-->
 
 ## os-build/map/
@@ -90,6 +90,13 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## os-build/map/tutorials/
 
 - `N4-architecture-options.md` - Tutorial behind waypoint N4: the three MVP architecture candidates explained with Python analogies. <!--hash:7c98f59a-->
+
+## os-build/references/
+
+- `agentos-讲解与启发.md` - Walk-through of the agentos in-process agent VM (Rivet) and what its kernel, permissions, and bindings design suggests for this Research OS. <!--hash:38b97eed-->
+- `EurekAgent-讲解与启发.md` - Walk-through of EurekAgent environment engineering for metric-driven research loops and lessons for evaluation contracts, artifacts, budgets, and snapshots. <!--hash:b88c9f85-->
+- `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:6973937d-->
+- `并行-自进化-经验共享-调研与启发.md` - GitHub survey note on parallel execution, self-evolution, and cross-agent experience sharing, with borrowing points and a recommended rollout path. <!--hash:d7d9a502-->
 
 ## os-ui/
 
@@ -197,10 +204,3 @@ _Auto-maintained compact navigation index by the filetree-simple skill. Indexed 
 ## research-skills-hub/
 
 - `index.md` - Hub index linking skill collections (science-skills, open-paper-skills, collected-skills, mattpocock-skills, claude-science-skills) and install steps. <!--hash:8691082e-->
-
-## resource/
-
-- `agentos-讲解与启发.md` - Walk-through of the agentos in-process agent VM (Rivet) and what its kernel, permissions, and bindings design suggests for this Research OS. <!--hash:2c15c7d0-->
-- `EurekAgent-讲解与启发.md` - Walk-through of EurekAgent environment engineering for metric-driven research loops and lessons for evaluation contracts, artifacts, budgets, and snapshots. <!--hash:5050ec4e-->
-- `sepo-讲解与启发.md` - Walk-through of sepo, a GitHub-native self-evolving repository agent, and lessons from its memory-versus-rubrics state split for this Research OS. <!--hash:56490406-->
-- `并行-自进化-经验共享-调研与启发.md` - GitHub survey note on parallel execution, self-evolution, and cross-agent experience sharing, with borrowing points and a recommended rollout path. <!--hash:2251349f-->

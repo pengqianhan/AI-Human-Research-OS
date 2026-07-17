@@ -1,11 +1,11 @@
 # agentos 讲解 & 对 AI-Human Research OS 的启发
 
-> 对 [`resource/agentos/`](agentos/) 仓库的讲解,以及它对本仓库(AI-Human Research OS)的可迁移启发。
+> 对 [`os-build/references/agentos/`](agentos/) 仓库的讲解,以及它对本仓库(AI-Human Research OS)的可迁移启发。
 > 资料来源:agentos 的 `README.md`、`CLAUDE.md`、内部架构图 `docs-internal/kernel-runtime-subsystem-map.md`。
 
 ---
 
-## 一、`resource/agentos` 是什么
+## 一、`os-build/references/agentos` 是什么
 
 先澄清一个容易混淆的点:它和本项目**都叫 "OS",但不是一回事**。
 

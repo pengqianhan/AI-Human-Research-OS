@@ -17,7 +17,7 @@ Read before editing:
 - `README.md`
 - `.agents/skills/filetree-simple/SKILL.md`
 
-Run `git status --short --branch`. Preserve all pre-existing changes and untracked content, including `resource/openscience/`; do not stage, delete, or rewrite unrelated work.
+Run `git status --short --branch`. Preserve all pre-existing changes and untracked content, including `os-build/references/openscience/`; do not stage, delete, or rewrite unrelated work.
 
 ## Required work
 

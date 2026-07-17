@@ -1,18 +1,18 @@
 # EurekAgent 讲解 & 对 AI-Human Research OS 的启发
 
-> 对 [`resource/EurekAgent/`](EurekAgent/) 仓库的讲解,以及它对本仓库
+> 对 [`os-build/references/EurekAgent/`](EurekAgent/) 仓库的讲解,以及它对本仓库
 > (AI-Human Research OS) 的可迁移启发。
 > 资料来源:EurekAgent 的 [`README.md`](EurekAgent/README.md)、核心
 > `src/` 控制流、`examples/` 问题定义,以及本仓库
-> [`paper-library/papers/2606.13662.md`](../paper-library/papers/2606.13662.md)
+> [`paper-wiki/papers/2606.13662.md`](../../paper-wiki/papers/2606.13662.md)
 > 的论文笔记。
 >
-> 注意:`resource/` 是只读外部参考区。落地时不要导入 EurekAgent 代码;
+> 注意:`os-build/references/` 是只读外部参考区。落地时不要导入 EurekAgent 代码;
 > 应在本仓库自己的模板、skills 和项目文件里重新实现相应思想。
 
 ---
 
-## 一、`resource/EurekAgent` 是什么
+## 一、`os-build/references/EurekAgent` 是什么
 
 EurekAgent 是一个 **metric-driven autonomous scientific discovery** 系统。
 它让用户先定义问题和评价标准,然后协调现成 CLI agent 去:
@@ -140,7 +140,7 @@ pipeline state、resume config 和 monitor snapshot 都作为环境的一部分�
 ## 三、对 AI-Human Research OS 的启发
 
 本 OS 当前已经有清晰的研究材料分层:
-`ideas/`、`paper-library/`、`projects-folder/`、`PROJECT_MEMORY.md`、
+`ideas/`、`paper-wiki/`、`projects-folder/`、`PROJECT_MEMORY.md`、
 `paper_skeleton.md`、`Code/`、`Figs/`、`Baselines/`、skills hub。
 EurekAgent 的启发是:在保持 plain files 的前提下,把其中的实验闭环做得更
 **可验证、可恢复、可比较**。
@@ -343,7 +343,7 @@ Evaluation Contract,但不要强迫所有项目都有单一 score。
 ### 4. 不要直接复制 AGPL 代码
 
 EurekAgent 使用 AGPL-3.0。本仓库的原创内容是 MIT。
-因此只能把它放在 `resource/` 中作为外部参考,落地时重新实现自己的轻量约定。
+因此只能把它放在 `os-build/references/` 中作为外部参考,落地时重新实现自己的轻量约定。
 
 ---
 

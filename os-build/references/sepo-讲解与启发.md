@@ -1,11 +1,11 @@
 # sepo(self-evolving repository)讲解 & 对 AI-Human Research OS 的启发
 
-> 对 [`resource/repo/`](repo/) 仓库的讲解,以及它对本仓库(AI-Human Research OS)的可迁移启发。
+> 对 [`os-build/references/repo/`](repo/) 仓库的讲解,以及它对本仓库(AI-Human Research OS)的可迁移启发。
 > 资料来源:sepo 的 `README.md`、`AGENT.md`,以及 `.agent/docs/` 下的 overview / architecture / technical-details 文档(memory、rubrics、orchestrator、request-lifecycle、key-concepts、goals)。
 
 ---
 
-## 一、`resource/repo`(sepo)是什么
+## 一、`os-build/references/repo`(sepo)是什么
 
 它的全名是 **sepo: self-evolving repository(自进化仓库)**。一句话:**把一个 GitHub 仓库本身变成一个能听懂请求、会改自己代码、还会积累记忆和偏好的 agent 系统**。
 
@@ -82,7 +82,7 @@ sepo 的 rubric 有 `applies_to`(适用哪种任务)、`severity`、`weight`,运
 
 ### 3. `human/inbox.md` 的"候选→晋升"其实就是 sepo 的规则学习闸,把它做实
 
-本项目已经有 [`human/inbox.md`](../human/inbox.md)("候选人类记忆,审核后再晋升进 PROFILE"),这正是 sepo "draft PR 提议规则 → 专门工作流校验 → 才提交到 `agent/rubrics`" 的轻量版,**思路完全一致**。sepo 多了两点纪律:**写路径严格校验(schema + 唯一 id),读路径尽力而为**;以及**只从可信来源保守学习**(只从已合并 PR、可信贡献者蒸馏)。
+本项目已经有 [`human/inbox.md`](../../human/inbox.md)("候选人类记忆,审核后再晋升进 PROFILE"),这正是 sepo "draft PR 提议规则 → 专门工作流校验 → 才提交到 `agent/rubrics`" 的轻量版,**思路完全一致**。sepo 多了两点纪律:**写路径严格校验(schema + 唯一 id),读路径尽力而为**;以及**只从可信来源保守学习**(只从已合并 PR、可信贡献者蒸馏)。
 
 → 给 `inbox.md` 的晋升加一条明确的 gate:晋升进 `PROFILE.md` 前校验格式 + 标注来源(哪次会话/哪个决策),并坚持"不确定就留在 inbox,别污染稳定档案"。
 
@@ -94,7 +94,7 @@ sepo 的 rubric 有 `applies_to`(适用哪种任务)、`severity`、`weight`,运
 
 ### 5.(和你的 paper-library 主题强相关)有界编排 + goal-issue 层级,是"自主研究循环"的安全模板
 
-你的 [`paper-library/`](../paper-library/) 收的全是 *autonomous research / self-evolving agent* 的论文(Arbor、AutoScientists、OpenSkill、EurekAgent…),说明你对"让 agent 自主跑研究循环"很感兴趣。sepo 的 orchestrator 给了一个**可直接照搬的安全骨架**:
+你的 [`paper-wiki/`](../../paper-wiki/) 收的全是 *autonomous research / self-evolving agent* 的论文(Arbor、AutoScientists、OpenSkill、EurekAgent…),说明你对"让 agent 自主跑研究循环"很感兴趣。sepo 的 orchestrator 给了一个**可直接照搬的安全骨架**:
 
 - **目标做成一等对象**,带显式 **success criteria**,而且"成功标准就是 scope 边界";
 - **最大轮数上限** + **明确的停止条件**(成功标准不清 / 需要研究判断 / 只剩可选清理 → 停下等人);
@@ -104,7 +104,7 @@ sepo 的 rubric 有 `applies_to`(适用哪种任务)、`severity`、`weight`,运
 
 ### 6. 会话连续性:thread key + 可恢复会话 ←→ 你的 HANDOFF
 
-sepo 用 `thread_key = repo:target_kind:target_number:route:lane` 给每条工作线一个稳定身份,下次能精确找回会话状态。本项目有 [`HANDOFF.md`](../HANDOFF.md) + `session-handoff` skill。
+sepo 用 `thread_key = repo:target_kind:target_number:route:lane` 给每条工作线一个稳定身份,下次能精确找回会话状态。本项目有 [`HANDOFF.md`](../../HANDOFF.md) + `session-handoff` skill。
 
 → 启发是给 handoff 一个**更明确的"线程身份"**:同一个 project / 同一类任务,恢复时能对应到上次的确切状态;并坚持让 Codex 和 Claude Code 恢复同一份工作时行为一致(你已经在做 `.agents/skills` 与 `.claude/skills` 字节一致,这是同一种"agent 无关"纪律)。
 
