@@ -1,113 +1,70 @@
 ---
 name: session-handoff
-description: Maintain HANDOFF.md as the cross-session hand-off record for active work, decisions, deviations, and intentionally-not-done items. Use when asked to record progress, prepare a hand-off for the next session, continue earlier work, recall what was done previously, or plan a task that may span multiple sessions.
+description: Maintain or resume repository-root HANDOFF.md for cross-session work. Use when recording a task arc that may span sessions, preparing its next-session handoff, or continuing and verifying an earlier arc.
 ---
 
 # Session Handoff
 
-Maintain one lightweight repository-root Markdown hand-off record for agent work:
+Keep one compact repository-root `HANDOFF.md` that transfers control to a cold session without
+requiring the prior conversation. Treat it as a snapshot: repository evidence always wins.
 
-- `HANDOFF.md` — cross-session record for active unfinished work, decisions
-  (with the default chosen and how to reverse it), deviations from the plan, and
-  what was intentionally not done.
+Keep each fact in its authoritative layer:
 
-This file complements — never replaces — the repository's memory files (e.g.
-`memory/MEMORY.md`) and git history. The division of labor is strict:
+- Git stores commits and diffs; link `git log` or `git show`, never mirror a commit table.
+- Memory files store durable cross-task or cross-project knowledge.
+- Project memory stores project-local state.
+- A dedicated map or tracker stores its own execution status; link it instead of mirroring it.
+- `HANDOFF.md` stores the current task arc: active work, settled decisions, deviations, and
+  intentional omissions.
 
-- **git** holds commits and diffs. Do **not** hand-maintain a commits table — it drifts
-  out of sync with the real history. Point to `git log` / `git show <hash>` instead.
-- **memory files** hold durable cross-task / cross-project knowledge.
-- **HANDOFF.md** holds the state and reasoning of one task arc, in a form a cold session
-  can absorb quickly.
+If `HANDOFF.md` is missing or needs structural repair, read [references/format.md](references/format.md)
+before recording.
 
-## Triggering — read this
+## Resume
 
-A skill cannot run itself at session start; it activates only when the user asks something
-relevant or types `/session-handoff`. So the **resume read must be wired where the agent
-already looks at startup** — do not rely on this SKILL.md body, which is not in context
-until the skill is invoked:
+1. Read `Active Work`, then `Decisions`, guardrails, blockers, and any suggested skills relevant
+   to the next action.
+2. Re-verify load-bearing facts with `git status`, `git log`, referenced artifacts, and targeted
+   checks. Prefer current repository evidence over the snapshot.
+3. Continue the recorded next action. Preserve settled defaults unless the user explicitly
+   reopens them.
 
-1. Add a step to `INSTRUCTION.md` (the file `AGENTS.md` / `CLAUDE.md` point to):
-   *"Read HANDOFF.md Active Work and Decisions before reopening settled questions."*
-2. Or add a `SessionStart` hook in `.claude/settings.json` that injects the relevant
-   `HANDOFF.md` sections.
+Complete when the next action, its authority, its prerequisites, and the evidence supporting the
+current state are all known without relying on the previous transcript.
 
-## When resuming
+## Record ongoing work
 
-1. Read `HANDOFF.md`'s Active Work section first. Unchecked Markdown task-list items
-   (`- [ ]`) are remaining work; checked and struck-through items (`- [x] ~~...~~`) are
-   completed context.
-2. Read `HANDOFF.md`'s Decisions table before reopening any settled question — each
-   default records how to reverse it. Re-litigate only if the user asks.
-3. **Trust the repository over this file** — it is a snapshot. Re-verify the
-   load-bearing facts (`git log`, `git status`, key file checks) before acting on them.
-4. Honor ⛔ guardrail rows: standing "do not do" rules; revisit only on explicit request.
+1. Create or update the active task arc before work may cross a session boundary. Give every open
+   item an exact next action and a checkable acceptance condition; add paths or commands when useful.
+2. Update the record as state changes. Keep blocked or partial items unchecked with the blocker;
+   check and strike through an item only after its verification passes.
+3. Record settled choices as `Decision | Default taken | To reverse`. Record material route changes
+   under `Deviations` and deliberately deferred scope under `Intentionally not done`.
+4. Reference existing specs, plans, ADRs, issues, maps, commits, and diffs by path or URL. Add only
+   the context needed to understand why they matter and what happens next.
+5. Keep sensitive values out of the handoff. Record a safe location or handling instruction for
+   credentials and private data, never the secret or personal detail itself.
 
-## When recording
+Complete when a cold agent can identify the current state, next action, acceptance check, blocker,
+and governing decision from repository artifacts alone.
 
-1. Before work that may span sessions, create or extend `HANDOFF.md`'s Active Work
-   section as a Markdown task list. Each item should be concrete enough for a cold
-   session to execute — exact paths, commands, and verification checks when useful.
-2. Update Active Work **as you work, not in bulk at the end**. A session can be
-   interrupted at any point. Leave unfinished items unchecked for the next session.
-   Check an item off only after its verification actually ran, and strike through the
-   completed task text: `- [x] ~~Task~~ — verified with <command or evidence>`.
-3. For partial or blocked work, keep the item unchecked and add the blocker inline.
-   Standing guardrails belong in Decisions or Intentionally not done, not in the active
-   checklist.
-4. When reality forces a deviation, take the sensible path and record it in
-   `HANDOFF.md` (what changed, why). An honest record beats a flattering one.
-5. At task end — or before a planned stop — update `HANDOFF.md`: decisions,
-   deviations, intentionally-not-done. **Do not add a commits table; link to `git log`.**
-6. When no execution steps remain, set Active Work to `No active tasks.` after durable
-   decisions and intentionally-not-done items are captured in `HANDOFF.md` or memory.
-7. Related unfinished follow-up work: append checklist items to Active Work. Unrelated new
-   unfinished task: replace Active Work with a fresh subsection for that task after
-   preserving any durable decisions in the Decisions table.
+## Prepare the next session
 
-## File Conventions
+1. Compact finished detail into links to authoritative artifacts and Git evidence. Keep only live,
+   load-bearing context in `HANDOFF.md`.
+2. If the user names the next session's focus, tailor the next action to it. Add `Suggested skills`
+   only when naming them changes tool or workflow routing.
+3. Audit the handoff: verify factual claims, resolve local links, remove duplicated artifact content,
+   and confirm that no credentials or sensitive personal information appear.
+4. When the task arc has no remaining execution work, write `No active tasks.` after preserving
+   durable decisions and intentional omissions in their authoritative layers.
 
-- Markdown, repository root. Use relative links so everything stays clickable.
-- Keep `## Active Work` near the top of `HANDOFF.md` — it is the first thing a resuming
-  session needs.
-- Keep `HANDOFF.md` **lean**: carry only live, load-bearing content forward. Push
-  finished-task detail into git history (and an archived snapshot if you want one).
+Complete when a fresh agent can resume safely from `HANDOFF.md` and its links, with no transcript
+and no hidden prerequisite.
 
-## Minimal Skeleton
+## Conventions and limitations
 
-`HANDOFF.md`:
-
-```markdown
-# Handoff — TASK NAME
-
-Commits live in git: `git log` / `git show <hash>` (not duplicated here).
-
-## Active Work
-
-No active tasks.
-
-When work is active, use a Markdown checklist:
-
-- [ ] Pending item — next action / verification needed.
-- [x] ~~Completed item~~ — verified.
-
-## Decisions
-| ID | Decision | Default taken | To reverse |
-|---|---|---|---|
-
-## Deviations from the plan
-
-## Intentionally not done
-```
-
-## Scope, inputs, outputs, limitations
-
-- **Scope**: a process and record-keeping convention; domain-independent; works in any git
-  repository driven by code agents.
-- **Inputs**: the current repository state, the task being planned or resumed, and any
-  existing `HANDOFF.md`.
-- **Outputs**: an updated `HANDOFF.md`.
-- **Limitations**: `HANDOFF.md` is a snapshot, not ground truth — always re-verify
-  against the repository; it does not replace memory files, commit messages, or git
-  history; the skill cannot auto-run at session start (wire that in `INSTRUCTION.md` or
-  a `SessionStart` hook).
+- Keep `HANDOFF.md` in the repository root, with relative links and `Active Work` near the top.
+- Keep it lean; Git history and linked artifacts carry completed detail.
+- This skill does not run automatically at session start. Repository startup instructions must
+  explicitly direct agents to read `HANDOFF.md`.
