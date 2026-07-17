@@ -34,48 +34,14 @@ checklists here. The circle_packing checklist below remains the authoritative
 work breakdown (referenced by map edge E6) until the project is instantiated.
 Historical section text: git history of this file.
 
-### os-ui — read-only monitor UI (designed 2026-07-04, grilling session)
+### os-ui — read-only monitor UI (completed 2026-07-05)
 
-Design settled in [os-ui/DESIGN.md](os-ui/DESIGN.md); pixel spec in
-[os-ui/mockup.html](os-ui/mockup.html). User is a frontend novice — implement in
-small explained steps (see `human/inbox.md` candidate entry). Read-only only;
-execution surface stays behind GOAL.md M4.
-
-- [x] ~~Design doc + clickable mockup (3 pages, fake data)~~ — delivered 2026-07-04.
-- [x] ~~U0 — `os-ui/generator/` (Python, uv, stdlib-only): schema v0.1 →
-      `frontend/public/state.json` (gitignored); `--watch` mtime polling~~ —
-      verified: built-in validate PASS (33 hub + 3 orphans, portfolio 1,
-      unregistered = Paper_VAE); independent schema-shape check passed.
-- [x] ~~U1 — Vite + React + TS + Tailwind scaffold; Dashboard reads real
-      state.json~~ — verified in browser: strips, unregistered alert,
-      active-work progress, policy, activity, governance; console clean.
-- [x] ~~U2 — Project page~~ — verified: honest nulls (未填写), round-track
-      empty state (real rounds land with circle_packing M2), fixture-tested
-      non-empty branch.
-- [x] ~~U3 — Store page~~ — verified: 36 cards (incl. hub skills added by a
-      parallel session — pipeline auto-picks-up), 4-state sync badges, orphan
-      filter, drawer (dialog semantics, focus, sync-back command for orphans).
-- [x] ~~U4 — novice README + wrap-up~~ — `os-ui/frontend/README.md`;
-      build/tsc clean; mobile breakpoint verified; committed.
-- [x] ~~U5 (2026-07-05) — desktop-OS shell rewrite (user directive, referencing
-      wanman.ai): tab shell → menu bar + dock + draggable/zoomable/minimizable
-      windows (`frontend/src/desktop/`); pages/data contract untouched~~ —
-      verified in browser (spawn/cascade/zoom/minimize/dock indicators/mobile
-      375px), tsc + build clean; adversarial review confirmed 2 a11y defects
-      (focus loss on close/minimize; hover-only copy feedback) — both fixed,
-      plus glass tokens (Tailwind `/80` on var() colors silently no-ops) and
-      keep-last-good-state polling.
-- [x] ~~U6 (2026-07-05) — user-feedback polish: one-command `os-ui/start.sh`
-      (--watch mode, orphan-process bug found & fixed in testing); dock gains
-      Claude Code / Codex launch-command copy buttons (agent-driven hint, per
-      user, wanman-style); menu bar decluttered (details moved to hover
-      tooltips); `os-ui/README.md` created (intro/launch/philosophy/TODO)~~ —
-      verified in browser at 5199 (user's own 5173 untouched), tsc + build
-      clean.
-
-Run: `./os-ui/start.sh` (or `--watch`); the manual two-step alternative is in
-`os-ui/README.md`. Next iteration ideas stay demand-driven
-(OS Feedback), per DESIGN.md.
+The read-only monitor is delivered and verified. Its governing design is
+[os-ui/DESIGN.md](os-ui/DESIGN.md), usage and launch instructions are in
+[os-ui/README.md](os-ui/README.md), and completed implementation detail belongs
+to Git history. Run it with `./os-ui/start.sh` (or `--watch`). Future execution
+features remain behind the GOAL.md M4 evidence gate; UI iterations stay
+demand-driven through OS Feedback.
 
 ### circle_packing — first real project / OS shakedown (planned 2026-07-03, grilling session)
 
@@ -125,6 +91,17 @@ the math result is secondary. Decisions table: see "circle_packing kickoff decis
       8-dimension rubric + LLM critique), isolated session → `Evaluations/`.
 - [ ] Project end: OS back-port batch 2 + update HANDOFF / memory/MEMORY.md; paper is an
       honest methods + experiment report (not a record-attempt paper).
+
+### Next session
+
+- Focus: follow the first ready construction edge in
+  [os-build/README.md](os-build/README.md), currently E1, by executing
+  [E1-governance-m0.md](os-build/map/prompts/E1-governance-m0.md); accept the
+  handoff only after N1 carries agent evidence and the human verification in the
+  execution manual passes.
+- Authority: [os-build/map/index.md](os-build/map/index.md) is the sole source of
+  construction status; do not mirror edge or waypoint progress here.
+- Suggested skills: `map-then-territory` for route-state handling.
 
 ## Decisions
 
