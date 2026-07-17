@@ -8,3 +8,4 @@
 * [Decentralized Multi-Agent Systems with Shared Context](2606.10662.md) - A paper about decentralized language-model agents coordinating through shared verified context.
 * [Toward Generalist Autonomous Research via Hypothesis-Tree Refinement](2606.11926.md) - A paper introducing Arbor, an autonomous research framework that uses persistent hypothesis-tree refinement to organize long-horizon artifact optimization.
 * [EurekAgent: Agent Environment Engineering is All You Need For Autonomous Scientific Discovery](2606.13662.md) - A paper about environment-engineered CLI-agent systems for metric-driven autonomous scientific discovery.
+* [Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable](2607.13285.md) - A behavior-centric, source-linked handbook and progressive-disclosure workflow for localizing changes in evolving agent harnesses.
