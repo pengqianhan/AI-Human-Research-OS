@@ -56,7 +56,7 @@ flowchart LR
 
 ### N1 — 治理债务清零（GOAL M0）
 - state: `OS_INTRO.html` 陈旧引用只剩历史性说明；Paper_VAE 的地位（登记入 portfolio vs 声明豁免区）由我拍板并记入 HANDOFF Decisions。
-- acceptance: 我运行 `grep -ri OS_INTRO --include='*.md' .`，只见历史性说明；打开 HANDOFF.md Decisions 能看到 Paper_VAE 决策行。
+- acceptance: 我运行 `git grep -n OS_INTRO -- '*.md'`，只见历史性说明；打开 HANDOFF.md Decisions 能看到 Paper_VAE 决策行。
 - type: executive（含一个交给我的二选一，但两个选项都不改地图走向）
 - status: approved
 - tutorial: —
@@ -85,7 +85,7 @@ flowchart LR
 - evidence: —
 
 ### N4 — MVP 最小架构路径已选定 ★
-- state: 架构决策文档写明场景由什么机制承载、每个被排除方案的排除理由；经我知情选择（**2026-07-17 用户选定：A · 纯会话协议**——MVP 环由 N5 阶段合同 + 现有 skills 承载，零新机制；launcher 弧保留 GOAL 授权但不推进、不挡主线；候选 B 并行 launcher、C launcher 优先被否，理由见教程对照表）。
+- state: `os-build/build_phases/mvp-architecture-decision.md` 写明场景由什么机制承载、每个被排除方案的排除理由；经我知情选择（**2026-07-17 用户选定：A · 纯会话协议**——MVP 环由 N5 阶段合同 + 现有 skills 承载，零新机制；launcher 弧保留 GOAL 授权但不推进、不挡主线；候选 B 并行 launcher、C launcher 优先被否，理由见教程对照表）。
 - acceptance: 我不看文档能向别人复述所选路径和至少两个排除理由（教程支撑到这个程度）。
 - type: directional（架构选错 = build_phases 重写两遍）
 - status: approved
@@ -190,16 +190,16 @@ flowchart LR
 - deviations: —
 
 ### E4 — N3 → N4
-- action: 依场景推导所需最小机制集合，写架构决策文档 + 教我看懂候选方案的教程，经我知情选择。
+- action: 依 N3 场景复核已选的纯会话协议，写 `os-build/build_phases/mvp-architecture-decision.md`，并让既有 N4 教程与正式决策互相链接；若场景证据推翻已选路径则停止并回图。
 - transition_logic: 场景步骤决定需要哪些机制（纯约定/启动器/状态文件）；顺序颠倒就是先造机制再找用途，违背奥卡姆剃刀。
-- prompt: —
+- prompt: [prompts/E4-architecture-decision.md](prompts/E4-architecture-decision.md)
 - status: drafted
 - deviations: —
 
 ### E5 — N4 → N5
 - action: 以选定架构重写 `build_phases/` 为完整 MVP 阶段合同（HANDOFF 2026-07-16 已决策必须替换 launcher-only 包）。
 - transition_logic: 阶段合同是架构的施工顺序化；没有 N4 的选择，合同没有承载物。
-- prompt: —
+- prompt: [prompts/E5-mvp-phase-contract.md](prompts/E5-mvp-phase-contract.md)
 - status: drafted
 - deviations: —
 

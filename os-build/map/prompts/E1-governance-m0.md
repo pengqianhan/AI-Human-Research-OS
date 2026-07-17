@@ -26,7 +26,7 @@ launch）, updating the Mermaid overview in the same edit.
 - [INSTRUCTION.md](../../../INSTRUCTION.md) — 会话启动序列与 Agent Rules。
 - [GOAL.md](../../GOAL.md) M0 — 本任务的授权与验收来源（纯文档工作，无需 OS Feedback 证据）。
 - [HANDOFF.md](../../../HANDOFF.md) — Active Work 的路线图指针段 + Decisions D4 行。
-- `grep -rni OS_INTRO --include='*.md' .` — 找全残留引用。
+- `git grep -n OS_INTRO -- '*.md'` — 只检查本仓库跟踪的 Markdown，避免把 `os-build/references/` 下的嵌套参考仓库误当成 OS 治理文本。
 - `projects-folder/Paper_VAE/` — 调查其内容、大小、git 状态、Claude 锁定程度，作为二选一的证据。
 
 ## Approach
@@ -37,9 +37,11 @@ launch）, updating the Mermaid overview in the same edit.
 
 ## Completion bar
 
-- Self-verify by running: `grep -rni OS_INTRO --include='*.md' .` 输出只含历史性说明；
+- Self-verify by running: `git grep -n OS_INTRO -- '*.md'` 输出只含历史性说明；
   打开 HANDOFF.md Decisions 能看到 Paper_VAE 决策行（含用户选择与理由）。<!-- ← N1.acceptance -->
-- 被索引文件（HANDOFF.md 等）变更后，用 `filetree-simple` 刷新哈希，`./verify.sh` 全绿。
+- `FILETREE.md` 只索引核心文件和公开顶层区域，本边不应新增嵌套条目或哈希。运行
+  `python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py lint`
+  与 `./verify.sh`，两者均须通过。
 - Record the result as `agent_verdict` with `evidence`（commands, outputs, artifact
   paths）in the map's `index.md`. `delivered` requires a passing self-check; if you
   must stop without passing, log a dated line under E1 `deviations`, set E1 back to

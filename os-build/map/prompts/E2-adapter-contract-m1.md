@@ -41,8 +41,9 @@ agent-agnostic 是铁律：内核零专属假设，任何能读文件的 agent �
 
 - Self-verify by running: 在 INSTRUCTION.md 全文搜 `.claude` 与 `.agents`，除
   「Agent adapters」表本身外零命中；README 硬编码段已改为引用该表。<!-- ← N2.acceptance -->
-- 被索引文件（INSTRUCTION.md、README.md、HANDOFF.md）变更后，用 `filetree-simple`
-  刷新哈希，`./verify.sh` 全绿。
+- `FILETREE.md` 的核心文件说明是稳定导航文本，本边不应为正文变化刷新哈希或新增条目。
+  运行 `python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py lint`
+  与 `./verify.sh`，两者均须通过。
 - Record the result as `agent_verdict` with `evidence` in the map's `index.md`.
   `delivered` requires a passing self-check; if you must stop without passing, log a
   dated line under E2 `deviations`, set E2 back to `ready`, leave N2 `in-progress`,

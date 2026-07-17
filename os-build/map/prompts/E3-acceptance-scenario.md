@@ -43,7 +43,9 @@ launch）, updating the Mermaid overview in the same edit.
 
 - Self-verify: 文档存在、七步齐全、每步有文件路径或命令级的通过标准、与 CONTEXT.md
   词汇一致、与 HANDOFF 既有决策无冲突；**用户已在会话中明确批准全文**。<!-- ← N3.acceptance -->
-- 新文件入索引：用 `filetree-simple` 刷新，`./verify.sh` 全绿。
+- `mvp-acceptance-scenario.md` 是 `os-build/` 内部制品，不应在顶层 `FILETREE.md` 新增一行。
+  运行 `python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py lint`
+  与 `./verify.sh`，两者均须通过。
 - Record the result as `agent_verdict` with `evidence` in the map's `index.md`.
   `delivered` requires a passing self-check（含用户批准）; if you must stop without
   passing, log a dated line under E3 `deviations`, set E3 back to `ready`, leave N3
