@@ -30,6 +30,7 @@ at source commit `8f854bd`.
 | [deli-auto-research](deli-auto-research/SKILL.md) | Provide state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks. | [Deli AutoResearch framework](https://victorchen96.github.io/auto_research/framework.html#fullmd) |
 | [baseline-selector](baseline-selector-main/SKILL.md) | Select reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks. | [RyanZhou168/baseline-selector](https://github.com/RyanZhou168/baseline-selector/tree/main), MIT |
 | [academic-rebuttal](academic-rebuttal/SKILL.md) | Triage reviews, prioritize rebuttal experiments, draft evidence-grounded responses, and plan resubmission when needed. | [TobiasLee/Rebuttal-Skill](https://github.com/TobiasLee/Rebuttal-Skill) |
+| [ResearchStudio-Idea](ResearchStudio-Idea/README.md) | Provide evidence-grounded paper search, research ideation, prior-art review, and idea-quality evaluation. | [microsoft/ResearchStudio](https://github.com/microsoft/ResearchStudio/tree/main/ResearchStudio-Idea), MIT |
 
 ## Installation
 
@@ -67,6 +68,9 @@ Keep `.agents/skills/` and `.claude/skills/` byte-identical.
   to use the skill.
 - `academic-rebuttal`: no additional local setup required; it is a standalone
   skill definition for compatible AI coding assistants.
+- `ResearchStudio-Idea`: Python packages `feedparser`, `openreview-py`,
+  `beautifulsoup4`, and `pymupdf`; copy `.env.template` to `.env` and configure
+  OpenReview and Semantic Scholar credentials for full connector coverage.
 
 ## ml-paper-writing
 
@@ -366,6 +370,34 @@ Example requests:
 /explain-this walk me through this codebase at working depth
 /explain-this explain what this diff is really saying
 /explain-this review my cards
+```
+
+## ResearchStudio-Idea
+
+An evidence-grounded research-ideation suite that combines multi-source paper
+search, generation of one implementable idea card, prior-art collision checks,
+and idea-quality evaluation. The upstream bundle keeps its runnable skills
+under [`skills/`](ResearchStudio-Idea/skills/) and its evaluator under
+[`evaluation/`](ResearchStudio-Idea/evaluation/).
+
+Setup:
+
+```bash
+python3 -m pip install feedparser openreview-py beautifulsoup4 pymupdf
+cp ResearchStudio-Idea/.env.template ResearchStudio-Idea/.env
+```
+
+Optional PDF output also requires XeLaTeX or Tectonic. Populate the `.env` file
+with OpenReview credentials and a Semantic Scholar API key for full retrieval;
+the suite can continue with degraded connector coverage when they are absent.
+
+Example requests:
+
+```text
+/idea-spark turn this research direction into one reviewer-defensible idea card
+/paper-search find recent KV-cache compression papers from 2024–2026
+/scoop-check check whether this proposed mechanism overlaps with prior work
+/idea-quality score this idea Markdown file before I pursue it
 ```
 
 ## Credits And License Boundary
