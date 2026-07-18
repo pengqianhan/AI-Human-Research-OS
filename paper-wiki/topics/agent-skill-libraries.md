@@ -6,7 +6,7 @@ tags:
 - agent-skills
 - skill-libraries
 - self-evolution
-timestamp: 2026-06-26T00:00:00Z
+timestamp: 2026-07-18T09:29:54Z
 ---
 
 # Scope
@@ -17,10 +17,11 @@ This topic tracks papers that treat agent capabilities as reusable, validated sk
 
 * [SkillFoundry](../papers/2604.03964.md) - mines heterogeneous scientific resources into validated, executable skill packages and grows the library through closed-loop expand/repair/merge/prune.
 * [OpenSkill](../papers/2606.06741.md) - builds transferable skills and self-built verification anchors from open-world resources without target-task supervision.
+* [ResearchStudio-Idea](../papers/2607.04439.md) - packages literature search, claim-level prior-art checking, and outcome-grounded idea generation as interoperable research-agent skills.
 
 # Synthesis
 
-Both papers treat skills as durable, reusable artifacts rather than one-off prompts. SkillFoundry emphasizes mining and maintaining a domain-scoped *library* from heterogeneous scientific artifacts with executability and novelty checks, while OpenSkill emphasizes constructing skills and their verifiers from scratch under a no-supervision constraint. SkillFoundry's explicit skill contract (scope, I/O, steps, environment assumptions, provenance, tests) and OpenSkill's self-built verification anchors are complementary views on what makes a skill trustworthy and reusable.
+All three papers treat skills as durable, reusable artifacts rather than one-off prompts. SkillFoundry emphasizes mining and maintaining a domain-scoped *library* from heterogeneous scientific artifacts with executability and novelty checks. OpenSkill emphasizes constructing skills and their verifiers from scratch under a no-supervision constraint. ResearchStudio-Idea emphasizes composing specialized skills into an evidence-gated research workflow whose pattern cards support both generation and audit. Together they foreground explicit contracts, provenance, verification, abstention, and maintenance as properties of trustworthy skill systems.
 
 # Open Questions
 
@@ -28,3 +29,4 @@ Both papers treat skills as durable, reusable artifacts rather than one-off prom
 * How should a skill library detect and prune redundant or stale skills as it grows?
 * How well do internal or self-built validation signals predict real downstream task success?
 * How should mined skill libraries connect to a research OS's own skills hub and its skill contract?
+* When should several narrow skills be composed into a gated workflow instead of merged into one large skill?

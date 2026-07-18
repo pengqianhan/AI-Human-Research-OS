@@ -34,4 +34,5 @@ page may link back through `# Used In Projects`.
 * Agent coordination and shared context.
 * Self-organizing AI research agents.
 * Autonomous research and hypothesis-tree refinement.
+* Research verifiability and claim-to-evidence provenance.
 * Open-world skill acquisition for LLM agents.

@@ -10,3 +10,5 @@
 * [LLM agents](llm-agents.md) - Papers about language-model agents, skills, verification, and autonomous task execution.
 * [LLM surrogate models](llm-surrogate-models.md) - Papers about using LLMs as predictive surrogates that forecast outcomes instead of generating or acting directly.
 * [Multi-agent systems](multi-agent-systems.md) - Papers about multiple agents coordinating work, state, and reasoning.
+* [Research ideation](research-ideation.md) - Papers about turning literature evidence, unresolved bottlenecks, and prior-art checks into defensible research proposals.
+* [Research verifiability](research-verifiability.md) - Papers about tracing scientific claims to supporting artifacts and auditing the integrity of research outputs.
