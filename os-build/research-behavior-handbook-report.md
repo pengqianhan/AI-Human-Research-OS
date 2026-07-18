@@ -3,6 +3,7 @@ type: DesignReport
 title: "从 Harness Handbook 到 Research Behavior Handbook：Research OS 导航与执行设计报告"
 status: proposed
 created: 2026-07-18
+last_updated: 2026-07-18
 ---
 
 # 从 Harness Handbook 到 Research Behavior Handbook
@@ -11,7 +12,7 @@ created: 2026-07-18
 
 ## 1. 结论
 
-如果只能选择一个作为 Research OS 的顶层设计范式，应优先选择 **Harness Handbook**，再用 **codebase-design** 约束局部代码、Skill 和执行模块的内部结构。
+如果只能选择一个作为 Research OS 的顶层设计范式，应优先选择 **Harness Handbook**，再用 **codebase-design** 约束局部代码、Skill 和执行模块的内部结构。Runta 提供第三种互补视角：当 Agent 的决定变成真实文件、进程、网络和凭据操作时，由独立执行层实施强制约束和记录；这一层应作为经过现有 M4 闸门后才评估的未来能力，而不是当前 MVP 的前置依赖。
 
 原因是 Research OS 当前最核心的问题不是单个代码模块的接口设计，而是：
 
@@ -30,7 +31,7 @@ research intent
 
 本报告将这种推广称为 **Research Behavior Handbook**。
 
-## 2. 两种方法解决的问题不同
+## 2. 三种方法解决的问题不同
 
 ### 2.1 codebase-design
 
@@ -64,13 +65,24 @@ research intent
 - Behavior-Guided Progressive Disclosure；
 - 以实时仓库为最终权威的 Source Locator 验证与同步。
 
-### 2.3 对 Research OS 的分工建议
+### 2.3 Runta
+
+[Runta](https://runta.com/blog/runta-the-execution-layer-for-agents/) 将自己定位为 Agent 下方的执行层。Agent 或 Harness 仍然决定下一步行动；Runta 在行动变成进程、文件、网络和凭据使用时，根据预先定义的策略控制其实际可达范围，并试图记录真实发生的动作。官方架构文档列出隔离 Runtime、资源控制、文件操作、Egress、Checkpoint、Secret Stub、Token X-Ray 和自动休眠等能力。[Runta Architecture](https://runta.com/docs/overview/)
+
+它主要回答：
+
+> Agent 已经决定执行某个动作时，系统实际允许它做什么，并以什么证据记录真实执行？
+
+Runta 不解决研究意图的行为定位，也不替代 Harness 或 Skill；它提供的是更低一层的运行时治理。其产品发布文章中的毫秒级启动、成本收益和“所有生产 Agent 都需要执行层”等表述属于厂商主张，不能在缺少独立基准和安全审计时当作已验证事实。
+
+### 2.4 对 Research OS 的分工建议
 
 | 层次 | 首选方法 | 作用 |
 |---|---|---|
 | Research OS 顶层导航与任务执行 | Harness Handbook | 从研究意图定位到权威文件、状态、动作和证据 |
 | 工作流与 Skill 契约 | 两者结合 | Handbook 负责发现和路由，deep module 原则负责减少调用者需要理解的细节 |
 | `os-ui`、Evaluator、安装器、执行器等代码 | codebase-design | 设计较小 Interface、真实 Seam、Adapter 和稳定测试表面 |
+| 未来的强制权限与隔离执行 | Runta 式 execution layer | 在文件、进程、网络、Secret 和资源边界强制实施 Research Run policy |
 
 两者不是替代关系。Handbook 让 Agent **完整找到变化**；codebase-design 让未来的变化尽可能**集中在更少、更深的模块中**。
 
@@ -168,8 +180,10 @@ Task Context
 ├── tools_and_skills      应使用什么能力
 ├── allowed_writes        允许修改什么
 ├── protected_artifacts   不得修改什么
+├── execution_policy      文件、网络、Secret、资源和运行时限制
 ├── expected_outputs      应产生什么制品
 ├── verification          怎样判断完成
+├── execution_evidence    实际发生了什么，而不只是 Agent 声称什么
 └── human_decisions       哪些选择必须交还人类
 ```
 
@@ -352,7 +366,204 @@ Handbook 负责把任务路由到正确 Skill；deep module 原则负责让该 S
 
 Handbook 可以暴露 Locality 问题；codebase-design 可以修正这些问题。重构完成后，再同步行为定位器。
 
-## 10. 建议的渐进落地路线
+## 10. Runta：导航之后的执行与治理层
+
+### 10.1 Runta 解决的核心问题
+
+传统软件通常沿预先写好的路径执行，API gateway 可以在入口处做认证、授权、限流和熔断。Agent 则会在运行时根据模型输出、工具结果和新读取的数据决定下一步；恶意或错误指令可能被转化为看似正常的工具调用。因此，Runta 主张治理点不能只放在 Agent 或 API 入口，还要放在动作真正成为操作系统和网络行为的位置。[Runta 发布文章](https://runta.com/blog/runta-the-execution-layer-for-agents/)
+
+它形成以下分层：
+
+```text
+Research Behavior Handbook
+决定应读取什么、执行什么流程、产生什么证据
+               ↓
+Agent / Harness / Skills
+根据上下文规划并发起工具调用
+               ↓
+Runta-like Execution Layer
+在文件、进程、网络、Secret 和资源边界执行 policy
+               ↓
+OS / filesystem / network / external services
+产生真实动作和可审计证据
+```
+
+Handbook 管的是 **semantic reach**：为了任务应去哪里。Runta 管的是 **enforced reach**：无论 Agent 怎样推理，它实际上能到哪里。Research OS 最终需要同时处理两者，但当前阶段应先证明导航与制品闭环，再用真实 OS Feedback 决定是否引入强制执行层。
+
+### 10.2 官方资料能够确认的产品表面
+
+| 能力 | 官方资料显示的机制 | 对 Research OS 的意义 |
+|---|---|---|
+| Isolated Runtime | Runtime 是可创建、暂停、恢复、调整资源和删除的隔离计算环境 | Research Run 可以拥有独立生命周期和资源边界 |
+| Structured command execution | Python 和 TypeScript SDK 的 `exec` 支持 timeout、结构化 `env`，返回 exit code、stdout、stderr、duration 和截断标志 | 命令、环境和结果可成为明确执行合同，而不是只拼接 Shell 字符串 |
+| Egress policy | 支持 hostname/wildcard 的 allowlist 或 denylist | 研究任务可以只访问声明过的模型、数据源和包仓库 |
+| Secret Stubs | 真实 Secret 存在执行层；出站请求匹配 host/path 后由 gateway 注入 header | Agent 可以引用凭据，但不必接触真实值 |
+| Checkpoints | 捕获 Runtime 文件系统和运行进程；恢复会创建新 Runtime，同一 Checkpoint 可多次 fork | 长任务可恢复或分叉执行，但不能替代语义化 research handoff |
+| Token X-Ray / Compression | 可捕获工具输入输出、发现重复或过大内容，并在模型上下文前压缩受支持的工具输出 | 可以分析上下文浪费，但捕获内容本身形成新的敏感数据面 |
+| Auto suspend/wake | Runtime 空闲后暂停，有新请求时恢复 | 长时间等待的 Agent 不必持续占用计算资源 |
+
+上述能力分别由官方 [Architecture](https://runta.com/docs/overview/)、[Runtime Basics](https://runta.com/docs/runtime/runtime-basic/)、[Egress](https://runta.com/docs/runtime/egress/)、[Secret Stubs](https://runta.com/docs/runtime/secrets-and-secret-injection/)、[Checkpoints](https://runta.com/docs/runtime/checkpoints/)、[Token Saving](https://runta.com/docs/runtime/token-x-ray/) 和 [Auto Suspend and Wake-Up](https://runta.com/docs/runtime/auto-suspend-and-wake-up/) 文档描述。
+
+一个与本报告前文环境变量讨论直接相关的例子是：Runta SDK 将环境变量作为命令执行参数，而不是要求模型把它们拼进 Shell 文本：
+
+```python
+result = runtime.exec(
+    ["sh", "-lc", "python backtest.py"],
+    timeout=30,
+    env={"START_DATE": "2022-01-01"},
+)
+```
+
+这表明 per-command `env` 可以由 Harness 原生实现，也可以由更低层的 Runtime Interface 实现。二者的差别在于信任边界：Harness 字段主要改善结构化调用；执行层还可以把它与任务权限、Secret、网络和审计结合。
+
+### 10.3 Consume、Reach、Record
+
+Runta 的发布文章将价值主张概括为三个方面：
+
+1. **Consume**：在计算和模型调用层观察资源使用，暂停空闲 Runtime，并寻找 Token 浪费；
+2. **Reach**：按任务 policy 限制文件、网络、凭据和外部目的地；
+3. **Record**：记录实际系统调用、网络调用、文件写入、凭据使用及其对应 policy，而不只记录 Agent 声称要做什么。
+
+其中 Reach 与 Record 对 Research OS 最重要。当前 Research OS 已经坚持“不读 transcript 也能验收”，Runta 进一步提醒：稳定制品仍然主要证明最终状态，完整治理还需要区分三类证据：
+
+```text
+Intent evidence       Agent/plan 声称准备做什么
+Execution evidence    进程、文件和网络实际上发生了什么
+Outcome evidence      Evaluator、测试和研究制品证明结果如何
+```
+
+这三类证据不能相互替代。执行成功不证明研究结论正确；Evaluator 结果也不自动证明执行期间没有访问越权资源。
+
+### 10.4 对 Research OS 的具体启发
+
+#### A. 为每个 Research Run 定义 task-scoped execution policy
+
+未来的行为条目除了导航信息，还可以在概念上声明：
+
+```yaml
+execution_policy:
+  filesystem:
+    read:
+      - projects-folder/<project>/**
+      - paper-wiki/**
+    write:
+      - projects-folder/<project>/Code/runs/<run-id>/**
+    deny:
+      - projects-folder/<project>/Code/evaluator/**
+  network:
+    allow:
+      - api.openai.com
+      - arxiv.org
+  secrets:
+    references:
+      - OPENAI_API_KEY
+    expose_raw_value_to_agent: false
+  resources:
+    wall_time: 600s
+    cpu_budget: 2h
+    max_parallel_tasks: 3
+  checkpoints:
+    before_destructive_or_long_step: true
+```
+
+这只是未来 policy 的概念模型，不是建议现在新增 YAML manifest。当前阶段仍可由 phase contract、sandbox、项目规则和人工验收承载；只有真实 Run 证明约定不够时，才选择机器强制方式。
+
+#### B. Secret 应以引用而不是明文进入任务
+
+Runta 的 Secret Stub 将凭据与 Agent Runtime 分开，并在匹配的出站 host/path 上注入请求 header。[Secret Stubs](https://runta.com/docs/runtime/secrets-and-secret-injection/)
+
+Research OS 应吸收的原则是：
+
+```text
+Agent 知道 secret reference 和允许用途
+              ≠
+Agent 获得 secret raw value
+```
+
+这比把 API Key 写进 prompt、命令字符串或项目 `.env` 更接近最小暴露原则。未来即使不采用 Runta，也应优先评估操作系统 Keychain、外部 Secret manager、受信任代理或短期令牌。
+
+#### C. 网络策略应优先使用显式 allowlist
+
+Runta 文档说明 Egress 支持 allowlist/denylist，但空 denylist 是默认开放策略；调用 `set policy` 还会替换整份策略。[Egress](https://runta.com/docs/runtime/egress/)
+
+这说明“存在 Egress 功能”不等于“默认最小权限”。Research OS 若未来引入执行层，应：
+
+- 为每个 Research Run 显式列出必要目的地；
+- 把默认开放和策略覆盖行为纳入验收；
+- 区分包安装、模型 API、论文检索、数据源和发布目的地；
+- 将发布、上传、邮件和外部写操作继续置于人类批准之后。
+
+#### D. Checkpoint 不能替代 Research Handoff
+
+Runta Checkpoint 捕获文件系统和运行进程，适合恢复或 fork Runtime。[Checkpoints](https://runta.com/docs/runtime/checkpoints/) 但它不能回答：
+
+- 当前研究问题是什么；
+- 哪些实验结果可信；
+- 为什么选择这条路线；
+- 哪些假设已经被否定；
+- 下一步需要什么人类决定。
+
+因此需要同时保留：
+
+```text
+Operational checkpoint   恢复计算环境和进程
+Semantic handoff          恢复研究理解、证据和决策状态
+```
+
+Research OS 目前以 plain files、Git、`PROJECT_MEMORY.md`、结果制品和 `HANDOFF.md` 承担 semantic handoff；未来 Runtime Checkpoint 只能作为补充。
+
+#### E. Token 观测本身需要隐私和真实性边界
+
+Runta 的 Token X-Ray 默认关闭，会捕获工具输入输出，使用 `ceil(characters / 4)` 估计 Token；官方明确说明估计值不是账单数据，捕获 payload 可能包含应用数据，应视为不可信输入。[Token Saving](https://runta.com/docs/runtime/token-x-ray/)
+
+Research OS 若未来记录工具 I/O，应明确：
+
+- 是否可能捕获论文全文、未发布结果、个人信息或 Secret；
+- 捕获数据由谁读取、保存多久、怎样删除；
+- Token 估计和真实计费怎样区分；
+- 压缩后的上下文是否仍保留决定所需的证据；
+- 原始制品仍然是事实源，压缩内容只是模型视图。
+
+#### F. 资源生命周期应与 Research Run 对齐
+
+Auto suspend/wake 说明 Runtime 可以在无任务时暂停并在请求到达时恢复。[Auto Suspend and Wake-Up](https://runta.com/docs/runtime/auto-suspend-and-wake-up/) 对长周期科研而言，更重要的原则是：
+
+- 计算资源属于有边界的 Research Run；
+- 空闲、等待人类批准和完成是不同状态；
+- 暂停不能被误认为完成；
+- 恢复后必须重新验证事实源、权限和停止条件；
+- 资源节省需要真实测量，而不是只依赖平台宣传。
+
+### 10.5 三层 Research OS 架构
+
+综合三种来源，建议长期采用以下概念分层：
+
+| 层 | 核心问题 | 主要设计来源 | 当前 Research OS 对应物 |
+|---|---|---|---|
+| Behavior/navigation layer | 应做什么、去哪里、相信什么、如何验收 | Harness Handbook | `INSTRUCTION.md`、`index.md`、Skills、State Registers |
+| Module/harness layer | 怎样规划工具调用并把复杂度藏在稳定 Interface 后 | codebase-design | Skills、Evaluator、adapters、未来执行代码 |
+| Execution/governance layer | 实际允许什么、真实发生什么 | Runta | 当前主要是 sandbox、权限约定、预算和人工验收；强制层受 M4 闸门约束 |
+
+这三层必须保持职责分离：
+
+- Handbook 不拥有动态状态，也不实施权限；
+- Harness 不应凭 Agent 自述自行扩大 policy；
+- Execution layer 不判断研究结论是否正确；
+- Evaluator 和人类仍负责 outcome correctness 与方向性决定。
+
+### 10.6 证据边界与采用条件
+
+截至 2026-07-18，可确认 Runta 提供官方文档、CLI、Python/TypeScript SDK 和 REST API 表面；其公开 GitHub 组织展示 `clawshell` 与 Homebrew tap，但未明显公开完整平台实现。[Runta GitHub](https://github.com/runta-dev) 发布文章中的系统调用级审计、毫秒级启动、成本收益和融资信息均来自厂商自身，报告未找到独立性能基准、安全审计或生产对照研究。
+
+因此，本报告不建议当前 Research OS 直接依赖 Runta。更合适的决策顺序是：
+
+1. 先在现有七步 MVP 和 `circle_packing` Research Run 中记录实际权限、Secret、网络、资源和恢复摩擦；
+2. 继续使用现有 sandbox、Evaluator、Git 和人类闸门形成基线；
+3. 只有 OS Feedback 证明约定和现有 sandbox 不足，才进入 M4 评估；
+4. 在 M4 比较 Runta、容器、操作系统 sandbox、网络代理和其他执行层，而不是预设供应商；
+5. 采用前验证数据边界、Secret 模型、默认 Egress、审计完整性、Checkpoint 语义、成本、退出与迁移路径。
+
+## 11. 建议的渐进落地路线
 
 ### 阶段 A：用现有 MVP 七步建立手工行为地图
 
@@ -405,7 +616,7 @@ Handbook 可以暴露 Locality 问题；codebase-design 可以修正这些问题
 
 在此之前，不建议直接复制论文的函数级静态分析器或构建新的机器状态系统。
 
-## 11. 成功标准
+## 12. 成功标准
 
 Research Behavior Handbook 的成功不应以“文档数量”衡量，而应以 Agent 是否更可靠地完成任务衡量：
 
@@ -417,7 +628,7 @@ Research Behavior Handbook 的成功不应以“文档数量”衡量，而应�
 6. Handbook 不复制项目状态，不成为新的漂移来源；
 7. 导航收益高于维护和同步成本。
 
-## 12. 主要风险与防护
+## 13. 主要风险与防护
 
 | 风险 | 后果 | 防护 |
 |---|---|---|
@@ -428,8 +639,11 @@ Research Behavior Handbook 的成功不应以“文档数量”衡量，而应�
 | 一开始自动化过重 | 产生新基础设施债务 | 先手工试点并记录 OS Feedback |
 | 只优化“找到更多文件” | 上下文膨胀、Scope 失控 | 同时衡量 Recall、无关读取和验证完成度 |
 | Handbook 变成静态说明书 | 不能指导实际执行 | 每条工作流必须链接 procedure、output 和 verification |
+| 把“有 execution layer”等同于默认安全 | 默认开放网络、错误 policy 或审计盲点被忽略 | 验证默认值、负向用例、Secret 暴露和越权失败行为 |
+| 运行时日志捕获敏感研究内容 | 新增隐私、保留和访问风险 | 默认最小捕获、显式授权、保留期限和敏感字段清理 |
+| 用 Runtime Checkpoint 替代研究交接 | 能恢复进程但无法恢复研究理解 | 始终同时维护 semantic handoff 和 outcome evidence |
 
-## 13. 推荐决策
+## 14. 推荐决策
 
 建议采用以下架构判断：
 
@@ -440,15 +654,18 @@ Research Behavior Handbook 的成功不应以“文档数量”衡量，而应�
 局部设计范式：codebase-design
 目标：让 Skills 和代码模块具有较小 Interface、较深 Implementation 和良好 Locality
 
+未来执行治理范式：Runta-like execution layer
+目标：在 Research Run 的文件、进程、网络、Secret 和资源边界强制实施 policy，并记录 execution evidence
+
 事实源：plain files + Git + Evaluator
 Handbook 角色：导航与验证定位，不拥有动态状态
 
-实施策略：从七步 MVP 和三个真实工作流开始，经过 fresh Agent 对照后再决定自动化
+实施策略：从七步 MVP 和三个真实工作流开始；先用现有 sandbox 建立基线，经过 fresh Agent 对照和真实 OS Feedback 后，再决定导航自动化或 M4 执行层
 ```
 
-近期最有价值的下一步不是开发 Handbook generator，而是把已批准的 MVP 七步逐项写成可验证的行为条目，并在首次真实 Research Run 中测量它是否减少错误定位、状态遗漏和无关文件读取。
+近期最有价值的下一步不是开发 Handbook generator 或接入 Runta，而是把已批准的 MVP 七步逐项写成可验证的行为条目，并在首次真实 Research Run 中同时测量导航错误、状态遗漏、无关文件读取、权限摩擦、Secret/网络需求和执行证据缺口。
 
-## 14. 参考资料
+## 15. 参考资料
 
 - [Harness Handbook 论文笔记](../paper-wiki/papers/2607.13285.md)
 - [Harness Handbook 本地参考仓库](references/Harness_Handbook/README.zh-CN.md)
@@ -458,4 +675,12 @@ Handbook 角色：导航与验证定位，不拥有动态状态
 - [Research OS 操作合同](../INSTRUCTION.md)
 - [Research OS 构建目标](GOAL.md)
 - [Research OS 构建路线图](map/index.md)
-
+- [Runta 发布文章：The execution layer for agents](https://runta.com/blog/runta-the-execution-layer-for-agents/)
+- [Runta Architecture](https://runta.com/docs/overview/)
+- [Runta Runtime Basics](https://runta.com/docs/runtime/runtime-basic/)
+- [Runta Egress](https://runta.com/docs/runtime/egress/)
+- [Runta Secret Stubs](https://runta.com/docs/runtime/secrets-and-secret-injection/)
+- [Runta Checkpoints](https://runta.com/docs/runtime/checkpoints/)
+- [Runta Token Saving](https://runta.com/docs/runtime/token-x-ray/)
+- [Runta Auto Suspend and Wake-Up](https://runta.com/docs/runtime/auto-suspend-and-wake-up/)
+- [Runta GitHub organization](https://github.com/runta-dev)
