@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sell Research Honestly"
+  short_description: "Turn evidence into an honest, persuasive research pitch"
+  default_prompt: "Use $sell-research-honestly to audit this research value case, calibrate every claim to its evidence, and produce the strongest defensible message for the intended audience and action."

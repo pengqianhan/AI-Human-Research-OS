@@ -26,6 +26,7 @@ at source commit `8f854bd`.
 | [codex-paper-figure-skill](codex-paper-figure-skill/SKILL.md) | Turn paper text or figure concepts into editable draw.io academic figures, using an image-generation pass for composition reference. | [Original, Pengqian Han](https://github.com/pengqianhan/codex-paper-figure-skill) |
 | [map-then-territory](map-then-territory/SKILL.md) | Map scattered ideas into a human-approved route of verifiable states, then drive agents through the territory edge by edge. | Original, Pengqian Han |
 | [writing-great-prompt](writing-great-prompt/SKILL.md) | Turn an intent into a lean, copy-ready prompt contract with destination, evidence, authority, and completion bar. | Original, Pengqian Han |
+| [sell-research-honestly](sell-research-honestly/SKILL.md) | Audit evidence and turn research into persuasive, audience-specific value communication without overclaiming. | Adapted from the user-provided article *AI-PhD.SKILL 4：人人都是销售* |
 
 ## Installation
 
@@ -48,8 +49,8 @@ python research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 ## Prerequisites
 
 - `research-bible`, `explain-anything-html`, `human-cognition-cache`,
-  `karpathy-coding-rules`, and `task-file-builder`: no additional local setup
-  required.
+  `karpathy-coding-rules`, `sell-research-honestly`, and `task-file-builder`:
+  no additional local setup required.
 - `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
   `hf` CLI is optional for faster paper fetching.
 - `filetree-simple`: Python 3.9+ standard library; Git is not required.
@@ -306,6 +307,21 @@ Example requests:
 /writing-great-prompt draft an implementation prompt for this feature
 /writing-great-prompt turn this plan into a copy-ready phased agent task
 /writing-great-prompt upgrade this prompt so it works across model providers
+```
+
+## sell-research-honestly
+
+Audits a research value case before producing the strongest defensible message
+for one audience and one desired action. It supports advisor pitches,
+collaboration invitations, reviewer-facing claim defense, talk narratives, and
+research-community PR.
+
+Example requests:
+
+```text
+/sell-research-honestly help me pitch this early idea to my advisor for a two-week validation
+/sell-research-honestly draft a scoped invitation for this potential collaborator
+/sell-research-honestly audit this abstract for overclaiming and prepare a community PR brief
 ```
 
 ## License
