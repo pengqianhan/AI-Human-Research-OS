@@ -72,12 +72,16 @@ _Avoid_: unrestricted agent, background thought, vague subagent
 One bounded execution attempt by an agent against a Research Task. A Research Task may have multiple Agent Runs, and a Run's success does not imply that the task or its findings have been accepted.
 _Avoid_: research task, project, authoritative session
 
+**Pi-Assisted Research Run**:
+A Human Owner-approved, bounded Agent Run conducted through the existing Pi Coding Agent interface while its terminal remains open. Research OS files, declared validation, a Research Checkpoint, and a Review Package carry the durable state; current boundaries are procedural and review-based rather than enforced by a custom Research OS runtime.
+_Avoid_: Autonomous Research Run, custom runtime, background daemon
+
 **Autonomous Research Run**:
-An unattended Agent Run confined to one human-approved Research Project and Research Task with explicit write scope, validation, budget, and stopping conditions. Shared workspace knowledge remains read-only and proposed global contributions await human review.
+A future unattended Agent Run confined to one human-approved Research Project and Research Task with explicit write scope, validation, budget, and stopping conditions. Shared workspace knowledge remains read-only and proposed global contributions await human review. This is not the current workflow MVP.
 _Avoid_: unrestricted autonomy, multi-project background agent, automatic global promotion
 
 **Run Contract**:
-The human-approved, immutable autonomy boundary for an Autonomous Research Run, covering its goal, success criteria, resource and write permissions, validation, budget, stopping conditions, and expected outputs.
+A human-approved, frozen boundary for one bounded Agent Run, covering its goal, success criteria, resource and write scope, validation, budget, stopping conditions, and expected outputs. In the workflow MVP it is a file contract reviewed by the Human Owner; a future runtime may enforce it mechanically.
 _Avoid_: prompt, informal instruction, mutable runtime plan
 
 **Executable Validation**:
@@ -89,7 +93,7 @@ Validation of a Research Task through a contract-defined package of Sources, Evi
 _Avoid_: no validation, polished prose, automatic claim acceptance
 
 **Agent Session**:
-A runtime conversation and context container created and observed by Research OS through an Agent Backend. It may support multiple turns or Agent Runs but never owns authoritative research state.
+A runtime conversation and context container used by a participating agent. It may support multiple turns or Agent Runs but never owns authoritative research state.
 _Avoid_: Pi process, research project, source of truth
 
 **Session Event**:

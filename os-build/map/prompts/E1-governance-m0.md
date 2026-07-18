@@ -14,10 +14,10 @@ launch）, updating the Mermaid overview in the same edit.
 
 1. HANDOFF.md 决策行 D4 中关于 `OS_INTRO.html` 的陈旧表述改为历史性说明（该文件已于
    commit 784f9e8 删除）；仓库内其余 `OS_INTRO` 引用同样只余历史性说明。
-2. 把 `projects-folder/Paper_VAE/` 的地位整理成带证据的二选一交用户拍板：
-   (a) 登记入 memory/MEMORY.md Active Projects 并补 `PROJECT_MEMORY.md`；
-   (b) 声明为嵌套仓库豁免区并写明豁免边界（不登记、不受 OS 约定约束、FILETREE 不索引）。
-   执行用户所选项，并把决策连同理由记入 HANDOFF.md Decisions。
+2. 验证 Human Owner 已暂时删除 `projects-folder/Paper_VAE/`，并把该决定记入
+   HANDOFF.md Decisions：当前不登记为活动项目；恢复必须由 Human Owner 新授权；恢复后
+   若要进入 Research OS 活动 portfolio，须先登记 `memory/MEMORY.md` 并补
+   `PROJECT_MEMORY.md`。
 
 ## Current state and evidence
 
@@ -27,18 +27,20 @@ launch）, updating the Mermaid overview in the same edit.
 - [GOAL.md](../../GOAL.md) M0 — 本任务的授权与验收来源（纯文档工作，无需 OS Feedback 证据）。
 - [HANDOFF.md](../../../HANDOFF.md) — Active Work 的路线图指针段 + Decisions D4 行。
 - `git grep -n OS_INTRO -- '*.md'` — 只检查本仓库跟踪的 Markdown，避免把 `os-build/references/` 下的嵌套参考仓库误当成 OS 治理文本。
-- `projects-folder/Paper_VAE/` — 调查其内容、大小、git 状态、Claude 锁定程度，作为二选一的证据。
+- `test ! -e projects-folder/Paper_VAE` 与 `git status --short -- projects-folder/Paper_VAE`
+  — 验证 Human Owner 已执行的临时删除，不恢复、不修改其他已删除项目。
 
 ## Approach
 
 悬而未决的治理项让每个新会话重复消化矛盾，这是本边存在的理由。<!-- ← E1.transition_logic -->
-措辞与决策行格式由你定，跟随 HANDOFF 既有表格风格；Paper_VAE 的选择权在用户，你只
-准备证据和利弊，不代拍板。<!-- ← E1.action -->
+措辞与决策行格式由你定，跟随 HANDOFF 既有表格风格；该选择已经由 Human Owner 做出，
+不得重新打开二选一，也不得恢复 Paper_VAE。<!-- ← E1.action -->
 
 ## Completion bar
 
 - Self-verify by running: `git grep -n OS_INTRO -- '*.md'` 输出只含历史性说明；
-  打开 HANDOFF.md Decisions 能看到 Paper_VAE 决策行（含用户选择与理由）。<!-- ← N1.acceptance -->
+  `test ! -e projects-folder/Paper_VAE` 成功；HANDOFF.md Decisions 能看到临时删除、
+  恢复授权和重新登记边界。<!-- ← N1.acceptance -->
 - `FILETREE.md` 只索引核心文件和公开顶层区域，本边不应新增嵌套条目或哈希。运行
   `python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py lint`
   与 `./verify.sh`，两者均须通过。

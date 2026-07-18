@@ -5,10 +5,10 @@ status: executing
 created: 2026-07-17
 ---
 
-# Map: Research OS — 从规范化文件系统到可验收的 MVP
+# Map: Research OS — 从规范化文件系统到可接管的研究工作流 MVP
 
 **Start:** 规范化的文件系统 OS：入口链、三层记忆、paper-wiki、skills hub、项目模板、只读监控 UI、治理文档（GOAL/CONTEXT/HANDOFF）均已就绪，`./verify.sh` 通过。
-**Destination:** Human Owner 从 Research Workspace 根目录通过最小 TUI 启动一个由 Pi Agent SDK 驱动的单项目 Autonomous Research Run；Run Contract、权限、验证、Checkpoint 与 Review Package 构成可验收闭环，且不依赖 transcript 或 Git 才能接管，安装 Git 时获得增强版本控制。
+**Destination:** Human Owner 从 Research Workspace 根目录启动 Pi Coding Agent，选择一个项目并批准文件化 Run Contract；Pi 在保持终端打开的有界回合中产出验证、Checkpoint 与 Review Package，Human Owner 或 fresh agent 不依赖 transcript 即可接管。Git 是可选增强；当前 MVP 不冒充自定义 autonomous runtime。
 
 > 用户最初命名的路点（原话）："点A……创建一个 paper-wiki 来方便保存、检索和分类论文，同时人类也可以阅读"——已建成，含于 N0；"点B……穿件 project-folder 来方便多个 subagent 在不同的 project folder 里执行任务"——即 N8 并行回合。
 
@@ -21,6 +21,10 @@ created: 2026-07-17
 | I3 | “这个过程，当人类休息或者睡觉的时候，我在想可不可以让Agent自主地进行研究？” | N13、N14 |
 | I4 | “默认应该支持无git，但是用户安装了git 可以实现更好的版本控制” | N13、N14 |
 | I5 | “我同意，先从一个project开始” | N14 |
+| I6 | “我尝试过之后发现学习路线太陡峭了，我对typescript语法完全啊不懂，pi agent SDK可以下阶段再接入，现在使用pi code agent是不是就可以实现一个MVP” | N15、N16、N17、E20–E23 |
+| I7 | “我个人更倾向于现在先删除os-runtime， 这样会对路线造成干扰，也会让上下文变得更加复杂。等我根据参考的项目进行学习之后，再用Pi Agent SDK来构建。” | N15、E20 |
+| I8 | “现在梳理os-build 下的文件，精简和删除多余的文件和内容” | N15、E20 |
+| I9 | “我暂时删除了Paper_VAE，第一个真实示例项目采用os-build/references/EurekAgent 中的cirle packing任务。 smoke test 还是使用projects-folder/Example_Project” | N1、N3、N6、N17、E1、E22、E23 |
 
 ## Overview
 
@@ -37,24 +41,28 @@ flowchart LR
   N2["N2: Adapter 契约成文 (M1)"]:::approved
   N3["N3: MVP 验收场景已定义 ★"]:::approved
   N4["N4: 旧纯会话路径（已推翻）"]:::dead
-  N5["N5: MVP 阶段合同就绪"]:::verified
-  N6["N6: 冻结评测器上线"]:::approved
+  N5["N5: 旧 SDK 阶段合同（已冻结）"]:::dead
+  N6["N6: 首个真实项目评测器上线"]:::approved
   N7["N7: 首个 Research Run 完成"]:::approved
   N8["N8: 并行回合已验证"]:::approved
   N9["N9: 经验回灌闭环"]:::approved
   N10["N10: 终点·MVP 端到端验收 ✓"]:::approved
   N11["N11: 第三 agent 冷启动 (M3 闸门)"]:::proposed
-  N12["N12: 执行面 Console (M4 闸门)"]:::proposed
-  N13["N13: Pi SDK MVP 架构已定 ★"]:::verified
-  N14["N14: 单项目自主运行 pilot"]:::approved
+  N12["N12: 自定义执行面 (M4 闸门)"]:::proposed
+  N13["N13: Pi SDK MVP 路径（已延后）"]:::dead
+  N14["N14: 旧 SDK pilot（已取消）"]:::dead
+  N15["N15: Pi Coding Agent 工作流 MVP 已定 ★"]:::delivered
+  N16["N16: Pi 文件工作流阶段合同就绪"]:::approved
+  N17["N17: Example_Project 工作流 smoke test"]:::approved
   N0 --> N1 --> N10
   N0 --> N2 --> N10
-  N0 --> N13 --> N5 --> N14 --> N7
+  N0 --> N15 --> N16 --> N17 --> N7
   N0 --> N3
   N3 --> N6 --> N7 --> N8 --> N9 --> N10
   N10 -.-> N11
   N10 -.-> N12
-  N4 -.-> N13
+  N4 -.-> N13 -.-> N5 -.-> N14
+  N13 -.-> N15
 ```
 
 ★ = directional（方向性节点，定稿前需教程 + 你的知情选择）。虚线 = 证据闸门（GOAL M3/M4），不排期。
@@ -69,8 +77,8 @@ flowchart LR
 - human_verdict: pass — verify.sh 于 2026-07-17 全绿（本会话）。
 
 ### N1 — 治理债务清零（GOAL M0）
-- state: `OS_INTRO.html` 陈旧引用只剩历史性说明；Paper_VAE 的地位（登记入 portfolio vs 声明豁免区）由我拍板并记入 HANDOFF Decisions。
-- acceptance: 我运行 `git grep -n OS_INTRO -- '*.md'`，只见历史性说明；打开 HANDOFF.md Decisions 能看到 Paper_VAE 决策行。
+- state: `OS_INTRO.html` 陈旧引用只剩历史性说明；`projects-folder/Paper_VAE/` 按 Human Owner 决定暂时删除，HANDOFF 记录恢复边界，portfolio 不把它列为活动项目。
+- acceptance: 我运行 `git grep -n OS_INTRO -- '*.md'`，只见历史性说明；运行 `test ! -e projects-folder/Paper_VAE` 成功；HANDOFF Decisions 明确恢复需新授权，恢复后成为活动项目前须登记 portfolio 并补项目记忆。
 - type: executive（含一个交给我的二选一，但两个选项都不改地图走向）
 - status: approved
 - tutorial: —
@@ -89,7 +97,7 @@ flowchart LR
 - evidence: —
 
 ### N3 — MVP 验收场景已定义 ★
-- state: 一份场景文档把 CONTEXT.md 的 MVP 定义翻译成可判定清单：每一步（intake→放置→续研→评估→捕获→交还）各有"通过/不通过怎么判"的证据项；场景载体已选定（**2026-07-17 用户选定：A · circle_packing**，备选 B 论文复现、C 合成场景被否；终点 N10 用全新输入补偿 A 与真实科研形态的距离）；经我批准。
+- state: 一份场景文档把 CONTEXT.md 的 MVP 定义翻译成可判定清单：每一步（intake→放置→续研→评估→捕获→交还）各有"通过/不通过怎么判"的证据项；首个真实项目/场景载体已选定（**circle_packing**，从 EurekAgent 任务规范重新实现，备选 B 论文复现、C 合成场景被否）；`Example_Project` 只承担此前的工作流 smoke test；终点 N10 用全新输入证明复用；经我批准。
 - acceptance: 我逐步读场景文档，对每一步都能说出验收时看哪个文件、跑哪条命令；有含糊步骤即不通过。
 - type: directional（载体选错，N6–N9 整条巷道重画）
 - status: approved
@@ -103,23 +111,24 @@ flowchart LR
 - acceptance: 历史节点，不再验收。
 - type: directional（架构选错 = build_phases 重写两遍）
 - status: dead
-- tutorial: [tutorials/N4-architecture-options.md](tutorials/N4-architecture-options.md)
+- tutorial: —（历史教程已从工作树删除，可由 Git 恢复）
 - agent_verdict: fail — 该路径不能承载用户随后明确要求的 SDK 内嵌、自主循环与最小 TUI。
 - human_verdict: fail — 2026-07-18 用户明确要求“正式修改”。
 - evidence: `docs/adr/0001-pi-sdk-autonomous-mvp.md`；HANDOFF「Research OS route-map decisions」。
 - post-mortem: 选择时把“先证明文件协议”作为 MVP；随后用户明确产品本体是根目录控制面，并要求 Pi SDK 驱动的无人值守自主研究，因此该方向性假设被推翻。历史教程保留。
 
-### N5 — MVP 阶段合同就绪
-- state: `build_phases/` 被替换为覆盖 Pi SDK MVP 环的阶段合同：SDK 学习切片、最小 TUI、Run Contract、权限、单步自主循环、Executable/Review Validation、Checkpoint、Review Package 与 Example_Project pilot 均有目标、输入、验收和真实文件锚点；launcher-only 旧包继续归档。
-- acceptance: 我读 `build_phases/README.md`，能把阶段链条与 N13 架构和 N14 pilot 一一对上；没有纯 session protocol 或 Pi CLI 子进程残留在新主路径。
+### N5 — 旧 Pi SDK 阶段合同（已冻结）
+- state: 2026-07-18 验证过的七阶段 Pi SDK 学习/施工合同；Phase 01 已交付真实 SDK spike，其余阶段因学习顺序改变而冻结，不再是当前 MVP 前置条件。
+- acceptance: 历史节点，不再继续验收；若未来重开 SDK，必须以新的 Human Owner 决策和当时 API 证据重审合同。
 - type: executive
-- status: verified
+- status: dead
 - tutorial: —
-- agent_verdict: pass — 七个独立 phase prompt 从真实 Pi SDK session 逐层到 Example_Project pilot；每阶段都有环境闸门、离线验证、Human Owner 学习 checkpoint、阻塞规则与下一阶段交接。
-- human_verdict: pass — 2026-07-18 Human Owner 确认七阶段顺序可同时作为 Research OS 施工路线与 TypeScript/Pi SDK 学习路线，并授权标记 verified。
-- evidence: `os-build/build_phases/README.md`、`os-build/build_phases/phase-01-pi-sdk-session.md` 至 `phase-07-example-project-pilot.md`。
+- agent_verdict: pass — 合同本身完整，Phase 01 的 SDK Session、类型检查和离线测试均成功。
+- human_verdict: fail — 2026-07-19 Human Owner 亲自尝试学习/调试后确认 TypeScript 路线现阶段过陡，要求 SDK 下阶段再接入。
+- evidence: ADR-0001、本节点 verdict 与 Git 历史中的七阶段合同；历史 phase 文件已从工作树删除。
+- post-mortem: 技术方向可行，但把 runtime 学习放在工作流验证之前造成了不必要的认知耦合。不继续 Phase 02；阶段记录保留为历史，未提交的 runtime 实现按 Human Owner 决定删除。
 
-### N6 — 首个冻结评测器上线并受保护
+### N6 — 首个真实项目的冻结评测器上线并受保护
 - state: circle_packing 立项完成（idea card→实例化→登记）；独立评测器自测全过并 git 冻结；tier-2 保护（deny 规则）部署；分数只能来自评测器写出的 `result.json`。
 - acceptance: 我运行评测器自测命令，看到全部固定用例通过；查看项目 `.claude/settings.json` 存在对 `Code/evaluator/**` 的 deny 规则。
 - type: executive
@@ -175,25 +184,57 @@ flowchart LR
 - type: directional
 - status: proposed（gated：真实第三 agent 可用才开工，见 GOAL M3；不排期）
 
-### N12 — 执行面 Agent Console（M4 闸门）
-- state: 在最小本地 TUI MVP 稳定后，是否扩展现有 os-ui 为 localhost GUI 执行面（server/transport 形态届时再定）。
-- acceptance: N10 之后根据真实 TUI 使用证据另行定义；GUI 不阻塞 Pi SDK MVP。
+### N12 — 自定义执行面 Agent Console（M4 闸门）
+- state: 工作流 MVP 产生真实摩擦证据后，是否用 Pi Agent SDK、自定义 TUI 或 localhost GUI 执行面实现机械权限、恢复与跨 Session 管理，形态届时再定。
+- acceptance: N10 之后根据 Pi Coding Agent 工作流证据另行定义；自定义 runtime 或 GUI 不阻塞当前 MVP。
 - type: directional
-- status: proposed（gated：最小 TUI MVP 通过后再由 Human Owner 开闸；不排期）
+- status: proposed（gated：工作流 MVP 通过后再由 Human Owner 开闸；不排期）
 
-### N13 — Pi Agent SDK 自主运行架构已定 ★
-- state: `docs/adr/0001-pi-sdk-autonomous-mvp.md`、GOAL、HANDOFF 与本地图一致声明：Research Workspace 根目录是跨项目控制面；v1 在单一 Node.js 进程内通过可替换 `PiAgentBackend` 嵌入 `@earendil-works/pi-coding-agent` SDK；最小 TUI 只承载一个 Project、一个已批准 Research Task 和一个 Autonomous Research Run；权威状态属于文件，Git 仅是可选增强。
-- acceptance: 我能向别人复述“为什么是 SDK 而不是 Pi CLI”“哪些状态属于 Research OS 而不属于 Agent Session”“无 Git 时仍保证什么”以及“首版为什么只跑一个项目”。
+### N13 — Pi Agent SDK 自主运行路径（已延后）★
+- state: 2026-07-18 选定、2026-07-19 完成 Phase 01 技术验证后延后的 embedded SDK + custom TUI 路径。
+- acceptance: 历史节点，不再验收；ADR-0001 保留原理由，ADR-0002 记录 supersession。
 - type: directional
-- status: verified
-- tutorial: [tutorials/N4-architecture-options.md](tutorials/N4-architecture-options.md)（旧选择的历史背景；新决策以 ADR 为准）
-- agent_verdict: pass — 新旧权威表述已显式 supersede，Pi SDK 运行时与文件领域状态边界成文。
-- human_verdict: pass — 2026-07-18 Human Owner 确认正式修改准确表达当前设计，并授权标记 verified。
-- evidence: `docs/adr/0001-pi-sdk-autonomous-mvp.md`、`os-build/GOAL.md`、`HANDOFF.md`、`CONTEXT.md`。
+- status: dead
+- tutorial: —（旧架构教程已删除；新决策以 ADR-0002 为准）
+- agent_verdict: pass — 架构边界成立，Phase 01 证明 SDK 可嵌入并可观察。
+- human_verdict: fail — 2026-07-19 Human Owner 根据实际学习体验决定延后 SDK，而非否定其长期价值。
+- evidence: `docs/adr/0001-pi-sdk-autonomous-mvp.md`、本节点/E18 的历史验证记录与 Git 历史；SDK phase/tutorial 和未提交的 `os-runtime/` 均已删除。
+- post-mortem: 路线错在时序，不在技术可行性：它要求 Human Owner 同时学习 TypeScript、事件驱动 SDK 和 Research OS 产品设计。成功运行事实保留，runtime 实现不保留；未来从参考项目和最新 API 重新学习。
 
-### N14 — Example_Project 单项目自主运行 pilot 完成
-- state: Human Owner 从 Research Workspace 根目录的最小 TUI 选择 `projects-folder/Example_Project/`，批准一个 Run Contract；一个 SDK Agent Session 在项目写权限与共享区只读边界内运行“计划→单步执行→验证→Checkpoint→继续/停止”循环，最终交付多随机种子线性拟合 Review Package；全局候选贡献只进入 inbox。
-- acceptance: 我不读 transcript：在 TUI 中批准合同、让 Run 无人值守完成、回来查看文件 diff/验证结果/Checkpoint/Review Package，并能 pause/stop；越界写测试被确定性拒绝。
+### N14 — 旧 Example_Project SDK pilot（已取消）
+- state: 原计划通过自定义最小 TUI、`PiAgentBackend` 和确定性写策略完成 Example_Project pilot；未执行。
+- acceptance: 历史节点，不再验收。
+- type: executive
+- status: dead
+- tutorial: —
+- agent_verdict: fail — 依赖已延后的 N13/N5 路径。
+- human_verdict: fail — 2026-07-19 接受用 Pi Coding Agent 现成 TUI 先完成工作流 MVP。
+- evidence: `docs/adr/0002-pi-coding-agent-workflow-mvp.md`。
+- post-mortem: pilot 的研究任务与文件验收仍有价值，但运行载体和确定性权限要求被新 N17 替代。
+
+### N15 — Pi Coding Agent 工作流 MVP 路径已定 ★
+- state: ADR-0002、GOAL、HANDOFF、CONTEXT 与本地图一致声明：Human Owner 在 Research Workspace 根目录使用 Pi Coding Agent 现成交互 TUI，批准一个 Project/Task 的文件化 Run Contract，并让 Pi 在终端保持打开时执行有界工作；验证、Checkpoint、Review Package 和项目文件负责持久接管。当前工作树不保留 `os-runtime/`，`os-build/` 只保留当前施工入口、权威路线和参考资料；dead 路线细节由 map + Git 历史审计。当前不宣称自定义 runtime、确定性权限、daemon 或主动跨 Session 调度；Git 仅为可选增强。
+- acceptance: 我能向别人解释“Pi Coding Agent 工作流 MVP”和“未来 Pi Agent SDK 自主 runtime”的区别，并指出当前依靠流程复核、以后才可能机械强制的边界；运行 `test ! -e os-runtime` 成功，且 `os-build/build_phases/` 不含历史 phase prompts、`map/prompts/` 只含非 dead edge prompts。
+- type: directional
+- status: delivered
+- tutorial: —
+- agent_verdict: pass — ADR-0002、领域词汇、GOAL、阶段入口、SDK 移除说明与交接记录已对齐；未提交的 `os-runtime/` 和 os-build 中 dead/deferred 施工文件已按 Human Owner 决定删除，参考项目保留并新增索引。
+- human_verdict: pending — 2026-07-19 已接受口头成功标准，待复核正式落盘表述。
+- evidence: `docs/adr/0002-pi-coding-agent-workflow-mvp.md`、`os-build/GOAL.md`、`CONTEXT.md`、`HANDOFF.md`、`os-build/build_phases/README.md`。
+
+### N16 — Pi Coding Agent 文件工作流阶段合同就绪
+- state: `build_phases/` 含三份可独立执行的合同：文件化 Run Contract → Example_Project 有界执行与产物 → fresh human/agent 接管验收；每份都只依赖 Pi 现成 TUI、plain files 与已有项目验证，不要求 TypeScript。
+- acceptance: 我读阶段合同后，能指出每段的输入、文件产物、验证命令、停止条件和人类验收；其中不含 SDK、custom TUI 或伪装成强制机制的提示词承诺。
+- type: executive
+- status: approved
+- tutorial: —
+- agent_verdict: —
+- human_verdict: —
+- evidence: —
+
+### N17 — Example_Project Pi Coding Agent 工作流 smoke test 完成
+- state: Human Owner 从 Research Workspace 根目录启动 Pi Coding Agent，批准文件化 Run Contract，让 Pi 在终端保持打开时完成 Example_Project 多随机种子稳定性 smoke test，并留下声明的验证结果、Research Checkpoint 与 Review Package；fresh human/agent 只靠文件即可继续。该项目不冒充首个真实研究项目。
+- acceptance: 我不读 transcript，能根据项目文件复述目标、修改、验证、限制与下一步；我能在运行时中断或接管；报告明确写边界是流程/复核而非确定性 runtime enforcement。
 - type: executive
 - status: approved
 - tutorial: —
@@ -204,7 +245,7 @@ flowchart LR
 ## Edges
 
 ### E1 — N0 → N1
-- action: 执行 GOAL M0 清单：修正 D4 陈旧表述；把 Paper_VAE 二选一（登记 vs 豁免）连同理由摆给我拍板并记录。
+- action: 执行 GOAL M0 清单：修正 D4 陈旧表述；验证 Human Owner 已暂时删除 Paper_VAE，并把恢复授权与重新登记边界写入 HANDOFF。
 - transition_logic: 悬而未决的治理项让每个新会话重复消化矛盾；纯文档工作，GOAL 已授权，无需新证据。
 - prompt: [prompts/E1-governance-m0.md](prompts/E1-governance-m0.md)
 - status: ready
@@ -227,14 +268,14 @@ flowchart LR
 ### E4 — N3 → N4
 - action: 依 N3 场景复核已选的纯会话协议，写 `os-build/build_phases/mvp-architecture-decision.md`，并让既有 N4 教程与正式决策互相链接；若场景证据推翻已选路径则停止并回图。
 - transition_logic: 场景步骤决定需要哪些机制（纯约定/启动器/状态文件）；顺序颠倒就是先造机制再找用途，违背奥卡姆剃刀。
-- prompt: [prompts/E4-architecture-decision.md](prompts/E4-architecture-decision.md)
+- prompt: —（dead prompt 已删除，可由 Git 恢复）
 - status: dead
 - deviations: 2026-07-18 directional — Human Owner 明确把 Pi Agent SDK、自主运行和最小 TUI 提前为 MVP，旧目标 N4 被判 dead；保留 prompt 作为历史。
 
 ### E5 — N4 → N5
 - action: 以选定架构重写 `build_phases/` 为完整 MVP 阶段合同（HANDOFF 2026-07-16 已决策必须替换 launcher-only 包）。
 - transition_logic: 阶段合同是架构的施工顺序化；没有 N4 的选择，合同没有承载物。
-- prompt: [prompts/E5-mvp-phase-contract.md](prompts/E5-mvp-phase-contract.md)
+- prompt: —（dead prompt 已删除，可由 Git 恢复）
 - status: dead
 - deviations: 2026-07-18 directional — source N4 已 dead；由 E17（N13 → N5）替代。
 
@@ -281,7 +322,7 @@ flowchart LR
 - deviations: —
 
 ### E12 — N1 → N10
-- action: 终点验收会话中核验 M0 项无回归（陈旧引用未复活、Paper_VAE 决策仍成立）。
+- action: 终点验收会话中核验 M0 项无回归（陈旧引用未复活、Paper_VAE 仍保持删除或已按 D10 明确恢复并登记）。
 - transition_logic: 治理清洁是"人类无缝加入"的一部分：新人/新会话不被陈旧引用误导。
 - prompt: —
 - status: drafted
@@ -302,8 +343,8 @@ flowchart LR
 - deviations: —
 
 ### E15 — N10 → N12（gated）
-- action: 最小 TUI MVP 通过并积累真实使用证据后，由 Human Owner 决定是否给 os-ui 增加 localhost GUI 执行面。
-- transition_logic: GUI 是 TUI 之后的可选产品面，不再承载首次 Pi SDK 执行能力。
+- action: 工作流 MVP 通过并积累真实使用证据后，由 Human Owner 决定是否用 Pi SDK、自定义 TUI 或 localhost GUI 增加机械执行能力。
+- transition_logic: 自定义 runtime 与 GUI 是文件工作流证明之后的可选机制，不再承载首次 MVP。
 - prompt: —
 - status: drafted
 - deviations: —
@@ -318,20 +359,48 @@ flowchart LR
 ### E17 — N13 → N5
 - action: 用学习导向的小型垂直切片重写 `build_phases/`：Pi SDK hello session → tool/event → Run Contract → 权限/验证 → Checkpoint → 最小 TUI → Example_Project pilot。
 - transition_logic: N13 只确定架构；可由不懂 TypeScript 的 Human Owner 学习、检查和逐步执行的阶段合同，才让架构成为可施工路线。
-- prompt: [prompts/E17-sdk-mvp-phase-contract.md](prompts/E17-sdk-mvp-phase-contract.md)
+- prompt: —（dead route prompt 已删除，可由 Git 恢复）
 - status: done
 - deviations: 2026-07-18 executive — 固定实现包为 `os-runtime/`、根控制状态为 `.research-os/`，并把无人值守 shell 收窄为 guarded tools + Human Owner 在 Run Contract 中冻结的验证命令；旧 launcher 包保持只读归档。
 
 ### E18 — N5 → N14
 - action: 实现最小 TUI 与 `PiAgentBackend`，在 `Example_Project` 执行多随机种子线性拟合 Autonomous Research Run，并生成 Review Package。
 - transition_logic: 先用安全、已有可复现命令的合成项目验证运行时闭环，避免把 harness 缺陷带入真实科研项目。
-- prompt: —
-- status: drafted
-- deviations: —
+- prompt: —（历史 SDK phase 文件已删除，可由 Git 恢复）
+- status: dead
+- deviations: 2026-07-19 directional — Phase 01 曾用 Node 22、SDK 0.80.10、8 个离线测试和真实 hello 证明技术可行；Human Owner 随后根据实际学习体验停止 Phase 02–07，转向 E20，并进一步删除未提交的 `os-runtime/` 实现以降低路线干扰。
 
 ### E19 — N14 → N7
 - action: pilot 经 Human Owner 验收后，再让同一合同与运行时承载 circle_packing 的首个真实 Research Run。
 - transition_logic: N14 证明产品机制可用，N6 证明真实项目评测器可信；两者同时成立后才进入 N7 的真实运行。
+- prompt: —
+- status: dead
+- deviations: 2026-07-19 directional — source N14 已 dead；由 E23 替代。
+
+### E20 — N0 → N15
+- action: 根据 Human Owner 的亲身学习证据，正式把当前 MVP 重置为 Pi Coding Agent 文件工作流；写 ADR-0002，supersede ADR-0001，并对齐 GOAL、CONTEXT、HANDOFF、memory、阶段入口与路线图。
+- transition_logic: 先验证 Research OS 工作流能否创造价值，再为观察到的强制/恢复需求学习和构建 SDK runtime，可降低学习与产品发现的耦合。
+- prompt: —（Human Owner 在本会话直接要求并接受此路线）
+- status: done
+- deviations: 2026-07-19 directional — N13、N5、N14 与 E18/E19 转为 dead 历史。随后 Human Owner 判断保留未提交的 SDK spike 会干扰当前路线，明确要求删除 `os-runtime/`；成功运行过 Phase 01 的事实保留在历史记录中，但实现、依赖与可执行证据不再保留于工作树。同日进一步精简 `os-build/`：删除 dead launcher/session/SDK prompts、失效教程和未引用的 proposed 报告；map 保留 post-mortem，Git 可恢复被跟踪文件，未提交教程不可恢复。
+
+### E21 — N15 → N16
+- action: 把三段工作流编译为可分别交给 Pi/Code Agent 的独立执行合同：Run Contract 准备、Example_Project 有界执行、无 transcript 接管验收。
+- transition_logic: N15 只确定产品证明；独立、可验收的文件合同才能让不懂 TypeScript 的 Human Owner 安全推进。
+- prompt: —（待 N15 human-verified 后用 `writing-great-prompt` 组装）
+- status: drafted
+- deviations: —
+
+### E22 — N16 → N17
+- action: Human Owner 在根目录启动 Pi Coding Agent，按已批准合同完成 Example_Project 多 seed 稳定性 smoke test，并保存验证、Checkpoint 与 Review Package。
+- transition_logic: 合成项目已有可复现 Python 基线，适合先暴露文件工作流摩擦而不混入真实研究风险。
+- prompt: —
+- status: drafted
+- deviations: —
+
+### E23 — N17 → N7
+- action: Pi 工作流 smoke test 经 Human Owner 验收后，再让同一文件合同承载 circle_packing 的首个真实 Research Run。
+- transition_logic: N17 证明工作流可接管，N6 证明真实项目评测器可信；两者同时成立后才进入 N7。
 - prompt: —
 - status: drafted
 - deviations: —

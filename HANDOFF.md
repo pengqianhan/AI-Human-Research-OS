@@ -24,11 +24,12 @@ git show <hash>              # the actual diff for any change
 All OS-construction work formerly tracked here as "Agent-native OS evolution"
 (GOAL M0–M4) and "Research OS MVP — architecture and phase redesign" now lives
 in the route map [os-build/map/index.md](os-build/map/index.md):
-waypoints N1–N14 carry states, human-runnable acceptance checks, dual verdicts,
+waypoints N1–N17 carry states, human-runnable acceptance checks, dual verdicts,
 and per-edge launch prompts under `os-build/map/prompts/`. Mapping:
 M0 → N1, M1 → N2, acceptance vehicle → N3, old pure-session architecture → N4
-(dead 2026-07-18), Pi SDK architecture → N13, rewritten phase contract → N5,
-Example_Project pilot → N14, circle_packing arc → N6–N9, end-to-end acceptance → N10,
+(dead 2026-07-18), deferred Pi SDK architecture/contract/pilot → N13/N5/N14,
+current Pi Coding Agent workflow path → N15, workflow contract → N16,
+Example_Project workflow smoke test → N17, circle_packing arc → N6–N9, end-to-end acceptance → N10,
 post-MVP gates → N11/N12.
 Read the map before opening any construction task; do not re-add construction
 checklists here. The circle_packing checklist below remains the authoritative
@@ -41,14 +42,14 @@ The read-only monitor is delivered and verified. Its governing design is
 [os-ui/DESIGN.md](os-ui/DESIGN.md), usage and launch instructions are in
 [os-ui/README.md](os-ui/README.md), and completed implementation detail belongs
 to Git history. Run it with `./os-ui/start.sh` (or `--watch`). Future execution
-features remain behind the GOAL.md M4 evidence gate; the newly authorized Pi SDK execution MVP
-uses a separate minimal local TUI, not this browser UI.
+features remain behind the GOAL.md M4 evidence gate. The current Pi Coding
+Agent workflow MVP uses Pi's existing terminal UI, not this browser UI.
 
-### circle_packing — first real project / post-pilot OS shakedown (planned 2026-07-03, grilling session)
+### circle_packing — first real project / post-smoke-test OS shakedown (planned 2026-07-03, grilling session)
 
 Purpose: reimplement the `circle_packing` task from `os-build/references/EurekAgent/examples/circle_packing/`
 inside the OS as its first real project. **Primary goal is stress-testing and refining the OS**;
-the math result is secondary. Do not start it until map N14 verifies the Pi SDK/TUI loop on
+the math result is secondary. Do not start it until map N17 verifies the Pi file workflow on
 `Example_Project`. Decisions table: see "circle_packing kickoff decisions" below.
 
 - [ ] Create idea card `ideas/circle-packing-os-shakedown.md` (OKF concept, `type: Idea`);
@@ -96,11 +97,9 @@ the math result is secondary. Do not start it until map N14 verifies the Pi SDK/
 
 ### Next session
 
-- Focus: follow the first ready construction edge in
-  [os-build/README.md](os-build/README.md), currently E1, by executing
-  [E1-governance-m0.md](os-build/map/prompts/E1-governance-m0.md); accept the
-  handoff only after N1 carries agent evidence and the human verification in the
-  execution manual passes.
+- Focus: Human Owner reviews map waypoint N15 using its acceptance check. After
+  N15 is explicitly human-verified, compile E21 into the three independent Pi
+  Coding Agent file-workflow prompts; do not continue SDK Phase 02.
 - Authority: [os-build/map/index.md](os-build/map/index.md) is the sole source of
   construction status; do not mirror edge or waypoint progress here.
 - Suggested skills: `map-then-territory` for route-state handling.
@@ -120,6 +119,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | D7 | `.agents/skills` vs `.claude/skills` (vs hub) duplication | **Three** identical copies (two installed + the canonical `research-skills-hub/` source) kept in sync by a documented rule | Symlink the installed dirs (macOS/Linux only) |
 | D8 | Where do instantiated projects live? | `projects-folder/<ProjectName>/`; reusable templates in `projects-folder/templates/<TemplateName>/` | Move projects back to the repo root and revert links + FILETREE rows |
 | D9 | Structured (YAML/JSON) indexes? | **No** — Markdown tables are grep-able and token-cheap | Add YAML front-matter later if tooling needs to parse indexes |
+| D10 | `Paper_VAE` project status | **Temporarily removed by the Human Owner on 2026-07-19.** It is not an active or exempt Research OS project. Restoring it requires a new Human Owner decision; before active use it must be registered in `memory/MEMORY.md` and gain `PROJECT_MEMORY.md` | Restore the deleted path from its own/Git history, explicitly authorize its return, then register and initialize it before treating it as active |
 
 **Follow-up decisions (2026-06-17):**
 
@@ -168,11 +168,11 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Decision | Default taken | To reverse |
 |---|---|---|
 | Product boundary | **Superseded 2026-07-18:** plain Research OS files remain authoritative, but Git is optional enhancement rather than a prerequisite. Without Git the OS still owns Audit Events, Checkpoints, hashes, text diffs and limited recoverable before-images; product surfaces remain removable adapters | Require Git for all projects, or introduce another authoritative store only after defining migration, synchronization and conflict semantics |
-| MVP runtime | **Supersedes old pure-session N4:** one local Node.js process embeds `@earendil-works/pi-coding-agent` through a replaceable `PiAgentBackend`; do not spawn/parse the Pi CLI. Pi owns agent loop/session/tool events; Research OS owns domain state and autonomy policy | Replace with RPC/subprocess only if measured isolation or non-Node requirements justify it; implementing another backend is post-MVP |
-| MVP autonomy | One Human Owner approves an immutable Run Contract for one Project + one Research Task at a time. Current Project is writable; Paper Wiki, Memory, Ideas, Skill Hub and other Projects are read-only; global proposals append to inbox. The Run may adjust its plan inside goal/permission/budget/stop boundaries and ends at `review`, never automatic acceptance | Expand to multi-project/multi-worker only after the single-project pilot; reduce by requiring approval for each loop step |
-| First delivery | **Superseded 2026-07-18:** the first product proof is a minimal local TUI + Pi SDK Autonomous Research Run on `projects-folder/Example_Project/`; the archived thin launcher is not on the live route | Restore launcher-only delivery and accept that it cannot prove unattended execution, deterministic write boundaries, validation, checkpoint or review |
-| Learning contract | Human Owner learns agent development while building: each core module is a small runnable vertical slice with tests and explanation; before merge the human can explain state/failure recovery and makes at least one small change | Optimize only for delivery speed and allow large agent-generated modules without human comprehension |
-| GUI gate and shape | Existing `os-ui` remains read-only. Pi execution first appears in the minimal local TUI; any localhost GUI/server/desktop wrapper waits for verified TUI use and a new Human Owner decision | Promote GUI into MVP and accept server/transport complexity before the local runtime loop is proven |
+| MVP runtime | **Superseded 2026-07-19:** use Pi Coding Agent's existing interactive TUI as the workflow shell. Research OS files own durable project/task/checkpoint/review state. Phase 01 was successfully exercised, but its uncommitted `os-runtime/` implementation was intentionally deleted so it cannot distract from the current route | Reopen embedded SDK/custom TUI only after studying the selected reference projects, workflow evidence identifies a concrete enforcement/recovery/session-management need, and the Human Owner makes a new decision |
+| MVP autonomy | One Human Owner approves a file-based Run Contract for one Project + one Research Task at a time and keeps Pi's terminal open. The run is human-supervised and bounded by procedure plus review; it never implies deterministic permission/budget enforcement or automatic acceptance | Expand to unattended/custom-runtime autonomy only after the single-project workflow pilot and a new directional decision |
+| First delivery | **Superseded 2026-07-19:** the first proof is a Pi Coding Agent file-workflow smoke test on `projects-folder/Example_Project/`, ending in declared validation, a Research Checkpoint, a Review Package, and transcript-independent takeover | Restore SDK/custom-TUI delivery only through a map redraw; deleted launcher prompts are historical and recoverable from Git, not an equivalent proof |
+| Learning contract | Start with Markdown, file contracts, Pi's existing UI, and the project's Python validation. TypeScript/Pi SDK learning resumes only after the workflow is understood and a specific runtime mechanism is needed | Resume the seven SDK slices now and accept coupling product discovery to a steep TypeScript/event-driven learning path |
+| GUI gate and shape | Existing `os-ui` remains read-only. Current execution uses Pi's existing terminal UI; any custom TUI, localhost GUI/server, or desktop wrapper waits for workflow evidence and a new Human Owner decision | Promote a custom UI into MVP and accept runtime/transport complexity before the file workflow is proven |
 | Desktop future work | After the browser GUI stabilizes, evaluate one desktop wrapper rather than promise both; Electron is the initial candidate because pi SDK is Node-native, with Tauri + Node sidecar considered if its trade-offs become worthwhile | Select Tauri first if measured packaging/resource/security requirements justify the sidecar complexity |
 
 **Orphan-skills decision (2026-07-04, user-set):**
@@ -185,7 +185,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](os-build/GOAL.md)). This refines, not replaces, the 2026-07-03 positioning: the user's research practice stays first; machinery remains evidence-gated except for the explicitly recorded M0/M1, read-only monitor, and thin-launcher exceptions. | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
+| End goal repositioned | Evolve the repo into an **agent-agnostic, agent-native Research OS** ([GOAL.md](os-build/GOAL.md)). This refines, not replaces, the 2026-07-03 positioning: the user's research practice stays first; machinery remains evidence-gated except for explicitly recorded M0/M1, the read-only monitor, and the current Pi Coding Agent file-workflow MVP. The former thin-launcher exception is superseded and its prompts are deleted. | Delete `GOAL.md`, remove this row and the OS-evolution Active Work entry; the 2026-07-03 positioning rows stand unchanged |
 | Document layering | **Superseded again 2026-07-16:** `os-build/GOAL.md` is the Long-term Research OS vision and strategic-governance layer; `os-build/build_phases/` is the Research OS MVP execution-contract layer; CONTEXT.md defines their shared language; INSTRUCTION/memory/actual artifacts remain operating truth. | Merge MVP implementation detail back into GOAL.md and remove the scoped execution layer |
 | Monitor-UI gate opened (read-only only) | Human authorized a **read-only monitor UI** (2026-07-04 grilling session): `os-ui/` = Python generator → schema-versioned `state.json` (gitignored) → static Vite/React frontend; 3 pages (dashboard / project / skills store); derived status only (no heartbeat; slot reserved with lease semantics); store shelves hub skills only; install = copy command. Design in [os-ui/DESIGN.md](os-ui/DESIGN.md), visual spec in [os-ui/mockup.html](os-ui/mockup.html). **This supersedes GOAL.md M4's evidence precondition for the read-only monitor UI only** (GOAL.md M4 annotated accordingly); the execution surface, SSE/resident services stay behind M4 (evidence + per-item human confirmation). | `rm -rf os-ui/`, remove this row + the Active Work entry, and drop the M4 exception note in GOAL.md; the OS has no dependency on os-ui |
 
@@ -230,9 +230,10 @@ vocabulary, Mermaid-update duty in the launch packet.
 | Decision | Default taken | To reverse |
 |---|---|---|
 | MVP acceptance-scenario vehicle (map N3) | **circle_packing** carries the MVP acceptance scenario; paper-reproduction and synthetic scenarios rejected; the N10 final acceptance run uses a fresh Research Input Artifact to prove the loop is reusable beyond the vehicle | Directional deviation on N3: stop the N6–N9 lane, pick a new vehicle, redraw the map |
-| MVP architecture path (map N4 → N13) | ~~Pure session protocol, zero new machinery~~ **— superseded 2026-07-18 by explicit Human Owner decision.** N4 and E4/E5 remain dead history. N13 selects embedded Pi Agent SDK + minimal local TUI + one Project/Task Autonomous Research Run; ADR: `docs/adr/0001-pi-sdk-autonomous-mvp.md` | Reopen N13 as a directional deviation; preserve N4 history and redraw all dependent edges rather than silently restoring it |
-| Runtime pilot (map N14) | Before circle_packing, prove the complete runtime loop on `projects-folder/Example_Project/` by extending its reproducible single-seed line fit to a multi-seed stability analysis and returning a Review Package | Pick another low-risk project only through a directional map revision with equivalent executable validation |
-| OS-construction tracking | `os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation); launcher phase prompts archived to `os-build/build_phases/archive-launcher/` | Restore the two Active Work sections from git history, un-archive the phase prompts, and mark the map bundle `paused` |
+| MVP architecture path (map N4 → N13 → N15) | ~~Pure session protocol~~ → ~~embedded Pi SDK + custom TUI~~ → **Pi Coding Agent existing TUI + file workflow (2026-07-19).** N13's Phase 01 succeeded technically, but the Human Owner's learning evidence showed the sequence was too steep. N4/N13 and dependent paths remain dead history; ADR-0002 is current | Reopen SDK/custom runtime as a directional deviation only after workflow evidence; preserve both earlier paths and redraw dependents rather than silently restoring either |
+| Workflow smoke test (map N17; old N14 dead) | Before circle_packing, prove the file workflow on `projects-folder/Example_Project/` by extending its reproducible single-seed line fit to multi-seed stability and returning declared validation, a Checkpoint, and a Review Package through Pi Coding Agent | Pick another low-risk project only through a directional map revision with equivalent executable validation and transcript-independent takeover |
+| Smoke test vs first real project | `projects-folder/Example_Project/` is the low-risk workflow smoke test. The first real research project is `circle_packing`, reimplemented from the task specification under `os-build/references/EurekAgent/examples/circle_packing/` without copying AGPL code | Change either role only through a directional map revision, preserving an equivalent low-risk smoke test before the real project |
+| OS-construction tracking | `os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation). On 2026-07-19 dead launcher/session/SDK prompts, an obsolete uncommitted tutorial, and an unreferenced proposed design report were deleted from `os-build/`; Git retains tracked history, while the tutorial is intentionally unrecoverable | Restore selected tracked files with `git show` only if a concrete audit or route revision needs them; do not reintroduce the whole historical tree by default |
 | OS-build reference location | External repositories used to design and build the Research OS, together with their walk-through notes, live under `os-build/references/`; the former top-level `resource/` boundary is retired | Move `os-build/references/` back to `resource/` and restore all repository-owned links plus `FILETREE.md` |
 
 **Navigation-index decisions (2026-07-17, user-confirmed):**
@@ -243,10 +244,18 @@ vocabulary, Mermaid-update duty in the launch packet.
 
 ## Deviations from the original plan
 
+- **2026-07-19 directional MVP sequencing reset** — After personally running the successful
+  Phase 01 SDK hello and attempting the TypeScript debugger path, the Human Owner judged the
+  combined TypeScript/event-driven/runtime learning curve too steep. The active route is now N15:
+  Pi Coding Agent's existing TUI plus a file-native, human-supervised workflow. The uncommitted
+  `os-runtime/` spike was then explicitly deleted to reduce route and context interference; the
+  successful run remains a historical fact, not recoverable implementation evidence. Phase 02–07,
+  custom TUI, deterministic enforcement, daemon autonomy, and proactive multi-session management
+  are deferred until reference-project study and a new decision. ADR-0002 supersedes ADR-0001.
 - **2026-07-18 directional MVP reset** — Human Owner formally replaced the approved pure-session
   N4 route with N13: embedded Pi Agent SDK, minimal local TUI, one Project/Task Run Contract and
   Autonomous Research Run. The old node/edges remain dead in the map; GOAL and ADR-0001 carry the
-  new authority. Example_Project is the safe runtime pilot before circle_packing.
+  new authority. Example_Project is the safe workflow smoke test before circle_packing.
 - **Build runs in place from `paper/`** — `main.tex` writes `paper/main.pdf` and reads
   `paper/references.bib`, avoiding repo-level reference-path assumptions.
 - **Reference intake was bib-entry-only** for the smoke test (no PDF downloaded), pending D3.
@@ -270,8 +279,10 @@ vocabulary, Mermaid-update duty in the launch packet.
   scoring schema, or hidden-evaluator machinery added yet.
 - **Agent-led project scaffolding** — policy recorded only; no new agent-led project, no
   `Evaluations/` directory, and no `Tasks/` workspace created until real work needs them.
-- **EurekAgent-style controller/UI/Docker runtime** — intentionally not copied. The authorized
-  runtime is a new, minimal Pi SDK/TUI loop built from this OS's contracts, not an EurekAgent clone.
-- **Post-MVP runtime scope** — no multi-project concurrency, multi-worker scheduler, daemon,
-  server, database, account system, remote access, GUI execution surface, or Codex/Claude runtime
-  backend is authorized by the N13 decision.
+- **EurekAgent-style controller/UI/Docker runtime** — intentionally not copied. The current MVP
+  uses Pi Coding Agent's existing TUI and this OS's file contracts, not an EurekAgent clone.
+- **Post-MVP runtime scope** — Pi SDK Phase 02+, custom TUI, deterministic permission/budget
+  enforcement, multi-project concurrency, multi-worker scheduler, daemon, proactive multi-session
+  manager, server, database, account system, remote access, GUI execution surface, or
+  Codex/Claude runtime backend is not authorized by the N15 decision. `os-runtime/` is intentionally
+  absent and must not be recreated as incidental cleanup or a prerequisite for E21/E22.

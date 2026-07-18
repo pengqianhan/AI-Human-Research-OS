@@ -1,8 +1,13 @@
 ---
-status: accepted
+status: superseded by ADR-0002
 ---
 
 # Use Pi Agent SDK for the autonomous Research OS MVP
+
+> Superseded on 2026-07-19 by
+> [ADR-0002](0002-pi-coding-agent-workflow-mvp.md). Phase 01 was successfully
+> exercised, but its uncommitted `os-runtime/` implementation was intentionally
+> deleted to keep the active route clear. This is historical context only.
 
 The 2026-07-17 MVP route selected a pure session protocol with zero new runtime machinery and deferred Pi SDK execution until after the file-native loop had been proven. On 2026-07-18 the Human Owner explicitly reopened that directional choice: the product to prove is a root-level Research Workspace that can run one bounded, unattended research task inside one selected project. The MVP will therefore embed `@earendil-works/pi-coding-agent` behind a replaceable `PiAgentBackend` and expose a minimal local TUI. Research Project, Task, Claim, Evidence, Artifact, Audit Event, Run Contract, validation, checkpoint, and review state remain owned by Research OS files rather than by an Agent Session.
 

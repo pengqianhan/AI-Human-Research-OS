@@ -11,8 +11,8 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 ## Active Index
 
-- cog-20260716-003 - TypeScript implementation: explicitly unfamiliar with TypeScript and wants to learn it through real MVP artifacts.
-- cog-20260716-004 - pi SDK: explicitly unfamiliar with pi SDK concepts and integration patterns.
+- cog-20260716-003 - TypeScript implementation: explicitly unfamiliar and deferring implementation until after file-workflow and reference-project learning.
+- cog-20260716-004 - pi SDK: can run the historical Phase 01 hello with guidance but wants to restart later from reference projects rather than old runtime code.
 - cog-20260716-005 - Frontend design: explicitly unfamiliar with frontend architecture and implementation.
 - cog-20260716-006 - Autonomous research runtime design: recognizes that detailed orchestration, safety, budget, evaluation, and subagent design exceed current knowledge.
 - cog-20260718-001 - LLM tool call and Codex Harness boundary: currently building a stable model of how tool-call JSON moves from the model through `codex-rs` to process execution.
@@ -21,41 +21,41 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 ## cog-20260716-003 TypeScript implementation
 
-- content: The human reports not knowing TypeScript and wants to learn the required parts while the Research OS MVP is built.
+- content: The human reports no TypeScript fluency and has chosen to defer implementation until the file workflow is understood, relevant reference projects have been studied, and a concrete runtime need exists.
 - source: user-confirmed
 - confidence: high
-- evidence: Explicit self-report in the Research OS MVP clarification.
+- evidence: Explicit self-report on 2026-07-19 after successfully running the SDK hello, finding the TypeScript/event-debugging route too steep, and requesting deletion of the old runtime before learning from reference projects.
 - created: 2026-07-16
-- last_updated: 2026-07-16
+- last_updated: 2026-07-19
 - status: active
 - domain: software implementation
 - scope: TypeScript needed for this repository's future pi SDK, local-server, and frontend artifacts.
 - capability_level: awareness
 - evidence_type: self-report
-- last_verified: 2026-07-16
+- last_verified: 2026-07-19
 - freshness: current
 - responsibility_relevance:
   - The human will need to operate and review delivered TypeScript components.
-- next_learning_edge: Read, run, and make a bounded verified change to a small TypeScript module using Python analogies.
+- next_learning_edge: After the workflow and selected reference projects clarify a mechanism, implement one fresh TypeScript slice from current APIs using Python analogies; do not restore the deleted spike by default.
 
 ## cog-20260716-004 pi SDK
 
-- content: The human reports not understanding pi SDK and wants implementation-grounded teaching while the MVP is built.
+- content: The human ran the former Phase 01 Pi SDK hello with guidance but prefers to delete that implementation, learn from reference projects, and restart SDK construction later.
 - source: user-confirmed
 - confidence: high
-- evidence: Explicit self-report in the Research OS MVP clarification.
+- evidence: On 2026-07-19 the human personally ran the real SDK hello, chose Pi Coding Agent for the MVP, and explicitly requested deletion of `os-runtime/` before future reference-project-based SDK learning.
 - created: 2026-07-16
-- last_updated: 2026-07-16
+- last_updated: 2026-07-19
 - status: active
 - domain: agent runtime integration
 - scope: pi SDK sessions, events, tools, resources, persistence, and application embedding relevant to this Research OS.
 - capability_level: awareness
 - evidence_type: self-report
-- last_verified: 2026-07-16
+- last_verified: 2026-07-19
 - freshness: current
 - responsibility_relevance:
   - The human will own product direction and must be able to operate and review the embedded agent runtime.
-- next_learning_edge: Explain and operate one real AgentSession lifecycle, including prompt, streaming events, tool execution, abort, and session persistence.
+- next_learning_edge: Study the selected reference projects first; revisit one AgentSession mechanism from the latest Pi API only after the workflow identifies why the existing Pi Coding Agent shell is insufficient.
 
 ## cog-20260716-005 Frontend design
 

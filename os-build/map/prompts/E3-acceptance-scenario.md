@@ -15,7 +15,8 @@ launch）, updating the Mermaid overview in the same edit.
 产出 `os-build/build_phases/mvp-acceptance-scenario.md`：把 CONTEXT.md 的 Research OS MVP 定义
 翻译成可判定的验收清单。<!-- ← N3.state -->
 
-- 载体已定（不重开）：**circle_packing**（2026-07-17 用户选定，记录在地图 N3 条目）。
+- 首个真实项目/载体已定（不重开）：**circle_packing**（用户确认，记录在地图 N3 条目）；
+  `projects-folder/Example_Project/` 只承担此前的 Pi 文件工作流 smoke test。
 - 覆盖 MVP 七步：接收 Research Input Artifact → 放置 → 理解 → 有界续研 → 评估 →
   经验捕获 → 交还人类；每步写明"验收时看哪个文件、跑哪条命令、通过标准是什么"。
 - 每步证据必须是用户**不读 transcript** 就能亲自检查的产物。
