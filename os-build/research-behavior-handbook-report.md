@@ -563,6 +563,29 @@ Auto suspend/wake 说明 Runtime 可以在无任务时暂停并在请求到达�
 4. 在 M4 比较 Runta、容器、操作系统 sandbox、网络代理和其他执行层，而不是预设供应商；
 5. 采用前验证数据边界、Secret 模型、默认 Egress、审计完整性、Checkpoint 语义、成本、退出与迁移路径。
 
+### 10.7 NeoSigma Agent Workspaces：高保真的执行工作空间
+
+NeoSigma 将 Agent Workspace 定义为接近真实开发机、同时隔离、可复现和可销毁的完整运行环境，而不是普通任务文件夹或只提供 Shell 的 Sandbox。其架构分为四个平面：Control Plane 通过 warm pool、版本化 snapshot 和 readiness check 管理生命周期与启动延迟；Execution Plane 提供文件系统、仓库、Docker、MCP 和配套服务；Security and Network Plane 通过多层隔离、双向 allowlist 和外部凭据注入代理限制后果；Data Plane 通过共享 reference snapshot 与 database branching，为每次运行提供独立、可写且起点一致的数据状态。[NeoSigma: Workspaces — How We Built Sandbox Infrastructure for Autonomous Agents](https://www.neosigma.ai/blog/agent-workspaces)
+
+其最有价值的抽象是把一次 Sandbox Run 看成受控实验：
+
+```text
+known starting state
+    + observable execution trace
+    + measurable outcome
+```
+
+对 Research OS，应明确区分：
+
+```text
+Research Workspace   持久保存问题、代码、论文、结果、决策和 handoff
+Execution Workspace  临时运行 Agent、代码、服务和数据分支的隔离环境
+```
+
+Research Run 从前者取得任务、事实源、policy 和输入，把执行 trace、文件差异与结果交给独立 Evaluator，只有验证后的稳定制品再写回 Research Workspace。运行时 snapshot 或完整 trace 不能替代 semantic handoff：前者回答“从哪里开始、发生了什么”，后者回答“这些结果意味着什么、下一步是什么”。
+
+当前可直接吸收的是已知初始状态、执行前 readiness check、Secret 不进入 Sandbox、出站 allowlist、execution trace 与 outcome evidence 分离等原则。Warm pool、Docker-in-sandbox、database branching 和硬件级隔离属于高成本基础设施；文章未提供独立安全审计、启动延迟/成本基准或多租户污染测试，因此只能作为 M4 后的候选架构参考，不能视为当前 MVP 的必要机制。
+
 ## 11. 建议的渐进落地路线
 
 ### 阶段 A：用现有 MVP 七步建立手工行为地图
@@ -684,3 +707,4 @@ Handbook 角色：导航与验证定位，不拥有动态状态
 - [Runta Token Saving](https://runta.com/docs/runtime/token-x-ray/)
 - [Runta Auto Suspend and Wake-Up](https://runta.com/docs/runtime/auto-suspend-and-wake-up/)
 - [Runta GitHub organization](https://github.com/runta-dev)
+- [NeoSigma: Workspaces — How We Built Sandbox Infrastructure for Autonomous Agents](https://www.neosigma.ai/blog/agent-workspaces)
