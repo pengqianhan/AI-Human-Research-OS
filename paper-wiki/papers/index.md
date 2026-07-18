@@ -11,3 +11,4 @@
 * [EurekAgent: Agent Environment Engineering is All You Need For Autonomous Scientific Discovery](2606.13662.md) - A paper about environment-engineered CLI-agent systems for metric-driven autonomous scientific discovery.
 * [ResearchStudio-Idea: An Evidence-Grounded Research-Ideation Skill Suite from ML Conference Outcomes](2607.04439.md) - Mines ML conference outcomes into failure-aware ideation patterns and operationalizes them as literature-search, prior-art-checking, and end-to-end ideation skills.
 * [Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable](2607.13285.md) - A behavior-centric, source-linked handbook and progressive-disclosure workflow for localizing changes in evolving agent harnesses.
+* [AI Agents Do Not Fail Alone: The Context Fails First](2607.14275.md) - Validates a seven-criterion context-quality score as a preflight signal for agent reliability under controlled context variation.

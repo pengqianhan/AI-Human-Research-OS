@@ -6,6 +6,7 @@
 * [Agent self-evolution](agent-self-evolution.md) - Papers about agents that improve their own skills, verification signals, or behavior after deployment.
 * [Agent skill libraries](agent-skill-libraries.md) - Papers about building, validating, and maintaining reusable libraries of executable agent skills.
 * [Autonomous research](autonomous-research.md) - Papers about AI systems that autonomously generate, test, and refine research hypotheses or artifacts over long horizons.
+* [Context engineering](context-engineering.md) - Papers about assembling, measuring, and governing the information environment in which AI agents reason and act.
 * [GPU kernel optimization](gpu-kernel-optimization.md) - Papers about searching for and evaluating fast GPU kernels, including the cost of on-device measurement.
 * [LLM agents](llm-agents.md) - Papers about language-model agents, skills, verification, and autonomous task execution.
 * [LLM surrogate models](llm-surrogate-models.md) - Papers about using LLMs as predictive surrogates that forecast outcomes instead of generating or acting directly.
