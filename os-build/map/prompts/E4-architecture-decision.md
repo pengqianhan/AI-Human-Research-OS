@@ -1,5 +1,8 @@
 # E4: 落成 MVP 架构决策 — 纯会话协议（N3 → N4 ★directional）
 
+> **RETIRED 2026-07-18:** map E4/N4 已标记 dead；不得执行本 prompt。当前路径从 N13
+> 开始，见 `docs/adr/0001-pi-sdk-autonomous-mvp.md` 与 map E16/E17。
+
 Map: `os-build/map/index.md` — read the N3 and N4 entries before starting. <!-- ← bundle path -->
 
 > 本边指向方向性节点。用户已于 2026-07-17 选择“纯会话协议”；本任务负责用 N3
@@ -90,4 +93,3 @@ that transition belongs to the human.
 Report `Status: complete | incomplete | blocked`, files changed, the selected mechanism and
 two exclusion reasons, the seven-step mapping result, exact verification evidence, any
 deviation, and the human acceptance check required before E5 can become `ready`.
-

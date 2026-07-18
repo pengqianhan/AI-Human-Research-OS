@@ -27,16 +27,20 @@
 - **研究实践优先**:OS 演化始终服务于用户自己的长期研究。真实研究项目产生的摩擦证据
   (项目 `PROJECT_MEMORY.md` 的 OS Feedback 条目)决定大多数缺口何时变成工作项;
   无需先有 OS Feedback 的已授权例外只有文档层治理与契约工作(M0、M1)、只读
-  monitor UI,以及 [build_phases/](build_phases/) 定义的只读、无状态薄启动器。
-- **agent-agnostic 是硬约束**:Codex、Claude Code、pi 以及任何"能读文件、能执行
-  shell"的 code agent 都能引导进入本 OS 执行任务。agent 专属内容只允许存在于
-  适配层(adapter),不得新增进内核。
+  monitor UI,以及 2026-07-18 经 Human Owner 逐项确认的 Pi Agent SDK 最小 TUI
+  Autonomous Research Run MVP（ADR-0001）。
+- **领域 agent-agnostic、首个 runtime 明确**:Codex、Claude Code、pi 以及任何"能读
+  文件、能执行 shell"的 code agent 都能读取并构建本 OS；Research Project、Task、
+  Claim、Evidence、Artifact 与 Audit Event 不依赖具体 agent。v1 运行时只实现可替换
+  `PiAgentBackend`,在进程内嵌入 `@earendil-works/pi-coding-agent` SDK；不承诺同时实现
+  Codex/Claude runtime backend。
 
-"OS"的定义:为运行其上的 agent 进程提供完整、稳定、可组合的抽象——引导、驱动
-(adapter)、进程、调度、内存、权限、系统调用(skills)、IPC、可观测性——载体仍是
-plain files + git,不是守护进程、数据库或图形界面(见 M4 闸门)。薄启动器只是可删除
-adapter,不改变 OS 的事实源或内核定义。构建工作由 code agent 执行(当前实际由
-Claude Code 承担),人类定方向、授权与审查。
+"OS"的定义:Research Workspace 根目录为 Human Owner 与根层 agent 提供共享 Skill Hub、
+Paper Wiki、Memory、Ideas、Inbox 与多个 Research Project；首个产品面是本地单进程最小
+TUI。权威研究状态仍是可读文件；无 Git 是完整默认模式（Audit Event、Checkpoint、
+受控文本变更记录），检测到 Git 时才增强 diff、历史、branch/worktree 与恢复。Pi SDK
+负责 agent loop、模型、工具与 Agent Session；Research OS 自己拥有项目语义、Run
+Contract、权限、验证与交接。构建工作由 code agent 执行,人类定方向、授权与审查。
 
 这个 OS 应让新进入的 agent 能快速定位:启动入口;当前 portfolio 与项目事实;idea、
 论文、代码、图表和写作材料的归属;经验向 memory/skill 的晋升边界;并行与 agent-led
@@ -105,13 +109,14 @@ portfolio 并保有 `PROJECT_MEMORY.md`;项目是否 agent 锁定由 owner 在
 
 ## 5. 里程碑
 
-OS 内核演化主线顺序:M0 → M1 → M2;M3、M4 是条件闸门,不排期。薄启动器 adapter
-任务弧的授权保留(M4 窄例外),但按 2026-07-16 HANDOFF pi 决策与 2026-07-17 路线图
-N4 决策**暂不推进**:原四阶段 launcher 提示已归档至
-[build_phases/archive-launcher/](build_phases/archive-launcher/),
-[build_phases/](build_phases/) 将按路线图边 E5 重写为完整 MVP 阶段合同。跨会话进度
-以 [map/index.md](map/index.md) 为唯一追踪器
-(HANDOFF Active Work 仅保留指针)。
+OS 构建主线顺序:M0 → M1 → M2;M3、M4 是 MVP 之后的条件闸门,不排期。2026-07-18
+Human Owner 正式推翻路线图旧 N4 的纯 session protocol，选择 N13:Pi Agent SDK +
+最小 TUI + 单项目 Autonomous Research Run。原 launcher 提示继续归档于
+[build_phases/archive-launcher/](build_phases/archive-launcher/),不得作为新主路径复活。
+[build_phases/](build_phases/) 已由路线图 E17 重写为学习导向的七阶段 SDK MVP 合同；
+实施仍从 Phase 01 开始，合同就绪不等于运行时代码已经存在。
+跨会话进度以 [map/index.md](map/index.md) 为唯一追踪器；架构理由见
+[ADR-0001](../docs/adr/0001-pi-sdk-autonomous-mvp.md)。
 
 - **M0 — 治理对齐(纯文档)**
   1) 原 task 构建指南归并进本文并删除旧入口后,修正 HANDOFF D4 中
@@ -134,56 +139,54 @@ N4 决策**暂不推进**:原四阶段 launcher 提示已归档至
   接入成本满足铁律 2。冷启动测试:**仅当真实第三 agent 可用时**执行(候选:pi,
   或已留下 `.antigravitycli/` 痕迹的 agent)——仅凭其一行入口文件完成一个只读任务
   (如"总结当前 portfolio 状态");不做人工模拟。
-- **M2 — 用户态实战(circle_packing)**
-  按 [HANDOFF.md](../HANDOFF.md) Active Work 的 circle_packing 清单执行——**该清单
-  是权威工作分解,其内部顺序优先于本文件**(含 rounds 开始前的 tier-2 评测器保护、
-  并行回合、两次制品评审、OS Feedback、两批回灌)。可观测性不单独立项:在两批回灌
-  中依据 OS Feedback 判断 round wrap-up 产物(progress log 条目 + `result.json` +
-  OS Feedback 条目 + git commit)是否已满足"人类不读 transcript 即可复述该轮
-  结论";只为有证据的缺口提约定。
-  验收:HANDOFF circle_packing 清单全部勾选;OS Feedback 幸存条目完成回灌。
+- **M2 — Pi SDK 单项目 Autonomous Research Run MVP**
+  在 Research Workspace 根目录实现本地单进程最小 TUI 和可替换 `PiAgentBackend`，通过
+  SDK 创建 Agent Session；一次只选择一个 Project 和一个经 Human Owner 批准的
+  Research Task。Run Contract 冻结目标、写范围、skills/tools、Executable/Review
+  Validation、预算、停止条件与预期输出。当前 Project 可写；Paper Wiki、Memory、
+  Ideas、Skill Hub 与其他 Project 只读；全局候选贡献只追加到 inbox。自主循环固定为
+  “计划→一个有界步骤→验证→Checkpoint→继续/调整/停止”，达到条件后只进入 review。
+  首个 pilot 使用 `projects-folder/Example_Project/` 的可复现线性拟合，把单 seed 扩展为
+  多 seed 稳定性分析。无 Git 模式必须可审计、可 checkpoint、可查看 Agent 文本变更；
+  Git 只提供增强版本控制。验收:Human Owner 在 TUI 中批准合同后可离开，回来不读
+  transcript 即可查看 diff、验证结果、Checkpoint 与 Review Package，并可 pause/stop；
+  越界写被确定性代码拒绝。学习契约:每个垂直切片小 diff + 测试 + 人类可解释并亲手
+  修改一次核心行为。
 - **M3(闸门:真实第三 agent 接入)— 安装器泛化**
   触发条件:某个真实第三 agent 通过 M1 冷启动测试并需要安装 hub skills。
   内容:`research-skill-installer` 的 `TARGET_DIRS` 从硬编码两目录改为 adapter
   对照表所列目录;此变更推翻 D7 的"两份拷贝"前提,需同步 HANDOFF 决策行。
   验收:一条命令把同一 hub skill 装进全部已注册 adapter 目录;新增 adapter 不改
   安装器逻辑。
-- **M4(闸门:OS Feedback 证据 + 人类逐项确认)— 更重的机制**
-  自动排队/调度、monitor UI 的执行面与常驻服务、数据库、守护进程、每 adapter
-  强制机制矩阵、OS 级 secrets 方案、任何机器可读 manifest 或工作流 CLI:每一项都
-  必须先有 OS Feedback 中"文件原生方案不够用"的具体证据,再经人类显式确认,才可开工。
-  已由人类开闸的窄例外只有:
-  1) **只读 monitor UI**(2026-07-04):设计见 `os-ui/DESIGN.md`;其执行面、SSE 与
-     常驻服务仍受本闸门约束;
-  2) **只读、无状态薄启动器**(2026-07-16):仅按
-     [build_phases/archive-launcher/](build_phases/archive-launcher/) 的归档规格
-     构建 repo-local `bin/research-os`(授权保留、暂不推进,见路线图 N4),调用原生
-     pi,不嵌入 SDK、不编码研究工作流、不创建服务/数据库/manifest,不改变 pi 默认
-     权限与 session 行为。
-  GUI 执行面仍需先用启动器完成一个真实项目阶段,记录具体 OS Feedback,再由人类重新
-  确认。开闸后的首选方向是扩展现有 `os-ui`:localhost-only TypeScript server + pi SDK
-  + HTTP/SSE Agent Console;持久仓库快照与 pi 实时状态内部隔离。Electron/Tauri 仅在
-  浏览器方案稳定后择一评估,当前不属于已授权实现范围。
+- **M4(闸门:M2 使用证据 + 人类逐项确认)— MVP 之后的更重机制**
+  多项目/多 Worker 并行调度、关闭 TUI 后继续运行的 daemon、数据库、远程访问、账户
+  系统、OS 级 secrets、完整通用版本控制、GUI 执行面及 desktop wrapper 仍需真实 M2
+  使用证据与 Human Owner 新授权。现有 `os-ui` 保持只读；GUI 是最小 TUI 稳定后的可选
+  adapter，不再承载首次 Pi SDK 执行能力。M2 授权不自动扩展这些范围。
 
 ## 6. 总验收(与里程碑一一对应)
 
 - M0:陈旧引用清零;Paper_VAE 地位有人类决策记录。
 - M1:adapter 契约成文;INSTRUCTION 内核文本(adapter 表除外)无具体 agent 假设;
   (条件项)真实第三 agent 冷启动通过。
-- M2:circle_packing 全清单完成,OS Feedback 产出并回灌。
+- M2:Example_Project 的 SDK/TUI Autonomous Research Run 闭环通过；Human Owner 不读
+  transcript 即可审查和接管；共享根目录写边界与无 Git 恢复能力通过负向验证。
 - 文档归并:长期方向与构建原则只在 GOAL.md 维护;原 task.md/task_en.md 已删除,
   历史原文可由记录的 Git commit 恢复。
-- `build_phases/`:重写后的 MVP 阶段合同按序完成;每阶段的真实制品、验证与中文 HTML
-  教程齐备(`archive-launcher/` 归档包不是验收对象);这不等于 GUI 执行闸门已经通过。
-- 全程:仓库仍是 plain files + git;除上述两项窄例外外,M3/M4 闸门未凭空打开;所有
-  被推翻的既有决策在 HANDOFF Decisions 有显式 supersession 行。
+- `build_phases/`:重写后的 Pi SDK MVP 阶段合同按序完成;每阶段的真实制品、验证与学习
+  教程齐备(`archive-launcher/` 归档包不是验收对象);这不等于 GUI/daemon 闸门已打开。
+- 全程:权威研究状态仍为 plain files；Git 是可选增强而非前置条件；所有被推翻的既有
+  决策在 map、HANDOFF 与 ADR 有显式 supersession 记录。
 
 ## 7. 非目标
 
-- 不做 Web 平台、后端服务、数据库、守护进程(M4 闸门前)。
-- 不引入机器可读 manifest、plugin manager、versioning 或工作流 CLI。唯一例外是
-  `build_phases/` 定义的 repo-local 薄启动器;它不是研究命令系统。M1 的 adapter 表
-  仍是人读文档,M3 仅让安装器读取该表所列目录。
+- 不做 Web 平台、后端服务、数据库、守护进程、远程访问或账户系统(M4 闸门前)。
+- 不在 v1 同时实现 Codex/Claude runtime backend；agent-agnostic 约束属于领域文件和
+  `AgentBackend` 边界，首个可运行 backend 明确是 Pi SDK。
+- 不实现完整通用版本控制；无 Git 只保证权威状态、Audit Event、Checkpoint 和 Agent
+  修改过的小型文本可恢复，Git adapter 才提供完整历史/branch/merge。
+- 不让 Autonomous Research Run 直接改写 Paper Wiki、Memory、Ideas、Skill Hub 或其他
+  Project；只允许在当前 Project 写入并向 inbox 追加候选贡献。
 - 不复制 EurekAgent 运行时(AGPL;只吸收其环境工程思想)。
 - 不追求支持"所有" agent:"支持"的定义 = 通过 M1 冷启动测试。
 - 不为假想需求造机制:没有真实第三 agent 就不做 M3,没有摩擦证据就不做 M4。

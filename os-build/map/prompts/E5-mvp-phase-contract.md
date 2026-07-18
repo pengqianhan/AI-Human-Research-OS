@@ -1,5 +1,8 @@
 # E5: 重写完整 MVP 阶段合同（N4 → N5）
 
+> **RETIRED 2026-07-18:** source N4 已 dead，map E5 已被 E17（N13 → N5）取代；不得按
+> 本 prompt 构建纯 session protocol 阶段合同。新 E17 prompt 尚未编译。
+
 Map: `os-build/map/index.md` — read the N4 and N5 entries before starting. <!-- ← bundle path -->
 
 ## Prerequisite gate
@@ -105,4 +108,3 @@ that transition belongs to the human.
 Report `Status: complete | incomplete | blocked`, live phase order, files created/changed,
 the N3 coverage matrix result, exact validation evidence, preserved archive boundary, any
 unresolved gate, and the human acceptance check required before downstream execution.
-

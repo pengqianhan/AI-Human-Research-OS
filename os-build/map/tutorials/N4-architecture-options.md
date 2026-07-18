@@ -1,5 +1,9 @@
 # N4 教程：MVP 架构路径的三个候选，到底各是什么东西
 
+> **历史文档（2026-07-18 已 supersede）：** 本教程支撑的纯 session protocol 选择已被
+> Human Owner 正式推翻。当前架构是 N13 的 embedded Pi Agent SDK + minimal TUI；权威
+> 理由见 `docs/adr/0001-pi-sdk-autonomous-mvp.md`。保留本文是为了说明旧 N4 当时的认知背景。
+
 > 目的：让你不懂 shell/TypeScript 也能对 N4 做出知情选择，并能向别人复述所选路径和排除理由。
 > 锚定的真实文件：[INSTRUCTION.md](../../../INSTRUCTION.md)、[GOAL.md](../../GOAL.md)、
 > [HANDOFF.md](../../../HANDOFF.md)（pi product-shell decisions）、
