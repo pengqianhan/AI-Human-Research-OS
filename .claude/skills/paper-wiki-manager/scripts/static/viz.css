@@ -95,8 +95,8 @@ main { display: flex; flex: 1; min-height: 0; }
   padding-left: 18px;
 }
 
-#detail-actions { margin: 10px 0 4px; }
-#detail-toggle {
+#detail-actions { display: flex; gap: 8px; margin: 10px 0 4px; }
+#detail-toggle, #detail-language-toggle {
   font-size: 13px;
   padding: 6px 14px;
   border: 1px solid #cbd5e1;
@@ -106,10 +106,40 @@ main { display: flex; flex: 1; min-height: 0; }
   cursor: pointer;
   font-weight: 600;
 }
-#detail-toggle:hover { background: #dbeafe; }
+#detail-toggle:hover, #detail-language-toggle:hover { background: #dbeafe; }
+#detail-language-toggle { min-width: 38px; padding-left: 10px; padding-right: 10px; }
 
-.detail-header { margin-bottom: 12px; }
-.detail-header h1 { font-size: 18px; margin: 4px 0 2px; font-weight: 600; }
+.detail-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: start;
+  padding: 0;
+  background: transparent;
+  border-bottom: 0;
+  margin-bottom: 12px;
+}
+.detail-header .type-chip {
+  grid-column: 1;
+  justify-self: start;
+}
+.detail-header h1 {
+  grid-column: 1 / -1;
+  font-size: 18px;
+  margin: 4px 0 2px;
+  font-weight: 600;
+}
+#detail-id {
+  grid-column: 1;
+  overflow-wrap: anywhere;
+}
+.detail-header #detail-actions {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: end;
+  margin: 0;
+}
 .type-chip {
   display: inline-block;
   padding: 2px 8px;

@@ -126,7 +126,9 @@ user asks to reorganize them.
 Chinese paper notes live in `paper-wiki/papers_zh/<arxiv_id>.md`. They are
 auxiliary mirrors of canonical English notes under `papers/`, not OKF graph
 concepts or a fifth canonical collection. The main paper index, topic/concept
-backlinks, project links, and `viz.html` continue to use `papers/` only.
+backlinks, project links, and graph identity continue to use `papers/` only.
+The generated viewer may embed a mirror's title and body under the canonical
+paper ID so its detail pane can switch between English and Chinese.
 
 Use this frontmatter:
 

@@ -13,7 +13,7 @@ This skill supersedes `paper-library-manager`, which managed the same kind of bu
 
 ## Scope
 
-Use `paper-wiki/` as the default wiki root unless the user names a different path. Treat every non-reserved `.md` file in that tree as an OKF concept except files under the auxiliary `papers_zh/` collection. The four canonical page collections are `papers/` (one page per arXiv paper), `topics/` (thematic synthesis pages), `concepts/` (entity pages for named methods, datasets, benchmarks, metrics, terms, and tools), and `sources/` (non-paper reading — blogs, docs, talks — as `type: Reference`). `papers_zh/` stores `zh-CN` mirrors of canonical paper notes and does not participate in indexes, topic/concept backlink requirements, or `viz.html`. Treat the `papers_zh/` directory name and `zh-CN` language tag as fixed parts of this skill's contract; `[localized_notes].enabled` is the only localized-note configuration switch.
+Use `paper-wiki/` as the default wiki root unless the user names a different path. Treat every non-reserved `.md` file in that tree as an OKF concept except files under the auxiliary `papers_zh/` collection. The four canonical page collections are `papers/` (one page per arXiv paper), `topics/` (thematic synthesis pages), `concepts/` (entity pages for named methods, datasets, benchmarks, metrics, terms, and tools), and `sources/` (non-paper reading — blogs, docs, talks — as `type: Reference`). `papers_zh/` stores `zh-CN` mirrors of canonical paper notes and does not participate in indexes, topic/concept backlink requirements, or graph nodes and edges. Treat the `papers_zh/` directory name and `zh-CN` language tag as fixed parts of this skill's contract; `[localized_notes].enabled` is the only localized-note configuration switch.
 
 ## Workflow
 
@@ -48,7 +48,7 @@ If a specific paper needs a different summarization style, derive a temporary pr
 
 Use `[localized_notes].enabled` in `assets/paper-wiki.toml` as the Chinese-mirror on/off switch. The mirror directory is always `<wiki-root>/papers_zh/` and the language is always simplified Chinese with the `zh-CN` tag; do not treat either value as configurable. When `enabled = true`, create or update `<wiki-root>/papers_zh/<arxiv_id>.md` after writing the canonical English note. Use the same arXiv ID as the filename and distil from the same retrieved full paper; do not translate from the abstract alone.
 
-Treat `papers/<arxiv_id>.md` as the sole source of truth for bibliographic metadata, status, tags, topic/concept links, project links, and graph identity. A Chinese mirror is an auxiliary reading artifact and must not be added to `papers/index.md`, topic or concept `# Papers` sections, or `viz.html`. It may link one-way to its canonical English note and to external citations without creating backlink obligations.
+Treat `papers/<arxiv_id>.md` as the sole source of truth for bibliographic metadata, status, tags, topic/concept links, project links, and graph identity. A Chinese mirror is an auxiliary reading artifact and must not be added to `papers/index.md`, topic or concept `# Papers` sections, or `viz.html` as a node or edge. The viewer may embed its title and body under the canonical paper ID for an English/Chinese detail-pane toggle. It may link one-way to its canonical English note and to external citations without creating backlink obligations.
 
 Use this lean frontmatter:
 
@@ -226,7 +226,7 @@ If your environment provides a skill validator, run it against this skill folder
 
 `paper-wiki/viz.html` is required. Use `viz.html` as the canonical filename; treat `vis.html` as a typo unless the user explicitly asks for a separate alias.
 
-`scripts/generate_viz.py` renders a self-contained Cytoscape graph + detail-pane viewer by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, `scripts/static/viz.js`, and the vendored libraries in `scripts/vendor/`. Keep all of these alongside the script; the generated `viz.html` inlines the vendored libraries so it works fully offline (no CDN). Papers, topics, and each concept type get distinct node colors. The viewer UI and text are English. The generator deliberately excludes `papers_zh/`, so adding or editing a Chinese mirror does not add nodes or edges.
+`scripts/generate_viz.py` renders a self-contained Cytoscape graph + detail-pane viewer by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, `scripts/static/viz.js`, and the vendored libraries in `scripts/vendor/`. Keep all of these alongside the script; the generated `viz.html` inlines the vendored libraries so it works fully offline (no CDN). Papers, topics, and each concept type get distinct node colors. The viewer UI and text are English. The generator excludes `papers_zh/` from graph nodes and edges, but embeds a matching Chinese title and body under its canonical paper ID. For papers with a mirror, show a `中` button in the detail pane to switch to Chinese and an `英` button to switch back.
 
 The viewer is a paper-wiki knowledge map, not a flat force graph:
 

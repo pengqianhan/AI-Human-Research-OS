@@ -207,6 +207,26 @@ def _walk_concepts(bundle_root: Path) -> list[Concept]:
     return concepts
 
 
+def _load_localized_notes(
+    bundle_root: Path, canonical_ids: set[str]
+) -> dict[str, dict[str, str]]:
+    notes: dict[str, dict[str, str]] = {}
+    notes_dir = bundle_root / "papers_zh"
+    if not notes_dir.is_dir():
+        return notes
+    for md_path in sorted(notes_dir.glob("*.md")):
+        canonical_id = f"papers/{md_path.stem}"
+        if canonical_id not in canonical_ids:
+            continue
+        frontmatter, body = parse_frontmatter(md_path.read_text(encoding="utf-8"))
+        if body.strip():
+            notes[canonical_id] = {
+                "title": str(frontmatter.get("title") or ""),
+                "body": body,
+            }
+    return notes
+
+
 def _build_graph(concepts: list[Concept]) -> dict[str, Any]:
     ids = {concept.id for concept in concepts}
     nodes = [concept.to_node() for concept in concepts]
@@ -283,6 +303,9 @@ def generate_visualization(
 
     concepts = _walk_concepts(bundle_root)
     graph = _build_graph(concepts)
+    graph["localizedNotes"] = _load_localized_notes(
+        bundle_root, set(graph["bodies"])
+    )
     name = bundle_name or bundle_root.name
     html = _render_html(name, graph)
 

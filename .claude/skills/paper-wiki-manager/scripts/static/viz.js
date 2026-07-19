@@ -256,7 +256,7 @@
     if (expanded.has(id)) expanded.delete(id);
     else expanded.add(id);
     sync(id);
-    if (currentDetail === id) renderExpandButton(id);
+    if (currentDetail === id) renderDetailActions(id);
   }
 
   function expandAll() {
@@ -401,6 +401,7 @@
 
   // ---------- detail pane ----------
   let currentDetail = null;
+  let currentLanguage = "en";
 
   function clearSelection() {
     selectedId = null;
@@ -419,11 +420,27 @@
     }
   }
 
-  function renderExpandButton(id) {
+  function renderDetailActions(id) {
     const holder = document.getElementById("detail-actions");
     holder.innerHTML = "";
     const d = nodeIndex[id];
-    if (!d || d.type === "Paper") return;
+    if (!d) return;
+    const localized = bundle.localizedNotes && bundle.localizedNotes[id];
+    if (d.type === "Paper" && localized) {
+      const languageBtn = document.createElement("button");
+      languageBtn.id = "detail-language-toggle";
+      languageBtn.textContent = currentLanguage === "en" ? "中" : "英";
+      languageBtn.title = currentLanguage === "en" ? "显示中文笔记" : "Show English note";
+      languageBtn.setAttribute("aria-label", languageBtn.title);
+      languageBtn.addEventListener("click", () => {
+        currentLanguage = currentLanguage === "en" ? "zh" : "en";
+        renderNoteBody(id);
+        renderDetailActions(id);
+      });
+      holder.appendChild(languageBtn);
+      return;
+    }
+    if (d.type === "Paper") return;
     const cnt = countPapers(id);
     if (!cnt) return;
     const btn = document.createElement("button");
@@ -433,7 +450,7 @@
       : `Expand ${plural(cnt, "paper")}`;
     btn.addEventListener("click", () => {
       toggleContainer(id);
-      renderExpandButton(id);
+      renderDetailActions(id);
       selectedId = id;
       applyDimming();
     });
@@ -449,6 +466,7 @@
     if (node.length) node.select();
     selectedId = conceptId;
     currentDetail = conceptId;
+    currentLanguage = "en";
     applyDimming();
 
     document.getElementById("detail-empty").hidden = true;
@@ -463,7 +481,7 @@
     document.getElementById("detail-description").textContent =
       data.description || "—";
 
-    renderExpandButton(conceptId);
+    renderDetailActions(conceptId);
 
     const resourceEl = document.getElementById("detail-resource");
     resourceEl.innerHTML = "";
@@ -492,10 +510,7 @@
       tagsEl.textContent = "—";
     }
 
-    const body = bundle.bodies[conceptId] || "";
-    const bodyEl = document.getElementById("detail-body");
-    bodyEl.innerHTML = marked.parse(body, { breaks: false, gfm: true });
-    rewriteInternalLinks(bodyEl, conceptId);
+    renderNoteBody(conceptId);
 
     const bl = dirBacklinks[conceptId] || [];
     const blSection = document.getElementById("detail-backlinks");
@@ -520,6 +535,18 @@
         { center: { eles: node }, zoom: Math.max(cy.zoom(), 1.0) },
         { duration: 200 }
       );
+  }
+
+  function renderNoteBody(conceptId) {
+    const data = nodeIndex[conceptId];
+    const localized = bundle.localizedNotes && bundle.localizedNotes[conceptId];
+    const showChinese = currentLanguage === "zh" && localized;
+    const body = showChinese ? localized.body : bundle.bodies[conceptId] || "";
+    document.getElementById("detail-title").textContent =
+      showChinese && localized.title ? localized.title : data.label;
+    const bodyEl = document.getElementById("detail-body");
+    bodyEl.innerHTML = marked.parse(body, { breaks: false, gfm: true });
+    rewriteInternalLinks(bodyEl, conceptId);
   }
 
   // Resolve both /abs.md and relative ../topics/x.md links to concept ids
