@@ -1,4 +1,4 @@
 interface:
   display_name: "Paper Wiki Manager"
-  short_description: "Maintain OKF research paper wikis"
-  default_prompt: "Use $paper-wiki-manager to add this arXiv paper to the current OKF paper wiki."
+  short_description: "Maintain bilingual OKF research paper wikis"
+  default_prompt: "Use $paper-wiki-manager to add this arXiv paper and its Chinese mirror note to the current OKF paper wiki."

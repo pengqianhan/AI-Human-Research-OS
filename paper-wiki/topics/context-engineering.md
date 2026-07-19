@@ -6,7 +6,7 @@ tags:
 - context-engineering
 - llm-agents
 - agent-reliability
-timestamp: 2026-07-18T22:59:11Z
+timestamp: 2026-07-18T23:48:25Z
 ---
 
 # Scope
@@ -16,6 +16,11 @@ This topic tracks the design and runtime management of agent context: instructio
 # Papers
 
 * [AI Agents Do Not Fail Alone](../papers/2607.14275.md) - defines seven context-quality criteria and tests whether their isolated scores predict corresponding agent behaviors under controlled context variation.
+* [MemoHarness](../papers/2607.14159.md) - treats context assembly and retrieval as two editable parts of a broader harness and adds retrieved execution experience when adapting each test case.
+
+# Synthesis
+
+AI Agents Do Not Fail Alone treats the assembled context as a diagnostic object whose clarity, grounding, consistency, tool descriptions, safety boundaries, trust separation, and efficiency can be scored before behavioral evaluation. MemoHarness treats context construction as one controllable stage in an adaptive execution policy and uses retrieved experience to decide when a case needs richer instructions, evidence, tools, memory, or workflow. Together they motivate measuring not only whether context is well formed, but whether the experience selected for a particular case is relevant, trustworthy, and worth its token cost.
 
 # Open Questions
 
@@ -24,3 +29,4 @@ This topic tracks the design and runtime management of agent context: instructio
 * What information can be compressed or discarded without losing safety constraints, evidence, or resumability?
 * Can context-quality judgments be calibrated against human experts and predict failures on unseen tasks, models, and domains?
 * How should capability, safety, latency, and token cost be optimized when hardening improves specification quality but reduces task completion?
+* How should retrieved execution experience be validated for relevance, freshness, and leakage before it enters a new case's context?

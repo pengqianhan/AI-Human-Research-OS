@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 RESERVED_NAMES = {"index.md", "log.md"}
+NON_GRAPH_COLLECTIONS = {"papers_zh"}
 FRONTMATTER_DELIM = "---"
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+\.md(?:#[^)]+)?)\)")
 TYPE_PALETTE = {
@@ -188,6 +189,8 @@ def _walk_concepts(bundle_root: Path) -> list[Concept]:
         if md_path.name in RESERVED_NAMES:
             continue
         rel = md_path.relative_to(bundle_root).with_suffix("")
+        if rel.parts and rel.parts[0] in NON_GRAPH_COLLECTIONS:
+            continue
         concept_id = rel.as_posix()
         frontmatter, body = parse_frontmatter(md_path.read_text(encoding="utf-8"))
         concept = Concept(

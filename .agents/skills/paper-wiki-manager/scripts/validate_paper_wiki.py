@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 RESERVED_NAMES = {"index.md", "log.md"}
+LOCALIZED_NOTES_DIR = "papers_zh"
 CONFIG_NAME = "paper-wiki.toml"
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[1] / "assets" / CONFIG_NAME
 PAPER_REQUIRED = {
@@ -47,6 +48,14 @@ SOURCE_REQUIRED = {
     "tags",
     "status",
     "priority",
+    "timestamp",
+}
+LOCALIZED_NOTE_REQUIRED = {
+    "type",
+    "title",
+    "language",
+    "arxiv_id",
+    "source_note",
     "timestamp",
 }
 STATUS_VALUES = {"unread", "skimmed", "read", "summarized"}
@@ -136,6 +145,8 @@ def load_documents(root: Path) -> tuple[list[Document], list[str]]:
         rel = path.relative_to(root)
         if path.name in RESERVED_NAMES:
             continue
+        if rel.parts and rel.parts[0] == LOCALIZED_NOTES_DIR:
+            continue
         try:
             frontmatter, body = parse_frontmatter(path.read_text(encoding="utf-8"))
         except Exception as exc:
@@ -143,6 +154,62 @@ def load_documents(root: Path) -> tuple[list[Document], list[str]]:
             continue
         docs.append(Document(path=path, rel=rel, frontmatter=frontmatter, body=body))
     return docs, errors
+
+
+def _validate_localized_notes(root: Path) -> list[str]:
+    errors: list[str] = []
+    notes_dir = root / LOCALIZED_NOTES_DIR
+    if not notes_dir.exists():
+        return errors
+    if not notes_dir.is_dir():
+        return [f"{LOCALIZED_NOTES_DIR}: expected a directory"]
+
+    for path in sorted(notes_dir.glob("*.md")):
+        rel = path.relative_to(root)
+        if path.name in RESERVED_NAMES:
+            errors.append(f"{rel}: localized notes do not use index.md or log.md")
+            continue
+        try:
+            frontmatter, body = parse_frontmatter(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            errors.append(f"{rel}: invalid localized-note frontmatter: {exc}")
+            continue
+
+        missing = _missing(frontmatter, LOCALIZED_NOTE_REQUIRED)
+        if missing:
+            errors.append(f"{rel}: missing localized-note fields: {', '.join(missing)}")
+        if frontmatter.get("type") != "LocalizedPaperNote":
+            errors.append(
+                f"{rel}: expected type LocalizedPaperNote, got {frontmatter.get('type')!r}"
+            )
+        if frontmatter.get("language") != "zh-CN":
+            errors.append(f"{rel}: expected language 'zh-CN'")
+
+        arxiv_id = frontmatter.get("arxiv_id")
+        if arxiv_id and arxiv_id != path.stem:
+            errors.append(f"{rel}: arxiv_id {arxiv_id!r} does not match filename")
+
+        expected_source = (root / "papers" / f"{path.stem}.md").resolve()
+        source_note = frontmatter.get("source_note")
+        if source_note:
+            actual_source = (path.parent / str(source_note)).resolve()
+            if actual_source != expected_source:
+                errors.append(
+                    f"{rel}: source_note must resolve to papers/{path.stem}.md"
+                )
+        if not expected_source.is_file():
+            errors.append(f"{rel}: missing canonical paper papers/{path.stem}.md")
+        if not body.strip():
+            errors.append(f"{rel}: localized-note body is empty")
+
+    nested_notes = [
+        path.relative_to(root)
+        for path in notes_dir.rglob("*.md")
+        if path.parent != notes_dir
+    ]
+    for rel in sorted(nested_notes):
+        errors.append(f"{rel}: localized notes must be direct children of papers_zh/")
+    return errors
 
 
 def _missing(frontmatter: dict[str, Any], required: set[str]) -> list[str]:
@@ -333,6 +400,7 @@ def validate(root: Path, config_path: Path | None = None) -> list[str]:
 
     docs, load_errors = load_documents(root)
     errors.extend(load_errors)
+    errors.extend(_validate_localized_notes(root))
     config, config_errors = _load_config(config_path)
     errors.extend(config_errors)
 
@@ -409,6 +477,8 @@ def validate(root: Path, config_path: Path | None = None) -> list[str]:
 
     for path in sorted(root.rglob("*.md")):
         rel = path.relative_to(root)
+        if rel.parts and rel.parts[0] == LOCALIZED_NOTES_DIR:
+            continue
         text = path.read_text(encoding="utf-8")
         for raw_target in LINK_RE.findall(text):
             if "://" in raw_target:

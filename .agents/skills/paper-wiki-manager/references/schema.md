@@ -121,6 +121,36 @@ Omit sections that do not fit the paper or the user's chosen profile. Preserve
 existing body layout and user-authored notes when updating a paper unless the
 user asks to reorganize them.
 
+## Localized Chinese Paper Notes
+
+Chinese paper notes live in `paper-wiki/papers_zh/<arxiv_id>.md`. They are
+auxiliary mirrors of canonical English notes under `papers/`, not OKF graph
+concepts or a fifth canonical collection. The main paper index, topic/concept
+backlinks, project links, and `viz.html` continue to use `papers/` only.
+
+Use this frontmatter:
+
+```yaml
+---
+type: LocalizedPaperNote
+title: 中文标题或原论文标题
+language: zh-CN
+arxiv_id: "2401.00001"
+source_note: ../papers/2401.00001.md
+timestamp: YYYY-MM-DDTHH:MM:SSZ
+---
+```
+
+The filename and `arxiv_id` must match. `source_note` must resolve to the
+canonical `papers/<arxiv_id>.md` file. The body must be non-empty. The
+validator checks only this mirror identity; it excludes `papers_zh/` from
+general OKF frontmatter checks, index requirements, internal-link validation,
+paper-topic and paper-concept backlink checks, and `viz.html` node matching.
+
+Do not create `papers_zh/index.md`. A localized note may link one-way to its
+canonical English note and external citations. Preserve user-owned Chinese
+sections such as `# 个人笔记` when updating the generated summary.
+
 ## Topic Frontmatter
 
 Topic files live in `paper-wiki/topics/<slug>.md`:

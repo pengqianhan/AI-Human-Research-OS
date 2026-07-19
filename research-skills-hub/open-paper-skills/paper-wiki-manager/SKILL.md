@@ -1,19 +1,19 @@
 ---
 name: paper-wiki-manager
-description: Maintain an OKF paper wiki under `paper-wiki/` or another user-named wiki root. Use when asked to add arXiv or research-paper URLs, capture non-paper sources such as blog posts, docs, or talks, update paper notes, maintain paper/topic/concept/source indexes, automatically create or update topic summary pages for important new themes, maintain concept entity pages for methods, datasets, benchmarks, metrics, terms, or tools, link papers to research projects, normalize paper metadata, track reading status, compare papers, generate required `viz.html` visualizations, or validate the paper wiki.
+description: Maintain an OKF paper wiki under `paper-wiki/` or another user-named wiki root, including optional Chinese mirror notes under `papers_zh/`. Use when asked to add arXiv or research-paper URLs, capture non-paper sources such as blog posts, docs, or talks, update or translate paper notes, maintain paper/topic/concept/source indexes, automatically create or update topic summary pages for important new themes, maintain concept entity pages for methods, datasets, benchmarks, metrics, terms, or tools, link papers to research projects, normalize paper metadata, track reading status, compare papers, generate required `viz.html` visualizations, or validate the paper wiki.
 ---
 
 # Paper Wiki Manager
 
 ## Overview
 
-Maintain an OKF paper wiki as Markdown files with YAML frontmatter: one page per paper, one page per topic, and one page per recurring named entity (method, dataset, benchmark, metric, term, or tool), all cross-linked in both directions. Keep wiki content in `paper-wiki/` unless the user names another wiki root; keep `<wiki-root>/viz.html` as the required generated graph. Treat `references/SPEC.md` as the bundled OKF format snapshot and `references/schema.md` as the stricter paper-wiki profile.
+Maintain an OKF paper wiki as Markdown files with YAML frontmatter: one canonical page per paper, one page per topic, and one page per recurring named entity (method, dataset, benchmark, metric, term, or tool), all cross-linked in both directions. Optionally maintain Chinese paper-note mirrors under `papers_zh/`; these are auxiliary reading artifacts, not OKF graph concepts. Keep wiki content in `paper-wiki/` unless the user names another wiki root; keep `<wiki-root>/viz.html` as the required generated graph. Treat `references/SPEC.md` as the bundled OKF format snapshot and `references/schema.md` as the stricter paper-wiki profile.
 
 This skill supersedes `paper-library-manager`, which managed the same kind of bundle under the historical root name `paper-library/`.
 
 ## Scope
 
-Use `paper-wiki/` as the default wiki root unless the user names a different path. Treat every non-reserved `.md` file in that tree as an OKF concept. The wiki has four page collections: `papers/` (one page per arXiv paper), `topics/` (thematic synthesis pages), `concepts/` (entity pages for named methods, datasets, benchmarks, metrics, terms, and tools), and `sources/` (non-paper reading — blogs, docs, talks — as `type: Reference`).
+Use `paper-wiki/` as the default wiki root unless the user names a different path. Treat every non-reserved `.md` file in that tree as an OKF concept except files under the auxiliary `papers_zh/` collection. The four canonical page collections are `papers/` (one page per arXiv paper), `topics/` (thematic synthesis pages), `concepts/` (entity pages for named methods, datasets, benchmarks, metrics, terms, and tools), and `sources/` (non-paper reading — blogs, docs, talks — as `type: Reference`). `papers_zh/` stores `zh-CN` mirrors of canonical paper notes and does not participate in indexes, topic/concept backlink requirements, or `viz.html`. Treat the `papers_zh/` directory name and `zh-CN` language tag as fixed parts of this skill's contract; `[localized_notes].enabled` is the only localized-note configuration switch.
 
 ## Workflow
 
@@ -25,14 +25,15 @@ When adding or updating a paper:
 3. Read `assets/paper-wiki.toml` from this skill and follow its paper body profile settings.
 4. Fetch metadata and paper content. Use the **HF CLI fast path** (see below) when `hf` is available — run `which hf` to check. Fall back to arXiv API or web fetch only when HF CLI is unavailable or returns no result. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
 5. Create or update one paper concept under `paper-wiki/papers/`.
-6. Identify and update 1 to 3 important themes following Topic Documents.
-7. Identify named entities that meet the concept-page criteria in Concept Documents; create or update pages under `paper-wiki/concepts/` and cross-link them with the paper.
-8. Add concise topic and concept links under the paper body; add the paper to each affected topic's and concept's `# Papers` section.
-9. If the paper is used by a project in this repository, add or update the paper's `# Used In Projects` section following Project Links.
-10. Update `paper-wiki/papers/index.md`, `paper-wiki/topics/index.md`, `paper-wiki/concepts/index.md` (when concepts exist), and every affected topic or concept page; update the wiki home `paper-wiki/index.md` if a new collection appeared.
-11. Preserve user-curated fields and existing body layout following Metadata Rules and Paper Documents.
-12. Run the Finishing Commands after content edits.
-13. Cite only sources that were actually used.
+6. Read `[localized_notes].enabled` in `assets/paper-wiki.toml`. When true, create or update the `zh-CN` mirror under `paper-wiki/papers_zh/<arxiv_id>.md` following Chinese Paper Notes.
+7. Identify and update 1 to 3 important themes following Topic Documents.
+8. Identify named entities that meet the concept-page criteria in Concept Documents; create or update pages under `paper-wiki/concepts/` and cross-link them with the paper.
+9. Add concise topic and concept links under the paper body; add the paper to each affected topic's and concept's `# Papers` section.
+10. If the paper is used by a project in this repository, add or update the paper's `# Used In Projects` section following Project Links.
+11. Update `paper-wiki/papers/index.md`, `paper-wiki/topics/index.md`, `paper-wiki/concepts/index.md` (when concepts exist), and every affected topic or concept page; update the wiki home `paper-wiki/index.md` if a new canonical collection appeared. Do not create a `papers_zh/index.md` entry.
+12. Preserve user-curated fields and existing body layout following Metadata Rules, Paper Documents, and Chinese Paper Notes.
+13. Run the Finishing Commands after content edits.
+14. Cite only sources that were actually used.
 
 ## Paper Documents
 
@@ -42,6 +43,27 @@ Paper bodies are user-customizable Markdown. Do not treat any one summarization 
 Use `paper_body.section_descriptions` as drafting guidance for what each section should contain. Do not copy those descriptions into generated paper notes unless the user explicitly asks for visible prompts.
 
 If a specific paper needs a different summarization style, derive a temporary profile or template from the asset config for that paper, and persist the new profile only when the user asks. Keep generated summaries concise and distinguish paper claims from personal notes. If a paper has not been read in full, avoid presenting speculative critique as established fact. Preserve existing paper body layout when updating a paper unless the user explicitly asks to reorganize it.
+
+## Chinese Paper Notes
+
+Use `[localized_notes].enabled` in `assets/paper-wiki.toml` as the Chinese-mirror on/off switch. The mirror directory is always `<wiki-root>/papers_zh/` and the language is always simplified Chinese with the `zh-CN` tag; do not treat either value as configurable. When `enabled = true`, create or update `<wiki-root>/papers_zh/<arxiv_id>.md` after writing the canonical English note. Use the same arXiv ID as the filename and distil from the same retrieved full paper; do not translate from the abstract alone.
+
+Treat `papers/<arxiv_id>.md` as the sole source of truth for bibliographic metadata, status, tags, topic/concept links, project links, and graph identity. A Chinese mirror is an auxiliary reading artifact and must not be added to `papers/index.md`, topic or concept `# Papers` sections, or `viz.html`. It may link one-way to its canonical English note and to external citations without creating backlink obligations.
+
+Use this lean frontmatter:
+
+```yaml
+---
+type: LocalizedPaperNote
+title: 中文标题或原论文标题
+language: zh-CN
+arxiv_id: "2401.00001"
+source_note: ../papers/2401.00001.md
+timestamp: YYYY-MM-DDTHH:MM:SSZ
+---
+```
+
+Translate the selected canonical paper-body profile semantically rather than mechanically. Preserve the same reasoning coverage and evidence boundaries while using natural Chinese headings, explanations, tables, and terminology. Keep important English technical terms in parentheses on first use when that improves precision. Preserve `# 个人笔记` and any user-authored or custom sections when updating an existing Chinese note. If the canonical note changes only in metadata, links, or formatting, do not rewrite the Chinese body unnecessarily.
 
 ## Custom Paper Body Profiles
 
@@ -159,6 +181,8 @@ Link a Markdown file such as the project's `index.md`, not the bare directory �
 
 Maintain index files as plain Markdown without frontmatter. The wiki root `index.md` is the wiki home: it lists the `papers/`, `topics/`, and `concepts/` collections and may carry a short current-focus section. Sort paper entries by arXiv ID or submitted date when the user does not specify a preference. Keep descriptions one sentence.
 
+Do not create or maintain an index for `papers_zh/`. Chinese mirrors are discovered by their shared arXiv-ID filenames and their `source_note` pointers.
+
 ## Metadata Rules
 
 Preserve these user-curated fields when updating a paper:
@@ -179,6 +203,7 @@ Before finishing paper-wiki edits:
 * Check configured paper body sections only when `assets/paper-wiki.toml` sets `paper_body.required_sections`.
 * Check that internal Markdown links resolve within the wiki root, and that project links resolve within the repository.
 * Check that index entries point to existing files.
+* When `papers_zh/` exists, check each Chinese mirror's identity and canonical `source_note`; the validator does not require every canonical paper to have a mirror.
 * Run bundled scripts from this skill's root directory, using paths relative to the directory that contains this `SKILL.md`. Pass the wiki root as an absolute path when the target repo is not the current working directory. Generate `viz.html` before validation because the validator reads the generated graph file.
 
 ```bash
@@ -201,7 +226,7 @@ If your environment provides a skill validator, run it against this skill folder
 
 `paper-wiki/viz.html` is required. Use `viz.html` as the canonical filename; treat `vis.html` as a typo unless the user explicitly asks for a separate alias.
 
-`scripts/generate_viz.py` renders a self-contained Cytoscape graph + detail-pane viewer by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, `scripts/static/viz.js`, and the vendored libraries in `scripts/vendor/`. Keep all of these alongside the script; the generated `viz.html` inlines the vendored libraries so it works fully offline (no CDN). Papers, topics, and each concept type get distinct node colors. The viewer UI and text are English.
+`scripts/generate_viz.py` renders a self-contained Cytoscape graph + detail-pane viewer by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, `scripts/static/viz.js`, and the vendored libraries in `scripts/vendor/`. Keep all of these alongside the script; the generated `viz.html` inlines the vendored libraries so it works fully offline (no CDN). Papers, topics, and each concept type get distinct node colors. The viewer UI and text are English. The generator deliberately excludes `papers_zh/`, so adding or editing a Chinese mirror does not add nodes or edges.
 
 The viewer is a paper-wiki knowledge map, not a flat force graph:
 

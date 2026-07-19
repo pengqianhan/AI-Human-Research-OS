@@ -1,3 +1,6 @@
+[localized_notes]
+enabled = true
+
 [paper_body]
 default_profile = "ten-question-review"
 preserve_existing_layout = true
