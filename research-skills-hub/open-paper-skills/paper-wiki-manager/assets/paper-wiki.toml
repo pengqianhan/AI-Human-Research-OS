@@ -50,10 +50,12 @@ recommended_sections = [
 "Q8 Evidence Quality" = "Whether the scientific hypothesis and the paper's claims are well supported by the experimental results."
 "Q9 Contributions" = "The paper's solid contributions: what knowledge is actually advanced."
 "Q10 Next Steps" = "Limitations of the proposed method and the future research they motivate, including new directions or links to other knowledge (the creative part)."
-"Overview" = "What the source covers, why it matters, and its one-line thesis; note that it synthesizes others' work rather than presenting original experiments."
-"Framework" = "The organizing taxonomy or structure the source proposes, which is the main value of a synthesis piece; explain what each branch is for, not just its name."
-"Key Techniques" = "The named methods, tools, or ideas the source surveys, grouped by the framework branches. Give load-bearing techniques 2-4 sentences each (problem, mechanism, key insight) so the note stands alone without the source; keep peripheral ones to one line. A map of names is too thin."
-"Case Studies" = "Concrete example systems or applications the source discusses."
+"TL;DR" = "A 1-3 sentence plain-language thesis stating the source's organizing idea, why it matters, and who should read it. Avoid unexplained notation and specialist terminology."
+"Overview" = "A fuller introduction to what the source covers, its source-stated scope and boundaries, the problem context, and the terminology needed to understand the synthesis. Do not repeat the TL;DR verbatim or invent coverage counts."
+"Framework" = "The organizing taxonomy or structure the source proposes, which is the main value of a synthesis piece. Explain what each branch is for, not just its name. When the framework has three or more branches or non-trivial dependencies, lead with the smallest useful table, nested list, or tree before the detailed prose; do not require a diagram when text is clearer."
+"Key Techniques" = "The named methods, tools, or ideas the source surveys, grouped by the framework branches. Give load-bearing techniques 2-4 sentences each (problem, mechanism, key insight) so the note stands alone without the source; keep peripheral ones to one line. When the abstractions remain hard to operationalize, add one paper-supported example or an explicitly labelled reader-constructed example."
+"Case Studies" = "Concrete applications and exemplar systems from the source. When both are present, separate them under Application Domains and Exemplar Systems subheadings; omit a subheading the source does not support."
+"Evidence Boundaries" = "Distinguish what the synthesis source itself establishes, what individual cited works merely report under incomparable settings, which classifications are qualitative, and which interpretations belong to the note writer."
 "Takeaways" = "Reader-owned notes on what to carry into one's own research."
 
 [paper_body.profiles.research-note]
@@ -124,10 +126,12 @@ sections = [
 [paper_body.profiles.synthesis-source]
 description = "Reading lens for a synthesis source (blog, survey, or tutorial) that organizes others' work rather than presenting one contribution."
 sections = [
+  "TL;DR",
   "Overview",
   "Framework",
   "Key Techniques",
   "Case Studies",
+  "Evidence Boundaries",
   "Takeaways",
   "Open Questions",
   "Related",

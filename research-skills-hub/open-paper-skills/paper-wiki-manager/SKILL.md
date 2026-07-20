@@ -25,15 +25,16 @@ When adding or updating a paper:
 3. Read `assets/paper-wiki.toml` from this skill and follow its paper body profile settings.
 4. Fetch metadata and paper content. Use the **HF CLI fast path** (see below) when `hf` is available — run `which hf` to check. Fall back to arXiv API or web fetch only when HF CLI is unavailable or returns no result. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
 5. Create or update one paper concept under `paper-wiki/papers/`.
-6. Read `[localized_notes].enabled` in `assets/paper-wiki.toml`. When true, create or update the `zh-CN` mirror under `paper-wiki/papers_zh/<arxiv_id>.md` following Chinese Paper Notes.
-7. Identify and update 1 to 3 important themes following Topic Documents.
-8. Identify named entities that meet the concept-page criteria in Concept Documents; create or update pages under `paper-wiki/concepts/` and cross-link them with the paper.
-9. Add concise topic and concept links under the paper body; add the paper to each affected topic's and concept's `# Papers` section.
-10. If the paper is used by a project in this repository, add or update the paper's `# Used In Projects` section following Project Links.
-11. Update `paper-wiki/papers/index.md`, `paper-wiki/topics/index.md`, `paper-wiki/concepts/index.md` (when concepts exist), and every affected topic or concept page; update the wiki home `paper-wiki/index.md` if a new canonical collection appeared. Do not create a `papers_zh/index.md` entry.
-12. Preserve user-curated fields and existing body layout following Metadata Rules, Paper Documents, and Chinese Paper Notes.
-13. Run the Finishing Commands after content edits.
-14. Cite only sources that were actually used.
+6. Complete the fidelity pass in Paper Documents against the retrieved full paper and every additional source used.
+7. Read `[localized_notes].enabled` in `assets/paper-wiki.toml`. When true, create or update the `zh-CN` mirror under `paper-wiki/papers_zh/<arxiv_id>.md` following Chinese Paper Notes.
+8. Identify and update 1 to 3 important themes following Topic Documents.
+9. Identify named entities that meet the concept-page criteria in Concept Documents; create or update pages under `paper-wiki/concepts/` and cross-link them with the paper.
+10. Add concise topic and concept links under the paper body; add the paper to each affected topic's and concept's `# Papers` section.
+11. If the paper is used by a project in this repository, add or update the paper's `# Used In Projects` section following Project Links.
+12. Update `paper-wiki/papers/index.md`, `paper-wiki/topics/index.md`, `paper-wiki/concepts/index.md` (when concepts exist), and every affected topic or concept page; update the wiki home `paper-wiki/index.md` if a new canonical collection appeared. Do not create a `papers_zh/index.md` entry.
+13. Preserve user-curated fields and existing body layout following Metadata Rules, Paper Documents, and Chinese Paper Notes.
+14. Run the Finishing Commands after content edits.
+15. Cite only sources that were actually used.
 
 ## Paper Documents
 
@@ -43,6 +44,8 @@ Paper bodies are user-customizable Markdown. Do not treat any one summarization 
 Use `paper_body.section_descriptions` as drafting guidance for what each section should contain. Do not copy those descriptions into generated paper notes unless the user explicitly asks for visible prompts.
 
 If a specific paper needs a different summarization style, derive a temporary profile or template from the asset config for that paper, and persist the new profile only when the user asks. Keep generated summaries concise and distinguish paper claims from personal notes. If a paper has not been read in full, avoid presenting speculative critique as established fact. Preserve existing paper body layout when updating a paper unless the user explicitly asks to reorganize it.
+
+Before finalizing a drafted note, run a **fidelity pass**: locate every load-bearing number, taxonomy branch, named exemplar, and comparative claim in the retrieved full paper or an additional source listed under `# Citations`. Mark reader-constructed examples and inferences explicitly, distinguish the source's qualitative synthesis from comparable empirical evidence, and remove claims that cannot be traced to a used source. The pass is complete only when every such claim has an identified source and the note's evidence boundaries match what that source can establish.
 
 ## Chinese Paper Notes
 
@@ -159,7 +162,7 @@ Ensure links are bidirectional: the paper links to the concept (typically in its
 
 When the input is a non-paper source (a blog post, documentation page, or talk) with no arXiv ID, add it under `paper-wiki/sources/<slug>.md` instead of `papers/`. Fetch it with a web request (the HF CLI / arXiv fast path does not apply). Use `type: Reference` and the source frontmatter in `references/schema.md`: `resource` is the source URL (its identity), `authors`/`published`/`medium` are optional, and the filename is a lowercase hyphenated slug derived from the title.
 
-For a blog, survey, or tutorial that organizes others' work rather than presenting one contribution, use the `synthesis-source` body profile from `assets/paper-wiki.toml` (Overview / Framework / Key Techniques / Case Studies / Takeaways / Open Questions / Related / Citations). That profile keys on the content type (synthesis), so an arXiv **survey paper** can use it too — do not treat it as blog-specific.
+For a blog, survey, or tutorial that organizes others' work rather than presenting one contribution, use the `synthesis-source` body profile from `assets/paper-wiki.toml`; read that profile for its current section list and drafting guidance rather than duplicating the list here. The profile keys on the content type (synthesis), so an arXiv **survey paper** can use it too — do not treat it as blog-specific.
 
 Sources are a lighter tier than papers. Link a source to the topics and concepts it covers, but these links are **one-way**: do not add the source to a topic's `# Papers` list, and the validator does not require a backlink. When a new source is added, update `paper-wiki/sources/index.md` and, if `sources/` is new, add a `Sources` line to the wiki home. A source that references many methods is a natural hub — the techniques it surveys may later become their own paper or concept pages.
 
@@ -199,6 +202,7 @@ Use `status: unread` for newly added papers unless the user says otherwise. Reco
 
 Before finishing paper-wiki edits:
 
+* Confirm that the manual fidelity pass in Paper Documents is complete; the structural validator cannot verify factual faithfulness to the paper.
 * Check required metadata fields from `references/schema.md`; the bundled validator is the executable check.
 * Check configured paper body sections only when `assets/paper-wiki.toml` sets `paper_body.required_sections`.
 * Check that internal Markdown links resolve within the wiki root, and that project links resolve within the repository.
