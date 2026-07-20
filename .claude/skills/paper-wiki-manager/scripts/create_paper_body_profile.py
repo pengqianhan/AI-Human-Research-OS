@@ -83,7 +83,7 @@ PROFILE_RULES = [
         ],
     ),
     (
-        "survey-card",
+        "comparison-card",
         {
             "survey",
             "literature",

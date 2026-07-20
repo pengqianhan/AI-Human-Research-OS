@@ -82,7 +82,7 @@ sections = [
   "Failure Modes",
 ]
 
-[paper_body.profiles.survey-card]
+[paper_body.profiles.comparison-card]
 description = "Compact card for literature review and cross-paper comparison."
 sections = [
   "One-line Takeaway",
