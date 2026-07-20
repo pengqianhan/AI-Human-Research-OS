@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-07-18T22:59:11Z
+timestamp: 2026-07-20T03:20:28Z
 ---
 
 # Definition
@@ -18,6 +18,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [ScientistOne](../papers/2605.26340.md) - uses LLM judgments for specification violations, method-code alignment, citation entailment, and review; a documented missed violation and sampled-only I4 validation show the judge's limits.
 * [ResearchStudio-Idea](../papers/2607.04439.md) - uses blind repeated LLM-based skills to judge proposal quality and prior-art novelty; the authors explicitly scope the result as automated-judge evidence rather than human acceptance evidence.
 * [AI Agents Do Not Fail Alone](../papers/2607.14275.md) - uses multi-juror consensus to score both context criteria and downstream behavior; score isolation prevents direct circularity but not shared-rater or shared-rubric bias.
+* [Self-Improvements in Modern Agentic Systems](../papers/2607.13104.md) - treats model-based judges as scalable intrinsic feedback and open-ended evaluation, while warning that reusing the same judge for improvement and final reporting invites reward hacking.
 
 # Notes
 
@@ -26,3 +27,5 @@ ScientistOne illustrates a useful hybrid pattern: use deterministic checks for e
 ResearchStudio-Idea exposes a complementary failure: “novel-but-empty” proposals can score highly on collision-based novelty because vagueness leaves little precise prior art to match. Idea-stage evaluation should therefore combine specificity, quality, and novelty rather than optimize a single judge score.
 
 AI Agents Do Not Fail Alone adds a measurement-validity distinction: keeping a diagnostic score out of the outcome formula prevents direct score reuse, but two LLM-judged instruments can still correlate because they share judge models, rubric language, or latent preferences. Independent human calibration and cross-family judges are needed before interpreting such correlations as criterion validity.
+
+Self-Improvements in Modern Agentic Systems turns that concern into an improvement-loop governance rule: the critic should be treated as infrastructure and an attack surface. Final reporting should use an independent judge configuration or orthogonal rubric, with calibration against executable checks or targeted human review where possible.
