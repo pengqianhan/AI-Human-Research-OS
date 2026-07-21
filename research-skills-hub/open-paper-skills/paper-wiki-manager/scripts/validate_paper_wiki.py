@@ -17,6 +17,7 @@ import re
 import sys
 import tomllib
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -60,6 +61,10 @@ LOCALIZED_NOTE_REQUIRED = {
 }
 STATUS_VALUES = {"unread", "skimmed", "read", "summarized"}
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+\.md(?:#[^)]+)?)\)")
+READING_HISTORY_HEADING = "# Reading History"
+READING_HISTORY_ENTRY_RE = re.compile(
+    r"^- (\d{4}-\d{2}-\d{2}) · ([^·\n]+) · ([^·\n]+) · (merged|needs-review)$"
+)
 
 
 @dataclass
@@ -218,6 +223,50 @@ def _missing(frontmatter: dict[str, Any], required: set[str]) -> list[str]:
 
 def _has_section(body: str, heading: str) -> bool:
     return any(line.strip() == heading for line in body.splitlines())
+
+
+def _section_blocks(body: str, heading: str) -> list[list[str]]:
+    lines = body.splitlines()
+    starts = [idx for idx, line in enumerate(lines) if line.strip() == heading]
+    blocks: list[list[str]] = []
+    for start in starts:
+        end = len(lines)
+        for idx in range(start + 1, len(lines)):
+            if lines[idx].startswith("# "):
+                end = idx
+                break
+        blocks.append(lines[start + 1 : end])
+    return blocks
+
+
+def _validate_reading_history(rel: Path, body: str) -> list[str]:
+    blocks = _section_blocks(body, READING_HISTORY_HEADING)
+    if not blocks:
+        return []
+
+    errors: list[str] = []
+    if len(blocks) > 1:
+        errors.append(f"{rel}: {READING_HISTORY_HEADING} must appear at most once")
+        return errors
+
+    entries = [line.strip() for line in blocks[0] if line.startswith("- ")]
+    if not entries:
+        return [f"{rel}: {READING_HISTORY_HEADING} must contain at least one entry"]
+
+    for entry in entries:
+        match = READING_HISTORY_ENTRY_RE.fullmatch(entry)
+        if match is None:
+            errors.append(
+                f"{rel}: Reading History entry must match "
+                "'- YYYY-MM-DD · paper-version · input-kind · merged|needs-review': "
+                f"{entry}"
+            )
+            continue
+        try:
+            date.fromisoformat(match.group(1))
+        except ValueError:
+            errors.append(f"{rel}: Reading History entry has invalid date: {entry}")
+    return errors
 
 
 def _string_list(value: Any) -> bool:
@@ -434,6 +483,7 @@ def validate(root: Path, config_path: Path | None = None) -> list[str]:
                     errors.append(
                         f"{doc.rel}: missing configured paper body section {heading}"
                     )
+            errors.extend(_validate_reading_history(doc.rel, doc.body))
 
         elif doc.rel.parts and doc.rel.parts[0] == "topics":
             missing = _missing(fm, TOPIC_REQUIRED)

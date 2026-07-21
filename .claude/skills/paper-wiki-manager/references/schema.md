@@ -48,6 +48,12 @@ venue: Conference or journal name
 reading_round: 1
 ```
 
+`reading_round` counts genuine human reading passes, not manager executions.
+Increment it only when the human supplies a new note or explicitly identifies a
+new reading round. Metadata refreshes, link repair, arXiv-version checks, and
+duplicate re-ingestion do not increment it. Do not infer a number when the
+existing record does not establish one.
+
 ## Paper Body
 
 Paper body is user-customizable Markdown. The paper-wiki profile does not
@@ -120,6 +126,30 @@ layout:
 Omit sections that do not fit the paper or the user's chosen profile. Preserve
 existing body layout and user-authored notes when updating a paper unless the
 user asks to reorganize them.
+
+### Optional Reading History
+
+An existing canonical paper may contain one optional `# Reading History`
+section. It is an append-only audit summary for substantive repeated ingestion,
+not a snapshot archive. Keep complete historical versions in Git. Do not add an
+entry for a no-op.
+
+Each top-level entry must use:
+
+```markdown
+# Reading History
+
+- 2026-07-22 · arXiv v2 · local-note · merged
+  - Updated: Q6, Q8
+  - Added: pipeline scheduling ablation evidence
+  - Input: `notes/second-pass.md`
+```
+
+The four fields are date, paper version, input kind, and result. The result is
+`merged` or `needs-review`; `no-op` is intentionally invalid because a no-op
+must not modify the file. Put the section only in `papers/<arxiv_id>.md`, never
+in `papers_zh/`. Follow [repeated-ingestion.md](repeated-ingestion.md) for the
+merge, conflict, ownership, and reporting rules.
 
 ## Localized Chinese Paper Notes
 

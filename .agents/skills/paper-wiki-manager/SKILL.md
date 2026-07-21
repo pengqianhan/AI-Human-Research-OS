@@ -21,7 +21,7 @@ When adding or updating a paper:
 
 1. Parse the arXiv ID from the URL, user input, or PDF filename/path. For a PDF, check the filename first (e.g., `2401.00001.pdf`); if the ID is not in the filename, extract it from the PDF header or `arxiv.org` URL embedded in the document.
    **If no ID can be extracted** (user provided only a title or keyword): run `hf papers search "TITLE" --limit 5 --format agent` (or fall back to the `literature_search_arxiv` skill if HF CLI is unavailable), show the top candidates to the user, and wait for confirmation before proceeding. Do not guess the ID.
-2. Read the existing paper file if `paper-wiki/papers/<arxiv_id>.md` already exists.
+2. Read the existing paper file if `paper-wiki/papers/<arxiv_id>.md` already exists. If it exists, read and follow [`references/repeated-ingestion.md`](references/repeated-ingestion.md) before editing; never append a second generated note or template wholesale.
 3. Read `assets/paper-wiki.toml` from this skill and follow its paper body profile settings.
 4. Fetch metadata and paper content. Use the **HF CLI fast path** (see below) when `hf` is available — run `which hf` to check. Fall back to arXiv API or web fetch only when HF CLI is unavailable or returns no result. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
 5. Create or update one paper concept under `paper-wiki/papers/`.
@@ -45,6 +45,8 @@ Use `paper_body.section_descriptions` as drafting guidance for what each section
 
 If a specific paper needs a different summarization style, derive a temporary profile or template from the asset config for that paper, and persist the new profile only when the user asks. Keep generated summaries concise and distinguish paper claims from personal notes. If a paper has not been read in full, avoid presenting speculative critique as established fact. Preserve existing paper body layout when updating a paper unless the user explicitly asks to reorganize it.
 
+For every repeated paper input, treat the existing canonical body as the current best synthesis. Merge only evidence-supported changes into its existing sections, protect human-owned notes, and use the no-op and review gates in [`references/repeated-ingestion.md`](references/repeated-ingestion.md).
+
 Before finalizing a drafted note, run a **fidelity pass**: locate every load-bearing number, taxonomy branch, named exemplar, and comparative claim in the retrieved full paper or an additional source listed under `# Citations`. Mark reader-constructed examples and inferences explicitly, distinguish the source's qualitative synthesis from comparable empirical evidence, and remove claims that cannot be traced to a used source. The pass is complete only when every such claim has an identified source and the note's evidence boundaries match what that source can establish.
 
 ## Chinese Paper Notes
@@ -66,7 +68,7 @@ timestamp: YYYY-MM-DDTHH:MM:SSZ
 ---
 ```
 
-Translate the selected canonical paper-body profile semantically rather than mechanically. Preserve the same reasoning coverage and evidence boundaries while using natural Chinese headings, explanations, tables, and terminology. Keep important English technical terms in parentheses on first use when that improves precision. Preserve `# 个人笔记` and any user-authored or custom sections when updating an existing Chinese note. If the canonical note changes only in metadata, links, or formatting, do not rewrite the Chinese body unnecessarily.
+Translate the selected canonical paper-body profile semantically rather than mechanically. Preserve the same reasoning coverage and evidence boundaries while using natural Chinese headings, explanations, tables, and terminology. Keep important English technical terms in parentheses on first use when that improves precision. Preserve `# 个人笔记` and any user-authored or custom sections when updating an existing Chinese note. If the canonical note changes only in metadata, links, or formatting, do not rewrite the Chinese body unnecessarily. Keep `# Reading History` only in the canonical English paper; do not duplicate it in the Chinese mirror.
 
 ## Custom Paper Body Profiles
 
@@ -194,6 +196,7 @@ Preserve these user-curated fields when updating a paper:
 * `priority`
 * `tags`
 * `# Notes`
+* `# 个人笔记`
 * any custom frontmatter keys not defined in `references/schema.md`
 
 Use `status: unread` for newly added papers unless the user says otherwise. Recommended status values are `unread`, `skimmed`, `read`, and `summarized`.
@@ -225,6 +228,12 @@ python scripts/validate_paper_wiki.py /absolute/path/to/paper-wiki
 Use `--config <path/to/paper-wiki.toml>` only for a temporary validation profile or another repo layout.
 
 If your environment provides a skill validator, run it against this skill folder after editing the skill itself.
+
+After editing `validate_paper_wiki.py` or its body contracts, run:
+
+```bash
+python -m unittest discover -s scripts -p 'test_*.py' -v
+```
 
 ## Visualization
 
