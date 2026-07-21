@@ -1,5 +1,6 @@
 # Paper
 
+* [Recursive Language Models](2512.24601.md) - Treats a long prompt as a REPL variable the model inspects, decomposes, and recursively sub-queries, handling 10M+ token inputs with a fixed-window model.
 * [SkillFoundry: Building Self-Evolving Agent Skill Libraries from Heterogeneous Scientific Resources](2604.03964.md) - A self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill packages and improves coding/scientific agents on MoSciBench and genomics tasks.
 * [Self-Evolving Multi-Agent Systems via Decentralized Memory](2605.22721.md) - Proposes DecentMem, per-agent dual-pool memory for self-evolving MAS with up to 23.8% accuracy gain over centralized memory.
 * [ScientistOne: Towards Human-Level Autonomous Research via Chain-of-Evidence](2605.26340.md) - Introduces Chain-of-Evidence, ScientistOne, and a four-part integrity audit for tracing autonomous-research claims to literature, code, and evaluator outputs.

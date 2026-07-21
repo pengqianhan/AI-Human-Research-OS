@@ -20,6 +20,7 @@ This topic tracks work on the executable software layer around a foundation mode
 * [MemoHarness](../papers/2607.14159.md) - six-dimensional harness search with a dual-layer experience bank and feedback-free per-case adaptation at test time.
 * [AI Agents Do Not Fail Alone](../papers/2607.14275.md) - seven-criterion assessment of the context assembled by a harness, validated against corresponding downstream behaviors.
 * [Self-Improvements in Modern Agentic Systems](../papers/2607.13104.md) - surveys prompt, memory, tool, and full-harness updates as the fast, explicit branch of persistent agent self-improvement.
+* [Recursive Language Models](../papers/2512.24601.md) - a minimal fixed harness (externalized prompt, persistent REPL, sub-LM call, final-answer protocol) whose failures are harness-use failures rather than semantic ones.
 
 # Synthesis
 
