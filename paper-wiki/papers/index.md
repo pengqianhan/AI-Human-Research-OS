@@ -15,3 +15,4 @@
 * [Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable](2607.13285.md) - A behavior-centric, source-linked handbook and progressive-disclosure workflow for localizing changes in evolving agent harnesses.
 * [MemoHarness: Agent Harnesses That Learn from Experience](2607.14159.md) - Searches six harness control surfaces, distils execution diagnoses into an experience bank, and retrieves that experience for label-free per-case adaptation.
 * [AI Agents Do Not Fail Alone: The Context Fails First](2607.14275.md) - Validates a seven-criterion context-quality score as a preflight signal for agent reliability under controlled context variation.
+* [SearchOS-V1: Towards Robust Open-Domain Information-Seeking Agent Collaboration](2607.15257.md) - Externalizes relational coverage, grounded evidence, frontier tasks, and search failures into shared state governed by continuous scheduling and middleware.
