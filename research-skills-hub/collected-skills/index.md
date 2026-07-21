@@ -12,7 +12,7 @@ skills.
 * [deepxiv-baseline-table](deepxiv-baseline-table/SKILL.md) - Builds markdown baseline comparison tables from DeepXiv searches and targeted section reads.
 * [deepxiv-cli](deepxiv-cli/SKILL.md) - Searches and reads open-access academic papers through the DeepXiv CLI.
 * [deepxiv-trending-digest](deepxiv-trending-digest/SKILL.md) - Summarizes recent DeepXiv trending papers into markdown digests.
-* [deli-auto-research](deli-auto-research/SKILL.md) - Provides state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks.
+* [deli-autoresearch](deli-autoresearch/SKILL.md) - Provides state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks.
 * [drawio](drawio/SKILL.md) - Generates native draw.io diagrams and exports PNG, SVG, or PDF.
 * [explain-diff-html](explain-diff-html/SKILL.md) - Explains code changes, diffs, branches, or PRs as rich interactive HTML.
 * [explain-this](explain-this/SKILL.md) - Explains digital artifacts using learner profiles, comprehension quizzes, and spaced repetition.

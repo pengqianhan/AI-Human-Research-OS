@@ -1,5 +1,5 @@
 ---
-name: deli-auto-research
+name: deli-autoresearch
 description: A protocol framework for long-horizon autonomous tasks. Targets three empirically-observed failure modes — cognitive loops, stalling, runtime fragility — by prescribing state management, stall detection, and watchdog mechanisms. Validated on multiple task types including paper writing (4 ICLR-format surveys, in-framework self-rating 8.0-8.6/10).
 type: Agent Framework
 tags: autonomous, long-horizon, zero-interaction, anti-loop, heartbeat-watchdog, loop, multi-agent, unattended, orchestration
