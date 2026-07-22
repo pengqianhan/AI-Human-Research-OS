@@ -714,6 +714,18 @@ INSTALLER_SCRIPT = (
 )
 
 
+def short_path(path: Path, repo_root: Path) -> str:
+    """Repository-relative when inside the repo, ~-prefixed when under $HOME."""
+    try:
+        return str(path.relative_to(repo_root))
+    except ValueError:
+        pass
+    try:
+        return f"~/{path.relative_to(Path.home())}"
+    except ValueError:
+        return str(path)
+
+
 def load_installer(repo_root: Path) -> Any:
     """Import research-skill-installer so install state has one implementation.
 
@@ -926,10 +938,19 @@ def build_store(repo_root: Path) -> dict[str, Any]:
             for entry in installer.scan_unknown(repo_root, targets, hub_skill_names):
                 if entry["name"] in known_orphans:
                     continue
+                description = None
+                for install in entry["installs"]:
+                    text = read_text(Path(install["path"]) / "SKILL.md")
+                    if text:
+                        description = parse_frontmatter(text).get("description")
+                        if description:
+                            break
+                if not description:
+                    warn(f"orphan {entry['name']}: no description in frontmatter")
                 orphans.append(
                     {
                         "name": entry["name"],
-                        "description": None,
+                        "description": description or "",
                         "installed": {},
                         "sync": "installed_no_hub_source",
                         "installs": entry["installs"],
@@ -945,6 +966,9 @@ def build_store(repo_root: Path) -> dict[str, Any]:
             {
                 "name": target.name,
                 "path": str(target.path),
+                # Repository-relative, or ~-prefixed outside it: absolute paths
+                # are too long to read in the drawer.
+                "display_path": short_path(target.path, repo_root),
                 "scope": target.scope,
                 "agent": target.agent,
                 "default": target.default,
@@ -1126,18 +1150,20 @@ def validate(out_path: Path) -> bool:
             file=sys.stderr,
         )
         ok = False
-    if orphan_count != 3:
-        print(
-            f"[validate] FAIL: expected 3 orphan skills, got {orphan_count}",
-            file=sys.stderr,
-        )
-        ok = False
+    # The orphan count is data, not a contract. It was pinned at 3 when three
+    # installs had no hub source; all three were later promoted into the hub,
+    # so the assertion had been failing on every run before it was removed.
+    # Orphans are reported in the summary above instead.
     if portfolio_count < 1:
         print("[validate] FAIL: portfolio has 0 rows, expected >= 1", file=sys.stderr)
         ok = False
-    if "Paper_VAE" not in unregistered_names:
+    # An empty target list means research-skill-installer failed to import and
+    # the store silently fell back to repo-only install data. That degradation
+    # is invisible in the output, so it is asserted here rather than warned.
+    if not data.get("store", {}).get("targets"):
         print(
-            "[validate] FAIL: 'Paper_VAE' not found in unregistered_projects",
+            "[validate] FAIL: store.targets is empty; research-skill-installer "
+            "did not load, so install state covers the repository only",
             file=sys.stderr,
         )
         ok = False

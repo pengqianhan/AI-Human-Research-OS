@@ -1,25 +1,22 @@
 import { useEffect, useRef, useState } from "react";
+import type { StoreTarget } from "../types";
 import type { DisplaySkill } from "../lib/skills";
 import { copyButtonLabel, installCommand } from "../lib/skills";
-import { SyncBadge } from "./SyncBadge";
+import { SkillInstalls } from "./SkillInstalls";
 
 interface Props {
   skill: DisplaySkill | null;
+  targets: StoreTarget[];
   triggerRef: React.RefObject<HTMLElement | null>;
   onClose: () => void;
 }
-
-const SYNC_NOTE: Partial<Record<DisplaySkill["sync"], string>> = {
-  drift: "- installed copies differ from the hub; reinstall to resync",
-  installed_no_hub_source: "- installed copy has no hub source; sync it back into the hub or remove it",
-};
 
 /**
  * Skill detail drawer: role=dialog, aria-modal, focus moves to the close
  * button on open and returns to the trigger card on close; Escape and
  * backdrop click both close it. Matches mockup.html's #drawer semantics.
  */
-export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
+export function SkillDrawer({ skill, targets, triggerRef, onClose }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const [copyLabel, setCopyLabel] = useState<string | null>(null);
   const copyTimerRef = useRef<number | undefined>(undefined);
@@ -102,16 +99,10 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
           <dd className="mt-0.5">{skill?.description ?? "—"}</dd>
 
           <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
-            Sync status (hub / .claude / .agents hashes)
+            Installs
           </dt>
           <dd className="mt-0.5">
-            {skill ? (
-              <>
-                <SyncBadge sync={skill.sync} /> {SYNC_NOTE[skill.sync] ?? ""}
-              </>
-            ) : (
-              "—"
-            )}
+            {skill ? <SkillInstalls skill={skill} targets={targets} /> : "—"}
           </dd>
 
           <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
@@ -139,7 +130,8 @@ export function SkillDrawer({ skill, triggerRef, onClose }: Props) {
           {copyLabel ?? (skill ? copyButtonLabel(skill) : "Copy install command")}
         </button>
         <p className="note mt-2.5 text-[11.5px] text-stale">
-          The read-only desktop does not install skills. Paste the command into a terminal.
+          This desktop does not install or delete skills; paste the command into a terminal.
+          Its only write action is the per-location disable/enable above.
           INSTRUCTION.md requires script review before installing third-party collected skills;
           this UI applies that warning to every skill with scripts/.
         </p>

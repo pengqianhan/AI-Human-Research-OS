@@ -1,4 +1,11 @@
-import type { OrphanSkill, Store, StoreSkill, SyncStatus } from "../types";
+import type {
+  InstallForm,
+  OrphanSkill,
+  SkillInstall,
+  Store,
+  StoreSkill,
+  SyncStatus,
+} from "../types";
 
 /** Unified shape used to render both hub-collection skills and orphans. */
 export interface DisplaySkill {
@@ -9,6 +16,8 @@ export interface DisplaySkill {
   license: string | null;
   hasScripts: boolean;
   sync: SyncStatus;
+  installForm: InstallForm | null;
+  installs: SkillInstall[];
 }
 
 export const ORPHAN_COLLECTION_LABEL = "no hub source";
@@ -21,6 +30,8 @@ function fromStoreSkill(collection: string, s: StoreSkill): DisplaySkill {
     license: s.license,
     hasScripts: s.has_scripts,
     sync: s.sync,
+    installForm: s.install_form ?? null,
+    installs: s.installs ?? [],
   };
 }
 
@@ -32,6 +43,8 @@ function fromOrphanSkill(s: OrphanSkill): DisplaySkill {
     license: null,
     hasScripts: false,
     sync: s.sync,
+    installForm: null,
+    installs: s.installs ?? [],
   };
 }
 
@@ -50,11 +63,22 @@ const INSTALLER_PATH =
 
 export function installCommand(skill: DisplaySkill): string {
   if (skill.sync === "installed_no_hub_source") {
-    return `python ${INSTALLER_PATH} sync-back ${skill.name} --from claude`;
+    // There is no sync-back command any more (ADR 0002): a symlinked install
+    // is the hub, and copied installs come from an auto-refreshed mirror that
+    // ADR 0001 forbids editing. An orphan is inspected, not promoted.
+    return `python ${INSTALLER_PATH} status ${skill.name}`;
   }
   return `python ${INSTALLER_PATH} install ${skill.name} --collection ${skill.collection}`;
 }
 
 export function copyButtonLabel(skill: DisplaySkill): string {
-  return skill.sync === "installed_no_hub_source" ? "Copy sync-back command" : "Copy install command";
+  return skill.sync === "installed_no_hub_source" ? "Copy status command" : "Copy install command";
+}
+
+/** Command that installs this skill at one specific target. */
+export function installAtTargetCommand(skill: DisplaySkill, target: string): string {
+  return (
+    `python ${INSTALLER_PATH} install ${skill.name} ` +
+    `--collection ${skill.collection} --target ${target}`
+  );
 }

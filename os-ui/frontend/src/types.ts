@@ -168,13 +168,46 @@ export type SyncStatus =
   | "not_installed"
   | "installed_no_hub_source";
 
+/** How a skill is placed at an install location (ADR 0002). */
+export type InstallForm = "symlink" | "copy" | "missing" | "unknown";
+
+/** One install location for one skill, as reported by research-skill-installer. */
+export interface SkillInstall {
+  target: string;
+  scope: string;
+  agent: string;
+  path: string;
+  form: InstallForm;
+  ok: boolean;
+  disabled: boolean;
+  detail: string;
+}
+
+/** A registered install target from the installer's assets/targets.toml. */
+export interface StoreTarget {
+  name: string;
+  path: string;
+  /** Repository-relative or ~-prefixed rendering of `path`. */
+  display_path?: string;
+  scope: string;
+  agent: string;
+  default: boolean;
+  exists: boolean;
+}
+
 export interface StoreSkill {
   name: string;
   description: string;
   license: string;
   has_scripts: boolean;
+  /** Repository directories only; superseded by `installs`, kept for compatibility. */
   installed: InstalledMap;
+  /** Repository directories only; superseded by `installs`, kept for compatibility. */
   sync: SyncStatus;
+  /** null when research-skill-installer could not be loaded. */
+  install_form?: InstallForm | null;
+  /** Every target where this skill is present. Empty if the installer is unavailable. */
+  installs?: SkillInstall[];
 }
 
 export interface StoreCollection {
@@ -182,17 +215,20 @@ export interface StoreCollection {
   skills: StoreSkill[];
 }
 
-/** Orphan skills: installed in .claude/.agents but with no hub source. */
+/** Orphan skills: installed somewhere but with no hub source. */
 export interface OrphanSkill {
   name: string;
   description: string;
   installed: InstalledMap;
   sync: SyncStatus;
+  installs?: SkillInstall[];
 }
 
 export interface Store {
   collections: StoreCollection[];
   orphans: OrphanSkill[];
+  /** Empty when the installer could not be loaded; the UI degrades to `installed`. */
+  targets?: StoreTarget[];
 }
 
 // ── activity ──────────────────────────────────────────────────────────────

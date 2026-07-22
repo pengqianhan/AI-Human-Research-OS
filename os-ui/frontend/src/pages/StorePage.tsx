@@ -28,7 +28,11 @@ export function StorePage({ state }: Props) {
     if (!matchesCollection) return false;
     if (query.trim() === "") return true;
     const q = query.trim().toLowerCase();
-    return s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
+    // description can be absent: the generator emits an empty string when a
+    // SKILL.md has no frontmatter description, and warns about it.
+    return (
+      s.name.toLowerCase().includes(q) || (s.description ?? "").toLowerCase().includes(q)
+    );
   });
 
   function openDrawerFor(skill: DisplaySkill, trigger: HTMLElement) {
@@ -102,7 +106,12 @@ export function StorePage({ state }: Props) {
         </div>
       )}
 
-      <SkillDrawer skill={openSkill} triggerRef={triggerRef} onClose={() => setOpenSkill(null)} />
+      <SkillDrawer
+        skill={openSkill}
+        targets={state.store.targets ?? []}
+        triggerRef={triggerRef}
+        onClose={() => setOpenSkill(null)}
+      />
     </section>
   );
 }
