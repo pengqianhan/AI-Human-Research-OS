@@ -16,11 +16,25 @@
 set -u
 cd "$(dirname "$0")"
 
-PYTHON="$(command -v python3 || command -v python)"
-if [ -z "$PYTHON" ]; then
-  echo "verify: no python3/python on PATH" >&2
+if ! command -v uv >/dev/null 2>&1; then
+  echo "verify: uv is required (https://docs.astral.sh/uv/)" >&2
   exit 2
 fi
+
+PYTHON_VERSION_FILE=".python-version"
+if [ ! -f "$PYTHON_VERSION_FILE" ]; then
+  echo "verify: missing $PYTHON_VERSION_FILE" >&2
+  exit 2
+fi
+IFS= read -r PYTHON_VERSION < "$PYTHON_VERSION_FILE"
+if [ -z "$PYTHON_VERSION" ]; then
+  echo "verify: $PYTHON_VERSION_FILE must name a Python version" >&2
+  exit 2
+fi
+
+# Use the repository-pinned interpreter on every machine. --no-project keeps
+# this read-only check from creating or syncing a repository-local .venv.
+PYTHON=(uv run --no-project --python "$PYTHON_VERSION" -- python)
 
 # Canonical (hub) copy of the hub-sourced skill; agent-neutral.
 PWM_HUB="research-skills-hub/open-paper-skills/paper-wiki-manager"
@@ -47,11 +61,11 @@ echo "verify: read-only consistency check"
 #    required indexes, and viz.html graph freshness (catches a forgotten
 #    generate_viz.py run).
 check "paper-wiki validation" \
-  "$PYTHON" "$PWM_HUB/scripts/validate_paper_wiki.py" paper-wiki
+  "${PYTHON[@]}" "$PWM_HUB/scripts/validate_paper_wiki.py" paper-wiki
 
 # 2. FILETREE.md drift.
 check "FILETREE lint" \
-  "$PYTHON" "$FILETREE" lint
+  "${PYTHON[@]}" "$FILETREE" lint
 
 # 3. Installed-skill integrity (ADR 0002). The hub is canonical. Every install
 #    is either a symlink back to it or a copy, and which one is not a free
