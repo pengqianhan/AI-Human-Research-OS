@@ -7,6 +7,8 @@ description: Install, remove, disable, enable, list, or check the status of skil
 
 Manages skills stored under `research-skills-hub/`. The hub is canonical; an
 install is a pointer to it or a pinned copy of it, never an independent version.
+For the bigger picture — who installs versus who disables, and why the GUI is
+limited — see [MANAGING-SKILLS.md](../../MANAGING-SKILLS.md).
 
 Run from the repository root unless you pass `--repo`. In the examples below,
 `$S` stands for

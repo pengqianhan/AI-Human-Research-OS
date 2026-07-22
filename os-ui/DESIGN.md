@@ -144,7 +144,9 @@ The old tab-shell concept is superseded.
    OS Feedback, and local skills.
 3. **Skill Store**: hub collections, orphan skills, sync badges, script
    warnings, license labels, per-target install state, and a per-location
-   enable/disable toggle; installing elsewhere stays a copied command.
+   enable/disable toggle; installing elsewhere stays a copied command. How this
+   splits between the human and the agent is documented in
+   [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
 
 ## 5. State Semantics
 
