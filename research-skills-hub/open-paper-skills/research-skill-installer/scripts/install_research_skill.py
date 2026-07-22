@@ -20,6 +20,7 @@ import os
 import shutil
 import sys
 import tomllib
+from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -525,6 +526,10 @@ def command_toggle(args: argparse.Namespace, enable: bool) -> None:
                 if not args.dry_run:
                     place(live_dir, source, form, root, args.dry_run)
                     off_dir.unlink()
+                    # Leave no empty holding area behind: Git does not track
+                    # empty directories, so one would linger unnoticed.
+                    with suppress(OSError):
+                        off_dir.parent.rmdir()
             elif not enable and live_dir.is_symlink():
                 print(f"disable:  {target.name:26} {live_dir.name} -> {DISABLED_DIR}/{off_dir.name}")
                 if not args.dry_run:
