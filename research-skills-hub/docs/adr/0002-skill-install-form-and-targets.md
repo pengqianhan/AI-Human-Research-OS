@@ -98,12 +98,13 @@ and should be re-tested after one. If an agent stops following links, set that
 agent's targets to copy in the target table — the mechanism already supports it.
 
 Whether an agent skips a leading-dot directory inside its skills folder is
-undocumented too. It held for Claude Code on 2026-07-23 — the skill vanished
-from the live listing when moved into `.disabled/` and returned when restored —
-but that is one agent on one version, and the in-place rename it replaced
-looked just as plausible before it was tested. Verify per agent, and re-test
-after an agent upgrade; if an agent does list `.disabled/` entries, disabling a
-symlinked install there silently does nothing.
+undocumented too. Both agents were tested on 2026-07-23 and both skip it: the
+skill vanished from Claude Code's live listing when moved into `.disabled/` and
+returned when restored, and Codex did not list it after a restart with the
+install parked there. That is still two agents on one version each, and the
+in-place rename this replaced looked just as plausible before it was tested —
+re-test after an agent upgrade. If an agent does list `.disabled/` entries,
+disabling a symlinked install there silently does nothing.
 
 Verified safe by inspection and then by execution: no installed skill's scripts
 break under symlinking. Every `__file__` use resolves assets *inside* the skill
