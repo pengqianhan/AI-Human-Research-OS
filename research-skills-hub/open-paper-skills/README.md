@@ -27,6 +27,9 @@ at source commit `8f854bd`.
 | [map-then-territory](map-then-territory/SKILL.md) | Map scattered ideas into a human-approved route of verifiable states, then drive agents through the territory edge by edge. | Original, Pengqian Han |
 | [writing-great-prompt](writing-great-prompt/SKILL.md) | Turn an intent into a lean, copy-ready prompt contract with destination, evidence, authority, and completion bar. | Original, Pengqian Han |
 | [sell-research-honestly](sell-research-honestly/SKILL.md) | Audit evidence and turn research into persuasive, audience-specific value communication without overclaiming. | Adapted from the user-provided article *AI-PhD.SKILL 4：人人都是销售* |
+| [okf-repo-organizer](okf-repo-organizer/SKILL.md) | Organize a repository, folder, or knowledge corpus into generic Open Knowledge Format (OKF) bundles, with a bundled conformance validator. | Original, Pengqian Han |
+| [session-handoff](session-handoff/SKILL.md) | Maintain or resume a repository-root `HANDOFF.md` that transfers a cross-session task arc to a cold session. | Repo-local support skill |
+| [skill-organizer](skill-organizer/SKILL.md) | Register a newly added hub skill into its collection's `index.md` and `README.md`. | Repo-local support skill |
 
 ## Installation
 
@@ -49,11 +52,14 @@ python research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 ## Prerequisites
 
 - `research-bible`, `explain-anything-html`, `human-cognition-cache`,
-  `karpathy-coding-rules`, `sell-research-honestly`, and `task-file-builder`:
-  no additional local setup required.
+  `karpathy-coding-rules`, `sell-research-honestly`, `session-handoff`,
+  `skill-organizer`, and `task-file-builder`: no additional local setup
+  required.
 - `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
   `hf` CLI is optional for faster paper fetching.
 - `filetree-simple`: Python 3.9+ standard library; Git is not required.
+- `okf-repo-organizer`: runs its bundled validator with `uv run` (installs the
+  declared PEP 723 dependency automatically), or Python 3.11+ with PyYAML.
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
 - `map-then-territory`: no local setup, but requires the `grilling`,
@@ -322,6 +328,71 @@ Example requests:
 /sell-research-honestly help me pitch this early idea to my advisor for a two-week validation
 /sell-research-honestly draft a scoped invitation for this potential collaborator
 /sell-research-honestly audit this abstract for overclaiming and prepare a community PR brief
+```
+
+## okf-repo-organizer
+
+Converts a repository, folder, or knowledge corpus into generic Open Knowledge
+Format bundles: chooses bundle boundaries, adds OKF `index`/`log`/`concept`
+frontmatter, migrates idea/project/doc folders into OKF-style structure, and
+validates generic OKF conformance. Generated and dependency folders such as
+`.git/`, `node_modules/`, and `.venv/` are skipped unless you ask for them.
+The bundled validator applies the generic rules in
+[okf-repo-organizer/references/SPEC.md](okf-repo-organizer/references/SPEC.md)
+rather than the stricter enrichment-agent document validator.
+
+Run the validator on each changed bundle root:
+
+```bash
+uv run research-skills-hub/open-paper-skills/okf-repo-organizer/scripts/validate_okf_bundle.py /absolute/path/to/bundle-root
+```
+
+Example requests:
+
+```text
+/okf-repo-organizer normalize this repo into OKF bundles
+/okf-repo-organizer migrate ideas/idea_example into an OKF bundle
+/okf-repo-organizer validate OKF conformance for this folder
+```
+
+## session-handoff
+
+Maintains one compact repository-root `HANDOFF.md` that transfers control to a
+cold session without requiring the prior conversation. Treats the file as a
+snapshot where repository evidence always wins, and keeps each fact in its
+authoritative layer: Git for commits and diffs, memory files for durable
+knowledge, project memory for project-local state, and `HANDOFF.md` only for
+the current task arc — active work, settled decisions, deviations, and
+intentional omissions. Structural repair follows
+[session-handoff/references/format.md](session-handoff/references/format.md).
+
+This skill does not run automatically at session start; repository startup
+instructions must direct agents to read `HANDOFF.md`.
+
+Example requests:
+
+```text
+/session-handoff record this task arc before I stop for the day
+/session-handoff prepare the next-session handoff for this work
+/session-handoff resume the arc in HANDOFF.md and verify its claims
+```
+
+## skill-organizer
+
+Registers a skill folder that has been dropped into a Research-skills-hub
+collection by updating that collection's `index.md` bullet list and its
+`README.md` table row, Prerequisites line, and usage section. Handles
+`collected-skills/` (external skills — source URL required, license when known)
+and `open-paper-skills/` (repo-authored — Original or Adapted provenance, no
+external URL). It does not install the skill into `.agents/skills/` or
+`.claude/skills/`; installation stays a separate explicit step.
+
+Example requests:
+
+```text
+/skill-organizer I added a new skill to collected-skills — register it
+/skill-organizer update the open-paper-skills index and README for this skill
+/skill-organizer register this skill, source is https://github.com/owner/repo
 ```
 
 ## License
