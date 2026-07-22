@@ -187,9 +187,11 @@ The old tab-shell concept is superseded.
 
 ## 8. Non-goals
 
-- No write operations beyond the skill enable/disable toggle. It removes or
-  recreates a symlinked install, or renames `SKILL.md` ↔ `SKILL.md.disabled`
-  in a copied one; no skill content is ever created, modified, or deleted.
+- No write operations beyond the skill enable/disable toggle: a symlinked
+  install moves into the target's `.disabled/` directory, a copied one renames
+  its `SKILL.md` to `SKILL.md.disabled`. No skill content is created or
+  deleted, and installing remains a copied command — the toggle is offered only
+  where an install already exists.
 - No resident services or SSE until M4. The toggle endpoint is a Vite dev-server
   middleware: it exists only while `start.sh` runs and dies with Ctrl-C.
 - No execution buttons until M4. Install and remove stay copy-only.

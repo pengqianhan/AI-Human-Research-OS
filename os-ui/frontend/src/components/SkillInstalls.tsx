@@ -153,9 +153,9 @@ export function SkillInstalls({ skill, targets }: Props) {
 
       {error && <p className="mt-1 text-[11px] text-warn">{error}</p>}
       <p className="mt-1 text-[11px] text-stale">
-        Disable is reversible and never deletes skill content: a linked install
-        drops its link (the hub keeps the files), a copied one renames SKILL.md.
-        Installing elsewhere is still a copied command.
+        Disable never deletes skill content: a linked install moves into the
+        target's <code>.disabled/</code>, a copied one renames its SKILL.md.
+        Installing somewhere new is still a copied command.
       </p>
     </div>
   );

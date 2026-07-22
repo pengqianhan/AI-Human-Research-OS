@@ -77,17 +77,20 @@ python $S remove  uv-env --target project-claude --yes
 
 ## How disable works, and why it differs by form
 
-A **symlinked** install is disabled by **dropping the link**. Its content lives
-in the hub, so nothing is lost and enabling recreates the link. Renaming
-`SKILL.md` inside a symlinked install would edit the hub itself and disable the
-skill at *every* location at once, so the installer never does that.
+A **symlinked** install is disabled by moving its link into the target's
+`.disabled/` directory. Three alternatives are wrong: renaming `SKILL.md`
+inside it edits the hub and disables the skill everywhere at once; deleting the
+link makes "disabled here" indistinguishable from "never installed here", so
+re-enabling would have to create the install; and renaming the link in place to
+`<name>.disabled` does not disable anything — Claude Code re-registers it under
+the new directory name (tested 2026-07-23).
 
 A **copied** install is the only place its content exists, so it is disabled by
-renaming `SKILL.md` to `SKILL.md.disabled`. Agents stop discovering it; the
-files stay put.
+renaming `SKILL.md` to `SKILL.md.disabled`; the files stay put.
 
 Either way disable is per location: turning a skill off in one project leaves
-every other install untouched.
+every other install untouched, and `status` still lists the location, marked
+`disabled`. Running `install` over a disabled location re-enables it.
 
 ## Workflow
 

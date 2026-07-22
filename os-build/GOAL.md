@@ -175,9 +175,15 @@ Git 历史恢复用于审计，不得作为新主路径复活。
   Human Owner 新授权。当前工作树不保留 SDK runtime 实现。
   M2 授权不自动扩展这些范围。
   2026-07-22 Human Owner 授权一条**最小细缝**,其余部分闸门不变:`os-ui` 可启用/停用
-  单个安装位置。具体机制按安装形态而定——symlink 安装删除该链接(内容留在 hub),
-  copy 安装重命名 `SKILL.md` ↔ `SKILL.md.disabled`。原条款只写了后者,但对 symlink
-  安装重命名 `SKILL.md` 等于改 hub 本体并一次停用所有位置,故 2026-07-22 更正。
+  单个安装位置。具体机制按安装形态而定——symlink 安装把链接移入该目标目录下的
+  `.disabled/`,copy 安装重命名 `SKILL.md` ↔ `SKILL.md.disabled`。原条款只写了后者,
+  但对 symlink 安装重命名 `SKILL.md` 等于改 hub 本体并一次停用所有位置,故
+  2026-07-22 更正。两种形态都不新建也不删除任何 skill 内容。
+  不用"删除链接"实现停用,是因为那会让"已停用"与"从未安装"在磁盘上无从区分,
+  于是重新启用就等同于安装,而 GUI 安装不在本授权范围内。
+  2026-07-23 实测记录:曾先尝试把链接原地改名为 `<name>.disabled`,失败——Claude Code
+  按目录名重新注册,skill 依旧可调用,即改名根本不构成停用。改用前缀点号的目录后,
+  扫描器跳过该目录。该行为同样未见于官方文档,各 agent 需分别实测,升级后需复测。
   授权理由:该操作零破坏性(内容不丢失、可逆、git 可见),且写通道挂在 `start.sh` 已
   启动的 Vite dev server 上,随 Ctrl-C 一同消失,不新增常驻进程,
   `os-ui/DESIGN.md` §2 的 "no resident daemon is left behind" 不变式不受影响。

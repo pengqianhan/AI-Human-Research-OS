@@ -74,11 +74,16 @@ check "FILETREE lint" \
 #    A plain `diff -rq` cannot be used against a symlinked install — it follows
 #    the link and compares the hub with itself, so it passes unconditionally.
 verify_installs() {
-  local rc=0 target name src coll form
-  for target in .claude/skills .agents/skills; do
+  local rc=0 target entry name src coll form
+  # `.disabled/` holds installs that are turned off. They are still installs,
+  # so they are checked too — the glob would otherwise skip the dot-directory
+  # and let a disabled install drift or dangle unnoticed.
+  for target in .claude/skills .agents/skills .claude/skills/.disabled .agents/skills/.disabled; do
+    [ -d "$target" ] || continue
     for path in "$target"/*; do
       [ -e "$path" ] || [ -L "$path" ] || continue
-      name="$(basename "$path")"
+      entry="$(basename "$path")"
+      name="$entry"
       # Dangling links are checked first and unconditionally: when the hub
       # source disappears the name lookup below finds nothing, so deferring
       # this would let the exact failure ADR 0002 warns about pass silently.
@@ -95,7 +100,7 @@ verify_installs() {
 
       if [ -L "$path" ]; then
         [ "$form" = symlink ] || { echo "$path is a symlink but $coll declares Install form: copy"; rc=1; continue; }
-        [ "$(cd "$(dirname "$path")" && cd "$(readlink "$name")" && pwd)" = "$(cd "$src" && pwd)" ] \
+        [ "$(cd "$(dirname "$path")" && cd "$(readlink "$entry")" && pwd)" = "$(cd "$src" && pwd)" ] \
           || { echo "$path resolves outside its hub source $src"; rc=1; }
       else
         [ "$form" = copy ] || { echo "$path is a copy but $coll should be symlinked"; rc=1; continue; }

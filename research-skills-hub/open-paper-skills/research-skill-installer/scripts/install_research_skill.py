@@ -34,6 +34,7 @@ IGNORE_NAMES = {
 }
 IGNORE_PATTERNS = ("*.pyc", "*.pyo")
 DISABLED_MARKER = "SKILL.md.disabled"
+DISABLED_DIR = ".disabled"
 TARGETS_ASSET = Path(__file__).resolve().parents[1] / "assets" / "targets.toml"
 
 
@@ -202,7 +203,12 @@ def ignore_for_copy(directory: str, names: list[str]) -> set[str]:
 
 
 def ensure_safe(install: Path, targets: list[Target]) -> None:
-    allowed = {target.path.expanduser().resolve() for target in targets}
+    allowed: set[Path] = set()
+    for target in targets:
+        base = target.path.expanduser()
+        allowed.add(base.resolve())
+        # The disabled holding area is part of the target, not a new location.
+        allowed.add((base / DISABLED_DIR).resolve())
     if install.parent.expanduser().resolve() not in allowed:
         fail(f"refusing to modify a path outside the target table: {install}")
 
@@ -234,46 +240,73 @@ def place(install: Path, source: SkillSource, form: str, root: Path, dry_run: bo
 # ------------------------------------------------------------------ inspecting
 
 
-def inspect(install: Path, source: SkillSource, form: str) -> tuple[str, bool, str, bool]:
-    """Return (actual_form, ok, detail, disabled) for one install path."""
+def install_paths(target_dir: Path, name: str) -> tuple[Path, Path]:
+    """The enabled path and the disabled path for one skill at one target.
+
+    A disabled *symlink* install is moved into a `.disabled/` subdirectory
+    rather than deleted. Deleting would make "disabled here" and "never
+    installed here" identical on disk, so re-enabling would have to create the
+    install — a GUI install action, which GOAL.md M4 does not authorize.
+
+    The first attempt renamed the link to `<name>.disabled` in place. Testing
+    on 2026-07-23 showed Claude Code simply re-registered it under the new
+    directory name, so the skill stayed callable: the rename was not a disable
+    at all. A leading-dot directory is skipped by the scanners instead.
+    """
+    return target_dir / name, target_dir / DISABLED_DIR / name
+
+
+def locate(target_dir: Path, name: str) -> tuple[Path, bool]:
+    """Return (path, disabled) for whichever variant exists; enabled if neither."""
+    live, off = install_paths(target_dir, name)
+    if live.is_symlink() or live.exists():
+        return live, False
+    if off.is_symlink() or off.exists():
+        return off, True
+    return live, False
+
+
+def inspect(target_dir: Path, name: str, source: SkillSource,
+            form: str) -> tuple[Path, str, bool, str, bool]:
+    """Return (path, actual_form, ok, detail, disabled) for one install."""
+    install, disabled = locate(target_dir, name)
     if install.is_symlink():
         actual = "symlink"
         if not install.exists():
-            return actual, False, f"dangling -> {os.readlink(install)}", False
+            return install, actual, False, f"dangling -> {os.readlink(install)}", disabled
         if install.resolve() != source.path.resolve():
-            return actual, False, f"points at {install.resolve()}", False
+            return install, actual, False, f"points at {install.resolve()}", disabled
         if form != "symlink":
-            return actual, False, "should be a copy", False
-        return actual, True, "", False
+            return install, actual, False, "should be a copy", disabled
+        return install, actual, True, "", disabled
     if not install.exists():
-        return "missing", True, "", False
+        return install, "missing", True, "", False
     if not install.is_dir():
-        return "unknown", False, "not a directory", False
+        return install, "unknown", False, "not a directory", disabled
 
     actual = "copy"
     disabled = (install / DISABLED_MARKER).is_file() and not (install / "SKILL.md").is_file()
     if form != "copy":
-        return actual, False, "should be a symlink", disabled
+        return install, actual, False, "should be a symlink", disabled
     left = {p.relative_to(source.path) for p in source.path.rglob("*") if p.is_file()}
     right = {p.relative_to(install) for p in install.rglob("*") if p.is_file()}
     if disabled:
         right = {Path("SKILL.md") if p.name == DISABLED_MARKER else p for p in right}
     if left != right:
-        return actual, False, "drifted from hub (file set differs)", disabled
+        return install, actual, False, "drifted from hub (file set differs)", disabled
     for rel in sorted(left):
         other = install / (DISABLED_MARKER if disabled and rel.name == "SKILL.md" else rel)
         if (source.path / rel).read_bytes() != other.read_bytes():
-            return actual, False, f"drifted from hub ({rel})", disabled
-    return actual, True, "", disabled
+            return install, actual, False, f"drifted from hub ({rel})", disabled
+    return install, actual, True, "", disabled
 
 
 def scan(root: Path, source: SkillSource, targets: list[Target]) -> list[State]:
     form = install_form(root, source.collection)
     states = []
     for target in targets:
-        install = target.path / source.name
-        actual, ok, detail, disabled = inspect(install, source, form)
-        states.append(State(target, install, actual, ok, detail, disabled))
+        path, actual, ok, detail, disabled = inspect(target.path, source.name, source, form)
+        states.append(State(target, path, actual, ok, detail, disabled))
     return states
 
 
@@ -329,7 +362,13 @@ def scan_unknown(root: Path, targets: list[Target], known: set[str]) -> list[dic
     for target in targets:
         if not target.path.is_dir():
             continue
-        for install in sorted(target.path.iterdir()):
+        # Include the disabled holding area: an install parked there is still
+        # an install, and one whose hub source vanished is still a dangling link.
+        entries = list(target.path.iterdir())
+        disabled_dir = target.path / DISABLED_DIR
+        if disabled_dir.is_dir():
+            entries.extend(disabled_dir.iterdir())
+        for install in sorted(entries):
             if install.name in known or install.name.startswith("."):
                 continue
             dangling = install.is_symlink() and not install.exists()
@@ -408,16 +447,24 @@ def command_install(args: argparse.Namespace) -> None:
     targets = select_targets(root, args.target, args.all_targets)
 
     for target in targets:
-        install = target.path / source.name
-        ensure_safe(install, targets)
-        actual, ok, detail, _ = inspect(install, source, form)
-        if actual != "missing" and ok and not args.update:
-            print(f"present:  {target.name:26} {install}")
+        found, actual, ok, _detail, disabled = inspect(target.path, source.name, source, form)
+        live, off = install_paths(target.path, source.name)
+        ensure_safe(live, targets)
+        if actual != "missing" and ok and not disabled and not args.update:
+            print(f"present:  {target.name:26} {found}")
             continue
-        verb = "install" if actual == "missing" else "replace"
+        # Installing over a disabled install re-enables it: the live path is
+        # always where an install ends up.
+        verb = "install" if actual == "missing" else "re-enable" if disabled else "replace"
         print(f"{verb}{'(dry-run)' if args.dry_run else ''}: "
-              f"{target.name:26} {install}  <- {form} {source.collection}/{source.name}")
-        place(install, source, form, root, args.dry_run)
+              f"{target.name:26} {live}  <- {form} {source.collection}/{source.name}")
+        if not args.dry_run and (off.is_symlink() or off.exists()):
+            ensure_safe(off, targets)
+            if off.is_symlink() or off.is_file():
+                off.unlink()
+            else:
+                shutil.rmtree(off)
+        place(live, source, form, root, args.dry_run)
 
 
 def command_remove(args: argparse.Namespace) -> None:
@@ -427,31 +474,39 @@ def command_remove(args: argparse.Namespace) -> None:
     source = resolve_source(root, args.skill, args.collection)
     targets = select_targets(root, args.target, args.all_targets)
     for target in targets:
-        install = target.path / source.name
-        ensure_safe(install, targets)
-        if not (install.is_symlink() or install.exists()):
-            print(f"missing:  {target.name:26} {install}")
-            continue
-        print(f"remove{'(dry-run)' if args.dry_run else ''}:   {target.name:26} {install}")
-        if args.dry_run:
-            continue
-        if install.is_symlink():
-            install.unlink()
-        else:
-            shutil.rmtree(install)
+        # Remove both variants: a disabled install is still an install.
+        removed = False
+        for install in install_paths(target.path, source.name):
+            if not (install.is_symlink() or install.exists()):
+                continue
+            ensure_safe(install, targets)
+            print(f"remove{'(dry-run)' if args.dry_run else ''}:   {target.name:26} {install}")
+            removed = True
+            if args.dry_run:
+                continue
+            if install.is_symlink():
+                install.unlink()
+            else:
+                shutil.rmtree(install)
+        if not removed:
+            print(f"missing:  {target.name:26} {target.path / source.name}")
 
 
 def command_toggle(args: argparse.Namespace, enable: bool) -> None:
     """Disable or enable one install location without touching the hub.
 
-    A symlinked install is disabled by dropping the link: its content lives in
-    the hub, so nothing is lost and re-enabling just recreates it. Renaming
-    SKILL.md inside a symlinked install would edit the hub itself and take out
-    every other install at once, so it is never done.
+    A symlinked install is disabled by renaming the link to `<name>.disabled`.
+    It is not deleted: deleting would make "disabled" indistinguishable from
+    "never installed", and re-enabling would then have to create the install —
+    which is a GUI install button, outside the M4 authorization. Renaming
+    SKILL.md inside a symlinked install is never an option either, because that
+    path leads into the hub and would disable every location at once.
 
     A copied install is the only place its content exists, so it is disabled by
-    renaming SKILL.md to SKILL.md.disabled — agents stop discovering it and the
-    files stay put.
+    renaming SKILL.md to SKILL.md.disabled; the files stay put.
+
+    Neither form creates or destroys skill content, and both are one rename
+    away from being undone.
     """
     root = repo_root(args)
     source = resolve_source(root, args.skill, args.collection)
@@ -459,25 +514,32 @@ def command_toggle(args: argparse.Namespace, enable: bool) -> None:
     targets = select_targets(root, args.target, args.all_targets)
 
     for target in targets:
-        install = target.path / source.name
-        ensure_safe(install, targets)
+        live_dir, off_dir = install_paths(target.path, source.name)
+        ensure_safe(live_dir, targets)
         if form == "symlink":
-            present = install.is_symlink()
-            if enable and not present:
-                print(f"enable:   {target.name:26} {install}  (recreating link)")
+            ensure_safe(off_dir, targets)
+            # The link is recreated rather than renamed: moving it in or out of
+            # .disabled/ changes its depth, which would break a relative target.
+            if enable and off_dir.is_symlink():
+                print(f"enable:   {target.name:26} {DISABLED_DIR}/{off_dir.name} -> {live_dir.name}")
                 if not args.dry_run:
-                    place(install, source, form, root, args.dry_run)
-            elif not enable and present:
-                print(f"disable:  {target.name:26} {install}  (dropping link; hub keeps content)")
+                    place(live_dir, source, form, root, args.dry_run)
+                    off_dir.unlink()
+            elif not enable and live_dir.is_symlink():
+                print(f"disable:  {target.name:26} {live_dir.name} -> {DISABLED_DIR}/{off_dir.name}")
                 if not args.dry_run:
-                    install.unlink()
+                    place(off_dir, source, form, root, args.dry_run)
+                    live_dir.unlink()
+            elif not (live_dir.is_symlink() or off_dir.is_symlink()):
+                print(f"missing:  {target.name:26} not installed here")
             else:
                 print(f"no-op:    {target.name:26} already {'enabled' if enable else 'disabled'}")
             continue
 
+        install = off_dir if off_dir.is_dir() and not live_dir.is_dir() else live_dir
         live, off = install / "SKILL.md", install / DISABLED_MARKER
         if not install.is_dir():
-            print(f"missing:  {target.name:26} {install}")
+            print(f"missing:  {target.name:26} not installed here")
         elif enable and off.is_file():
             print(f"enable:   {target.name:26} {off.name} -> SKILL.md")
             if not args.dry_run:

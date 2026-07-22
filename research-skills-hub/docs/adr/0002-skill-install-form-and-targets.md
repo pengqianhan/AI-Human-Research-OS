@@ -64,6 +64,29 @@ installed path is the hub; copied skills are the auto-refresh mirror, which ADR
   so the convergence here is on the copy-as-version-pin reasoning, not on
   symlinking as an install strategy.
 
+## Disabling one location
+
+An install can be turned off without being removed, per location. A copied
+install renames `SKILL.md` to `SKILL.md.disabled`, the mechanism `asm` uses. A
+symlinked install moves its **link** into a `.disabled/` directory inside the
+same target.
+
+Three alternatives were rejected for symlinks:
+
+- **Renaming `SKILL.md` inside the install** writes through the link into the
+  hub, disabling the skill at every location at once.
+- **Deleting the link** loses information: "disabled here" and "never installed
+  here" become the same on-disk state, so re-enabling would have to recreate
+  the install, turning the toggle into an install action — outside what os-ui
+  is authorized to do (GOAL.md M4).
+- **Renaming the link to `<name>.disabled` in place** was implemented first and
+  then disproved by testing on 2026-07-23: Claude Code re-registered the skill
+  under the new directory name and it stayed callable, so the rename disabled
+  nothing. Skill discovery keys on the directory name, not on frontmatter.
+
+The link is recreated rather than moved, because `.disabled/` is one level
+deeper and a relative link target would otherwise no longer resolve.
+
 ## Known risks
 
 Whether an agent follows a **symlinked** skill directory is undocumented;
@@ -73,6 +96,14 @@ Codex** discovered and executed the linked skill. Because it is implementation
 behavior rather than a documented contract, it can regress on an agent upgrade
 and should be re-tested after one. If an agent stops following links, set that
 agent's targets to copy in the target table — the mechanism already supports it.
+
+Whether an agent skips a leading-dot directory inside its skills folder is
+undocumented too. It held for Claude Code on 2026-07-23 — the skill vanished
+from the live listing when moved into `.disabled/` and returned when restored —
+but that is one agent on one version, and the in-place rename it replaced
+looked just as plausible before it was tested. Verify per agent, and re-test
+after an agent upgrade; if an agent does list `.disabled/` entries, disabling a
+symlinked install there silently does nothing.
 
 Verified safe by inspection and then by execution: no installed skill's scripts
 break under symlinking. Every `__file__` use resolves assets *inside* the skill
