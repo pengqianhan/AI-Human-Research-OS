@@ -1,4 +1,0 @@
-interface:
-  display_name: "Research Skill Installer"
-  short_description: "Install and sync hub skills"
-  default_prompt: "Use $research-skill-installer to install or sync back a Research-skills-hub skill for both Codex and Claude Code."

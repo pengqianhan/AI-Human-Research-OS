@@ -4,16 +4,23 @@ This document is the implementation contract for `os-ui/`. The static visual
 mockup lives in [mockup.html](mockup.html).
 
 Authorization boundary: the human authorized a read-only monitor UI on
-2026-07-04. That exception applies only to observation. Real execution buttons,
-resident services, SSE, and action endpoints remain gated by GOAL.md M4:
-evidence first, then explicit human confirmation.
+2026-07-04. That exception applies only to observation. On 2026-07-22 the Human
+Owner authorized exactly one narrow write action on top of it — toggling an
+installed skill between `SKILL.md` and `SKILL.md.disabled` — because that
+rename is non-destructive, reversible, and visible in Git. Everything else,
+including install and delete buttons, resident services, SSE, and any further
+action endpoint, remains gated by GOAL.md M4: evidence first, then explicit
+human confirmation.
 
 ## 1. Positioning
 
-- `os-ui` is a read-only dashboard, not a control console.
+- `os-ui` is an observation dashboard, not a control console. Its only write
+  action is the skill enable/disable toggle authorized on 2026-07-22.
 - It renders repository state and copies commands for the human to run; it does
-  not execute commands.
-- The filesystem remains the source of truth and the only write surface.
+  not execute commands. Skill install and removal are copy-only, like every
+  other command.
+- The filesystem remains the source of truth. It is also the only write
+  surface: the toggle writes by renaming a file, not by mutating hidden state.
 - Removing `os-ui/` must leave the Research OS unaffected.
 - The UI is infrastructure, not a project in `projects-folder/` and not a
   portfolio row.
@@ -180,9 +187,11 @@ The old tab-shell concept is superseded.
 
 ## 8. Non-goals
 
-- No write operations.
-- No resident services or SSE until M4.
-- No execution buttons until M4.
+- No write operations beyond the skill enable/disable toggle (`SKILL.md` ↔
+  `SKILL.md.disabled`). No other file is created, modified, or deleted.
+- No resident services or SSE until M4. The toggle endpoint is a Vite dev-server
+  middleware: it exists only while `start.sh` runs and dies with Ctrl-C.
+- No execution buttons until M4. Install and remove stay copy-only.
 - No user accounts, multi-user collaboration, or remote deployment.
 - No agent transcript parser or dependence on one specific agent.
 - No Chinese UI/i18n layer for now; the current build is English-first. Keep

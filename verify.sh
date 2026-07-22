@@ -11,7 +11,7 @@
 #
 # This is repo-local glue, not part of any skill. The skills it calls
 # (paper-wiki-manager's validator, filetree-simple's lint) are independently
-# usable on their own; only this OS repo needs the three-copy check below.
+# usable on their own; only this OS repo needs the install-integrity check below.
 
 set -u
 cd "$(dirname "$0")"
@@ -53,15 +53,45 @@ check "paper-wiki validation" \
 check "FILETREE lint" \
   "$PYTHON" "$FILETREE" lint
 
-# 3. Three-copy skill consistency (D7): hub is canonical, both installs match.
-check "skill sync: hub == .claude" \
-  diff -rq "$PWM_HUB" .claude/skills/paper-wiki-manager
-check "skill sync: hub == .agents" \
-  diff -rq "$PWM_HUB" .agents/skills/paper-wiki-manager
-check "filetree-simple sync: hub == .claude" \
-  diff -rq "$FILETREE_HUB" .claude/skills/filetree-simple
-check "filetree-simple sync: hub == .agents" \
-  diff -rq "$FILETREE_HUB" .agents/skills/filetree-simple
+# 3. Installed-skill integrity (ADR 0002). The hub is canonical. Every install
+#    is either a symlink back to it or a copy, and which one is not a free
+#    choice: a collection whose SOURCE.md declares `Install form: copy` (an
+#    auto-refreshed read-only mirror) must be copied, everything else linked.
+#    A plain `diff -rq` cannot be used against a symlinked install — it follows
+#    the link and compares the hub with itself, so it passes unconditionally.
+verify_installs() {
+  local rc=0 target name src coll form
+  for target in .claude/skills .agents/skills; do
+    for path in "$target"/*; do
+      [ -e "$path" ] || [ -L "$path" ] || continue
+      name="$(basename "$path")"
+      # Dangling links are checked first and unconditionally: when the hub
+      # source disappears the name lookup below finds nothing, so deferring
+      # this would let the exact failure ADR 0002 warns about pass silently.
+      if [ -L "$path" ] && [ ! -e "$path" ]; then
+        echo "$path is a dangling symlink (target $(readlink "$path") is missing)"; rc=1; continue
+      fi
+      src="$(find research-skills-hub -maxdepth 3 -type d -name "$name" | head -1)"
+      if [ -z "$src" ]; then
+        continue  # orphan install with no hub source; tracked in HANDOFF, not an error
+      fi
+      coll="$(printf '%s' "$src" | cut -d/ -f2)"
+      form=copy
+      grep -q 'Install form.*`copy`' "research-skills-hub/$coll/SOURCE.md" 2>/dev/null || form=symlink
+
+      if [ -L "$path" ]; then
+        [ "$form" = symlink ] || { echo "$path is a symlink but $coll declares Install form: copy"; rc=1; continue; }
+        [ "$(cd "$(dirname "$path")" && cd "$(readlink "$name")" && pwd)" = "$(cd "$src" && pwd)" ] \
+          || { echo "$path resolves outside its hub source $src"; rc=1; }
+      else
+        [ "$form" = copy ] || { echo "$path is a copy but $coll should be symlinked"; rc=1; continue; }
+        diff -rq "$src" "$path" >/dev/null 2>&1 || { echo "$path has drifted from $src"; rc=1; }
+      fi
+    done
+  done
+  return "$rc"
+}
+check "installed skills: link/copy form and integrity" verify_installs
 
 if [ "$fail" -eq 0 ]; then
   echo "verify: all checks passed"

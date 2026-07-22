@@ -47,7 +47,8 @@ flowchart LR
   N8["N8: 并行回合已验证"]:::approved
   N9["N9: 经验回灌闭环"]:::approved
   N10["N10: 终点·MVP 端到端验收 ✓"]:::approved
-  N11["N11: 第三 agent 冷启动 (M3 闸门)"]:::proposed
+  N11["N11: 第三 agent 冷启动"]:::proposed
+  N18["N18: 安装器泛化 (M3 已开闸)"]:::approved
   N12["N12: 自定义执行面 (M4 闸门)"]:::proposed
   N13["N13: Pi SDK MVP 路径（已延后）"]:::dead
   N14["N14: 旧 SDK pilot（已取消）"]:::dead
@@ -60,6 +61,7 @@ flowchart LR
   N0 --> N3
   N3 --> N6 --> N7 --> N8 --> N9 --> N10
   N10 -.-> N11
+  N0 --> N18
   N10 -.-> N12
   N4 -.-> N13 -.-> N5 -.-> N14
   N13 -.-> N15
@@ -178,17 +180,25 @@ flowchart LR
 - human_verdict: —
 - evidence: —
 
-### N11 — 第三 agent 冷启动通过（M3 闸门）
-- state: 某真实第三 agent 仅凭一行入口文件完成一个只读任务；安装器随 adapter 表泛化。
+### N11 — 第三 agent 冷启动通过
+- state: 某真实第三 agent 仅凭一行入口文件完成一个只读任务。**2026-07-22 拆分**：原本挂在本节点上的"安装器随 adapter 表泛化"已独立为 N18 并先行开工，因为 M3 的真实驱动力是多安装目标，与第三 agent 无关。本节点回归纯粹的 agent-agnostic 冷启动验证。
 - acceptance: 我看着该 agent 从冷启动跑完"总结当前 portfolio 状态"。
 - type: directional
-- status: proposed（gated：真实第三 agent 可用才开工，见 GOAL M3；不排期）
+- status: proposed（gated：真实第三 agent 可用才开工；不排期）
+
+### N18 — 安装器泛化（GOAL M3，2026-07-22 开闸）
+- state: `research-skill-installer` 从硬编码两目录改为目标表驱动（本仓库两目录 + 全局 + 各 Research Project）；安装形态按来源分 symlink / copy；`sync-back` 删除。决策全文见 HANDOFF「Skill-management decisions (2026-07-22)」。
+- acceptance: 一条命令把同一 hub skill 装进全部已注册目标；新增目标只加表行、不改安装器逻辑；**且有实测证据表明 Claude Code 与 Codex 各自都跟随 symlink 目录**（该行为未见于任何官方文档，两者需分别验证）。
+- type: mechanical
+- status: executing（2026-07-22 Human Owner 修订 M3 触发条件后开闸）
+- evidence: 2026-07-22 完成安装形态迁移——15 个 symlink + 6 个 copy（`mattpocock-skills`，按 SOURCE.md 的 `Install form: copy`），0 跳过、0 悬空。**symlink 跟随性由 Human Owner 在 Claude Code 与 Codex 上分别实测通过**（`filetree-simple` 试点）。`verify.sh` 的四条恒真 `diff -rq` 已替换为形态与完整性检查，并用三种注入故障（悬空链接、形态错配、镜像副本漂移）验证其确实会失败。
+- remaining: 安装器脚本本身尚未改写（仍是硬编码两目录 + `sync-back`）；目标表、全局与项目级目标、os-ui 停用开关未开工。
 
 ### N12 — 自定义执行面 Agent Console（M4 闸门）
-- state: 工作流 MVP 产生真实摩擦证据后，是否用 Pi Agent SDK、自定义 TUI 或 localhost GUI 执行面实现机械权限、恢复与跨 Session 管理，形态届时再定。
+- state: 工作流 MVP 产生真实摩擦证据后，是否用 Pi Agent SDK、自定义 TUI 或 localhost GUI 执行面实现机械权限、恢复与跨 Session 管理，形态届时再定。**2026-07-22 开了一条细缝**：`os-ui` 获准执行 `SKILL.md` ↔ `SKILL.md.disabled` 重命名以逐位置停用/启用 skill，写通道为随 `start.sh` 生死的 Vite 中间件。安装、删除、常驻服务、SSE 及其余动作端点仍在闸门内。
 - acceptance: N10 之后根据 Pi Coding Agent 工作流证据另行定义；自定义 runtime 或 GUI 不阻塞当前 MVP。
 - type: directional
-- status: proposed（gated：工作流 MVP 通过后再由 Human Owner 开闸；不排期）
+- status: proposed（gated：除已开的停用/启用细缝外，其余待工作流 MVP 通过后再由 Human Owner 开闸；不排期）
 
 ### N13 — Pi Agent SDK 自主运行路径（已延后）★
 - state: 2026-07-18 选定、2026-07-19 完成 Phase 01 技术验证后延后的 embedded SDK + custom TUI 路径。

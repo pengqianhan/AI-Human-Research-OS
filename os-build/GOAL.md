@@ -152,18 +152,35 @@ Git 历史恢复用于审计，不得作为新主路径复活。
   确定性拒绝。学习优先 Markdown、项目文件和已有 Python 验证；暂不要求 TypeScript。
   `Example_Project` 只承担 smoke test；通过后第一个真实项目是从 EurekAgent 任务规范
   重新实现的 `circle_packing`，不是复制其 AGPL 代码。
-- **M3(闸门:真实第三 agent 接入)— 安装器泛化**
-  触发条件:某个真实第三 agent 通过 M1 冷启动测试并需要安装 hub skills。
-  内容:`research-skill-installer` 的 `TARGET_DIRS` 从硬编码两目录改为 adapter
-  对照表所列目录;此变更推翻 D7 的"两份拷贝"前提,需同步 HANDOFF 决策行。
-  验收:一条命令把同一 hub skill 装进全部已注册 adapter 目录;新增 adapter 不改
-  安装器逻辑。
+- **M3(闸门:存在多安装目标)— 安装器泛化**
+  触发条件:存在两个以上需要统一管理的安装目标(全局目录、项目级目录、多 agent
+  适配目录),且重复副本已产生实际维护成本。2026-07-22 由 Human Owner 修订:原
+  条件写的是"某个真实第三 agent 通过 M1 冷启动测试并需要安装 hub skills",那是
+  立条款时预估的唯一触发场景;真实驱动力是跨项目的 skill 管理,与第三 agent 无
+  关,故据此扩充。第三 agent 接入仍是本闸门的充分条件之一,不再是必要条件。变更
+  理由见 HANDOFF 决策行。
+  内容:`research-skill-installer` 的 `TARGET_DIRS` 从硬编码两目录改为目标对照表
+  所列目录;此变更推翻 D7 的"两份拷贝"前提,需同步 HANDOFF 决策行。
+  安装形态按来源区分:Human Owner 自撰且在迭代的 collection 用 symlink(编辑安装
+  路径即编辑 hub,无漂移);外部 vendored collection 用 copy(副本兼作版本钉)。凡
+  声明为自动刷新只读镜像者(现为 `mattpocock-skills`,CI 每周 `rsync --delete`)
+  一律只能 copy,否则上游改动会绕过 review 直达在用 skill,并在上游重命名时产生
+  悬空链接。
+  验收:一条命令把同一 hub skill 装进全部已注册目标;新增目标不改安装器逻辑;
+  symlink 被各 agent 正确跟随一事有实测证据(该行为未见于任何 agent 的官方文档)。
 - **M4(闸门:M2 使用证据 + 人类逐项确认)— 自定义 runtime 与更重机制**
   Pi Agent SDK backend、自定义 TUI、确定性权限/预算执行、关闭 TUI 后继续运行的 daemon、
   主动跨 Session 管理、多项目/多 Worker 调度、数据库、远程访问、账户系统、OS 级
   secrets、完整通用版本控制、GUI 执行面及 desktop wrapper 都需真实 M2 摩擦证据与
-  Human Owner 新授权。当前工作树不保留 SDK runtime 实现；现有 `os-ui` 保持只读。
+  Human Owner 新授权。当前工作树不保留 SDK runtime 实现。
   M2 授权不自动扩展这些范围。
+  2026-07-22 Human Owner 授权一条**最小细缝**,其余部分闸门不变:`os-ui` 可对已安装
+  skill 执行 `SKILL.md` ↔ `SKILL.md.disabled` 重命名,以启用/停用单个安装位置。
+  授权理由:该操作零破坏性(不删内容、可逆、git 可见),且写通道挂在 `start.sh` 已
+  启动的 Vite dev server 上,随 Ctrl-C 一同消失,不新增常驻进程,
+  `os-ui/DESIGN.md` §2 的 "no resident daemon is left behind" 不变式不受影响。
+  本细缝**不**包含:GUI 内执行安装或删除、常驻服务、SSE、以及任何其他动作端点;
+  安装与卸载仍走命令行,GUI 只提供命令复制。
 
 ## 6. 总验收(与里程碑一一对应)
 

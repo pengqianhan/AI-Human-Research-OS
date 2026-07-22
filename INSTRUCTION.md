@@ -151,8 +151,13 @@ python research-skills-hub/open-paper-skills/filetree-simple/scripts/filetree.py
 
 - [research-skills-hub/index.md](research-skills-hub/index.md) is the canonical
   skill-store entrypoint.
-  Use `research-skill-installer` so `.agents/skills/` and `.claude/skills/`
-  remain byte-identical.
+  Use `research-skill-installer` for every install, update, and removal; never
+  copy a hub skill by hand. It is target-table driven, so it reaches the repo's
+  agent directories, the global ones, and each project's. An installed skill is
+  either a **symlink** back to the hub or a **copy**, decided by its
+  collection's declared source policy — the installer chooses; do not override
+  it per skill. Auto-refreshed read-only mirrors must stay copies, because the
+  copy is what pins the version.
 - Review a third-party skill's `SKILL.md`, scripts, provenance, and license
   before installation.
 - Keep project-local skills in both `<Project>/.agents/skills/` and

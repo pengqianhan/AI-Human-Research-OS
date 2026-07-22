@@ -1,2 +1,0 @@
-Notified the user to check the arXiv API terms of use at https://info.arxiv.org/help/api/index.html and to check retrieved papers for license restrictions.
-Timestamp: 2026-06-02T19:51:50+12:00
