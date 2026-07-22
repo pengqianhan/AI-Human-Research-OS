@@ -174,9 +174,11 @@ Git 历史恢复用于审计，不得作为新主路径复活。
   secrets、完整通用版本控制、GUI 执行面及 desktop wrapper 都需真实 M2 摩擦证据与
   Human Owner 新授权。当前工作树不保留 SDK runtime 实现。
   M2 授权不自动扩展这些范围。
-  2026-07-22 Human Owner 授权一条**最小细缝**,其余部分闸门不变:`os-ui` 可对已安装
-  skill 执行 `SKILL.md` ↔ `SKILL.md.disabled` 重命名,以启用/停用单个安装位置。
-  授权理由:该操作零破坏性(不删内容、可逆、git 可见),且写通道挂在 `start.sh` 已
+  2026-07-22 Human Owner 授权一条**最小细缝**,其余部分闸门不变:`os-ui` 可启用/停用
+  单个安装位置。具体机制按安装形态而定——symlink 安装删除该链接(内容留在 hub),
+  copy 安装重命名 `SKILL.md` ↔ `SKILL.md.disabled`。原条款只写了后者,但对 symlink
+  安装重命名 `SKILL.md` 等于改 hub 本体并一次停用所有位置,故 2026-07-22 更正。
+  授权理由:该操作零破坏性(内容不丢失、可逆、git 可见),且写通道挂在 `start.sh` 已
   启动的 Vite dev server 上,随 Ctrl-C 一同消失,不新增常驻进程,
   `os-ui/DESIGN.md` §2 的 "no resident daemon is left behind" 不变式不受影响。
   本细缝**不**包含:GUI 内执行安装或删除、常驻服务、SSE、以及任何其他动作端点;

@@ -5,9 +5,9 @@ mockup lives in [mockup.html](mockup.html).
 
 Authorization boundary: the human authorized a read-only monitor UI on
 2026-07-04. That exception applies only to observation. On 2026-07-22 the Human
-Owner authorized exactly one narrow write action on top of it — toggling an
-installed skill between `SKILL.md` and `SKILL.md.disabled` — because that
-rename is non-destructive, reversible, and visible in Git. Everything else,
+Owner authorized exactly one narrow write action on top of it — disabling or
+enabling a single install location — because it is non-destructive,
+reversible, and visible in Git. Everything else,
 including install and delete buttons, resident services, SSE, and any further
 action endpoint, remains gated by GOAL.md M4: evidence first, then explicit
 human confirmation.
@@ -187,8 +187,9 @@ The old tab-shell concept is superseded.
 
 ## 8. Non-goals
 
-- No write operations beyond the skill enable/disable toggle (`SKILL.md` ↔
-  `SKILL.md.disabled`). No other file is created, modified, or deleted.
+- No write operations beyond the skill enable/disable toggle. It removes or
+  recreates a symlinked install, or renames `SKILL.md` ↔ `SKILL.md.disabled`
+  in a copied one; no skill content is ever created, modified, or deleted.
 - No resident services or SSE until M4. The toggle endpoint is a Vite dev-server
   middleware: it exists only while `start.sh` runs and dies with Ctrl-C.
 - No execution buttons until M4. Install and remove stay copy-only.
