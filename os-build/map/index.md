@@ -192,7 +192,7 @@ flowchart LR
 - type: mechanical
 - status: executing（2026-07-22 Human Owner 修订 M3 触发条件后开闸）
 - evidence: 2026-07-22 完成安装形态迁移——15 个 symlink + 6 个 copy（`mattpocock-skills`，按 SOURCE.md 的 `Install form: copy`），0 跳过、0 悬空。**symlink 跟随性由 Human Owner 在 Claude Code 与 Codex 上分别实测通过**（`filetree-simple` 试点）。`verify.sh` 的四条恒真 `diff -rq` 已替换为形态与完整性检查，并用三种注入故障（悬空链接、形态错配、镜像副本漂移）验证其确实会失败。
-- remaining: 已完成安装器改写（目标表驱动、`sync-back` 删除、`targets`/`disable`/`enable`/`--json` 新增）、生成器改为消费安装器输出、os-ui Store 的安装矩阵与逐位置停用开关。停用机制经两次实测定稿（原地改名被证伪，改用 `.disabled/` 目录，Claude Code 与 Codex 均验证）。尚未开工：把兄弟仓库（harness_platform、LSN-AI）纳入目标表。
+- remaining: 已完成安装器改写（目标表驱动、`sync-back` 删除、`targets`/`disable`/`enable`/`--json` 新增）、生成器改为消费安装器输出、os-ui Store 的安装矩阵与逐位置停用开关。停用机制经两次实测定稿（原地改名被证伪，改用 `.disabled/` 目录，Claude Code 与 Codex 均验证）。本节点已完成，无遗留工作：Human Owner 于 2026-07-23 确认 Research OS 的构建范围就是本仓库，`Research_folder/` 下的其他目录不在范围内。
 
 ### N12 — 自定义执行面 Agent Console（M4 闸门）
 - state: 工作流 MVP 产生真实摩擦证据后，是否用 Pi Agent SDK、自定义 TUI 或 localhost GUI 执行面实现机械权限、恢复与跨 Session 管理，形态届时再定。**2026-07-22 开了一条细缝**：`os-ui` 获准执行 `SKILL.md` ↔ `SKILL.md.disabled` 重命名以逐位置停用/启用 skill，写通道为随 `start.sh` 生死的 Vite 中间件。安装、删除、常驻服务、SSE 及其余动作端点仍在闸门内。

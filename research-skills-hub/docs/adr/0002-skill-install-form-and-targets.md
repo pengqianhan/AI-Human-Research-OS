@@ -9,8 +9,10 @@ Skills lived in three byte-identical copies: the canonical
 `.agents/skills/`). Keeping them identical required `sync-back`, a digest
 comparison, a `--force` override, and a stop-on-conflict path — machinery whose
 only job was reconciling copies of a file that already had one canonical home.
-The same skills were separately copied into sibling repositories the installer
-could not see, so `uv-env` existed in at least five places on disk.
+Scope: this repository only. Other directories under the same parent folder
+hold their own copies of some of these skills, and they stay out of the target
+table — reaching them would need machine-local absolute paths that cannot be
+committed, and the Research OS being built here is this repository.
 
 An installed skill is now **either a symlink back to the hub or a copy**,
 decided by the source, and it is placed into any target listed in a target
