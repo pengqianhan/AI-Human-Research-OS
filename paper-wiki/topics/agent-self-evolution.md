@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-07-20T03:20:28Z
+timestamp: 2026-07-22T11:05:19Z
 ---
 
 # Scope
@@ -20,10 +20,11 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [Self-Evolving Multi-Agent Systems via Decentralized Memory](../papers/2605.22721.md) - per-agent dual-pool memory (exploit past trajectories + explore LLM-generated candidates) with LLM-as-a-judge reweighting for continual improvement.
 * [MemoHarness](../papers/2607.14159.md) - learns a global harness from diagnosed executions, then retrieves positive and negative experience to specialize that harness for each unseen case.
 * [Self-Improvements in Modern Agentic Systems](../papers/2607.13104.md) - defines persistent self-improvement across model parameters and prompts, memory, tools, or full scaffolds, then organizes each branch by its execution-derived learning signal.
+* [SkillOpt-Lite](../papers/2607.03451.md) - simplifies post-deployment skill evolution to file-based trajectory exploration, consensus mining, minimal patches, and independent validation, then applies the loop to harness code.
 
 # Synthesis
 
-OpenSkill and DecentMem both target continual agent improvement but differ in mechanism: OpenSkill builds reusable skill objects from external resources, while DecentMem accumulates and reweights trajectory-level memory within a multi-agent system. SkillFoundry adds library-level expansion, repair, merging, and pruning (see also [Agent skill libraries](agent-skill-libraries.md)). MemoHarness operates on a different mutable object—the complete model harness—and separates detailed episode records from distilled global patterns before retrieving both for case-level adaptation. Its reported test-time bank is frozen, so it demonstrates experience-conditioned adaptation rather than fully online self-evolution during deployment. Self-Improvements in Modern Agentic Systems supplies a common coordinate system for these mechanisms: what persistent substrate changes, what signal drives the change, and whether the result is fast scaffold exploration or slower parametric consolidation.
+OpenSkill and DecentMem both target continual agent improvement but differ in mechanism: OpenSkill builds reusable skill objects from external resources, while DecentMem accumulates and reweights trajectory-level memory within a multi-agent system. SkillFoundry adds library-level expansion, repair, merging, and pruning (see also [Agent skill libraries](agent-skill-libraries.md)). SkillOpt-Lite updates existing skills from task trajectories and argues that file-native exploration plus independent validation can replace several pooling and damping mechanisms. MemoHarness operates on a different mutable object—the complete model harness—and separates detailed episode records from distilled global patterns before retrieving both for case-level adaptation. Its reported test-time bank is frozen, so it demonstrates experience-conditioned adaptation rather than fully online self-evolution during deployment. Self-Improvements in Modern Agentic Systems supplies a common coordinate system for these mechanisms: what persistent substrate changes, what signal drives the change, and whether the result is fast scaffold exploration or slower parametric consolidation.
 
 # Open Questions
 
@@ -34,3 +35,4 @@ OpenSkill and DecentMem both target continual agent improvement but differ in me
 * When should episode-level execution records be promoted into global patterns, reusable skills, or permanent harness changes?
 * How can a system measure whether case-specific adaptation is genuinely useful rather than retrieval-induced overfitting?
 * What evidence should be required before a validated scaffold behavior is consolidated into model weights?
+* Which skill-optimization mechanisms remain useful once an optimizer can inspect semantically rich trajectories directly, and how should that be tested without changing several components at once?
