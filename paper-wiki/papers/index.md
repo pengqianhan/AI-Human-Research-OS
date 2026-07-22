@@ -16,3 +16,4 @@
 * [MemoHarness: Agent Harnesses That Learn from Experience](2607.14159.md) - Searches six harness control surfaces, distils execution diagnoses into an experience bank, and retrieves that experience for label-free per-case adaptation.
 * [AI Agents Do Not Fail Alone: The Context Fails First](2607.14275.md) - Validates a seven-criterion context-quality score as a preflight signal for agent reliability under controlled context variation.
 * [SearchOS-V1: Towards Robust Open-Domain Information-Seeking Agent Collaboration](2607.15257.md) - Externalizes relational coverage, grounded evidence, frontier tasks, and search failures into shared state governed by continuous scheduling and middleware.
+* [LLM-as-a-Coach: Experiential Learning for Non-Verifiable Tasks](2607.18110.md) - Replaces rubric-based RL's scalar reward with coach-extracted experiential knowledge internalized by on-policy context distillation, improving transfer and reducing reward overoptimization.
