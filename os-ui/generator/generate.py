@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import filecmp
+import importlib.util
 import json
 import re
 import subprocess
@@ -707,10 +708,84 @@ def dirs_byte_equal(a: Path, b: Path) -> bool:
     return True
 
 
+INSTALLER_SCRIPT = (
+    "research-skills-hub/open-paper-skills/research-skill-installer"
+    "/scripts/install_research_skill.py"
+)
+
+
+def load_installer(repo_root: Path) -> Any:
+    """Import research-skill-installer so install state has one implementation.
+
+    The generator used to decide "installed" and "synced" itself against two
+    hardcoded directories. That is the same scan the installer and verify.sh
+    already perform, and a third copy of it would drift from the other two —
+    it also cannot see the global or project targets, and `dirs_byte_equal`
+    silently passes for a symlinked install because it follows the link.
+    Returns None on any failure; callers fall back to the repo-only fields.
+    """
+    script = repo_root / INSTALLER_SCRIPT
+    if not script.is_file():
+        warn(f"{INSTALLER_SCRIPT} not found; store shows repo installs only")
+        return None
+    try:
+        name = "research_skill_installer"
+        spec = importlib.util.spec_from_file_location(name, script)
+        module = importlib.util.module_from_spec(spec)
+        # Register before executing: @dataclass resolves its own module via
+        # sys.modules[cls.__module__], which is None until this assignment.
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+        return module
+    except Exception as exc:  # a broken installer must not break the dashboard
+        warn(f"could not import research-skill-installer: {exc}")
+        return None
+
+
+def installer_targets(installer: Any, repo_root: Path) -> list[Any]:
+    if installer is None:
+        return []
+    try:
+        return installer.load_targets(repo_root)
+    except SystemExit:  # installer.fail() on a malformed target table
+        warn("research-skill-installer could not read its target table")
+        return []
+    except Exception as exc:
+        warn(f"research-skill-installer target table failed to load: {exc}")
+        return []
+
+
+def install_rows(installer: Any, repo_root: Path, targets: list[Any],
+                 collection: str, name: str, path: Path) -> list[dict[str, Any]]:
+    if installer is None or not targets:
+        return []
+    try:
+        source = installer.SkillSource(collection, name, path)
+        return [
+            {
+                "target": state.target.name,
+                "scope": state.target.scope,
+                "agent": state.target.agent,
+                "path": str(state.path),
+                "form": state.form,
+                "ok": state.ok,
+                "disabled": state.disabled,
+                "detail": state.detail,
+            }
+            for state in installer.scan(repo_root, source, targets)
+            if state.form != "missing"
+        ]
+    except Exception as exc:
+        warn(f"install scan failed for {collection}/{name}: {exc}")
+        return []
+
+
 def build_store(repo_root: Path) -> dict[str, Any]:
     hub_dir = repo_root / "research-skills-hub"
     claude_dir = repo_root / ".claude" / "skills"
     agents_dir = repo_root / ".agents" / "skills"
+    installer = load_installer(repo_root)
+    targets = installer_targets(installer, repo_root)
 
     collections: list[dict[str, Any]] = []
     hub_skill_names: set[str] = set()
@@ -792,8 +867,19 @@ def build_store(repo_root: Path) -> dict[str, Any]:
                         "description": description,
                         "license": license_,
                         "has_scripts": has_scripts,
+                        # `installed` and `sync` describe the two repository
+                        # directories only, and are kept because the schema is
+                        # additive. `installs` is the full picture across every
+                        # registered target; prefer it when present.
                         "installed": installed,
                         "sync": sync,
+                        "install_form": (
+                            installer.install_form(repo_root, collection_name)
+                            if installer else None
+                        ),
+                        "installs": install_rows(
+                            installer, repo_root, targets, collection_name, name, skill_dir
+                        ),
                     }
                 )
             collections.append({"name": collection_name, "skills": skills})
@@ -831,7 +917,42 @@ def build_store(repo_root: Path) -> dict[str, Any]:
             }
         )
 
-    return {"collections": collections, "orphans": orphans}
+    # Orphans above cover the two repository directories. Ask the installer for
+    # the rest: an install whose hub source vanished is invisible to any scan
+    # that starts from the hub, and a dangling symlink is exactly that case.
+    known_orphans = {entry["name"] for entry in orphans}
+    if installer is not None and targets:
+        try:
+            for entry in installer.scan_unknown(repo_root, targets, hub_skill_names):
+                if entry["name"] in known_orphans:
+                    continue
+                orphans.append(
+                    {
+                        "name": entry["name"],
+                        "description": None,
+                        "installed": {},
+                        "sync": "installed_no_hub_source",
+                        "installs": entry["installs"],
+                    }
+                )
+        except Exception as exc:
+            warn(f"orphan scan across targets failed: {exc}")
+
+    return {
+        "collections": collections,
+        "orphans": orphans,
+        "targets": [
+            {
+                "name": target.name,
+                "path": str(target.path),
+                "scope": target.scope,
+                "agent": target.agent,
+                "default": target.default,
+                "exists": target.path.is_dir(),
+            }
+            for target in targets
+        ],
+    }
 
 
 # --------------------------------------------------------------------------
