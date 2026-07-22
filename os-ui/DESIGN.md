@@ -143,7 +143,8 @@ The old tab-shell concept is superseded.
 2. **Projects**: snapshot cards, round score track, round cards, evaluations,
    OS Feedback, and local skills.
 3. **Skill Store**: hub collections, orphan skills, sync badges, script
-   warnings, license labels, and copy-only install/sync-back commands.
+   warnings, license labels, per-target install state, and a per-location
+   enable/disable toggle; installing elsewhere stays a copied command.
 
 ## 5. State Semantics
 

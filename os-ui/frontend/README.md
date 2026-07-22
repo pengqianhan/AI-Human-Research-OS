@@ -96,7 +96,9 @@ The build output goes to `dist/`, which is gitignored.
   `tailwind.config.js`.
 - App names, icons, and default window sizes: edit `src/desktop/apps.tsx`.
 - Dock copy commands: edit constants in `src/desktop/Dock.tsx`.
-- Skill install/sync-back command construction: edit `src/lib/skills.ts`.
+- Skill install command construction: edit `src/lib/skills.ts`. The
+  per-location enable/disable toggle lives in `src/components/SkillInstalls.tsx`
+  and posts to the Vite middleware in `skill-toggle-plugin.ts`.
 - `state.json` shape: update `src/types.ts`, `os-ui/DESIGN.md`, and the
   generator together.
 - Fixed UI copy: edit the page or component that owns the text. Dynamic

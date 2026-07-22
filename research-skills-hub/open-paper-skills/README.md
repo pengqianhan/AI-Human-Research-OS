@@ -19,7 +19,7 @@ at source commit `8f854bd`.
 | [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) | Apply a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly. | Original skill, Pengqian Han; uses Andrej Karpathy's *CLAUDE.md* notes as attributed reference material |
 | [human-cognition-cache](human-cognition-cache/README.md) | Scaffold tasks beyond current understanding with a project-local cognition map, decision routing, and artifact-grounded teaching. | Original, Pengqian Han |
 | [paper-wiki-manager](paper-wiki-manager/SKILL.md) | Maintain an OKF paper wiki with paper, topic, and concept pages, project links, graph visualization, and validation. | Original, Pengqian Han; supersedes `paper-library-manager` |
-| [research-skill-installer](research-skill-installer/SKILL.md) | Install, sync back, inspect, update, or remove Research-skills-hub skills in both Codex and Claude Code. | Repo-local support skill |
+| [research-skill-installer](research-skill-installer/SKILL.md) | Install, inspect, update, disable, enable, or remove Research-skills-hub skills across every registered target (repo, global, per-project). | Repo-local support skill |
 | [task-file-builder](task-file-builder/SKILL.md) | Draft context-rich `task.md` briefs for fresh Claude Code sessions. | Original, Pengqian Han |
 | [uv-env](uv-env/SKILL.md) | Set up and manage uv-based Python environments for research projects. | Repo-local support skill |
 | [discover-academic-skills](discover-academic-skills/SKILL.md) | Discover and strictly filter research/academic skills from skills.sh, scoring survivors with reasons for human-gated intake. | Original, Pengqian Han |
@@ -40,9 +40,11 @@ cp -R research-skills-hub/open-paper-skills/<skill> .agents/skills/<skill>
 cp -R research-skills-hub/open-paper-skills/<skill> .claude/skills/<skill>
 ```
 
-Keep `.agents/skills/` and `.claude/skills/` byte-identical.
+Install a hub skill into the agent directories through the installer, never by
+hand. An install is a symlink to the hub or a copy, decided by the collection's
+`SOURCE.md`; the two directories are no longer required to be byte-identical.
 
-The [research-skill-installer](research-skill-installer/SKILL.md) skill can do
+The [research-skill-installer](research-skill-installer/SKILL.md) skill does
 this deterministically:
 
 ```bash
@@ -169,17 +171,20 @@ refactor the auth middleware to support API keys
 
 ## research-skill-installer
 
-Installs skills from `research-skills-hub/` into both `.agents/skills/` and
-`.claude/skills/` so Codex and Claude Code see the same skill set.
+Installs skills from `research-skills-hub/` into every target in
+`assets/targets.toml` — the repository's `.agents/skills/` and `.claude/skills/`,
+the global agent directories, and each Research Project's. An install is a
+symlink back to the hub or a copy, decided by the collection's `SOURCE.md`; see
+[ADR 0002](../docs/adr/0002-skill-install-form-and-targets.md).
 
 Example commands:
 
 ```bash
-python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py list
-python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status research-bible
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py targets
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status
 python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible
-python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --update
-python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py sync-back research-bible --from agents
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install research-bible --target project-claude
+python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py disable research-bible --target repo-claude
 ```
 
 ## task-file-builder

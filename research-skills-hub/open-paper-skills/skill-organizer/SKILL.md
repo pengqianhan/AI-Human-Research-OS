@@ -154,6 +154,6 @@ Confirm to the user:
   Original/Adapted attribution for `open-paper-skills`).
 - That the top-level `research-skills-hub/index.md` and `FILETREE.md` list
   collections only, so they need no per-skill edit.
-- Optionally remind them to install the skill:
-  `cp -R research-skills-hub/<collection>/<name> .claude/skills/<name>` and the
-  matching `.agents/skills/<name>` copy (keep both byte-identical).
+- Optionally remind them to install the skill through the installer, never by
+  hand: `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install <name>`.
+  It places a symlink or a copy depending on the collection's `SOURCE.md`.

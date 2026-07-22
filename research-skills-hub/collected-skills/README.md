@@ -41,7 +41,8 @@ cp -R research-skills-hub/collected-skills/<skill> .agents/skills/<skill>
 cp -R research-skills-hub/collected-skills/<skill> .claude/skills/<skill>
 ```
 
-Keep `.agents/skills/` and `.claude/skills/` byte-identical.
+Install through `research-skill-installer`, never by hand; it decides symlink
+vs copy from the collection's `SOURCE.md`.
 
 ## Prerequisites
 

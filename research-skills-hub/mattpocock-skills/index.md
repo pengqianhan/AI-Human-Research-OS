@@ -53,5 +53,7 @@ From the repository root (names collide with other collections, so pass
 python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install <skill> --collection mattpocock-skills
 ```
 
-Because these are a read-only mirror, do not `sync-back` into this collection —
-promote local changes into `collected-skills/` instead.
+Because these are a read-only mirror, do not edit skills here or promote
+changes back into this collection — cherry-pick into `collected-skills/`
+instead. This collection is installed as copies, not symlinks, so an installed
+copy is never a route back into the mirror (ADR 0002).

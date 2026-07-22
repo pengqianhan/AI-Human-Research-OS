@@ -102,11 +102,11 @@ Running experiments:
 Managing skills:
 
 - Use [research-skill-installer](../research-skills-hub/open-paper-skills/research-skill-installer/SKILL.md)
-  to install, update, or sync back skills between the hub and the agent skill
-  directories.
+  to install, update, disable, enable, or remove skills across the registered
+  targets.
 - Use [research-skills-hub/](../research-skills-hub/) as the canonical store.
-- Installed copies live in `.agents/skills/` and `.claude/skills/` and should
-  stay byte-identical.
+- Each install is a symlink back to the hub or a copy, decided by the
+  collection's `SOURCE.md`; the agent directories are no longer byte-identical.
 
 ## Entry Templates
 

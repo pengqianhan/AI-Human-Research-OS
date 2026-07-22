@@ -16,6 +16,7 @@ cp -R research-skills-hub/<collection>/<skill> .claude/skills/<skill>
 ```
 
 Review a skill's `SKILL.md` and bundled scripts before installing it from
-outside this repository. Keep `.agents/skills/` and `.claude/skills/`
-byte-identical. If public top-level entrypoints changed, run `filetree-simple generate`,
-then `filetree-simple lint`.
+outside this repository. Install through `research-skill-installer`, never by
+hand: it places each skill as a symlink to the hub or a copy, decided by the
+collection's `SOURCE.md`. If public top-level entrypoints changed, run
+`filetree-simple generate`, then `filetree-simple lint`.
