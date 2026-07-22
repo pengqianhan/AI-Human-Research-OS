@@ -1,0 +1,67 @@
+# Install targets for research-skill-installer (ADR 0002).
+#
+# Adding a target is a new [[target]] row. The installer reads this table and
+# never hardcodes a directory, so a new agent or a new machine layout costs one
+# row and zero code.
+#
+# Keys:
+#   name     stable identifier used by --target
+#   path     directory that holds installed skills; "~" expands to $HOME
+#   glob     alternative to path: a shell glob of parent directories, each of
+#            which gets `subdir` appended. Use for "every project".
+#   subdir   required with glob; appended to each glob match
+#   exclude  basenames to skip when expanding a glob
+#   scope    repo | global | project — informational, shown in status output
+#   default  true means `install` writes here when no --target is given
+#
+# Paths are relative to the repository root unless they start with "~".
+
+[[target]]
+name = "repo-claude"
+path = ".claude/skills"
+scope = "repo"
+agent = "claude"
+default = true
+
+[[target]]
+name = "repo-codex"
+path = ".agents/skills"
+scope = "repo"
+agent = "codex"
+default = true
+
+[[target]]
+name = "global-claude"
+path = "~/.claude/skills"
+scope = "global"
+agent = "claude"
+
+[[target]]
+name = "global-codex"
+path = "~/.codex/skills"
+scope = "global"
+agent = "codex"
+
+[[target]]
+name = "global-agents"
+path = "~/.agents/skills"
+scope = "global"
+agent = "codex"
+
+# One row covers every current and future project: the glob is expanded at run
+# time, so instantiating a project does not require editing this table.
+[[target]]
+name = "project-claude"
+glob = "projects-folder/*"
+subdir = ".claude/skills"
+exclude = ["templates"]
+scope = "project"
+agent = "claude"
+
+[[target]]
+name = "project-codex"
+glob = "projects-folder/*"
+subdir = ".agents/skills"
+exclude = ["templates"]
+scope = "project"
+agent = "codex"
