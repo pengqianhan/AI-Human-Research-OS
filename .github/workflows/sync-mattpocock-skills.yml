@@ -1,8 +1,9 @@
 name: Sync mattpocock-skills mirror
 
-# Weekly, human-gated refresh of the read-only `mattpocock-skills` vendored
-# mirror. Detects upstream drift and opens (or updates) a PR — it NEVER merges.
-# The PR diff is the review gate required by ADR 0001.
+# Weekly, fully automatic refresh of the read-only `mattpocock-skills` vendored
+# mirror. Detects upstream drift, opens a PR, and squash-merges it immediately.
+# The PR exists only as an audit trail of what landed — there is no review gate
+# (ADR 0001, superseded 2026-07-24: upstream is a maintained repo we track).
 
 on:
   schedule:
@@ -28,9 +29,10 @@ jobs:
       - name: Refresh mirror from upstream
         run: bash research-skills-hub/mattpocock-skills/scripts/refresh.sh
 
-      - name: Open or update PR when upstream changed
+      - name: Open and auto-merge a PR when upstream changed
         env:
           GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
           if [[ -z "$(git status --porcelain)" ]]; then
@@ -46,16 +48,22 @@ jobs:
           git commit -m "chore: sync mattpocock-skills mirror from upstream"
           git push -f -u origin "$BRANCH"
 
-          if gh pr view "$BRANCH" >/dev/null 2>&1; then
-            echo "PR for $BRANCH already open; force-pushed the latest diff."
+          # Reuse a still-open PR (a previous run's merge may have failed);
+          # `gh pr view` also matches merged PRs, so filter on state explicitly.
+          PR="$(gh pr list --head "$BRANCH" --state open --json number -q '.[0].number')"
+          if [[ -n "$PR" ]]; then
+            echo "PR #$PR is still open; force-pushed the latest diff onto it."
           else
             BODY=$(printf '%s\n' \
               'Automated wholesale refresh of the read-only `mattpocock-skills` vendored mirror' \
               'from https://github.com/mattpocock/skills (paths `skills/engineering`, `skills/productivity`).' \
               '' \
-              'Review the diff before merging — this is the human gate per ADR 0001.' \
+              'Merged automatically — this PR is an audit trail, not a review gate.' \
               'Do not edit mirrored skills in place; adapt by cherry-picking into `collected-skills/`.')
-            gh pr create --base "${GITHUB_REF_NAME}" --head "$BRANCH" \
+            PR="$(gh pr create --base "$BASE" --head "$BRANCH" \
               --title "Sync mattpocock-skills mirror from upstream" \
-              --body "$BODY"
+              --body "$BODY" | tail -1 | grep -oE '[0-9]+$')"
           fi
+
+          gh pr merge "$PR" --squash --delete-branch
+          echo "Merged PR #$PR into $BASE."

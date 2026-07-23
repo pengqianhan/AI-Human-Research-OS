@@ -60,7 +60,7 @@ if [[ "$changed" -eq 1 ]]; then
     printf '%s\n' '- **License**: MIT (see the upstream `LICENSE`). Preserve attribution when redistributing.'
     printf -- '- **Pinned upstream commit**: `%s`\n' "$SHA"
     printf -- '- **Last synced**: %s (UTC)\n' "$DATE"
-    printf '%s\n' '- **Sync policy**: read-only vendored mirror; refreshed wholesale (`rsync --delete`) by [scripts/refresh.sh](scripts/refresh.sh) via the weekly sync workflow, which opens a PR and never auto-merges. To adapt a skill, cherry-pick it into `../collected-skills/` instead of editing it here. See [../docs/adr/0001-external-skill-intake-and-sync.md](../docs/adr/0001-external-skill-intake-and-sync.md).'
+    printf '%s\n' '- **Sync policy**: read-only vendored mirror; refreshed wholesale (`rsync --delete`) by [scripts/refresh.sh](scripts/refresh.sh) via the weekly sync workflow, which opens a PR and merges it automatically. To adapt a skill, cherry-pick it into `../collected-skills/` instead of editing it here. See [../docs/adr/0001-external-skill-intake-and-sync.md](../docs/adr/0001-external-skill-intake-and-sync.md).'
   } > "$COLLECTION_DIR/SOURCE.md"
   echo "mattpocock-skills: mirror updated to upstream ${SHA:0:12}."
 else
