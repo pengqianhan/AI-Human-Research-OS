@@ -31,6 +31,40 @@ The human retains authority over goals, values, permissions, budgets,
 irreversible actions, and material risk. When understanding matters, the agent
 explains the real artifact at the depth needed for the human's role.
 
+## Autonomous capture
+
+The cache maintains itself. A map that only updates when the human remembers to
+ask for an update goes stale quickly, and the interruption costs more than the
+entry is worth. Two of the four quadrants cannot be filled any other way: nobody
+can report their own implicit criteria or name their own blind spots.
+
+So when a substantive task finishes, the agent reviews the conversation, records
+what it durably revealed, and closes its reply with one line naming the entry —
+`Recorded cognition cog-20260724-001`. No confirmation prompt, no pending queue.
+One sentence from the human corrects or deletes any entry, and Git keeps the
+rest of the audit trail.
+
+Three rules keep silent writing honest:
+
+- **Merge before appending.** An existing entry on the topic is updated, not
+  duplicated. Without a size cap and without write-time review, duplicates are
+  how the cache would rot.
+- **Evidence sets confidence.** Autonomous entries are `source: inferred`, but a
+  demonstration witnessed in conversation counts as the real thing. Overstating
+  cognition makes the agent explain too little, so `known_knowns` needs
+  explanation-level evidence or better.
+- **Nothing is deleted on a timer.** Stale entries are flagged for
+  re-confirmation or archived in place with their IDs intact.
+
+Enabling it in another project takes one line in whatever file that project
+always loads — `AGENTS.md`, `CLAUDE.md`, or the instructions they import:
+
+```text
+At the end of every substantive task, use $human-cognition-cache to record what
+the conversation revealed about my cognition, without asking first, and name each
+write in your closing line.
+```
+
 ## Example: train GPT-2 before understanding GPT-2 training
 
 A newcomer can ask an agent to train GPT-2 without first mastering tokenizers,
@@ -84,6 +118,8 @@ See [SKILL.md](SKILL.md) for the agent procedure. Detailed rules live in:
 
 ## Example requests
 
+Capture is automatic, so these are for when you want a branch run on demand.
+
 ```text
 Use $human-cognition-cache to initialize a cognition map for this project.
 Use $human-cognition-cache to help me complete this task even though I do not understand the implementation yet.
@@ -95,9 +131,13 @@ Use $human-cognition-cache to update my cognition map using evidence from this t
 ## Privacy
 
 The cache may be git-tracked and published with the repository. It excludes
-credentials and high-sensitivity personal data, treats behavioral inference as
-low-confidence evidence, and requires confirmation before sensitive or
-long-term personal claims are persisted.
+credentials and high-sensitivity personal data outright, treats behavioral
+inference as low-confidence evidence, and asks before recording identifying
+personal claims that are not cognition.
+
+Cognition itself — including capability and long-term observations — is recorded
+without a confirmation prompt, because the human keeps control a cheaper way:
+every write is announced, and one sentence revokes it.
 
 Human Cognition Cache is an original skill by Pengqian Han and is distributed
 under the repository's MIT license.

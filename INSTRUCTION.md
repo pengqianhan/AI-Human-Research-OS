@@ -41,9 +41,17 @@ platform infrastructure.
 
 1. If [`human/human-cognition/index.md`](human/human-cognition/index.md)
    exists, skim it and the frontmatter plus `Active Index` of its four quadrant
-   files. Read full entries only when relevant. Before finishing, update the
-   cache only for durable cognition changes, following the
-   `human-cognition-cache` privacy rules.
+   files. Read full entries only when relevant.
+
+   Capture cognition autonomously. When a substantive task finishes, judge from
+   the conversation what it revealed about the human's cognition and write
+   durable observations to the cache **without asking first**; the human should
+   never have to invoke the skill to keep the cache current. Report each write
+   as one closing line naming the entry ID, and act on the human's word alone to
+   correct or remove it. Persist any non-private cognition, engineering and
+   tooling included; never persist credentials or the high-sensitivity personal
+   data named in the `human-cognition-cache` privacy rules. Follow that skill for
+   merge-before-append, evidence thresholds, decay, and blind-spot handling.
 2. Read [HANDOFF.md](HANDOFF.md), especially Active Work and Decisions, before
    reopening settled questions; re-check its claims with repository evidence
    such as `git status`.

@@ -1,6 +1,6 @@
 ---
 name: human-cognition-cache
-description: Scaffold human cognition with a project-local, git-trackable four-quadrant cache. Use when (1) initializing, reading, updating, or migrating the cache; (2) completing a task beyond the human's confirmed understanding, where cognition should guide agent autonomy and decision escalation; or (3) explaining a verified artifact at the human's level and recording evidence-backed cognitive growth.
+description: Scaffold human cognition with a project-local, git-trackable four-quadrant cache. Use when (1) initializing, reading, updating, or migrating the cache; (2) completing a task beyond the human's confirmed understanding, where cognition should guide agent autonomy and decision escalation; (3) explaining a verified artifact at the human's level and recording evidence-backed cognitive growth; or (4) finishing any substantive task, where the conversation revealed durable cognition that should be captured without the human having to ask.
 ---
 
 # Human Cognition Cache
@@ -21,7 +21,7 @@ Scope:
 Inputs:
 - The current request, conversation, and verified task artifacts.
 - The relevant entries in the project-local cognition cache.
-- Human confirmation for sensitive or durable personal claims.
+- Human corrections to entries the agent recorded on its own.
 
 Outputs:
 - A maintained Markdown cognition cache with indexed, evidence-labelled entries.
@@ -50,6 +50,51 @@ Limitations:
   evidence. Do not persist it merely because the cache is silent.
 
 Keep the same stable cognition ID when an entry moves between quadrants.
+
+## Autonomous Capture
+
+Keeping the cache current is the agent's job, not the human's. Waiting to be
+invoked costs continuity and starves the two quadrants the human cannot
+self-report: nobody can state their own implicit criteria or blind spots.
+
+Capture at task boundaries, not every turn. When a substantive task finishes,
+review the whole conversation for what it revealed about the human's cognition
+and record it in one pass. A single turn rarely carries enough evidence, and
+per-turn capture manufactures low-confidence noise.
+
+Write without asking, then say so. Record the entry, and close the reply with
+one line naming the ID, such as `Recorded cognition cog-20260724-001`. Do not
+interrupt the task to request permission, do not open a pending queue, and do
+not stage a review ritual. The human's word alone is enough to correct or delete
+any entry; version control carries the rest of the audit trail.
+
+Persist any non-private cognition. There is no topic filter: engineering,
+tooling, and workflow cognition shape agent routing at least as much as subject
+knowledge does. The only gates are the privacy guardrails below and the
+requirement that the observation be durable and human-scoped.
+
+**Merge before appending.** Scan the target quadrant's `Active Index` first.
+When an existing entry already covers the topic, update it — append evidence,
+adjust confidence, widen or narrow scope, refresh `last_verified` — instead of
+creating a new ID. This is a hard prerequisite, not a preference: silent capture
+has no size cap, so unchecked duplicates are its main failure mode and the human
+cannot see them accumulating.
+
+Let observed evidence set confidence. Mark autonomous entries `source:
+inferred`, but take `evidence_type` and `confidence` from what actually
+happened: a demonstration witnessed in conversation is real evidence and should
+not be discounted for lacking confirmation. Overstating cognition is the more
+harmful error, because it makes the agent explain too little and leaves the
+human silently behind, so `known_knowns` requires `explanation`-level evidence
+or stronger. Inference alone never promotes an entry there.
+
+Record blind spots, then raise them. Write `unknown_unknowns` entries as
+questions or hypotheses, never diagnoses, and surface the relevant one when a
+later task touches it. A blind spot the human is never told about has no value
+to them.
+
+See [references/cache-schema.md](references/cache-schema.md) for decay,
+archiving, and entry fields.
 
 ## Branches and Context Pointers
 
@@ -123,14 +168,21 @@ at the scope supported by observed evidence.
 
 ### 4. Persist durable cognition
 
-Review candidate changes at the end of the task. Persist only human-scoped,
-durable cognition that will improve future collaboration. Label inferred
-observations conservatively and preserve the narrowest scope supported by the
-evidence. A read-only or inconclusive task may correctly produce no cache edit.
+Run this step at the end of every substantive task, whether or not the human
+asked for it, following the Autonomous Capture rules above. Persist only
+human-scoped, durable cognition that will improve future collaboration, and
+preserve the narrowest scope supported by the evidence. A read-only or
+inconclusive task may correctly produce no cache edit.
+
+Also apply the decay rules while you are here: refresh `last_verified` on any
+entry this task re-confirmed, and mark or archive entries the schema has aged
+out.
 
 Complete when every persisted entry has a stable ID, source, confidence,
 evidence, dates, status, and current index entry; every move has a transition
-stub; and sensitive or long-term claims have explicit human confirmation.
+stub; no new entry duplicates an existing one; every write is named in the
+reply's closing line; and any high-sensitivity claim was withheld rather than
+recorded.
 
 ## Boundaries
 
@@ -148,8 +200,14 @@ stub; and sensitive or long-term claims have explicit human confirmation.
 
 - Never record credentials, recovery material, government IDs, bank details,
   medical records, or other high-sensitivity personal data.
-- Ask before recording identifying, sensitive, capability-related, or long-term
-  personal claims.
+- Record cognition claims — including capability and long-term ones — without
+  asking, and disclose each write in the reply's closing line. Continuity of the
+  conversation outweighs a confirmation ritual for cognition the human can
+  revoke with one sentence. This exemption covers cognition only; it never
+  licenses recording the high-sensitivity data listed above, which is withheld
+  rather than confirmed.
+- Ask before recording identifying personal claims that are not cognition, such
+  as location, employer, or affiliation.
 - Mark agent-derived observations as `source: inferred` and keep confidence
   conservative.
 - Record candidate blind spots as questions or hypotheses, never diagnoses.
