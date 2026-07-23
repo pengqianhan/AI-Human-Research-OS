@@ -7,6 +7,7 @@ Original or repo-maintained skills for Open Paper and this Research OS. See
 * [discover-academic-skills](discover-academic-skills/SKILL.md) - Discovers and strictly filters research/academic skills from skills.sh, scoring survivors with reasons for human-gated intake.
 * [drawio-paper](drawio-paper/SKILL.md) - Generates publication-quality academic diagrams and statistical plots using a PaperBanana-inspired pipeline.
 * [explain-anything-html](explain-anything-html/SKILL.md) - Produces a rich, self-contained interactive HTML explanation of a paper, blog post, or hard concept, with background, intuition, walkthrough, and quiz.
+* [explain-paper-html](explain-paper-html/SKILL.md) - Builds evidence-traceable interactive HTML lessons from academic papers, verified in a browser before hand-off.
 * [filetree-simple](filetree-simple/SKILL.md) - Generates and lints a compact top-level FILETREE.md navigation map from directory-owned entrypoints without Git or third-party dependencies.
 * [human-cognition-cache](human-cognition-cache/README.md) - Scaffolds tasks beyond current understanding with a project-local cognition map, decision routing, and artifact-grounded teaching.
 * [karpathy-coding-rules](karpathy-coding-rules/SKILL.md) - Applies a concise coding-discipline checklist before coding tasks: read first, plan narrowly, keep diffs small, verify behavior, and communicate clearly.

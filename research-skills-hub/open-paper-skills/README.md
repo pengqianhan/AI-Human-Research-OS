@@ -30,6 +30,7 @@ at source commit `8f854bd`.
 | [okf-repo-organizer](okf-repo-organizer/SKILL.md) | Organize a repository, folder, or knowledge corpus into generic Open Knowledge Format (OKF) bundles, with a bundled conformance validator. | Original, Pengqian Han |
 | [session-handoff](session-handoff/SKILL.md) | Maintain or resume a repository-root `HANDOFF.md` that transfers a cross-session task arc to a cold session. | Repo-local support skill |
 | [skill-organizer](skill-organizer/SKILL.md) | Register a newly added hub skill into its collection's `index.md` and `README.md`. | Repo-local support skill |
+| [explain-paper-html](explain-paper-html/SKILL.md) | Build an evidence-traceable interactive HTML lesson from an academic paper, verified in a browser before hand-off. | Original, Pengqian Han |
 
 ## Installation
 
@@ -60,6 +61,10 @@ python research-skills-hub/open-paper-skills/research-skill-installer/scripts/in
 - `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
   `hf` CLI is optional for faster paper fetching.
 - `filetree-simple`: Python 3.9+ standard library; Git is not required.
+- `explain-paper-html`: Python 3.9+ standard library for
+  `scripts/verify_explanation.py`, Node for its inline-JavaScript syntax check,
+  and browser automation (or a headless browser) for the required browser and
+  behavior matrices.
 - `okf-repo-organizer`: runs its bundled validator with `uv run` (installs the
   declared PEP 723 dependency automatically), or Python 3.11+ with PyYAML.
 - `uv-env`: requires or installs the `uv` Python package manager.
@@ -398,6 +403,34 @@ Example requests:
 /skill-organizer I added a new skill to collected-skills — register it
 /skill-organizer update the open-paper-skills index and README for this skill
 /skill-organizer register this skill, source is https://github.com/owner/repo
+```
+
+## explain-paper-html
+
+Builds a teaching **lesson** from an academic paper or PDF: one self-contained,
+responsive HTML file per paper whose every technical claim, equation, and
+reported number is traced back to a page or section of the source. The lesson
+follows a background → intuition → mechanism → evidence → boundaries path and
+ends in five feedback-bearing multiple-choice questions. For a series of papers
+it states what each earlier paper established and links the pages together.
+
+Unlike `explain-anything-html`, which explains any source, this one is
+paper-specific and gates hand-off on verification: an evidence ledger, the
+bundled static verifier, and an exercised browser matrix.
+
+Verify every output before hand-off:
+
+```bash
+python research-skills-hub/open-paper-skills/explain-paper-html/scripts/verify_explanation.py /absolute/path/to/explanation.html
+```
+
+Example requests:
+
+```text
+/explain-paper-html turn https://arxiv.org/abs/2401.12345 into an interactive lesson
+/explain-paper-html explain this PDF in Chinese, keeping English technical terms
+/explain-paper-html build connected lessons for these three papers as a series
+/explain-paper-html match the visual style of this reference page
 ```
 
 ## License

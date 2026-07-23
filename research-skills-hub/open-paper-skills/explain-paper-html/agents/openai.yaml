@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Paper HTML"
+  short_description: "Create evidence-traceable interactive paper tutorials"
+  default_prompt: "Use $explain-paper-html to turn this academic paper into a verified, self-contained interactive HTML explanation."
