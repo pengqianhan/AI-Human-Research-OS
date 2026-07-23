@@ -61,6 +61,16 @@ if [[ "$changed" -eq 1 ]]; then
     printf -- '- **Pinned upstream commit**: `%s`\n' "$SHA"
     printf -- '- **Last synced**: %s (UTC)\n' "$DATE"
     printf '%s\n' '- **Sync policy**: read-only vendored mirror; refreshed wholesale (`rsync --delete`) by [scripts/refresh.sh](scripts/refresh.sh) via the weekly sync workflow, which opens a PR and merges it automatically. To adapt a skill, cherry-pick it into `../collected-skills/` instead of editing it here. See [../docs/adr/0001-external-skill-intake-and-sync.md](../docs/adr/0001-external-skill-intake-and-sync.md).'
+    # This block is load-bearing, not documentation: the installer parses it, and
+    # a collection without it defaults to `symlink`. It lives here because this
+    # script rewrites SOURCE.md wholesale — dropping it silently converts every
+    # installed mirror skill to a symlink on the next refresh.
+    printf '%s\n' '- **Install form**: `copy`. `research-skill-installer` reads this field and must'
+    printf '%s\n' '  never symlink skills from this collection. The installed copy is what pins the'
+    printf '%s\n' '  version: it keeps a merged upstream sync PR from silently changing a skill'
+    printf '%s\n' '  already in use, and it survives an upstream rename that `rsync --delete` would'
+    printf '%s\n' '  otherwise turn into a dangling link. Collections without this field default to'
+    printf '%s\n' '  `symlink`. See [../docs/adr/0002-skill-install-form-and-targets.md](../docs/adr/0002-skill-install-form-and-targets.md).'
   } > "$COLLECTION_DIR/SOURCE.md"
   echo "mattpocock-skills: mirror updated to upstream ${SHA:0:12}."
 else
