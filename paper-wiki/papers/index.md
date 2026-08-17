@@ -1,10 +1,12 @@
 # Paper
 
+* [TradingAgents: Multi-Agents LLM Financial Trading Framework](2412.20138.md) - A trading-firm-inspired multi-agent LLM framework with analyst, bull/bear researcher, trader, and risk-management roles that outperforms rule-based baselines on backtested stock trading.
 * [Recursive Language Models](2512.24601.md) - Treats a long prompt as a REPL variable the model inspects, decomposes, and recursively sub-queries, handling 10M+ token inputs with a fixed-window model.
 * [SkillFoundry: Building Self-Evolving Agent Skill Libraries from Heterogeneous Scientific Resources](2604.03964.md) - A self-evolving framework that mines heterogeneous scientific resources into validated, reusable agent skill packages and improves coding/scientific agents on MoSciBench and genomics tasks.
 * [Self-Evolving Multi-Agent Systems via Decentralized Memory](2605.22721.md) - Proposes DecentMem, per-agent dual-pool memory for self-evolving MAS with up to 23.8% accuracy gain over centralized memory.
 * [ScientistOne: Towards Human-Level Autonomous Research via Chain-of-Evidence](2605.26340.md) - Introduces Chain-of-Evidence, ScientistOne, and a four-part integrity audit for tracing autonomous-research claims to literature, code, and evaluator outputs.
 * [AutoScientists: Self-Organizing Agent Teams for Long-Running Scientific Experimentation](2605.28655.md) - A paper about decentralized AI agent teams for long-running scientific experimentation.
+* [COLLEAGUE.SKILL: Automated AI Skill Generation via Expert Knowledge Distillation](2605.31264.md) - An open-source pipeline that distills heterogeneous human traces into versioned, inspectable, correctable agent-skill packages across colleague, celebrity, and relationship presets.
 * [GPU Forecasters: Language Models as Selective Surrogates for Kernel Runtime Optimization](2605.31464.md) - A paper about using LLMs as selective surrogate evaluators that forecast GPU kernel performance to accelerate kernel search.
 * [OpenSkill: Open-World Self-Evolution for LLM Agents](2606.06741.md) - A paper about agents that build skills and verification signals from open-world resources without target-task supervision.
 * [Decentralized Multi-Agent Systems with Shared Context](2606.10662.md) - A paper about decentralized language-model agents coordinating through shared verified context.
@@ -18,3 +20,4 @@
 * [AI Agents Do Not Fail Alone: The Context Fails First](2607.14275.md) - Validates a seven-criterion context-quality score as a preflight signal for agent reliability under controlled context variation.
 * [SearchOS-V1: Towards Robust Open-Domain Information-Seeking Agent Collaboration](2607.15257.md) - Externalizes relational coverage, grounded evidence, frontier tasks, and search failures into shared state governed by continuous scheduling and middleware.
 * [LLM-as-a-Coach: Experiential Learning for Non-Verifiable Tasks](2607.18110.md) - Replaces rubric-based RL's scalar reward with coach-extracted experiential knowledge internalized by on-policy context distillation, improving transfer and reducing reward overoptimization.
+* [MatrAIx: Simulating the World with 8.3 Billion Persona Agents](2608.04205.md) - A population-scale simulated-user infrastructure that pairs an 8.3-billion-record persona dataset with four interaction environments and 1,010 application tasks to evaluate AI systems and digital products across heterogeneous user cohorts.

@@ -21,6 +21,9 @@ This topic tracks papers about LLM agents that execute tasks, build reusable ski
 * [EurekAgent](../papers/2606.13662.md) - CLI agents coordinated by an environment that manages permissions, artifacts, budgets, and human oversight.
 * [Harness Handbook](../papers/2607.13285.md) - a behavior-centric map and progressive-disclosure workflow for locating where an agent harness must change.
 * [Self-Improvements in Modern Agentic Systems](../papers/2607.13104.md) - a survey of persistent agent adaptation through model parameters, prompts, memory, tools, and full scaffolds.
+* [COLLEAGUE.SKILL](../papers/2605.31264.md) - distills heterogeneous human traces into versioned, correctable, capability/behavior-split agent skill packages.
+* [TradingAgents](../papers/2412.20138.md) - role-specialized trading-firm agents using structured-document communication and bull/bear/risk debate.
+* [MatrAIx](../papers/2608.04205.md) - population-scale persona agents used as simulated evaluators of AI systems and digital products.
 
 # Synthesis
 
