@@ -19,6 +19,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 
 * [Toward Generalist Autonomous Research via Hypothesis-Tree Refinement](../papers/2606.11926.md) - uses Terminal-Bench 2.0 harness engineering as one of six Autonomous Optimization tasks for Arbor.
 * [MemoHarness](../papers/2607.14159.md) - uses an 18-task held-out Terminal-Bench split for its main fixed-harness comparison, cross-model transfer study, and cost analysis.
+* [LongHorizon-Harness](../papers/2608.01964.md) - evaluates on Terminal-Bench 2.1 via Harbor/Docker, improving Qwen 3.7-Plus with Claude Code from 69.7% to 77.2% success rate.
 
 # Notes
 
