@@ -2,8 +2,8 @@
 
 - **Upstream**: [mattpocock/skills](https://github.com/mattpocock/skills), paths `skills/engineering/` and `skills/productivity/`.
 - **License**: MIT (see the upstream `LICENSE`). Preserve attribution when redistributing.
-- **Pinned upstream commit**: `84fdeffd12f2ee307994d1eb6feb48173b6e0502`
-- **Last synced**: 2026-08-10 (UTC)
+- **Pinned upstream commit**: `068b6e0c62393147daf03530149cdce209c93da8`
+- **Last synced**: 2026-08-17 (UTC)
 - **Sync policy**: read-only vendored mirror; refreshed wholesale (`rsync --delete`) by [scripts/refresh.sh](scripts/refresh.sh) via the weekly sync workflow, which opens a PR and merges it automatically. To adapt a skill, cherry-pick it into `../collected-skills/` instead of editing it here. See [../docs/adr/0001-external-skill-intake-and-sync.md](../docs/adr/0001-external-skill-intake-and-sync.md).
 - **Install form**: `copy`. `research-skill-installer` reads this field and must
   never symlink skills from this collection. The installed copy is what pins the
