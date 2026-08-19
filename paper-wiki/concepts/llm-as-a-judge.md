@@ -21,6 +21,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [Self-Improvements in Modern Agentic Systems](../papers/2607.13104.md) - treats model-based judges as scalable intrinsic feedback and open-ended evaluation, while warning that reusing the same judge for improvement and final reporting invites reward hacking.
 * [LLM-as-a-Coach](../papers/2607.18110.md) - argues the judge interface is the bottleneck rather than the judge: keeping only the scalar score discards the textual assessment, and re-using the same model as a "coach" that emits transferable guidance transfers better.
 * [MatrAIx](../papers/2608.04205.md) - uses LLM judges to score both controlled behavioral adherence (400 trials) and human-grounded persona extraction quality (1,000 personas), and separately quantifies judge-vs-human agreement (93.8% for Claude Opus 4.8, 79.2% for GPT 5.5 within one point of a six-rater human mean) rather than treating the judge as ground truth.
+* [HarnessEval-W](../papers/2608.16859.md) - restructures the judge itself: a parent agent plus specialized sub-agents decompose an evaluation question into subproblems and produce an inspectable evidence tree, instead of a single opaque score, reaching 0.93 Spearman correlation with human preference on intentional-transition judgments.
+* [Mem0](../papers/2504.19413.md) - uses a separate, more capable LLM as its primary long-term-memory quality metric (J) to avoid the false confidence of lexical-overlap metrics (F1/BLEU-1) on factually wrong but lexically similar answers, and runs it 10 times per method to report mean ± std given judge stochasticity.
 
 # Notes
 

@@ -20,6 +20,7 @@ This topic tracks papers where multiple agents coordinate reasoning, experimenta
 * [Self-Evolving Multi-Agent Systems via Decentralized Memory](../papers/2605.22721.md) - per-agent dual-pool memory that outperforms centralized memory by up to 23.8% while cutting token usage by 49%.
 * [SearchOS-V1](../papers/2607.15257.md) - orchestrator–worker search coordinated through shared relational coverage, evidence, failures, and continuously dispatched frontier tasks.
 * [TradingAgents](../papers/2412.20138.md) - trading-firm-inspired agents coordinated through a structured-document protocol, with bull/bear research debate and risk-team debate as the only free-form dialogue stages.
+* [HarnessEval-W](../papers/2608.16859.md) - a parent agent spawns specialized sub-agents to reason over evaluation subproblems, then validates and aggregates their evidence into a final verdict.
 
 # Synthesis
 
