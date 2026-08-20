@@ -27,6 +27,8 @@ This topic tracks papers about LLM agents that execute tasks, build reusable ski
 * [OpenHands (f.k.a. OpenDevin)](../papers/2407.16741.md) - an open agent platform (event-stream protocol, sandboxed bash/IPython/browser runtime, extensible skills library, multi-agent delegation) where one generalist agent stays competitive across software-engineering, web-browsing, and miscellaneous-assistance benchmarks under a single system prompt.
 * [LLM-as-a-Verifier](../papers/2607.05391.md) - a training-free verification framework that scores agent trajectories by the expectation over scoring-token logits, used for best-of-N selection, task-progress monitoring, and dense RL rewards across coding, robotics, and medical agent domains.
 * [StateM](../papers/2608.15089.md) - an agent-native runbook that externalizes durable execution state for long-horizon CLI agents and studies how far the resulting control profile transfers across model generations, providers, and task families.
+* [MemOS](../papers/2507.03724.md) - positions memory as first-class infrastructure for persistent, self-adapting agents ("Mem-training paradigm"), unifying plaintext, activation, and parameter memory under one OS-inspired scheduling system.
+* [Agentic ESOpt](../papers/2608.17310.md) - a weight-level fine-tuning method for long-horizon LLM agents using full-parameter evolution strategies instead of backpropagation-based RL, reported to widen its advantage as task horizon and model size grow.
 
 # Synthesis
 

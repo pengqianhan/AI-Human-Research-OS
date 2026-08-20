@@ -2,6 +2,7 @@
 
 * [AI for science](ai-for-science.md) - Papers about AI systems that design, run, and revise scientific experiments.
 * [Agent environments](agent-environments.md) - Papers about the environments, permissions, artifacts, budgets, and interfaces that shape agent behavior.
+* [Agent fine-tuning](agent-fine-tuning.md) - Papers about algorithms and objectives for updating an LLM agent's weights on long-horizon, multi-turn tasks.
 * [Agent harness engineering](agent-harness-engineering.md) - Papers about understanding, modifying, evaluating, and evolving the software layer that turns foundation models into agents.
 * [Agent memory](agent-memory.md) - Papers about architectures for extracting, consolidating, and retrieving long-term memory in AI agents.
 * [Agent self-evolution](agent-self-evolution.md) - Papers about agents that improve their own skills, verification signals, or behavior after deployment.

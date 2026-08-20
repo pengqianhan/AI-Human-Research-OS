@@ -6,7 +6,7 @@ tags:
 - multi-agent-systems
 - coordination
 - shared-state
-timestamp: 2026-07-21T22:58:23Z
+timestamp: 2026-08-20T00:00:00Z
 ---
 
 # Scope
@@ -21,10 +21,11 @@ This topic tracks papers where multiple agents coordinate reasoning, experimenta
 * [SearchOS-V1](../papers/2607.15257.md) - orchestrator–worker search coordinated through shared relational coverage, evidence, failures, and continuously dispatched frontier tasks.
 * [TradingAgents](../papers/2412.20138.md) - trading-firm-inspired agents coordinated through a structured-document protocol, with bull/bear research debate and risk-team debate as the only free-form dialogue stages.
 * [HarnessEval-W](../papers/2608.16859.md) - a parent agent spawns specialized sub-agents to reason over evaluation subproblems, then validates and aggregates their evidence into a final verdict.
+* [ARIS](../papers/2605.03042.md) - a minimal two-role cross-family executor/reviewer pattern for research workflows, with reviewer access scope and context policy configured along two orthogonal axes to reduce correlated blind spots.
 
 # Synthesis
 
-Two complementary decentralization strategies appear in this set: 2606.10662 (DeLM) decentralizes agents while keeping a single shared verified context, whereas 2605.22721 (DecentMem) keeps context centralized per-agent and decentralizes memory. SearchOS instead keeps a central orchestrator and decomposes the shared state by operational concern—tasks, coverage, evidence, and failures—then projects only role-relevant slices to workers. TradingAgents shows a third pattern: a fixed pipeline of role-specialized teams that communicate mostly through structured reports, reserving natural-language debate for exactly the two stages (bull/bear research, risk-stance negotiation) where deliberation is the point — a deliberate rejection of pure message-history communication to avoid its "telephone effect." The trade-off is coordination overhead vs. agent diversity: shared context enables tight coherence, per-agent memory preserves behavioral variation, structured central state makes scheduling and completion checks explicit at the cost of a write bottleneck, and structured-document-plus-scoped-debate constrains communication cost while still allowing genuine deliberation where it matters.
+Two complementary decentralization strategies appear in this set: 2606.10662 (DeLM) decentralizes agents while keeping a single shared verified context, whereas 2605.22721 (DecentMem) keeps context centralized per-agent and decentralizes memory. SearchOS instead keeps a central orchestrator and decomposes the shared state by operational concern—tasks, coverage, evidence, and failures—then projects only role-relevant slices to workers. TradingAgents shows a third pattern: a fixed pipeline of role-specialized teams that communicate mostly through structured reports, reserving natural-language debate for exactly the two stages (bull/bear research, risk-stance negotiation) where deliberation is the point — a deliberate rejection of pure message-history communication to avoid its "telephone effect." ARIS shows a fourth, adversarial pattern distinct from the cooperative coordination above: rather than pooling agents toward a shared goal, it deliberately keeps executor and reviewer on different model families so the reviewer's critique is not correlated with the executor's own blind spots, justifying the two-role minimum by analogy to adversarial-vs-stochastic bandits rather than by a coordination-efficiency argument. The trade-off is coordination overhead vs. agent diversity: shared context enables tight coherence, per-agent memory preserves behavioral variation, structured central state makes scheduling and completion checks explicit at the cost of a write bottleneck, structured-document-plus-scoped-debate constrains communication cost while still allowing genuine deliberation where it matters, and cross-family adversarial review trades a harder optimization problem for the executor against a reduced risk of correlated, self-reinforcing errors.
 
 # Open Questions
 
@@ -33,3 +34,4 @@ Two complementary decentralization strategies appear in this set: 2606.10662 (De
 * What safeguards are needed when multiple agents update durable knowledge artifacts?
 * How do per-agent memory and shared-context approaches interact when combined in a single system?
 * When does continuously updated central state improve coordination enough to justify its contention and single-orchestrator risks?
+* When does adversarial (reviewer-vs-executor) coordination outperform cooperative coordination, and does a fixed two-role minimum generalize to tasks harder to score than research-manuscript review?
