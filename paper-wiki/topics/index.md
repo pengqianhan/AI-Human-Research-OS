@@ -5,6 +5,7 @@
 * [Agent fine-tuning](agent-fine-tuning.md) - Papers about algorithms and objectives for updating an LLM agent's weights on long-horizon, multi-turn tasks.
 * [Agent harness engineering](agent-harness-engineering.md) - Papers about understanding, modifying, evaluating, and evolving the software layer that turns foundation models into agents.
 * [Agent memory](agent-memory.md) - Papers about architectures for extracting, consolidating, and retrieving long-term memory in AI agents.
+* [Agent security and red teaming](agent-security.md) - Papers about assessing and defending the security of deployed AI agents and the infrastructure, protocols, and models beneath them.
 * [Agent self-evolution](agent-self-evolution.md) - Papers about agents that improve their own skills, verification signals, or behavior after deployment.
 * [Agent skill libraries](agent-skill-libraries.md) - Papers about building, validating, and maintaining reusable libraries of executable agent skills.
 * [Autonomous research](autonomous-research.md) - Papers about AI systems that autonomously generate, test, and refine research hypotheses or artifacts over long horizons.

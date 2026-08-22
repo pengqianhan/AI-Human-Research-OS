@@ -30,6 +30,8 @@ This topic tracks papers about LLM agents that execute tasks, build reusable ski
 * [MemOS](../papers/2507.03724.md) - positions memory as first-class infrastructure for persistent, self-adapting agents ("Mem-training paradigm"), unifying plaintext, activation, and parameter memory under one OS-inspired scheduling system.
 * [Agentic ESOpt](../papers/2608.17310.md) - a weight-level fine-tuning method for long-horizon LLM agents using full-parameter evolution strategies instead of backpropagation-based RL, reported to widen its advantage as task horizon and model size grow.
 * [AgentScope 1.0](../papers/2508.16279.md) - a ReAct-grounded, developer-centric agent framework unifying model/memory/tool abstractions, real-time steering, state persistence, and multi-agent primitives with production tooling (Evaluation, Studio, Runtime/Sandbox).
+* [SWE-bench Science](../papers/2608.19799.md) - a repository-level coding-agent benchmark for scientific software engineering (119 tasks, 98 repositories, 20 domains) with a four-mechanism failure taxonomy and a paired ablation showing scientific guidance helps or hurts repair depending on how well-grounded it is.
+* [Securing the AI Agent (AI-Infra-Guard)](../papers/2606.31227.md) - audits the MCP servers and agent-skill packages this topic tracks as capability sources from a security-red-teaming angle rather than a capability-building one, using an LLM-driven agentic harness structurally similar to this topic's other agent-as-auditor designs.
 
 # Synthesis
 
