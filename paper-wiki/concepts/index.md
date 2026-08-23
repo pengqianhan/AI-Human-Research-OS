@@ -1,5 +1,6 @@
 # Concept
 
+* [AgentScope](agentscope.md) - Open-source, Alibaba-developed multi-agent LLM platform providing model/memory/tool abstractions, a ReAct-based agent core, and infrastructure for both population-scale simulation and developer-facing agentic application deployment.
 * [BrowseComp-Plus](browsecomp-plus.md) - Multi-hop deep-research QA benchmark with a verified offline corpus of gold, evidence, and hard-negative documents.
 * [Context rot](context-rot.md) - Degradation of model quality as context grows, even inside the physical context window.
 * [GISA](gisa.md) - General information-seeking benchmark with structured item, set, list, and table answers.
