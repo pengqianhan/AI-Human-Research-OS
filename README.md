@@ -140,3 +140,4 @@ keeps per-skill upstream attribution and license terms.
 - [How to Make Codebases AI Agents Love](https://www.aihero.dev/how-to-make-codebases-ai-agents-love)
 - [Microsoft Research Studio](https://github.com/microsoft/ResearchStudio/tree/main)
 - [openscience](https://github.com/synthetic-sciences/openscience)
+- [rome](https://github.com/rome-os/rome):Rome is the agentic OS.
