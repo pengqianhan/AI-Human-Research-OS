@@ -17,8 +17,8 @@ a stable environment that lets a code agent flow into long-horizon research and
 do its best work.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Agents: Claude Code · Codex](https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex-blue.svg)](#quick-start)
-[![No DB · No server · No CLI](https://img.shields.io/badge/stack-folders%20%2B%20conventions-lightgrey.svg)](#core-directories)
+[![Agents: Claude Code · Codex](<https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex-blue.svg>)](#quick-start)
+[![No DB · No server · No CLI](<https://img.shields.io/badge/stack-folders%20%2B%20conventions-lightgrey.svg>)](#core-directories)
 
 A lightweight, folder-based research operating system for humans working with
 code agents such as Codex and Claude Code. The agent is the execution core; the
@@ -69,17 +69,17 @@ figures, references, and paper drafts, not empty ideas.
 
 ## Core Directories
 
-| Path | Purpose |
-|---|---|
-| [ideas/](ideas/) | OKF bundle for research ideas, hypotheses, inspirations, and early discussions |
-| [human/](human/) | Stable user context, collaboration preferences, workflows, and privacy boundaries |
-| [projects-folder/](projects-folder/) | Container for project instances and reusable project templates |
-| [projects-folder/templates/ai_research_template/](projects-folder/templates/ai_research_template/) | AI-research paper template copied to start a new project |
-| [memory/](memory/) | Global long-term memory across projects |
-| [research-skills-hub/](research-skills-hub/) | Store of reusable agent skills |
-| `.agents/skills/`, `.claude/skills/` | Installed skills (two identical copies) |
-| [INSTRUCTION.md](INSTRUCTION.md) | Agent operating guide (read first) |
-| [FILETREE.md](FILETREE.md) | Auto-generated top-level navigation map |
+| Path                                                                                              | Purpose                                                                           |
+| ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [ideas/](ideas/)                                                                                   | OKF bundle for research ideas, hypotheses, inspirations, and early discussions    |
+| [human/](human/)                                                                                   | Stable user context, collaboration preferences, workflows, and privacy boundaries |
+| [projects-folder/](projects-folder/)                                                               | Container for project instances and reusable project templates                    |
+| [projects-folder/templates/ai_research_template/](projects-folder/templates/ai_research_template/) | AI-research paper template copied to start a new project                          |
+| [memory/](memory/)                                                                                 | Global long-term memory across projects                                           |
+| [research-skills-hub/](research-skills-hub/)                                                       | Store of reusable agent skills                                                    |
+| `.agents/skills/`, `.claude/skills/`                                                          | Installed skills (two identical copies)                                           |
+| [INSTRUCTION.md](INSTRUCTION.md)                                                                   | Agent operating guide (read first)                                                |
+| [FILETREE.md](FILETREE.md)                                                                         | Auto-generated top-level navigation map                                           |
 
 ## Minimal Workflow
 
@@ -109,22 +109,22 @@ keeps per-skill upstream attribution and license terms.
 > INSTRUCTION.md → Memory Layers (global `memory/MEMORY.md` + per-project
 > `PROJECT_MEMORY.md`). The rest remains open.
 
-
-- [ ] A map of `research-skills-hub` or an index of all skills should be added to `research-skill-installer` so that the AI agent can quickly locate the required skills and install them into `.agents/skills/` or `.claude/skills/`. For this skill, please refer to [find-skills](https://github.com/vercel-labs/skills/blob/main/skills/find-skills/SKILL.md).
-- [ ] Regarding skills, is it sufficient to install them globally and activate them on demand for different projects? This way, a single configuration file can manage the installation and activation of skills, avoiding redundant installations and saving disk space.
+- [ ] For projects-folder and templates, create a skill which can automatically create a new project from the template, and copy the template to the new project folder. The skill can also help the AI agent to manage the projects, including adding new projects, updating existing projects, and deleting old projects. Using skill makes the OS more flexible and the skill can be a plugin for other code agents. In the initial state the skill can help create a new project from the template, and then the AI agent can use the skill to manage the projects and understand the project structure. Futhermore, the ideas/ folder can also be managed by the research-ideas-manager skill.
+- [X] A map of `research-skills-hub` or an index of all skills should be added to `research-skill-installer` so that the AI agent can quickly locate the required skills and install them into `.agents/skills/` or `.claude/skills/`. For this skill, please refer to [find-skills](https://github.com/vercel-labs/skills/blob/main/skills/find-skills/SKILL.md).
+- [X] Regarding skills, is it sufficient to install them globally and activate them on demand for different projects? This way, a single configuration file can manage the installation and activation of skills, avoiding redundant installations and saving disk space.
 - [ ] This OS should be able to accept any kind of input from users, such as an idea, a codebase, a paper draft, and so on. After users add these materials to the OS, it should automatically archive them, place them into the appropriate folders, and integrate them into the overall system.
 - [ ] create a skill which can access them markdown files of paper, such as 'hf cli', 'https://github.com/timf34/arxiv2md','deepxive cli' and so on.
-
 - [ ] Design this template as a CLI so agents can use commands to understand the whole research project.
 - [ ] Design bash commands that make agents deterministically read specific files, such as `INSTRUCTION.md`, at the start of each session.
 - [ ] Add a workspace where holding a group meeting with humans and AI, humans discuss research with the AI. Because AI can search paper and read fast, they can point out if the idea is feasible or not, and they can also point out relevant papers that humans might miss. This can be a good way to brainstorm research ideas and get feedback on them. After discussion, the AI can implement the idea or feedback immediately.
 - [ ] The final goal of the repo is to build a Research OS.
 - [ ] add interface according to [AlookAI](https://github.com/alookai/alook) and [Wanman](https://github.com/chekusu/wanman) and [不二的主页](https://hiesther.me/#home)
-- [x] in References/ folder, maintain a paper-wiki, which includes the summary, key points, and relation to the research project for each paper. The paper-wiki can be implemented as a markdown file or a simple database. The paper-wiki can help the AI agent to quickly find relevant papers and understand their content. — Implemented as the [paper-wiki/](paper-wiki/) OKF paper wiki maintained by the `paper-wiki-manager` skill: per-paper pages, topic pages, concept entity pages (methods/datasets/benchmarks/metrics/terms/tools), optional `# Used In Projects` links, a generated `viz.html` graph, and an executable validator. - add `paper-wiki-manager` skill, which can help the AI agent to manage the paper-wiki, including adding new papers, updating existing papers, and deleting old papers. The skill can also help the AI agent to generate the `viz.html` graph and validate the paper-wiki. The skill can be used in both `ideas/` and `paper/` folders. remove the 'References/' folder, and move all the papers to `paper-wiki/` folder.
-- [x] Add `read_paper` workflow， which manages the process of reading a paper, including summarizing it, extracting key points, and relating it to the research project. The workflow can be used in both `ideas/` and `References/` folders. Besides, when AI meet a problem that it cannot solve, it can use this workflow to read relevant papers and find solutions. All the new reading papers will be stored in `References/` folder, and the summary and key points will be stored in `ideas/` folder. - add `paper-wiki-manager` skill, which can help the AI agent to manage papers in paper-wiki.
-- [x] add find-research-skills, which can help the AI agent to find the right research skills in `research-skills-hub/` folder or even online
-- [x] Add memory mechanisim. Doing research is a long-term process, and the AI agent needs to remember the research progress, including the ideas, references, and experiments. The memory can be implemented as a simple database or a more complex knowledge graph. The memory can also be used to track the research progress and provide feedback to the human researcher. 
-   - [x] The memory should include global memory, which stores the overall research progress and important information, and local memory, which stores the right now research project. Because the research always can be cross domain. And for ADHDers, they may have multiple research projects at the same time, so the local memory can help them to focus on the current project.- `memory/MEMORY.md` is the global memory, and `PROJECT_MEMORY.md` is the local memory for each project. `human` in this folder, there are some files to store the human's preferences.
+- [X] in References/ folder, maintain a paper-wiki, which includes the summary, key points, and relation to the research project for each paper. The paper-wiki can be implemented as a markdown file or a simple database. The paper-wiki can help the AI agent to quickly find relevant papers and understand their content. — Implemented as the [paper-wiki/](paper-wiki/) OKF paper wiki maintained by the `paper-wiki-manager` skill: per-paper pages, topic pages, concept entity pages (methods/datasets/benchmarks/metrics/terms/tools), optional `# Used In Projects` links, a generated `viz.html` graph, and an executable validator. - add `paper-wiki-manager` skill, which can help the AI agent to manage the paper-wiki, including adding new papers, updating existing papers, and deleting old papers. The skill can also help the AI agent to generate the `viz.html` graph and validate the paper-wiki. The skill can be used in both `ideas/` and `paper/` folders. remove the 'References/' folder, and move all the papers to `paper-wiki/` folder.
+- [X] Add `read_paper` workflow， which manages the process of reading a paper, including summarizing it, extracting key points, and relating it to the research project. The workflow can be used in both `ideas/` and `References/` folders. Besides, when AI meet a problem that it cannot solve, it can use this workflow to read relevant papers and find solutions. All the new reading papers will be stored in `References/` folder, and the summary and key points will be stored in `ideas/` folder. - add `paper-wiki-manager` skill, which can help the AI agent to manage papers in paper-wiki.
+- [X] add find-research-skills, which can help the AI agent to find the right research skills in `research-skills-hub/` folder or even online
+- [X] Add memory mechanisim. Doing research is a long-term process, and the AI agent needs to remember the research progress, including the ideas, references, and experiments. The memory can be implemented as a simple database or a more complex knowledge graph. The memory can also be used to track the research progress and provide feedback to the human researcher.
+
+  - [X] The memory should include global memory, which stores the overall research progress and important information, and local memory, which stores the right now research project. Because the research always can be cross domain. And for ADHDers, they may have multiple research projects at the same time, so the local memory can help them to focus on the current project.- `memory/MEMORY.md` is the global memory, and `PROJECT_MEMORY.md` is the local memory for each project. `human` in this folder, there are some files to store the human's preferences.
 
 ## Reference Projects
 
