@@ -22,6 +22,10 @@ interface Props {
   onZoom: () => void;
   onMove: (x: number, y: number) => void;
   onResize: (w: number, h: number) => void;
+  /** True for content that manages its own edge-to-edge layout and scrolling
+   *  (currently the Paper Wiki iframe) — skips the default padded, scrolling
+   *  content area every other app uses. */
+  fill?: boolean;
   children: ReactNode;
 }
 
@@ -46,6 +50,7 @@ export function WindowFrame({
   onZoom,
   onMove,
   onResize,
+  fill = false,
   children,
 }: Props) {
   // Gesture bookkeeping: where the pointer went down and the window's
@@ -182,7 +187,10 @@ export function WindowFrame({
       </div>
 
       {/* tabIndex lets keyboard users focus the scroll area and use arrows */}
-      <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+      <div
+        tabIndex={0}
+        className={"min-h-0 flex-1 " + (fill ? "overflow-hidden" : "overflow-y-auto px-5 py-4")}
+      >
         {children}
       </div>
 

@@ -160,6 +160,7 @@ export function Desktop({ state }: { state: OsState }) {
               onZoom={() => patch(app.id, { zoomed: !win.zoomed })}
               onMove={(x, y) => patch(app.id, { x, y })}
               onResize={(w, h) => patch(app.id, { w, h })}
+              fill={app.fill}
             >
               {app.render(state)}
             </WindowFrame>

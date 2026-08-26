@@ -25,6 +25,13 @@ fi
 echo "> Generating state.json snapshot..."
 (cd generator && uv run python generate.py)
 
+# ---- Step 1b: sync paper-wiki/ so the Paper Wiki app can load it ---------
+# frontend/public/paper-wiki is a gitignored cache copy, same treatment as
+# state.json: the repository's paper-wiki/ stays the only source of truth.
+echo "> Syncing paper-wiki/ into frontend/public/paper-wiki..."
+mkdir -p frontend/public/paper-wiki
+cp -r ../paper-wiki/. frontend/public/paper-wiki/
+
 # ---- Step 2: install frontend deps on first run ---------------------------
 if [ ! -d frontend/node_modules ]; then
   echo "> First run: installing frontend dependencies..."

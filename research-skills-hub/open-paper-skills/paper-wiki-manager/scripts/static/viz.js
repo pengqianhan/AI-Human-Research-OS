@@ -120,7 +120,7 @@
                 : d.label;
             return d.shortLabel || d.label;
           },
-          color: (ele) => (ele.data("kind") === "container" ? "#0f172a" : "#475569"),
+          color: (ele) => (ele.data("kind") === "container" ? "#17262E" : "#52646E"),
           "font-size": (ele) => (ele.data("kind") === "container" ? 11 : 9),
           "font-weight": (ele) => (ele.data("kind") === "container" ? 700 : 500),
           "text-valign": "bottom",
@@ -135,24 +135,24 @@
           width: "data(size)",
           height: "data(size)",
           "border-width": 1.5,
-          "border-color": "#0f172a",
+          "border-color": "#17262E",
           "transition-property": "opacity",
           "transition-duration": "150ms",
         },
       },
       {
         selector: 'node[kind = "container"].open',
-        style: { "border-width": 4, "border-color": "#334155" },
+        style: { "border-width": 4, "border-color": "#E8590C" },
       },
       {
         selector: "node:selected",
-        style: { "border-width": 4, "border-color": "#f59e0b" },
+        style: { "border-width": 4, "border-color": "#B7791F" },
       },
       {
         selector: "edge",
         style: {
           width: 1.5,
-          "line-color": "#cbd5e1",
+          "line-color": "#D9E0E2",
           "curve-style": "bezier",
           "transition-property": "opacity",
           "transition-duration": "150ms",
@@ -160,11 +160,11 @@
       },
       {
         selector: "edge.citation",
-        style: { "line-style": "dashed", "line-color": "#94a3b8" },
+        style: { "line-style": "dashed", "line-color": "#8A979E" },
       },
       {
         selector: "edge:selected",
-        style: { "line-color": "#f59e0b", width: 2.5 },
+        style: { "line-color": "#B7791F", width: 2.5 },
       },
       { selector: ".dim", style: { opacity: 0.12 } },
     ],
