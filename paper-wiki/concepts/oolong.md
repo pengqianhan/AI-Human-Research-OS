@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - long-context-reasoning
 - information-aggregation
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-08-26T00:00:00Z
 ---
 
 # Definition
@@ -21,7 +21,8 @@ The `trec_coarse` split, used in the RLM evaluation, asks the model to infer eac
 # Papers
 
 * [Recursive Language Models](../papers/2512.24601.md) - uses the 50-task `trec_coarse` split as its linear-density benchmark and constructs OOLONG-Pairs as a quadratic-density extension; recursive sub-calls matter most on both.
+* [Prime Agent](../papers/2608.23552.md) - uses OOLONG and OOLONG-Pairs as two of eight benchmarks in its long-context information-management suite (RQ2), comparing three model families against their own native or popular harnesses rather than against a base model, and reporting Prime Agent generally competitive with harnesses that did not use a model trained around them.
 
 # Notes
 
-OOLONG is useful precisely as a counterexample to length-only long-context evaluation: a system can look strong on million-token NIAH and still fail at 131K tokens here. When comparing results, check the split, the scoring function, and whether the variant is the original benchmark or the RLM paper's Pairs modification.
+OOLONG is useful precisely as a counterexample to length-only long-context evaluation: a system can look strong on million-token NIAH and still fail at 131K tokens here. When comparing results, check the split, the scoring function, and whether the variant is the original benchmark or the RLM paper's Pairs modification. Prime Agent's use is a harness-vs-harness comparison (its RLM abstraction wrapped in Prime Agent vs. each model's native or popular harness) rather than the RLM paper's own base-model-vs-RLM ablation, so the two papers' OOLONG numbers are not directly comparable without checking which baseline each is measured against.
