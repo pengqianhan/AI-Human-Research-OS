@@ -147,6 +147,20 @@ The old tab-shell concept is superseded.
    enable/disable toggle; installing elsewhere stays a copied command. How this
    splits between the human and the agent is documented in
    [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
+4. **Paper Wiki**: the paper-wiki graph viewer, embedded by `<iframe>` from
+   `paper-wiki/viz.html` rather than reimplemented natively. That file is a
+   generated artifact (source: `research-skills-hub/open-paper-skills/
+   paper-wiki-manager/scripts/{templates/viz.html,static/viz.{css,js}}`) that
+   already vendors its own force-directed graph engine (fcose + cytoscape.js)
+   and stays independently deployable — see the GitHub Pages workflow at
+   `.github/workflows/pages.yml`. Reimplementing that graph natively in React
+   would duplicate a working, self-contained viewer for no benefit; the iframe
+   keeps a single source of truth. `frontend/public/paper-wiki/` is a
+   gitignored cache copy synced by `start.sh` (same treatment as
+   `state.json`) — re-run `./start.sh` after editing paper-wiki content or the
+   viewer templates. Its window skips the padded content area every other app
+   uses (`AppDef.fill`), so the viewer fills the window edge-to-edge and
+   manages its own scrolling.
 
 ## 5. State Semantics
 
