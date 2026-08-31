@@ -1,5 +1,6 @@
 # Topic
 
+* [3D generation agents](3d-generation-agents.md) - Papers about MLLM/LLM agents that construct or edit 3D content — worlds, scenes, or CAD objects — through iterative tool use and verifier-gated feedback rather than single-pass generation.
 * [AI for science](ai-for-science.md) - Papers about AI systems that design, run, and revise scientific experiments.
 * [Agent environments](agent-environments.md) - Papers about the environments, permissions, artifacts, budgets, and interfaces that shape agent behavior.
 * [Agent fine-tuning](agent-fine-tuning.md) - Papers about algorithms and objectives for updating an LLM agent's weights on long-horizon, multi-turn tasks.
