@@ -28,9 +28,10 @@ at source commit `8f854bd`.
 | [arxiv2md](arxiv2md/SKILL.md) | Convert arXiv papers to clean, LLM-ready Markdown (math, tables, sections) via a REST API. | [timf34/arxiv2md](https://github.com/timf34/arxiv2md), MIT |
 | [alphaxiv-paper-lookup](alphaxiv-paper-lookup/SKILL.md) | Look up arXiv papers on AlphaXiv for structured AI-generated overviews. | Source unknown — moved from `open-paper-skills`, upstream not yet identified |
 | [deli-autoresearch](deli-autoresearch/SKILL.md) | Provide state, stall-detection, and watchdog protocols for long-horizon autonomous agent tasks. | [Deli AutoResearch framework](https://victorchen96.github.io/auto_research/framework.html#fullmd) |
-| [baseline-selector](baseline-selector-main/SKILL.md) | Select reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks. | [RyanZhou168/baseline-selector](https://github.com/RyanZhou168/baseline-selector/tree/main), MIT |
+| [baseline-selector](baseline-selector/SKILL.md) | Select reproducible experimental baselines with GitHub evidence, compute-aware sets, and reviewer-risk checks. | [RyanZhou168/baseline-selector](https://github.com/RyanZhou168/baseline-selector/tree/main), MIT |
 | [academic-rebuttal](academic-rebuttal/SKILL.md) | Triage reviews, prioritize rebuttal experiments, draft evidence-grounded responses, and plan resubmission when needed. | [TobiasLee/Rebuttal-Skill](https://github.com/TobiasLee/Rebuttal-Skill) |
 | [ResearchStudio-Idea](ResearchStudio-Idea/README.md) | Provide evidence-grounded paper search, research ideation, prior-art review, and idea-quality evaluation. | [microsoft/ResearchStudio](https://github.com/microsoft/ResearchStudio/tree/main/ResearchStudio-Idea), MIT |
+| [humanizer](humanizer/SKILL.md) | Rewrite AI-sounding text so it reads naturally, using 35 Wikipedia "Signs of AI writing" patterns, without changing what it says. | [blader/humanizer](https://github.com/blader/humanizer), MIT |
 
 ## Installation
 
@@ -72,6 +73,9 @@ vs copy from the collection's `SOURCE.md`.
 - `ResearchStudio-Idea`: Python packages `feedparser`, `openreview-py`,
   `beautifulsoup4`, and `pymupdf`; copy `.env.template` to `.env` and configure
   OpenReview and Semantic Scholar credentials for full connector coverage.
+- `humanizer`: no local setup required; `SKILL.md` is the whole skill. The
+  bundled `scripts/validate-package.py` is an upstream packaging check for the
+  original repository, not a runtime dependency.
 
 ## ml-paper-writing
 
@@ -399,6 +403,36 @@ Example requests:
 /paper-search find recent KV-cache compression papers from 2024–2026
 /scoop-check check whether this proposed mechanism overlaps with prior work
 /idea-quality score this idea Markdown file before I pursue it
+```
+
+## humanizer
+
+Rewrites AI-sounding prose so it reads like the writer, without adding or losing
+a claim. The 35 patterns come from Wikipedia's
+["Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing),
+maintained by WikiProject AI Cleanup, and cover inflated claims, sales language,
+vague sources, stock AI words, chatbot leftovers, filler, and formatting tics.
+The skill also lists false positives it must not "fix", so ordinary formal or
+polished writing is left alone.
+
+It has three return modes: pasted text returns a draft, a short critique, and the
+final rewrite; a named file is rewritten in place, prose only, leaving code
+blocks, YAML frontmatter, data, and link targets unchanged; embedded use by
+another task returns only the final text. Supplying a writing sample makes the
+sample's habits override the skill's default style rules.
+
+Useful here for paper drafts, `index.md` and README prose, evaluation reports,
+and commit or PR text. It never invents a fact, name, number, date, quote, or
+citation, which keeps it compatible with the repository's claim-traceability
+rule.
+
+Example requests:
+
+```text
+/humanizer rewrite this abstract so it stops reading as AI-generated
+/humanizer humanize the prose in projects-folder/Example_Project/index.md
+/humanizer match this writing sample, then rewrite the discussion section
+/humanizer clean up the AI patterns in this commit message
 ```
 
 ## Credits And License Boundary

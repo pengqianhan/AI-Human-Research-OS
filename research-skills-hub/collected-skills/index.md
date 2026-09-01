@@ -19,6 +19,7 @@ skills.
 * [grill-for-unknowns](grill-for-unknowns/SKILL.md) - Interrogates a plan against docs/source evidence and surfaces unknown unknowns before implementation.
 * [hf-cli](hf-cli/SKILL.md) - Hugging Face Hub CLI (`hf`) for downloading, uploading, and managing models, datasets, spaces, buckets, repos, papers, jobs, and more.
 * [hugging-face-paper-pages](hugging-face-paper-pages/SKILL.md) - Reads Hugging Face paper pages and paper metadata.
+* [humanizer](humanizer/SKILL.md) - Rewrites AI-sounding prose into natural writing with 35 "Signs of AI writing" patterns, without changing its claims.
 * [ml-paper-writing](ml-paper-writing/SKILL.md) - Writes publication-ready ML/AI papers with venue templates, citation checks, and writing guidance.
 * [paper-finder](paper-finder/SKILL.md) - Finds and organizes related ML/AI papers into persistent topic workspaces.
 * [pyzotero](pyzotero/SKILL.md) - Manages Zotero libraries programmatically with the pyzotero Python client.
