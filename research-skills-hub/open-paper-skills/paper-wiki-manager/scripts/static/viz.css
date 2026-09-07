@@ -270,3 +270,128 @@ hr { border: none; border-top: 1px solid var(--grid); margin: 14px 0; }
 }
 #detail-backlinks ul { padding-left: 18px; }
 #detail-backlinks a { color: var(--signal); cursor: pointer; }
+
+/* ---------- view tabs ----------
+ * `hidden` needs !important here: the view wrappers below set `display: flex`,
+ * which would otherwise beat the user-agent `[hidden] { display: none }` rule.
+ */
+[hidden] { display: none !important; }
+
+#tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-right: 12px;
+  vertical-align: middle;
+}
+.tab {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.tab:hover { background: var(--grid); }
+.tab.active { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+.tab:focus-visible { outline: 2px solid var(--signal); outline-offset: 1px; }
+
+/* ---------- timeline view ---------- */
+#timeline-wrap {
+  flex: 1 1 60%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--grid);
+}
+#timeline-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--grid);
+  flex-shrink: 0;
+}
+.sort-modes { display: flex; gap: 4px; }
+.sort-mode, #sort-direction {
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.sort-mode:hover, #sort-direction:hover { background: var(--grid); }
+.sort-mode.active { background: var(--grid); color: var(--ink); font-weight: 700; }
+.sort-mode:focus-visible, #sort-direction:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}
+#sort-direction { font-family: var(--mono); min-width: 30px; }
+
+#timeline-list {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tl-month {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 14px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--grid);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.tl-row {
+  display: grid;
+  grid-template-columns: 20px 14px minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(217, 224, 226, 0.5);
+}
+.tl-row:hover { background: var(--paper); }
+.tl-row.selected {
+  background: rgba(232, 89, 12, 0.09);
+  box-shadow: inset 3px 0 0 var(--signal);
+}
+.tl-day {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: right;
+}
+.tl-status { font-size: 10px; color: var(--stale); }
+.tl-status.unread { color: var(--signal); }
+.tl-title { font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.tl-empty {
+  padding: 26px 14px;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  text-align: center;
+}
+#timeline-legend {
+  display: flex;
+  gap: 14px;
+  padding: 7px 14px;
+  border-top: 1px solid var(--grid);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+#timeline-legend b { font-weight: 400; }

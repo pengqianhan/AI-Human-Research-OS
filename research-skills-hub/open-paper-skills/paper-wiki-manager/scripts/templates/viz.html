@@ -11,7 +11,11 @@
 <header>
   <div class="title">
     <strong id="bundle-name"></strong>
-    <span class="muted">Click a node for details · double-click a topic to expand</span>
+    <nav id="tabs">
+      <button id="tab-graph" class="tab active" type="button">Graph</button>
+      <button id="tab-timeline" class="tab" type="button">Timeline</button>
+    </nav>
+    <span class="muted" id="view-hint"></span>
   </div>
   <div class="controls">
     <input id="search" type="search" placeholder="Search title / id / tag">
@@ -26,15 +30,39 @@
     <section id="graph"></section>
     <div id="legend"></div>
   </div>
+  <div id="timeline-wrap" hidden>
+    <div id="timeline-toolbar">
+      <div class="sort-modes">
+        <button id="sort-added" class="sort-mode active" type="button"
+                title="Sort by the date the note entered the wiki">Added</button>
+        <button id="sort-published" class="sort-mode" type="button"
+                title="Sort by arXiv submission date, or source publication date">Published</button>
+      </div>
+      <button id="sort-direction" type="button" title="Newest first">↓</button>
+    </div>
+    <ol id="timeline-list"></ol>
+    <div id="timeline-legend">
+      <span><b class="tl-status unread">●</b> unread</span>
+      <span><b class="tl-status summarized">○</b> summarized</span>
+      <span><b class="tl-status read">✓</b> read</span>
+    </div>
+  </div>
   <section id="detail">
     <div id="detail-empty">
       <div id="stats"></div>
-      <ul class="hints">
+      <ul class="hints" id="hints-graph">
         <li>Only topics and concepts are shown by default (the number in parentheses is the paper count).</li>
         <li><strong>Double-click</strong> a topic to expand or collapse its papers.</li>
         <li><strong>Click</strong> any node to see its details and highlight its neighbors.</li>
         <li>Click a legend entry to show only that type; search reveals hidden papers automatically.</li>
         <li>Dragged things around? Click "Reset view" to restore the layout.</li>
+      </ul>
+      <ul class="hints" id="hints-timeline" hidden>
+        <li>Papers and sources in reading order, newest first, grouped by month.</li>
+        <li><strong>Click</strong> an entry to read its note here; hover a row for its one-line description.</li>
+        <li><strong>Added</strong> orders by when the note entered the wiki; <strong>Published</strong> by arXiv submission or source publication date.</li>
+        <li>Search filters the list; the arrow flips between newest-first and oldest-first.</li>
+        <li>Papers with a Chinese mirror show a language button in the note header.</li>
       </ul>
     </div>
     <article id="detail-content" hidden>

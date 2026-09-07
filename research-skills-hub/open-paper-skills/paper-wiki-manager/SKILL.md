@@ -239,13 +239,26 @@ python -m unittest discover -s scripts -p 'test_*.py' -v
 
 `paper-wiki/viz.html` is required. Use `viz.html` as the canonical filename; treat `vis.html` as a typo unless the user explicitly asks for a separate alias.
 
-`scripts/generate_viz.py` renders a self-contained Cytoscape graph + detail-pane viewer by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, `scripts/static/viz.js`, and the vendored libraries in `scripts/vendor/`. Keep all of these alongside the script; the generated `viz.html` inlines the vendored libraries so it works fully offline (no CDN). Papers, topics, and each concept type get distinct node colors. The viewer UI and text are English. The generator excludes `papers_zh/` from graph nodes and edges, but embeds a matching Chinese title and body under its canonical paper ID. For papers with a mirror, show a `中` button in the detail pane to switch to Chinese and an `英` button to switch back.
+`scripts/generate_viz.py` renders a self-contained Cytoscape graph + detail-pane viewer by injecting `scripts/templates/viz.html`, `scripts/static/viz.css`, `scripts/static/viz.js`, and the vendored libraries in `scripts/vendor/`. Keep all of these alongside the script; the generated `viz.html` inlines the vendored libraries so it works fully offline (no CDN). Papers, topics, and each concept type get distinct node colors. The viewer UI and text are English throughout; Chinese appears only inside a paper note's own body. The generator excludes `papers_zh/` from graph nodes and edges, but embeds a matching Chinese title and body under its canonical paper ID. For papers with a mirror, show a `中文` button in the detail pane to switch that note to Chinese and an `English` button to switch back; the choice sticks across papers until it is switched back.
 
-The viewer is a paper-wiki knowledge map, not a flat force graph:
+The viewer has two tabs over a shared detail pane: **Graph** and **Timeline**. The
+tab is reflected in the URL fragment (`#graph`, `#timeline`) so either view can be
+linked or bookmarked directly; `#graph` is the default. The search box is shared by
+both tabs; every other control belongs to one of them.
+
+The Graph tab is a paper-wiki knowledge map, not a flat force graph:
 
 * **Collapsed by default.** It opens showing only topics and concepts on a deterministic grid (same layout every time), each labelled with its paper count. Papers stay hidden until a topic is opened, so the first view is a readable index rather than a hairball.
 * **Expand on demand.** Double-clicking a topic (or the "Expand N papers" button in the detail pane) fans that topic's papers around it without moving the other topics. "Expand all" runs the fcose force layout to lay out the whole clustered map; "Collapse all" and "Reset view" return to the grid.
 * **Focus.** Clicking any node highlights it and its direct neighbors and dims the rest; the type legend (top-left) filters to one type; search reveals matching hidden papers.
+
+The Timeline tab is the chronological reading surface:
+
+* **Papers and sources only.** Topics and concepts are rewritten repeatedly, so their `timestamp` means "last touched" and would read as noise in a reading feed.
+* **Two orderings.** "Added" sorts by `timestamp` (when the note entered the wiki), "Published" by `submitted` for papers and `published` for other sources; the arrow flips newest-first and oldest-first. Entries carrying neither publication date group under "No date" at the end. Same-day entries fall back to publication date and then concept ID, so the order never drifts between reloads.
+* **Compact rows.** Month headers with entry counts, then one row per entry: day, a `status` glyph, and the English title, with the description on hover. Clicking a row renders that note in the shared detail pane.
+
+`generate_viz.py` copies `timestamp`, `submitted`, `published`, and `status` from frontmatter onto graph nodes so the timeline can order and label entries; the validator already requires `timestamp` on every note and `submitted` on every paper.
 
 These are viewer behaviors baked into the bundled assets — regenerating `viz.html` is all that is needed to pick up viewer changes; no per-paper edits are involved.
 

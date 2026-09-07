@@ -147,7 +147,7 @@ The old tab-shell concept is superseded.
    enable/disable toggle; installing elsewhere stays a copied command. How this
    splits between the human and the agent is documented in
    [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
-4. **Paper Wiki**: the paper-wiki graph viewer, embedded by `<iframe>` from
+4. **Paper Wiki**: the paper-wiki viewer (Graph and Timeline tabs), embedded by `<iframe>` from
    `paper-wiki/viz.html` rather than reimplemented natively. That file is a
    generated artifact (source: `research-skills-hub/open-paper-skills/
    paper-wiki-manager/scripts/{templates/viz.html,static/viz.{css,js}}`) that

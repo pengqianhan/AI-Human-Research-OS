@@ -40,6 +40,11 @@ TYPE_PALETTE = {
 }
 DEFAULT_NODE_COLOR = "#64748b"
 
+# Chronological and reading-state frontmatter copied verbatim onto graph nodes
+# so the viewer's timeline can order and label entries without a second data
+# source. Papers carry `submitted`, non-paper sources carry `published`.
+TIMELINE_FIELDS = ("timestamp", "submitted", "published", "status")
+
 # Injection markers used by templates/viz.html.
 _CSS_MARKER = "/*__VIZ_CSS__*/"
 _JS_MARKER = "/*__VIZ_JS__*/"
@@ -68,20 +73,21 @@ class Concept:
     tags: list[str]
     body: str
     links_to: list[str] = field(default_factory=list)
+    timeline: dict[str, str] = field(default_factory=dict)
 
     def to_node(self) -> dict[str, Any]:
-        return {
-            "data": {
-                "id": self.id,
-                "label": self.title or self.id,
-                "type": self.type,
-                "description": self.description,
-                "resource": self.resource,
-                "tags": self.tags,
-                "color": TYPE_PALETTE.get(self.type, DEFAULT_NODE_COLOR),
-                "size": 30 + min(60, len(self.body) // 200),
-            }
+        data = {
+            "id": self.id,
+            "label": self.title or self.id,
+            "type": self.type,
+            "description": self.description,
+            "resource": self.resource,
+            "tags": self.tags,
+            "color": TYPE_PALETTE.get(self.type, DEFAULT_NODE_COLOR),
+            "size": 30 + min(60, len(self.body) // 200),
         }
+        data.update(self.timeline)
+        return {"data": data}
 
 
 def _strip_quotes(value: str) -> str:
@@ -183,6 +189,16 @@ def _string_list(value: Any) -> list[str]:
     return []
 
 
+def _timeline_fields(frontmatter: dict[str, Any]) -> dict[str, str]:
+    """Keep only the timeline frontmatter that is present and scalar."""
+    out: dict[str, str] = {}
+    for key in TIMELINE_FIELDS:
+        value = frontmatter.get(key)
+        if isinstance(value, str) and value.strip():
+            out[key] = value.strip()
+    return out
+
+
 def _walk_concepts(bundle_root: Path) -> list[Concept]:
     concepts: list[Concept] = []
     for md_path in sorted(bundle_root.rglob("*.md")):
@@ -202,6 +218,7 @@ def _walk_concepts(bundle_root: Path) -> list[Concept]:
             tags=_string_list(frontmatter.get("tags")),
             body=body or "",
             links_to=_extract_links(body or "", md_path, bundle_root),
+            timeline=_timeline_fields(frontmatter),
         )
         concepts.append(concept)
     return concepts
