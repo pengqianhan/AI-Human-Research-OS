@@ -19,7 +19,7 @@ The UI opens as a dot-grid desktop with three layers:
   generated timestamp, schema version, and repository HEAD.
 - **Windows**: four draggable, resizable, minimizable macOS-style windows:
   **Dashboard**, **Projects**, **Skill Store**, and **Paper Wiki** (the
-  standalone `paper-wiki/viz.html` graph viewer, embedded by iframe — see
+  standalone `paper-wiki/viz.html` graph and timeline viewer, embedded by iframe — see
   DESIGN.md §4).
 - **Dock**: app icons on the left and copy-only command buttons on the right
   for Claude Code, Codex, and snapshot regeneration.

@@ -376,28 +376,28 @@
     const q = e.target.value.trim().toLowerCase();
     selectedId = null;
     cy.elements().unselect();
-    if (!q) {
-      searchRevealed.clear();
-      sync();
-      return;
-    }
     // reveal hidden papers that match
-    searchRevealed = new Set(
-      paperNodes
-        .filter((p) => {
-          const d = p.data;
-          const hay =
-            (d.label || "").toLowerCase() +
-            " " +
-            d.id.toLowerCase() +
-            " " +
-            (d.tags || []).join(" ").toLowerCase();
-          return hay.includes(q);
-        })
-        .map((p) => p.data.id)
-    );
+    searchRevealed = q
+      ? new Set(
+          paperNodes
+            .filter((p) => matchesQuery(p.data, q))
+            .map((p) => p.data.id)
+        )
+      : new Set();
     sync();
+    renderTimeline();
   });
+
+  function matchesQuery(d, q) {
+    if (!q) return true;
+    const hay =
+      (d.label || "").toLowerCase() +
+      " " +
+      d.id.toLowerCase() +
+      " " +
+      (d.tags || []).join(" ").toLowerCase();
+    return hay.includes(q);
+  }
 
   // ---------- detail pane ----------
   let currentDetail = null;
@@ -408,6 +408,7 @@
     currentDetail = null;
     cy.elements().unselect();
     applyDimming();
+    highlightTimelineRow(null);
     document.getElementById("detail-empty").hidden = false;
     document.getElementById("detail-content").hidden = true;
   }
@@ -429,8 +430,9 @@
     if (d.type === "Paper" && localized) {
       const languageBtn = document.createElement("button");
       languageBtn.id = "detail-language-toggle";
-      languageBtn.textContent = currentLanguage === "en" ? "中" : "英";
-      languageBtn.title = currentLanguage === "en" ? "显示中文笔记" : "Show English note";
+      languageBtn.textContent = currentLanguage === "en" ? "中文" : "English";
+      languageBtn.title =
+        currentLanguage === "en" ? "Show Chinese note" : "Show English note";
       languageBtn.setAttribute("aria-label", languageBtn.title);
       languageBtn.addEventListener("click", () => {
         currentLanguage = currentLanguage === "en" ? "zh" : "en";
@@ -466,8 +468,8 @@
     if (node.length) node.select();
     selectedId = conceptId;
     currentDetail = conceptId;
-    currentLanguage = "en";
     applyDimming();
+    highlightTimelineRow(conceptId);
 
     document.getElementById("detail-empty").hidden = true;
     document.getElementById("detail-content").hidden = false;
@@ -603,5 +605,232 @@
       )}`;
   })();
 
+  // ---------- timeline ----------
+  // Reading surface: papers and non-paper sources in date order. Topics and
+  // concepts are left out — they are rewritten repeatedly, so their timestamp
+  // means "last touched", which reads as noise in a chronological feed.
+  const TIMELINE_TYPES = new Set(["Paper", "Reference"]);
+  const STATUS_GLYPH = { unread: "●", summarized: "○", read: "✓" };
+  const SORT_KEYS = {
+    added: (d) => d.timestamp || "",
+    published: (d) => d.submitted || d.published || "",
+  };
+  const timelineEntries = bundle.nodes
+    .map((n) => n.data)
+    .filter((d) => TIMELINE_TYPES.has(d.type));
+  let sortKey = "added";
+  let sortDesc = true;
+
+  function sortedTimelineEntries() {
+    const dateOf = SORT_KEYS[sortKey];
+    const q = document.getElementById("search").value.trim().toLowerCase();
+    const rows = timelineEntries.filter((d) => matchesQuery(d, q));
+    const dir = sortDesc ? 1 : -1;
+    rows.sort((a, b) => {
+      const da = dateOf(a);
+      const db = dateOf(b);
+      // Undated entries sink to the bottom whichever way the rest is running.
+      if (!da !== !db) return da ? -1 : 1;
+      if (da !== db) return da < db ? dir : -dir;
+      // Same day (timestamps are often midnight): keep a stable, meaningful
+      // order instead of letting the sort drift between reloads.
+      const sa = SORT_KEYS.published(a);
+      const sb = SORT_KEYS.published(b);
+      if (sa !== sb) return sa < sb ? 1 : -1;
+      return a.id < b.id ? -1 : 1;
+    });
+    return rows;
+  }
+
+  function timelineGroupKey(d) {
+    const date = SORT_KEYS[sortKey](d);
+    return date ? date.slice(0, 7) : "undated";
+  }
+
+  function monthHeader(key, count) {
+    const li = document.createElement("li");
+    li.className = "tl-month";
+    const label = document.createElement("span");
+    label.textContent = key === "undated" ? "No date" : key;
+    const n = document.createElement("span");
+    n.textContent = count;
+    li.append(label, n);
+    return li;
+  }
+
+  function timelineRow(d) {
+    const date = SORT_KEYS[sortKey](d);
+    const li = document.createElement("li");
+    li.className = "tl-row";
+    li.dataset.id = d.id;
+    if (d.id === selectedId) li.classList.add("selected");
+    if (d.description) li.title = d.description;
+
+    const day = document.createElement("span");
+    day.className = "tl-day";
+    day.textContent = date ? date.slice(8, 10) : "—";
+
+    const status = document.createElement("span");
+    status.className = "tl-status " + (d.status || "");
+    status.textContent = STATUS_GLYPH[d.status] || "·";
+    if (d.status) status.title = d.status;
+
+    const title = document.createElement("span");
+    title.className = "tl-title";
+    title.textContent = d.label;
+
+    li.append(day, status, title);
+    li.addEventListener("click", () => showDetail(d.id));
+    return li;
+  }
+
+  function renderTimeline() {
+    const list = document.getElementById("timeline-list");
+    list.innerHTML = "";
+    const rows = sortedTimelineEntries();
+    if (!rows.length) {
+      const li = document.createElement("li");
+      li.className = "tl-empty";
+      li.textContent = "No entry matches the search.";
+      list.appendChild(li);
+      return;
+    }
+    const counts = new Map();
+    for (const d of rows) {
+      const key = timelineGroupKey(d);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    let group = null;
+    for (const d of rows) {
+      const key = timelineGroupKey(d);
+      if (key !== group) {
+        group = key;
+        list.appendChild(monthHeader(key, counts.get(key)));
+      }
+      list.appendChild(timelineRow(d));
+    }
+  }
+
+  function highlightTimelineRow(id) {
+    document.querySelectorAll("#timeline-list .tl-row").forEach((li) => {
+      li.classList.toggle("selected", li.dataset.id === id);
+    });
+  }
+
+  function updateSortControls() {
+    for (const key of Object.keys(SORT_KEYS)) {
+      document
+        .getElementById("sort-" + key)
+        .classList.toggle("active", sortKey === key);
+    }
+    const btn = document.getElementById("sort-direction");
+    btn.textContent = sortDesc ? "↓" : "↑";
+    btn.title = sortDesc ? "Newest first" : "Oldest first";
+  }
+
+  for (const key of Object.keys(SORT_KEYS)) {
+    document.getElementById("sort-" + key).addEventListener("click", () => {
+      if (sortKey === key) return;
+      sortKey = key;
+      updateSortControls();
+      renderTimeline();
+    });
+  }
+  document.getElementById("sort-direction").addEventListener("click", () => {
+    sortDesc = !sortDesc;
+    updateSortControls();
+    renderTimeline();
+  });
+
+  // ---------- view tabs ----------
+  const VIEW_HINTS = {
+    graph: "Click a node for details · double-click a topic to expand",
+    timeline: "Click an entry to read its note · sort by added or published date",
+  };
+  const graphOnlyControls = ["expand-all", "collapse-all", "reset"].map((id) =>
+    document.getElementById(id)
+  );
+  let currentView = "graph";
+  let graphNeedsFit = false;
+
+  function setView(view, updateHash) {
+    currentView = view;
+    document.getElementById("graph-wrap").hidden = view !== "graph";
+    document.getElementById("timeline-wrap").hidden = view !== "timeline";
+    document.getElementById("hints-graph").hidden = view !== "graph";
+    document.getElementById("hints-timeline").hidden = view !== "timeline";
+    for (const btn of graphOnlyControls) btn.hidden = view !== "graph";
+    for (const name of ["graph", "timeline"]) {
+      document
+        .getElementById("tab-" + name)
+        .classList.toggle("active", name === view);
+    }
+    document.getElementById("view-hint").textContent = VIEW_HINTS[view];
+
+    if (view === "graph") {
+      // Cytoscape measured a hidden (zero-sized) container while the timeline
+      // was up, so it has to re-measure before it draws again.
+      cy.resize();
+      if (graphNeedsFit) {
+        fitClamped();
+        graphNeedsFit = false;
+      }
+    } else {
+      const row = document.querySelector("#timeline-list .tl-row.selected");
+      if (row) row.scrollIntoView({ block: "nearest" });
+    }
+    if (updateHash !== false && location.hash !== "#" + view)
+      location.hash = view;
+  }
+
+  document
+    .getElementById("tab-graph")
+    .addEventListener("click", () => setView("graph"));
+  document
+    .getElementById("tab-timeline")
+    .addEventListener("click", () => setView("timeline"));
+  window.addEventListener("hashchange", () => {
+    const view = location.hash === "#timeline" ? "timeline" : "graph";
+    if (view !== currentView) setView(view, false);
+  });
+
+  // ---------- split handle ----------
+  // Pointer capture keeps the drag alive over the graph canvas, which would
+  // otherwise swallow the moves.
+  (function initSplitter() {
+    const splitter = document.getElementById("splitter");
+    const main = document.querySelector("main");
+    const MIN_PANE = 260;
+    splitter.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      splitter.setPointerCapture(e.pointerId);
+      splitter.classList.add("dragging");
+      document.body.classList.add("resizing");
+    });
+    splitter.addEventListener("pointermove", (e) => {
+      if (!splitter.hasPointerCapture(e.pointerId)) return;
+      const rect = main.getBoundingClientRect();
+      const detailWidth = Math.min(
+        Math.max(rect.right - e.clientX, MIN_PANE),
+        Math.max(rect.width - MIN_PANE, MIN_PANE)
+      );
+      main.style.setProperty("--detail-w", detailWidth + "px");
+      cy.resize();
+    });
+    const endDrag = (e) => {
+      if (splitter.hasPointerCapture(e.pointerId))
+        splitter.releasePointerCapture(e.pointerId);
+      splitter.classList.remove("dragging");
+      document.body.classList.remove("resizing");
+    };
+    splitter.addEventListener("pointerup", endDrag);
+    splitter.addEventListener("pointercancel", endDrag);
+  })();
+
   renderLegend();
+  updateSortControls();
+  renderTimeline();
+  const bootView = location.hash === "#timeline" ? "timeline" : "graph";
+  graphNeedsFit = bootView === "timeline";
+  setView(bootView, false);
 })();

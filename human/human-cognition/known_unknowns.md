@@ -13,7 +13,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 - cog-20260716-003 - TypeScript implementation: explicitly unfamiliar and deferring implementation until after file-workflow and reference-project learning.
 - cog-20260716-004 - pi SDK: can run the historical Phase 01 hello with guidance but wants to restart later from reference projects rather than old runtime code.
-- cog-20260716-005 - Frontend design: explicitly unfamiliar with frontend architecture and implementation.
+- cog-20260716-005 - Frontend design: explicitly unfamiliar with frontend architecture and implementation; interface judgment from rendered options is reliable.
 - cog-20260716-006 - Autonomous research runtime design: recognizes that detailed orchestration, safety, budget, evaluation, and subagent design exceed current knowledge.
 - cog-20260718-001 - LLM tool call and Codex Harness boundary: currently building a stable model of how tool-call JSON moves from the model through `codex-rs` to process execution.
 
@@ -59,21 +59,22 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 ## cog-20260716-005 Frontend design
 
-- content: The human reports not understanding frontend design and wants to learn it from the real product interface as it is built.
+- content: The human reports not understanding frontend design and wants to learn it from the real product interface as it is built. Observed behaviour narrows the gap to implementation and architecture: given rendered options, their interface judgment is reliable and needs no scaffolding.
 - source: user-confirmed
 - confidence: high
-- evidence: Explicit self-report in the Research OS MVP clarification.
+- evidence: Explicit self-report in the Research OS MVP clarification (2026-07-16). Narrowed 2026-09-08 during the `viz.html` timeline task: presented with ASCII mockups, the human chose reading layout and row density without hesitation, rejected the description-heavy card variant, declined an optional status filter as scope creep, and pulled back an over-reaching language switch — five interface calls, none of which needed explanation first. They asked nothing about the implementation.
 - created: 2026-07-16
-- last_updated: 2026-07-16
+- last_updated: 2026-09-08
 - status: active
 - domain: product interface
-- scope: Frontend component, state, API, streaming, and interaction design needed for the local Research OS interface.
+- scope: Frontend component, state, API, streaming, and interaction *implementation* for the local Research OS interface. Does not cover interface and information-design judgment, which the human exercises reliably when options are rendered concretely.
 - capability_level: awareness
 - evidence_type: self-report
-- last_verified: 2026-07-16
+- last_verified: 2026-09-08
 - freshness: current
 - responsibility_relevance:
   - The human must be able to use, inspect, and redirect the GUI without maintaining every implementation detail.
+  - Put UI choices to them as rendered options (mockups, previews), not as prose descriptions or implementation questions.
 - next_learning_edge: Trace one verified UI interaction from component event through local API/state update to rendered result.
 
 ## cog-20260716-006 Autonomous research runtime design
