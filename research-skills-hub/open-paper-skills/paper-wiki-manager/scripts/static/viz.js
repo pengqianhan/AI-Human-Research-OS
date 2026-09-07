@@ -794,6 +794,39 @@
     if (view !== currentView) setView(view, false);
   });
 
+  // ---------- split handle ----------
+  // Pointer capture keeps the drag alive over the graph canvas, which would
+  // otherwise swallow the moves.
+  (function initSplitter() {
+    const splitter = document.getElementById("splitter");
+    const main = document.querySelector("main");
+    const MIN_PANE = 260;
+    splitter.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      splitter.setPointerCapture(e.pointerId);
+      splitter.classList.add("dragging");
+      document.body.classList.add("resizing");
+    });
+    splitter.addEventListener("pointermove", (e) => {
+      if (!splitter.hasPointerCapture(e.pointerId)) return;
+      const rect = main.getBoundingClientRect();
+      const detailWidth = Math.min(
+        Math.max(rect.right - e.clientX, MIN_PANE),
+        Math.max(rect.width - MIN_PANE, MIN_PANE)
+      );
+      main.style.setProperty("--detail-w", detailWidth + "px");
+      cy.resize();
+    });
+    const endDrag = (e) => {
+      if (splitter.hasPointerCapture(e.pointerId))
+        splitter.releasePointerCapture(e.pointerId);
+      splitter.classList.remove("dragging");
+      document.body.classList.remove("resizing");
+    };
+    splitter.addEventListener("pointerup", endDrag);
+    splitter.addEventListener("pointercancel", endDrag);
+  })();
+
   renderLegend();
   updateSortControls();
   renderTimeline();

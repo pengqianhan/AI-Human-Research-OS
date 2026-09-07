@@ -69,8 +69,9 @@ header {
 .controls button { cursor: pointer; background: var(--paper); font-weight: 500; }
 .controls button:hover { background: var(--grid); }
 
-main { display: flex; flex: 1; min-height: 0; }
-#graph-wrap { flex: 1 1 60%; position: relative; display: flex; min-width: 0; }
+/* --detail-w is the split position; the splitter below rewrites it on drag. */
+main { display: flex; flex: 1; min-height: 0; --detail-w: 50%; }
+#graph-wrap { flex: 1 1 0; position: relative; display: flex; min-width: 0; }
 #graph {
   flex: 1;
   background-color: var(--panel);
@@ -118,7 +119,7 @@ main { display: flex; flex: 1; min-height: 0; }
 }
 
 #detail {
-  flex: 0 0 40%;
+  flex: 0 0 var(--detail-w);
   overflow-y: auto;
   padding: 18px 22px;
   background: var(--panel);
@@ -306,7 +307,7 @@ hr { border: none; border-top: 1px solid var(--grid); margin: 14px 0; }
 
 /* ---------- timeline view ---------- */
 #timeline-wrap {
-  flex: 1 1 60%;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -402,6 +403,22 @@ hr { border: none; border-top: 1px solid var(--grid); margin: 14px 0; }
 }
 #timeline-legend b { font-weight: 400; }
 
+/* ---------- split handle ---------- */
+#splitter {
+  flex: 0 0 5px;
+  background: var(--grid);
+  cursor: col-resize;
+  position: relative;
+}
+/* The line stays thin; this widens only the grab target around it. */
+#splitter::before {
+  content: "";
+  position: absolute;
+  inset: 0 -4px;
+}
+#splitter:hover, #splitter.dragging { background: var(--signal); }
+body.resizing { cursor: col-resize; user-select: none; }
+
 </style>
 </head>
 <body>
@@ -444,6 +461,7 @@ hr { border: none; border-top: 1px solid var(--grid); margin: 14px 0; }
       <span><b class="tl-status read">✓</b> read</span>
     </div>
   </div>
+  <div id="splitter" title="Drag to resize"></div>
   <section id="detail">
     <div id="detail-empty">
       <div id="stats"></div>
@@ -11325,6 +11343,39 @@ window.BUNDLE = {"nodes": [{"data": {"id": "concepts/agentscope", "label": "Agen
     const view = location.hash === "#timeline" ? "timeline" : "graph";
     if (view !== currentView) setView(view, false);
   });
+
+  // ---------- split handle ----------
+  // Pointer capture keeps the drag alive over the graph canvas, which would
+  // otherwise swallow the moves.
+  (function initSplitter() {
+    const splitter = document.getElementById("splitter");
+    const main = document.querySelector("main");
+    const MIN_PANE = 260;
+    splitter.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      splitter.setPointerCapture(e.pointerId);
+      splitter.classList.add("dragging");
+      document.body.classList.add("resizing");
+    });
+    splitter.addEventListener("pointermove", (e) => {
+      if (!splitter.hasPointerCapture(e.pointerId)) return;
+      const rect = main.getBoundingClientRect();
+      const detailWidth = Math.min(
+        Math.max(rect.right - e.clientX, MIN_PANE),
+        Math.max(rect.width - MIN_PANE, MIN_PANE)
+      );
+      main.style.setProperty("--detail-w", detailWidth + "px");
+      cy.resize();
+    });
+    const endDrag = (e) => {
+      if (splitter.hasPointerCapture(e.pointerId))
+        splitter.releasePointerCapture(e.pointerId);
+      splitter.classList.remove("dragging");
+      document.body.classList.remove("resizing");
+    };
+    splitter.addEventListener("pointerup", endDrag);
+    splitter.addEventListener("pointercancel", endDrag);
+  })();
 
   renderLegend();
   updateSortControls();

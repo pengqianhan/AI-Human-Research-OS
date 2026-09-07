@@ -63,8 +63,9 @@ header {
 .controls button { cursor: pointer; background: var(--paper); font-weight: 500; }
 .controls button:hover { background: var(--grid); }
 
-main { display: flex; flex: 1; min-height: 0; }
-#graph-wrap { flex: 1 1 60%; position: relative; display: flex; min-width: 0; }
+/* --detail-w is the split position; the splitter below rewrites it on drag. */
+main { display: flex; flex: 1; min-height: 0; --detail-w: 50%; }
+#graph-wrap { flex: 1 1 0; position: relative; display: flex; min-width: 0; }
 #graph {
   flex: 1;
   background-color: var(--panel);
@@ -112,7 +113,7 @@ main { display: flex; flex: 1; min-height: 0; }
 }
 
 #detail {
-  flex: 0 0 40%;
+  flex: 0 0 var(--detail-w);
   overflow-y: auto;
   padding: 18px 22px;
   background: var(--panel);
@@ -300,7 +301,7 @@ hr { border: none; border-top: 1px solid var(--grid); margin: 14px 0; }
 
 /* ---------- timeline view ---------- */
 #timeline-wrap {
-  flex: 1 1 60%;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -395,3 +396,19 @@ hr { border: none; border-top: 1px solid var(--grid); margin: 14px 0; }
   flex-shrink: 0;
 }
 #timeline-legend b { font-weight: 400; }
+
+/* ---------- split handle ---------- */
+#splitter {
+  flex: 0 0 5px;
+  background: var(--grid);
+  cursor: col-resize;
+  position: relative;
+}
+/* The line stays thin; this widens only the grab target around it. */
+#splitter::before {
+  content: "";
+  position: absolute;
+  inset: 0 -4px;
+}
+#splitter:hover, #splitter.dragging { background: var(--signal); }
+body.resizing { cursor: col-resize; user-select: none; }

@@ -244,7 +244,10 @@ python -m unittest discover -s scripts -p 'test_*.py' -v
 The viewer has two tabs over a shared detail pane: **Graph** and **Timeline**. The
 tab is reflected in the URL fragment (`#graph`, `#timeline`) so either view can be
 linked or bookmarked directly; `#graph` is the default. The search box is shared by
-both tabs; every other control belongs to one of them.
+both tabs; every other control belongs to one of them. The split between the left
+view and the detail pane starts at half the window and is resized by dragging the
+divider between them; each side keeps a 260px minimum, and the graph re-measures as
+the divider moves.
 
 The Graph tab is a paper-wiki knowledge map, not a flat force graph:
 
