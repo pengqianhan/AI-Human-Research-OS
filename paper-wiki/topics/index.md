@@ -22,4 +22,5 @@
 * [Post-training feedback](post-training-feedback.md) - Papers about the signals used to post-train language models when no verifier exists, and what those signals discard.
 * [Research ideation](research-ideation.md) - Papers about turning literature evidence, unresolved bottlenecks, and prior-art checks into defensible research proposals.
 * [Research verifiability](research-verifiability.md) - Papers about tracing scientific claims to supporting artifacts and auditing the integrity of research outputs.
+* [Search agents](search-agents.md) - Papers about agents trained or built to search the live web and synthesize retrieved evidence into verified answers or structured outputs.
 * [Simulated-user evaluation](simulated-user-evaluation.md) - Papers about using LLM-powered persona agents as stand-ins for real users to evaluate AI systems and digital products at scale.
