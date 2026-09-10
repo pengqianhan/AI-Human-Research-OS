@@ -131,7 +131,7 @@ main { display: flex; flex: 1; min-height: 0; --detail-w: 50%; }
 }
 
 #detail-actions { display: flex; gap: 8px; margin: 10px 0 4px; }
-#detail-toggle, #detail-language-toggle {
+#detail-toggle, #detail-language-toggle, #detail-locate {
   font-family: var(--sans);
   font-size: 13px;
   padding: 6px 14px;
@@ -141,8 +141,9 @@ main { display: flex; flex: 1; min-height: 0; --detail-w: 50%; }
   color: var(--signal);
   cursor: pointer;
   font-weight: 600;
+  white-space: nowrap;
 }
-#detail-toggle:hover, #detail-language-toggle:hover { background: rgba(232, 89, 12, 0.16); }
+#detail-toggle:hover, #detail-language-toggle:hover, #detail-locate:hover { background: rgba(232, 89, 12, 0.16); }
 #detail-language-toggle { min-width: 38px; padding-left: 10px; padding-right: 10px; }
 
 .detail-header {

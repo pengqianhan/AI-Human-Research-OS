@@ -104,6 +104,11 @@
   let searchRevealed = new Set();
   let typeFilter = null;
 
+  const labelFontSize = (ele) => (ele.data("kind") === "container" ? 11 : 9);
+  const labelMaxWidth = (ele) => (ele.data("kind") === "container" ? 120 : 110);
+  // Below 1:1, focus labels grow in model units to hold their on-screen size.
+  const labelZoom = (ele) => Math.min(1, ele.cy().zoom());
+
   const cy = cytoscape({
     container: document.getElementById("graph"),
     elements: seeded,
@@ -121,13 +126,12 @@
             return d.shortLabel || d.label;
           },
           color: (ele) => (ele.data("kind") === "container" ? "#17262E" : "#52646E"),
-          "font-size": (ele) => (ele.data("kind") === "container" ? 11 : 9),
+          "font-size": labelFontSize,
           "font-weight": (ele) => (ele.data("kind") === "container" ? 700 : 500),
           "text-valign": "bottom",
           "text-margin-y": 4,
           "text-wrap": "wrap",
-          "text-max-width": (ele) =>
-            ele.data("kind") === "container" ? 120 : 110,
+          "text-max-width": labelMaxWidth,
           "text-background-color": "#ffffff",
           "text-background-opacity": 0.72,
           "text-background-padding": 1,
@@ -141,12 +145,37 @@
         },
       },
       {
+        // Focus nodes (see applyDimming) keep readable labels at any zoom, so
+        // a note framed at map scale still shows what it is filed under.
+        selector: "node.focus",
+        style: {
+          "font-size": (ele) => labelFontSize(ele) / labelZoom(ele),
+          "text-max-width": (ele) => labelMaxWidth(ele) / labelZoom(ele),
+          "text-margin-y": (ele) => 4 / labelZoom(ele),
+          "text-background-opacity": 0.9,
+          "z-index": 10,
+        },
+      },
+      {
         selector: 'node[kind = "container"].open',
         style: { "border-width": 4, "border-color": "#E8590C" },
       },
       {
         selector: "node:selected",
         style: { "border-width": 4, "border-color": "#B7791F" },
+      },
+      {
+        // The selection stays findable at map scale: a minimum on-screen
+        // size, and a label drawn above every other one.
+        selector: "node.focus:selected",
+        style: {
+          width: (ele) => Math.max(ele.data("size"), 18 / ele.cy().zoom()),
+          height: (ele) => Math.max(ele.data("size"), 18 / ele.cy().zoom()),
+          "border-width": (ele) => 4 / labelZoom(ele),
+          "font-weight": 700,
+          color: "#17262E",
+          "z-index": 20,
+        },
       },
       {
         selector: "edge",
@@ -294,12 +323,18 @@
   // ---------- dimming: selection > search > type filter ----------
   let selectedId = null;
 
+  // Focus labels are sized against the zoom, so re-evaluate them as it moves.
+  cy.on("zoom", () => cy.nodes(".focus").updateStyle());
+
   function applyDimming() {
-    cy.elements().removeClass("dim");
+    cy.elements().removeClass("dim focus");
     const q = document.getElementById("search").value.trim().toLowerCase();
     if (selectedId && cy.$id(selectedId).length) {
       const hood = cy.$id(selectedId).closedNeighborhood();
       cy.elements().not(hood).addClass("dim");
+      // Label the topics and concepts around the selection plus the selection
+      // itself; labelling every linked paper as well crowds the overview.
+      hood.nodes('[kind = "container"]').union(cy.$id(selectedId)).addClass("focus");
       return;
     }
     if (q) {
@@ -421,11 +456,58 @@
     }
   }
 
+  // Jump from the timeline to a note's place on the map. A paper's place is
+  // the topics and concepts it is filed under plus the papers it links with;
+  // those papers are normally hidden, so reveal them to complete the
+  // highlighted neighborhood.
+  function showInGraph(id) {
+    if (isPaper(id)) {
+      searchRevealed.add(id);
+      for (const x of neighbors[id] || []) if (isPaper(x)) searchRevealed.add(x);
+      sync();
+    }
+    graphNeedsFit = false; // the frame below replaces the whole-map fit
+    setView("graph");
+    const node = cy.$id(id);
+    if (!node.length) return;
+    cy.elements().unselect();
+    node.select();
+    selectedId = id;
+    applyDimming();
+    // Frame the neighborhood, not the node alone, and never zoom in past the
+    // whole-map fit, so the dimmed map around it stays in view. Measure node
+    // bodies only: focus labels rescale with the zoom, so the padding leaves
+    // room for them.
+    const hood = node.closedNeighborhood();
+    const bb = hood.boundingBox({ includeLabels: false });
+    const pad = 70;
+    const fitZoom = Math.min(
+      (cy.width() - 2 * pad) / bb.w,
+      (cy.height() - 2 * pad) / bb.h
+    );
+    cy.animate(
+      {
+        center: { eles: hood },
+        zoom: Math.min(MAX_FIT_ZOOM, Math.max(0.1, fitZoom)),
+      },
+      { duration: 250 }
+    );
+  }
+
   function renderDetailActions(id) {
     const holder = document.getElementById("detail-actions");
     holder.innerHTML = "";
     const d = nodeIndex[id];
     if (!d) return;
+    // On the timeline the graph is out of sight, so offer the jump to it.
+    if (currentView === "timeline") {
+      const locateBtn = document.createElement("button");
+      locateBtn.id = "detail-locate";
+      locateBtn.textContent = "Show in graph";
+      locateBtn.title = "Switch to the graph and highlight where this note sits";
+      locateBtn.addEventListener("click", () => showInGraph(id));
+      holder.appendChild(locateBtn);
+    }
     const localized = bundle.localizedNotes && bundle.localizedNotes[id];
     if (d.type === "Paper" && localized) {
       const languageBtn = document.createElement("button");
@@ -766,6 +848,8 @@
         .classList.toggle("active", name === view);
     }
     document.getElementById("view-hint").textContent = VIEW_HINTS[view];
+    // The note header's actions depend on the view ("Show in graph").
+    if (currentDetail) renderDetailActions(currentDetail);
 
     if (view === "graph") {
       // Cytoscape measured a hidden (zero-sized) container while the timeline
