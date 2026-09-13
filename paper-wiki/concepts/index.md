@@ -5,9 +5,12 @@
 * [BrowseComp-Plus](browsecomp-plus.md) - Multi-hop deep-research QA benchmark with a verified offline corpus of gold, evidence, and hard-negative documents.
 * [Context rot](context-rot.md) - Degradation of model quality as context grows, even inside the physical context window.
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
+* [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
 * [GISA](gisa.md) - General information-seeking benchmark with structured item, set, list, and table answers.
 * [GRPO](grpo.md) - Value-free RL algorithm that estimates advantage from a group of same-prompt responses rather than a learned critic.
 * [LLM-as-a-Judge](llm-as-a-judge.md) - Using a language model to score, rank, or select other model outputs.
+* [LoCoMo](locomo.md) - Very-long-term conversational memory benchmark spanning single-hop, multi-hop, open-domain, and temporal reasoning.
+* [LongMemEval](longmemeval.md) - 500-question, six-category benchmark for long-term interactive memory in chat assistants.
 * [MLE-Bench Lite](mle-bench-lite.md) - Lighter subset of MLE-Bench for Kaggle-derived ML-engineering agent evaluation.
 * [Model Context Protocol (MCP)](model-context-protocol.md) - Standard for how a language-model application discovers and invokes external tools via named, schema-described servers.
 * [OOLONG](oolong.md) - Long-context benchmark requiring semantic transformation and aggregation over nearly every input entry.
