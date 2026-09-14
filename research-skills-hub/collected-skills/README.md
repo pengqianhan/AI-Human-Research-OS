@@ -32,6 +32,7 @@ at source commit `8f854bd`.
 | [academic-rebuttal](academic-rebuttal/SKILL.md) | Triage reviews, prioritize rebuttal experiments, draft evidence-grounded responses, and plan resubmission when needed. | [TobiasLee/Rebuttal-Skill](https://github.com/TobiasLee/Rebuttal-Skill) |
 | [ResearchStudio-Idea](ResearchStudio-Idea/README.md) | Provide evidence-grounded paper search, research ideation, prior-art review, and idea-quality evaluation. | [microsoft/ResearchStudio](https://github.com/microsoft/ResearchStudio/tree/main/ResearchStudio-Idea), MIT |
 | [humanizer](humanizer/SKILL.md) | Rewrite AI-sounding text so it reads naturally, using 35 Wikipedia "Signs of AI writing" patterns, without changing what it says. | [blader/humanizer](https://github.com/blader/humanizer), MIT |
+| [skill-doctor](skill-doctor/SKILL.md) | Grade installed skills by scoring recent local agent conversations, then draft skill edits and a shareable report. | [warpdotdev/common-skills](https://github.com/warpdotdev/common-skills/blob/main/.agents/skills/skill-doctor/SKILL.md), MIT |
 
 ## Installation
 
@@ -72,6 +73,9 @@ collection's `SOURCE.md`. See [Managing skills](../MANAGING-SKILLS.md) for detai
 - `humanizer`: no local setup required; `SKILL.md` is the whole skill. The
   bundled `scripts/validate-package.py` is an upstream packaging check for the
   original repository, not a runtime dependency.
+- `skill-doctor`: Python 3 standard library only (`sqlite3` included); it reads
+  local agent conversation history in place and writes every artifact to a
+  temporary directory, never to the repository.
 
 ## ml-paper-writing
 
@@ -429,6 +433,40 @@ Example requests:
 /humanizer humanize the prose in projects-folder/Example_Project/index.md
 /humanizer match this writing sample, then rewrite the discussion section
 /humanizer clean up the AI patterns in this commit message
+```
+
+## skill-doctor
+
+Grades the agent setup itself: it samples recent local agent conversations,
+scores each one against an efficiency rubric and a code-quality rubric, and
+turns the failing conversations into concrete skill edits. Output is a single
+self-contained `report.html` with the scorecard, the three top findings, and
+unified diffs for each proposed `SKILL.md` change.
+
+Scope is chosen at startup — conversations in the current repository, selected
+projects, or all local conversations; project skills alone or project plus
+global skills. Supported harnesses are listed in
+[references/supported-harnesses.md](skill-doctor/references/supported-harnesses.md)
+(Warp, Claude Code, Codex, Pi, Grok Build, ZCode); the skill stops if it cannot
+identify the executing harness. Everything runs locally: transcripts are never
+uploaded, and the report is written to a `mktemp` directory rather than into
+this repository. The proposed edits land under that directory too, so applying
+them stays an explicit second step.
+
+Useful here for auditing the hub's own skills — which installed skills never
+fire (usually a `description` trigger problem) and which repeated manual steps
+deserve a new skill. Note that the rendered report ends with a Warp Factories
+call-to-action from the upstream skill.
+
+Upstream introduction: [warp.dev/skill-doctor](https://www.warp.dev/skill-doctor).
+
+Example requests:
+
+```text
+/skill-doctor grade the conversations in this repository
+/skill-doctor evaluate project and global skills over the last 90 days
+/skill-doctor which of my installed skills are actually being used?
+/skill-doctor draft edits for the skills that failed in recent sessions
 ```
 
 ## Credits And License Boundary
