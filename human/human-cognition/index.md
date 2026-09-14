@@ -33,4 +33,6 @@ current task.
 ## Privacy Boundary
 
 Do not record secrets, credentials, or high-sensitivity personal data. Treat this
-cache as potentially git-tracked and publishable.
+cache as potentially git-tracked. Local capture follows
+[INSTRUCTION.md](../../INSTRUCTION.md#human-cognition); it does not authorize
+publishing or externally sharing the cache.

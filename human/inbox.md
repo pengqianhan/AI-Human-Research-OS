@@ -1,19 +1,21 @@
 ---
 type: Human Memory Inbox
 title: Human Memory Inbox
-description: Review queue for candidate facts, preferences, and workflow updates before durable promotion.
+description: Review queue for candidate profile facts, preferences, and workflow updates.
 tags: [human-context, memory, review]
 timestamp: 2026-06-22T01:24:11Z
 ---
 
 # Human Memory Inbox
 
-Use this file for candidate facts, preferences, or workflow updates about the
-human user that need review before becoming durable memory.
+Use this file for candidate facts, preferences, or workflow updates awaiting
+approval for the human's profile.
 
 Agents may add entries here when a user preference appears important but has not
 been explicitly approved for long-term storage. Do not promote entries into
-[PROFILE.md](PROFILE.md) without confirmation.
+[PROFILE.md](PROFILE.md) without confirmation. Cognition observations go directly
+to the [cognition cache](human-cognition/index.md) under the
+[Memory Policy](index.md#memory-policy), without an inbox review step.
 
 ## Pending
 

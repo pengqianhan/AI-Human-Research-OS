@@ -49,8 +49,9 @@ Communication:
   another language.
 - Prefer direct, concrete answers over broad generalities.
 - Surface assumptions, tradeoffs, and verification status clearly.
-- Avoid storing a preference permanently unless it is confirmed or repeatedly
-  observed and then approved.
+- Add or change preferences in this profile only with human confirmation or a
+  direct request. Inferred cognition follows the separate
+  [cognition policy](../INSTRUCTION.md#human-cognition).
 
 Research:
 
