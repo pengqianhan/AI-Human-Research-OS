@@ -96,8 +96,10 @@ Claude Code's skills documentation does not mention symlinks at all. This was
 tested on 2026-07-22 with a `filetree-simple` pilot and **both Claude Code and
 Codex** discovered and executed the linked skill. Because it is implementation
 behavior rather than a documented contract, it can regress on an agent upgrade
-and should be re-tested after one. If an agent stops following links, set that
-agent's targets to copy in the target table — the mechanism already supports it.
+and should be re-tested after one. If an agent stops following links, linked
+skills may no longer be discoverable. The current installer has no per-target
+install-form override; a per-agent copy fallback would require revising the
+source-policy contract and installer rather than editing the target table.
 
 Whether an agent skips a leading-dot directory inside its skills folder is
 undocumented too. Both agents were tested on 2026-07-23 and both skip it: the

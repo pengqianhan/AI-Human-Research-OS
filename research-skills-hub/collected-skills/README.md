@@ -35,15 +35,11 @@ at source commit `8f854bd`.
 
 ## Installation
 
-Install a skill into both agent skill directories:
-
-```bash
-cp -R research-skills-hub/collected-skills/<skill> .agents/skills/<skill>
-cp -R research-skills-hub/collected-skills/<skill> .claude/skills/<skill>
-```
-
-Install through `research-skill-installer`, never by hand; it decides symlink
-vs copy from the collection's `SOURCE.md`.
+Review the skill's `SKILL.md`, scripts, provenance, and license, then use
+[research-skill-installer](../open-paper-skills/research-skill-installer/SKILL.md)
+for installation commands, target selection, and verification. Install
+destinations come from its target table; symlink or copy form comes from the
+collection's `SOURCE.md`. See [Managing skills](../MANAGING-SKILLS.md) for details.
 
 ## Prerequisites
 

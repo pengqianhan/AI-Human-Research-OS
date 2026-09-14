@@ -11,15 +11,13 @@ agents and the human, who does what, and what each interface may do.
 * [mattpocock-skills](mattpocock-skills/index.md) - Read-only vendored mirror of [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills) (MIT): the `engineering/` and `productivity/` bundles, refreshed wholesale from upstream. Do not edit; adapt by cherry-picking into collected-skills. See [ADR 0001](docs/adr/0001-external-skill-intake-and-sync.md).
 * [claude-science-skills](claude-science-skills/index.md) - Claude Science asset bundle (prompt, agents, MCP servers, skills) vendored from [JimLiu/science-skills](https://github.com/JimLiu/science-skills/tree/main).
 
-# Installing a skill
+## Installing a skill
 
-```bash
-cp -R research-skills-hub/<collection>/<skill> .agents/skills/<skill>
-cp -R research-skills-hub/<collection>/<skill> .claude/skills/<skill>
-```
+Use [research-skill-installer](open-paper-skills/research-skill-installer/SKILL.md)
+for installation commands, target selection, and verification. It selects
+destinations from its target table and symlink or copy form from the collection's
+`SOURCE.md`; do not place hub skills by hand.
 
-Review a skill's `SKILL.md` and bundled scripts before installing it from
-outside this repository. Install through `research-skill-installer`, never by
-hand: it places each skill as a symlink to the hub or a copy, decided by the
-collection's `SOURCE.md`. If public top-level entrypoints changed, run
-`filetree-simple generate`, then `filetree-simple lint`.
+Review third-party skills' `SKILL.md`, scripts, provenance, and license before
+installation. For the lifecycle and source-policy rationale, see
+[Managing skills](MANAGING-SKILLS.md).
