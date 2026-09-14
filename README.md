@@ -67,6 +67,13 @@ figures, references, and paper drafts, not empty ideas.
 3. Talk to the agent in natural language, e.g. "record this idea", "start a
    project from idea X", "add this paper to the references".
 
+Run [`./verify.sh`](verify.sh) from the repository root to check the paper wiki,
+navigation map, and installed skills. It requires a working `uv` and the Python
+version in [`.python-version`](.python-version) already installed; it uses a
+temporary cache and performs no downloads or project-environment sync. Runtime
+errors mark dependent checks `SKIP` while independent checks continue. Exit codes:
+`0` = all passed, `1` = a check failed, `2` = runtime error left checks incomplete.
+
 ## Core Directories
 
 | Path                                                                                              | Purpose                                                                           |

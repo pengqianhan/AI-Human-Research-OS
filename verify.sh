@@ -4,7 +4,7 @@
 #
 # Agent-neutral: Claude Code, Codex, or a human all run the same command.
 # It REPORTS drift; it never fixes anything and never edits files. A non-zero
-# exit means the working tree is inconsistent and needs a fix before commit.
+# exit is 1 for failed checks or 2 when the runtime prevents complete checking.
 #
 # Run before finishing a change that touches paper-wiki/, an installed skill,
 # or an indexed doc:  ./verify.sh
@@ -16,25 +16,23 @@
 set -u
 cd "$(dirname "$0")"
 
-if ! command -v uv >/dev/null 2>&1; then
-  echo "verify: uv is required (https://docs.astral.sh/uv/)" >&2
-  exit 2
-fi
-
 PYTHON_VERSION_FILE=".python-version"
-if [ ! -f "$PYTHON_VERSION_FILE" ]; then
-  echo "verify: missing $PYTHON_VERSION_FILE" >&2
-  exit 2
-fi
-IFS= read -r PYTHON_VERSION < "$PYTHON_VERSION_FILE"
-if [ -z "$PYTHON_VERSION" ]; then
-  echo "verify: $PYTHON_VERSION_FILE must name a Python version" >&2
-  exit 2
+PYTHON_VERSION=""
+runtime_problem=""
+if ! command -v uv >/dev/null 2>&1; then
+  runtime_problem="uv is required (https://docs.astral.sh/uv/)"
+elif [ ! -f "$PYTHON_VERSION_FILE" ]; then
+  runtime_problem="missing $PYTHON_VERSION_FILE"
+else
+  IFS= read -r PYTHON_VERSION < "$PYTHON_VERSION_FILE"
+  if [ -z "$PYTHON_VERSION" ]; then
+    runtime_problem="$PYTHON_VERSION_FILE must name a Python version"
+  fi
 fi
 
-# Use the repository-pinned interpreter on every machine. --no-project keeps
-# this read-only check from creating or syncing a repository-local .venv.
-PYTHON=(uv run --no-project --python "$PYTHON_VERSION" -- python)
+# Use the pinned, already-installed interpreter without project sync, downloads,
+# or the persistent user cache, which may be inaccessible in an agent sandbox.
+PYTHON=(uv run --no-project --no-cache --offline --no-python-downloads --python "$PYTHON_VERSION" -- python)
 
 # Canonical (hub) copy of the hub-sourced skill; agent-neutral.
 PWM_HUB="research-skills-hub/open-paper-skills/paper-wiki-manager"
@@ -57,15 +55,35 @@ check() {
 
 echo "verify: read-only consistency check"
 
-# 1. Paper-wiki bundle: frontmatter, links, bidirectional paper<->topic/concept,
-#    required indexes, and viz.html graph freshness (catches a forgotten
-#    generate_viz.py run).
-check "paper-wiki validation" \
-  "${PYTHON[@]}" "$PWM_HUB/scripts/validate_paper_wiki.py" paper-wiki
+# Probe Python once so a launcher failure is not reported as invalid documents.
+runtime_error=0
+if [ -z "$runtime_problem" ]; then
+  runtime_output="$("${PYTHON[@]}" -c 'import sys; print(sys.executable)' 2>&1)"; rc=$?
+  if [ "$rc" -ne 0 ]; then
+    runtime_problem="Python $PYTHON_VERSION startup failed (exit $rc):
+$runtime_output"
+  fi
+fi
 
-# 2. FILETREE.md drift.
-check "FILETREE lint" \
-  "${PYTHON[@]}" "$FILETREE" lint
+if [ -n "$runtime_problem" ]; then
+  runtime_error=1
+  echo "  ERROR runtime"
+  printf '%s\n' "$runtime_problem" | sed 's/^/          /'
+  echo "  SKIP  paper-wiki validation (runtime unavailable)"
+  echo "  SKIP  FILETREE lint (runtime unavailable)"
+else
+  echo "  OK    Python runtime ($PYTHON_VERSION)"
+
+  # 1. Paper-wiki bundle: frontmatter, links, bidirectional paper<->topic/concept,
+  #    required indexes, and viz.html graph freshness (catches a forgotten
+  #    generate_viz.py run).
+  check "paper-wiki validation" \
+    "${PYTHON[@]}" "$PWM_HUB/scripts/validate_paper_wiki.py" paper-wiki
+
+  # 2. FILETREE.md drift.
+  check "FILETREE lint" \
+    "${PYTHON[@]}" "$FILETREE" lint
+fi
 
 # 3. Installed-skill integrity (ADR 0002). The hub is canonical. Every install
 #    is either a symlink back to it or a copy, and which one is not a free
@@ -112,7 +130,10 @@ verify_installs() {
 }
 check "installed skills: link/copy form and integrity" verify_installs
 
-if [ "$fail" -eq 0 ]; then
+if [ "$runtime_error" -ne 0 ]; then
+  echo "verify: INCOMPLETE — resolve the runtime error and rerun"
+  exit 2
+elif [ "$fail" -eq 0 ]; then
   echo "verify: all checks passed"
 else
   echo "verify: FAILED — fix the items above (this script does not auto-fix)"
