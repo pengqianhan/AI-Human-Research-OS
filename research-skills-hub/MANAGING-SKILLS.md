@@ -14,9 +14,9 @@ is either a **symlink back to the hub** or a **copy of it** — never an
 independent version. So there is nothing to keep in sync by hand, and editing a
 symlinked install *is* editing the hub.
 
-Nothing installs, moves, or deletes a skill by hand. Every write goes through
-`research-skill-installer`, which refuses to touch anything outside its target
-table.
+Install, update, disable, enable, or remove hub skills through
+`research-skill-installer`, which manages install locations within its target
+table. Editing skill content follows the collection's source policy.
 
 ## Symlink or copy — not a choice
 
@@ -88,9 +88,10 @@ re-enabled. Running `install` over a disabled location re-enables it.
 
 Whether an agent skips a `.disabled/` directory is undocumented behaviour, like
 symlink following; both were verified on Claude Code and Codex on 2026-07-23 and
-should be re-checked after an agent upgrade. If an agent ever lists `.disabled/`
-entries, set that agent's targets to `copy` — its `SKILL.md.disabled` rename
-does not depend on directory-name behaviour.
+should be re-checked after an agent upgrade. If an agent lists `.disabled/`
+entries, the skill may still be discoverable there. The current target table
+has no install-form override: a per-agent copy fallback would require a change
+to the installer and source-policy contract, not a target-table edit.
 
 ## Checking and typical flows
 
