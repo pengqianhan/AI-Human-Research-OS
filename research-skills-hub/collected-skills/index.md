@@ -24,6 +24,7 @@ skills.
 * [paper-finder](paper-finder/SKILL.md) - Finds and organizes related ML/AI papers into persistent topic workspaces.
 * [pyzotero](pyzotero/SKILL.md) - Manages Zotero libraries programmatically with the pyzotero Python client.
 * [ResearchStudio-Idea](ResearchStudio-Idea/README.md) - Provides an evidence-grounded search, ideation, prior-art review, and idea-quality evaluation suite.
+* [skill-doctor](skill-doctor/SKILL.md) - Grades agent skills from local conversation history and drafts concrete skill edits in one report.
 
 The `engineering/` and `productivity/` bundles from
 [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills) have
