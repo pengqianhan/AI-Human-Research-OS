@@ -33,6 +33,7 @@ at source commit `8f854bd`.
 | [ResearchStudio-Idea](ResearchStudio-Idea/README.md) | Provide evidence-grounded paper search, research ideation, prior-art review, and idea-quality evaluation. | [microsoft/ResearchStudio](https://github.com/microsoft/ResearchStudio/tree/main/ResearchStudio-Idea), MIT |
 | [humanizer](humanizer/SKILL.md) | Rewrite AI-sounding text so it reads naturally, using 35 Wikipedia "Signs of AI writing" patterns, without changing what it says. | [blader/humanizer](https://github.com/blader/humanizer), MIT |
 | [skill-doctor](skill-doctor/SKILL.md) | Grade installed skills by scoring recent local agent conversations, then draft skill edits and a shareable report. | [warpdotdev/common-skills](https://github.com/warpdotdev/common-skills/blob/main/.agents/skills/skill-doctor/SKILL.md), MIT |
+| [show-me](show-me/SKILL.md) | Explain the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts. | [humanlayer/skills](https://github.com/humanlayer/skills/blob/main/plugins/show-me/skills/show-me/SKILL.md), MIT |
 
 ## Installation
 
@@ -76,6 +77,9 @@ collection's `SOURCE.md`. See [Managing skills](../MANAGING-SKILLS.md) for detai
 - `skill-doctor`: Python 3 standard library only (`sqlite3` included); it reads
   local agent conversation history in place and writes every artifact to a
   temporary directory, never to the repository.
+- `show-me`: no local setup required; `SKILL.md` is the whole skill. Mermaid
+  and `diff` blocks render in any Markdown viewer; the optional HTML view is a
+  single file opened in the browser.
 
 ## ml-paper-writing
 
@@ -467,6 +471,34 @@ Example requests:
 /skill-doctor evaluate project and global skills over the last 90 days
 /skill-doctor which of my installed skills are actually being used?
 /skill-doctor draft edits for the skills that failed in recent sessions
+```
+
+## show-me
+
+Explains the current topic of conversation visually instead of in prose. It
+picks the smallest view that makes the point: pseudocode for logic, a call tree
+for runtime flow, a component tree for UI structure, a shallow file tree for
+responsibilities, a Mermaid diagram for interaction or data flow, a `diff` when
+the point is what changes, or a full block when most of it is new. Only when a
+layout, state comparison, or concept is too dense for Mermaid does it write one
+focused HTML file and open it.
+
+The skill body is a set of shape examples plus a short guidance note: keep only
+the calls, files, states, and boundaries needed for the current question, place
+each visual next to the sentence it supports, and never use every view at once.
+Upstream ships it as a Claude Code plugin (`plugins/show-me`, v1.0.1); only the
+`SKILL.md` is kept here.
+
+Useful here for explaining a `Code/` pipeline, a repository restructure, an
+agent control loop, or a skill's step order before editing it.
+
+Example requests:
+
+```text
+/show-me how the verify.sh checks call into the hub skills
+/show-me the control flow of research-skill-installer's install command
+/show-me what changes in the file layout if we split paper-wiki by venue
+/show-me the data flow from PROJECT_MEMORY.md to HANDOFF.md as a diagram
 ```
 
 ## Credits And License Boundary
