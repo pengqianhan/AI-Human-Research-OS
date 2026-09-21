@@ -20,6 +20,7 @@ The Model Context Protocol (MCP) standardizes how a language-model application d
 * [AgentScope 1.0](../papers/2508.16279.md) - provides fine-grained MCP client support (stateful and stateless clients) as one of its core tool-abstraction primitives, exposing remote MCP functions as ordinary local callables a developer can compose with other tools.
 * [MAI-UI](../papers/2512.22047.md) - adds `mcp_call` as a first-class action in a GUI agent's action space, letting the agent invoke external MCP tools (e.g., a maps or GitHub server) to compress long UI-operation sequences or reach tasks that pure GUI manipulation cannot.
 * [VibeWorlding](../papers/2608.15265.md) - exposes all five of its 3D sandbox operations (asset_retrieve, asset_add, asset_delete, asset_rotate, asset_translate) as MCP tools, using the protocol to unify what the paper describes as an otherwise fragmented landscape of incompatible 3D asset interfaces.
+* [Paper2Agent](../papers/2509.06917.md) - MCP is not one feature among several here but the paper's central technique: its entire contribution is systematically constructing an MCP server (Tools/Resources/Prompts) from a paper and its codebase, validating each tool against the reference implementation's own reported results before locking it, then deploying the server for any MCP-compatible chat agent — a more direct, load-bearing use of the protocol than this concept's other entries, each of which treats MCP as one integration surface within a larger agent rather than as the artifact being built.
 
 # Related
 
