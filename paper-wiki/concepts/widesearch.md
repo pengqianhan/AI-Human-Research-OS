@@ -20,6 +20,7 @@ Its item-level metrics score cells independently, while row-level metrics requir
 # Papers
 
 * [SearchOS-V1](../papers/2607.15257.md) - uses WideSearch for its main table-completion results and its schema, scheduling, middleware, and skill analyses.
+* [WideSeek-R1](../papers/2602.04634.md) - main evaluation benchmark; WideSeek-R1-4B leads 5 of 6 metrics among 4B/8B baselines and reaches an item F1 comparable to single-agent DeepSeek-R1-671B at roughly 170x fewer parameters.
 
 # Notes
 

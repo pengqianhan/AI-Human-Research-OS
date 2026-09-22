@@ -20,6 +20,7 @@ Evaluations typically sample a subset of tasks and provide a subset of the corpu
 # Papers
 
 * [Recursive Language Models](../papers/2512.24601.md) - uses the 1K-document configuration as its beyond-the-window regime; RLM(GPT-5) reaches 91.33 where base GPT-5 cannot fit the input at all.
+* [JIT-Agent](../papers/2608.25593.md) - one of nine benchmarks in its Deep Research evaluation category; JIT-Agent-generated harnesses reach 78.0 (GLM-5.2 backbone) and 74.0 (DeepSeek-V4-Flash backbone), against a 67.5-76.9 spread for the nine other backbones/harnesses reported in the same table.
 
 # Notes
 

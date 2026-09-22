@@ -1,0 +1,8 @@
+# paper-wiki/viz.html is a generated artifact whose whole data payload sits on a
+# single `window.BUNDLE = {...}` line, so a textual merge of two branches that
+# both regenerated it produces conflict markers *inside* a <script> block — a
+# syntax error that silently blanks the viewer. Never text-merge it: on conflict
+# git keeps our side and flags the file, and the fix is always to re-run
+# research-skills-hub/open-paper-skills/paper-wiki-manager/scripts/generate_viz.py.
+# -diff additionally keeps a 2 MB one-line diff out of log and review views.
+paper-wiki/viz.html -diff -merge
