@@ -110,7 +110,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | ID | Decision | Default taken | To reverse |
 |---|---|---|---|
-| D1 | Restore the `CLAUDE.md` pointer (a prior commit had removed it as "redundant")? | **Restored** the one-line pointer to INSTRUCTION.md | Delete `CLAUDE.md` and rely on Claude Code reading `AGENTS.md` — confirm your version does so |
+| D1 | Restore the `CLAUDE.md` pointer (a prior commit had removed it as "redundant")? | ~~**Restored** the one-line pointer to INSTRUCTION.md~~ **— superseded 2026-09-23 (commit 840cdaa):** `INSTRUCTION.md` content moved into `AGENTS.md`; `CLAUDE.md` and `INSTRUCTION.md` deleted, relying on Claude Code reading `AGENTS.md` natively | Delete `CLAUDE.md` and rely on Claude Code reading `AGENTS.md` — confirm your version does so |
 | D2 | Template directory casing | ~~`Paper_Initial_template`~~ **— superseded 2026-06-17:** renamed to **`ai_research_template`** (all-lowercase) | `git mv` back and update README / INSTRUCTION / OS_INTRO / the index files, then regenerate FILETREE.md |
 | D3 | Track reference PDFs in git? | Status quo (tracked if added); none added yet | Add `References/*.pdf` to `.gitignore` |
 | D4 | HTML as the format for operating docs | **— superseded 2026-06-17 and narrowed later:** `HANDOFF.md` is the durable Markdown hand-off record; `OS_INTRO.html` stays HTML as a static delivered intro | Convert hand-off records back to HTML (not recommended — Markdown is cheaper to read/edit/grep/diff) |

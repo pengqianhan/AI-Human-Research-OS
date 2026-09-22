@@ -82,7 +82,7 @@ export interface GovernanceEntry {
 // ── projects ──────────────────────────────────────────────────────────────
 
 /**
- * Per-project Snapshot fields, field names per INSTRUCTION.md's convention.
+ * Per-project Snapshot fields, field names per AGENTS.md's convention.
  * Any field the generator could not find in PROJECT_MEMORY.md is null —
  * the UI must render "not filled in" rather than invent a value.
  */

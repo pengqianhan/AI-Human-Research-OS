@@ -21,7 +21,7 @@ const terminalIcon = (
 
 /* Agent launchers — the wanman-style hint that this OS is driven by code
    agents. Clicking copies the agent's launch command (run from the repo
-   root, where the AGENTS.md / CLAUDE.md → INSTRUCTION.md entry chain lives).
+   root, where the AGENTS.md entry file lives).
    Copy-only, like everything else in this UI. */
 const AGENTS: { id: string; name: string; command: string; icon: ReactNode }[] = [
   {

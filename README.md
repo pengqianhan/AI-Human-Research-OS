@@ -61,8 +61,7 @@ figures, references, and paper drafts, not empty ideas.
 ## Quick Start
 
 1. Clone the repository and open it with Claude Code or Codex.
-2. The agent entry files ([CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md)) direct
-   the agent to [INSTRUCTION.md](INSTRUCTION.md), which defines startup order,
+2. Both agents load [AGENTS.md](AGENTS.md) at startup; it defines startup order,
    core workflows, memory rules, and research-material protection rules.
 3. Talk to the agent in natural language, e.g. "record this idea", "start a
    project from idea X", "add this paper to the references".
@@ -85,7 +84,7 @@ errors mark dependent checks `SKIP` while independent checks continue. Exit code
 | [memory/](memory/)                                                                                 | Global long-term memory across projects                                           |
 | [research-skills-hub/](research-skills-hub/)                                                       | Store of reusable agent skills                                                    |
 | `.agents/skills/`, `.claude/skills/`                                                          | Installed skills (two identical copies)                                           |
-| [INSTRUCTION.md](INSTRUCTION.md)                                                                   | Agent operating guide (read first)                                                |
+| [AGENTS.md](AGENTS.md)                                                                             | Agent operating guide (read first)                                                |
 | [FILETREE.md](FILETREE.md)                                                                         | Auto-generated top-level navigation map                                           |
 
 ## Minimal Workflow
@@ -96,7 +95,7 @@ idea → [ideas/](ideas/) OKF concept or idea bundle → copy
 `projects-folder/<ProjectName>/Code/`, figures in `Figs/` → write
 `paper/main.tex` with local references in `paper/references.bib` → memory updated in
 project `PROJECT_MEMORY.md` and
-[memory/MEMORY.md](memory/MEMORY.md). Details: [INSTRUCTION.md](INSTRUCTION.md).
+[memory/MEMORY.md](memory/MEMORY.md). Details: [AGENTS.md](AGENTS.md).
 A complete worked example (code → figure → compiled PDF) lives in
 [projects-folder/Example_Project/](projects-folder/Example_Project/).
 
@@ -113,7 +112,7 @@ keeps per-skill upstream attribution and license terms.
 ## Roadmap (original TODO list)
 
 > Note: the memory-mechanism items below are now partially implemented — see
-> INSTRUCTION.md → Memory Layers (global `memory/MEMORY.md` + per-project
+> AGENTS.md → Memory Layers (global `memory/MEMORY.md` + per-project
 > `PROJECT_MEMORY.md`). The rest remains open.
 
 - [ ] For projects-folder and templates, create a skill which can automatically create a new project from the template, and copy the template to the new project folder. The skill can also help the AI agent to manage the projects, including adding new projects, updating existing projects, and deleting old projects. Using skill makes the OS more flexible and the skill can be a plugin for other code agents. In the initial state the skill can help create a new project from the template, and then the AI agent can use the skill to manage the projects and understand the project structure. Futhermore, the ideas/ folder can also be managed by the research-ideas-manager skill.
@@ -122,7 +121,7 @@ keeps per-skill upstream attribution and license terms.
 - [ ] This OS should be able to accept any kind of input from users, such as an idea, a codebase, a paper draft, and so on. After users add these materials to the OS, it should automatically archive them, place them into the appropriate folders, and integrate them into the overall system.
 - [ ] create a skill which can access them markdown files of paper, such as 'hf cli', 'https://github.com/timf34/arxiv2md','deepxive cli' and so on.
 - [ ] Design this template as a CLI so agents can use commands to understand the whole research project.
-- [ ] Design bash commands that make agents deterministically read specific files, such as `INSTRUCTION.md`, at the start of each session.
+- [ ] Design bash commands that make agents deterministically read specific files, such as `AGENTS.md`, at the start of each session.
 - [ ] Add a workspace where holding a group meeting with humans and AI, humans discuss research with the AI. Because AI can search paper and read fast, they can point out if the idea is feasible or not, and they can also point out relevant papers that humans might miss. This can be a good way to brainstorm research ideas and get feedback on them. After discussion, the AI can implement the idea or feedback immediately.
 - [ ] The final goal of the repo is to build a Research OS.
 - [ ] add interface according to [AlookAI](https://github.com/alookai/alook) and [Wanman](https://github.com/chekusu/wanman) and [不二的主页](https://hiesther.me/#home)

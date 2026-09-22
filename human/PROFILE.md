@@ -51,7 +51,7 @@ Communication:
 - Surface assumptions, tradeoffs, and verification status clearly.
 - Add or change preferences in this profile only with human confirmation or a
   direct request. Inferred cognition follows the separate
-  [cognition policy](../INSTRUCTION.md#human-cognition).
+  [cognition policy](../AGENTS.md#human-cognition).
 
 Research:
 

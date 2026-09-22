@@ -67,7 +67,7 @@ Choose the destination by what the entry records:
 |---|---|---|
 | Personal facts, stable preferences, and recurring workflows | [PROFILE.md](PROFILE.md) | Human confirmation or a direct request to make the edit |
 | Unconfirmed candidates for the profile | [inbox.md](inbox.md) | Agents may propose entries; promotion requires confirmation |
-| Evidence-backed cognition, including inferred criteria and candidate blind spots | [human-cognition/](human-cognition/index.md) | Automatic capture under [INSTRUCTION.md](../INSTRUCTION.md#human-cognition) and `human-cognition-cache`; no prior confirmation or inbox queue |
+| Evidence-backed cognition, including inferred criteria and candidate blind spots | [human-cognition/](human-cognition/index.md) | Automatic capture under [INSTRUCTION.md](../AGENTS.md#human-cognition) and `human-cognition-cache`; no prior confirmation or inbox queue |
 
 For cognition, use the skill's evidence, privacy, merge, and disclosure rules.
 This permission covers local cache maintenance, not profile promotion or external

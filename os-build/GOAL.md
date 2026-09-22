@@ -9,11 +9,11 @@
 > 吸收为本文的长期约束,原文保存在 Git commit
 > `38d79be74b463dc41b0b651e5510ac7346502cbd`。[build_phases/](build_phases/)
 > 是 Research OS MVP 的阶段执行合同;MVP 的正式定义见 [CONTEXT.md](../CONTEXT.md)。
-> 运行事实源 = 实际目录结构、[INSTRUCTION.md](../INSTRUCTION.md)、
+> 运行事实源 = 实际目录结构、[AGENTS.md](../AGENTS.md)、
 > [memory/MEMORY.md](../memory/MEMORY.md)、[HANDOFF.md](../HANDOFF.md)(Decisions)、
 > [FILETREE.md](../FILETREE.md)。
 >
-> 本文与运行事实源冲突时,优先相信实际目录结构、INSTRUCTION.md 和
+> 本文与运行事实源冲突时,优先相信实际目录结构、AGENTS.md 和
 > memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的工作。对 Research OS MVP,
 > 若本文与完成设计后的 `build_phases/` 有执行范围、顺序或验收冲突,以
 > `build_phases/` 为准并回写本文;该优先级不自动扩展到 Long-term Research OS 的
@@ -45,7 +45,7 @@ Agent 的现成交互 TUI 开始；权威研究状态仍是可读文件。无 Gi
 这个 OS 应让新进入的 agent 能快速定位:启动入口;当前 portfolio 与项目事实;idea、
 论文、代码、图表和写作材料的归属;经验向 memory/skill 的晋升边界;并行与 agent-led
 research 的开闸条件;完整 artifact 的统一评估方式。具体操作契约以
-[INSTRUCTION.md](../INSTRUCTION.md) 为准,当前目录以 [FILETREE.md](../FILETREE.md) 为准。
+[AGENTS.md](../AGENTS.md) 为准,当前目录以 [FILETREE.md](../FILETREE.md) 为准。
 
 ## 2. 长期设计原则与自主判断
 

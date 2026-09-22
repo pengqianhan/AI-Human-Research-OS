@@ -31,7 +31,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - last_verified: 2026-07-24
 - freshness: current
 - responsibility_relevance:
-  - Do not propose harness-specific machinery (Claude Code hooks, settings.json automation, provider-only APIs) for OS-level behavior; reach for `INSTRUCTION.md`, skills, and files, which `AGENTS.md` and `CLAUDE.md` both resolve to.
+  - Do not propose harness-specific machinery (Claude Code hooks, settings.json automation, provider-only APIs) for OS-level behavior; reach for `AGENTS.md`, skills, and files.
   - When only a harness-specific option would meet a reliability bar, surface the trade-off rather than assuming the guarantee wins.
 - related:
   - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)

@@ -30,7 +30,7 @@ EXCLUDED_DIRECTORIES = frozenset(
 )
 CORE_FILES: Sequence[Tuple[str, str]] = (
     ("README.md", "Human-facing overview and entry point for the Research OS."),
-    ("INSTRUCTION.md", "Primary operating instructions for agents working in this repository."),
+    ("AGENTS.md", "Primary operating instructions for agents working in this repository."),
     ("CONTEXT.md", "Shared domain language for the Research OS and its MVP."),
     ("HANDOFF.md", "Cross-session record of active work, settled decisions, deviations, and intentional omissions."),
     ("verify.sh", "Read-only consistency checks for the paper wiki, FILETREE, and installed skills."),

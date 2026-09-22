@@ -34,5 +34,5 @@ current task.
 
 Do not record secrets, credentials, or high-sensitivity personal data. Treat this
 cache as potentially git-tracked. Local capture follows
-[INSTRUCTION.md](../../INSTRUCTION.md#human-cognition); it does not authorize
+[INSTRUCTION.md](../../AGENTS.md#human-cognition); it does not authorize
 publishing or externally sharing the cache.

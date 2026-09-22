@@ -20,7 +20,7 @@ data, code, figures, or experiment outputs.
 ## Source Map
 
 Relative links assume this project folder sits under `projects-folder/` (see
-`INSTRUCTION.md`, workflow "Idea → Project"). Project-specific references live
+[AGENTS.md](../../AGENTS.md), row "Instantiate a project"). Project-specific references live
 under `paper/`.
 
 | Asset | Link or path | Notes |

@@ -91,14 +91,14 @@ This post is almost a spec for what this Research OS is trying to be — read it
 a design mirror:
 
 * **"Evolve the harness, not the weights" is this OS's entire premise.** The OS is
-  a harness: `INSTRUCTION.md` + skills + memory layers + evaluator protocol around
+  a harness: `AGENTS.md` + skills + memory layers + evaluator protocol around
   a fixed model. This is the same bet as [EurekAgent](../papers/2606.13662.md)'s
   "environment engineering is all you need."
 * **"File system as persistent memory" is literally the OKF / paper-wiki design.**
   Durable notes on disk, retrieved on demand, escaping the context window — the
   wiki, `PROJECT_MEMORY.md`, and `memory/MEMORY.md` are this pattern.
 * **The optimization ladder is a promotion path we already have:** instructions
-  (`INSTRUCTION.md`) → prompts → structured context (OKF) → workflow → harness
+  (`AGENTS.md`) → prompts → structured context (OKF) → workflow → harness
   code (skills) → optimizer. Our "lesson → project memory → skill" promotion is
   climbing the same ladder; `verify.sh` is a first rung of "harness code" made
   self-checking.

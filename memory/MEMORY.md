@@ -3,7 +3,7 @@
 > Cross-project long-term memory. Read this for broad or cross-project work.
 > Keep under ~200 lines: prune aggressively. Per-project context lives in
 > `projects-folder/<ProjectName>/PROJECT_MEMORY.md`. Update rules: see
-> [INSTRUCTION.md](../INSTRUCTION.md).
+> [INSTRUCTION.md](../AGENTS.md).
 
 ## Long-Term Research Goals
 

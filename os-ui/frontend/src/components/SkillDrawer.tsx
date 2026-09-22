@@ -132,7 +132,7 @@ export function SkillDrawer({ skill, targets, triggerRef, onClose }: Props) {
         <p className="note mt-2.5 text-[11.5px] text-stale">
           This desktop does not install or delete skills; paste the command into a terminal.
           Its only write action is the per-location disable/enable above.
-          INSTRUCTION.md requires script review before installing third-party collected skills;
+          AGENTS.md requires script review before installing third-party collected skills;
           this UI applies that warning to every skill with scripts/.
         </p>
       </aside>
