@@ -11,6 +11,7 @@
 * [Agent skill libraries](agent-skill-libraries.md) - Papers about building, validating, and maintaining reusable libraries of executable agent skills.
 * [Autonomous research](autonomous-research.md) - Papers about AI systems that autonomously generate, test, and refine research hypotheses or artifacts over long horizons.
 * [Context engineering](context-engineering.md) - Papers about assembling, measuring, and governing the information environment in which AI agents reason and act.
+* [Data agents](data-agents.md) - Papers about LLM agents that fulfill natural-language instructions over heterogeneous structured and unstructured data, and the intermediate layers that bridge agent tools and domain semantics.
 * [Embodied navigation](embodied-navigation.md) - Papers about vision-language(-action) models that translate goals and egocentric observations into navigation actions across tasks, scenes, and robot embodiments.
 * [Financial agents](financial-agents.md) - Papers about LLM agents that analyze, trade, or manage risk in financial markets.
 * [GPU kernel optimization](gpu-kernel-optimization.md) - Papers about searching for and evaluating fast GPU kernels, including the cost of on-device measurement.
