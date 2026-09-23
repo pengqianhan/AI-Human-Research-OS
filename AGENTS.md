@@ -36,7 +36,7 @@ Project paths below are relative to the project being worked on.
 | Work in a project | Its `index.md` and `PROJECT_MEMORY.md`; use `Code/README.md` for experiments and artifacts |
 | Write or assess research claims | Project `paper_skeleton.md`; use `paper/main.tex` for the paper and the evaluation contract below for assessment |
 | Capture or promote an idea | [ideas/index.md](ideas/index.md); use `okf-repo-organizer` for structural normalization |
-| Instantiate a project | [projects-folder/templates/index.md](projects-folder/templates/index.md), then the copied project's `index.md` |
+| Create, register, validate, or archive a project | `research-project-manager`, then the copied project's `index.md` |
 | Add or organize research reading | [paper-wiki/index.md](paper-wiki/index.md) and `paper-wiki-manager` |
 | Find reusable skills | [research-skills-hub/index.md](research-skills-hub/index.md) |
 | Need user context or handle personal information | [human/index.md](human/index.md); read `human/private/` only when explicitly requested |
@@ -95,8 +95,9 @@ Store full reports in project `Evaluations/`, with summaries in memory.
 
 ## Completion checks
 
-For changes to `paper-wiki/`, installed skills, public top-level `index.md`
-files, or `FILETREE.md`, run [`./verify.sh`](verify.sh) from the repository root.
+For changes to `paper-wiki/`, `projects-folder/`, installed skills, public
+top-level `index.md` files, or `FILETREE.md`, run [`./verify.sh`](verify.sh)
+from the repository root.
 Fix failures introduced by the task; report pre-existing failures separately.
 Run other checks proportionate to the change. Broaden or repeat them only for
 new changes, failures, or unresolved concerns.

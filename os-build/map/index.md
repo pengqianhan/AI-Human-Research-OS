@@ -25,6 +25,7 @@ created: 2026-07-17
 | I7 | “我个人更倾向于现在先删除os-runtime， 这样会对路线造成干扰，也会让上下文变得更加复杂。等我根据参考的项目进行学习之后，再用Pi Agent SDK来构建。” | N15、E20 |
 | I8 | “现在梳理os-build 下的文件，精简和删除多余的文件和内容” | N15、E20 |
 | I9 | “我暂时删除了Paper_VAE，第一个真实示例项目采用os-build/references/EurekAgent 中的cirle packing任务。 smoke test 还是使用projects-folder/Example_Project” | N1、N3、N6、N17、E1、E22、E23 |
+| I10 | “对于这个OS project-folder 的管理是不是也可以用一个skill，这样用skill来给code agent 提供接口来直接管理project-folder 下的不同project。整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill。” | N19、E24 |
 
 ## Overview
 
@@ -55,6 +56,7 @@ flowchart LR
   N15["N15: Pi Coding Agent 工作流 MVP 已定 ★"]:::delivered
   N16["N16: Pi 文件工作流阶段合同就绪"]:::approved
   N17["N17: Example_Project 工作流 smoke test"]:::approved
+  N19["N19: 项目管理 skill 就绪"]:::delivered
   N0 --> N1 --> N10
   N0 --> N2 --> N10
   N0 --> N15 --> N16 --> N17 --> N7
@@ -62,6 +64,7 @@ flowchart LR
   N3 --> N6 --> N7 --> N8 --> N9 --> N10
   N10 -.-> N11
   N0 --> N18
+  N0 --> N19 --> N6
   N10 -.-> N12
   N4 -.-> N13 -.-> N5 -.-> N14
   N13 -.-> N15
@@ -252,6 +255,16 @@ flowchart LR
 - human_verdict: —
 - evidence: —
 
+### N19 — 项目管理 skill 就绪（research-project-manager，2026-09-23）
+- state: `research-skills-hub/open-paper-skills/research-project-manager/` 已建成并以相对 symlink 装进仓库两个 agent 目录；`new` / `status` / `validate` / `set` / `sync` / `archive` 可用；`PROJECT_MEMORY.md` 的 Snapshot 是项目状态之源，`memory/MEMORY.md` Active Projects 行由 `sync` 投影；`validate` 是 `./verify.sh` 的第四项检查；`Example_Project` 通过契约。决策全文见 HANDOFF「Project-management decisions (2026-09-23)」。
+- acceptance: 我在仓库根运行 `./verify.sh`，看到 `OK    project contract`；运行 `python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py status`，看到 Example_Project 标为 `registered` 且没有 "missing Snapshot labels" 一行；运行同一脚本的 `validate`，看到 `validate: ok`。
+- type: executive
+- status: delivered
+- tutorial: —
+- agent_verdict: pass — 19 个 stdlib 单元测试通过；真实仓库 `sync` 后 `validate: ok (1 project(s), 0 warning(s))`，`./verify.sh` 五项全 OK；三种注入故障（去掉表行、加幻影行、Stage 写成 `smoke-test`）各自使 project contract 检查失败并在复原后恢复通过；`new`/`set`/`archive` 在仓库副本上跑通，工作树无残迹。
+- human_verdict: —
+- evidence: `scripts/test_manage_research_project.py`（`python -m unittest`，19 passed）；修复前 `validate` 报 7 个 error（6 个缺标签 + `row_drift`），修复后 0；installer `status research-project-manager` 两处 `ok symlink`；本节点在 2026-09-23 的 grilling 会话内由 agent 直接建成，未组装独立 launch prompt（与 N18 同样处理，N0 → N19 不设边条目）。
+
 ## Edges
 
 ### E1 — N0 → N1
@@ -412,6 +425,13 @@ flowchart LR
 - action: Pi 工作流 smoke test 经 Human Owner 验收后，再让同一文件合同承载 circle_packing 的首个真实 Research Run。
 - transition_logic: N17 证明工作流可接管，N6 证明真实项目评测器可信；两者同时成立后才进入 N7。
 - prompt: —
+- status: drafted
+- deviations: —
+
+### E24 — N19 → N6
+- action: circle_packing 立项改走 skill：`new circle_packing --from-idea ideas/circle-packing-os-shakedown.md --owner human-led --stage probe --priority P1 --origin "EurekAgent example task"`，随后按 E6 的其余步骤（评测器 Phase 0、tier-2 保护）继续；HANDOFF 的 circle_packing 清单已同步改写。
+- transition_logic: N6 的第一步是"立项完成（idea card→实例化→登记）"；N19 把这一步变成一条命令加 `validate`，取代四步手工操作，也让 circle_packing 成为该 skill 的首次真实使用。
+- prompt: —（与 E6 合并组装）
 - status: drafted
 - deviations: —
 

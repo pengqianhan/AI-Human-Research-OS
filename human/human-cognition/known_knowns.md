@@ -14,6 +14,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260716-001 - Python and PyTorch familiarity: self-reported working familiarity with Python programming and deep-learning training in PyTorch.
 - cog-20260716-002 - Outcome-level Research OS vision: can state desired human-agent research outcomes and collaboration flows without prescribing the implementation route.
 - cog-20260724-002 - Branch as the containment boundary for unattended agent work: scopes recurring autonomous runs to a named branch and expects their output readable off the dev machine.
+- cog-20260923-001 - Human-read, agent-write division of the OS: the GUI exists for human observation; agents mutate paper-wiki, skills, and projects only through skills with scripted interfaces.
 
 ## Entries
 
@@ -39,15 +40,15 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human can articulate the desired end state and research collaboration flows, while explicitly delegating detailed technical route design beyond their current knowledge.
 - source: user-confirmed
 - confidence: high
-- evidence: The human described intake from ideas, documents, papers, and partial experiments; autonomous continuation; project and hub skill learning; and parallel agent research, while stating they cannot provide detailed implementation instructions.
+- evidence: The human described intake from ideas, documents, papers, and partial experiments; autonomous continuation; project and hub skill learning; and parallel agent research, while stating they cannot provide detailed implementation instructions. 2026-09-23: opened the project-management design with an outcome statement only (a skill as the agents' interface to `projects-folder/`, mirroring the paper-wiki and skill-hub skills) and left the whole route — operation set, state source, contract location, tracking, verification plan — to three grilling rounds, accepting every recommended default.
 - created: 2026-07-16
-- last_updated: 2026-07-16
+- last_updated: 2026-09-23
 - status: active
 - domain: Research OS product direction
 - scope: Outcome and value-level product direction, not implementation architecture or technology selection.
 - capability_level: awareness
 - evidence_type: explanation
-- last_verified: 2026-07-16
+- last_verified: 2026-09-23
 - freshness: current
 - responsibility_relevance:
   - Preserve human authority over research goals, autonomy limits, budgets, irreversible actions, and acceptance criteria.
@@ -69,5 +70,26 @@ timestamp: 2026-07-04T00:00:00+12:00
 - responsibility_relevance:
   - For any scheduled or long-running autonomous task, verify the working branch before the first write and never touch `main` or open a PR without being asked.
   - Treat "the agent produced files in the repo" as incomplete delivery when the human is away from the machine; pair unattended runs with a reachable published view.
+- related:
+  - [cog-20260724-001](unknown_knowns.md#cog-20260724-001-agent-neutrality-as-a-veto)
+
+## cog-20260923-001 Human-read, agent-write division of the OS
+
+- content: The human holds, and states as a standing design principle, that the Research OS GUI exists for human observation while code agents perform all mutation of the OS's managed areas (paper-wiki, skills, projects) through skills that expose scripted interfaces. A management need in an OS area is therefore met by a skill, not by a GUI action.
+- source: user-confirmed
+- confidence: high
+- evidence: 2026-09-23, opening the project-management design: 「整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill」. Applied consistently before: the 2026-07-22 skill-management session confined `os-ui` to a single disable/enable write slice and kept install and remove on the command line (HANDOFF "Skill-management decisions"); on 2026-09-23 the human accepted that `os-ui` stays read-only for projects with no stage toggle, and that the GUI's unregistered-project warning is only a cue for an agent to run `sync`.
+- created: 2026-09-23
+- last_updated: 2026-09-23
+- status: active
+- domain: Research OS architecture and division of labour
+- scope: Where write authority sits between the GUI and agents in this Research OS; no claim about GUI design preferences in general or about other tools.
+- capability_level: awareness
+- evidence_type: explanation
+- last_verified: 2026-09-23
+- freshness: current
+- responsibility_relevance:
+  - When a request implies a GUI write action, route it to an explicit M4-style authorization decision rather than building it.
+  - When the human asks to "manage" an OS area, propose a hub skill with a stdlib script and a `verify.sh` check, following `paper-wiki-manager`, `research-skill-installer`, and `research-project-manager`.
 - related:
   - [cog-20260724-001](unknown_knowns.md#cog-20260724-001-agent-neutrality-as-a-veto)

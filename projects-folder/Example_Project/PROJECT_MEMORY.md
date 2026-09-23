@@ -10,9 +10,16 @@
 - Started: 2026-06-12 — from idea: [linear-fit micro-experiment](../../ideas/idea_example/linear-fit-micro-experiment.md)
 - Goal (one sentence): Validate the Research OS end-to-end — idea → project from
   template → runnable code → figure → compiled PDF — with everything traceable.
-- Status: experimenting
-- Next action: keep as a worked example; delete if the user prefers (decision D6
-  in [../../HANDOFF.md](../../HANDOFF.md)).
+- Owner: mixed
+- Origin: OS pipeline smoke test from the 2026-06 task brief (Git `38d79be`); now
+  the N17 workflow smoke-test vehicle in [os-build/map/index.md](../../os-build/map/index.md)
+- Stage: probe
+- Priority: P1
+- Status: smoke-test vehicle; ready for the N17 Pi workflow smoke test
+- Evaluator status: existing reproducible linear fit (`Code/fit_line.py`); no frozen evaluator
+- Current question: does the file workflow survive a multi-seed extension with
+  transcript-independent takeover? (N17)
+- Next action: after N16, run the N17 multi-seed workflow smoke test before `circle_packing`
 
 ## Key Decisions
 
@@ -25,6 +32,10 @@
 
 <!-- newest first, one dated bullet per session, keep ≤ ~30 lines -->
 
+- 2026-09-23: Snapshot completed to the template contract (Owner, Origin, Stage,
+  Priority, Evaluator status, Current question added; Stage `probe`, the
+  smoke-test role moved into Status and Origin); Active Projects row re-projected
+  by `research-project-manager sync`.
 - 2026-06-17: Build convention updated so `latexmk` run from `paper/` writes
   `paper/main.pdf` directly; `.gitignore` now ignores the generated PDF and
   LaTeX auxiliary files under project `paper/` directories.

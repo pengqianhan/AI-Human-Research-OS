@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Project Manager"
+  short_description: "Create, validate, and update Research Projects"
+  default_prompt: "Use $research-project-manager to create a project from the template, validate projects against the contract, or sync the Active Projects table."

@@ -80,7 +80,9 @@ Writing and documents:
 Research idea to project:
 
 1. Capture the idea under [ideas/](../ideas/).
-2. Promote it into a project under [projects-folder/](../projects-folder/).
+2. Promote it into a project under [projects-folder/](../projects-folder/) with
+   the [research-project-manager](../research-skills-hub/open-paper-skills/research-project-manager/SKILL.md)
+   skill (`new --from-idea`), which links idea and project both ways.
 3. Keep claims traceable through project memory, references, code, figures, and
    writing.
 

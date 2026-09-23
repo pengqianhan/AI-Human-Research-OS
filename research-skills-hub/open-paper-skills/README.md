@@ -31,6 +31,7 @@ at source commit `8f854bd`.
 | [session-handoff](session-handoff/SKILL.md) | Maintain or resume a repository-root `HANDOFF.md` that transfers a cross-session task arc to a cold session. | Repo-local support skill |
 | [skill-organizer](skill-organizer/SKILL.md) | Register a newly added hub skill into its collection's `index.md` and `README.md`. | Repo-local support skill |
 | [explain-paper-html](explain-paper-html/SKILL.md) | Build an evidence-traceable interactive HTML lesson from an academic paper, verified in a browser before hand-off. | Original, Pengqian Han |
+| [research-project-manager](research-project-manager/SKILL.md) | Create, validate, update, sync, and archive Research Projects under `projects-folder/` against one template contract. | Original, Pengqian Han |
 
 ## Installation
 
@@ -48,6 +49,8 @@ table; symlink or copy form comes from the collection's `SOURCE.md`. See
 - `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
   `hf` CLI is optional for faster paper fetching.
 - `filetree-simple`: Python 3.9+ standard library; Git is not required.
+- `research-project-manager`: Python 3.11+ standard library (`tomllib`); run
+  its script with `uv run` as `verify.sh` does.
 - `explain-paper-html`: Python 3.9+ standard library for
   `scripts/verify_explanation.py`, Node for its inline-JavaScript syntax check,
   and browser automation (or a headless browser) for the required browser and
@@ -418,6 +421,24 @@ Example requests:
 /explain-paper-html explain this PDF in Chinese, keeping English technical terms
 /explain-paper-html build connected lessons for these three papers as a series
 /explain-paper-html match the visual style of this reference page
+```
+
+## research-project-manager
+
+Creates, validates, updates, syncs, and archives Research Projects under
+`projects-folder/`. A project's `PROJECT_MEMORY.md` Snapshot is the source of
+its state; its row in the Active Projects table of `memory/MEMORY.md` is a
+projection written by `sync`. `validate` is what `./verify.sh` runs for
+projects; the contract lives in `assets/project-contract.toml`.
+
+Example commands:
+
+```bash
+python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py status
+python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py validate
+python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py new circle_packing --from-idea ideas/circle-packing-os-shakedown.md --stage probe
+python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py set circle_packing --stage develop
+python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py sync
 ```
 
 ## License

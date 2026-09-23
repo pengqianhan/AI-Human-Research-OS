@@ -54,11 +54,11 @@ the math result is secondary. Do not start it until map N17 verifies the Pi file
 
 - [ ] Create idea card `ideas/circle-packing-os-shakedown.md` (OKF concept, `type: Idea`);
       update [ideas/index.md](ideas/index.md); set `status: promoted` at instantiation.
-- [ ] Instantiate: `cp -R projects-folder/templates/ai_research_template projects-folder/circle_packing`
-      (template unchanged — route B). Fill `index.md`, `PROJECT_MEMORY.md` Snapshot
-      (`owner: human-led`, `origin: EurekAgent example task`, `stage: probe`),
-      `paper_skeleton.md` Snapshot; add row to Active Projects in
-      [memory/MEMORY.md](memory/MEMORY.md).
+- [ ] Instantiate with `research-project-manager` (template unchanged — route B):
+      `python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py new circle_packing --from-idea ideas/circle-packing-os-shakedown.md --owner human-led --stage probe --priority P1 --origin "EurekAgent example task"`.
+      It fills the Snapshot identity fields, promotes the idea, and adds the Active Projects
+      row in [memory/MEMORY.md](memory/MEMORY.md); then fill `index.md`, the remaining
+      Snapshot fields, and the `paper_skeleton.md` Snapshot, and run `validate circle_packing`.
 - [ ] Add project-experimental sections to `PROJECT_MEMORY.md`:
       `## Evaluation Contract` (3-tier goals below; stop condition: 5 consecutive rounds
       with best-score gain < 0.001 → switch to writing),
@@ -100,6 +100,9 @@ the math result is secondary. Do not start it until map N17 verifies the Pi file
 - Focus: Human Owner reviews map waypoint N15 using its acceptance check. After
   N15 is explicitly human-verified, compile E21 into the three independent Pi
   Coding Agent file-workflow prompts; do not continue SDK Phase 02.
+- Also pending: N19 (`research-project-manager`, delivered 2026-09-23) awaits its
+  `human_verdict`; its acceptance is `./verify.sh` plus the skill's `status` and
+  `validate` commands, both listed in the map entry.
 - Authority: [os-build/map/index.md](os-build/map/index.md) is the sole source of
   construction status; do not mirror edge or waypoint progress here.
 - Suggested skills: `map-then-territory` for route-state handling.
@@ -256,6 +259,34 @@ vocabulary, Mermaid-update duty in the launch packet.
 |---|---|---|
 | FILETREE role and scope | `FILETREE.md` is an auto-generated, Git-independent cold-start map: five core files plus public top-level areas only. Every public top-level directory owns an English `index.md` summary of at most 20 words; true skill directories may fall back to `SKILL.md`. Hashes and nested inventory rows are removed. `filetree-simple generate` writes atomically; `lint` is read-only and runs from `verify.sh`. The canonical skill lives in `research-skills-hub/open-paper-skills/` and is synced to both installed copies. | Restore the previous detailed generator and manifest from Git history, then restore hash and nested-entry maintenance rules in `INSTRUCTION.md` and `verify.sh` |
 
+**Project-management decisions (2026-09-23, user-confirmed grilling session):**
+
+New skill `research-skills-hub/open-paper-skills/research-project-manager/`, symlinked into
+both repository agent directories; map waypoint N19, edge E24. Motivation: the README roadmap
+item dates from the original TODO list; instantiation was a four-step manual procedure written
+in two places; `Example_Project`'s Snapshot had drifted from the template (six labels missing,
+`stage: smoke-test` outside the vocabulary); and the installer, the os-ui generator, and the
+template contract each held their own definition of "project". Sixteen decisions were grilled
+in three rounds and user-confirmed:
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Timing | Built now, before `circle_packing`; its instantiation is the skill's first real use (precedent: N18 built ahead of demonstrated need) | Delete the skill and restore the manual four-step contract in `projects-folder/templates/index.md` from Git |
+| Operation set | `new`, `status [--json]`, `validate`, `set`, `sync`, `archive`. No `remove`: deleting a project stays a Human Owner git operation plus a row here, as with Paper_VAE. No `upgrade`: `validate` reports missing fields and the agent fills them by hand | Add the command; `remove` needs its own authorization row here first |
+| Definition of a project | A directory directly under `projects-folder/` (never `templates/`) containing `PROJECT_MEMORY.md`; registered = has an Active Projects row. `validate` errors on unregistered (directory, no row), phantom (row, no directory), and stray (directory, no `PROJECT_MEMORY.md`) | Edit `[projects]` in the skill's `assets/project-contract.toml` |
+| State source vs projection | Refines the 2026-07-03 "Project state source" row: where the Active Projects columns overlap the Snapshot (Owner, Stage, Priority, Status, Evaluator, Next action), the `PROJECT_MEMORY.md` Snapshot is the source and the row is a projection written by `sync`; `validate` reports `row_drift`. No new registry file, so D9 stands | Make the table primary: invert `sync` and drop `row_drift` |
+| Interface form | `SKILL.md` plus one stdlib Python script with `--json`, the same shape as `research-skill-installer`. D5 ("no CLI") is untouched: it rejects a repository-wide CLI product, and skill-bundled scripts are the established plugin form; the script runs under any agent | Reduce the skill to a `SKILL.md`-only procedure |
+| Contract location | `assets/project-contract.toml` holds required files, Snapshot fields with their table columns, and the stage/owner vocabularies; `validate` checks the contract against every template so the two cannot drift silently | Derive the contract from the template at run time |
+| Idea promotion | `new --from-idea` sets the idea's `status: promoted` and `project:` back-link in the same run; `validate` checks the link both ways. Capturing or listing ideas stays outside this skill (`research-ideas-manager` remains a roadmap item) | Drop `--from-idea`; promotion becomes a manual frontmatter edit again |
+| `archive` semantics | Stage `archived`; the directory and the Active Projects row stay (the template already enumerated `archived`, and the GUI needs no change). Moving directories was rejected because every `../../` link inside a project would break | Add an `## Archived Projects` table together with the generator swap below |
+| Write-operation boundary | `set`, `sync`, and `archive` touch only Snapshot bullets and the portfolio row; the agent writes Progress Log and Key Decisions entries. `sync` never deletes a phantom row | Auto-append dated log lines |
+| `validate` placement | Fourth check in `verify.sh`; AGENTS.md completion checks now include `projects-folder/`; SKILL.md positions it as the structural slice of CONTEXT.md's Project Integrity Gate (CONTEXT.md unchanged; Write Lease not implemented). Errors: missing file, missing Snapshot label, vocabulary, unregistered/phantom/stray, idea back-link, row drift, contract-template mismatch. Warnings: empty field, missing `projects-folder/index.md` bullet | Remove the `verify.sh` check and keep the command standalone |
+| What `new` does | Copies the template, fills Project name / Started / Owner / Stage / Priority / Goal / Origin, adds the row, adds a `projects-folder/index.md` bullet, promotes the idea. It leaves agent directories to the installer, environments to `uv-env`, protection rules to the project, commits to the session; no submodule or external-repository import | Extend `new` with the corresponding flags |
+| GUI boundary | `os-ui` stays read-only for projects, with no stage toggle. `status --json` keys mirror `state.json` (`portfolio`, `projects`, `unregistered_projects`) so the generator can later consume the script's output the way it consumes the installer's. Trigger for that swap: `circle_packing` instantiated through the skill, i.e. the output has run on two or more projects | Open a project write slice in os-ui under a new M4-style authorization row |
+| Example_Project drift | Repaired in this session: six missing Snapshot labels added, Stage set to `probe` with the smoke-test role moved into Status and Origin, row re-projected by `sync`. The stage vocabulary is unchanged | Add `smoke-test` to `[vocabulary].stage` (rejected: an OS role is not a research stage) |
+| Tracking | Map waypoint N19 (executive) with edge E24 N19 → N6, since E6's instantiation step now runs through the skill; the README roadmap item is ticked; `memory/MEMORY.md` has a Key Decisions row; `human/PROFILE.md`'s idea-to-project workflow points at the skill | Remove N19/E24 and the pointers; the skill works without them |
+| Verification | 19 stdlib unit tests on a temporary repository fixture; three injected faults (row removed, phantom row, `stage: smoke-test`) each made `./verify.sh` fail on `project contract` and were reverted byte-for-byte; `new`/`set`/`archive` exercised on a scratch copy of the repository, never in the working tree | n/a |
+
 ## Deviations from the original plan
 
 - **2026-07-19 directional MVP sequencing reset** — After personally running the successful
@@ -302,3 +333,12 @@ vocabulary, Mermaid-update duty in the launch packet.
   manager, server, database, account system, remote access, GUI execution surface, or
   Codex/Claude runtime backend is not authorized by the N15 decision. `os-runtime/` is intentionally
   absent and must not be recreated as incidental cleanup or a prerequisite for E21/E22.
+- **Project deletion, template upgrade, and an Archived Projects table** — `research-project-manager`
+  ships no `remove` (deleting a project stays a Human Owner git operation plus a decision row here)
+  and no `upgrade` (`validate` reports missing Snapshot fields; the agent fills them); archived
+  projects keep their Active Projects row until the table grows enough to justify a second table.
+- **os-ui generator consuming `status --json`** — deferred until `circle_packing` has been
+  instantiated through the skill, so the output has run on two or more projects; until then the
+  generator keeps its own project parser and two definitions of "project" coexist knowingly.
+- **`research-ideas-manager`** — still a roadmap item; `new --from-idea` writes only the promotion
+  fields of one idea.

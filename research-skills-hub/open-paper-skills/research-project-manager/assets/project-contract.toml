@@ -1,0 +1,129 @@
+# Project contract for research-project-manager.
+#
+# `validate` reads this table; `new`, `set`, `sync`, and `archive` write
+# according to it. Changing the project layout is an edit here plus the matching
+# edit in the template; `validate` checks the two still agree. Paths are
+# relative to the repository root.
+
+[projects]
+root = "projects-folder"
+# Directory names under root that are never projects.
+exclude = ["templates"]
+# A directory is a project only when this file exists.
+memory_file = "PROJECT_MEMORY.md"
+# Human-facing navigation list; `new` appends a bullet under this heading and
+# `validate` warns when a registered project has none.
+index_file = "projects-folder/index.md"
+index_heading = "# Projects"
+
+[templates]
+root = "projects-folder/templates"
+default = "ai_research_template"
+# Files every project must contain. `validate` also checks that every template
+# under [templates].root ships each one, so this list cannot drift from the
+# scaffold unnoticed.
+required_files = [
+  "index.md",
+  "PROJECT_MEMORY.md",
+  "paper_skeleton.md",
+  "log.md",
+  "paper/main.tex",
+  "paper/references.bib",
+  "Code/README.md",
+]
+
+[portfolio]
+file = "memory/MEMORY.md"
+heading = "Active Projects"
+
+# Column order of the Active Projects table. `field` is a Snapshot key from
+# [[snapshot.fields]] or the reserved value "path". A row is the projection of
+# its project's Snapshot; `sync` writes it, `validate` compares it.
+[[portfolio.columns]]
+name = "Project"
+field = "project_name"
+
+[[portfolio.columns]]
+name = "Path"
+field = "path"
+
+[[portfolio.columns]]
+name = "Owner"
+field = "owner"
+
+[[portfolio.columns]]
+name = "Stage"
+field = "stage"
+
+[[portfolio.columns]]
+name = "Priority"
+field = "priority"
+
+[[portfolio.columns]]
+name = "Status"
+field = "status"
+
+[[portfolio.columns]]
+name = "Evaluator"
+field = "evaluator_status"
+
+[[portfolio.columns]]
+name = "Next action"
+field = "next_action"
+
+# Snapshot bullets in PROJECT_MEMORY.md, in template order. `label` is the
+# exact bullet label (case-insensitive match); `key` is the machine name used
+# by `set` and `--json`. A missing label is an error; an empty value is a
+# warning.
+[[snapshot.fields]]
+label = "Project name"
+key = "project_name"
+
+[[snapshot.fields]]
+label = "Started"
+key = "started"
+
+[[snapshot.fields]]
+label = "Goal (one sentence)"
+key = "goal"
+
+[[snapshot.fields]]
+label = "Owner"
+key = "owner"
+
+[[snapshot.fields]]
+label = "Origin"
+key = "origin"
+
+[[snapshot.fields]]
+label = "Stage"
+key = "stage"
+
+[[snapshot.fields]]
+label = "Priority"
+key = "priority"
+
+[[snapshot.fields]]
+label = "Status"
+key = "status"
+
+[[snapshot.fields]]
+label = "Evaluator status"
+key = "evaluator_status"
+
+[[snapshot.fields]]
+label = "Current question"
+key = "current_question"
+
+[[snapshot.fields]]
+label = "Next action"
+key = "next_action"
+
+[vocabulary]
+stage = ["scout", "probe", "develop", "writing", "paused", "complete", "archived"]
+owner = ["human-led", "agent-led", "mixed"]
+
+[ideas]
+# Idea concepts live here; an idea is promoted by setting `status: promoted`
+# and `project:` (a path relative to the idea file) in its frontmatter.
+root = "ideas"

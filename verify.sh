@@ -7,7 +7,7 @@
 # exit is 1 for failed checks or 2 when the runtime prevents complete checking.
 #
 # Run before finishing a change that touches paper-wiki/, an installed skill,
-# or an indexed doc:  ./verify.sh
+# a project under projects-folder/, or an indexed doc:  ./verify.sh
 #
 # This is repo-local glue, not part of any skill. The skills it calls
 # (paper-wiki-manager's validator, filetree-simple's lint) are independently
@@ -38,6 +38,7 @@ PYTHON=(uv run --no-project --no-cache --offline --no-python-downloads --python 
 PWM_HUB="research-skills-hub/open-paper-skills/paper-wiki-manager"
 FILETREE_HUB="research-skills-hub/open-paper-skills/filetree-simple"
 FILETREE="$FILETREE_HUB/scripts/filetree.py"
+RPM_HUB="research-skills-hub/open-paper-skills/research-project-manager"
 
 fail=0
 check() {
@@ -71,6 +72,7 @@ if [ -n "$runtime_problem" ]; then
   printf '%s\n' "$runtime_problem" | sed 's/^/          /'
   echo "  SKIP  paper-wiki validation (runtime unavailable)"
   echo "  SKIP  FILETREE lint (runtime unavailable)"
+  echo "  SKIP  project contract (runtime unavailable)"
 else
   echo "  OK    Python runtime ($PYTHON_VERSION)"
 
@@ -83,9 +85,16 @@ else
   # 2. FILETREE.md drift.
   check "FILETREE lint" \
     "${PYTHON[@]}" "$FILETREE" lint
+
+  # 3. Project contract (research-project-manager): every project under
+  #    projects-folder/ has the template's files and Snapshot fields, its
+  #    Active Projects row is the projection of that Snapshot, and idea links
+  #    resolve both ways. Warnings are printed only on failure.
+  check "project contract" \
+    "${PYTHON[@]}" "$RPM_HUB/scripts/manage_research_project.py" validate
 fi
 
-# 3. Installed-skill integrity (ADR 0002). The hub is canonical. Every install
+# 4. Installed-skill integrity (ADR 0002). The hub is canonical. Every install
 #    is either a symlink back to it or a copy, and which one is not a free
 #    choice: a collection whose SOURCE.md declares `Install form: copy` (an
 #    auto-refreshed read-only mirror) must be copied, everything else linked.
