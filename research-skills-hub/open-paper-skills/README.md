@@ -296,7 +296,7 @@ Example requests:
 /map-then-territory I want to build a Research OS but only have these scattered ideas — survey the territory and map them with me
 /map-then-territory draw a route map for projects-folder/MyProject
 /map-then-territory the map is approved — assemble launch prompts for the ready edges
-/map-then-territory write this session's results and deviations back into os-build/map
+/map-then-territory write this session's results and deviations back into the map bundle
 /map-then-territory I ran the acceptance check — record my verdict and update the calibration ledger
 ```
 

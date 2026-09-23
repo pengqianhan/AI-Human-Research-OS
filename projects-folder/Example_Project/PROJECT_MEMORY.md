@@ -12,14 +12,14 @@
   template → runnable code → figure → compiled PDF — with everything traceable.
 - Owner: mixed
 - Origin: OS pipeline smoke test from the 2026-06 task brief (Git `38d79be`); now
-  the N17 workflow smoke-test vehicle in [os-build/map/index.md](../../os-build/map/index.md)
+  the Pi file-workflow smoke-test vehicle (ADR-0002; status in [HANDOFF.md](../../HANDOFF.md) Active Work)
 - Stage: probe
 - Priority: P1
-- Status: smoke-test vehicle; ready for the N17 Pi workflow smoke test
+- Status: smoke-test vehicle; waits for the Human Owner to confirm the Pi file-workflow route
 - Evaluator status: existing reproducible linear fit (`Code/fit_line.py`); no frozen evaluator
 - Current question: does the file workflow survive a multi-seed extension with
-  transcript-independent takeover? (N17)
-- Next action: after N16, run the N17 multi-seed workflow smoke test before `circle_packing`
+  transcript-independent takeover? (GOAL.md M2)
+- Next action: once the Human Owner confirms the Pi workflow route, run the multi-seed smoke test before `circle_packing`
 
 ## Key Decisions
 

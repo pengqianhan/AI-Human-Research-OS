@@ -21,7 +21,7 @@ The workspace-level agent that proactively observes Agent Sessions, detects coor
 _Avoid_: unrestricted supervisor, project owner, final approver
 
 **Research OS MVP**:
-The smallest end-to-end version that proves a human can provide a partial research state, an agent can place and understand it, continue bounded research, produce traceable artifacts, and return control to the human. `os-build/build_phases/` is its execution contract.
+The smallest end-to-end version that proves a human can provide a partial research state, an agent can place and understand it, continue bounded research, produce traceable artifacts, and return control to the human. Its construction status is recorded in the Active Work section of `HANDOFF.md`.
 _Avoid_: thin launcher, demo, final Research OS
 
 **Research Input Artifact**:

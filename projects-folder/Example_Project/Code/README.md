@@ -1,7 +1,7 @@
 # Code
 
 How to set up and run the experiments in this folder. Per repository rules
-([INSTRUCTION.md](../../../AGENTS.md)), update this file — and
+([AGENTS.md](../../../AGENTS.md)), update this file — and
 [README_zh.md](README_zh.md) — whenever code, configuration, or results change.
 
 ## Environment

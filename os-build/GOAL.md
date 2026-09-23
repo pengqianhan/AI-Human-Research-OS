@@ -7,17 +7,15 @@
 > **长期愿景层**:本文件描述 Long-term Research OS 的方向、长期设计原则与战略
 > 治理闸门,不充当当前 MVP 的逐步实施说明。两个旧 task 文件已删除,其仍有效原则已
 > 吸收为本文的长期约束,原文保存在 Git commit
-> `38d79be74b463dc41b0b651e5510ac7346502cbd`。[build_phases/](build_phases/)
-> 是 Research OS MVP 的阶段执行合同;MVP 的正式定义见 [CONTEXT.md](../CONTEXT.md)。
+> `38d79be74b463dc41b0b651e5510ac7346502cbd`。MVP 的正式定义见 [CONTEXT.md](../CONTEXT.md)；
+> 原执行合同层 `build_phases/` 与路线图 `map/` 已于 2026-09-23 按 Human Owner 决定删除,
+> 施工状态记录在 [HANDOFF.md](../HANDOFF.md) Active Work,最后版本见 Git commit `0f1805c`。
 > 运行事实源 = 实际目录结构、[AGENTS.md](../AGENTS.md)、
 > [memory/MEMORY.md](../memory/MEMORY.md)、[HANDOFF.md](../HANDOFF.md)(Decisions)、
 > [FILETREE.md](../FILETREE.md)。
 >
 > 本文与运行事实源冲突时,优先相信实际目录结构、AGENTS.md 和
-> memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的工作。对 Research OS MVP,
-> 若本文与完成设计后的 `build_phases/` 有执行范围、顺序或验收冲突,以
-> `build_phases/` 为准并回写本文;该优先级不自动扩展到 Long-term Research OS 的
-> 其他工作。实际实现完成后
+> memory/MEMORY.md,把冲突记为待决策事项并暂停受影响的工作。实际实现完成后
 > 仍以仓库制品和验证结果为事实。本文只能由人类(或经人类逐条确认的 agent 提案)修订。
 
 ## 1. 最终目的
@@ -66,22 +64,22 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
 - **交付诚实**:完成状态必须绑定真实验证;最终说明做了什么、为什么、检查结果、已知
   限制以及刻意未做的范围。
 
-原 task 中的目录清单、工作流说明和文档更新规则已由 INSTRUCTION.md/FILETREE.md
+原 task 中的目录清单、工作流说明和文档更新规则已由 AGENTS.md/FILETREE.md
 承载;旧 normalization 交付物已完成并留在 git 历史,不再作为当前验收清单重复维护。
 
 ## 3. OS 抽象对照表(词汇与现状,不是工作清单)
 
 > 本表是一次性类比与现状描述,不作为仓库规范术语(正文与验收一律使用
-> INSTRUCTION.md 的既有词汇),也**不是工作来源**——除 M0/M1、只读 monitor UI 与
-> `build_phases/` 薄启动器外,任何缺口转为工作项都需要 OS Feedback 证据或人类显式授权。
+> AGENTS.md 的既有词汇),也**不是工作来源**——除 M0/M1、只读 monitor UI 与
+> 2026-07-19 授权的 Pi Coding Agent 文件工作流 MVP 外,任何缺口转为工作项都需要 OS Feedback 证据或人类显式授权。
 
 | OS 概念 | 本仓库对应物 | 现状(2026-07-04 核实)|
 |---|---|---|
-| 内核 | 入口链 + 三层记忆 + 目录语义(INSTRUCTION.md 定义的 core)| 已有;但 INSTRUCTION.md Skills 节(两处)与 README 仍硬编码两个 agent 目录,尚不满足铁律 1,由 M1 认领 |
+| 内核 | 入口链 + 三层记忆 + 目录语义(AGENTS.md 定义的 core)| 已有;但 AGENTS.md Skills 节(两处)与 README 仍硬编码两个 agent 目录,尚不满足铁律 1,由 M1 认领 |
 | 文件系统 | 仓库本身(git 版本化)| 已有 |
-| 引导协议 | 入口文件 → INSTRUCTION.md →(完整启动序列见 INSTRUCTION.md Session Startup,含 HANDOFF.md、human/index.md)| 链条已有;adapter 契约未成文(M1)|
+| 引导协议 | 入口文件 → AGENTS.md →(完整启动序列见 AGENTS.md Session Startup,含 HANDOFF.md、human/index.md)| 链条已有;adapter 契约未成文(M1)|
 | 驱动(adapter)| 每 agent 一个一行入口指针文件 + 适配目录(`CLAUDE.md`+`.claude/`、`AGENTS.md`+`.agents/`)| 已注册两个;`.gitignore` 中 `.antigravitycli/` 痕迹表明存在第三个未注册 agent;原 `projects-folder/Paper_VAE/` 已由 Human Owner 暂时删除，恢复边界由 M0/D10 记录 |
-| 进程 | 有边界的 agent 任务:`Tasks/<task-id>/` 工作区 + 预算 + 状态 | 工作区约定已写(INSTRUCTION.md);预算/回合制词汇目前仅存在于 HANDOFF 的 circle_packing 计划;均未实战(M2)|
+| 进程 | 有边界的 agent 任务:`Tasks/<task-id>/` 工作区 + 预算 + 状态 | 工作区约定已写(AGENTS.md);预算/回合制词汇目前仅存在于 HANDOFF 的 circle_packing 计划;均未实战(M2)|
 | 调度器 | 人类 + `memory/MEMORY.md` Active Projects 表 | 人工调度可用;自动排队属 M4 闸门 |
 | 内存管理 | 全局/项目/任务三层记忆 + 卫生规则 | 已有;progress log 已在 Example_Project 实战 |
 | 权限 | 保护规则(评测器、权威结果、用户材料、`human/private/`)| 纯约定;唯一已部署的强制机制是 `.gitignore` 对 `human/private/` 的忽略(agent 无关);项目级 settings deny 已决策未部署(HANDOFF circle_packing tier-2),且为 Claude 专属 |
@@ -92,7 +90,7 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
 
 ## 4. Agent-Agnostic 三条铁律
 
-1. **内核不新增专属假设**:内核文件(INSTRUCTION.md、memory/MEMORY.md、各入口指针
+1. **内核不新增专属假设**:内核文件(AGENTS.md、memory/MEMORY.md、各入口指针
    文件、目录语义)不得**新增**任何特定 agent 的假设;存量硬编码由 M1 一次性迁往
    adapter 契约表。FILETREE.md 的例行刷新不计为内核改动。
 2. **统一引导契约**:所有 agent 走同一条引导链;每个 agent 的原生入口文件只允许是
@@ -103,19 +101,20 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
    (MCP)时,OS 必须仍能以"约定 + 事后检查"降级运行。机制增强安全,正确性不依赖机制。
 
 **项目层边界**:铁律约束 OS 内核与仓库级约定。项目内部允许 agent 专属适配
-(项目局部 skills / 子代理本就是 INSTRUCTION 认可的晋升路径),但项目必须登记进
+(项目局部 skills / 子代理本就是 AGENTS.md 认可的晋升路径),但项目必须登记进
 portfolio 并保有 `PROJECT_MEMORY.md`;项目是否 agent 锁定由 owner 在
 `PROJECT_MEMORY.md` 中声明。
 
 ## 5. 里程碑
 
 OS 构建主线顺序:M0 → M1 → M2;M3、M4 是 MVP 之后的条件闸门,不排期。2026-07-19
-Human Owner 根据亲自运行 Phase 01 后的学习证据，把 N13 的 SDK 路线延后，选择 N15:
+Human Owner 根据亲自运行 Phase 01 后的学习证据，把 SDK 路线（原路线图 N13）延后，选择 Pi Coding Agent 工作流路线（原 N15）:
 先用 Pi Coding Agent 现成 TUI 验证单项目文件工作流。Phase 01 的成功运行作为历史事实
 记录，但其未提交的 `os-runtime/` 实现和依赖已按 Human Owner 决定删除；Phase 02–07
 冻结，不是当前前置条件。旧 launcher 与 SDK phase prompts 已从工作树删除，只能从
 Git 历史恢复用于审计，不得作为新主路径复活。
-跨会话进度以 [map/index.md](map/index.md) 为唯一追踪器；当前理由见
+跨会话进度记录在 [HANDOFF.md](../HANDOFF.md) Active Work（路线图 `map/` 已于 2026-09-23
+删除，最后版本见 Git commit `0f1805c`）；当前理由见
 [ADR-0002](../docs/adr/0002-pi-coding-agent-workflow-mvp.md)，被取代的 SDK 决策见
 [ADR-0001](../docs/adr/0001-pi-sdk-autonomous-mvp.md)。
 
@@ -128,15 +127,15 @@ Git 历史恢复用于审计，不得作为新主路径复活。
   验收:`grep -ri OS_INTRO` 仅命中历史性说明；`test ! -e projects-folder/Paper_VAE`
   成功；HANDOFF Decisions 有恢复与重新登记边界。
 - **M1 — 适配器契约成文 + 内核去硬编码(纯文档)**
-  在 INSTRUCTION.md「Extending the OS」下新增一小节(建议 ≤30 行)「Agent
+  在 AGENTS.md 中新增一小节(建议 ≤30 行)「Agent
   adapters」:人读的 adapter 对照表(agent、入口文件、技能目录、可用强制机制、
   外部工具/凭据机制、降级方式),并明确声明**这是文档约定,不是机器可读
   manifest**(与既有 no-manifest 决策一致)。skills 格式一并成文:`SKILL.md`
   (frontmatter: name/description)+ `scripts/` 为跨 agent 格式;
   `agents/<vendor>.yaml` 类 per-agent 附件允许存在,其他 agent 忽略。
-  同一批次:INSTRUCTION.md Skills 节与 README 中的两 agent 硬编码改为引用该表;
+  同一批次:AGENTS.md Skills 节与 README 中的两 agent 硬编码改为引用该表;
   HANDOFF D7 加注(拷贝数 = 已注册 adapter 数)。
-  验收:INSTRUCTION.md 除 adapter 表外 grep 不到具体 agent 目录名;新增 agent 的
+  验收:AGENTS.md 除 adapter 表外 grep 不到具体 agent 目录名;新增 agent 的
   接入成本满足铁律 2。冷启动测试:**仅当真实第三 agent 可用时**执行(候选:pi,
   或已留下 `.antigravitycli/` 痕迹的 agent)——仅凭其一行入口文件完成一个只读任务
   (如"总结当前 portfolio 状态");不做人工模拟。
@@ -194,17 +193,17 @@ Git 历史恢复用于审计，不得作为新主路径复活。
 ## 6. 总验收(与里程碑一一对应)
 
 - M0:陈旧引用清零；Paper_VAE 临时删除及恢复/重新登记边界有人类决策记录。
-- M1:adapter 契约成文;INSTRUCTION 内核文本(adapter 表除外)无具体 agent 假设;
+- M1:adapter 契约成文;AGENTS.md 内核文本(adapter 表除外)无具体 agent 假设;
   (条件项)真实第三 agent 冷启动通过。
 - M2:Example_Project 的 Pi-Assisted Research Run 文件闭环通过；Human Owner 不读
   transcript 即可审查和接管；声明的验证、Checkpoint、Review Package 与无 Git 接续
   能力均有真实证据，且报告不夸大流程边界为确定性 runtime enforcement。
 - 文档归并:长期方向与构建原则只在 GOAL.md 维护;原 task.md/task_en.md 已删除,
   历史原文可由记录的 Git commit 恢复。
-- `build_phases/`:当前 Pi Coding Agent 文件工作流合同按序完成；历史 launcher/SDK
+- 执行合同层:`build_phases/` 与路线图 `map/` 已于 2026-09-23 删除；历史 launcher/SDK
   prompts 已删除且不是当前验收对象，`os-runtime/` 不存在且不应重建。
 - 全程:权威研究状态仍为 plain files；Git 是可选增强而非前置条件；所有被推翻的既有
-  决策在 map、HANDOFF 与 ADR 有显式 supersession 记录。
+  决策在 HANDOFF 与 ADR 有显式 supersession 记录。
 
 ## 7. 非目标
 

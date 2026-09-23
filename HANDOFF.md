@@ -19,22 +19,30 @@ git show <hash>              # the actual diff for any change
 
 ## Active Work
 
-### Research OS construction — tracked in the route map (since 2026-07-17)
+### Research OS construction — status (route map deleted 2026-09-23)
 
-All OS-construction work formerly tracked here as "Agent-native OS evolution"
-(GOAL M0–M4) and "Research OS MVP — architecture and phase redesign" now lives
-in the route map [os-build/map/index.md](os-build/map/index.md):
-waypoints N1–N17 carry states, human-runnable acceptance checks, dual verdicts,
-and per-edge launch prompts under `os-build/map/prompts/`. Mapping:
-M0 → N1, M1 → N2, acceptance vehicle → N3, old pure-session architecture → N4
-(dead 2026-07-18), deferred Pi SDK architecture/contract/pilot → N13/N5/N14,
-current Pi Coding Agent workflow path → N15, workflow contract → N16,
-Example_Project workflow smoke test → N17, circle_packing arc → N6–N9, end-to-end acceptance → N10,
-post-MVP gates → N11/N12.
-Read the map before opening any construction task; do not re-add construction
-checklists here. The circle_packing checklist below remains the authoritative
-work breakdown (referenced by map edge E6) until the project is instantiated.
-Historical section text: git history of this file.
+The route map `os-build/map/` and the execution-contract slot
+`os-build/build_phases/` were deleted by Human Owner decision on 2026-09-23
+(see "Route-map deletion" under Decisions); their last version is
+`git show 0f1805c:os-build/map/index.md`. Construction status lives here again:
+
+- **Done:** installer generalization (GOAL M3, 2026-07-22); `research-project-manager`
+  (2026-09-23; its acceptance is still to be run by the Human Owner, see Next
+  session); Paper_VAE removal recorded (D10).
+- **Governance debt (M0):** both items met: Paper_VAE recorded in D10; D4's stale
+  `OS_INTRO.html` wording fixed 2026-09-23.
+- **Not started:** adapter contract (GOAL M1); the `circle_packing` arc below.
+- **Stalled, Human Owner decision pending:** the Pi Coding Agent file-workflow MVP
+  (ADR-0002, chosen 2026-07-19). The agent delivered the route definition on
+  2026-07-19; it was never human-verified, and the three workflow prompts
+  (contract preparation, run and record, transcript-independent takeover) were
+  never compiled. Whether this route continues or is replaced is an open
+  decision; GOAL.md M2 keeps its acceptance bar.
+- **Gated, not scheduled:** third-agent cold start (a sufficient M3 trigger) and
+  the custom execution surface (M4), both defined in GOAL.md.
+
+The circle_packing checklist below remains the authoritative work breakdown
+until the project is instantiated. Historical section text: git history of this file.
 
 ### os-ui — read-only monitor UI (completed 2026-07-05)
 
@@ -49,8 +57,9 @@ Agent workflow MVP uses Pi's existing terminal UI, not this browser UI.
 
 Purpose: reimplement the `circle_packing` task from `os-build/references/EurekAgent/examples/circle_packing/`
 inside the OS as its first real project. **Primary goal is stress-testing and refining the OS**;
-the math result is secondary. Do not start it until map N17 verifies the Pi file workflow on
-`Example_Project`. Decisions table: see "circle_packing kickoff decisions" below.
+the math result is secondary. Do not start it until the Pi file-workflow smoke test on
+`Example_Project` has passed against GOAL.md M2, or the Human Owner replaces that route.
+Decisions table: see "circle_packing kickoff decisions" below.
 
 - [ ] Create idea card `ideas/circle-packing-os-shakedown.md` (OKF concept, `type: Idea`);
       update [ideas/index.md](ideas/index.md); set `status: promoted` at instantiation.
@@ -97,15 +106,17 @@ the math result is secondary. Do not start it until map N17 verifies the Pi file
 
 ### Next session
 
-- Focus: Human Owner reviews map waypoint N15 using its acceptance check. After
-  N15 is explicitly human-verified, compile E21 into the three independent Pi
-  Coding Agent file-workflow prompts; do not continue SDK Phase 02.
-- Also pending: N19 (`research-project-manager`, delivered 2026-09-23) awaits its
-  `human_verdict`; its acceptance is `./verify.sh` plus the skill's `status` and
-  `validate` commands, both listed in the map entry.
-- Authority: [os-build/map/index.md](os-build/map/index.md) is the sole source of
-  construction status; do not mirror edge or waypoint progress here.
-- Suggested skills: `map-then-territory` for route-state handling.
+- Focus: Human Owner decides whether the Pi Coding Agent file-workflow MVP route
+  (ADR-0002) continues. If yes, the next step is the `Example_Project` multi-seed
+  smoke test under a file-based Run Contract, judged against GOAL.md M2; do not
+  continue SDK Phase 02. If no, record the supersession in Decisions and in a new ADR.
+- Also pending: the Human Owner has not yet run the `research-project-manager`
+  acceptance: `./verify.sh` shows `OK project contract`, and the skill's `status`
+  and `validate` commands report Example_Project registered with no errors.
+- Authority: the Active Work section above is the construction-status record;
+  Decisions hold the reasons and reversal paths.
+- Suggested skills: `session-handoff` for this file; `research-project-manager`
+  for project state.
 
 ## Decisions
 
@@ -114,12 +125,12 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | ID | Decision | Default taken | To reverse |
 |---|---|---|---|
 | D1 | Restore the `CLAUDE.md` pointer (a prior commit had removed it as "redundant")? | ~~**Restored** the one-line pointer to INSTRUCTION.md~~ **— superseded 2026-09-23 (commit 840cdaa):** `INSTRUCTION.md` content moved into `AGENTS.md`; `CLAUDE.md` and `INSTRUCTION.md` deleted, relying on Claude Code reading `AGENTS.md` natively | Delete `CLAUDE.md` and rely on Claude Code reading `AGENTS.md` — confirm your version does so |
-| D2 | Template directory casing | ~~`Paper_Initial_template`~~ **— superseded 2026-06-17:** renamed to **`ai_research_template`** (all-lowercase) | `git mv` back and update README / INSTRUCTION / OS_INTRO / the index files, then regenerate FILETREE.md |
+| D2 | Template directory casing | ~~`Paper_Initial_template`~~ **— superseded 2026-06-17:** renamed to **`ai_research_template`** (all-lowercase) | `git mv` back and update README / AGENTS.md / the index files, then regenerate FILETREE.md |
 | D3 | Track reference PDFs in git? | Status quo (tracked if added); none added yet | Add `References/*.pdf` to `.gitignore` |
-| D4 | HTML as the format for operating docs | **— superseded 2026-06-17 and narrowed later:** `HANDOFF.md` is the durable Markdown hand-off record; `OS_INTRO.html` stays HTML as a static delivered intro | Convert hand-off records back to HTML (not recommended — Markdown is cheaper to read/edit/grep/diff) |
+| D4 | HTML as the format for operating docs | **— superseded 2026-06-17 and narrowed later:** `HANDOFF.md` is the durable Markdown hand-off record; `OS_INTRO.html` was deleted in commit 784f9e8, so Markdown is the only operating-doc format | Convert hand-off records back to HTML (not recommended — Markdown is cheaper to read/edit/grep/diff) |
 | D5 | Build a CLI? | **No** — non-goal; conventions + skills suffice at this scale | Revisit only with explicit confirmation if navigation becomes slow |
 | D6 | Keep `Example_Project/`? | **Kept** as living documentation under `projects-folder/Example_Project/` | `rm -rf projects-folder/Example_Project` + remove its README/MEMORY/Ideas links and FILETREE rows |
-| D7 | `.agents/skills` vs `.claude/skills` (vs hub) duplication | ~~Three identical copies kept in sync by a documented rule~~ **— superseded 2026-07-22 by the M3 authorization below.** Installs are now **mixed**: skills from Human-Owner-authored collections are **symlinked** to the hub (editing the installed path edits the hub, so drift is impossible); skills from vendored collections are **copied**, and any collection declared an auto-refreshed read-only mirror (`mattpocock-skills`) **must** stay copied so the copy acts as a version pin. Targets are table-driven, not the hardcoded two directories, so `.claude/skills` and `.agents/skills` are no longer required to be byte-identical | Revert `research-skill-installer` to copy-only into two hardcoded directories, restore the three-copy rule here and in INSTRUCTION.md, and restore the four `diff -rq` checks in `verify.sh` |
+| D7 | `.agents/skills` vs `.claude/skills` (vs hub) duplication | ~~Three identical copies kept in sync by a documented rule~~ **— superseded 2026-07-22 by the M3 authorization below.** Installs are now **mixed**: skills from Human-Owner-authored collections are **symlinked** to the hub (editing the installed path edits the hub, so drift is impossible); skills from vendored collections are **copied**, and any collection declared an auto-refreshed read-only mirror (`mattpocock-skills`) **must** stay copied so the copy acts as a version pin. Targets are table-driven, not the hardcoded two directories, so `.claude/skills` and `.agents/skills` are no longer required to be byte-identical | Revert `research-skill-installer` to copy-only into two hardcoded directories, restore the three-copy rule here and in AGENTS.md, and restore the four `diff -rq` checks in `verify.sh` |
 | D8 | Where do instantiated projects live? | `projects-folder/<ProjectName>/`; reusable templates in `projects-folder/templates/<TemplateName>/` | Move projects back to the repo root and revert links + FILETREE rows |
 | D9 | Structured (YAML/JSON) indexes? | **No** — Markdown tables are grep-able and token-cheap | Add YAML front-matter later if tooling needs to parse indexes |
 | D10 | `Paper_VAE` project status | **Temporarily removed by the Human Owner on 2026-07-19.** It is not an active or exempt Research OS project. Restoring it requires a new Human Owner decision; before active use it must be registered in `memory/MEMORY.md` and gain `PROJECT_MEMORY.md` | Restore the deleted path from its own/Git history, explicitly authorize its return, then register and initialize it before treating it as active |
@@ -143,7 +154,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| What is this OS primarily? | Treat it as a **file-system-native environment for long-horizon human-agent research**. The human user's own research practice is primary; reusable open-source templates are a byproduct; product/platform possibilities stay future-compatible but do not drive current complexity. | Reposition README/INSTRUCTION around an external product or template-first project, then revisit CLI/UI/database needs explicitly. |
+| What is this OS primarily? | Treat it as a **file-system-native environment for long-horizon human-agent research**. The human user's own research practice is primary; reusable open-source templates are a byproduct; product/platform possibilities stay future-compatible but do not drive current complexity. | Reposition README/AGENTS.md around an external product or template-first project, then revisit CLI/UI/database needs explicitly. |
 | Paper library boundary | Shared paper understanding lives in `paper-wiki/papers/` and `paper-wiki/topics/`; project-specific use of a paper lives in the project (`references.bib`, `paper_skeleton.md`, `PROJECT_MEMORY.md`). | Allow full project-local copies of paper notes, accepting duplicate-note drift. |
 | Topic pages | Topic pages are lightweight synthesis and research roadmaps, not mere tags or exhaustive surveys. | Downgrade topics to index-only pages, or promote them into full survey documents with a separate maintenance policy. |
 | Experience promotion | Project-only facts stay in project memory; cross-project principles go to global memory; repeatable procedures become skills only when another project agent can execute them without local context. | Skill-ify more aggressively, accepting skill-library churn and validation overhead. |
@@ -250,19 +261,20 @@ vocabulary, Mermaid-update duty in the launch packet.
 | MVP architecture path (map N4 → N13 → N15) | ~~Pure session protocol~~ → ~~embedded Pi SDK + custom TUI~~ → **Pi Coding Agent existing TUI + file workflow (2026-07-19).** N13's Phase 01 succeeded technically, but the Human Owner's learning evidence showed the sequence was too steep. N4/N13 and dependent paths remain dead history; ADR-0002 is current | Reopen SDK/custom runtime as a directional deviation only after workflow evidence; preserve both earlier paths and redraw dependents rather than silently restoring either |
 | Workflow smoke test (map N17; old N14 dead) | Before circle_packing, prove the file workflow on `projects-folder/Example_Project/` by extending its reproducible single-seed line fit to multi-seed stability and returning declared validation, a Checkpoint, and a Review Package through Pi Coding Agent | Pick another low-risk project only through a directional map revision with equivalent executable validation and transcript-independent takeover |
 | Smoke test vs first real project | `projects-folder/Example_Project/` is the low-risk workflow smoke test. The first real research project is `circle_packing`, reimplemented from the task specification under `os-build/references/EurekAgent/examples/circle_packing/` without copying AGPL code | Change either role only through a directional map revision, preserving an equivalent low-risk smoke test before the real project |
-| OS-construction tracking | `os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only (plus the circle_packing authoritative checklist until project instantiation). On 2026-07-19 dead launcher/session/SDK prompts, an obsolete uncommitted tutorial, and an unreferenced proposed design report were deleted from `os-build/`; Git retains tracked history, while the tutorial is intentionally unrecoverable | Restore selected tracked files with `git show` only if a concrete audit or route revision needs them; do not reintroduce the whole historical tree by default |
+| OS-construction tracking | ~~`os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only~~ **— superseded 2026-09-23:** the map was deleted and construction status returns to HANDOFF Active Work (see "Route-map deletion" below) (plus the circle_packing authoritative checklist until project instantiation). On 2026-07-19 dead launcher/session/SDK prompts, an obsolete uncommitted tutorial, and an unreferenced proposed design report were deleted from `os-build/`; Git retains tracked history, while the tutorial is intentionally unrecoverable | Restore selected tracked files with `git show` only if a concrete audit or route revision needs them; do not reintroduce the whole historical tree by default |
 | OS-build reference location | External repositories used to design and build the Research OS, together with their walk-through notes, live under `os-build/references/`; the former top-level `resource/` boundary is retired | Move `os-build/references/` back to `resource/` and restore all repository-owned links plus `FILETREE.md` |
 
 **Navigation-index decisions (2026-07-17, user-confirmed):**
 
 | Decision | Default taken | To reverse |
 |---|---|---|
-| FILETREE role and scope | `FILETREE.md` is an auto-generated, Git-independent cold-start map: five core files plus public top-level areas only. Every public top-level directory owns an English `index.md` summary of at most 20 words; true skill directories may fall back to `SKILL.md`. Hashes and nested inventory rows are removed. `filetree-simple generate` writes atomically; `lint` is read-only and runs from `verify.sh`. The canonical skill lives in `research-skills-hub/open-paper-skills/` and is synced to both installed copies. | Restore the previous detailed generator and manifest from Git history, then restore hash and nested-entry maintenance rules in `INSTRUCTION.md` and `verify.sh` |
+| FILETREE role and scope | `FILETREE.md` is an auto-generated, Git-independent cold-start map: five core files plus public top-level areas only. Every public top-level directory owns an English `index.md` summary of at most 20 words; true skill directories may fall back to `SKILL.md`. Hashes and nested inventory rows are removed. `filetree-simple generate` writes atomically; `lint` is read-only and runs from `verify.sh`. The canonical skill lives in `research-skills-hub/open-paper-skills/` and is synced to both installed copies. | Restore the previous detailed generator and manifest from Git history, then restore hash and nested-entry maintenance rules in `AGENTS.md` and `verify.sh` |
 
 **Project-management decisions (2026-09-23, user-confirmed grilling session):**
 
 New skill `research-skills-hub/open-paper-skills/research-project-manager/`, symlinked into
-both repository agent directories; map waypoint N19, edge E24. Motivation: the README roadmap
+both repository agent directories (map waypoint N19 and edge E24 were added, then deleted
+with the map the same day). Motivation: the README roadmap
 item dates from the original TODO list; instantiation was a four-step manual procedure written
 in two places; `Example_Project`'s Snapshot had drifted from the template (six labels missing,
 `stage: smoke-test` outside the vocabulary); and the installer, the os-ui generator, and the
@@ -284,8 +296,44 @@ in three rounds and user-confirmed:
 | What `new` does | Copies the template, fills Project name / Started / Owner / Stage / Priority / Goal / Origin, adds the row, adds a `projects-folder/index.md` bullet, promotes the idea. It leaves agent directories to the installer, environments to `uv-env`, protection rules to the project, commits to the session; no submodule or external-repository import | Extend `new` with the corresponding flags |
 | GUI boundary | `os-ui` stays read-only for projects, with no stage toggle. `status --json` keys mirror `state.json` (`portfolio`, `projects`, `unregistered_projects`) so the generator can later consume the script's output the way it consumes the installer's. Trigger for that swap: `circle_packing` instantiated through the skill, i.e. the output has run on two or more projects | Open a project write slice in os-ui under a new M4-style authorization row |
 | Example_Project drift | Repaired in this session: six missing Snapshot labels added, Stage set to `probe` with the smoke-test role moved into Status and Origin, row re-projected by `sync`. The stage vocabulary is unchanged | Add `smoke-test` to `[vocabulary].stage` (rejected: an OS role is not a research stage) |
-| Tracking | Map waypoint N19 (executive) with edge E24 N19 → N6, since E6's instantiation step now runs through the skill; the README roadmap item is ticked; `memory/MEMORY.md` has a Key Decisions row; `human/PROFILE.md`'s idea-to-project workflow points at the skill | Remove N19/E24 and the pointers; the skill works without them |
+| Tracking | ~~Map waypoint N19 (executive) with edge E24 N19 → N6~~ **— superseded the same day by the route-map deletion**; the README roadmap item is ticked; `memory/MEMORY.md` has a Key Decisions row; `human/PROFILE.md`'s idea-to-project workflow points at the skill; the skill's acceptance is listed under Next session | Remove the pointers; the skill works without them |
 | Verification | 19 stdlib unit tests on a temporary repository fixture; three injected faults (row removed, phantom row, `stage: smoke-test`) each made `./verify.sh` fail on `project contract` and were reverted byte-for-byte; `new`/`set`/`archive` exercised on a scratch copy of the repository, never in the working tree | n/a |
+
+**Route-map deletion (2026-09-23, Human Owner decision after an evidence review):**
+
+`os-build/map/` (the index and three never-run prompts) and `os-build/build_phases/`
+(a one-file placeholder) were deleted; last version `git show 0f1805c:os-build/map/index.md`.
+Evidence put to the Human Owner: of 20 waypoints only the start was verified; N15 had waited
+for human verification since 2026-07-19; ten approved waypoints never started; the three
+`ready` prompts were never executed and referenced the deleted `INSTRUCTION.md`; and no work
+had moved through the map since 2026-07-23, while the OS work of that period (AGENTS.md
+consolidation, the daily paper routine, `research-project-manager`) came from grilling
+sessions and reached the map only after the fact. Three options were presented without a
+recommendation (delete all; delete `build_phases/` and prune the map; keep and fix
+references); the Human Owner chose delete all.
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Where construction status lives | HANDOFF Active Work again, as before 2026-07-17; GOAL.md keeps direction, milestones, and gates; ADRs keep architecture decisions | Restore the map from `0f1805c` and re-point AGENTS.md, GOAL.md §5, and Active Work at it |
+| Waypoint IDs in older text | `N*` / `E*` identifiers in earlier decision rows, deviations, ADR-0001, and GOAL.md §5 refer to the deleted map and are left as written | Not applicable; `git show 0f1805c:os-build/map/index.md` resolves any ID |
+| Idea ledger | The Human Owner's verbatim idea fragments from the map are preserved in the table below | Delete the table |
+| `map-then-territory` skill | Stays in the hub and installed; the Research OS itself no longer has a live map bundle | Draw a new map only by a new Human Owner decision |
+| Open route question | Whether the Pi Coding Agent file-workflow MVP (ADR-0002) continues was **not** decided by the deletion; it is recorded under Active Work and Next session as pending | n/a |
+
+Idea ledger carried over from the deleted map (verbatim; dispositions name the deleted map's nodes):
+
+| ID | Idea (verbatim) | Original disposition |
+| --- | --- | --- |
+| I1 | “我打算用pi agent SDK来作为运行时来运行我的research OS” | N13、E16 |
+| I2 | “这样不管对任何项目进行科研，都只需要打开这个Research OS的根目录，就可以统领全局。” | N13、N14 |
+| I3 | “这个过程，当人类休息或者睡觉的时候，我在想可不可以让Agent自主地进行研究？” | N13、N14 |
+| I4 | “默认应该支持无git，但是用户安装了git 可以实现更好的版本控制” | N13、N14 |
+| I5 | “我同意，先从一个project开始” | N14 |
+| I6 | “我尝试过之后发现学习路线太陡峭了，我对typescript语法完全啊不懂，pi agent SDK可以下阶段再接入，现在使用pi code agent是不是就可以实现一个MVP” | N15、N16、N17、E20–E23 |
+| I7 | “我个人更倾向于现在先删除os-runtime， 这样会对路线造成干扰，也会让上下文变得更加复杂。等我根据参考的项目进行学习之后，再用Pi Agent SDK来构建。” | N15、E20 |
+| I8 | “现在梳理os-build 下的文件，精简和删除多余的文件和内容” | N15、E20 |
+| I9 | “我暂时删除了Paper_VAE，第一个真实示例项目采用os-build/references/EurekAgent 中的cirle packing任务。 smoke test 还是使用projects-folder/Example_Project” | N1、N3、N6、N17、E1、E22、E23 |
+| I10 | “对于这个OS project-folder 的管理是不是也可以用一个skill，这样用skill来给code agent 提供接口来直接管理project-folder 下的不同project。整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill。” | N19、E24 |
 
 ## Deviations from the original plan
 
@@ -342,3 +390,5 @@ in three rounds and user-confirmed:
   generator keeps its own project parser and two definitions of "project" coexist knowingly.
 - **`research-ideas-manager`** — still a roadmap item; `new --from-idea` writes only the promotion
   fields of one idea.
+- **Route map and `build_phases/`** — deleted 2026-09-23 by Human Owner decision; not to be
+  recreated as incidental cleanup. Recover from `git show 0f1805c:<path>` only for an audit.

@@ -24,4 +24,4 @@ The 2026-07-17 MVP route selected a pure session protocol with zero new runtime 
 - The TUI, domain core, and Pi backend run in one local Node.js process; no daemon, server, database, account system, remote access, or GUI execution surface belongs to this MVP.
 - The selected project is writable; shared Paper Wiki, Memory, Ideas, Skill Hub, and other projects are read-only; proposed global contributions go to inbox for human review.
 - Git is optional enhancement. Without Git, Research OS still records Audit Events, Checkpoints, hashes, text diffs, and limited recoverable before-images; it does not implement a general-purpose VCS.
-- The old N4 waypoint and its incoming route remain in `os-build/map/index.md` as dead history rather than being erased.
+- The old N4 waypoint and its incoming route remained in `os-build/map/index.md` as dead history until the whole map was deleted on 2026-09-23 (last version: Git `0f1805c`).

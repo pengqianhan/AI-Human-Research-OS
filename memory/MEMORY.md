@@ -3,7 +3,7 @@
 > Cross-project long-term memory. Read this for broad or cross-project work.
 > Keep under ~200 lines: prune aggressively. Per-project context lives in
 > `projects-folder/<ProjectName>/PROJECT_MEMORY.md`. Update rules: see
-> [INSTRUCTION.md](../AGENTS.md).
+> [AGENTS.md](../AGENTS.md).
 
 ## Long-Term Research Goals
 
@@ -20,7 +20,7 @@
 
 | Project | Path | Owner | Stage | Priority | Status | Evaluator | Next action |
 |---|---|---|---|---|---|---|---|
-| Example_Project (OS pipeline smoke test) | `projects-folder/Example_Project/` | mixed | probe | P1 | smoke-test vehicle; ready for the N17 Pi workflow smoke test | existing reproducible linear fit (`Code/fit_line.py`); no frozen evaluator | after N16, run the N17 multi-seed workflow smoke test before `circle_packing` |
+| Example_Project (OS pipeline smoke test) | `projects-folder/Example_Project/` | mixed | probe | P1 | smoke-test vehicle; waits for the Human Owner to confirm the Pi file-workflow route | existing reproducible linear fit (`Code/fit_line.py`); no frozen evaluator | once the Human Owner confirms the Pi workflow route, run the multi-seed smoke test before `circle_packing` |
 
 ## Key Decisions (cross-project)
 
@@ -40,6 +40,7 @@
 | 2026-07-19 | Current MVP uses Pi Coding Agent's existing TUI for one human-supervised, file-native Research Run; after a successful SDK hello, the uncommitted `os-runtime/` spike was deleted and SDK/custom runtime work deferred until reference-project study | prevents historical runtime code from competing with the active workflow route; project files remain authoritative and Git optional |
 | 2026-07-19 | `Paper_VAE` is temporarily removed; `Example_Project` is the workflow smoke test; `circle_packing` is the first real project after the smoke test | separates low-risk OS validation from real research and prevents a removed legacy project from remaining an implicit governance dependency |
 | 2026-09-23 | Research Projects are managed through the `research-project-manager` skill: a project's `PROJECT_MEMORY.md` Snapshot is the source of its state, its Active Projects row is a projection written by `sync`, and `validate` runs inside `./verify.sh` | removes the hand-maintained duplicate between project memory and this table; decisions in [`HANDOFF.md`](../HANDOFF.md) |
+| 2026-09-23 | `os-build/map/` and `os-build/build_phases/` deleted by the Human Owner; construction status returns to HANDOFF Active Work, [`GOAL.md`](../os-build/GOAL.md) keeps direction and gates, ADRs keep architecture decisions | the map had driven no work since 2026-07-23 and its live route was stalled on human verification; last version at Git `0f1805c` |
 
 ## Lessons and Principles
 

@@ -28,11 +28,11 @@ current task.
 
 ## Recent Transitions
 
-- None yet.
+- 2026-09-23: cog-20260923-002 moved unknown_unknowns → known_knowns after the human confirmed they accept recommended defaults in grilling rounds without close reading.
 
 ## Privacy Boundary
 
 Do not record secrets, credentials, or high-sensitivity personal data. Treat this
 cache as potentially git-tracked. Local capture follows
-[INSTRUCTION.md](../../AGENTS.md#human-cognition); it does not authorize
+[AGENTS.md](../../AGENTS.md#human-cognition); it does not authorize
 publishing or externally sharing the cache.

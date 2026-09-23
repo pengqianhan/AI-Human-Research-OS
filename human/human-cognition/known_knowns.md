@@ -15,6 +15,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260716-002 - Outcome-level Research OS vision: can state desired human-agent research outcomes and collaboration flows without prescribing the implementation route.
 - cog-20260724-002 - Branch as the containment boundary for unattended agent work: scopes recurring autonomous runs to a named branch and expects their output readable off the dev machine.
 - cog-20260923-001 - Human-read, agent-write division of the OS: the GUI exists for human observation; agents mutate paper-wiki, skills, and projects only through skills with scripted interfaces.
+- cog-20260923-002 - Recommended defaults in grilling rounds are accepted without close reading: executive decisions inside a round are effectively the agent's; directional vetoes happen separately.
 
 ## Entries
 
@@ -93,3 +94,25 @@ timestamp: 2026-07-04T00:00:00+12:00
   - When the human asks to "manage" an OS area, propose a hub skill with a stdlib script and a `verify.sh` check, following `paper-wiki-manager`, `research-skill-installer`, and `research-project-manager`.
 - related:
   - [cog-20260724-001](unknown_knowns.md#cog-20260724-001-agent-neutrality-as-a-veto)
+
+## cog-20260923-002 Recommended defaults in grilling rounds are accepted without close reading
+
+- content: The human states that in grilling rounds they accept the agent's recommended defaults without reading each one closely. Inside a round, the recommendation is therefore effectively the decision. Their directional judgement is exercised separately and has produced vetoes, so this describes the executive and mechanical layer only.
+- source: user-confirmed
+- confidence: high
+- evidence: Raised as a hypothesis on 2026-09-23 after 16 of 16 recommended defaults were accepted across three rounds with one-line replies. Asked directly whether they read each recommendation's evidence or trusted the format, the human answered 「我基本没细看，直接接受了推荐」. Directional counter-evidence stands: the 2026-07-19 SDK route reset and the 2026-07-22 amendment of GOAL.md M3's trigger were the human's own vetoes. Later the same day, given three options without a recommendation on deleting the route map, the human chose one directly (「全部删除」), which supports withholding recommendations on directional-grade questions.
+- created: 2026-09-23
+- last_updated: 2026-09-23
+- status: active
+- domain: human-agent decision process in this repository
+- scope: Executive and mechanical decisions presented inside grilling rounds with a recommendation attached; no claim about directional decisions.
+- evidence_type: self-report
+- last_verified: 2026-09-23
+- freshness: current
+- responsibility_relevance:
+  - Treat a recommendation inside a round as the decision that will be taken: keep it reversible and record it in HANDOFF with a reversal path.
+  - Mark each question as evidence-forced or judgment call, and flag directional-grade questions (those that change a standing decision or an OS principle) explicitly.
+  - Present the one or two directional-grade questions of a round without a recommendation, as two balanced options with their costs, so the human chooses.
+  - Six 2026-09-23 judgment calls were effectively agent-made: timing (Q1), Snapshot as source (Q3), archive semantics (Q8), Integrity Gate positioning (Q9), contract in TOML (Q11), Example_Project stage `probe` (Q14). Q3 and Q9 are directional-grade and stay open to a deliberate re-decision.
+- related:
+  - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
