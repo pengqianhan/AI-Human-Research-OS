@@ -13,6 +13,7 @@
 * [LLM-as-a-Judge](llm-as-a-judge.md) - Using a language model to score, rank, or select other model outputs.
 * [LoCoMo](locomo.md) - Very-long-term conversational memory benchmark spanning single-hop, multi-hop, open-domain, and temporal reasoning.
 * [LongMemEval](longmemeval.md) - 500-question, six-category benchmark for long-term interactive memory in chat assistants.
+* [Meta-Harness](meta-harness.md) - Outer-loop optimization of executable agent-harness code by an agentic proposer reading past candidates' code, scores, and traces; the common baseline for automated harness evolution.
 * [MLE-Bench Lite](mle-bench-lite.md) - Lighter subset of MLE-Bench for Kaggle-derived ML-engineering agent evaluation.
 * [Model Context Protocol (MCP)](model-context-protocol.md) - Standard for how a language-model application discovers and invokes external tools via named, schema-described servers.
 * [OOLONG](oolong.md) - Long-context benchmark requiring semantic transformation and aggregation over nearly every input entry.

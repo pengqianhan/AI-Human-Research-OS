@@ -6,7 +6,7 @@ tags:
 - agent-memory
 - long-term-memory
 - retrieval
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-09-23T00:00:00Z
 ---
 
 # Scope
@@ -23,6 +23,7 @@ This topic tracks papers about persistent memory systems for LLM agents: how sal
 * [VoiceMem](../papers/2608.26005.md) - a streaming "dual-brain" memory for real-time voice agents: a schema/entity-indexed left brain for facts sits above an interchangeable backend (Mem0, Zep, or LangMem), a right brain of independent/cross-entity nodes maintains persona and affect as its own structure rather than a retrieval re-weighting, and a four-stage pipeline hides the entire retrieval (134ms) inside a standard VAD's turn-taking window at a top-5 budget.
 * [Memanto](../papers/2604.22085.md) - a vector-only architecture with a 13-category typed schema, built-in conflict resolution, and Moorcheh's deterministic Information-Theoretic Search backend that argues knowledge-graph structure is unnecessary once retrieval recall is high enough; reports 89.8% LongMemEval / 87.1% LoCoMo (state-of-the-art among vector-only systems, beating Mem0 by 20+ points) with zero LLM calls at ingestion, versus Zep's and Mem0-graph's two-or-more.
 * [RSIAgent](../papers/2609.15364.md) - a different unit of memory management than any system above: not extracted facts, a bi-temporal graph edge, a cross-substrate MemCube, or a lifecycle MemCell, but verifier-grounded *causal* relationships (action, condition, consequence) discovered through autonomous exploration of a new digital environment rather than extracted from conversational or task interaction; the resulting memory is frozen after an explicit exploration phase rather than continuously updated during deployment, trading this topic's online-adaptivity axis for a cheap, repeatable test-time reuse phase.
+* [Jev-Mem](../papers/2609.23986.md) - changes the question from what the memory unit is to *which compute runs memory control*. A batched, non-generative typed-probability controller handles typing, multi-relational linking, query routing, retrieval budgets, candidate scoring, and stopping, and a System-Two LLM only synthesizes answers. It reports 0.777 on LoCoMo with a 158 s build and 0.93 s query latency.
 
 # Synthesis
 
@@ -41,3 +42,4 @@ Zep is the earliest system in this topic (January 2025) and the one all three la
 * Recuris shows that coupling memory to a verified working state, rather than the query or context alone, roughly doubles fault-localization accuracy for *why* a memory-augmented run failed (64.8% vs. 37.0% from the raw trajectory) — would adding a comparable checker-verified state layer to Zep's, Mem0's, or MemOS's own consolidation pipelines improve their reported add/update/delete decision quality, or is Recuris's gain specific to gating *invocation* rather than gating *ingestion*?
 * VoiceMem's index improves Mem0, Zep, and LangMem's LoCoMo accuracy by 15.8-29.5 points as a layer bolted on top, without changing any of those systems' own extraction, consolidation, or graph-construction logic — does a comparable pre-ranking narrowing step (schema/entity routing before backend search) transfer gains to MemOS's or EverMemOS's more elaborate lifecycle-based consolidation, or does their existing structure already capture what VoiceMem's index adds, making the two approaches redundant rather than additive?
 * Memanto's cross-paper comparison table draws competing-system numbers from each system's own published report rather than a single reproduction harness, and its own final-stage result depends partly on upgrading its inference model to Gemini 3 specifically to match competitors' reported models — how much of the accuracy gap this topic's papers report against each other (Memanto vs. Mem0/Zep, MemOS vs. Mem0/Zep) reflects architecture versus uncontrolled inference-model or judge-model differences, and would a single controlled harness holding the backbone LLM fixed across Zep, Mem0, MemOS, and Memanto preserve the same ranking?
+* Jev-Mem's accuracy and speed gains on LoCoMo come without ablations: how much is due to the non-generative controller itself versus its query-adaptive routing/stopping algorithm (which an LLM controller could also run) versus its always-retain write policy?

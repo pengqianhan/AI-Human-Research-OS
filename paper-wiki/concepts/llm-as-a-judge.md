@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-08-20T00:00:00Z
+timestamp: 2026-09-23T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [HarnessEval-W](../papers/2608.16859.md) - restructures the judge itself: a parent agent plus specialized sub-agents decompose an evaluation question into subproblems and produce an inspectable evidence tree, instead of a single opaque score, reaching 0.93 Spearman correlation with human preference on intentional-transition judgments.
 * [Mem0](../papers/2504.19413.md) - uses a separate, more capable LLM as its primary long-term-memory quality metric (J) to avoid the false confidence of lexical-overlap metrics (F1/BLEU-1) on factually wrong but lexically similar answers, and runs it 10 times per method to report mean ± std given judge stochasticity.
 * [LLM-as-a-Verifier](../papers/2607.05391.md) - replaces the discrete decoded score at the heart of standard LLM-as-a-judge with the expectation over the full scoring-token logit distribution, eliminating ties (0% vs. 26.7% at K=1 on Terminal-Bench) and formally scaling verification accuracy along score granularity, repeated evaluation, and criteria decomposition.
+* [Jev-Mem](../papers/2609.23986.md) - uses LLM-as-a-Judge correctness as its only LoCoMo accuracy metric.
+* [RRSI](../papers/2609.24972.md) - four of its eight benchmarks are judge-scored (Harvey LAB, JobBench, GDPval with a three-vendor panel in both presentation orders, APEX-Agents). It adds deterministic-simulator domains specifically to rule out judge-pleasing as the source of harness transfer.
 
 # Notes
 

@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-08-26T00:00:00Z
+timestamp: 2026-09-23T00:00:00Z
 ---
 
 # Scope
@@ -35,6 +35,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [The Last AI Built by Humans](../papers/2609.11873.md) - supplies an autonomy-level vocabulary (improvement-execution → improvement-strategy → experience-acquisition → environment-adaptation → recursive-inheritance) that this topic's diagnose-write-validate mechanisms can be placed on — most cluster at improvement-strategy through environment-adaptation autonomy, fixed-objective mutation under a held-out validation gate, rather than the recursive-inheritance level where the gate or diagnosis mechanism itself is what gets revised; see [Recursive self-improvement](recursive-self-improvement.md) for the taxonomy and its own safety-challenges framing.
 * [RSIAgent](../papers/2609.15364.md) - moves the mutable object to environment-level *causal* memory rather than a skill, harness, or environment artifact: a curriculum/actor/verifier multi-agent loop autonomously discovers action-condition-consequence relationships in a new digital environment through broad-then-deep exploration, then freezes the resulting memory for test-time reuse; its verifier-isolation design (excluded from the actor's private reasoning and memory) is a concrete, ablation-supported instance of this topic's held-out-validation-gate pattern, and its own case-audit failure analysis names incomplete verification and unreliable consolidation as observed, not merely hypothesized, failure modes.
 * [Dream-RSI](../papers/2609.14858.md) - locates the mutable object one layer above every other paper in this topic: not a skill, harness, environment, or training-data mixture, but the *exploration-policy code* governing how a fixed, unmodified coding agent allocates its discovery attempts across a long-horizon search; its validation gate is a formal monotonic-non-regression guarantee (the current policy is always a replay candidate, so the selected policy's average replay score cannot regress) rather than a probabilistic or threshold-based acceptance criterion, making it this topic's strongest-guarantee gate to date.
+* [RRSI](../papers/2609.24972.md) - offers generic acceptance gates (a pre-scoring leakage critic, a noise-band floor, a cost-per-gain constraint, pruning of unproductive components) that address the risk of self-evolution loops fitting their own evaluation tasks. It is demonstrated on whole-harness evolution rather than on a single skill or memory component.
 
 # Synthesis
 

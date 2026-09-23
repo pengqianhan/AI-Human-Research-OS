@@ -7,7 +7,7 @@ tags:
 - agent-memory
 - long-term-memory
 - benchmark
-timestamp: 2026-09-13T00:00:00Z
+timestamp: 2026-09-23T00:00:00Z
 ---
 
 # Definition
@@ -17,3 +17,4 @@ LoCoMo (Maharana et al., ACL 2024, "Evaluating Very Long-Term Conversational Mem
 # Papers
 
 * [Memanto](../papers/2604.22085.md) - reports 87.1% overall accuracy (Stage 5 of a five-stage ablation) alongside its LongMemEval result, using LoCoMo as a shorter-dialogue complementary benchmark; the paper's per-category breakdown shows Multi-Hop as its weakest category (70.8%) against a strongest Open Domain category (92.4%), and it reports the benchmark's own label-quality limitation (an estimated 6-7% of questions have ambiguous or unverifiable ground truth).
+* [Jev-Mem](../papers/2609.23986.md) - sole evaluation benchmark: 0.777 overall LLM-judge accuracy with a gpt-4o-mini answer model vs. MAGMA 0.700. Its §4.2 prose and Table 1 disagree slightly on several per-category values, including Temporal.

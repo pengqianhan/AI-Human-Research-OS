@@ -7,7 +7,7 @@ tags:
 - information-seeking
 - web-agents
 - reinforcement-learning
-timestamp: 2026-09-08T00:00:00Z
+timestamp: 2026-09-23T00:00:00Z
 ---
 
 # Scope
@@ -19,6 +19,7 @@ This topic tracks agents whose core task is searching external sources (the live
 * [SearchOS-V1](../papers/2607.15257.md) - formalizes open-domain information seeking as relational schema completion, coordinating orchestrator, explore, search, and writer agents through durable shared state (task, evidence, coverage, failure) rather than training the agents' weights.
 * [WideSeek-R1](../papers/2602.04634.md) - a lead-agent–subagent system trained end-to-end via multi-agent RL to decompose a broad information-seeking task into parallel subtasks, letting a 4B model match single-agent DeepSeek-R1-671B by scaling parallel subagents ("width") rather than sequential turns ("depth").
 * [Iris](../papers/2609.04304.md) - a single-agent ReAct search policy trained via an SFT-RL "climbing" loop on reverse-constructed, dual-criteria-verified multi-hop web questions, reporting the strongest open-source results on BrowseComp, BrowseComp-ZH, DeepSearchQA, and HLE while explicitly separating intrinsic policy capability from context-management gains.
+* [ZGCM-1](../papers/2609.13356.md) - places search capability inside a from-scratch, fully open 7B model through MDP-style agentic mid-training and schema-aligned agentic SFT. It reports 63.1 on WebWalkerQA and 19.4 on BrowseComp, but most web baselines are copied from other reports rather than rerun in its harness.
 
 # Synthesis
 
@@ -30,3 +31,4 @@ These three papers attack the same underlying problem — an agent must decide w
 * Iris reports that width scaling (WideSeek-R1's framing) and better training data plus curriculum (Iris's own framing) can each independently push search-agent capability — at a matched training and inference compute budget, which investment yields more headroom, and do the two combine additively or does one dominate?
 * Iris's dual-criteria verification (closed-book fails, open-book solves) is used to certify training questions; SearchOS's coverage map and failure memory are used to track live search progress at inference time — could Iris-style verification be applied inside SearchOS's evidence graph to catch unresolvable or ill-posed sub-goals before they consume search budget, rather than only at training-data-construction time?
 * None of these three papers reports results on the same benchmark under the same protocol (SearchOS uses WideSearch and GISA; WideSeek-R1 uses WideSearch; Iris uses BrowseComp, BrowseComp-ZH, DeepSearchQA, and HLE) — a head-to-head comparison across a shared benchmark suite would clarify whether the reported gains come from architecture, training recipe, or benchmark-specific tuning.
+* ZGCM-1 reports a 7B model beating much larger tool-using models on BrowseComp, but compares against numbers from other harnesses, search providers, and judges. How much of the small-vs-large gap in search-agent results is harness and protocol rather than model?

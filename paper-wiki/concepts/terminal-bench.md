@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-09-22T00:00:00Z
+timestamp: 2026-09-23T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,8 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [Recuris](../papers/2608.24876.md) - uses Terminal-Bench 2.1 (87 tasks, Terminus-2 agent) for its test-time adaptation mode specifically, because the benchmark's tasks share no tools or policies across each other — cross-task memory evolution admits no patch in thirteen runs, so only within-task retry-plus-adaptation applies, and the paper's own decomposition shows the attempt-budget/retry effect (+26.4 points) dominates the learning effect from adaptation itself (+2.3 points, interval including zero).
 * [AutoSaddler](../papers/2608.23041.md) - automatically optimizes a Terminus 2 base harness on Terminal-Bench 2.0 (40 test tasks), raising Pass@1 from a 40.0% base to 50.0%, surpassing both automated baselines (GEPA 42.5%, Meta-Harness 43.3%) and the manually expert-tuned Terminus KIRA harness (47.5%).
 * [Code2Skill](../papers/2609.05571.md) - uses TerminalBench (Merrill et al., 2026) as one of eight evaluation benchmarks; retrieved code-derived skills from CodeSkillBank show large gains under generation-time prompting for DS4-Flash specifically (Sec. 5.4), among the paper's strongest single-benchmark results.
+* [RRSI](../papers/2609.24972.md) - evolves the coding harness on Terminal-Bench 2.1 (89 tasks): Claude Opus 4.8 74.2 → 80.2, Gemini 3.5 Flash 64.6 → 78.7, and the Gemini-evolved harness lifts the unseen Gemini 3.1 Flash Lite 11.2 → 14.6.
+* [ZGCM-1](../papers/2609.13356.md) - appendix diagnostic on Terminal-Bench 2.0: its best audited 7B run resolves 2 of 89 tasks (2.25%).
 
 # Notes
 
