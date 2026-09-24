@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-09-23T00:00:00Z
+timestamp: 2026-09-24T00:00:00Z
 ---
 
 # Definition
@@ -24,3 +24,4 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [WideSeek-R1](../papers/2602.04634.md) - extends GRPO to multi-agent rollouts by assigning one group-normalized outcome reward identically to every agent and token in a multi-agent rollout, then adding dual-level (token- and agent-level) advantage reweighting on top of GRPO's usual grouped-advantage estimation.
 * [Multi-module GRPO](../papers/2508.04660.md) - relaxes GRPO's shared-prompt-within-a-group requirement by grouping rollouts at the module level instead, aligning structurally comparable calls to the same named module across different program-trajectory rollouts so a uniform program-level outcome reward can update each module's own LM weights independently.
 * [ZGCM-1](../papers/2609.13356.md) - mixed math/code/general GRPO with reference-KL, dynamic sampling of zero-variance groups, a mild length penalty, and up to 64K-token rollouts. The paper's headline evaluations use the pre-RL SFT checkpoint.
+* [One to More, More to One](../papers/2609.23377.md) - uses RLOO's leave-one-out baseline instead of GRPO's self-inclusive mean for long-horizon SWE RL, arguing the inclusive mean shrinks every mixed-outcome group's advantage by (G-1)/G, which matters when rare successes are the only signal.

@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-09-23T00:00:00Z
+timestamp: 2026-09-24T00:00:00Z
 ---
 
 # Definition
@@ -26,6 +26,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [LLM-as-a-Verifier](../papers/2607.05391.md) - replaces the discrete decoded score at the heart of standard LLM-as-a-judge with the expectation over the full scoring-token logit distribution, eliminating ties (0% vs. 26.7% at K=1 on Terminal-Bench) and formally scaling verification accuracy along score granularity, repeated evaluation, and criteria decomposition.
 * [Jev-Mem](../papers/2609.23986.md) - uses LLM-as-a-Judge correctness as its only LoCoMo accuracy metric.
 * [RRSI](../papers/2609.24972.md) - four of its eight benchmarks are judge-scored (Harvey LAB, JobBench, GDPval with a three-vendor panel in both presentation orders, APEX-Agents). It adds deterministic-simulator domains specifically to rule out judge-pleasing as the source of harness transfer.
+* [Lean Pool](../papers/2609.25199.md) - an LLM mathematical-review service judges faithfulness, novelty, significance, sources, and code quality of formalization PRs after the Lean kernel has checked the proofs; verdicts gate merges but were never labeled for accuracy, and repeated reviews of the same PR agree in 37 of 69 pairs.
 
 # Notes
 

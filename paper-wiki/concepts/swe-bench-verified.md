@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - software-engineering
 - llm-agents
-timestamp: 2026-09-23T00:00:00Z
+timestamp: 2026-09-24T00:00:00Z
 ---
 
 # Definition
@@ -21,3 +21,4 @@ SWE-bench evaluates coding agents on resolving real GitHub issues from open-sour
 * [Code2Skill](../papers/2609.05571.md) - uses SWE-bench Verified as one of eight evaluation benchmarks for CodeSkillBank; all nine protocol-matched model/reasoning-mode pairs improve with retrieved code-derived skills, the most consistent per-benchmark result in the paper's main sweep.
 * [RRSI](../papers/2609.24972.md) - out-of-distribution target for a harness evolved only on Terminal-Bench 2.1: +1.8 (82.0 → 83.8) with Claude Opus 4.8 and +2.2 (76.8 → 79.0) with Gemini 3.5 Flash, never scored during search.
 * [ZGCM-1](../papers/2609.13356.md) - appendix diagnostic on a fixed internal 50-task subset with mini-SWE-agent v2: 2 of 50 resolved (4.0%).
+* [One to More, More to One](../papers/2609.23377.md) - used only to profile benchmark composition with SWE Labeler: 87.0% bug fixes and 86.2% single-file changes, vs. 47.3% bug fixes and 59.2% cross-module changes in SWE-bench Pro.

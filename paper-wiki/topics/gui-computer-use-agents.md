@@ -7,7 +7,7 @@ tags:
 - computer-use-agents
 - desktop-automation
 - in-context-demonstration-learning
-timestamp: 2026-09-22T00:00:00Z
+timestamp: 2026-09-24T00:00:00Z
 ---
 
 # Scope
@@ -19,6 +19,7 @@ This topic tracks agents that act directly on graphical interfaces — desktops,
 * [UI-Mate](../papers/2608.15930.md) - an open-weight foundation GUI agent combining a closed-loop environment-grounded training pipeline with DemoCUA, which converts multimodal demonstrations into adaptive subtask-level workflows rather than rigid replay; introduces OSWorkerBench, a 100-task long-horizon office benchmark with a controlled paired protocol for isolating demonstration value from instruction-only capability.
 * [MAI-UI](../papers/2512.22047.md) - a 2B-235B foundation GUI agent family adding native agent-user-interaction (`ask_user`) and MCP-tool-use (`mcp_call`) actions, a device-cloud collaboration system with a trajectory monitor and privacy gate, and large-scale online RL (up to 512 parallel environments); new SOTA on five grounding benchmarks and AndroidWorld (76.7%).
 * [RecreationWorld](../papers/2609.22000.md) - a five-platform (Ubuntu, macOS, Windows, Android, Web) framework built around application recreation: given a running reference and no prescribed workflow, an agent must interleave GUI exploration, coding, and execution-grounded self-verification to build a faithful implementation, scored by reference-validated hidden programmatic and visual test suites; training on 35,000 rejection-sampled recreation trajectories transfers to five out-of-distribution benchmarks (up to +17.9 points), while on the released 250-task RecreationBench the strongest model passes all programmatic tests on only 2.8% of tasks.
+* [GameHorizon Suite](../papers/2609.25001.md) - evaluates models on AAA video games in the same raw keyboard-mouse action space as desktop computer use; both GUI agents tested (GELab-Zero-4B-Preview, UI-TARS-1.5-7B) fall into its lowest tier, and UI-TARS-1.5-7B scores 3.7 points below its own general-purpose base (Qwen2.5-VL-7B), suggesting GUI post-training can reduce transfer to other screen-and-control domains.
 
 # Synthesis
 

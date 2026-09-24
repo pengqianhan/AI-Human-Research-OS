@@ -5,7 +5,7 @@ description: Training a student on its own sampled trajectories by matching a te
 tags:
 - on-policy-distillation
 - post-training-feedback
-timestamp: 2026-07-22T00:00:00Z
+timestamp: 2026-09-24T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ The second variant is what makes OPD a channel for arbitrary natural-language su
 * [VoiceMem](../papers/2608.26005.md) - uses teacher-parametric black-box on-policy distillation ("SLM-verified OPD") to convert speech-in/text-out models (Qwen2.5-Omni, Qwen3-Omni, Step-Audio2-Mini) into models with explicit memory access, distilling from stronger proprietary teachers (Qwen3.5-Omni, Step-Audio2) through a loop of memory-world construction, online correction, and post-hoc verification.
 * [PaperGym](../papers/2608.31119.md) - uses context-conditioned OPD ("OPSD," same-model teacher) with the raw rubric itself as privileged context, withheld at inference; an ablation finds this beats conditioning the teacher on the reference answer, or on rubric plus reference answer together, for downstream research-plan generation quality.
 * [NeoHorse-1](../papers/2609.08183.md) - extends a routing-guided three-stage curriculum from SFT to OPD: at each stage the student generates responses from recorded pre-response contexts, and a fixed teacher supplies a next-token distribution over the student's own top-K generated candidates plus one aggregated overflow bin, minimized via a response-length-normalized reverse KL; the rollout checkpoint is periodically refreshed so later-stage contexts get teacher supervision on more recent student behavior.
+* [One to More, More to One](../papers/2609.23377.md) - label-routed multi-teacher OPD (MOPD) merges three same-origin SWE category experts into one student, adding ReLU-gated reward extrapolation that keeps only tokens where the routed expert beats the shared base; pure distillation mode, with no environment reward in the student loss, recovers 80.8-111.1% of each expert's gain.
 
 # Notes
 
