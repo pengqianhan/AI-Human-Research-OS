@@ -6,7 +6,7 @@ tags:
 - ai-for-science
 - scientific-discovery
 - experiments
-timestamp: 2026-09-24T00:00:00Z
+timestamp: 2026-09-25T00:00:00Z
 ---
 
 # Scope
@@ -23,6 +23,7 @@ This topic tracks papers about AI systems used to plan, run, and revise scientif
 * [ASI-Bench](../papers/2608.17271.md) - a 60-task benchmark spanning 11 scientific domains (mathematics, physics, chemistry, biology, astronomy, materials science, earth science, medicine/biostatistics, computer science, robotics, electrical engineering) that measures autonomous scientific research capability directly by progressively withdrawing human methodological guidance within the same matched project, rather than proposing a discovery system itself.
 * [EvoScientist](../papers/2603.08127.md) - a three-agent (Researcher/Engineer/Evolution-Manager) end-to-end AI-scientist framework that distills each task's outcomes into two persistent memories (ideation, experimentation) rather than adapting only within a single run; beats 7 open-source and commercial baselines on idea quality, lifts execution success rate 34.39%→44.56%, and had all six of its autonomously generated end-to-end manuscripts accepted at a real peer-reviewed venue (ICAIS 2025), including a Best Paper Award.
 * [Lean Pool](../papers/2609.25199.md) - agents maintain scientific *infrastructure* rather than run experiments: scheduled jobs discover and import Lean formalizations, repair projects after each Lean/Mathlib upgrade (95 of 97 repair jobs succeeded on the stable-Lean migration), shorten proofs, and review statements, keeping 211 projects in one continuously building archive intended as a formal counterpart to arXiv.
+* [ScienceBuddy](../papers/2609.17523.md) - a released biomedical research workspace (224 tools) whose researcher collaborations are packaged as executable Harbor tasks with task-specific rubrics, which then drive both harness edits and RL of the deployed agent.
 
 # Synthesis
 

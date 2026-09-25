@@ -7,7 +7,7 @@ tags:
 - procedural-modeling
 - multimodal-agents
 - verifier-gated-generation
-timestamp: 2026-08-30T00:00:00Z
+timestamp: 2026-09-25T00:00:00Z
 ---
 
 # Scope
@@ -20,6 +20,7 @@ This topic tracks papers where an agent produces 3D content (a scene, an open wo
 * [Procedura](../papers/2608.26238.md) - an agent that writes a discrete, many-part object as a procedural CSG assembly joined by typed, machine-checkable mates, solving part placement analytically and gating every commit on compile/mate/connectivity checks plus a decoupled vision critic.
 * [Code as Worlds](../papers/2608.27549.md) - discovers an executable world representation (physical composition, dynamic evolution, and visual appearance as code) from text or video evidence through a propose-instantiate-execute-render-verify loop, where the verifier compares a physics simulator's executed state trajectory against the input evidence rather than checking a static rendered image or geometric/connectivity constraints.
 * [SceneMosaic](../papers/2609.05594.md) - initializes from an image-based layout prior for speed, then decomposes the scene into independent local units so a Critic-Actor VLM loop (visual evidence plus simulation tools) can refine each unit separately in an orthographic 2D projection, and — unique among this topic's papers — recombines independently evolved local-unit variants via Cartesian product to generate multiple diverse, physically valid layouts from one input rather than a single best-effort scene.
+* [HARMONY](../papers/2609.26793.md) - reconstructs a compositional indoor scene from a single photo: a VLM calibrates a metric room and camera, places objects in hierarchical, depth-first order so each is unoccluded, and after each stage renders the scene and compares it with the input, while silhouette and VGGT point-cloud evidence fix position and scale. Its verifier is fidelity to one observed view, not physics or intent.
 
 # Synthesis
 

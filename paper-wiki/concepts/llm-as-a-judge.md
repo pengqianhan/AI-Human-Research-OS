@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-09-24T00:00:00Z
+timestamp: 2026-09-25T00:00:00Z
 ---
 
 # Definition
@@ -27,6 +27,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [Jev-Mem](../papers/2609.23986.md) - uses LLM-as-a-Judge correctness as its only LoCoMo accuracy metric.
 * [RRSI](../papers/2609.24972.md) - four of its eight benchmarks are judge-scored (Harvey LAB, JobBench, GDPval with a three-vendor panel in both presentation orders, APEX-Agents). It adds deterministic-simulator domains specifically to rule out judge-pleasing as the source of harness transfer.
 * [Lean Pool](../papers/2609.25199.md) - an LLM mathematical-review service judges faithfulness, novelty, significance, sources, and code quality of formalization PRs after the Lean kernel has checked the proofs; verdicts gate merges but were never labeled for accuracy, and repeated reviews of the same PR agree in 37 of 69 pairs.
+* [ScienceBuddy](../papers/2609.17523.md) - a fixed judge scores rubric criteria that need scientific interpretation, alongside executable checks, and its rubric score is the GRPO reward; the judge and rubrics stay fixed during optimization and harness evaluation.
 
 # Notes
 

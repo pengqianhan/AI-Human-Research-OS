@@ -6,7 +6,7 @@ tags:
 - agent-environments
 - environment-engineering
 - agent-reliability
-timestamp: 2026-09-22T00:00:00Z
+timestamp: 2026-09-25T00:00:00Z
 ---
 
 # Scope
@@ -23,6 +23,7 @@ This topic tracks papers where the main design object is not only the agent poli
 * [VibeWorlding](../papers/2608.15265.md) - a from-scratch sandbox (VibeWorlding-Gym) exposing five 3D-world-editing tools as MCP tools, paired with a dual-constraint verifier (deterministic physical-feasibility geometry checks gating an MLLM rubric judge) that is reused directly as the RL reward function, not only as a post-hoc evaluator.
 * [UrbanGround](../papers/2608.27456.md) - a real-scale, georegistered urban sandbox built from official Hong Kong 3D geospatial data, purpose-built to test whether an MLLM agent's local spatial grounding composes into sustained navigation under continuous physics, dynamic pedestrians, and route invalidation.
 * [RecreationWorld](../papers/2609.22000.md) - a reproducible, five-platform (Ubuntu, macOS, Windows, Android, Web) execution substrate with versioned task-isolated workers, a 20-hour per-rollout budget, and platform-specific local-permission and network isolation that treats all model-generated commands and artifacts as untrusted; the running reference application doubles as both the evaluation oracle (hidden, human-validated programmatic and visual test suites) and the training-reward source (rejection-sampled recreation trajectories), scaled across a horizontally scalable VM pool.
+* [EmbodiedSWE](../papers/2609.27308.md) - a robotics benchmark environment for coding agents: isolated containers, network limited to the model API and package index, and offline re-execution in a separate grader with state-writing disabled; even so, two models hack the score in about 40% of runs, which the paper audits and zeroes.
 
 # Synthesis
 

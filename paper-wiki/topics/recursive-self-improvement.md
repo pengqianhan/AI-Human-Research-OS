@@ -6,7 +6,7 @@ tags:
 - recursive-self-improvement
 - ai-safety
 - agent-self-evolution
-timestamp: 2026-09-23T00:00:00Z
+timestamp: 2026-09-25T00:00:00Z
 ---
 
 # Scope
@@ -21,6 +21,7 @@ This topic tracks papers that treat recursive self-improvement (RSI) — an AI s
 * [SoL-Pi](../papers/2609.20519.md) - explicitly frames itself as "an RSI-inspired approach... at the harness layer" (its own words), a third grounded instance of this topic's central question but at a different point in the RSI stack than Atria Dawn or The Last AI Built by Humans: rather than measuring human-vs-agent decision authority inside a model-development project, it measures whether an agent-run harness-research loop (an agent proposing, testing, and gating changes to a separate execution agent's harness under fixed, agent-inaccessible acceptance metrics) produces improvements that generalize to held-out tasks and an unseen model backend — a more literal instance of "an improvement mechanism being iteratively improved" than Atria Dawn's human-in-the-loop project data, though its primary treatment (mechanism detail, harness comparisons) lives in [Agent harness engineering](agent-harness-engineering.md).
 * [RRSI](../papers/2609.24972.md) - argues that harness-level RSI *itself* needs regularization, because a finite evolve set reused adaptively turns apparent self-improvement into benchmark fitting, noise chasing, or complexity growth. It supplies a mechanism-level safeguard that complements this topic's taxonomies and project studies.
 * [ZGCM-1](../papers/2609.13356.md) - an AI-native model-development report in which nine contributors rate agent autonomy across 11 R&D tasks on an L1–L5 rubric. Operational work (experimentation/monitoring, deployment) is rated L4 and architecture and algorithm design L2, a second project-internal autonomy profile alongside [Atria Dawn](../papers/2609.15818.md).
+* [ScienceBuddy](../papers/2609.17523.md) - names its method "recursive-in-recursive self-improvement": an inner loop of validation-gated harness edits with the task model fixed, nested inside rubric-reward GRPO with the harness fixed, redeployed to researchers each cycle. The authors themselves note the reflector that proposes edits stays fixed, so the improvement mechanism does not improve; on this topic's scale it is a model-plus-harness co-evolution loop, not self-referential RSI.
 
 # Synthesis
 
