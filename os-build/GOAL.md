@@ -77,8 +77,8 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
 |---|---|---|
 | 内核 | 入口链 + 三层记忆 + 目录语义(AGENTS.md 定义的 core)| 已有;但 AGENTS.md Skills 节(两处)与 README 仍硬编码两个 agent 目录,尚不满足铁律 1,由 M1 认领 |
 | 文件系统 | 仓库本身(git 版本化)| 已有 |
-| 引导协议 | 入口文件 → AGENTS.md →(完整启动序列见 AGENTS.md Session Startup,含 HANDOFF.md、human/index.md)| 链条已有;adapter 契约未成文(M1)|
-| 驱动(adapter)| 每 agent 一个一行入口指针文件 + 适配目录(`CLAUDE.md`+`.claude/`、`AGENTS.md`+`.agents/`)| 已注册两个;`.gitignore` 中 `.antigravitycli/` 痕迹表明存在第三个未注册 agent;原 `projects-folder/Paper_VAE/` 已由 Human Owner 暂时删除，恢复边界由 M0/D10 记录 |
+| 引导协议 | AGENTS.md 即入口文件;按其 Read by task 表与 Human cognition 节按需加载(含 HANDOFF.md、human/index.md)| 链条已有;adapter 契约未成文(M1)|
+| 驱动(adapter)| 共享入口 `AGENTS.md` + 每 agent 一个适配目录(`.claude/`、`.agents/`);`CLAUDE.md` 已于 2026-09-23 删除(HANDOFF D1)| 已注册两个;`.gitignore` 中 `.antigravitycli/` 痕迹表明存在第三个未注册 agent;原 `projects-folder/Paper_VAE/` 已由 Human Owner 暂时删除，恢复边界由 M0/D10 记录 |
 | 进程 | 有边界的 agent 任务:`Tasks/<task-id>/` 工作区 + 预算 + 状态 | 工作区约定已写(AGENTS.md);预算/回合制词汇目前仅存在于 HANDOFF 的 circle_packing 计划;均未实战(M2)|
 | 调度器 | 人类 + `memory/MEMORY.md` Active Projects 表 | 人工调度可用;自动排队属 M4 闸门 |
 | 内存管理 | 全局/项目/任务三层记忆 + 卫生规则 | 已有;progress log 已在 Example_Project 实战 |
