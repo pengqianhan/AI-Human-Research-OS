@@ -20,7 +20,9 @@ os-ui/frontend/
 ├── postcss.config.js       # Tailwind/PostCSS config
 ├── tsconfig.json           # TypeScript config
 ├── public/
-│   └── state.json          # generated cache; gitignored; do not edit by hand
+│   ├── state.json          # generated cache; gitignored; do not edit by hand
+│   ├── favicon.svg         # tracked copy of docs/brand/favicon.svg (verify.sh checks it)
+│   └── favicon-256.png     # tracked copy of docs/brand/favicon-256.png, PNG fallback
 └── src/
     ├── main.tsx            # React mount point
     ├── App.tsx             # loading/error/desktop entry

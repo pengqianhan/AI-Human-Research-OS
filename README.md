@@ -1,7 +1,8 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-lockup-white.png">
-    <img src="docs/brand/logo-lockup.png" alt="AI-Human Research OS" width="480">
+    <source media="(prefers-color-scheme: light)" srcset="docs/brand/logo-lockup.png">
+    <img src="docs/brand/logo-lockup-on-paper.png" alt="AI-Human Research OS" width="480">
   </picture>
 </p>
 
