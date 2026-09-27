@@ -1,36 +1,55 @@
 import type { ActiveWorkSection } from "../types";
 import { stripInlineMarkdown } from "../lib/format";
+import { Chip } from "./Chip";
+import { Disclosure } from "./Disclosure";
 
 interface Props {
   section: ActiveWorkSection;
 }
 
 /**
- * One Active Work checklist block. Progress bar = done / total. Title and
- * item text may contain inline Markdown ([text](path), **bold**, ~~strike~~)
- * per HANDOFF.md's authoring convention — stripInlineMarkdown removes the
- * syntax so only plain text reaches the DOM.
+ * One Active Work section as a row: its title, and, when it is a checklist,
+ * a progress bar with done/total. The items open on click. A section with
+ * no checklist items is prose in HANDOFF.md; the row says so and stays flat.
+ * Title and item text may contain inline Markdown, which stripInlineMarkdown
+ * removes so only plain text reaches the DOM.
  */
 export function ActiveWorkPanel({ section }: Props) {
   const total = section.items.length;
   const doneCount = section.items.filter((i) => i.done).length;
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-
-  // First not-done item is "now" (in progress), matching mockup's ▸ marker.
+  const title = stripInlineMarkdown(section.title);
   const firstNotDoneIndex = section.items.findIndex((i) => !i.done);
 
+  const head = (
+    <>
+      <span className="font-mono-heading min-w-0 flex-1 truncate text-[12px] font-semibold text-ink" title={title}>
+        {title}
+      </span>
+      {total > 0 ? (
+        <>
+          <span className="h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-paper" aria-hidden="true">
+            <i className="block h-full rounded-full bg-verify" style={{ width: `${pct}%` }} />
+          </span>
+          <span className="font-mono-heading shrink-0 text-[11px] tabular-nums text-verify">
+            {doneCount}/{total}
+          </span>
+        </>
+      ) : (
+        <Chip tone="mute" title="A status section in HANDOFF.md without a checklist">
+          prose
+        </Chip>
+      )}
+    </>
+  );
+
+  if (total === 0) {
+    return <div className="flex items-center gap-2 rounded border border-grid bg-panel px-3.5 py-2.5 pl-[34px]">{head}</div>;
+  }
+
   return (
-    <div className="panel work rounded border border-grid bg-panel p-4 px-[18px]">
-      <div className="work-title flex items-baseline justify-between font-mono-heading text-[12.5px] font-semibold">
-        <span>{stripInlineMarkdown(section.title)}</span>
-        <span className="font-mono-heading text-verify">
-          {doneCount}/{total}
-        </span>
-      </div>
-      <div className="bar my-2 h-1.5 overflow-hidden rounded-full bg-paper">
-        <i className="block h-full rounded-full bg-verify" style={{ width: `${pct}%` }} />
-      </div>
-      <ul>
+    <Disclosure className="rounded border border-grid bg-panel px-3.5 py-2.5" summary={head}>
+      <ul className="pl-5">
         {section.items.map((item, idx) => (
           <li
             key={idx}
@@ -47,6 +66,6 @@ export function ActiveWorkPanel({ section }: Props) {
           </li>
         ))}
       </ul>
-    </div>
+    </Disclosure>
   );
 }

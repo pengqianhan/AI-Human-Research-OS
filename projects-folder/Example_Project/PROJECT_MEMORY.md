@@ -11,15 +11,13 @@
 - Goal (one sentence): Validate the Research OS end-to-end — idea → project from
   template → runnable code → figure → compiled PDF — with everything traceable.
 - Owner: mixed
-- Origin: OS pipeline smoke test from the 2026-06 task brief (Git `38d79be`); now
-  the Pi file-workflow smoke-test vehicle (ADR-0002; status in [HANDOFF.md](../../HANDOFF.md) Active Work)
+- Origin: OS pipeline smoke test from the 2026-06 task brief (Git `38d79be`); now the OS workflow smoke-test vehicle, driven through `os-harness/` since 2026-09-26 (ADR-0003; status in [HANDOFF.md](../../HANDOFF.md) Active Work)
 - Stage: probe
 - Priority: P1
-- Status: smoke-test vehicle; waits for the Human Owner to confirm the Pi file-workflow route
-- Evaluator status: existing reproducible linear fit (`Code/fit_line.py`); no frozen evaluator
-- Current question: does the file workflow survive a multi-seed extension with
-  transcript-independent takeover? (GOAL.md M2)
-- Next action: once the Human Owner confirms the Pi workflow route, run the multi-seed smoke test before `circle_packing`
+- Status: smoke-test vehicle; Pi route superseded 2026-09-26 by the os-harness route (ADR-0003); waits for the Human Owner to choose the next harness step
+- Evaluator status: reproducible linear fit (`Code/fit_line.py`) and 20-seed stability run (`Code/multi_seed.py`); no frozen evaluator
+- Current question: does the file workflow survive a multi-seed extension with transcript-independent takeover when run through os-harness?
+- Next action: Human Owner reviews and accepts or revises the multi-seed smoke-test run (uncommitted), then decides the next harness step
 
 ## Key Decisions
 
@@ -32,6 +30,13 @@
 
 <!-- newest first, one dated bullet per session, keep ≤ ~30 lines -->
 
+- 2026-09-26: Multi-seed smoke test run as a project agent: added `Code/multi_seed.py`
+  (seeds 0-19; slope 2.0003 ± 0.0460, intercept 0.9851 ± 0.1319, MSE 0.2298 ± 0.0478),
+  `Figs/multi_seed_stability.png`, and Code READMEs; `fit_line.py` output unchanged;
+  uncommitted, awaiting Human Owner review.
+- 2026-09-26: Vehicle route changed, project content untouched: the Pi file-workflow
+  route (ADR-0002) was superseded by `os-harness/` (ADR-0003); Snapshot Origin, Status,
+  Current question, and Next action updated with `research-project-manager set`.
 - 2026-09-23: Snapshot completed to the template contract (Owner, Origin, Stage,
   Priority, Evaluator status, Current question added; Stage `probe`, the
   smoke-test role moved into Status and Origin); Active Projects row re-projected

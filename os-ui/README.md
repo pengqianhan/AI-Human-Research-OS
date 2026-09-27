@@ -17,12 +17,53 @@ The UI opens as a dot-grid desktop with three layers:
 - **Menu bar**: the OS name, a snapshot freshness chip, and the
   `agent_led_research` policy chip. Hover the snapshot chip to see the full
   generated timestamp, schema version, and repository HEAD.
-- **Windows**: four draggable, resizable, minimizable macOS-style windows:
-  **Dashboard**, **Projects**, **Skill Store**, and **Paper Wiki** (the
+- **Windows**: five draggable, resizable, minimizable macOS-style windows:
+  **Dashboard**, **Projects**, **Skill Store**, **Paper Wiki** (the
   standalone `paper-wiki/viz.html` graph and timeline viewer, embedded by iframe — see
-  DESIGN.md §4).
-- **Dock**: app icons on the left and copy-only command buttons on the right
-  for Claude Code, Codex, and snapshot regeneration.
+  DESIGN.md §4), and **Root Agent** (below).
+- **Dock**: the five app icons on the left, and one copy-only button for
+  snapshot regeneration on the right.
+
+## Agent conversations
+
+Two entry points share one chat component:
+
+- **Root Agent window** (dock): the conversation with the root agent (GOAL.md
+  H2). Each message is one [os-harness](../os-harness/README.md) turn at the
+  repository root; the agent reads AGENTS.md there and hands project work to
+  project agents through the `project-dispatch` skill.
+- **Projects window → Agent**: the conversation with one project's agent. Each
+  message is one turn inside `projects-folder/<Name>/`, so the human can
+  operate a project directly. Runs the root agent dispatched into that project
+  appear in the same list and can be continued with feedback.
+
+Every turn runs on your own Claude Code or Codex login. For a new
+conversation the header picks the agent (remembered) and the permission mode
+(`full` by default; `workspace` and `read-only` as in os-harness). The list
+shows the harness sessions of that directory; the trace replays with the
+agent's tool calls, polls every 2 s while a turn runs, and a running turn can
+be stopped. One agent runs per directory at a time: starting a second
+conversation while one is running is refused (HTTP 409), the same Write
+Lease rule that `project-dispatch` follows.
+
+It needs the **Root Agent token** that `start.sh` prints when the dev server
+starts (`OS_UI_TOKEN` sets it; otherwise it is random per start). The window
+asks for it once and keeps it in `localStorage`. The token exists because the
+dev server may be reached through a public tunnel and this endpoint runs an
+agent with full permissions: without the token, `/api/chat/*` answers 401.
+
+Endpoints (dev server only, in [frontend/chat-plugin.ts](frontend/chat-plugin.ts)):
+`GET /api/chat/sessions?cwd=`, `GET /api/chat/session?id=`,
+`POST /api/chat/send` (`{cwd, agent, mode, session?, text}`), and
+`POST /api/chat/stop` (`{session}`). `cwd` is empty for the repository root or
+`projects-folder/<Name>` for a registered project; anything else is refused.
+The plugin only starts, resumes, stops, and reads harness sessions; the traces
+live in `os-harness/sessions/`. A static build has no chat, like it has no
+skill toggle.
+
+Dashboard and Projects show state visually (stage bars, chips, progress bars,
+counts, a timeline) and keep sentences behind a click, following the Human
+Owner's 2026-09-27 direction; DESIGN.md §4 lists what each page shows.
 
 All displayed data comes from one cache file:
 `frontend/public/state.json`. The generator creates that file by scanning the
@@ -60,6 +101,18 @@ npm run dev
 
 The dev server prints a URL, usually `http://localhost:5173/`.
 
+To view the live dashboard from another device for a while, open a Cloudflare
+quick tunnel to it (no account needed; the URL is public to anyone who has it
+and dies with the process):
+
+```bash
+cloudflared tunnel --url http://localhost:5173 --http-host-header localhost:5173
+```
+
+`--http-host-header` is required: Vite rejects requests whose Host header is
+not a local one. The tunnel also exposes the skill enable/disable endpoint;
+the Root Agent endpoints stay behind their token.
+
 Build a static bundle:
 
 ```bash
@@ -67,13 +120,19 @@ cd os-ui/frontend
 npm run build
 ```
 
-The output goes to `frontend/dist/`, which is gitignored.
+The output goes to `frontend/dist/`, which is gitignored. The frontend loads
+`state.json` and the Paper Wiki viewer by relative paths, so a bundle built with
+`npx vite build --base=./` also works from a sub-path or another origin, such as
+a private claude.ai artifact. The skill toggle needs the dev server and does
+nothing in a static bundle.
 
 ## Design Stance
 
-1. **Read-only dashboard, not a console**. Every apparent action copies a
-   command for the human to run elsewhere. Real execution buttons remain behind
-   GOAL.md M4.
+1. **Read-only dashboard plus agent conversations**. Every other apparent
+   action copies a command for the human to run elsewhere. The conversations
+   (root agent, and each project's agent) are the one execution surface,
+   authorized by the Human Owner on 2026-09-26; they run turns through
+   os-harness rather than executing anything themselves.
 2. **`state.json` is the only contract** between generator and frontend. The
    generator knows Markdown; the frontend knows schema.
 3. **Honest state beats fake realtime**. The UI shows evidence sources,
@@ -92,7 +151,7 @@ palette, typography, and read-only semantics.
 - [ ] Persist window layout in `localStorage`.
 - [ ] Add keyboard move/resize controls for windows.
 - [ ] Feed the round score track from real `Code/runs/<round-id>/result.json`
-      files after circle_packing M2 lands.
+      files once a project produces them.
 - [ ] Split governance or activity into separate dock apps only if real use
       shows that the Dashboard is too dense.
 - [ ] M4-gated: replace polling with a small file-watching service plus SSE.

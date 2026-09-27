@@ -47,6 +47,11 @@ SETTABLE = {
 }
 
 
+def rel_link(path: Path, start: Path) -> str:
+    """Relative link with forward slashes, as Markdown and frontmatter need on every OS."""
+    return Path(os.path.relpath(path, start)).as_posix()
+
+
 def fail(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(1)
@@ -843,7 +848,7 @@ def command_new(args: argparse.Namespace) -> None:
     today = dt.date.today().isoformat()
     started = today
     if idea_path is not None:
-        rel_idea = os.path.relpath(idea_path, dest)
+        rel_idea = rel_link(idea_path, dest)
         started = f"{today} — from idea: [{idea_title}]({rel_idea})"
     updates = {
         "project_name": name,
@@ -865,7 +870,7 @@ def command_new(args: argparse.Namespace) -> None:
         f"add bullet to {contract.index_file} under {contract.index_heading!r}",
     ]
     if idea_path is not None:
-        plan.append(f"promote {idea_path.relative_to(root)}: status=promoted, project={os.path.relpath(dest, idea_path.parent)}/")
+        plan.append(f"promote {idea_path.relative_to(root)}: status=promoted, project={rel_link(dest, idea_path.parent)}/")
     if args.dry_run:
         print("dry run; would:")
         for step in plan:
@@ -878,7 +883,7 @@ def command_new(args: argparse.Namespace) -> None:
     sync_rows(root, contract, [project], dry_run=False)
     add_index_bullet(root, contract, project)
     if idea_path is not None:
-        rel_project = os.path.relpath(dest, idea_path.parent) + "/"
+        rel_project = rel_link(dest, idea_path.parent) + "/"
         write_lines(idea_path, set_frontmatter(read_lines(idea_path), {"status": "promoted", "project": rel_project}))
 
     print(f"created {contract.projects_root}/{name}/ from {template_name}")

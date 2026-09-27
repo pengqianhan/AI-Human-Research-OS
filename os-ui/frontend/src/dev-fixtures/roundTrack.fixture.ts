@@ -2,11 +2,11 @@ import type { EvaluationContract, Round } from "../types";
 
 /**
  * Dev-only fixture used to exercise RoundTrack's non-empty rendering branch.
- * This mirrors the shape of the mockup's example circle_packing rounds
+ * This mirrors the shape of the mockup's example rounds
  * (R0..R3 + a 3-way R3 parallel fork) but MUST NOT ship in state.json or be
  * imported from any production page — it exists purely so this component's
  * SVG logic can be visually verified before real Code/runs/ data exists
- * (DESIGN.md: real round data is gated on circle_packing M2).
+ * (DESIGN.md: real round data waits for a project with rounds).
  *
  * To preview it locally: temporarily import ROUND_TRACK_FIXTURE_ROUNDS in
  * ProjectPage.tsx in place of project.rounds, run `npm run dev`, look at

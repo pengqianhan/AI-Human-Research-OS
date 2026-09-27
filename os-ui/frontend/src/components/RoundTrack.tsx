@@ -31,15 +31,16 @@ interface PlotPoint {
  *
  * Empty branch: when rounds is [], renders the honest empty state — no
  * fabricated example numbers, per DESIGN.md's data-honesty rule. Real round
- * data depends on circle_packing landing runs/ (M2); this component must
- * still render correctly today via the dev fixture in RoundTrack.fixture.ts.
+ * data appears once a project writes Code/runs/<round-id>/result.json; this
+ * component must still render correctly today via the dev fixture in
+ * RoundTrack.fixture.ts.
  */
 export function RoundTrack({ rounds, evaluation }: Props) {
   if (rounds.length === 0) {
     return (
       <div className="track-wrap rounded border border-grid bg-panel p-[18px]">
         <p className="text-[13px] text-stale">
-          No round data yet. Round data will appear after circle_packing M2 lands.
+          No round data yet. Rounds appear once this project writes Code/runs/&lt;round-id&gt;/result.json.
         </p>
       </div>
     );

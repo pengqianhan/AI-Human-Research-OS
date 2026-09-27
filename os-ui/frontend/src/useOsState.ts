@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { OsState } from "./types";
 
 const POLL_INTERVAL_MS = 5000;
-const STATE_URL = "/state.json";
+const STATE_URL = "./state.json"; // relative, so a static build works from any base path
 
 export type OsStateStatus =
   | { kind: "loading" }

@@ -8,7 +8,7 @@
 export function PaperWikiPage() {
   return (
     <iframe
-      src="/paper-wiki/viz.html"
+      src="./paper-wiki/viz.html"
       title="Paper Wiki"
       className="h-full w-full border-0"
     />

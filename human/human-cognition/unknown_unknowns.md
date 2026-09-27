@@ -12,6 +12,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 ## Active Index
 
 - cog-20260908-002 - Does the paper-wiki graph match the human's mental model of it? Hypothesis: it may be read as a citation network when 74% of its edges are filing structure.
+- cog-20260926-001 - Is subscription reuse seen as a technical question only? Hypothesis: provider terms, not code, may bound what a distributed product can do with users' subscriptions.
 
 ## Entries
 
@@ -39,3 +40,20 @@ timestamp: 2026-07-04T00:00:00+12:00
 - moved_to: [known_knowns.md#cog-20260923-002](known_knowns.md#cog-20260923-002-recommended-defaults-in-grilling-rounds-are-accepted-without-close-reading)
 - reason: Asked directly on 2026-09-23, the human confirmed the behaviour (「我基本没细看，直接接受了推荐」); the hypothesis became a stated fact about their decision process.
 - last_updated: 2026-09-23
+
+## cog-20260926-001 Is subscription reuse seen as a technical question only?
+
+- content: Hypothesis, not a finding. The human framed "reuse the user's code-agent subscription instead of buying an API key" as an implementation question to study in Orca and OpenResearch. Whether a distributed product may drive a user's consumer subscription is also set by each provider's usage terms, which can change and can differ between launching the official CLI and handling its OAuth tokens directly.
+- source: inferred
+- confidence: low
+- evidence: 2026-09-26 request asked only "how do they implement it" and named subscription reuse as a selling point; neither studied repo discusses provider terms, and Orca refreshes Claude OAuth tokens and calls usage endpoints itself. Later the same day, shown the terms risk and Pi's own warning that third-party use of a Claude subscription is billed as extra usage, the human chose the official-CLI route. That choice fits the hypothesis being addressed, but the personal-versus-public question was not answered, so the blind spot is not yet resolved.
+- created: 2026-09-26
+- last_updated: 2026-09-26
+- status: active
+- domain: Research OS product and distribution
+- scope: Subscription reuse in a product distributed to other users; no claim about the human's personal local use.
+- last_verified: 2026-09-26
+- freshness: current
+- responsibility_relevance:
+  - Before designing credential handling or public distribution, point to the current provider terms and prefer launching official CLIs over touching their tokens.
+- next_learning_edge: Ask whether the product is for personal use, a small group, or public release, since that decides how much the terms constrain the design.

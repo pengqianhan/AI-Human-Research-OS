@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 128" width="560" height="128" role="img" aria-label="AI-Human Research OS">
+  <title>AI-Human Research OS</title>
+  <desc>The mark beside the wordmark. The wordmark uses IBM Plex Mono; see README.md for the pre-rendered PNGs.</desc>
+  <!-- mark -->
+  <rect x="10" y="14" width="108" height="100" rx="16" fill="#F2F4F3" stroke="#17262E" stroke-width="6"/>
+  <line x1="13" y1="40" x2="115" y2="40" stroke="#17262E" stroke-width="3"/>
+  <circle cx="26" cy="27" r="4" fill="#C4564A"/>
+  <circle cx="38" cy="27" r="4" fill="#B7791F"/>
+  <circle cx="50" cy="27" r="4" fill="#2F7D6D"/>
+  <g stroke="#17262E" stroke-width="4" stroke-linecap="round" fill="none">
+    <line x1="58" y1="62" x2="67.5" y2="62"/>
+    <line x1="64" y1="62" x2="64" y2="80"/>
+    <line x1="40" y1="80" x2="88" y2="80"/>
+    <line x1="40" y1="80" x2="40" y2="88"/>
+    <line x1="64" y1="80" x2="64" y2="88"/>
+    <line x1="88" y1="80" x2="88" y2="88"/>
+  </g>
+  <circle cx="50" cy="62" r="8" fill="#17262E"/>
+  <circle cx="78" cy="62" r="8" fill="#F2F4F3" stroke="#E8590C" stroke-width="5"/>
+  <rect x="34" y="88" width="12" height="12" rx="2.5" fill="#17262E"/>
+  <rect x="58" y="88" width="12" height="12" rx="2.5" fill="#17262E"/>
+  <rect x="82" y="88" width="12" height="12" rx="2.5" fill="#17262E"/>
+  <!-- wordmark -->
+  <text x="150" y="58" font-family="IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace" font-size="22" font-weight="500" letter-spacing="4" fill="#52646E">AI-HUMAN</text>
+  <text x="150" y="98" font-family="IBM Plex Mono, ui-monospace, Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#17262E">RESEARCH <tspan fill="#E8590C">OS</tspan></text>
+</svg>
