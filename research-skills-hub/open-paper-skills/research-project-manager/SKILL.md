@@ -33,13 +33,13 @@ Run from the repository root unless you pass `--repo`. Below, `$S` stands for
 python $S status                    # every project, its Snapshot, unregistered/phantom/stray
 python $S status --json             # keys match os-ui state.json: portfolio, projects, unregistered_projects
 python $S validate                  # all projects; exit 1 on any error (what ./verify.sh runs)
-python $S validate circle_packing   # one project
-python $S new circle_packing --from-idea ideas/circle-packing-os-shakedown.md \
-    --owner human-led --stage probe --priority P1 --goal "Reimplement circle packing as the OS shakedown."
+python $S validate my_project   # one project
+python $S new my_project --from-idea ideas/my-idea.md \
+    --owner human-led --stage probe --priority P1 --goal "One sentence on what the project proves."
 python $S new demo --dry-run        # print the plan, write nothing
-python $S set circle_packing --stage develop --next-action "run round 3"
+python $S set my_project --stage develop --next-action "run round 3"
 python $S sync                      # rewrite every row from its Snapshot
-python $S archive circle_packing --status "results in paper/main.pdf"
+python $S archive my_project --status "results in paper/main.pdf"
 ```
 
 ## Workflow

@@ -1,8 +1,14 @@
 ---
-status: accepted
+status: superseded by ADR-0003
 ---
 
 # Use Pi Coding Agent as the workflow MVP shell
+
+> Superseded on 2026-09-26 by
+> [ADR-0003](0003-subscription-cli-harness.md). The route had waited since
+> 2026-07-19 for a human-verified run; the Human Owner chose to drive the OS
+> through subscription-backed Claude Code and Codex CLIs instead. This is
+> historical context only.
 
 The Human Owner successfully ran the first embedded Pi Agent SDK session, but
 the next learning step exposed a sequencing problem: learning TypeScript,

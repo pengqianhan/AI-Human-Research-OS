@@ -14,16 +14,20 @@
 
 发生冲突时，以实际仓库制品和 HANDOFF Decisions 为准。
 
-## 当前状态（2026-09-23）
+## 当前状态（2026-09-26）
 
 - 已完成：安装器泛化（M3，2026-07-22）；`research-project-manager`（2026-09-23，
-  Human Owner 尚未运行其验收）；Paper_VAE 暂时删除已记录（D10）。
+  Human Owner 尚未运行其验收）；Paper_VAE 暂时删除已记录（D10）；
+  [`os-harness/`](../os-harness/README.md)（2026-09-26，ADR-0003）：用 Human Owner
+  自己的订阅驱动 Claude Code 与 Codex 的适配器，离线测试与真实运行均已通过。
 - 治理债务（M0）：两项均已满足（Paper_VAE 见 D10；HANDOFF D4 里关于 `OS_INTRO.html`
   的陈旧表述已于 2026-09-23 修正）。
-- 未开始：adapter 契约成文（M1）；`circle_packing` 项目（清单在 HANDOFF Active Work）。
-- 停滞待决：Pi Coding Agent 文件工作流 MVP（ADR-0002，2026-07-19 选定）自 7 月起等待
-  Human Owner 验证，三份工作流 prompt 从未编译；是否继续由 Human Owner 决定，验收
-  标准见 GOAL.md M2。
+- 未开始：adapter 契约成文（M1）。原计划的 `circle_packing` 项目已于 2026-09-27 由
+  Human Owner 取消，portfolio 保留 Example_Project 与 nanochat_cpu 两个示例项目。
+- 已取代：Pi Coding Agent 文件工作流 MVP（ADR-0002）于 2026-09-26 由订阅 CLI harness
+  路线（ADR-0003）取代；GOAL.md 已按 Human Owner 采用的修订稿更新（主线 H1–H3）。
+- 进行中：H2 root agent（`project-dispatch` skill，ADR-0004）；验收运行在 Example_Project，
+  状态见 HANDOFF Active Work。
 - `os-runtime/`、Pi SDK phases、自定义 TUI 和旧 launcher 不在当前工作树或执行路径。
 
 ## 执行纪律

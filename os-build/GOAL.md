@@ -1,8 +1,10 @@
-# GOAL: 从文件系统到 Agent-Native Research OS
+# GOAL：订阅驱动、单一入口的 Research OS
 
 > **方向层目标(北极星)**。2026-07-04 由用户确立:在"服务用户自身研究实践"的前提下,
 > 把本仓库演化为 agent-agnostic 的 agent-native Research OS(决策记录见
-> [HANDOFF.md](../HANDOFF.md) Decisions)。
+> [HANDOFF.md](../HANDOFF.md) Decisions)。2026-09-26 Human Owner 采用 agent 起草的
+> 修订稿:目标改为订阅驱动、单一入口,主线改为 H1–H3(见 HANDOFF "Agent-harness
+> decisions" 与 [ADR-0003](../docs/adr/0003-subscription-cli-harness.md))。
 >
 > **长期愿景层**:本文件描述 Long-term Research OS 的方向、长期设计原则与战略
 > 治理闸门,不充当当前 MVP 的逐步实施说明。两个旧 task 文件已删除,其仍有效原则已
@@ -20,25 +22,26 @@
 
 ## 1. 最终目的
 
-把本仓库从"组织良好的文件系统"演化为**真正的 agent-native Research OS**,同时保持两条根约束:
+**目标**:人只和一个 root agent 对话,就能推进和跟进所有研究项目;各项目里的工作
+由 Claude Code / Codex 在用户自己的订阅下完成,全过程留下可复盘的 session trace。
+
+同时保持两条根约束:
 
 - **研究实践优先**:OS 演化始终服务于用户自己的长期研究。真实研究项目产生的摩擦证据
   (项目 `PROJECT_MEMORY.md` 的 OS Feedback 条目)决定大多数缺口何时变成工作项;
   无需先有 OS Feedback 的已授权例外只有文档层治理与契约工作(M0、M1)、只读
-  monitor UI,以及 2026-07-19 经 Human Owner 确认的 Pi Coding Agent 文件工作流
-  MVP（ADR-0002）。
-- **领域 agent-agnostic、当前操作壳明确**:Codex、Claude Code、pi 以及任何"能读文件、
-  能执行 shell"的 code agent 都能读取并构建本 OS；Research Project、Task、Claim、
-  Evidence、Artifact 与 Audit Event 不依赖具体 agent。当前 MVP 使用 Pi Coding Agent
-  的现成交互 TUI 验证工作流，不把 Pi Session 变成权威状态，也不承诺已有自定义 runtime。
+  monitor UI,以及 2026-09-26 经 Human Owner 采用的 H1–H3 里程碑(§5)。
+- **领域 agent-agnostic**:Codex、Claude Code、pi 以及任何"能读文件、能执行 shell"的
+  code agent 都能读取并构建本 OS;Research Project、Task、Claim、Evidence、Artifact
+  与 Audit Event 不依赖具体 agent。项目 agent 经 [`os-harness/`](../os-harness/README.md)
+  以官方 CLI 运行,Agent Session 与 session trace 都不是权威状态。
 
-"OS"的定义:Research Workspace 根目录为 Human Owner 与根层 agent 提供共享 Skill Hub、
-Paper Wiki、Memory、Ideas、Inbox 与多个 Research Project。当前产品证明从 Pi Coding
-Agent 的现成交互 TUI 开始；权威研究状态仍是可读文件。无 Git 是默认模式，检测到 Git
-时才增强 diff、历史、branch/worktree 与恢复。当前 Research OS 通过 Run Contract、
-验证、Checkpoint 与 Review Package 组织项目语义和交接，但边界主要靠流程与复核；
-自定义 runtime 的确定性权限和恢复保证属于后续证据闸门。构建工作由 code agent 执行,
-人类定方向、授权与审查。
+"OS"的定义:Research Workspace 根目录为 Human Owner 与 root agent(CONTEXT.md 中的
+Manager Agent)提供共享 Skill Hub、Paper Wiki、Memory、Ideas、Inbox 与多个 Research
+Project。root agent 在根目录与人对话,把 Research Task 派发给各项目里的 agent,并依据
+项目文件汇报;权威研究状态仍是可读文件。无 Git 是默认模式,检测到 Git 时才增强 diff、
+历史、branch/worktree 与恢复。边界主要靠任务合同、验证与人类复核;确定性权限和恢复
+保证属于后续证据闸门。构建工作由 code agent 执行,人类定方向、授权与审查。
 
 这个 OS 应让新进入的 agent 能快速定位:启动入口;当前 portfolio 与项目事实;idea、
 论文、代码、图表和写作材料的归属;经验向 memory/skill 的晋升边界;并行与 agent-led
@@ -71,7 +74,7 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
 
 > 本表是一次性类比与现状描述,不作为仓库规范术语(正文与验收一律使用
 > AGENTS.md 的既有词汇),也**不是工作来源**——除 M0/M1、只读 monitor UI 与
-> 2026-07-19 授权的 Pi Coding Agent 文件工作流 MVP 外,任何缺口转为工作项都需要 OS Feedback 证据或人类显式授权。
+> 2026-09-26 采用的 H1–H3 外,任何缺口转为工作项都需要 OS Feedback 证据或人类显式授权。
 
 | OS 概念 | 本仓库对应物 | 现状(2026-07-04 核实)|
 |---|---|---|
@@ -107,16 +110,28 @@ portfolio 并保有 `PROJECT_MEMORY.md`;项目是否 agent 锁定由 owner 在
 
 ## 5. 里程碑
 
-OS 构建主线顺序:M0 → M1 → M2;M3、M4 是 MVP 之后的条件闸门,不排期。2026-07-19
-Human Owner 根据亲自运行 Phase 01 后的学习证据，把 SDK 路线（原路线图 N13）延后，选择 Pi Coding Agent 工作流路线（原 N15）:
-先用 Pi Coding Agent 现成 TUI 验证单项目文件工作流。Phase 01 的成功运行作为历史事实
-记录，但其未提交的 `os-runtime/` 实现和依赖已按 Human Owner 决定删除；Phase 02–07
-冻结，不是当前前置条件。旧 launcher 与 SDK phase prompts 已从工作树删除，只能从
-Git 历史恢复用于审计，不得作为新主路径复活。
-跨会话进度记录在 [HANDOFF.md](../HANDOFF.md) Active Work（路线图 `map/` 已于 2026-09-23
-删除，最后版本见 Git commit `0f1805c`）；当前理由见
-[ADR-0002](../docs/adr/0002-pi-coding-agent-workflow-mvp.md)，被取代的 SDK 决策见
-[ADR-0001](../docs/adr/0001-pi-sdk-autonomous-mvp.md)。
+OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 已满足、M1 仍
+有效、M3 已完成;M4 是条件闸门,不排期。M2(Pi Coding Agent 文件工作流 MVP,
+[ADR-0002](../docs/adr/0002-pi-coding-agent-workflow-mvp.md))与更早的 SDK 路线
+([ADR-0001](../docs/adr/0001-pi-sdk-autonomous-mvp.md))都已被取代,只作历史保留;
+`os-runtime/`、SDK phase prompts 与旧 launcher 不得作为新主路径复活。
+跨会话进度记录在 [HANDOFF.md](../HANDOFF.md) Active Work(路线图 `map/` 已于 2026-09-23
+删除,最后版本见 Git commit `0f1805c`);当前理由见
+[ADR-0003](../docs/adr/0003-subscription-cli-harness.md)。
+
+- **H1 — 适配层(已完成 2026-09-26)**
+  `os-harness` 能在任意项目目录运行、续接 Claude Code 与 Codex 的对话,走订阅登录,
+  记录 trace。
+  验收:离线测试与两种 CLI 的真实运行通过(记录见 HANDOFF "Agent-harness decisions")。
+- **H2 — root agent**
+  人在一个对话里下达任务、询问进度;root agent 经 os-harness 派发给项目 agent,并依据
+  项目文件(`PROJECT_MEMORY.md`)汇报。
+  验收:在 Example_Project 跑通一次"派发 → 执行 → 汇报 → 人类验收"。
+- **H3 — trace 反思**
+  agent 能检索过往 session trace,把经验提炼写回记忆层,并在后续任务中用上。
+  验收:同类任务第二次执行时引用了第一次的经验。
+- **长期:Pi Agent 引擎**
+  Pi Agent 作为另一个引擎接入,上层不变。
 
 - **M0 — 治理对齐(纯文档)**
   1) 原 task 构建指南归并进本文并删除旧入口后,修正 HANDOFF D4 中
@@ -139,18 +154,9 @@ Git 历史恢复用于审计，不得作为新主路径复活。
   接入成本满足铁律 2。冷启动测试:**仅当真实第三 agent 可用时**执行(候选:pi,
   或已留下 `.antigravitycli/` 痕迹的 agent)——仅凭其一行入口文件完成一个只读任务
   (如"总结当前 portfolio 状态");不做人工模拟。
-- **M2 — Pi Coding Agent 单项目文件工作流 MVP**
-  Human Owner 从 Research Workspace 根目录启动 Pi Coding Agent，选择一个 Project 和
-  一个 Research Task，先让 Pi 起草文件化 Run Contract，再由人类批准。Pi 在终端保持
-  打开的前提下执行有界工作，运行合同声明的 Executable/Review Validation，并把
-  Research Checkpoint 与 Review Package 写入项目文件。首个 pilot 使用
-  `projects-folder/Example_Project/` 的可复现线性拟合，把单 seed 扩展为多 seed 稳定性
-  分析。Human Owner 或 fresh agent 必须能只靠项目文件接管，不依赖 transcript 或同一
-  Session。Git 是可选增强；无 Git 模式仍必须留下足以审查和继续的文件产物。当前写范围、
-  预算和停止条件靠 Run Contract、Pi 操作纪律与事后验证，不宣称有自定义 runtime 的
-  确定性拒绝。学习优先 Markdown、项目文件和已有 Python 验证；暂不要求 TypeScript。
-  `Example_Project` 只承担 smoke test；通过后第一个真实项目是从 EurekAgent 任务规范
-  重新实现的 `circle_packing`，不是复制其 AGPL 代码。
+- **M2 —(已取代)Pi Coding Agent 单项目文件工作流 MVP**
+  2026-09-26 由 ADR-0003 取代:Human Owner 改走订阅驱动的 CLI harness(H1–H3)。
+  原条款全文见 Git 历史(commit `0e185da` 及之前)。
 - **M3(闸门:存在多安装目标)— 安装器泛化**
   触发条件:存在两个以上需要统一管理的安装目标(全局目录、项目级目录、多 agent
   适配目录),且重复副本已产生实际维护成本。2026-07-22 由 Human Owner 修订:原
@@ -167,12 +173,12 @@ Git 历史恢复用于审计，不得作为新主路径复活。
   悬空链接。
   验收:一条命令把同一 hub skill 装进全部已注册目标;新增目标不改安装器逻辑;
   symlink 被各 agent 正确跟随一事有实测证据(该行为未见于任何 agent 的官方文档)。
-- **M4(闸门:M2 使用证据 + 人类逐项确认)— 自定义 runtime 与更重机制**
-  Pi Agent SDK backend、自定义 TUI、确定性权限/预算执行、关闭 TUI 后继续运行的 daemon、
-  主动跨 Session 管理、多项目/多 Worker 调度、数据库、远程访问、账户系统、OS 级
-  secrets、完整通用版本控制、GUI 执行面及 desktop wrapper 都需真实 M2 摩擦证据与
-  Human Owner 新授权。当前工作树不保留 SDK runtime 实现。
-  M2 授权不自动扩展这些范围。
+- **M4(闸门:H2 使用证据 + 人类逐项确认)— 自定义 runtime 与更重机制**
+  Pi Agent SDK backend、自定义 TUI、确定性权限/预算执行、常驻 daemon、无人值守的自动
+  排队与并行调度、数据库、远程访问、账户系统、OS 级 secrets、完整通用版本控制、GUI
+  执行面及 desktop wrapper 都需真实使用证据与 Human Owner 新授权。root agent 按人类
+  请求经 os-harness 派发和跟进项目任务属于 H2,自 2026-09-26 起不在本闸门内。
+  H1–H3 的授权不自动扩展这些范围。
   2026-07-22 Human Owner 授权一条**最小细缝**,其余部分闸门不变:`os-ui` 可启用/停用
   单个安装位置。具体机制按安装形态而定——symlink 安装把链接移入该目标目录下的
   `.disabled/`,copy 安装重命名 `SKILL.md` ↔ `SKILL.md.disabled`。原条款只写了后者,
@@ -195,9 +201,11 @@ Git 历史恢复用于审计，不得作为新主路径复活。
 - M0:陈旧引用清零；Paper_VAE 临时删除及恢复/重新登记边界有人类决策记录。
 - M1:adapter 契约成文;AGENTS.md 内核文本(adapter 表除外)无具体 agent 假设;
   (条件项)真实第三 agent 冷启动通过。
-- M2:Example_Project 的 Pi-Assisted Research Run 文件闭环通过；Human Owner 不读
-  transcript 即可审查和接管；声明的验证、Checkpoint、Review Package 与无 Git 接续
-  能力均有真实证据，且报告不夸大流程边界为确定性 runtime enforcement。
+- M2:已取代(ADR-0003),不再作为验收对象。
+- H1:os-harness 离线测试与 Claude Code、Codex 真实运行通过。
+- H2:Example_Project 上"派发 → 执行 → 汇报 → 人类验收"跑通;汇报以项目文件和
+  验证结果为依据,不夸大流程边界为确定性 runtime enforcement。
+- H3:同类任务第二次执行时引用了第一次的经验。
 - 文档归并:长期方向与构建原则只在 GOAL.md 维护;原 task.md/task_en.md 已删除,
   历史原文可由记录的 Git commit 恢复。
 - 执行合同层:`build_phases/` 与路线图 `map/` 已于 2026-09-23 删除；历史 launcher/SDK
@@ -207,13 +215,13 @@ Git 历史恢复用于审计，不得作为新主路径复活。
 
 ## 7. 非目标
 
-- 不做 Web 平台、后端服务、数据库、守护进程、远程访问或账户系统(M4 闸门前)。
-- 不在当前 MVP 实现 `AgentBackend`、Pi SDK runtime 或 Codex/Claude runtime backend；
-  agent-agnostic 约束属于领域文件和可接续状态，Pi Coding Agent 只是当前操作壳。
+- 不做 Web 平台、后端服务、数据库、守护进程、远程访问或账户系统(M4 闸门前);没有
+  真实需求就不做 GUI 执行面与并行调度。
+- 不用 API key 计费;不读取、刷新或复制 CLI 的 OAuth token,只启动用户已登录的官方 CLI。
 - 不实现完整通用版本控制；无 Git 只保证权威状态、Audit Event、Checkpoint 和 Agent
   修改过的小型文本可恢复，Git adapter 才提供完整历史/branch/merge。
-- 不让 Pi-Assisted Research Run 直接改写 Paper Wiki、Memory、Ideas、Skill Hub 或其他
-  Project；当前通过 Run Contract 与 Human Owner 复核约束，未来再决定是否机械强制。
+- 不让派发到项目的 agent 直接改写 Paper Wiki、Memory、Ideas、Skill Hub 或其他
+  Project;当前通过任务合同与 Human Owner 复核约束,未来再决定是否机械强制。
 - 不复制 EurekAgent 运行时(AGPL;只吸收其环境工程思想)。
 - 不追求支持"所有" agent:"支持"的定义 = 通过 M1 冷启动测试。
 - 不为假想需求造机制:没有真实第三 agent 就不做 M3,没有摩擦证据就不做 M4。
