@@ -19,15 +19,25 @@ window's three traffic lights come from the os-ui desktop.
 | [logo-mark-white.svg](logo-mark-white.svg) | Mark for dark backgrounds (white lines, orange ring, colored lights). |
 | [logo-mark-mono.svg](logo-mark-mono.svg) | One-color mark; takes the surrounding `currentColor` (inline it, or set `color` on an `<img>` wrapper). For print, stamps, and disabled states. |
 | [logo-lockup.svg](logo-lockup.svg) | Mark plus wordmark, horizontal. Its text needs IBM Plex Mono installed; use the PNG where you cannot control fonts. |
+| [logo-lockup-white.svg](logo-lockup-white.svg) | The lockup for dark backgrounds (white mark and text, orange ring and “OS”). |
 | [app-icon.svg](app-icon.svg) | Ink tile with the OS's dot grid and the white mark. Rounded corners at 22%; masks well to a circle. |
 | [favicon.svg](favicon.svg) | The pair only (dot and ring) on an ink tile, for 16–48 px. |
 | `logo-mark.png`, `logo-mark-white.png`, `app-icon.png` | 1024 px PNG exports, transparent background. |
-| `logo-lockup.png`, `logo-lockup-on-paper.png` | 2240 px PNG exports of the lockup: transparent, and on the paper color. |
+| `logo-lockup.png`, `logo-lockup-white.png`, `logo-lockup-on-paper.png` | 1740 px PNG exports of the lockup: transparent for light backgrounds, transparent for dark backgrounds, and on the paper color. |
 | `favicon-256.png` | 256 px PNG of the favicon. |
 
 The PNGs were rendered from the SVGs with headless Chromium (IBM Plex Mono
 loaded from Google Fonts for the wordmark). Re-render them after editing an
 SVG; keep the SVGs as the source of truth.
+
+## Where the assets are used
+
+- The repository [README](../../README.md) opens with the lockup:
+  `logo-lockup.png` in light mode and `logo-lockup-white.png` in dark mode,
+  switched by a `<picture>` element.
+- [os-ui](../../os-ui/README.md) shows `favicon.svg` as its browser-tab icon
+  from a copy at `os-ui/frontend/public/favicon.svg`; replace that copy when
+  the favicon changes.
 
 ## Colors and type
 

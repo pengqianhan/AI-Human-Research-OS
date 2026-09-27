@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="AI-Human Research OS favicon">
+  <title>AI-Human Research OS</title>
+  <!-- small sizes keep only the pair: human dot and agent ring, joined -->
+  <rect width="64" height="64" rx="14" fill="#17262E"/>
+  <line x1="27" y1="32" x2="37" y2="32" stroke="#F2F4F3" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="19" cy="32" r="8" fill="#F2F4F3"/>
+  <circle cx="45" cy="32" r="8" fill="none" stroke="#E8590C" stroke-width="5"/>
+</svg>
