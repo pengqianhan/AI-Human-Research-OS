@@ -84,7 +84,7 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
 | 驱动(adapter)| 共享入口 `AGENTS.md` + 每 agent 一个适配目录(`.claude/`、`.agents/`);`CLAUDE.md` 已于 2026-09-23 删除(HANDOFF D1)| 已注册两个;`.gitignore` 中 `.antigravitycli/` 痕迹表明存在第三个未注册 agent;原 `projects-folder/Paper_VAE/` 已由 Human Owner 暂时删除，恢复边界由 M0/D10 记录 |
 | 进程 | 有边界的 agent 任务:`Tasks/<task-id>/` 工作区 + 预算 + 状态 | 工作区约定已写(AGENTS.md);预算/回合制词汇目前仅存在于 HANDOFF 的 circle_packing 计划;均未实战(M2)|
 | 调度器 | 人类 + `memory/MEMORY.md` Active Projects 表 | 人工调度可用;自动排队属 M4 闸门 |
-| 内存管理 | 全局/项目/任务三层记忆 + 卫生规则 | 已有;progress log 已在 Example_Project 实战 |
+| 内存管理 | 全局/项目/任务三层记忆 + 卫生规则 | 已有;progress log 已在示例项目中实战 |
 | 权限 | 保护规则(评测器、权威结果、用户材料、`human/private/`)| 纯约定;唯一已部署的强制机制是 `.gitignore` 对 `human/private/` 的忽略(agent 无关);项目级 settings deny 已决策未部署(HANDOFF circle_packing tier-2),且为 Claude 专属 |
 | 系统调用/标准库 | skills(hub 为源,装进各 adapter 目录)| 安装器硬编码两个目录(`TARGET_DIRS`);`SKILL.md` frontmatter 是事实上的跨 agent 格式但未成文;5 个 hub 技能带 per-agent 附件(`agents/openai.yaml`)(M1 成文,M3 泛化)|
 | secrets / 外部工具 | `.env` 约定痕迹 + 各 agent 的 MCP/工具与凭据机制 | 无 OS 级约定;adapter 契约应声明外部工具能力与凭据机制(M1 给一行定位,更多属 M4 闸门)|
@@ -126,7 +126,8 @@ OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 �
 - **H2 — root agent**
   人在一个对话里下达任务、询问进度;root agent 经 os-harness 派发给项目 agent,并依据
   项目文件(`PROJECT_MEMORY.md`)汇报。
-  验收:在 Example_Project 跑通一次"派发 → 执行 → 汇报 → 人类验收"。
+  验收:在 nanochat_cpu 跑通一次"派发 → 执行 → 汇报 → 人类验收"(2026-09-29 由
+  Example_Project 改为 nanochat_cpu,见 HANDOFF "Example-project decision")。
 - **H3 — trace 反思**
   agent 能检索过往 session trace,把经验提炼写回记忆层,并在后续任务中用上。
   验收:同类任务第二次执行时引用了第一次的经验。
@@ -203,7 +204,7 @@ OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 �
   (条件项)真实第三 agent 冷启动通过。
 - M2:已取代(ADR-0003),不再作为验收对象。
 - H1:os-harness 离线测试与 Claude Code、Codex 真实运行通过。
-- H2:Example_Project 上"派发 → 执行 → 汇报 → 人类验收"跑通;汇报以项目文件和
+- H2:nanochat_cpu 上"派发 → 执行 → 汇报 → 人类验收"跑通;汇报以项目文件和
   验证结果为依据,不夸大流程边界为确定性 runtime enforcement。
 - H3:同类任务第二次执行时引用了第一次的经验。
 - 文档归并:长期方向与构建原则只在 GOAL.md 维护;原 task.md/task_en.md 已删除,

@@ -84,7 +84,22 @@ created: 2026-09-23
 Demo.
 """
 
-REQUIRED = ["index.md", "paper_skeleton.md", "log.md", "paper/main.tex",
+TEMPLATE_INDEX = """# AI Research Project Template
+
+Template summary
+wrapped over two lines.
+
+## Start here
+
+* [AGENTS.md](AGENTS.md) - Rules.
+"""
+
+TEMPLATE_AGENTS = """# Project Instructions
+
+Based on the `ai_research_template` project template, last synced YYYY-MM-DD.
+"""
+
+REQUIRED = ["index.md", "AGENTS.md", "paper_skeleton.md", "log.md", "paper/main.tex",
             "paper/references.bib", "Code/README.md"]
 
 
@@ -96,6 +111,8 @@ def make_repo(base: Path) -> Path:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(f"# {rel}\n", encoding="utf-8")
     (template / "PROJECT_MEMORY.md").write_text(TEMPLATE_MEMORY, encoding="utf-8")
+    (template / "index.md").write_text(TEMPLATE_INDEX, encoding="utf-8")
+    (template / "AGENTS.md").write_text(TEMPLATE_AGENTS, encoding="utf-8")
     (root / "projects-folder" / "index.md").write_text(PROJECTS_INDEX, encoding="utf-8")
     (root / "memory").mkdir()
     (root / "memory" / "MEMORY.md").write_text(MEMORY, encoding="utf-8")
@@ -169,6 +186,21 @@ class NewTests(FixtureCase):
         self.assertIn("project: ../projects-folder/Demo/", idea)
         self.assertEqual(errors(self.root), set())
         self.assertIn("snapshot_empty", codes(self.root))     # warnings only
+
+    def test_new_sets_index_title_and_stamps_template_line(self) -> None:
+        self.new_demo()
+        project_dir = self.root / "projects-folder" / "Demo"
+        index = (project_dir / "index.md").read_text(encoding="utf-8")
+        self.assertTrue(index.startswith("# Demo\n\nTest the manager.\n\n## Start here\n"), index)
+        agents = (project_dir / "AGENTS.md").read_text(encoding="utf-8")
+        today = mrp.dt.date.today().isoformat()
+        self.assertIn(f"Based on the `ai_research_template` project template, last synced {today}.", agents)
+        self.assertNotIn("index_title_is_template", codes(self.root))
+        self.assertNotIn("template_sync_missing", codes(self.root))
+        code, _, err = run(self.root, "new", "Plain")      # no --goal: the summary stays
+        self.assertEqual(code, 0, err)
+        plain = (self.root / "projects-folder" / "Plain" / "index.md").read_text(encoding="utf-8")
+        self.assertTrue(plain.startswith("# Plain\n\nTemplate summary\nwrapped over two lines.\n"), plain)
 
     def test_new_dry_run_writes_nothing(self) -> None:
         before = {p: p.read_text(encoding="utf-8") for p in self.root.rglob("*.md")}
@@ -283,6 +315,15 @@ class ValidateTests(FixtureCase):
         findings = {f.code: f.level for f in mrp.validate_repo(self.root, contract)}
         self.assertEqual(findings.get("index_bullet_missing"), "warning")
 
+    def test_template_title_and_undated_template_line_are_warnings(self) -> None:
+        project_dir = self.root / "projects-folder" / "Demo"
+        (project_dir / "index.md").write_text(TEMPLATE_INDEX, encoding="utf-8")
+        (project_dir / "AGENTS.md").write_text(TEMPLATE_AGENTS, encoding="utf-8")
+        contract = mrp.load_contract()
+        findings = {f.code: f.level for f in mrp.validate_repo(self.root, contract)}
+        self.assertEqual(findings.get("index_title_is_template"), "warning")
+        self.assertEqual(findings.get("template_sync_missing"), "warning")
+
     def test_portfolio_header_mismatch_is_an_error(self) -> None:
         memory = self.memory().replace("| Evaluator | Next action |", "| Evaluator | Next step |")
         (self.root / "memory" / "MEMORY.md").write_text(memory, encoding="utf-8")
@@ -313,6 +354,18 @@ class SetTests(FixtureCase):
         self.assertIn("- Stage: develop", text)
         self.assertIn("- Next action: round 1", text)
         self.assertIn("| develop | P1 |  |  | round 1 |", self.memory())
+        self.assertNotIn("row_drift", errors(self.root))
+
+    def test_snapshot_links_are_rebased_for_the_portfolio(self) -> None:
+        status = ("see [README](Code/README.md), [idea](../../ideas/demo.md#one-liner), "
+                  "and [docs](https://example.org)")
+        code, _, err = run(self.root, "set", "Demo", "--status", status)
+        self.assertEqual(code, 0, err)
+        self.assertIn(f"- Status: {status}", self.project_memory().read_text(encoding="utf-8"))
+        row = next(line for line in self.memory().splitlines() if line.startswith("| Demo |"))
+        self.assertIn("[README](../projects-folder/Demo/Code/README.md)", row)
+        self.assertIn("[idea](../ideas/demo.md#one-liner)", row)
+        self.assertIn("[docs](https://example.org)", row)
         self.assertNotIn("row_drift", errors(self.root))
 
     def test_set_rejects_vocabulary_and_empty_calls(self) -> None:

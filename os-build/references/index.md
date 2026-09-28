@@ -2,6 +2,10 @@
 
 External projects and local synthesis notes used to study Research OS design. Treat vendored repositories as read-only evidence.
 
+## Related projects
+
+- [Related projects](related-projects.md) — links to external projects that are related or served as design references, beyond the README's Similar Projects.
+
 ## Guided notes
 
 - [EurekAgent 讲解与启发](EurekAgent-讲解与启发.md) — bounded scientific loops, evaluation, recovery, and observability.

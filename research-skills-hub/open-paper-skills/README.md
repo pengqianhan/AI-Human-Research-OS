@@ -455,10 +455,10 @@ leaves acceptance to the Human Owner.
 Example requests:
 
 ```text
-Have Example_Project extend its line fit to a multi-seed stability analysis.
-How is the Example_Project run going?
+Have nanochat_cpu rerun its matrix learning-rate probe with three seeds.
+How is the nanochat_cpu run going?
 Review the finished run and tell me whether it meets the brief.
-Stop the running Example_Project session.
+Stop the running nanochat_cpu session.
 ```
 
 ## License

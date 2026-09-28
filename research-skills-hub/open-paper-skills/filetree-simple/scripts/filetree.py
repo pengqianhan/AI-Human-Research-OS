@@ -33,7 +33,7 @@ CORE_FILES: Sequence[Tuple[str, str]] = (
     ("AGENTS.md", "Primary operating instructions for agents working in this repository."),
     ("CONTEXT.md", "Shared domain language for the Research OS and its MVP."),
     ("HANDOFF.md", "Cross-session record of active work, settled decisions, deviations, and intentional omissions."),
-    ("verify.sh", "Read-only consistency checks for the paper wiki, FILETREE, and installed skills."),
+    ("verify.sh", "Read-only consistency checks for the paper wiki, FILETREE, project contract, installed skills, and brand copies."),
 )
 
 CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")

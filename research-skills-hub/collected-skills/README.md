@@ -434,7 +434,7 @@ Example requests:
 
 ```text
 /humanizer rewrite this abstract so it stops reading as AI-generated
-/humanizer humanize the prose in projects-folder/Example_Project/index.md
+/humanizer humanize the prose in projects-folder/nanochat_cpu/paper/main.tex
 /humanizer match this writing sample, then rewrite the discussion section
 /humanizer clean up the AI patterns in this commit message
 ```

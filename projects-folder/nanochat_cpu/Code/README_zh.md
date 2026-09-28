@@ -120,7 +120,8 @@ embedding lr 0.3）。`base_train` 会按 √(4096/524288) = 0.088 为小批量�
 [results/training_metrics.csv](results/training_metrics.csv)（均纳入版本管理）。
 `results/logs/` 中的原始阶段日志每次运行都会重新生成，不纳入版本管理（仓库忽略
 `*.log`）。两次从空缓存开始的运行得到的验证
-bpb 在小数点后 6 位完全一致：本机上的训练是确定性的。
+bpb 在小数点后 6 位完全一致：本机上的训练是确定性的。`summary.json` 中各阶段的耗时
+来自最后一次运行，即数据已缓存时的重跑（共 152.9 秒）；本 README 引用的耗时来自首次运行。
 
 ![Baseline 训练曲线](../Figs/baseline_training_curves.svg)
 

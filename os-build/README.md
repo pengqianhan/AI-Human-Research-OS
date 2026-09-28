@@ -23,11 +23,11 @@
 - 治理债务（M0）：两项均已满足（Paper_VAE 见 D10；HANDOFF D4 里关于 `OS_INTRO.html`
   的陈旧表述已于 2026-09-23 修正）。
 - 未开始：adapter 契约成文（M1）。原计划的 `circle_packing` 项目已于 2026-09-27 由
-  Human Owner 取消，portfolio 保留 Example_Project 与 nanochat_cpu 两个示例项目。
+  Human Owner 取消；Example_Project 于 2026-09-29 删除，nanochat_cpu 是唯一的示例项目。
 - 已取代：Pi Coding Agent 文件工作流 MVP（ADR-0002）于 2026-09-26 由订阅 CLI harness
   路线（ADR-0003）取代；GOAL.md 已按 Human Owner 采用的修订稿更新（主线 H1–H3）。
-- 进行中：H2 root agent（`project-dispatch` skill，ADR-0004）；验收运行在 Example_Project，
-  状态见 HANDOFF Active Work。
+- 进行中：H2 root agent（`project-dispatch` skill，ADR-0004）；验收运行改为 nanochat_cpu 的
+  2026-09-26 派发运行，状态见 HANDOFF Active Work。
 - `os-runtime/`、Pi SDK phases、自定义 TUI 和旧 launcher 不在当前工作树或执行路径。
 
 ## 执行纪律
