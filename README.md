@@ -50,7 +50,7 @@ folders are organized by material type rather than by a fixed workflow.
 - [Optional Layers](#optional-layers)
 - [License](#license)
 - [Roadmap](#roadmap)
-- [Reference Projects](#reference-projects)
+- [Similar Projects](#similar-projects)
 
 ## Current Design Stance
 
@@ -222,18 +222,21 @@ Open:
   [Wanman](https://github.com/chekusu/wanman), and [不二的主页](https://hiesther.me/#home).
   [os-ui/](os-ui/README.md) is a first version, with a desktop shell inspired by Wanman.
 
-## Reference Projects
+## Similar Projects
 
-- [AutoR](https://github.com/AutoX-AI-Labs/AutoR): [code](os-build/references/AutoR)
-- [autolab](https://github.com/autolabhq/autolab)
-- [eve](https://github.com/vercel/eve)
-- [maka-agent](https://github.com/jackwener/maka-agent)
-- [awesome-AI-for-research](os-build/references/awesome-AI-for-research)
-- [duoduo](https://github.com/openduo/duoduo)
-- [FAROS](https://github.com/OpenNSWM-Lab/FAROS/tree/main)
-- [science-skills](https://github.com/JimLiu/science-skills)
-- [openscience](https://github.com/synthetic-sciences/openscience)
-- [How to Make Codebases AI Agents Love](https://www.aihero.dev/how-to-make-codebases-ai-agents-love)
-- [Microsoft Research Studio](https://github.com/microsoft/ResearchStudio/tree/main)
-- [dr-claw](https://github.com/OpenLAIR/dr-claw): Dr. Claw: Your AI Research Assistant - Full-stack research workspace.
-- [rome](https://github.com/rome-os/rome): Rome is the agentic OS.
+Projects closest to this OS: environments where humans and AI agents carry
+research from a question to a paper, with persistent, traceable artifacts.
+Projects that are only related, or that served as design references, are
+listed in [os-build/references/related-projects.md](os-build/references/related-projects.md).
+
+- [FAROS](https://github.com/OpenNSWM-Lab/FAROS): a collaborative AI Scientist
+  system that goes from research questions to auditable evidence, covering
+  literature-grounded planning, experiments, paper writing, and review, with
+  human review at key decisions.
+- [OpenResearch](https://github.com/alphaXiv/OpenResearch): turns coding agents
+  into research agents. The adapter layering of [os-harness/](os-harness/README.md)
+  follows it, and [nanochat_cpu](projects-folder/nanochat_cpu/) ports its default
+  demo.
+- [Dr. Claw](https://github.com/OpenLAIR/dr-claw): an AI research assistant and
+  research IDE with a Claude Code plugin, covering literature review through
+  paper writing.
