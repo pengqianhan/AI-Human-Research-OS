@@ -90,26 +90,26 @@ passed, `1` = a check failed, `2` = runtime error left checks incomplete.
 
 ## Core Directories
 
-| Path                                                                                               | Purpose                                                                                                                                            |
-| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ideas/](ideas/)                                                                                   | OKF bundle for research ideas, hypotheses, inspirations, and early discussions                                                                     |
-| [inbox/](inbox/)                                                                                   | Temporary intake area for new materials before classification and archival                                                                         |
+| Path                                                                                              | Purpose                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ideas/](ideas/)                                                                                   | OKF bundle for research ideas, hypotheses, inspirations, and early discussions                                                                    |
+| [inbox/](inbox/)                                                                                   | Temporary intake area for new materials before classification and archival                                                                        |
 | [paper-wiki/](paper-wiki/)                                                                         | Paper notes, topic syntheses, and concepts, with a graph viewer ([online](https://pengqianhan.github.io/AI-Human-Research-OS/paper-wiki/viz.html)) |
-| [projects-folder/](projects-folder/)                                                               | Research projects and reusable project templates                                                                                                   |
-| [projects-folder/templates/ai_research_template/](projects-folder/templates/ai_research_template/) | AI-research paper template copied to start a new project                                                                                           |
-| [memory/](memory/)                                                                                 | Global long-term memory across projects: portfolio, decisions, and policies                                                                        |
-| [human/](human/)                                                                                   | Stable user context, collaboration preferences, cognition notes, and privacy boundaries                                                            |
-| [research-skills-hub/](research-skills-hub/)                                                       | Canonical store of reusable agent skills                                                                                                           |
-| `.agents/skills/`, `.claude/skills/`                                                               | Installed skills, symlinked or copied from the hub by `research-skill-installer`                                                                   |
-| [os-ui/](os-ui/)                                                                                   | Optional browser desktop for observing OS state and talking to agents                                                                              |
-| [os-harness/](os-harness/)                                                                         | Optional runner for Claude Code and Codex turns on your own subscriptions                                                                          |
-| [os-build/](os-build/)                                                                             | Goals, construction manual, and read-only reference repositories for building the OS                                                               |
-| [docs/](docs/)                                                                                     | Presentation draft, architecture decision records, and brand assets                                                                                |
-| [AGENTS.md](AGENTS.md)                                                                             | Agent operating guide (read first)                                                                                                                 |
-| [CONTEXT.md](CONTEXT.md)                                                                           | Shared vocabulary, e.g. Research Task, Agent Run, Write Lease                                                                                      |
-| [HANDOFF.md](HANDOFF.md)                                                                           | Cross-session record of active work and settled decisions                                                                                          |
-| [FILETREE.md](FILETREE.md)                                                                         | Auto-generated top-level navigation map                                                                                                            |
-| [verify.sh](verify.sh)                                                                             | Read-only consistency checks                                                                                                                       |
+| [projects-folder/](projects-folder/)                                                               | Research projects and reusable project templates                                                                                                  |
+| [projects-folder/templates/ai_research_template/](projects-folder/templates/ai_research_template/) | AI-research paper template copied to start a new project                                                                                          |
+| [memory/](memory/)                                                                                 | Global long-term memory across projects: portfolio, decisions, and policies                                                                       |
+| [human/](human/)                                                                                   | Stable user context, collaboration preferences, cognition notes, and privacy boundaries                                                           |
+| [research-skills-hub/](research-skills-hub/)                                                       | Canonical store of reusable agent skills                                                                                                          |
+| `.agents/skills/`, `.claude/skills/`                                                          | Installed skills, symlinked or copied from the hub by`research-skill-installer`                                                                 |
+| [os-ui/](os-ui/)                                                                                   | Optional browser desktop for observing OS state and talking to agents                                                                             |
+| [os-harness/](os-harness/)                                                                         | Optional runner for Claude Code and Codex turns on your own subscriptions                                                                         |
+| [os-build/](os-build/)                                                                             | Goals, construction manual, and read-only reference repositories for building the OS                                                              |
+| [docs/](docs/)                                                                                     | Presentation draft, architecture decision records, and brand assets                                                                               |
+| [AGENTS.md](AGENTS.md)                                                                             | Agent operating guide (read first)                                                                                                                |
+| [CONTEXT.md](CONTEXT.md)                                                                           | Shared vocabulary, e.g. Research Task, Agent Run, Write Lease                                                                                     |
+| [HANDOFF.md](HANDOFF.md)                                                                           | Cross-session record of active work and settled decisions                                                                                         |
+| [FILETREE.md](FILETREE.md)                                                                         | Auto-generated top-level navigation map                                                                                                           |
+| [verify.sh](verify.sh)                                                                             | Read-only consistency checks                                                                                                                      |
 
 ## Minimal Workflow
 
@@ -218,9 +218,6 @@ Open:
   `AGENTS.md`, at session start.
 - [ ] A group-meeting workspace where humans and AI discuss research: the AI checks
   feasibility and points out missed papers, then implements the agreed ideas.
-- [ ] An interface inspired by [AlookAI](https://github.com/alookai/alook),
-  [Wanman](https://github.com/chekusu/wanman), and [不二的主页](https://hiesther.me/#home).
-  [os-ui/](os-ui/README.md) is a first version, with a desktop shell inspired by Wanman.
 
 ## Similar Projects
 

@@ -26,6 +26,13 @@ to the README list when it is.
 
 ## Agent runtimes and operating systems
 
+- [wanman](https://github.com/chekusu/wanman): an agent-matrix runtime in which
+  a local supervisor runs a network of Claude Code or Codex CLI agents in
+  company-like roles (CEO, dev, devops, marketing) while the human observes;
+  hosted edition at [wanman.ai](https://wanman.ai/). The desktop shell of
+  [os-ui](../../os-ui/README.md) was inspired by wanman.ai, and running agents
+  as CLI subprocesses on the user's own login parallels
+  [os-harness](../../os-harness/README.md).
 - [Apache Maka](https://github.com/apache/maka) (formerly `jackwener/maka-agent`):
   an agent workspace that keeps a complete record of everything it did.
 - [eve](https://github.com/vercel/eve): an open framework for building agents.
