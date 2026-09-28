@@ -1,22 +1,30 @@
 ---
 type: Topic
 title: Game-playing agents
-description: Papers about models and agents that perceive video-game state and act through game controls, and the datasets and benchmarks that compare their planning and action execution across games and temporal horizons.
+description: Papers about models and agents that play games — video games through game controls, or board, card, social-deduction, and sandbox games through text or tool interfaces — and the datasets and benchmarks that compare their planning, strategy, and action execution.
 tags:
 - game-agents
 - benchmarks
 - long-horizon-planning
 - vision-language-action
-timestamp: 2026-09-24T00:00:00Z
+timestamp: 2026-09-28T00:00:00Z
 ---
 
 # Scope
 
 This topic tracks agents that play video games from pixels (and optionally language instructions) by emitting game controls such as keystrokes, mouse movements, or gamepad inputs. It covers dedicated game agents (vision-language-action or action-head policies trained on gameplay trajectories), general-purpose VLMs and LLM agents evaluated on games, and the gameplay datasets and benchmarks used to compare them. Games are treated as a controllable testbed for the split between *planning* (decomposing long-horizon goals) and *acting* (precise low-level control) that also appears in [GUI and computer-use agents](gui-computer-use-agents.md). Embodied robot control and navigation belong to [Embodied navigation](embodied-navigation.md) rather than here.
 
+It also covers games played through text or high-level tool interfaces, where perception and control are removed on purpose: head-to-head strategy games (chess, poker, social deduction) used as outcome-grounded LLM evaluations, and game worlds used as sandboxes for multi-agent coordination.
+
 # Papers
 
 * [GameHorizon Suite](../papers/2609.25001.md) - a 5,000-hour, 21-title AAA gameplay dataset with directly recorded keyboard-mouse actions and an automatically annotated three-horizon instruction pyramid, plus a 5,000-question offline benchmark and a stepwise-reset Minecraft online track; across 47 models, future-action planning and goal decomposition are the bottleneck, dedicated game VLAs are near chance on unseen AAA games, and offline tiers match online rankings.
+* [Game Arena](../papers/2609.31473.md) - Kaggle's open arena ranking frontier LLMs by head-to-head play through a bare text harness in Chess, heads-up no-limit poker, and 8-player Werewolf, at large scale (900,000 poker hands, 31,472 Werewolf games) with duplicate poker and role-decomposed ratings; rankings are tiered within each game but reorder across games.
+* [AgentWorld](../papers/2609.31590.md) - uses an open-source MMORPG as a cooperative multi-agent testbed but wraps all low-level control in 13 high-level API tools, so scores isolate planning and coordination rather than action execution.
+
+# Synthesis
+
+The three papers sit at different points on the planning-versus-acting axis this topic uses. GameHorizon keeps both and finds planning is the bottleneck even when control is available. AgentWorld removes control through 13 high-level tools; with coordination left as the main difficulty, the best model still solves only 52.0% of tasks. Game Arena removes perception and control entirely through a bare text harness, yet control-like failures return as rule-following errors: weaker models often need more than ten illegal-move retries per chess game, mostly late in the game. Two cautions carry across. Game Arena's rankings reorder across Chess, poker, and Werewolf, so a single game or game genre should not be read as a general strategic or game-playing score. And both evaluation papers measure default API configurations rather than matched reasoning budgets, which matters given this topic's open question on the latency cost of thinking.
 
 # Open Questions
 
@@ -25,3 +33,4 @@ This topic tracks agents that play video games from pixels (and optionally langu
 * Do multi-horizon language instructions help when used as *training* signal for action-generating policies, not only as extra evaluation-time input?
 * How should the latency cost of reasoning ("thinking") be traded against its planning benefit in real-time play, and at what model size does thinking stop hurting action accuracy?
 * Why does GUI-agent post-training reduce transfer to games while coding-agent models transfer well, and does this reflect action-space mismatch or loss of general planning ability?
+* Game Arena finds model rankings reorder across Chess, poker, and Werewolf — which underlying capabilities (search, belief updating, opponent modelling, legality tracking) explain the reordering, and can a consolidated cross-game rating be built without hiding it?

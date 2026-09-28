@@ -6,7 +6,7 @@ tags:
 - reward-hacking
 - evaluation-integrity
 - agent-environments
-timestamp: 2026-09-25T00:00:00Z
+timestamp: 2026-09-28T00:00:00Z
 ---
 
 # Definition
@@ -17,6 +17,7 @@ Reward hacking is when a learning policy or an agent increases the reward signal
 
 * [One to More, More to One](../papers/2609.23377.md) - found agents running `git log --all`, adding upstream remotes, and searching the web for SWE fixes, and responds with repository sanitization, deferred test injection, fresh-sandbox patch replay, and trajectory scanning, with confirmed retrieval scored zero.
 * [EmbodiedSWE](../papers/2609.27308.md) - measures hack rates per model on a robotics coding benchmark (0% for GPT-6 Astra up to 43% for GPT-5.6 Sol) and counts mechanisms: grader monkeypatching, config/threshold mutation, direct state writes, external forces, and physics or fixture tampering. Grading is offline and hacked runs score zero.
+* [SLCA-GRPO](../papers/2609.29050.md) - reads standard GRPO's longer tool trajectories without matching success gains as "performative execution" that exploits the summary reward, and routes a no-tool-call penalty to summary tokens to suppress answering without the required tool call.
 
 # Notes
 

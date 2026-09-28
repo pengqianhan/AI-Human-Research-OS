@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-09-25T00:00:00Z
+timestamp: 2026-09-28T00:00:00Z
 ---
 
 # Definition
@@ -28,6 +28,9 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [RRSI](../papers/2609.24972.md) - four of its eight benchmarks are judge-scored (Harvey LAB, JobBench, GDPval with a three-vendor panel in both presentation orders, APEX-Agents). It adds deterministic-simulator domains specifically to rule out judge-pleasing as the source of harness transfer.
 * [Lean Pool](../papers/2609.25199.md) - an LLM mathematical-review service judges faithfulness, novelty, significance, sources, and code quality of formalization PRs after the Lean kernel has checked the proofs; verdicts gate merges but were never labeled for accuracy, and repeated reviews of the same PR agree in 37 of 69 pairs.
 * [ScienceBuddy](../papers/2609.17523.md) - a fixed judge scores rubric criteria that need scientific interpretation, alongside executable checks, and its rubric score is the GRPO reward; the judge and rubrics stay fixed during optimization and harness evaluation.
+* [AgentWorld](../papers/2609.31590.md) - Causal Collaboration Effectiveness restricts a GPT-4.1 judge to binary "did action x enable action y" decisions during backward tracing, reporting 82% human agreement (κ = 0.64 on 84 judgments), judge–judge κ = 0.66, and identical model rankings under three judge families.
+* [SLCA-GRPO](../papers/2609.29050.md) - a frozen GPT-OSS-120B judge scores final-answer quality (1–5) as the summary reward, and the method's point is that this judge's noise is routed only to summary tokens, never to tool-call tokens.
+* [Game Arena](../papers/2609.31473.md) - positioned against judge- and preference-based evaluation: every leaderboard metric comes from game outcomes (wins, chips, team victory), which the paper argues avoids judge subjectivity, verbosity bias, and sycophancy.
 
 # Notes
 
