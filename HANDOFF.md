@@ -28,21 +28,48 @@ The route map `os-build/map/` and the execution-contract slot
 
 - **Done:** installer generalization (GOAL M3, 2026-07-22); `research-project-manager`
   (2026-09-23; its acceptance is still to be run by the Human Owner, see Next
-  session); Paper_VAE removal recorded (D10).
+  session); Paper_VAE removal recorded (D10); [`os-harness/`](os-harness/README.md)
+  (2026-09-26, ADR-0003): Claude Code and Codex adapters on the Human Owner's
+  subscriptions, verified by 17 offline tests and live runs of both CLIs.
 - **Governance debt (M0):** both items met: Paper_VAE recorded in D10; D4's stale
   `OS_INTRO.html` wording fixed 2026-09-23.
-- **Not started:** adapter contract (GOAL M1); the `circle_packing` arc below.
-- **Stalled, Human Owner decision pending:** the Pi Coding Agent file-workflow MVP
-  (ADR-0002, chosen 2026-07-19). The agent delivered the route definition on
-  2026-07-19; it was never human-verified, and the three workflow prompts
-  (contract preparation, run and record, transcript-independent takeover) were
-  never compiled. Whether this route continues or is replaced is an open
-  decision; GOAL.md M2 keeps its acceptance bar.
+- **Not started:** adapter contract (GOAL M1).
+- **Cancelled 2026-09-27:** the planned `circle_packing` first real project (an
+  eleven-step checklist from the 2026-07-03 grilling session, never instantiated).
+  The Human Owner keeps `Example_Project` and `nanochat_cpu` as the two example
+  projects; the checklist's last version is in Git history
+  (`git log -S circle_packing -- HANDOFF.md`), and the kickoff decisions stay in
+  Decisions, marked cancelled.
+- **H2 root agent, awaiting Human Owner acceptance (2026-09-26):** the
+  `project-dispatch` skill and harness `--detach`/`stop`/status (ADR-0004). Its
+  acceptance run, session `20260926-195626-claude-5ed5` (Claude, `full` mode),
+  extended Example_Project to a 20-seed stability analysis. The run ended `ok`
+  after 86 s, and the root agent re-ran both validation commands, checked that
+  all changes stayed inside the project, and re-synced the portfolio row. H3
+  (trace reflection) waits for this acceptance.
+- **New project `nanochat_cpu`, delivered and awaiting Human Owner acceptance
+  (2026-09-26):** OpenResearch's default nanochat demo as a runnable example for
+  every Research OS user (idea `ideas/nanochat-cpu-baseline.md`). The root agent
+  created and registered it and dispatched the work as session
+  `20260926-202021-claude-2302` (three turns: the Human Owner twice narrowed the
+  scope, from a ~30-minute d2 baseline to a ~3-minute d1 example). Delivered: the
+  port with documented changes, `bash runs/runcpu_small.sh all` (tokenizer,
+  pretraining, eval, SFT, chat, two probes, summary), READMEs in both languages,
+  figures, results, and the Progress Log. Root-agent review: the command re-run
+  by the root agent finished in 155 s with val bpb identical to the README, no
+  change outside the project, 70 small files, ~0.95 GB on disk, portfolio row
+  re-synced, `verify.sh` passing except the known symlink check. Creating the
+  project exposed a Windows bug in `research-project-manager` (`new` wrote
+  backslash links; 2 of 19 tests failed), fixed with `rel_link()`.
+- **Superseded 2026-09-26:** the Pi Coding Agent file-workflow MVP (ADR-0002),
+  stalled since 2026-07-19 without a human-verified run. The Human Owner replaced
+  it with the subscription-CLI harness route (ADR-0003; see "Agent-harness
+  decisions"). GOAL.md still describes the Pi route and M2 until the Human Owner
+  approves a revised GOAL.
 - **Gated, not scheduled:** third-agent cold start (a sufficient M3 trigger) and
   the custom execution surface (M4), both defined in GOAL.md.
 
-The circle_packing checklist below remains the authoritative work breakdown
-until the project is instantiated. Historical section text: git history of this file.
+Historical section text: git history of this file.
 
 ### os-ui — read-only monitor UI (completed 2026-07-05)
 
@@ -50,66 +77,35 @@ The read-only monitor is delivered and verified. Its governing design is
 [os-ui/DESIGN.md](os-ui/DESIGN.md), usage and launch instructions are in
 [os-ui/README.md](os-ui/README.md), and completed implementation detail belongs
 to Git history. Run it with `./os-ui/start.sh` (or `--watch`). Future execution
-features remain behind the GOAL.md M4 evidence gate. The current Pi Coding
-Agent workflow MVP uses Pi's existing terminal UI, not this browser UI.
-
-### circle_packing — first real project / post-smoke-test OS shakedown (planned 2026-07-03, grilling session)
-
-Purpose: reimplement the `circle_packing` task from `os-build/references/EurekAgent/examples/circle_packing/`
-inside the OS as its first real project. **Primary goal is stress-testing and refining the OS**;
-the math result is secondary. Do not start it until the Pi file-workflow smoke test on
-`Example_Project` has passed against GOAL.md M2, or the Human Owner replaces that route.
-Decisions table: see "circle_packing kickoff decisions" below.
-
-- [ ] Create idea card `ideas/circle-packing-os-shakedown.md` (OKF concept, `type: Idea`);
-      update [ideas/index.md](ideas/index.md); set `status: promoted` at instantiation.
-- [ ] Instantiate with `research-project-manager` (template unchanged — route B):
-      `python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py new circle_packing --from-idea ideas/circle-packing-os-shakedown.md --owner human-led --stage probe --priority P1 --origin "EurekAgent example task"`.
-      It fills the Snapshot identity fields, promotes the idea, and adds the Active Projects
-      row in [memory/MEMORY.md](memory/MEMORY.md); then fill `index.md`, the remaining
-      Snapshot fields, and the `paper_skeleton.md` Snapshot, and run `validate circle_packing`.
-- [ ] Add project-experimental sections to `PROJECT_MEMORY.md`:
-      `## Evaluation Contract` (3-tier goals below; stop condition: 5 consecutive rounds
-      with best-score gain < 0.001 → switch to writing),
-      `## Autonomy Boundary` (per-run budget 600 s; ≤ 2 h CPU per round; ≤ 8 optimization
-      rounds; parallel width ≤ 3; ≤ 2 retries per round; human review between rounds),
-      `## OS Feedback` (one line per entry: `date | OS mechanism | expected vs actual |
-      severity | suggested change`; **every round must add an entry or an explicit "none"**).
-- [ ] Phase 0 — independent evaluator at `projects-folder/circle_packing/Code/evaluator/evaluate.py`:
-      spec = n=26, shapes (26,2)/(26,), radii ≥ 0, reported vs actual sum atol 1e-6,
-      circles inside unit square, pairwise non-overlap tol 1e-6, score = sum of radii.
-      Reimplement from the problem spec — **no code copied from `os-build/references/EurekAgent/` (AGPL)**.
-      Fixed self-tests before freeze: single circle r=0.5, k×k grid, overlapping pair,
-      out-of-bounds, sum-mismatch. Freeze = git commit after tests pass.
-- [ ] Protection (tier 2): project-local `.claude/settings.json` deny rules for Edit/Write on
-      `Code/evaluator/**` and `Code/runs/**/result.json`. Rule: solver code never self-reports
-      final scores; every recorded score comes from evaluator-written `result.json`.
-- [ ] Verify provenance of best-known 2.63598844 with the literature-search skills; cite it in
-      Evaluation Contract "Baselines or known best" (or record honestly as "taken from
-      EurekAgent task definition, provenance unverified"). Add AlphaEvolve note to
-      [paper-wiki/papers/](paper-wiki/papers/) (minimal profile) + bib entry in project
-      `paper/references.bib`. Bounded intake: 3–5 sources total, no new topic page.
-- [ ] Rounds 1–2 (single-threaded): baseline construction (grid/greedy) then one improvement
-      round; artifacts under `Code/runs/<round-id>/`. Round wrap-up (manual, not yet a skill):
-      progress log entry, evaluator `result.json`, OS Feedback entry, git commit on `main`.
-- [ ] Round 3+: one deliberate parallel round — 2–3 heterogeneous approaches in
-      `Tasks/<approach-id>/` workspaces, ranked by the frozen evaluator; merge winner only.
-- [ ] Mid-term artifact review after the parallel round: separate read-only agent session,
-      hard checks on the evidence chain (evaluator tests pass, claims ↔ result.json, citation
-      metadata real); report → `projects-folder/circle_packing/Evaluations/`.
-      Then OS back-port batch 1 (template fields proven useful).
-- [ ] Writing phase after stop condition: `paper/main.tex` (claims table in
-      `paper_skeleton.md` is live from round 1). Final review = full protocol (hard checks +
-      8-dimension rubric + LLM critique), isolated session → `Evaluations/`.
-- [ ] Project end: OS back-port batch 2 + update HANDOFF / memory/MEMORY.md; paper is an
-      honest methods + experiment report (not a record-attempt paper).
+features remain behind the GOAL.md M4 evidence gate. Agents are currently driven
+through [`os-harness/`](os-harness/README.md) (ADR-0003), not this browser UI.
+2026-09-26: `state.json` and the Paper Wiki iframe are now loaded by relative
+paths, so `npx vite build --base=./` produces a bundle that runs from any
+origin; a snapshot was published as a private claude.ai artifact for the Human
+Owner's remote viewing (link in the session, not in the repository). The Paper
+Wiki viewer (4 MB) is replaced by a placeholder in that snapshot.
+2026-09-27: at the Human Owner's direction (“尽量少的用文字，尽量用视觉元素来呈现信息。
+用户如果想看详情的话，点击才可以就可以看到”), Dashboard and Project Overview were
+rebuilt glance-first: stage bars, chips, progress bars, count tiles, and an
+activity timeline, with every sentence behind a click (DESIGN.md §4). Checked
+at desktop and phone widths with no text overflow.
 
 ### Next session
 
-- Focus: Human Owner decides whether the Pi Coding Agent file-workflow MVP route
-  (ADR-0002) continues. If yes, the next step is the `Example_Project` multi-seed
-  smoke test under a file-based Run Contract, judged against GOAL.md M2; do not
-  continue SDK Phase 02. If no, record the supersession in Decisions and in a new ADR.
+- Focus: the Human Owner accepts or revises two delivered runs: the H2 acceptance
+  run on Example_Project, and the `nanochat_cpu` example (evidence in each
+  project's Progress Log and `Code/README.md`). With circle_packing cancelled,
+  there is no queued project after them; the next OS milestone is H3. Nothing from 2026-09-26 is
+  committed yet: os-harness, project-dispatch, GOAL.md, ADR-0003/0004, both
+  projects, and the memory updates are all in the working tree. On acceptance, append
+  `(accepted <date>)` to that Progress Log bullet and let the Human Owner decide on a
+  commit; then H3 (trace reflection) is next per GOAL.md.
+- Environment facts found on 2026-09-26 (Human Owner's machine, not repository
+  state). The Human Owner updated the global `codex` from 0.142.4 to 0.157.1, which
+  runs the configured model `gpt-5.6-luna`. Both Codex logins are ChatGPT `free`.
+  Codex's Windows sandbox is `ready` in `~/.codex` but `updateRequired` in the
+  `CODEX_HOME` that Orca sets for sessions it launches, so a harness started
+  inside Orca needs `--mode full` for Codex.
 - Also pending: the Human Owner has not yet run the `research-project-manager`
   acceptance: `./verify.sh` shows `OK project contract`, and the skill's `status`
   and `validate` commands report Example_Project registered with no errors.
@@ -163,7 +159,11 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | Project state source | Global state is the Active Projects table in `memory/MEMORY.md`; per-project truth is `PROJECT_MEMORY.md`; project `index.md` is a navigation summary, not a state database. `HANDOFF.md` stays narrow. | Move state into a dashboard, CLI, issue tracker, or structured database after confirming Markdown tables are insufficient. |
 | Evaluator | Use one evaluator protocol for human-led and agent-led research: hard checks + rubric scoring + LLM critique. Final judgment targets complete artifacts, not empty ideas. | Replace with a lightweight LLM-only judge, accepting weaker guarantees on reproducibility and traceability. |
 
-**circle_packing kickoff decisions (2026-07-03, grilling session):**
+**circle_packing kickoff decisions (2026-07-03, grilling session) — cancelled 2026-09-27:**
+the Human Owner dropped the project (“我只需要保留 Example Project 和 Nano Chat 这两个
+Project 作为示例就可以了。Circle Packing 我觉得可以删除”). The rows below are history; the
+evaluator, autonomy-boundary, and OS-feedback conventions they define stay available to any
+future project through the template and CONTEXT.md.
 
 | Decision | Default taken | To reverse |
 |---|---|---|
@@ -258,10 +258,10 @@ vocabulary, Mermaid-update duty in the launch packet.
 | Decision | Default taken | To reverse |
 |---|---|---|
 | MVP acceptance-scenario vehicle (map N3) | **circle_packing** carries the MVP acceptance scenario; paper-reproduction and synthetic scenarios rejected; the N10 final acceptance run uses a fresh Research Input Artifact to prove the loop is reusable beyond the vehicle | Directional deviation on N3: stop the N6–N9 lane, pick a new vehicle, redraw the map |
-| MVP architecture path (map N4 → N13 → N15) | ~~Pure session protocol~~ → ~~embedded Pi SDK + custom TUI~~ → **Pi Coding Agent existing TUI + file workflow (2026-07-19).** N13's Phase 01 succeeded technically, but the Human Owner's learning evidence showed the sequence was too steep. N4/N13 and dependent paths remain dead history; ADR-0002 is current | Reopen SDK/custom runtime as a directional deviation only after workflow evidence; preserve both earlier paths and redraw dependents rather than silently restoring either |
+| MVP architecture path (map N4 → N13 → N15) | ~~Pure session protocol~~ → ~~embedded Pi SDK + custom TUI~~ → **Pi Coding Agent existing TUI + file workflow (2026-07-19).** N13's Phase 01 succeeded technically, but the Human Owner's learning evidence showed the sequence was too steep. N4/N13 and dependent paths remain dead history. **Superseded 2026-09-26 by the subscription-CLI harness (ADR-0003; see Agent-harness decisions)** | Reopen SDK/custom runtime as a directional deviation only after workflow evidence; preserve both earlier paths and redraw dependents rather than silently restoring either |
 | Workflow smoke test (map N17; old N14 dead) | Before circle_packing, prove the file workflow on `projects-folder/Example_Project/` by extending its reproducible single-seed line fit to multi-seed stability and returning declared validation, a Checkpoint, and a Review Package through Pi Coding Agent | Pick another low-risk project only through a directional map revision with equivalent executable validation and transcript-independent takeover |
 | Smoke test vs first real project | `projects-folder/Example_Project/` is the low-risk workflow smoke test. The first real research project is `circle_packing`, reimplemented from the task specification under `os-build/references/EurekAgent/examples/circle_packing/` without copying AGPL code | Change either role only through a directional map revision, preserving an equivalent low-risk smoke test before the real project |
-| OS-construction tracking | ~~`os-build/map/index.md` is the **single tracker** for OS-construction work; HANDOFF Active Work keeps a pointer only~~ **— superseded 2026-09-23:** the map was deleted and construction status returns to HANDOFF Active Work (see "Route-map deletion" below) (plus the circle_packing authoritative checklist until project instantiation). On 2026-07-19 dead launcher/session/SDK prompts, an obsolete uncommitted tutorial, and an unreferenced proposed design report were deleted from `os-build/`; Git retains tracked history, while the tutorial is intentionally unrecoverable | Restore selected tracked files with `git show` only if a concrete audit or route revision needs them; do not reintroduce the whole historical tree by default |
+| OS-construction tracking | ~~`os-build/map/index.md` is the **single tracker** for OS-construction work (plus the circle_packing authoritative checklist until project instantiation); HANDOFF Active Work keeps a pointer only~~ **— superseded 2026-09-23:** the map was deleted and construction status returns to HANDOFF Active Work (see "Route-map deletion" below). On 2026-07-19 dead launcher/session/SDK prompts, an obsolete uncommitted tutorial, and an unreferenced proposed design report were deleted from `os-build/`; Git retains tracked history, while the tutorial is intentionally unrecoverable | Restore selected tracked files with `git show` only if a concrete audit or route revision needs them; do not reintroduce the whole historical tree by default |
 | OS-build reference location | External repositories used to design and build the Research OS, together with their walk-through notes, live under `os-build/references/`; the former top-level `resource/` boundary is retired | Move `os-build/references/` back to `resource/` and restore all repository-owned links plus `FILETREE.md` |
 
 **Navigation-index decisions (2026-07-17, user-confirmed):**
@@ -318,7 +318,7 @@ references); the Human Owner chose delete all.
 | Waypoint IDs in older text | `N*` / `E*` identifiers in earlier decision rows, deviations, ADR-0001, and GOAL.md §5 refer to the deleted map and are left as written | Not applicable; `git show 0f1805c:os-build/map/index.md` resolves any ID |
 | Idea ledger | The Human Owner's verbatim idea fragments from the map are preserved in the table below | Delete the table |
 | `map-then-territory` skill | Stays in the hub and installed; the Research OS itself no longer has a live map bundle | Draw a new map only by a new Human Owner decision |
-| Open route question | Whether the Pi Coding Agent file-workflow MVP (ADR-0002) continues was **not** decided by the deletion; it is recorded under Active Work and Next session as pending | n/a |
+| Open route question | Whether the Pi Coding Agent file-workflow MVP (ADR-0002) continues was **not** decided by the deletion; it is recorded under Active Work and Next session as pending. **Resolved 2026-09-26:** replaced by the harness route (see Agent-harness decisions) | n/a |
 
 Idea ledger carried over from the deleted map (verbatim; dispositions name the deleted map's nodes):
 
@@ -334,6 +334,34 @@ Idea ledger carried over from the deleted map (verbatim; dispositions name the d
 | I8 | “现在梳理os-build 下的文件，精简和删除多余的文件和内容” | N15、E20 |
 | I9 | “我暂时删除了Paper_VAE，第一个真实示例项目采用os-build/references/EurekAgent 中的cirle packing任务。 smoke test 还是使用projects-folder/Example_Project” | N1、N3、N6、N17、E1、E22、E23 |
 | I10 | “对于这个OS project-folder 的管理是不是也可以用一个skill，这样用skill来给code agent 提供接口来直接管理project-folder 下的不同project。整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill。” | N19、E24 |
+
+**Agent-harness decisions (2026-09-26, Human Owner decision after a reference study):**
+
+The agent studied how Orca (`stablyai/orca`) and alphaXiv OpenResearch reuse coding-agent
+subscriptions: both launch the vendors' official CLIs rather than calling model APIs. It
+then recommended OpenResearch's adapter layering. The Human Owner's words: “后续我打算用
+Pi Agent 作为引擎来驱动我的 OS，但是为了快速实现，我打算用 claude 或者 codex 的订阅来驱动”
+and “基本照搬 OpenResearch 的适配器分层：先做 Claude 的流式模式和 codex app-server 两个适配器。
+我想接受这个建议，采用这种方案来先把我的 OS 驱动起来”, asking for the simplest effective
+implementation.
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Active route | Drive the OS through subscription-backed CLIs with [`os-harness/`](os-harness/README.md) ([ADR-0003](docs/adr/0003-subscription-cli-harness.md)). Supersedes ADR-0002 and GOAL.md's non-goal "no Codex/Claude runtime backend in the current MVP" | Return to ADR-0002 by a new Human Owner decision and delete `os-harness/` |
+| Adapter shape | Claude `--print` with stream-json output, and `codex app-server` JSON-RPC; one CLI process per turn; Python standard library only; one JSONL trace per session, ignored by Git | Long-lived processes or a daemon once turn latency or mid-turn steering is a real need |
+| Credentials | Launch only the official CLIs; never read, refresh, or copy their OAuth tokens (Orca's approach was rejected); strip `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` from children and record the auth source per turn | Allow API-key billing explicitly |
+| Pi's role | Intended long-term engine, off the critical path. Pi `/login` with a Claude subscription was rejected: Pi's own warning says third-party use is billed as per-token extra usage | Put Pi back on the critical path by a new decision |
+| Permission modes | `read-only`, `workspace` (default), `full`. Claude refuses shell commands outside `full`; Codex runs with `approvalPolicy: "never"` and the harness declines any approval request; on Windows, Codex fails fast when its sandbox is not ready | Add finer allow-lists when a project needs shell commands without `full` |
+| GOAL.md | **Revised 2026-09-26.** Asked which goal to execute (the draft, the unrevised GOAL.md, or a reworked draft), the Human Owner chose to adopt the draft. Merged into [os-build/GOAL.md](os-build/GOAL.md): new §1 goal, H1–H3 in §5 and §6, M2 marked superseded, the M4 gate no longer covers request-driven root-agent dispatch, and the non-goals replaced | Restore GOAL.md from Git (`0e185da`) by a new Human Owner decision |
+| Root agent in os-ui | The Human Owner (2026-09-26 evening: “os 的界面里 claude code 和 codex 还是复制链接，不是接入，也没有一个对话框提供给人类给 root agent 对话”) asked for the conversation inside the UI. Added the **Root Agent** window and a serve-only Vite plugin (`os-ui/frontend/chat-plugin.ts`) with token-gated `/api/chat/*` endpoints that start, resume, stop, and read os-harness sessions at the repository root (`full` mode); the dock's Claude Code and Codex buttons first opened that window, then were removed the same evening at the Human Owner's request (“点击 root agent 里可以进行选择就可以了”): the window's own agent selector is the one place to choose. Then the Human Owner asked for a direct entry per project (“也应该提供 project 中的入口，让用户直接操作和管理project”): the Projects window gained an **Agent** view that runs turns inside `projects-folder/<Name>/`, with an agent and mode selector, the directory's sessions (including root-agent dispatches) listed for resumption, and one running agent per directory enforced by the endpoint (HTTP 409). This is the one GUI execution surface opened from GOAL.md M4; the token exists because the dev server is reachable through a public tunnel. Verified: typecheck and build pass, 401 without the token, and a real turn through the API answered a portfolio question in 27 s | Remove the window and plugin; the dock buttons go back to copying launch commands |
+| Root agent (H2) | Any code agent opened at the repository root that follows the hub skill [`project-dispatch`](research-skills-hub/open-paper-skills/project-dispatch/SKILL.md) ([ADR-0004](docs/adr/0004-root-agent-as-skill.md)). The harness adds `--detach` background turns, the session status `running`/`ok`/`failed`/`stopped`, and `stop`. At most one running session per project (Write Lease) | A dedicated root-agent program, only if a skill proves insufficient |
+| Verification | 17 offline tests with fake CLIs (Python 3.9 and 3.12; 20 once H2 added detach, stop, and status). Bug found in use on 2026-09-26 and fixed: `claude --resume` replays the previous turn's init and result, which the adapter had taken as the new turn's `done`, so a resumed session read as finished while it ran; a result now counts only if nothing follows it, and the fake CLI replays too; live runs on the Human Owner's machine: Claude Code 2.1.283 (Max) passed reply, resume, and file-write turns; Codex passed the same turns with codex-cli 0.157.1 via `npx` in `full` mode; the workspace-mode fast failure was observed on Windows. After the Human Owner updated the global `codex` to 0.157.1, it passed with the default modes in `~/.codex` (sandbox ready) and in `full` mode in Orca's `CODEX_HOME` | n/a |
+
+**Portfolio scope decision (2026-09-27, Human Owner):**
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| circle_packing cancelled | The planned first real project is dropped before instantiation; `Example_Project` and `nanochat_cpu` are the portfolio's two example projects. Live references (Active Work, os-build status, os-ui empty states and docs, the project-manager examples, Example_Project's next action) were retired the same day; historical decision rows and deviations keep the name | Restore the checklist from Git history and add a new Human Owner decision |
 
 ## Deviations from the original plan
 
@@ -385,9 +413,9 @@ Idea ledger carried over from the deleted map (verbatim; dispositions name the d
   ships no `remove` (deleting a project stays a Human Owner git operation plus a decision row here)
   and no `upgrade` (`validate` reports missing Snapshot fields; the agent fills them); archived
   projects keep their Active Projects row until the table grows enough to justify a second table.
-- **os-ui generator consuming `status --json`** — deferred until `circle_packing` has been
-  instantiated through the skill, so the output has run on two or more projects; until then the
-  generator keeps its own project parser and two definitions of "project" coexist knowingly.
+- **os-ui generator consuming `status --json`** — deferred until the skill's output has run
+  on two or more projects in real use; until then the generator keeps its own project parser
+  and two definitions of "project" coexist knowingly.
 - **`research-ideas-manager`** — still a roadmap item; `new --from-idea` writes only the promotion
   fields of one idea.
 - **Route map and `build_phases/`** — deleted 2026-09-23 by Human Owner decision; not to be

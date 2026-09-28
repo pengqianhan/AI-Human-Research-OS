@@ -34,6 +34,7 @@ Project paths below are relative to the project being worked on.
 | Start agent-led research or intra-project parallel work | The Research Policy in global memory; bound work by intent, stopping criteria, resources, and merge cost |
 | Build the Research OS | [os-build/index.md](os-build/index.md), then the Active Work section of [HANDOFF.md](HANDOFF.md) |
 | Work in a project | Its `index.md` and `PROJECT_MEMORY.md`; use `Code/README.md` for experiments and artifacts |
+| Hand work to a project agent, or follow up on dispatched work | `project-dispatch`; harness commands in [os-harness/README.md](os-harness/README.md) |
 | Write or assess research claims | Project `paper_skeleton.md`; use `paper/main.tex` for the paper and the evaluation contract below for assessment |
 | Capture or promote an idea | [ideas/index.md](ideas/index.md); use `okf-repo-organizer` for structural normalization |
 | Create, register, validate, or archive a project | `research-project-manager`, then the copied project's `index.md` |

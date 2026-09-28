@@ -1,5 +1,9 @@
 # Ideas Update Log
 
+## 2026-09-26
+
+* **Creation**: Captured and promoted the [nanochat CPU baseline idea](nanochat-cpu-baseline.md) to the `nanochat_cpu` project at the Human Owner's request.
+
 ## 2026-06-17
 
 * **Migration**: Converted [Ideas](index.md) into an OKF bundle and created [idea_example](idea_example/) as a nested OKF bundle.

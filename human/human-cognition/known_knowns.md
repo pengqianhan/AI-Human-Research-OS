@@ -16,6 +16,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260724-002 - Branch as the containment boundary for unattended agent work: scopes recurring autonomous runs to a named branch and expects their output readable off the dev machine.
 - cog-20260923-001 - Human-read, agent-write division of the OS: the GUI exists for human observation; agents mutate paper-wiki, skills, and projects only through skills with scripted interfaces.
 - cog-20260923-002 - Recommended defaults in grilling rounds are accepted without close reading: executive decisions inside a round are effectively the agent's; directional vetoes happen separately.
+- cog-20260927-001 - Glance-first GUI: state shown with visual elements and minimal text; sentences only after a click.
 
 ## Entries
 
@@ -41,18 +42,19 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human can articulate the desired end state and research collaboration flows, while explicitly delegating detailed technical route design beyond their current knowledge.
 - source: user-confirmed
 - confidence: high
-- evidence: The human described intake from ideas, documents, papers, and partial experiments; autonomous continuation; project and hub skill learning; and parallel agent research, while stating they cannot provide detailed implementation instructions. 2026-09-23: opened the project-management design with an outcome statement only (a skill as the agents' interface to `projects-folder/`, mirroring the paper-wiki and skill-hub skills) and left the whole route — operation set, state source, contract location, tracking, verification plan — to three grilling rounds, accepting every recommended default.
+- evidence: The human described intake from ideas, documents, papers, and partial experiments; autonomous continuation; project and hub skill learning; and parallel agent research, while stating they cannot provide detailed implementation instructions. 2026-09-23: opened the project-management design with an outcome statement only (a skill as the agents' interface to `projects-folder/`, mirroring the paper-wiki and skill-hub skills) and left the whole route — operation set, state source, contract location, tracking, verification plan — to three grilling rounds, accepting every recommended default. 2026-09-26: extended the vision to a product — users bring their own coding-agent subscription (after seeing Orca and alphaXiv OpenResearch), the human talks only to one root agent that coordinates per-project agents to cut attention loss when switching projects, and the OS manages session traces so agents can reflect on history — and again delegated the mechanism analysis to the agent. Same day: named Pi Agent as the intended long-term engine but chose subscription-driven Claude/Codex CLIs for speed, accepted the recommended OpenResearch-style adapter layering by restating it, and delegated implementation and verification with one constraint: “尽量简单的实现，不要太复杂，简单有效最好”. Later that day they cut the first example project twice, from a 30-minute run to “只要它小到足够让所有用户能够作为例子试验一遍即可”, stating the priority outright: “我们的任务重点是构建 AI Home Research OS，这个训练只是作为一个小例子”. Example projects exist to let any user try the OS once; their research content is secondary. 2026-09-27: cancelled the long-planned first real project outright (“我只需要保留 Example Project 和 Nano Chat 这两个 Project 作为示例就可以了。Circle Packing 我觉得可以删除”), keeping the portfolio to the two examples.
 - created: 2026-07-16
-- last_updated: 2026-09-23
+- last_updated: 2026-09-26
 - status: active
 - domain: Research OS product direction
 - scope: Outcome and value-level product direction, not implementation architecture or technology selection.
 - capability_level: awareness
 - evidence_type: explanation
-- last_verified: 2026-09-23
+- last_verified: 2026-09-26
 - freshness: current
 - responsibility_relevance:
   - Preserve human authority over research goals, autonomy limits, budgets, irreversible actions, and acceptance criteria.
+  - Size example and smoke-test projects for the least capable user's machine and patience, and say so in their READMEs; propose research-grade scale only when the human asks for a result.
 
 ## cog-20260724-002 Branch as the containment boundary for unattended agent work
 
@@ -76,21 +78,22 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 ## cog-20260923-001 Human-read, agent-write division of the OS
 
-- content: The human holds, and states as a standing design principle, that the Research OS GUI exists for human observation while code agents perform all mutation of the OS's managed areas (paper-wiki, skills, projects) through skills that expose scripted interfaces. A management need in an OS area is therefore met by a skill, not by a GUI action.
+- content: The human holds, and states as a standing design principle, that the Research OS GUI exists for human observation while code agents perform all mutation of the OS's managed areas (paper-wiki, skills, projects) through skills that expose scripted interfaces. A management need in an OS area is therefore met by a skill, not by a GUI action. The GUI's operating surface is conversation with agents: the root agent for the whole OS, and, at the human's request, a direct entry into each project's agent (“root agent 来管理不同的 project。但是也应该提供 project 中的入口，让用户直接操作和管理project”). The human treats "copy a launch command" as not being integration, and wants both levels of control, not only the root agent.
 - source: user-confirmed
 - confidence: high
-- evidence: 2026-09-23, opening the project-management design: 「整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill」. Applied consistently before: the 2026-07-22 skill-management session confined `os-ui` to a single disable/enable write slice and kept install and remove on the command line (HANDOFF "Skill-management decisions"); on 2026-09-23 the human accepted that `os-ui` stays read-only for projects with no stage toggle, and that the GUI's unregistered-project warning is only a cue for an agent to run `sync`.
+- evidence: 2026-09-23, opening the project-management design: 「整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill」. Applied consistently before: the 2026-07-22 skill-management session confined `os-ui` to a single disable/enable write slice and kept install and remove on the command line (HANDOFF "Skill-management decisions"); on 2026-09-23 the human accepted that `os-ui` stays read-only for projects with no stage toggle, and that the GUI's unregistered-project warning is only a cue for an agent to run `sync`. 2026-09-26: after seeing the dashboard remotely, the human objected that 「claude code 和 codex 还是复制链接，不是接入，也没有一个对话框提供给人类给 root agent 对话」 and had the Root Agent window built; mutation of OS areas still goes through the root agent and skills, not through GUI buttons.
 - created: 2026-09-23
-- last_updated: 2026-09-23
+- last_updated: 2026-09-26
 - status: active
 - domain: Research OS architecture and division of labour
 - scope: Where write authority sits between the GUI and agents in this Research OS; no claim about GUI design preferences in general or about other tools.
 - capability_level: awareness
 - evidence_type: explanation
-- last_verified: 2026-09-23
+- last_verified: 2026-09-26
 - freshness: current
 - responsibility_relevance:
-  - When a request implies a GUI write action, route it to an explicit M4-style authorization decision rather than building it.
+  - When a request implies a GUI write action, route it to an explicit M4-style authorization decision rather than building it; the root-agent conversation is the authorized exception.
+  - Treat "agent integration" in the GUI as meaning live conversations, with the root agent and with each project's agent, never a copied command.
   - When the human asks to "manage" an OS area, propose a hub skill with a stdlib script and a `verify.sh` check, following `paper-wiki-manager`, `research-skill-installer`, and `research-project-manager`.
 - related:
   - [cog-20260724-001](unknown_knowns.md#cog-20260724-001-agent-neutrality-as-a-veto)
@@ -100,19 +103,41 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human states that in grilling rounds they accept the agent's recommended defaults without reading each one closely. Inside a round, the recommendation is therefore effectively the decision. Their directional judgement is exercised separately and has produced vetoes, so this describes the executive and mechanical layer only.
 - source: user-confirmed
 - confidence: high
-- evidence: Raised as a hypothesis on 2026-09-23 after 16 of 16 recommended defaults were accepted across three rounds with one-line replies. Asked directly whether they read each recommendation's evidence or trusted the format, the human answered 「我基本没细看，直接接受了推荐」. Directional counter-evidence stands: the 2026-07-19 SDK route reset and the 2026-07-22 amendment of GOAL.md M3's trigger were the human's own vetoes. Later the same day, given three options without a recommendation on deleting the route map, the human chose one directly (「全部删除」), which supports withholding recommendations on directional-grade questions.
+- evidence: Raised as a hypothesis on 2026-09-23 after 16 of 16 recommended defaults were accepted across three rounds with one-line replies. Asked directly whether they read each recommendation's evidence or trusted the format, the human answered 「我基本没细看，直接接受了推荐」. Directional counter-evidence stands: the 2026-07-19 SDK route reset and the 2026-07-22 amendment of GOAL.md M3's trigger were the human's own vetoes. Later the same day, given three options without a recommendation on deleting the route map, the human chose one directly (「全部删除」), which supports withholding recommendations on directional-grade questions. 2026-09-26: contrary to this entry's guidance, the agent marked one option "(Recommended)" in a directional-grade question (adopt the revised GOAL.md draft, execute the unrevised GOAL.md, or rework the draft first), and the human chose the recommended option. The human had asked for the draft and then to execute "the GOAL", so the choice probably matched their intent; the observation cannot separate intent from default acceptance.
 - created: 2026-09-23
-- last_updated: 2026-09-23
+- last_updated: 2026-09-26
 - status: active
 - domain: human-agent decision process in this repository
 - scope: Executive and mechanical decisions presented inside grilling rounds with a recommendation attached; no claim about directional decisions.
 - evidence_type: self-report
-- last_verified: 2026-09-23
+- last_verified: 2026-09-26
 - freshness: current
 - responsibility_relevance:
   - Treat a recommendation inside a round as the decision that will be taken: keep it reversible and record it in HANDOFF with a reversal path.
   - Mark each question as evidence-forced or judgment call, and flag directional-grade questions (those that change a standing decision or an OS principle) explicitly.
   - Present the one or two directional-grade questions of a round without a recommendation, as two balanced options with their costs, so the human chooses.
-  - Six 2026-09-23 judgment calls were effectively agent-made: timing (Q1), Snapshot as source (Q3), archive semantics (Q8), Integrity Gate positioning (Q9), contract in TOML (Q11), Example_Project stage `probe` (Q14). Q3 and Q9 are directional-grade and stay open to a deliberate re-decision.
+  - Six 2026-09-23 judgment calls were effectively agent-made: timing (Q1), Snapshot as source (Q3), archive semantics (Q8), Integrity Gate positioning (Q9), contract in TOML (Q11), Example_Project stage `probe` (Q14). Q3 and Q9 are directional-grade and stay open to a deliberate re-decision. The 2026-09-26 GOAL.md adoption was likewise taken on a recommended option and stays open to one.
 - related:
   - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
+
+## cog-20260927-001 Glance-first GUI: visual state, text on click
+
+- content: The human wants the OS interface to present state through visual elements (bars, chips, counts, timelines) with as little text as possible, and to reveal sentences only when the user clicks for detail. Dense text on a screen is treated as a defect even when it is accurate.
+- source: user-confirmed
+- confidence: high
+- evidence: 2026-09-27, after viewing the dashboard remotely: 「Dashboard 和 Project Overview 页面尽量少的用文字，尽量用视觉元素来呈现信息。用户如果想看详情的话，点击才可以就可以看到」. Earlier the same evening they reported text overflowing its boxes as a problem worth fixing before any feature work, which is consistent with caring about the visual surface.
+- created: 2026-09-27
+- last_updated: 2026-09-27
+- status: active
+- domain: Research OS interface design
+- scope: The os-ui desktop pages; no claim about documents, READMEs, or agent replies, where the human reads prose readily.
+- capability_level: awareness
+- evidence_type: explanation
+- last_verified: 2026-09-27
+- freshness: current
+- responsibility_relevance:
+  - When adding a UI panel, encode state in form (bar, chip, count, dot) first and put the sentence behind a disclosure; check both desktop and phone widths for overflow before showing it.
+  - Treat a new text-heavy panel as needing a visual pass, not as done.
+- related:
+  - [cog-20260908-001](unknown_knowns.md#cog-20260908-001-lingua-franca-for-shared-artifacts)
+  - [cog-20260923-001](#cog-20260923-001-human-read-agent-write-division-of-the-os)

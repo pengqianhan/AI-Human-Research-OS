@@ -4,8 +4,9 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { ProjectPage } from "../pages/ProjectPage";
 import { StorePage } from "../pages/StorePage";
 import { PaperWikiPage } from "../pages/PaperWikiPage";
+import { RootAgentPage } from "../pages/RootAgentPage";
 
-export type AppId = "dash" | "proj" | "store" | "paperwiki";
+export type AppId = "dash" | "proj" | "store" | "paperwiki" | "agent";
 
 /** One dock app: identity, icon, default window size, and page content. */
 export interface AppDef {
@@ -45,6 +46,13 @@ const storeIcon = (
     <rect x="10.1" y="2.5" width="5.4" height="5.4" rx="1.2" />
     <rect x="2.5" y="10.1" width="5.4" height="5.4" rx="1.2" />
     <rect x="10.1" y="10.1" width="5.4" height="5.4" rx="1.2" />
+  </svg>
+);
+
+const agentIcon = (
+  <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+    <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5v6a1.5 1.5 0 0 1-1.5 1.5H8l-3.4 2.6V12H4.5A1.5 1.5 0 0 1 3 10.5v-6Z" />
+    <path d="M6.5 7.5h5M6.5 9.5h3" strokeLinecap="round" />
   </svg>
 );
 
@@ -90,5 +98,14 @@ export const APPS: AppDef[] = [
     defaultH: 720,
     fill: true,
     render: () => <PaperWikiPage />,
+  },
+  {
+    id: "agent",
+    title: "Root Agent",
+    icon: agentIcon,
+    defaultW: 980,
+    defaultH: 640,
+    fill: true,
+    render: () => <RootAgentPage />,
   },
 ];

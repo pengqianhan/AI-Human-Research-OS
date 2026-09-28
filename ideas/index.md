@@ -18,6 +18,10 @@ Follow the [project-template instantiation contract](../projects-folder/template
 then set the idea's `status` to `promoted`, link the instantiated project, and
 add it to the Active Projects table in [global memory](../memory/MEMORY.md).
 
+## Concepts
+
+* [nanochat CPU baseline](nanochat-cpu-baseline.md) - OpenResearch's default nanochat demo, scaled to train end to end on this workstation's CPU.
+
 ## Bundles
 
 * [Idea example](idea_example/index.md) - Worked OKF bundle for a promoted idea that validates the OS pipeline with a linear-fit micro-experiment.

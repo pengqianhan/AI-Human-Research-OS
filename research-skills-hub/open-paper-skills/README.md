@@ -32,6 +32,7 @@ at source commit `8f854bd`.
 | [skill-organizer](skill-organizer/SKILL.md) | Register a newly added hub skill into its collection's `index.md` and `README.md`. | Repo-local support skill |
 | [explain-paper-html](explain-paper-html/SKILL.md) | Build an evidence-traceable interactive HTML lesson from an academic paper, verified in a browser before hand-off. | Original, Pengqian Han |
 | [research-project-manager](research-project-manager/SKILL.md) | Create, validate, update, sync, and archive Research Projects under `projects-folder/` against one template contract. | Original, Pengqian Han |
+| [project-dispatch](project-dispatch/SKILL.md) | Act as the root agent: brief, dispatch, track, and review project work run through `os-harness`. | Original, Pengqian Han |
 
 ## Installation
 
@@ -51,6 +52,8 @@ table; symlink or copy form comes from the collection's `SOURCE.md`. See
 - `filetree-simple`: Python 3.9+ standard library; Git is not required.
 - `research-project-manager`: Python 3.11+ standard library (`tomllib`); run
   its script with `uv run` as `verify.sh` does.
+- `project-dispatch`: Python 3.9+ for `os-harness/harness.py`, plus a logged-in
+  `claude` or `codex` CLI for the project agents.
 - `explain-paper-html`: Python 3.9+ standard library for
   `scripts/verify_explanation.py`, Node for its inline-JavaScript syntax check,
   and browser automation (or a headless browser) for the required browser and
@@ -436,9 +439,26 @@ Example commands:
 ```bash
 python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py status
 python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py validate
-python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py new circle_packing --from-idea ideas/circle-packing-os-shakedown.md --stage probe
-python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py set circle_packing --stage develop
+python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py new my_project --from-idea ideas/my-idea.md --stage probe
+python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py set my_project --stage develop
 python research-skills-hub/open-paper-skills/research-project-manager/scripts/manage_research_project.py sync
+```
+
+## project-dispatch
+
+Makes the agent at the repository root the human's single point of contact: it
+briefs a Research Task, dispatches it to a Claude Code or Codex session inside
+the project through `os-harness` (in the background, on the human's own
+subscription), reports progress on request, verifies the result itself, and
+leaves acceptance to the Human Owner.
+
+Example requests:
+
+```text
+Have Example_Project extend its line fit to a multi-seed stability analysis.
+How is the Example_Project run going?
+Review the finished run and tell me whether it meets the brief.
+Stop the running Example_Project session.
 ```
 
 ## License

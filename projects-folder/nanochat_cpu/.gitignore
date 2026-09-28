@@ -1,0 +1,11 @@
+# Keep checkpoints, datasets, caches, and virtual environments out of Git.
+# nanochat writes all of them under Code/nanochat/.cache/ (NANOCHAT_BASE_DIR) and Code/nanochat/.venv/.
+Code/nanochat/.cache/
+Code/nanochat/.venv/
+__pycache__/
+*.pyc
+*.pt
+*.pkl
+*.parquet
+*.zip
+wandb/

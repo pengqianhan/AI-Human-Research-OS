@@ -73,7 +73,7 @@ One bounded execution attempt by an agent against a Research Task. A Research Ta
 _Avoid_: research task, project, authoritative session
 
 **Pi-Assisted Research Run**:
-A Human Owner-approved, bounded Agent Run conducted through the existing Pi Coding Agent interface while its terminal remains open. Research OS files, declared validation, a Research Checkpoint, and a Review Package carry the durable state; current boundaries are procedural and review-based rather than enforced by a custom Research OS runtime.
+Superseded on 2026-09-26 by Agent Runs dispatched through `os-harness/` (ADR-0003); kept for historical records. A Human Owner-approved, bounded Agent Run conducted through the existing Pi Coding Agent interface while its terminal remains open. Research OS files, declared validation, a Research Checkpoint, and a Review Package carry the durable state; current boundaries are procedural and review-based rather than enforced by a custom Research OS runtime.
 _Avoid_: Autonomous Research Run, custom runtime, background daemon
 
 **Autonomous Research Run**:

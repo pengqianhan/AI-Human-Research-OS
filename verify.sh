@@ -139,6 +139,20 @@ verify_installs() {
 }
 check "installed skills: link/copy form and integrity" verify_installs
 
+# 5. Brand copies. os-ui serves its tab icons from tracked copies of the
+#    docs/brand originals; a changed original must be copied again.
+verify_brand_copies() {
+  local rc=0 f
+  for f in favicon.svg favicon-256.png; do
+    if ! cmp -s "docs/brand/$f" "os-ui/frontend/public/$f"; then
+      echo "os-ui/frontend/public/$f differs from docs/brand/$f; copy it again"
+      rc=1
+    fi
+  done
+  return "$rc"
+}
+check "brand copies in os-ui" verify_brand_copies
+
 if [ "$runtime_error" -ne 0 ]; then
   echo "verify: INCOMPLETE — resolve the runtime error and rerun"
   exit 2

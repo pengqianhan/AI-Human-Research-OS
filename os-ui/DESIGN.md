@@ -7,15 +7,23 @@ Authorization boundary: the human authorized a read-only monitor UI on
 2026-07-04. That exception applies only to observation. On 2026-07-22 the Human
 Owner authorized exactly one narrow write action on top of it — disabling or
 enabling a single install location — because it is non-destructive,
-reversible, and visible in Git. Everything else,
-including install and delete buttons, resident services, SSE, and any further
-action endpoint, remains gated by GOAL.md M4: evidence first, then explicit
-human confirmation.
+reversible, and visible in Git. On 2026-09-26 the Human Owner asked for the
+root-agent conversation inside the UI (GOAL.md H2: one root agent as the
+human's single point of contact) and, the same evening, a direct entry to each
+project's agent, so the **Root Agent** window, the Projects window's **Agent**
+view, and their token-gated `/api/chat/*` endpoints were added; they start,
+resume, stop, and read os-harness sessions at the repository root or inside one
+registered project, and execute nothing themselves.
+Everything else, including install and delete buttons, resident services, SSE,
+and any further action endpoint, remains gated by GOAL.md M4: evidence first,
+then explicit human confirmation.
 
 ## 1. Positioning
 
-- `os-ui` is an observation dashboard, not a control console. Its only write
-  action is the skill enable/disable toggle authorized on 2026-07-22.
+- `os-ui` is an observation dashboard with agent conversations. Its write
+  actions are the skill enable/disable toggle (2026-07-22) and the agent
+  conversations (2026-09-26: the Root Agent window and each project's Agent
+  view), which send messages to os-harness sessions.
 - It renders repository state and copies commands for the human to run; it does
   not execute commands. Skill install and removal are copy-only, like every
   other command.
@@ -118,11 +126,11 @@ plain repository files -> generator (Python, uv) -> state.json -> frontend
 | Active Work | `HANDOFF.md` Active Work checklists | available |
 | Governance log | `HANDOFF.md` Decisions + `memory/MEMORY.md` decisions | available |
 | Project snapshot | `projects-folder/<P>/PROJECT_MEMORY.md` Snapshot | available |
-| Evaluation lines | `PROJECT_MEMORY.md` Evaluation Contract | pending circle_packing M2 |
-| Round track | `projects-folder/<P>/Code/runs/<round-id>/result.json` | pending circle_packing M2 |
-| Parallel branches | `projects-folder/<P>/Tasks/<task-id>/` | pending circle_packing M2 |
-| Review reports | `projects-folder/<P>/Evaluations/` | pending circle_packing M2 |
-| OS Feedback | `PROJECT_MEMORY.md` OS Feedback section | pending circle_packing M2 |
+| Evaluation lines | `PROJECT_MEMORY.md` Evaluation Contract | pending a project with rounds |
+| Round track | `projects-folder/<P>/Code/runs/<round-id>/result.json` | pending a project with rounds |
+| Parallel branches | `projects-folder/<P>/Tasks/<task-id>/` | pending a project with rounds |
+| Review reports | `projects-folder/<P>/Evaluations/` | pending a project with reviews |
+| OS Feedback | `PROJECT_MEMORY.md` OS Feedback section | pending a project that records it |
 | Local skills | project-local `.claude/skills` / `.agents/skills` | partial |
 | Skill Store | `research-skills-hub/*/index.md` + `SKILL.md` frontmatter | available |
 | License | skill LICENSE -> collection LICENSE/README -> fallback | available |
@@ -138,10 +146,18 @@ Since 2026-07-05 the UI uses a desktop shell: a persistent menu bar, a bottom
 dock, and draggable/zoomable/minimizable windows under `frontend/src/desktop/`.
 The old tab-shell concept is superseded.
 
-1. **Dashboard**: portfolio strips, unregistered project warnings, Active Work,
-   recent activity, research policy, and governance log.
-2. **Projects**: snapshot cards, round score track, round cards, evaluations,
-   OS Feedback, and local skills.
+1. **Dashboard**: portfolio strips (stage bar and chips; the status, evaluator,
+   and next-action sentences open on click), unregistered project warnings,
+   Active Work rows (progress bar; checklist opens on click), an activity
+   timeline (first line; full text opens on click), policy chips, and the
+   collapsed governance log.
+2. **Projects**: a header (stage bar, owner/priority/evaluator chips, four
+   counts), the Snapshot sentences as one-line previews that open on click,
+   and collapsed sections for the round score track, evaluations, OS
+   Feedback, and local skills; plus the Agent view (§1).
+   Rule for both pages, set by the Human Owner on 2026-09-27: show state with
+   visual elements and as few words as possible; sentences appear only when
+   the human clicks.
 3. **Skill Store**: hub collections, orphan skills, sync badges, script
    warnings, license labels, per-target install state, and a per-location
    enable/disable toggle; installing elsewhere stays a copied command. How this

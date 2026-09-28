@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import type { ReactNode } from "react";
 import type { AppDef, AppId } from "./apps";
 
 interface Props {
@@ -19,40 +18,11 @@ const terminalIcon = (
   </svg>
 );
 
-/* Agent launchers — the wanman-style hint that this OS is driven by code
-   agents. Clicking copies the agent's launch command (run from the repo
-   root, where the AGENTS.md entry file lives).
-   Copy-only, like everything else in this UI. */
-const AGENTS: { id: string; name: string; command: string; icon: ReactNode }[] = [
-  {
-    id: "claude-code",
-    name: "Claude Code",
-    command: "claude",
-    // six-ray starburst
-    icon: (
-      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-        <path d="M9 2.5v13M3.4 5.75l11.2 6.5M14.6 5.75L3.4 12.25" />
-      </svg>
-    ),
-  },
-  {
-    id: "codex",
-    name: "Codex",
-    command: "codex",
-    // hexagon
-    icon: (
-      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
-        <path d="M9 1.8l6.2 3.6v7.2L9 16.2l-6.2-3.6V5.4L9 1.8Z" />
-      </svg>
-    ),
-  },
-];
 
 /**
- * Bottom-center dock. Left of the divider: the three app windows. Right of
- * it: copy-only actions — launch commands for the agents that drive this OS,
- * and the snapshot-regenerate command. The read-only rule stays intact: the
- * UI itself never executes anything.
+ * Bottom-center dock. Left of the divider: the app windows, including the
+ * Root Agent conversation (its window chooses the agent). Right of it: the
+ * copy-only snapshot-regenerate command.
  */
 export function Dock({ apps, openApps, onAppClick }: Props) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -111,35 +81,6 @@ export function Dock({ apps, openApps, onAppClick }: Props) {
 
       <span aria-hidden="true" className="mx-1.5 h-6 w-px bg-grid" />
 
-      {AGENTS.map((agent) => (
-        <button
-          key={agent.id}
-          type="button"
-          onClick={() => copyCommand(agent.id, agent.command)}
-          aria-label={`Copy ${agent.name} launch command`}
-          className="group relative flex h-11 w-11 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-paper"
-        >
-          <span
-            className={
-              (copiedId === agent.id ? "text-verify " : "") + "[&>svg]:h-[19px] [&>svg]:w-[19px]"
-            }
-          >
-            {agent.icon}
-          </span>
-          <span className={tooltipClass}>
-            {copiedId === agent.id ? (
-              <b className="text-verify">Copied. Run it from the repository root.</b>
-            ) : (
-              <>
-                Drive this OS with {agent.name} <span className="text-stale">· copy {agent.command}</span>
-              </>
-            )}
-          </span>
-          <span aria-live="polite" className="sr-only">
-            {copiedId === agent.id ? `Copied ${agent.name} launch command` : ""}
-          </span>
-        </button>
-      ))}
 
       <button
         type="button"
