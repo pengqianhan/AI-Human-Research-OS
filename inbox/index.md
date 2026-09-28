@@ -2,6 +2,7 @@
 
 Temporary intake area for new research materials before classification and archival.
 
-* [drop/](drop/) - Landing area for new, unprocessed research inputs.
-* [archive/](archive/) - Intake materials retained after classification or processing.
-* [scripts/](scripts/) - Local helpers for deterministic intake operations.
+No intake workflow exists yet; see the [README roadmap](../README.md#roadmap).
+The planned layout is `drop/` for new, unprocessed inputs, `archive/` for
+materials kept after classification, and `scripts/` for deterministic intake
+helpers. Create each folder when the workflow needs it.

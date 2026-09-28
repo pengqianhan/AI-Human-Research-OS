@@ -50,23 +50,33 @@ python $S archive my_project --status "results in paper/main.pdf"
 2. Run `new <Name> [--from-idea <idea.md>] [--template] [--owner] [--stage]
    [--priority] [--goal] [--origin]`. It copies the template, fills Project
    name, Started (today, linked to the idea), Owner, Stage, Priority, Goal, and
-   Origin, adds the portfolio row, adds a bullet under `# Projects` in
-   `projects-folder/index.md`, and sets `status: promoted` plus a `project:`
-   back-link in the idea's frontmatter. Names match `^[A-Za-z][A-Za-z0-9_-]*$`.
-3. Fill by hand what needs research judgement: the remaining Snapshot fields
-   (Status, Evaluator status, Current question, Next action), the Snapshot in
-   `paper_skeleton.md`, and the title and abstract in `paper/main.tex`.
-4. Run `validate <Name>`. Done when it reports no error; empty fields stay
-   warnings until filled.
+   Origin, sets the title of the copied `index.md` to the name and its summary
+   to the goal, stamps the template line in the copied `AGENTS.md` with the
+   template name and today, adds the portfolio row, adds a bullet under
+   `# Projects` in `projects-folder/index.md`, and sets `status: promoted` plus
+   a `project:` back-link in the idea's frontmatter. Names match
+   `^[A-Za-z][A-Za-z0-9_-]*$`.
+3. Fill by hand what needs research judgement: the "Setup after copying"
+   section of the copied `index.md` lists it (remaining Snapshot fields,
+   `paper_skeleton.md`, `paper/main.tex`, and project-specific rules in
+   `AGENTS.md`).
+4. Run `validate <Name>`. Done when it reports no error. Empty Snapshot fields,
+   an `index.md` still titled as the template (`index_title_is_template`), and
+   an `AGENTS.md` without a dated template line (`template_sync_missing`) stay
+   warnings until fixed.
 
 ### Change project state
 
 - `set` changes stage, status, owner, priority, next action, evaluator status,
   current question, goal, or origin: it rewrites the Snapshot bullet and
   re-projects the row in one step. Editing the Snapshot by hand is equally
-  valid; run `sync` afterwards so the row follows.
+  valid; run `sync` afterwards so the row follows. Write links in Snapshot
+  values relative to the project directory; the projection rebases them for
+  `memory/MEMORY.md` and `projects-folder/index.md`.
 - Write the dated Progress Log line and any Key Decisions row yourself; the
   script only ever touches Snapshot bullets and portfolio rows.
+- To bring a project up to a changed template, follow "Port template changes"
+  in [projects-folder/templates/index.md](../../../projects-folder/templates/index.md).
 - `archive` sets Stage to `archived`. The directory and the row stay, so the
   project remains navigable and the GUI keeps showing it. Deleting a project is
   a Human Owner git operation recorded in `HANDOFF.md`; there is no `remove`.

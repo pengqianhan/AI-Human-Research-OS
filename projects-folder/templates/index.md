@@ -11,26 +11,47 @@ python research-skills-hub/open-paper-skills/research-project-manager/scripts/ma
   new <ProjectName> --from-idea ideas/<idea>.md --owner human-led --stage scout
 ```
 
-It performs the four steps that used to be manual: copy the chosen template
-(`--template`, default `ai_research_template`) without modifying the reusable
-source; fill the identity fields of the copied `PROJECT_MEMORY.md` Snapshot;
-set the source idea to `status: promoted` and link idea and project both ways;
-and add the project row to [memory/MEMORY.md](../../memory/MEMORY.md) plus a
-bullet in [projects-folder/index.md](../index.md). Then follow the copied
-project's `index.md`, fill every file it marks as immediate setup, and run
-`validate <ProjectName>` until it reports no error.
+It copies the chosen template (`--template`, default `ai_research_template`)
+without modifying the reusable source; fills the identity fields of the copied
+`PROJECT_MEMORY.md` Snapshot, the title and summary of the copied `index.md`,
+and the template line in the copied `AGENTS.md`; sets the source idea to
+`status: promoted` and links idea and project both ways; and adds the project
+row to [memory/MEMORY.md](../../memory/MEMORY.md) plus a bullet in
+[projects-folder/index.md](../index.md). Then follow the "Setup after copying"
+section of the copied `index.md` and run `validate <ProjectName>` until it
+reports no error.
 
 ## Template contract
 
-A reusable template:
+A template is the greatest common divisor of the projects built from it: it
+holds what every such project needs, so each new project starts from it rather
+than from scratch. A reusable template:
 
+- carries the shared agent rules in `AGENTS.md`, which each project keeps as
+  shipped and extends under its "Project-specific rules" section, so a project
+  also works as a standalone repository;
 - keeps internal links valid from its copied location under
-  `projects-folder/<ProjectName>/`;
-- names the files that must be filled immediately after copying;
+  `projects-folder/<ProjectName>/`; links that leave the project (to ideas,
+  global memory, or the paper wiki) work only inside the Research OS, and the
+  rules that depend on them sit under "Inside the Research OS" in `AGENTS.md`;
+- names the setup steps left after copying in its `index.md`;
 - keeps project-specific commands and directory semantics in its own
   `index.md` and local READMEs; and
 - lives as a sibling under this directory when another discipline or output
   requires a different scaffold.
+
+## Port template changes
+
+An improvement that every project needs goes into the template first. Each
+project's `AGENTS.md` records when it last matched its template, in the line
+"Based on the `<template>` project template, last synced YYYY-MM-DD." To
+bring a project up to date:
+
+1. List the template changes since that date:
+   `git log -p --since=<date> -- projects-folder/templates/<template>`.
+2. Apply the changes that fit the project, keeping its project-specific
+   content.
+3. Set the date in that line to today.
 
 ## Available templates
 
