@@ -48,7 +48,8 @@ at most three lines, the session id, agent, mode, and what the run will deliver.
 ### Brief template
 
 ```text
-You are the project agent for the Research OS project in the current directory.
+You are the project agent for the Research OS project in the current directory;
+follow its AGENTS.md.
 Task: <what to do and why, one paragraph>
 Done when:
 - <checkable criterion>

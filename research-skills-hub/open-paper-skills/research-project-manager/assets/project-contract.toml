@@ -24,6 +24,7 @@ default = "ai_research_template"
 # scaffold unnoticed.
 required_files = [
   "index.md",
+  "AGENTS.md",
   "PROJECT_MEMORY.md",
   "paper_skeleton.md",
   "log.md",

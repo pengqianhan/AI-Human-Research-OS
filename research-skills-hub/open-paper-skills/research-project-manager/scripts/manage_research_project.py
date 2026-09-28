@@ -30,8 +30,17 @@ NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
 SECTION_END = re.compile(r"^#{1,2}\s+")       # a `#` or `##` heading closes a section
 BULLET = re.compile(r"^\s*[-*]\s+(.+?)\s*$")
 IDEA_LINK = re.compile(r"\[([^\]]*)\]\(([^)\s]+\.md)\)")
+MD_LINK = re.compile(r"(\[[^\]]*\]\()([^)\s]+)\)")
 FRONTMATTER_FENCE = re.compile(r"^---\s*$")
+BLOCK_START = re.compile(r"^(?:#|[-*+>]\s|\d+[.)]\s|```|<)")   # a line that is not paragraph prose
 SNAPSHOT_HEADING = "Snapshot"
+# Navigation page, whose H1 and summary paragraph `new` sets to the project's.
+PROJECT_INDEX = "index.md"
+# Shared agent rules, whose template line records when the project last
+# matched its template (see projects-folder/templates/index.md).
+PROJECT_AGENTS = "AGENTS.md"
+TEMPLATE_LINE = re.compile(r"^Based on the `([^`]+)` project template, last synced (\S+)\.$")
+ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Keys `set` may change, mapped to their flags. Project name and Started are
 # identity, written once by `new`.
 SETTABLE = {
@@ -430,13 +439,32 @@ def load_portfolio(root: Path, contract: Contract) -> Portfolio:
     return portfolio
 
 
-def project_cells(project: Project, contract: Contract) -> dict[str, str]:
+def rebase_links(text: str, source_dir: Path, target_dir: Path) -> str:
+    """Rewrite relative Markdown link targets written from `source_dir` so they
+    resolve from `target_dir`; URLs, anchors, and absolute paths stay as they are."""
+    def fix(match: re.Match[str]) -> str:
+        target = match.group(2)
+        if target.startswith(("#", "/")) or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+            return match.group(0)
+        path, sep, anchor = target.partition("#")
+        rebased = rel_link(Path(os.path.normpath(source_dir / path)), target_dir)
+        if path.endswith("/"):
+            rebased += "/"
+        return f"{match.group(1)}{rebased}{sep}{anchor})"
+    return MD_LINK.sub(fix, text)
+
+
+def project_cells(root: Path, project: Project, contract: Contract) -> dict[str, str]:
+    """The portfolio row a project's Snapshot projects to, with its links
+    rebased from the project directory to the portfolio file."""
+    portfolio_dir = (root / contract.portfolio_file).parent
     cells: dict[str, str] = {}
     for column in contract.columns:
         if column.field == "path":
             cells[column.name] = f"`{project.rel_path}`"
         else:
-            cells[column.name] = escape_cell(project.snapshot.values.get(column.field, ""))
+            value = rebase_links(project.snapshot.values.get(column.field, ""), project.dir, portfolio_dir)
+            cells[column.name] = escape_cell(value)
     return cells
 
 
@@ -465,7 +493,7 @@ def sync_rows(root: Path, contract: Contract, projects: list[Project], dry_run: 
     inserts: list[str] = []
     dirty = False
     for project in projects:
-        cells = project_cells(project, contract)
+        cells = project_cells(root, project, contract)
         text = format_row([cells[name] for name in portfolio.columns])
         row = by_path.get(project.rel_path.rstrip("/"))
         if row is None:
@@ -520,7 +548,8 @@ def add_index_bullet(root: Path, contract: Contract, project: Project) -> None:
     if rng is None:
         fail(f"{contract.index_file}: heading {contract.index_heading!r} not found")
     title = squash(project.snapshot.values.get("project_name", "")) or project.name
-    summary = squash(project.snapshot.values.get("goal", "")) or "Newly instantiated project; fill PROJECT_MEMORY.md."
+    goal = rebase_links(project.snapshot.values.get("goal", ""), project.dir, path.parent)
+    summary = squash(goal) or "Newly instantiated project; fill PROJECT_MEMORY.md."
     bullet = f"* [{title}]({project.name}/index.md) - {summary}"
     body = lines[rng[0]:rng[1]]
     bullet_idx = [i for i, line in enumerate(body) if re.match(r"^\s*[*-]\s+", line)]
@@ -534,6 +563,56 @@ def add_index_bullet(root: Path, contract: Contract, project: Project) -> None:
             body.append("")
     lines[rng[0]:rng[1]] = body
     write_lines(path, lines)
+
+
+# ------------------------------------------------------------- project files
+
+
+def first_h1(lines: list[str]) -> tuple[int, str] | None:
+    for i, line in enumerate(lines):
+        if line.startswith("# "):
+            return i, line[2:].strip()
+    return None
+
+
+def fill_project_index(path: Path, name: str, summary: str) -> None:
+    """Set the H1 to the project name and, when given, the summary paragraph below it."""
+    lines = read_lines(path)
+    found = first_h1(lines)
+    if found is None:
+        return
+    at = found[0]
+    lines[at] = f"# {name}"
+    if summary:
+        start = at + 1
+        while start < len(lines) and not lines[start].strip():
+            start += 1
+        end = start
+        while end < len(lines) and lines[end].strip() and not BLOCK_START.match(lines[end]):
+            end += 1
+        if end > start:
+            lines[start:end] = [summary]
+    write_lines(path, lines)
+
+
+def stamp_template_line(path: Path, template: str, day: str) -> bool:
+    """Record in the project's AGENTS.md that it matches `template` as of `day`."""
+    lines = read_lines(path)
+    for i, line in enumerate(lines):
+        if TEMPLATE_LINE.match(line):
+            lines[i] = f"Based on the `{template}` project template, last synced {day}."
+            write_lines(path, lines)
+            return True
+    return False
+
+
+def template_sync(path: Path) -> tuple[str, str] | None:
+    """(template, date) from a project's template line, or None when absent or undated."""
+    for line in read_lines(path):
+        match = TEMPLATE_LINE.match(line)
+        if match and ISO_DATE.match(match.group(2)):
+            return match.group(1), match.group(2)
+    return None
 
 
 # --------------------------------------------------------------------- ideas
@@ -606,6 +685,12 @@ def validate_repo(root: Path, contract: Contract) -> list[Finding]:
             for label in snapshot.extra:
                 warning(scope, "template_extra_snapshot_label",
                         f"template Snapshot bullet '{label}' is not in the contract")
+    template_titles: dict[str, str] = {}
+    for template in template_dirs:
+        if (template / PROJECT_INDEX).is_file():
+            title = first_h1(read_lines(template / PROJECT_INDEX))
+            if title:
+                template_titles[title[1]] = template.name
 
     portfolio = load_portfolio(root, contract)
     for problem in portfolio.problems:
@@ -623,6 +708,17 @@ def validate_repo(root: Path, contract: Contract) -> list[Finding]:
         for rel in contract.required_files:
             if not (project.dir / rel).is_file():
                 error(scope, "missing_required_file", f"required file {rel} is missing")
+        index = project.dir / PROJECT_INDEX
+        title = first_h1(read_lines(index)) if index.is_file() else None
+        if title and title[1] in template_titles:
+            warning(scope, "index_title_is_template",
+                    f"{PROJECT_INDEX} still has the {template_titles[title[1]]} template's title; "
+                    "set it to the project name")
+        agents = project.dir / PROJECT_AGENTS
+        if agents.is_file() and template_sync(agents) is None:
+            warning(scope, "template_sync_missing",
+                    f"{PROJECT_AGENTS} has no dated line 'Based on the `<template>` project template, "
+                    "last synced YYYY-MM-DD.'")
         snapshot = project.snapshot
         if not snapshot.present:
             error(scope, "snapshot_missing", f"{contract.memory_file} has no '## {SNAPSHOT_HEADING}' section")
@@ -645,7 +741,7 @@ def validate_repo(root: Path, contract: Contract) -> list[Finding]:
             if not portfolio.problems:
                 error(scope, "unregistered", f"no row in {contract.portfolio_file} '## {contract.portfolio_heading}'; run sync")
         else:
-            diff = differing_columns(row.cells, project_cells(project, contract), contract)
+            diff = differing_columns(row.cells, project_cells(root, project, contract), contract)
             if diff:
                 error(scope, "row_drift",
                       f"portfolio row differs from the Snapshot in: {', '.join(diff)}; run sync")
@@ -866,6 +962,8 @@ def command_new(args: argparse.Namespace) -> None:
     plan = [
         f"copy {contract.templates_root}/{template_name}/ -> {contract.projects_root}/{name}/",
         "fill Snapshot: " + ", ".join(f"{contract.label_for(k)}={v!r}" for k, v in updates.items()),
+        f"set {PROJECT_INDEX} title to {name!r}" + (" and summary to the goal" if args.goal else ""),
+        f"stamp {PROJECT_AGENTS} template line: {template_name}, last synced {today}",
         f"add row to {contract.portfolio_file} '## {contract.portfolio_heading}'",
         f"add bullet to {contract.index_file} under {contract.index_heading!r}",
     ]
@@ -879,6 +977,9 @@ def command_new(args: argparse.Namespace) -> None:
 
     shutil.copytree(template, dest, ignore=COPY_IGNORE)
     update_snapshot(dest / contract.memory_file, updates, contract)
+    if (dest / PROJECT_INDEX).is_file():
+        fill_project_index(dest / PROJECT_INDEX, name, args.goal or "")
+    stamped = (dest / PROJECT_AGENTS).is_file() and stamp_template_line(dest / PROJECT_AGENTS, template_name, today)
     project = load_project(root, contract, name)
     sync_rows(root, contract, [project], dry_run=False)
     add_index_bullet(root, contract, project)
@@ -889,9 +990,11 @@ def command_new(args: argparse.Namespace) -> None:
     print(f"created {contract.projects_root}/{name}/ from {template_name}")
     for step in plan[1:]:
         print(f"  - {step}")
+    if not stamped:
+        print(f"  ! {template_name} has no template line in {PROJECT_AGENTS}; add one by hand")
     empty = [contract.label_for(k) for k, v in project.snapshot.values.items() if not v]
     print("next: fill the remaining Snapshot fields (" + ", ".join(empty) + "), "
-          "paper_skeleton.md Snapshot, and paper/main.tex title; then run validate")
+          f"then follow 'Setup after copying' in {PROJECT_INDEX}; then run validate")
 
 
 def command_set(args: argparse.Namespace) -> None:

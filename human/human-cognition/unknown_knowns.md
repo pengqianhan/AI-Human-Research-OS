@@ -13,6 +13,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 - cog-20260724-001 - Agent neutrality as a veto: rejects OS mechanisms that work in only one agent harness, even when they are the most reliable option.
 - cog-20260908-001 - Lingua franca for shared artifacts: keeps UI chrome and skill docs in English and confines Chinese to the human's own note content.
+- cog-20260929-001 - Reuse-first templates: a template is the greatest common divisor of its projects, so no project starts from scratch, and each project must stay exportable as its own repository.
 
 ## Entries
 
@@ -55,3 +56,25 @@ timestamp: 2026-07-04T00:00:00+12:00
   - Treat any proposal that spreads localization into shared chrome as needing explicit approval; the human will otherwise pull it back.
 - related:
   - [cog-20260724-001](#cog-20260724-001-agent-neutrality-as-a-veto)
+
+## cog-20260929-001 Reuse-first templates as the projects' greatest common divisor
+
+- content: The human designs project templates so that no project starts from scratch. A template is the greatest common divisor of its projects: a new project inherits it, and later project changes build on it rather than replacing it. Each project must also be able to leave the OS as a standalone repository. Neither criterion was written in the repository until the human stated them as a correction.
+- source: user-confirmed
+- confidence: high
+- evidence: 2026-09-29, after the agent changed the template so that each project would rewrite its `index.md` from scratch, the human explained the template's purpose: 「总的思想还是想着不用每次都从零开始，这样会做很多重复工作。template尽量作为不同project 的最大公约数」. Asked to compare three designs, they answered 「希望项目能单独成独立仓库」, which settled on copying the template's shared parts, and raised a per-project `AGENTS.md` themselves. Recorded as the project-template decisions in HANDOFF.md.
+- created: 2026-09-29
+- last_updated: 2026-09-29
+- status: active
+- domain: Research OS project scaffolding
+- scope: Project templates and the relationship between a template and its projects under `projects-folder/`; no claim about other OS areas.
+- evidence_type: explanation
+- last_verified: 2026-09-29
+- freshness: current
+- responsibility_relevance:
+  - When changing a project's structure, keep the template's shared parts and add project content beside them; send improvements that every project needs to the template first.
+  - Check proposals for exportability: a project still has to work after it is copied out of the OS.
+  - Raise any change that would make projects diverge from their template as a design question, not as a local cleanup.
+- related:
+  - [cog-20260724-001](#cog-20260724-001-agent-neutrality-as-a-veto)
+  - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
