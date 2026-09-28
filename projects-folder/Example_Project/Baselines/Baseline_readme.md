@@ -1,1 +1,0 @@
-All research must have a baseline. As Kaiming said, "Optimize your baseline, and then you can find a better one." 

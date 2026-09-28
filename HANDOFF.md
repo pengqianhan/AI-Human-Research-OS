@@ -36,17 +36,19 @@ The route map `os-build/map/` and the execution-contract slot
 - **Not started:** adapter contract (GOAL M1).
 - **Cancelled 2026-09-27:** the planned `circle_packing` first real project (an
   eleven-step checklist from the 2026-07-03 grilling session, never instantiated).
-  The Human Owner keeps `Example_Project` and `nanochat_cpu` as the two example
-  projects; the checklist's last version is in Git history
+  The Human Owner kept `Example_Project` and `nanochat_cpu` as the two example
+  projects, then deleted `Example_Project` on 2026-09-29, leaving `nanochat_cpu`
+  as the only one; the checklist's last version is in Git history
   (`git log -S circle_packing -- HANDOFF.md`), and the kickoff decisions stay in
   Decisions, marked cancelled.
-- **H2 root agent, awaiting Human Owner acceptance (2026-09-26):** the
-  `project-dispatch` skill and harness `--detach`/`stop`/status (ADR-0004). Its
-  acceptance run, session `20260926-195626-claude-5ed5` (Claude, `full` mode),
-  extended Example_Project to a 20-seed stability analysis. The run ended `ok`
-  after 86 s, and the root agent re-ran both validation commands, checked that
-  all changes stayed inside the project, and re-synced the portfolio row. H3
-  (trace reflection) waits for this acceptance.
+- **H2 root agent, awaiting Human Owner acceptance (2026-09-26; acceptance run
+  moved 2026-09-29):** the `project-dispatch` skill and harness
+  `--detach`/`stop`/status (ADR-0004). Its acceptance run is now `nanochat_cpu`'s
+  dispatch, session `20260926-202021-claude-2302` (next item), because the Human
+  Owner deleted `Example_Project` (see "Example-project decision"). The earlier
+  run there, session `20260926-195626-claude-5ed5`, extended Example_Project to a
+  20-seed stability analysis and ended `ok` after 86 s; the project's last version
+  is at Git `2523ae9`. H3 (trace reflection) waits for this acceptance.
 - **New project `nanochat_cpu`, delivered and awaiting Human Owner acceptance
   (2026-09-26):** OpenResearch's default nanochat demo as a runnable example for
   every Research OS user (idea `ideas/nanochat-cpu-baseline.md`). The root agent
@@ -60,12 +62,13 @@ The route map `os-build/map/` and the execution-contract slot
   change outside the project, 70 small files, ~0.95 GB on disk, portfolio row
   re-synced, `verify.sh` passing except the known symlink check. Creating the
   project exposed a Windows bug in `research-project-manager` (`new` wrote
-  backslash links; 2 of 19 tests failed), fixed with `rel_link()`.
+  backslash links; 2 of 19 tests failed), fixed with `rel_link()`. On 2026-09-29
+  it gained a short paper (`paper/main.pdf`) and became the only example project;
+  accepting it also completes H2.
 - **Superseded 2026-09-26:** the Pi Coding Agent file-workflow MVP (ADR-0002),
   stalled since 2026-07-19 without a human-verified run. The Human Owner replaced
   it with the subscription-CLI harness route (ADR-0003; see "Agent-harness
-  decisions"). GOAL.md still describes the Pi route and M2 until the Human Owner
-  approves a revised GOAL.
+  decisions"). GOAL.md was revised the same day to the H1–H3 route.
 - **Gated, not scheduled:** third-agent cold start (a sufficient M3 trigger) and
   the custom execution surface (M4), both defined in GOAL.md.
 
@@ -92,14 +95,12 @@ at desktop and phone widths with no text overflow.
 
 ### Next session
 
-- Focus: the Human Owner accepts or revises two delivered runs: the H2 acceptance
-  run on Example_Project, and the `nanochat_cpu` example (evidence in each
-  project's Progress Log and `Code/README.md`). With circle_packing cancelled,
-  there is no queued project after them; the next OS milestone is H3. Nothing from 2026-09-26 is
-  committed yet: os-harness, project-dispatch, GOAL.md, ADR-0003/0004, both
-  projects, and the memory updates are all in the working tree. On acceptance, append
-  `(accepted <date>)` to that Progress Log bullet and let the Human Owner decide on a
-  commit; then H3 (trace reflection) is next per GOAL.md.
+- Focus: the Human Owner accepts or revises the `nanochat_cpu` example, including
+  its short paper; accepting its 2026-09-26 dispatch run also completes H2
+  (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
+  No project is queued after it; the next OS milestone is H3. On acceptance, append
+  `(accepted <date>)` to that Progress Log bullet; then H3 (trace reflection) is
+  next per GOAL.md.
 - Environment facts found on 2026-09-26 (Human Owner's machine, not repository
   state). The Human Owner updated the global `codex` from 0.142.4 to 0.157.1, which
   runs the configured model `gpt-5.6-luna`. Both Codex logins are ChatGPT `free`.
@@ -108,7 +109,7 @@ at desktop and phone widths with no text overflow.
   inside Orca needs `--mode full` for Codex.
 - Also pending: the Human Owner has not yet run the `research-project-manager`
   acceptance: `./verify.sh` shows `OK project contract`, and the skill's `status`
-  and `validate` commands report Example_Project registered with no errors.
+  and `validate` commands report `nanochat_cpu` registered with no errors.
 - Authority: the Active Work section above is the construction-status record;
   Decisions hold the reasons and reversal paths.
 - Suggested skills: `session-handoff` for this file; `research-project-manager`
@@ -125,7 +126,7 @@ Defaults taken during the normalization task (2026-06-12) and its follow-ups, ea
 | D3 | Track reference PDFs in git? | Status quo (tracked if added); none added yet | Add `References/*.pdf` to `.gitignore` |
 | D4 | HTML as the format for operating docs | **— superseded 2026-06-17 and narrowed later:** `HANDOFF.md` is the durable Markdown hand-off record; `OS_INTRO.html` was deleted in commit 784f9e8, so Markdown is the only operating-doc format | Convert hand-off records back to HTML (not recommended — Markdown is cheaper to read/edit/grep/diff) |
 | D5 | Build a CLI? | **No** — non-goal; conventions + skills suffice at this scale | Revisit only with explicit confirmation if navigation becomes slow |
-| D6 | Keep `Example_Project/`? | **Kept** as living documentation under `projects-folder/Example_Project/` | `rm -rf projects-folder/Example_Project` + remove its README/MEMORY/Ideas links and FILETREE rows |
+| D6 | Keep `Example_Project/`? | ~~**Kept** as living documentation under `projects-folder/Example_Project/`~~ **— superseded 2026-09-29:** deleted by the Human Owner; see "Example-project decision" | Restore it with `git checkout 2523ae9 -- projects-folder/Example_Project`, then re-register it with `research-project-manager sync` |
 | D7 | `.agents/skills` vs `.claude/skills` (vs hub) duplication | ~~Three identical copies kept in sync by a documented rule~~ **— superseded 2026-07-22 by the M3 authorization below.** Installs are now **mixed**: skills from Human-Owner-authored collections are **symlinked** to the hub (editing the installed path edits the hub, so drift is impossible); skills from vendored collections are **copied**, and any collection declared an auto-refreshed read-only mirror (`mattpocock-skills`) **must** stay copied so the copy acts as a version pin. Targets are table-driven, not the hardcoded two directories, so `.claude/skills` and `.agents/skills` are no longer required to be byte-identical | Revert `research-skill-installer` to copy-only into two hardcoded directories, restore the three-copy rule here and in AGENTS.md, and restore the four `diff -rq` checks in `verify.sh` |
 | D8 | Where do instantiated projects live? | `projects-folder/<ProjectName>/`; reusable templates in `projects-folder/templates/<TemplateName>/` | Move projects back to the repo root and revert links + FILETREE rows |
 | D9 | Structured (YAML/JSON) indexes? | **No** — Markdown tables are grep-able and token-cheap | Add YAML front-matter later if tooling needs to parse indexes |
@@ -374,6 +375,16 @@ The Human Owner stated the template's purpose: “template尽量作为不同proj
 | Template version (a) | A dated line, "Based on the `<template>` project template, last synced YYYY-MM-DD.", stamped by `new`; `validate` warns `template_sync_missing` when it is absent or undated. A date rather than a commit, because the template may be uncommitted when a project is created or aligned, and `git log --since=<date>` lists every later template change either way | Record commits, or drop the line and the warning |
 | Project `index.md` (b) | Navigation only: title, summary, "Start here", "Project areas", and a "Setup after copying" checklist deleted once done. `new` sets the title to the project name and, with `--goal`, the summary; `validate` warns `index_title_is_template`. This replaced an uncommitted same-day whole-file `index_is_template` check that pushed projects to rewrite shared content | Drop the fill step and the warning |
 | Verification | 21 research-project-manager tests pass; `validate` reports 2 projects, 0 warnings; an end-to-end `new` on a scratch copy of the real template set the index and template line with no new warnings; `./verify.sh` passes except the pre-existing installed-skills check (`core.symlinks=false` on this checkout); a read-only Claude Code 2.1.284 turn in `nanochat_cpu` confirmed it loads both the root and the project `AGENTS.md`. Codex was not checked: its Windows sandbox reported `updateRequired`, so the harness refused read-only mode | Run the Codex check once its sandbox is updated |
+
+**Example-project decision (2026-09-29, Human Owner):**
+
+Asked 「projects-folder\Example_Project 可以删除吗？已经有projects-folder\nanochat_cpu作为示例代码了」, the Human Owner was shown what only Example_Project covered: the writing workflow, a seconds-long smoke test, and the H2 acceptance run. They answered 「在projects-folder\nanochat_cpu\paper 中写简短的paper即可」 for the writing gap and chose to move H2 to `nanochat_cpu` (「选 b，开始执行」).
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Example_Project | Deleted; its last version is at Git `2523ae9`. Its idea bundle `ideas/idea_example/` is archived rather than deleted and records where the project went. Live references (README, os-build, os-harness, os-ui, skill READMEs) now use `nanochat_cpu`; historical decision rows, ADR-0001, and cognition evidence keep the name | Restore it from Git and re-register it (D6) |
+| Writing example | `nanochat_cpu` carries a 4-page paper, `paper/main.tex` → `paper/main.pdf`, with every claim traced in `paper_skeleton.md`. Figure 1 is drawn by pgfplots from `Code/results/training_metrics.csv` at build time, because no SVG converter is installed. Each reference was checked against arXiv, GitHub, Hugging Face, or the author's page | Remove the paper and restore the project rule that the writing workflow is not in use |
+| H2 acceptance | GOAL.md H2 now names `nanochat_cpu`; its acceptance run is dispatch session `20260926-202021-claude-2302`, still awaiting the Human Owner | Restore Example_Project and the GOAL.md wording |
 
 ## Deviations from the original plan
 

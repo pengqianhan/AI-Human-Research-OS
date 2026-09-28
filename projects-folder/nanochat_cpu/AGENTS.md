@@ -69,8 +69,11 @@ later template changes can be ported. -->
 - This project is a runnable Research OS example, not a research result.
   Keep `bash runs/runcpu_small.sh all` (run from `Code/nanochat/`) finishing
   in a few minutes on a laptop-class CPU; larger recipes belong in the
-  "Scaling notes" section of [Code/README.md](Code/README.md). The Writing
-  workflow and `paper_skeleton.md` are not in use.
+  "Scaling notes" section of [Code/README.md](Code/README.md).
+- [paper/main.tex](paper/main.tex) is a short write-up of this example, the
+  Research OS's worked example of the Writing workflow. When results or
+  timings change, update the paper, `paper_skeleton.md`, and `Code/README.md`
+  together and rebuild `paper/main.pdf`.
 - Train on CPU. The runner sets `NANOCHAT_BASE_DIR`, `NANOCHAT_COMPILE=0`,
   and `ARROW_DEFAULT_MEMORY_POOL=system`; set the same variables to run a
   script by hand.

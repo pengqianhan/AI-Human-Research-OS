@@ -24,4 +24,4 @@ add it to the Active Projects table in [global memory](../memory/MEMORY.md).
 
 ## Bundles
 
-* [Idea example](idea_example/index.md) - Worked OKF bundle for a promoted idea that validates the OS pipeline with a linear-fit micro-experiment.
+* [Idea example](idea_example/index.md) - Worked OKF bundle for an archived idea that validated the OS pipeline with a linear-fit micro-experiment.

@@ -26,7 +26,7 @@ Run from the repository root with any Python 3.9+. There are no dependencies.
 
 ```bash
 python os-harness/harness.py check
-python os-harness/harness.py run --agent claude --cwd projects-folder/Example_Project "Summarize the project status"
+python os-harness/harness.py run --agent claude --cwd projects-folder/nanochat_cpu "Summarize the project status"
 python os-harness/harness.py resume <session-id> "Now list the open questions"
 python os-harness/harness.py sessions
 python os-harness/harness.py show <session-id>

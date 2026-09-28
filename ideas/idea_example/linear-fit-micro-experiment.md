@@ -2,11 +2,10 @@
 type: Idea
 title: "Demo: validate the OS pipeline with a linear-fit micro-experiment"
 description: "Walk one idea through the full OS loop to verify the template and conventions work end to end."
-status: promoted
+status: archived
 created: 2026-06-12
-timestamp: 2026-06-17T00:00:00+12:00
-tags: [research-os, smoke-test, linear-fit, promoted]
-project: ../../projects-folder/Example_Project/
+timestamp: 2026-09-29T00:00:00+13:00
+tags: [research-os, smoke-test, linear-fit, archived]
 source: "https://github.com/pengqianhan/AI-Human-Research-OS/blob/38d79be74b463dc41b0b651e5510ac7346502cbd/task_en.md"
 ---
 
@@ -34,7 +33,7 @@ compiled PDF.
 
 # Project
 
-Promoted to [Example Project](../../projects-folder/Example_Project/).
+Promoted to `projects-folder/Example_Project/`. The project was deleted on 2026-09-29, when `nanochat_cpu` became the only example project; its last version is in Git at commit `2523ae9`.
 
 # Notes
 

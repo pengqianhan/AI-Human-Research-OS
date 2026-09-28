@@ -13,7 +13,7 @@ export function RootAgentPage() {
       examples={[
         "What is the state of the portfolio?",
         "Have nanochat_cpu rerun the vocabulary probe with 8,192 tokens.",
-        "How is the Example_Project run going?",
+        "How is the nanochat_cpu run going?",
       ]}
     />
   );

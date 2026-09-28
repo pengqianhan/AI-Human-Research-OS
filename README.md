@@ -124,14 +124,13 @@ Each project carries its own `AGENTS.md` with the template's shared rules, so
 it can also stand alone as its own repository; the template is the greatest
 common divisor of its projects ([template contract](projects-folder/templates/index.md)).
 
-Two runnable example projects:
-
-- [Example_Project/](projects-folder/Example_Project/): a complete worked
-  example, from code to figure to compiled PDF.
-- [nanochat_cpu/](projects-folder/nanochat_cpu/): Andrej Karpathy's nanochat,
-  shrunk until every stage (tokenizer, pretraining, eval, SFT, chat) runs on a
-  laptop-class CPU in a few minutes; see its
-  [Code/README.md](projects-folder/nanochat_cpu/Code/README.md).
+A complete worked example lives in
+[projects-folder/nanochat_cpu/](projects-folder/nanochat_cpu/): Andrej
+Karpathy's nanochat, shrunk until every stage (tokenizer, pretraining, eval,
+SFT, chat) runs on a laptop-class CPU in a few minutes, with a short paper
+compiled from its results. See its
+[Code/README.md](projects-folder/nanochat_cpu/Code/README.md) to run it and
+[paper/main.pdf](projects-folder/nanochat_cpu/paper/main.pdf) for the write-up.
 
 ## Optional Layers
 
