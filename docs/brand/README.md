@@ -19,37 +19,42 @@ window's three traffic lights come from the os-ui desktop.
 | [logo-mark-white.svg](logo-mark-white.svg) | Mark for dark backgrounds (white lines, orange ring, colored lights). |
 | [logo-mark-mono.svg](logo-mark-mono.svg) | One-color mark; takes the surrounding `currentColor` (inline it, or set `color` on an `<img>` wrapper). For print, stamps, and disabled states. |
 | [logo-lockup.svg](logo-lockup.svg) | Mark plus wordmark, horizontal. Its text needs IBM Plex Mono installed; use the PNG where you cannot control fonts. |
-| [logo-lockup-white.svg](logo-lockup-white.svg) | The lockup for dark backgrounds (white mark and text, orange ring and “OS”). |
+| [logo-lockup-white.svg](logo-lockup-white.svg) | The lockup for dark backgrounds: white mark and “RESEARCH”, mist-grey “AI-HUMAN”, orange ring and “OS”. |
 | [app-icon.svg](app-icon.svg) | Ink tile with the OS's dot grid and the white mark. Rounded corners at 22%; masks well to a circle. |
 | [favicon.svg](favicon.svg) | The pair only (dot and ring) on an ink tile, for 16–48 px. |
-| `logo-mark.png`, `logo-mark-white.png`, `app-icon.png` | 1024 px PNG exports, transparent background. |
-| `logo-lockup.png`, `logo-lockup-white.png`, `logo-lockup-on-paper.png` | 1740 px PNG exports of the lockup: transparent for light backgrounds, transparent for dark backgrounds, and on the paper color. |
-| `favicon-256.png` | 256 px PNG of the favicon. |
+| [logo-mark.png](logo-mark.png), [logo-mark-white.png](logo-mark-white.png), [app-icon.png](app-icon.png) | 1024 px PNG exports, transparent background. |
+| [logo-lockup.png](logo-lockup.png), [logo-lockup-white.png](logo-lockup-white.png), [logo-lockup-on-paper.png](logo-lockup-on-paper.png) | PNG exports of the lockup at 4× its viewBox width: transparent for light backgrounds, transparent for dark backgrounds, and on the paper color (rendered from `logo-lockup.svg`). |
+| [favicon-256.png](favicon-256.png) | 256 px PNG of the favicon. |
 
-The PNGs were rendered from the SVGs with headless Chromium (IBM Plex Mono
-loaded from Google Fonts for the wordmark). Re-render them after editing an
-SVG; keep the SVGs as the source of truth.
+Every PNG is rendered from its SVG by [render.py](render.py) (headless
+Chromium, IBM Plex Mono from Google Fonts). The SVGs are the source of truth:
+after editing one, run `python docs/brand/render.py` from the repository root.
 
 ## Where the assets are used
 
 - The repository [README](../../README.md) opens with the lockup:
-  `logo-lockup.png` in light mode and `logo-lockup-white.png` in dark mode,
-  switched by a `<picture>` element.
-- [os-ui](../../os-ui/README.md) shows `favicon.svg` as its browser-tab icon
-  from a copy at `os-ui/frontend/public/favicon.svg`; replace that copy when
-  the favicon changes.
+  [logo-lockup.png](logo-lockup.png) in light mode and
+  [logo-lockup-white.png](logo-lockup-white.png) in dark mode, switched by a
+  `<picture>` element; renderers that ignore it get
+  [logo-lockup-on-paper.png](logo-lockup-on-paper.png), readable on any background.
+- [os-ui](../../os-ui/README.md) shows the favicon as its browser-tab icon from
+  tracked copies, [favicon.svg](../../os-ui/frontend/public/favicon.svg) and
+  [favicon-256.png](../../os-ui/frontend/public/favicon-256.png). After changing
+  an original, copy it again; `./verify.sh` fails while they differ.
 
 ## Colors and type
 
-The logo uses the os-ui palette (`os-ui/DESIGN.md` §7):
+The logo uses the os-ui palette ([os-ui/DESIGN.md](../../os-ui/DESIGN.md) §7)
+plus one brand-only tint for dark backgrounds:
 
-| Token | Hex | In the logo |
-|---|---|---|
-| ink | `#17262E` | window, human dot, projects, wordmark |
-| paper | `#F2F4F3` | window fill; the light background |
-| signal | `#E8590C` | the agent ring and “OS” |
-| verify / warn / danger | `#2F7D6D` / `#B7791F` / `#C4564A` | the three window lights |
-| ink-soft | `#52646E` | “AI-HUMAN” in the wordmark |
+| Token | Hex | Light versions | Dark versions (`-white`) |
+|---|---|---|---|
+| ink | `#17262E` | window, human dot, projects, “RESEARCH” | the background |
+| paper | `#F2F4F3` | window fill; the light background | window, human dot, projects, “RESEARCH” |
+| signal | `#E8590C` | the agent ring and “OS” | the same |
+| verify / warn / danger | `#2F7D6D` / `#B7791F` / `#C4564A` | the three window lights | the same |
+| ink-soft | `#52646E` | “AI-HUMAN” | — (too dark on ink) |
+| mist (brand only) | `#9FB0B8` | — | “AI-HUMAN” |
 
 Wordmark: IBM Plex Mono, “AI-HUMAN” at 500 with wide tracking, “RESEARCH OS”
 at 700. Body text next to the logo: IBM Plex Sans.
