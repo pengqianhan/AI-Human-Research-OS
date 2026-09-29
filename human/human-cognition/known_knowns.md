@@ -13,7 +13,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 - cog-20260716-001 - Python and PyTorch familiarity: self-reported working familiarity with Python programming and deep-learning training in PyTorch.
 - cog-20260716-002 - Outcome-level Research OS vision: can state desired human-agent research outcomes and collaboration flows without prescribing the implementation route.
-- cog-20260724-002 - Branch as the containment boundary for unattended agent work: scopes recurring autonomous runs to a named branch and expects their output readable off the dev machine.
+- cog-20260724-002 - Branch as the containment boundary for unattended agent work: scopes recurring autonomous runs to a named branch, merges their output into main only after review, and expects it readable off the dev machine.
 - cog-20260923-001 - Human-read, agent-write division of the OS: the GUI exists for human observation; agents mutate paper-wiki, skills, and projects only through skills with scripted interfaces.
 - cog-20260923-002 - Recommended defaults in grilling rounds are accepted without close reading: executive decisions inside a round are effectively the agent's; directional vetoes happen separately.
 - cog-20260927-001 - Glance-first GUI: state shown with visual elements and minimal text; sentences only after a click.
@@ -58,20 +58,20 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 ## cog-20260724-002 Branch as the containment boundary for unattended agent work
 
-- content: When delegating recurring work that runs without supervision, the human names a single branch as the sole write surface and states it as a hard constraint rather than a suggestion. They separately expect the resulting artifact to be readable away from the development machine, including from another country, so unattended output must land somewhere they can reach without the repo checkout.
+- content: When delegating recurring work that runs without supervision, the human names a single branch as the sole write surface and states it as a hard constraint rather than a suggestion. Unattended output that should reach `main` goes through their own review and merge. They separately expect the resulting artifact to be readable away from the development machine, including from another country, so unattended output must land somewhere they can reach without the repo checkout.
 - source: user-confirmed
 - confidence: medium
-- evidence: Setting up a daily Hugging Face agent-paper reading routine, the human specified that every operation must happen only on the `autoreadpaper` branch, and in the same request asked that `paper-wiki/viz.html` be published to the internet so they could read the notes from abroad.
+- evidence: Setting up a daily Hugging Face agent-paper reading routine, the human specified that every operation must happen only on the `autoreadpaper` branch, and in the same request asked that `paper-wiki/viz.html` be published to the internet so they could read the notes from abroad. 2026-09-29: asking for a recurring scan of GitHub for related projects, they set the gate themselves: 「填写到os-build\references\related-projects.md 中，我审核后合并到main」, which became a scan branch plus a PR they review.
 - created: 2026-07-24
-- last_updated: 2026-07-24
+- last_updated: 2026-09-29
 - status: active
 - domain: autonomy governance and delivery of agent output
 - scope: Unattended or scheduled agent work in this repository; no claim about branch discipline in interactive sessions the human is watching.
 - evidence_type: explanation
-- last_verified: 2026-07-24
+- last_verified: 2026-09-29
 - freshness: current
 - responsibility_relevance:
-  - For any scheduled or long-running autonomous task, verify the working branch before the first write and never touch `main` or open a PR without being asked.
+  - For any scheduled or long-running autonomous task, verify the working branch before the first write and never touch `main` or open a PR without being asked; when the task's output is meant for `main`, deliver it as a PR for the human to review rather than merging.
   - Treat "the agent produced files in the repo" as incomplete delivery when the human is away from the machine; pair unattended runs with a reachable published view.
 - related:
   - [cog-20260724-001](unknown_knowns.md#cog-20260724-001-agent-neutrality-as-a-veto)

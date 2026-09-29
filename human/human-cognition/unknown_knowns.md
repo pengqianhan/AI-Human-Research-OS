@@ -14,6 +14,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260724-001 - Agent neutrality as a veto: rejects OS mechanisms that work in only one agent harness, even when they are the most reliable option.
 - cog-20260908-001 - Lingua franca for shared artifacts: keeps UI chrome and skill docs in English and confines Chinese to the human's own note content.
 - cog-20260929-001 - Reuse-first templates: a template is the greatest common divisor of its projects, so no project starts from scratch, and each project must stay exportable as its own repository.
+- cog-20260929-002 - Scripted tooling before a scheduled agent: for one mechanical recurring chore (the related-projects scan), preferred a `gh` keyword script over a Claude scheduled task; low confidence.
 
 ## Entries
 
@@ -78,3 +79,23 @@ timestamp: 2026-07-04T00:00:00+12:00
 - related:
   - [cog-20260724-001](#cog-20260724-001-agent-neutrality-as-a-veto)
   - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
+
+## cog-20260929-002 Scripted tooling before a scheduled agent for mechanical chores
+
+- content: For a recurring chore that a deterministic tool can do, the human may prefer a plain script over a scheduled LLM agent. For the GitHub related-projects scan they accepted noisier keyword matches in exchange, with pruning moved into their own PR review. Recurring work that needs reading and judgment, such as the daily paper routine, stays with an agent.
+- source: inferred
+- confidence: low
+- evidence: 2026-09-29, while the agent was setting up the related-projects scan as a Claude desktop scheduled task modelled on `autoreadpaper`, the human interrupted the registration question with 「我在想可不可以用github cli 根据关键字来扫描，而不用claude 的定时任务呢？」. The scan was rebuilt as a GitHub Actions workflow with a standard-library script, and the Claude task was dropped.
+- created: 2026-09-29
+- last_updated: 2026-09-29
+- status: active
+- domain: automation design
+- scope: Choosing a mechanism for recurring, unattended repository chores; a single instance, phrased as a question, so it may be about this task's cost or friction rather than a general rule.
+- evidence_type: explanation
+- last_verified: 2026-09-29
+- freshness: current
+- responsibility_relevance:
+  - When proposing a recurring automation, offer the scripted option (GitHub Actions, `gh`, a small script) next to the agent option, with the precision lost by dropping judgment, before building either.
+- related:
+  - [cog-20260724-002](known_knowns.md#cog-20260724-002-branch-as-the-containment-boundary-for-unattended-agent-work)
+  - [cog-20260923-001](known_knowns.md#cog-20260923-001-human-read-agent-write-division-of-the-os)
