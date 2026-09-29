@@ -25,6 +25,25 @@ proposes new entries in a pull request; prune them there before merging.
   [AutoR/](AutoR/) here is a submodule pointer without content.
 - [autolab](https://github.com/autolabhq/autolab): a benchmark for evaluating AI
   agents on frontier, ultra-long-horizon auto-research tasks.
+- [AutoScholarLoop](https://github.com/damonwan1/AutoScholarLoop): A multi-agent
+  AUTO Research loop for idea discovery, experiment execution, evidence-grounded
+  paper writing, quality audit, and live Web observation from AI group, CNIC,
+  CAS.
+- [AutoResearchClaw](https://github.com/aiming-lab/AutoResearchClaw): Fully
+  autonomous & self-evolving research from idea to paper. Chat an Idea. Get a
+  Paper.
+- [AutoResearch](https://github.com/EvoMap/AutoResearch): AI/ML research agents
+  from idea to paper-ready evidence. An EvoMap open-source project.
+- [NanoResearch](https://github.com/OpenRaiser/NanoResearch): NanoResearch: The
+  Autonomous AI Research Assistant.
+- [Arbor](https://github.com/RUC-NLPIR/Arbor): A generalist autonomous research
+  agent — runs experiments, researches, and iteratively optimizes, autonomously.
+- [Principia](https://github.com/pzqpzq/Principia): Principia extracts reusable
+  principles, composes those principles into traceable research ideas, and helps
+  researchers inspect why an idea may be worth testing.
+- [Anti-Autoresearch](https://github.com/wanshuiyin/Anti-Autoresearch): Don't
+  trust an autoresearch paper at face value. Reviewer-side integrity forensics
+  (self-consistency + fabrication), deterministic verdict.
 
 ## Agent runtimes and operating systems
 
@@ -52,6 +71,17 @@ proposes new entries in a pull request; prune them there before merging.
   the Human Owner's field map of AI systems, infrastructure, benchmarks, and
   papers for scientific discovery; [awesome-AI-for-research/](awesome-AI-for-research/)
   here is a submodule pointer to it.
+- [Auto-Research-Skills](https://github.com/brycewang-stanford/Auto-Research-Skills):
+  A curated hub of autonomous-research skills & agents — from idea to paper, on
+  autopilot.
+- [de-anthropocentric-research-engine](https://github.com/yogsoth-ai/de-anthropocentric-research-engine):
+  A 267-skill research graph in pure markdown — 51 research operations built
+  from 216 single-purpose steps, composed in any order with explicit
+  backtracking. One npx install, no runtime, no MCP bindings.
+- [skills](https://github.com/dzhng/skills): Reusable AI agent skills for
+  software factories: explore ideas, write specs, implement, review, and run
+  autonomous research. Works with Claude Code, Codex, and other skill-compatible
+  agents.
 
 ## Articles
 
