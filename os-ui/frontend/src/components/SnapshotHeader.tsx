@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Meta, Policy } from "../types";
 import { formatSnapshotTime, minutesSince } from "../lib/format";
+import { LIVE } from "../lib/mode";
 
 const STALE_THRESHOLD_MINUTES = 10;
 
@@ -26,7 +27,9 @@ export function SnapshotHeader({ meta, policy }: Props) {
   }, []);
 
   const ageMinutes = minutesSince(meta.generated_at);
-  const isStale = ageMinutes !== null && ageMinutes > STALE_THRESHOLD_MINUTES;
+  // A published snapshot is as old as its last deploy by design; only the
+  // live desktop, which should track the repository, can go stale.
+  const isStale = LIVE && ageMinutes !== null && ageMinutes > STALE_THRESHOLD_MINUTES;
 
   // Kept deliberately sparse: name on the left, two quiet status chips on
   // the right. Details (full timestamp, schema, HEAD, policy key) live in
@@ -38,7 +41,9 @@ export function SnapshotHeader({ meta, policy }: Props) {
         title="Read-only desktop: the file system is the source of truth; this UI executes nothing"
       >
         AI-HUMAN RESEARCH OS
-        <small className="ml-2 hidden font-normal text-ink-soft sm:inline">Read-only desktop</small>
+        <small className="ml-2 hidden font-normal text-ink-soft sm:inline">
+          {LIVE ? "Read-only desktop" : "Public snapshot · view only"}
+        </small>
       </span>
 
       <span className="ml-auto flex items-center gap-2">

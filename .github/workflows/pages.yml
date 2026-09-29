@@ -1,15 +1,19 @@
-name: Deploy paper-wiki to Pages
+name: Deploy os-ui to Pages
 
-# Publishes paper-wiki/ so the OKF viewer is readable from any browser:
-# https://pengqianhan.github.io/AI-Human-Research-OS/paper-wiki/viz.html
-# Deploys from the autoreadpaper branch only.
+# Publishes a view-only build of os-ui, with the paper wiki inside it:
+#   https://pengqianhan.github.io/AI-Human-Research-OS/                     os-ui desktop
+#   https://pengqianhan.github.io/AI-Human-Research-OS/paper-wiki/viz.html  paper wiki
+# Deploys from the autoreadpaper branch only, so the nightly paper run is
+# public at once; the rest of the OS updates when main is merged into it.
+#
+# A production build has no write or agent endpoints (their Vite plugins are
+# serve-only) and hides those controls (os-ui/frontend/src/lib/mode.ts). It is
+# built from the checkout, so only tracked files reach the site. No path
+# filter: state.json reads files all over the repository.
 
 on:
   push:
     branches: [autoreadpaper]
-    paths:
-      - 'paper-wiki/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -24,23 +28,45 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 30 # the Dashboard's activity timeline reads `git log -15`
 
-      - name: Stage site
+      - uses: astral-sh/setup-uv@v10.2.0 # publishes no moving major tag
+
+      - name: Install the pinned Python
+        run: uv python install "$(cat .python-version)"
+
+      # The same two steps os-ui/start.sh runs before the dev server.
+      - name: Generate state.json and stage the paper wiki
         run: |
-          mkdir -p _site/paper-wiki
-          cp -r paper-wiki/. _site/paper-wiki/
-          printf '%s' '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=paper-wiki/viz.html"><a href="paper-wiki/viz.html">paper wiki</a>' > _site/index.html
+          uv run --no-project --python "$(cat .python-version)" -- python os-ui/generator/generate.py
+          mkdir -p os-ui/frontend/public/paper-wiki
+          cp -r paper-wiki/. os-ui/frontend/public/paper-wiki/
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: os-ui/frontend/package-lock.json
+
+      # Relative base: the site lives under /AI-Human-Research-OS/.
+      - name: Build os-ui
+        working-directory: os-ui/frontend
+        run: |
+          npm ci
+          npx vite build --base=./
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: os-ui/frontend/dist
 
       - id: deployment
         uses: actions/deploy-pages@v4

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { SkillInstall, StoreTarget } from "../types";
 import type { DisplaySkill } from "../lib/skills";
 import { installAtTargetCommand } from "../lib/skills";
+import { LIVE } from "../lib/mode";
 
 interface Props {
   skill: DisplaySkill;
@@ -111,7 +112,14 @@ export function SkillInstalls({ skill, targets }: Props) {
                     </span>
                   </span>
 
-                  {install ? (
+                  {!LIVE ? (
+                    // A published build shows the state; toggling needs the dev server.
+                    install && (
+                      <span className="font-mono-heading shrink-0 text-[10.5px] text-stale">
+                        {install.disabled ? "disabled" : "enabled"}
+                      </span>
+                    )
+                  ) : install ? (
                     <button
                       type="button"
                       disabled={working}
@@ -152,11 +160,13 @@ export function SkillInstalls({ skill, targets }: Props) {
       })}
 
       {error && <p className="mt-1 text-[11px] text-warn">{error}</p>}
-      <p className="mt-1 text-[11px] text-stale">
-        Disable never deletes skill content: a linked install moves into the
-        target's <code>.disabled/</code>, a copied one renames its SKILL.md.
-        Installing somewhere new is still a copied command.
-      </p>
+      {LIVE && (
+        <p className="mt-1 text-[11px] text-stale">
+          Disable never deletes skill content: a linked install moves into the
+          target's <code>.disabled/</code>, a copied one renames its SKILL.md.
+          Installing somewhere new is still a copied command.
+        </p>
+      )}
     </div>
   );
 }

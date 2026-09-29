@@ -175,8 +175,9 @@ The old tab-shell concept is superseded.
    generated artifact (source: `research-skills-hub/open-paper-skills/
    paper-wiki-manager/scripts/{templates/viz.html,static/viz.{css,js}}`) that
    already vendors its own force-directed graph engine (fcose + cytoscape.js)
-   and stays independently deployable — see the GitHub Pages workflow at
-   `.github/workflows/pages.yml`. Reimplementing that graph natively in React
+   and stays usable on its own — the GitHub Pages workflow at
+   `.github/workflows/pages.yml` serves it at `paper-wiki/viz.html` inside the
+   published os-ui build. Reimplementing that graph natively in React
    would duplicate a working, self-contained viewer for no benefit; the iframe
    keeps a single source of truth. `frontend/public/paper-wiki/` is a
    gitignored cache copy synced by `start.sh` (same treatment as
@@ -243,7 +244,11 @@ The old tab-shell concept is superseded.
   dev-server middleware: they exist only while `start.sh` runs and die with
   Ctrl-C.
 - No execution buttons until M4. Install and remove stay copy-only.
-- No user accounts, multi-user collaboration, or remote deployment.
+- No user accounts, multi-user collaboration, or remote deployment of the live
+  desktop. The one remote copy is the view-only production build that
+  `.github/workflows/pages.yml` publishes to GitHub Pages from `autoreadpaper`
+  (Human Owner, 2026-09-30); it carries no endpoints and hides their controls
+  (`frontend/src/lib/mode.ts`).
 - No agent transcript parser or dependence on one specific agent.
 - No Chinese UI/i18n layer for now; the current build is English-first. Keep
   `README_zh.md` as a reference copy, and add Chinese UI support later when the
