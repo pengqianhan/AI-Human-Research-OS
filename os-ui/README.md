@@ -20,7 +20,8 @@ The UI opens as a dot-grid desktop with three layers:
 - **Windows**: five draggable, resizable, minimizable macOS-style windows:
   **Dashboard**, **Projects**, **Skill Store**, **Paper Wiki** (the
   standalone `paper-wiki/viz.html` graph and timeline viewer, embedded by iframe — see
-  DESIGN.md §4), and **Root Agent** (below).
+  DESIGN.md §4; here a note's Status row saves your unread / skimmed / read
+  state into the note's file), and **Root Agent** (below).
 - **Dock**: the five app icons on the left, and one copy-only button for
   snapshot regeneration on the right.
 
@@ -123,8 +124,8 @@ npm run build
 The output goes to `frontend/dist/`, which is gitignored. The frontend loads
 `state.json` and the Paper Wiki viewer by relative paths, so a bundle built with
 `npx vite build --base=./` also works from a sub-path or another origin, such as
-a private claude.ai artifact. The skill toggle needs the dev server and does
-nothing in a static bundle.
+a private claude.ai artifact. The skill toggle and the Paper Wiki status
+buttons need the dev server; a static bundle shows the status read-only.
 
 ## Design Stance
 

@@ -10,7 +10,7 @@ tags:
 - llm-agents
 - agent-architecture
 - survey
-status: read
+status: unread
 priority: high
 timestamp: 2026-07-08T00:00:00Z
 ---

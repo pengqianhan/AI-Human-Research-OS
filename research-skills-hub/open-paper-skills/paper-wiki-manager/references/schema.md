@@ -54,6 +54,10 @@ new reading round. Metadata refreshes, link repair, arXiv-version checks, and
 duplicate re-ingestion do not increment it. Do not infer a number when the
 existing record does not establish one.
 
+`status` is human-owned in the same way: `unread`, `skimmed`, or `read` records
+the human's reading, not the agent's. Every new paper and source starts at
+`unread`; the Metadata Rules in `SKILL.md` say how it changes.
+
 ## Paper Body
 
 Paper body is user-customizable Markdown. The paper-wiki profile does not
@@ -270,7 +274,7 @@ description: One sentence summary for indexes and search.
 resource: https://example.com/post
 tags:
 - topic-tag
-status: read
+status: unread
 priority: normal
 timestamp: YYYY-MM-DDTHH:MM:SSZ
 ---

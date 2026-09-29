@@ -594,6 +594,7 @@
       tagsEl.textContent = "—";
     }
 
+    renderStatus(conceptId);
     renderNoteBody(conceptId);
 
     const bl = dirBacklinks[conceptId] || [];
@@ -692,7 +693,7 @@
   // concepts are left out — they are rewritten repeatedly, so their timestamp
   // means "last touched", which reads as noise in a chronological feed.
   const TIMELINE_TYPES = new Set(["Paper", "Reference"]);
-  const STATUS_GLYPH = { unread: "●", summarized: "○", read: "✓" };
+  const STATUS_GLYPH = { unread: "●", skimmed: "◐", read: "✓" };
   const SORT_KEYS = {
     added: (d) => d.timestamp || "",
     published: (d) => d.submitted || d.published || "",
@@ -753,9 +754,7 @@
     day.textContent = date ? date.slice(8, 10) : "—";
 
     const status = document.createElement("span");
-    status.className = "tl-status " + (d.status || "");
-    status.textContent = STATUS_GLYPH[d.status] || "·";
-    if (d.status) status.title = d.status;
+    paintStatusGlyph(status, d.status);
 
     const title = document.createElement("span");
     title.className = "tl-title";
@@ -823,6 +822,108 @@
     updateSortControls();
     renderTimeline();
   });
+
+  // ---------- reading status ----------
+  // `status` is the human's own reading state, so only the human changes it.
+  // The viewer can save it only when os-ui's dev server is behind the page:
+  // POST /api/paper-wiki/status rewrites the note's frontmatter and regenerates
+  // viz.html. Opened from disk or any static host, the probe fails and the
+  // Status row stays read-only.
+  const STATUS_API = "/api/paper-wiki/status";
+  let statusWritable = false;
+
+  function paintStatusGlyph(el, status) {
+    el.className = "tl-status " + (status || "");
+    el.textContent = STATUS_GLYPH[status] || "·";
+    // An empty title would hide the row's description tooltip.
+    if (status) el.title = status;
+    else el.removeAttribute("title");
+  }
+
+  function renderStatus(id) {
+    const d = nodeIndex[id];
+    const label = document.getElementById("detail-status-label");
+    const dd = document.getElementById("detail-status");
+    const shown = Boolean(d && TIMELINE_TYPES.has(d.type));
+    label.hidden = !shown;
+    dd.hidden = !shown;
+    dd.innerHTML = "";
+    if (!shown) return;
+    if (!statusWritable) {
+      const glyph = document.createElement("span");
+      paintStatusGlyph(glyph, d.status);
+      dd.append(glyph, " " + (d.status || "—"));
+      return;
+    }
+    const group = document.createElement("div");
+    group.className = "status-choices";
+    group.setAttribute("role", "group");
+    group.setAttribute("aria-label", "Reading status");
+    for (const value of Object.keys(STATUS_GLYPH)) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "status-choice" + (d.status === value ? " active" : "");
+      btn.setAttribute("aria-pressed", String(d.status === value));
+      const glyph = document.createElement("span");
+      paintStatusGlyph(glyph, value);
+      glyph.removeAttribute("title");
+      btn.append(glyph, " " + value);
+      btn.addEventListener("click", () => saveStatus(id, value));
+      group.appendChild(btn);
+    }
+    const note = document.createElement("span");
+    note.className = "status-note";
+    dd.append(group, note);
+  }
+
+  function statusNote(text, kind) {
+    const note = document.querySelector("#detail-status .status-note");
+    if (!note) return;
+    note.textContent = text;
+    note.className = "status-note" + (kind ? " " + kind : "");
+  }
+
+  async function saveStatus(id, value) {
+    const d = nodeIndex[id];
+    if (!d || d.status === value) return;
+    document
+      .querySelectorAll("#detail-status button")
+      .forEach((btn) => (btn.disabled = true));
+    statusNote("Saving…");
+    try {
+      const res = await fetch(STATUS_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: value }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      d.status = value;
+      const glyph = document.querySelector(
+        `#timeline-list .tl-row[data-id="${CSS.escape(id)}"] .tl-status`
+      );
+      if (glyph) paintStatusGlyph(glyph, value);
+      if (currentDetail !== id) return;
+      renderStatus(id);
+      // The note file is already written; only the embedded copy is stale.
+      if (body.vizError)
+        statusNote("Saved to the note; viz.html was not regenerated", "warn");
+    } catch (err) {
+      if (currentDetail !== id) return;
+      renderStatus(id);
+      statusNote("Not saved: " + err.message, "error");
+    }
+  }
+
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    fetch(STATUS_API)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        statusWritable = Boolean(body && body.writable);
+        if (statusWritable && currentDetail) renderStatus(currentDetail);
+      })
+      .catch(() => {});
+  }
 
   // ---------- view tabs ----------
   const VIEW_HINTS = {

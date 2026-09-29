@@ -43,7 +43,7 @@
     <ol id="timeline-list"></ol>
     <div id="timeline-legend">
       <span><b class="tl-status unread">●</b> unread</span>
-      <span><b class="tl-status summarized">○</b> summarized</span>
+      <span><b class="tl-status skimmed">◐</b> skimmed</span>
       <span><b class="tl-status read">✓</b> read</span>
     </div>
   </div>
@@ -65,6 +65,7 @@
         <li><strong>Added</strong> orders by when the note entered the wiki; <strong>Published</strong> by arXiv submission or source publication date.</li>
         <li>Search filters the list; the arrow flips between newest-first and oldest-first.</li>
         <li>Papers with a Chinese mirror show a language button in the note header.</li>
+        <li>The status glyph is your own reading state. Opened through os-ui, a note's <strong>Status</strong> row sets it and saves it to the note's file.</li>
       </ul>
     </div>
     <article id="detail-content" hidden>
@@ -78,6 +79,7 @@
         <dt>Description</dt><dd id="detail-description"></dd>
         <dt>Resource</dt><dd id="detail-resource"></dd>
         <dt>Tags</dt><dd id="detail-tags"></dd>
+        <dt id="detail-status-label" hidden>Status</dt><dd id="detail-status" hidden></dd>
       </dl>
       <hr>
       <div id="detail-body"></div>
