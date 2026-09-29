@@ -62,15 +62,15 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human reports not understanding frontend design and wants to learn it from the real product interface as it is built. Observed behaviour narrows the gap to implementation and architecture: given rendered options, their interface judgment is reliable and needs no scaffolding.
 - source: user-confirmed
 - confidence: high
-- evidence: Explicit self-report in the Research OS MVP clarification (2026-07-16). Narrowed 2026-09-08 during the `viz.html` timeline task: presented with ASCII mockups, the human chose reading layout and row density without hesitation, rejected the description-heavy card variant, declined an optional status filter as scope creep, and pulled back an over-reaching language switch — five interface calls, none of which needed explanation first. They asked nothing about the implementation.
+- evidence: Explicit self-report in the Research OS MVP clarification (2026-07-16). Narrowed 2026-09-08 during the `viz.html` timeline task: presented with ASCII mockups, the human chose reading layout and row density without hesitation, rejected the description-heavy card variant, declined an optional status filter as scope creep, and pulled back an over-reaching language switch — five interface calls, none of which needed explanation first. They asked nothing about the implementation. Corroborated 2026-09-29 on the README hero: the human proposed replacing the text epigraph with an os-ui screenshot, asked for the Paper Wiki window to be included, and on seeing four windows tiled edge to edge judged it 「有点拥挤」 and asked for resized windows — composition calls made straight from the rendered image.
 - created: 2026-07-16
-- last_updated: 2026-09-08
+- last_updated: 2026-09-29
 - status: active
 - domain: product interface
 - scope: Frontend component, state, API, streaming, and interaction *implementation* for the local Research OS interface. Does not cover interface and information-design judgment, which the human exercises reliably when options are rendered concretely.
 - capability_level: awareness
 - evidence_type: self-report
-- last_verified: 2026-09-08
+- last_verified: 2026-09-29
 - freshness: current
 - responsibility_relevance:
   - The human must be able to use, inspect, and redirect the GUI without maintaining every implementation detail.
