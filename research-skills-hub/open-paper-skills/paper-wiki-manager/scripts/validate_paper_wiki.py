@@ -59,7 +59,7 @@ LOCALIZED_NOTE_REQUIRED = {
     "source_note",
     "timestamp",
 }
-STATUS_VALUES = {"unread", "skimmed", "read", "summarized"}
+STATUS_VALUES = {"unread", "skimmed", "read"}
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+\.md(?:#[^)]+)?)\)")
 READING_HISTORY_HEADING = "# Reading History"
 READING_HISTORY_ENTRY_RE = re.compile(

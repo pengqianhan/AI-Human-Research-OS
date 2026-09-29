@@ -40,6 +40,9 @@ function harness(args: string[], input?: string): Promise<{ stdout: string; stde
     const child = spawn(bin, [...base, HARNESS, ...args], {
       cwd: REPO_ROOT,
       env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+      // See paper-status-plugin.ts (0xC0000142 once the terminal that started
+      // the dev server is gone).
+      windowsHide: true,
     });
     let stdout = "";
     let stderr = "";

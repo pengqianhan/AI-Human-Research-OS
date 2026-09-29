@@ -13,10 +13,11 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 - cog-20260716-001 - Python and PyTorch familiarity: self-reported working familiarity with Python programming and deep-learning training in PyTorch.
 - cog-20260716-002 - Outcome-level Research OS vision: can state desired human-agent research outcomes and collaboration flows without prescribing the implementation route.
-- cog-20260724-002 - Branch as the containment boundary for unattended agent work: scopes recurring autonomous runs to a named branch and expects their output readable off the dev machine.
+- cog-20260724-002 - Branch as the containment boundary for unattended agent work: scopes recurring autonomous runs to a named branch, merges their output into main only after review, and expects it readable off the dev machine.
 - cog-20260923-001 - Human-read, agent-write division of the OS: the GUI exists for human observation; agents mutate paper-wiki, skills, and projects only through skills with scripted interfaces.
 - cog-20260923-002 - Recommended defaults in grilling rounds are accepted without close reading: executive decisions inside a round are effectively the agent's; directional vetoes happen separately.
 - cog-20260927-001 - Glance-first GUI: state shown with visual elements and minimal text; sentences only after a click.
+- cog-20260930-001 - Human and LLM remember papers differently: a human retains what they read, while an LLM keeps a paper only through its note, so the human marks their own reading in the note for agents to look up.
 
 ## Entries
 
@@ -58,20 +59,20 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 ## cog-20260724-002 Branch as the containment boundary for unattended agent work
 
-- content: When delegating recurring work that runs without supervision, the human names a single branch as the sole write surface and states it as a hard constraint rather than a suggestion. They separately expect the resulting artifact to be readable away from the development machine, including from another country, so unattended output must land somewhere they can reach without the repo checkout.
+- content: When delegating recurring work that runs without supervision, the human names a single branch as the sole write surface and states it as a hard constraint rather than a suggestion. Unattended output that should reach `main` goes through their own review and merge. They separately expect the resulting artifact to be readable away from the development machine, including from another country, so unattended output must land somewhere they can reach without the repo checkout.
 - source: user-confirmed
 - confidence: medium
-- evidence: Setting up a daily Hugging Face agent-paper reading routine, the human specified that every operation must happen only on the `autoreadpaper` branch, and in the same request asked that `paper-wiki/viz.html` be published to the internet so they could read the notes from abroad.
+- evidence: Setting up a daily Hugging Face agent-paper reading routine, the human specified that every operation must happen only on the `autoreadpaper` branch, and in the same request asked that `paper-wiki/viz.html` be published to the internet so they could read the notes from abroad. 2026-09-29: asking for a recurring scan of GitHub for related projects, they set the gate themselves: 「填写到os-build\references\related-projects.md 中，我审核后合并到main」, which became a scan branch plus a PR they review.
 - created: 2026-07-24
-- last_updated: 2026-07-24
+- last_updated: 2026-09-29
 - status: active
 - domain: autonomy governance and delivery of agent output
 - scope: Unattended or scheduled agent work in this repository; no claim about branch discipline in interactive sessions the human is watching.
 - evidence_type: explanation
-- last_verified: 2026-07-24
+- last_verified: 2026-09-29
 - freshness: current
 - responsibility_relevance:
-  - For any scheduled or long-running autonomous task, verify the working branch before the first write and never touch `main` or open a PR without being asked.
+  - For any scheduled or long-running autonomous task, verify the working branch before the first write and never touch `main` or open a PR without being asked; when the task's output is meant for `main`, deliver it as a PR for the human to review rather than merging.
   - Treat "the agent produced files in the repo" as incomplete delivery when the human is away from the machine; pair unattended runs with a reachable published view.
 - related:
   - [cog-20260724-001](unknown_knowns.md#cog-20260724-001-agent-neutrality-as-a-veto)
@@ -81,18 +82,18 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human holds, and states as a standing design principle, that the Research OS GUI exists for human observation while code agents perform all mutation of the OS's managed areas (paper-wiki, skills, projects) through skills that expose scripted interfaces. A management need in an OS area is therefore met by a skill, not by a GUI action. The GUI's operating surface is conversation with agents: the root agent for the whole OS, and, at the human's request, a direct entry into each project's agent (“root agent 来管理不同的 project。但是也应该提供 project 中的入口，让用户直接操作和管理project”). The human treats "copy a launch command" as not being integration, and wants both levels of control, not only the root agent.
 - source: user-confirmed
 - confidence: high
-- evidence: 2026-09-23, opening the project-management design: 「整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill」. Applied consistently before: the 2026-07-22 skill-management session confined `os-ui` to a single disable/enable write slice and kept install and remove on the command line (HANDOFF "Skill-management decisions"); on 2026-09-23 the human accepted that `os-ui` stays read-only for projects with no stage toggle, and that the GUI's unregistered-project warning is only a cue for an agent to run `sync`. 2026-09-26: after seeing the dashboard remotely, the human objected that 「claude code 和 codex 还是复制链接，不是接入，也没有一个对话框提供给人类给 root agent 对话」 and had the Root Agent window built; mutation of OS areas still goes through the root agent and skills, not through GUI buttons.
+- evidence: 2026-09-23, opening the project-management design: 「整个OS 图形界面是给人看，code agent 来管理paper-wiki, skill,和project，现在paper-wiki 和 skill-hub 都有对应的 skill 来添加，删除和管理，但是projects 还没有skill」. Applied consistently before: the 2026-07-22 skill-management session confined `os-ui` to a single disable/enable write slice and kept install and remove on the command line (HANDOFF "Skill-management decisions"); on 2026-09-23 the human accepted that `os-ui` stays read-only for projects with no stage toggle, and that the GUI's unregistered-project warning is only a cue for an agent to run `sync`. 2026-09-26: after seeing the dashboard remotely, the human objected that 「claude code 和 codex 还是复制链接，不是接入，也没有一个对话框提供给人类给 root agent 对话」 and had the Root Agent window built; mutation of OS areas still goes through the root agent and skills, not through GUI buttons. 2026-09-30: the human themselves proposed a GUI write, a Paper Wiki viewer button to mark a paper read that records the status in its Markdown file (「对于网页可以添加一个按钮来让人类来标记读过」), and approved the os-ui endpoint when asked. The write carries the human's own state and runs through a skill script (`set_status.py`), so the principle holds for agent mutations while the GUI may carry the human's own records.
 - created: 2026-09-23
-- last_updated: 2026-09-26
+- last_updated: 2026-09-30
 - status: active
 - domain: Research OS architecture and division of labour
 - scope: Where write authority sits between the GUI and agents in this Research OS; no claim about GUI design preferences in general or about other tools.
 - capability_level: awareness
 - evidence_type: explanation
-- last_verified: 2026-09-26
+- last_verified: 2026-09-30
 - freshness: current
 - responsibility_relevance:
-  - When a request implies a GUI write action, route it to an explicit M4-style authorization decision rather than building it; the root-agent conversation is the authorized exception.
+  - When a request implies a GUI write action, route it to an explicit M4-style authorization decision rather than building it; the authorized exceptions are the root-agent conversation, the skill toggle, and the human's own paper reading status.
   - Treat "agent integration" in the GUI as meaning live conversations, with the root agent and with each project's agent, never a copied command.
   - When the human asks to "manage" an OS area, propose a hub skill with a stdlib script and a `verify.sh` check, following `paper-wiki-manager`, `research-skill-installer`, and `research-project-manager`.
 - related:
@@ -140,4 +141,25 @@ timestamp: 2026-07-04T00:00:00+12:00
   - Treat a new text-heavy panel as needing a visual pass, not as done.
 - related:
   - [cog-20260908-001](unknown_knowns.md#cog-20260908-001-lingua-franca-for-shared-artifacts)
+  - [cog-20260923-001](#cog-20260923-001-human-read-agent-write-division-of-the-os)
+
+## cog-20260930-001 Human and LLM remember papers differently
+
+- content: The human reasons that after reading a paper a person keeps some of its content, while an LLM understands a paper only during the session that reads it and has forgotten it by the next. The note file is therefore the LLM's memory of the paper, and the human's reading state belongs in that file, set only by the human and kept easy for agents to search. An agent reading a paper in full is not the human reading it.
+- source: user-confirmed
+- confidence: high
+- evidence: 2026-09-30, discussing the Paper Wiki viewer: 「对于人类来说，读完之后论文的内容或多或少会留存在脑子里，但是对于LLM 来说，只有在阅读的时候拥有论文的理解，下个session会忘记这篇论文」, followed by the design of a human-only “read” button that writes the note's `status`. Shown that agent runs had set `status: read` on papers the human may not have read, they decided 「只有人类改了status 才更新」 and reset every note to `unread`.
+- created: 2026-09-30
+- last_updated: 2026-09-30
+- status: active
+- domain: human-agent memory division in the Research OS
+- scope: Reading state of paper-wiki papers and sources; no claim yet about how other OS memory layers should split human and agent knowledge.
+- capability_level: awareness
+- evidence_type: explanation
+- last_verified: 2026-09-30
+- freshness: current
+- responsibility_relevance:
+  - Treat `status: read` as “the human knows this paper”: reference it without re-explaining, and prefer `unread` papers when recommending reading.
+  - Leave `status` at `unread` after agent reading, however complete the note is; the note body carries the agent's understanding.
+- related:
   - [cog-20260923-001](#cog-20260923-001-human-read-agent-write-division-of-the-os)

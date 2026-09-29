@@ -1,0 +1,60 @@
+name: Scan related projects
+
+# Weekly keyword scan of GitHub for projects related to the Research OS
+# (.github/scripts/scan_related_projects.py). New candidates are appended to
+# os-build/references/related-projects.md on the `related-projects-scan`
+# branch, and a PR is opened for the Human Owner to review, prune, and merge.
+# Never merges. Skips while an earlier scan PR is still open.
+
+on:
+  schedule:
+    - cron: "23 19 * * 0" # Sundays 19:23 UTC = Monday morning in New Zealand
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: scan-related-projects
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan GitHub and append new candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/scan_related_projects.py --write --pr-body "$RUNNER_TEMP/pr-body.md"
+
+      - name: Open a PR for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.event.repository.default_branch }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "No new candidates; nothing to do."
+            exit 0
+          fi
+
+          # Safe to overwrite: the script exits early while a scan PR is open,
+          # so this branch only holds a merged or closed scan.
+          BRANCH="related-projects-scan"
+          DATE="$(date -u +%Y-%m-%d)"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add os-build/references/related-projects.md
+          git commit -m "related-projects: add candidates from GitHub scan $DATE"
+          git push -f -u origin "$BRANCH"
+
+          PR="$(gh pr create --base "$BASE" --head "$BRANCH" \
+            --title "related-projects: GitHub scan $DATE" \
+            --body-file "$RUNNER_TEMP/pr-body.md")"
+          gh pr edit "$PR" --add-reviewer "$OWNER" || echo "Could not request review from $OWNER."
+          echo "Opened $PR"

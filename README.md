@@ -8,21 +8,9 @@
 
 # AI-Human Research OS
 
-> "Be Water, My Friend.
-> Empty your mind.
-> Be formless, shapeless, like water.
-> You put water into a cup, it becomes the cup.
-> You put water into a bottle, it becomes the bottle.
-> You put it into a teapot, it becomes the teapot.
-> Now water can flow or it can crash.
-> Be water, my friend."
->
-> — Bruce Lee
+[![The os-ui browser desktop showing the Dashboard, Skill Store, Paper Wiki, and Projects windows](docs/screenshots/os-ui-desktop.png)](os-ui/README.md)
 
-An agent is like water: it has no fixed form, and takes on the abilities of
-whatever container holds it. This repository is a container shaped for agents —
-a stable environment that lets a code agent flow into long-horizon research and
-do its best work.
+<p align="center"><sub>The optional <a href="os-ui/README.md">os-ui</a> desktop, rendered from this repository's own files.</sub></p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Agents: Claude Code · Codex](<https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex-blue.svg>)](#quick-start)

@@ -386,6 +386,16 @@ Asked 「projects-folder\Example_Project 可以删除吗？已经有projects-fol
 | Writing example | `nanochat_cpu` carries a 4-page paper, `paper/main.tex` → `paper/main.pdf`, with every claim traced in `paper_skeleton.md`. Figure 1 is drawn by pgfplots from `Code/results/training_metrics.csv` at build time, because no SVG converter is installed. Each reference was checked against arXiv, GitHub, Hugging Face, or the author's page | Remove the paper and restore the project rule that the writing workflow is not in use |
 | H2 acceptance | GOAL.md H2 now names `nanochat_cpu`; its acceptance run is dispatch session `20260926-202021-claude-2302`, still awaiting the Human Owner | Restore Example_Project and the GOAL.md wording |
 
+**Paper reading-status decision (2026-09-30, Human Owner):**
+
+The Human Owner observed that a human keeps a paper after reading it while an LLM keeps it only through the note, and asked for a viewer button that records the human's reading in the note file so later sessions can find it. Answers: 「只有人类改了status 才更新」, 「全部设置为unread， 取消summarized」, and approval of an os-ui write endpoint.
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| `status` meaning | The human's reading state only: `unread`, `skimmed`, `read`. Agents write `unread` on every new paper and source, including ones they read in full, and change it only on the human's word (paper-wiki-manager Metadata Rules). `summarized` is removed from the validator | Restore `summarized` in `validate_paper_wiki.py` and the SKILL.md rule |
+| Existing values | All 22 non-`unread` notes (19 papers, 2 sources, 1 `summarized`) reset to `unread`, because agent-set `read` could not be told apart from human reading | Restore those `status:` lines from commit `06124b3`, the last state before the reset |
+| Write path | The viewer's Status row saves through os-ui's dev-server endpoint `/api/paper-wiki/status` → `scripts/set_status.py` (one frontmatter line) → `generate_viz.py`; the static viewer and GitHub Pages copy stay read-only (os-ui/DESIGN.md authorization boundary) | Remove `paper-status-plugin.ts` from `vite.config.ts` |
+
 ## Deviations from the original plan
 
 - **2026-07-19 directional MVP sequencing reset** — After personally running the successful

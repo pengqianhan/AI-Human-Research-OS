@@ -199,7 +199,7 @@ Preserve these user-curated fields when updating a paper:
 * `# 个人笔记`
 * any custom frontmatter keys not defined in `references/schema.md`
 
-Use `status: unread` for newly added papers unless the user says otherwise. Recommended status values are `unread`, `skimmed`, `read`, and `summarized`.
+`status` is the human's reading state — `unread`, `skimmed`, or `read` — and changes on the human's word alone. Write `status: unread` on every new paper and source, including ones an agent read in full: the note body is the agent's memory of a paper, while `read` tells later sessions the human already knows it. Change it only when the human does so in the viewer's Status row or asks you to, then run `scripts/set_status.py <papers/ID | sources/slug> <status> --root <wiki-root>`, which rewrites only that frontmatter line. Find what the human has read with `grep -l '^status: read' <wiki-root>/papers/*.md <wiki-root>/sources/*.md`.
 
 ## Finishing Commands
 
@@ -260,6 +260,7 @@ The Timeline tab is the chronological reading surface:
 * **Papers and sources only.** Topics and concepts are rewritten repeatedly, so their `timestamp` means "last touched" and would read as noise in a reading feed.
 * **Two orderings.** "Added" sorts by `timestamp` (when the note entered the wiki), "Published" by `submitted` for papers and `published` for other sources; the arrow flips newest-first and oldest-first. Entries carrying neither publication date group under "No date" at the end. Same-day entries fall back to publication date and then concept ID, so the order never drifts between reloads.
 * **Compact rows.** Month headers with entry counts, then one row per entry: day, a `status` glyph, and the English title, with the description on hover. Clicking a row renders that note in the shared detail pane.
+* **Status row.** The detail pane shows a paper's or source's `status`. When os-ui's dev server is behind the page (its `GET /api/paper-wiki/status` answers `writable`), the row becomes unread / skimmed / read buttons; a click runs `set_status.py`, regenerates `viz.html`, and repaints the timeline glyph. Opened from disk or a static host, the row stays read-only.
 * **Show in graph.** While the Timeline tab is up, the note header carries a "Show in graph" button. It switches to the Graph tab, reveals a paper together with the papers it links with, highlights that neighborhood, and frames it with the zoom capped at the whole-map fit, so the note's position among its topics and concepts stays readable against the dimmed map. The button is hidden on the Graph tab, where the note is already on screen.
 
 `generate_viz.py` copies `timestamp`, `submitted`, `published`, and `status` from frontmatter onto graph nodes so the timeline can order and label entries; the validator already requires `timestamp` on every note and `submitted` on every paper.

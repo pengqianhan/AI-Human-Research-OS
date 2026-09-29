@@ -17,6 +17,9 @@ Use the `paper-wiki-manager` skill for additions and structural updates.
   `sources/`.
 - Fetch bibliographic facts with literature-search tools and preserve unknowns
   rather than inventing metadata.
+- Read a note's `status` as the human's reading state: `read` means the human
+  knows the paper. New notes start `unread`; the human sets it from the viewer
+  or by asking.
 
 Shared understanding belongs here. Project-specific claims and BibTeX entries
 belong in the project's `paper_skeleton.md` and `paper/references.bib`; a paper
