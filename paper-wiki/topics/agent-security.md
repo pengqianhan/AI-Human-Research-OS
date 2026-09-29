@@ -7,7 +7,7 @@ tags:
 - red-teaming
 - mcp-security
 - jailbreak-evaluation
-timestamp: 2026-08-22T00:00:00Z
+timestamp: 2026-09-29T00:00:00Z
 ---
 
 # Scope
@@ -17,6 +17,11 @@ This topic tracks papers whose main object is not agent *capability* but agent *
 # Papers
 
 * [Securing the AI Agent (AI-Infra-Guard)](../papers/2606.31227.md) - a four-layer, four-paradigm red-teaming framework (deterministic infrastructure scanning, LLM-driven MCP/agent-skill auditing, black-box multi-turn agent red-teaming, and large-scale jailbreak evaluation) plus SkillTrustBench, a new agent-skill-trustworthiness benchmark.
+* [TraceDance](../papers/2609.33295.md) - measures security-relevant *model* behavior at real decision points taken from deployment traces rather than attacking the infrastructure: across nine frontier LLMs, mean pass rates are 6.9% for protecting secrets, 11.3% for preserving permissions and security checks, and 13.0% for checking scripts and dependencies before use.
+
+# Synthesis
+
+The two papers measure agent security at different layers. AI-Infra-Guard audits the attack surface around the agent (infrastructure, MCP servers, skill packages) and probes the model with adversarial inputs. TraceDance needs no attacker: it replays ordinary contexts in which a deployed agent actually leaked a secret, weakened a safeguard, or trusted an unverified script, and asks whether other models would do the same. Its low pass rates suggest that many security failures in deployment arise from routine task pressure, not only from adversarial prompts, though its pass rates are conditioned on contexts where the failure already happened and do not estimate how often it occurs.
 
 # Open Questions
 

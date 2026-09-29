@@ -8,7 +8,7 @@ tags:
 - software-engineering
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-09-24T00:00:00Z
+timestamp: 2026-09-29T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ SWE-bench Pro evaluates coding agents on enterprise-style, repository-level soft
 * [MemoHarness](../papers/2607.14159.md) - uses SWE-Bench Pro as a secondary cross-dataset transfer target: a harness trained on Terminal-Bench transfers to SWE-Bench Pro with a +0.059 gain, one of the selective-transfer results in the paper's cross-dataset study.
 * [AutoSaddler](../papers/2608.23041.md) - uses SWE-Bench Pro as one of three primary training/evaluation benchmarks (96 Ansible + 85 Flipt + 56 Element-web tasks), automatically optimizing a SWE-agent base harness from 37.3% to 46.9% Pass@1, ahead of both GEPA (42.5%) and Meta-Harness (35.3%).
 * [One to More, More to One](../papers/2609.23377.md) - primary benchmark as the audited 618-of-731-task subset Pro-618 (excluding 113 tasks flagged by a public determinacy audit plus one OpenAI-documented prompt-test mismatch), split by repository domain into Pro-A/B/C = 221/201/196 for per-category see-saw analysis; final MOPD student reaches 58.04% (base 52.64%).
+* [TraceDance](../papers/2609.33295.md) - cited, not run: GPT-5.6-Sol's higher reported SWE-bench Pro score than DeepSeek-V4-Pro and GLM-5.2 is contrasted with its failure to outperform either model on TraceDance's behavior benchmarks (27.2% vs. 29.3% and 28.6%, within one rank group), as evidence that task completion and in-execution behavior rank models differently.
 
 # Notes
 

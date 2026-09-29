@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-09-23T00:00:00Z
+timestamp: 2026-09-29T00:00:00Z
 ---
 
 # Definition
@@ -27,6 +27,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [Code2Skill](../papers/2609.05571.md) - uses TerminalBench (Merrill et al., 2026) as one of eight evaluation benchmarks; retrieved code-derived skills from CodeSkillBank show large gains under generation-time prompting for DS4-Flash specifically (Sec. 5.4), among the paper's strongest single-benchmark results.
 * [RRSI](../papers/2609.24972.md) - evolves the coding harness on Terminal-Bench 2.1 (89 tasks): Claude Opus 4.8 74.2 → 80.2, Gemini 3.5 Flash 64.6 → 78.7, and the Gemini-evolved harness lifts the unseen Gemini 3.1 Flash Lite 11.2 → 14.6.
 * [ZGCM-1](../papers/2609.13356.md) - appendix diagnostic on Terminal-Bench 2.0: its best audited 7B run resolves 2 of 89 tasks (2.25%).
+* [TraceDance](../papers/2609.33295.md) - cited, not run: Terminal-Bench is the paper's example of outcome-only evaluation by final container state, and GPT-5.6-Sol's higher reported Terminal-Bench 2.1 score than DeepSeek-V4-Pro and GLM-5.2 does not carry over to TraceDance's behavior-at-decision-point benchmarks.
 
 # Notes
 

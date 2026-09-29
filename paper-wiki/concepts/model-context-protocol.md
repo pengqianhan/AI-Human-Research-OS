@@ -7,7 +7,7 @@ tags:
 - mcp
 - tool-use
 - agent-infrastructure
-timestamp: 2026-09-22T00:00:00Z
+timestamp: 2026-09-29T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ The Model Context Protocol (MCP) standardizes how a language-model application d
 * [Paper2Agent](../papers/2509.06917.md) - MCP is not one feature among several here but the paper's central technique: its entire contribution is systematically constructing an MCP server (Tools/Resources/Prompts) from a paper and its codebase, validating each tool against the reference implementation's own reported results before locking it, then deploying the server for any MCP-compatible chat agent — a more direct, load-bearing use of the protocol than this concept's other entries, each of which treats MCP as one integration surface within a larger agent rather than as the artifact being built.
 * [EvoOntology](../papers/2609.15779.md) - encapsulates an entire self-evolving ontology (schema, content, and tool layers) as one MCP server exposing `browse` and `resolve` tools plus a compact session manifest, using the protocol's selective, on-demand retrieval as the mechanism that outperforms injecting the same ontology content as static prompt text.
 * [RecreationWorld](../papers/2609.22000.md) - exposes every platform action (GUI control and coding tools alike) as direct MCP tool calls in its standard benchmark interface across five operating-system and web environments, and separately studies replacing that per-primitive MCP round-trip pattern with a persistent programmable SDK runtime for efficiency.
+* [CompoWorld](../papers/2609.33665.md) - uses public MCP tool specifications as raw material for training environments: crawled specs are normalized to function-calling format, and coding agents implement each server's tools as typed, stateful mock services (448 services, 10,130 tools) that are then composed into cross-service tasks.
 
 # Related
 

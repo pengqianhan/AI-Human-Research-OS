@@ -2,6 +2,7 @@
 
 * [3D generation agents](3d-generation-agents.md) - Papers about MLLM/LLM agents that construct or edit 3D content — worlds, scenes, or CAD objects — through iterative tool use and verifier-gated feedback rather than single-pass generation.
 * [AI for science](ai-for-science.md) - Papers about AI systems that design, run, and revise scientific experiments.
+* [Agent benchmarks and evaluation](agent-benchmarks.md) - Papers whose main contribution is a benchmark, an evaluation protocol, or a method for constructing benchmarks that measure how LLM agents perform and behave.
 * [Agent environments](agent-environments.md) - Papers about the environments, permissions, artifacts, budgets, and interfaces that shape agent behavior.
 * [Agent fine-tuning](agent-fine-tuning.md) - Papers about algorithms and objectives for updating an LLM agent's weights on long-horizon, multi-turn tasks.
 * [Agent harness engineering](agent-harness-engineering.md) - Papers about understanding, modifying, evaluating, and evolving the software layer that turns foundation models into agents.

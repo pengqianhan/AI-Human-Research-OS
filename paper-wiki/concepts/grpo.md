@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-09-28T00:00:00Z
+timestamp: 2026-09-29T00:00:00Z
 ---
 
 # Definition
@@ -27,3 +27,4 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [One to More, More to One](../papers/2609.23377.md) - uses RLOO's leave-one-out baseline instead of GRPO's self-inclusive mean for long-horizon SWE RL, arguing the inclusive mean shrinks every mixed-outcome group's advantage by (G-1)/G, which matters when rare successes are the only signal.
 * [ScienceBuddy](../papers/2609.17523.md) - standard token-averaged GRPO with a sampled KL surrogate, where the trajectory reward is a weighted task-specific rubric score (executable checks plus a fixed judge) derived from researcher collaborations, and the harness is held fixed during training.
 * [SLCA-GRPO](../papers/2609.29050.md) - keeps GRPO's group normalization but applies it separately to a dense tool-execution reward and a summary-judge reward, routing each advantage only to its own token segment (tool calls vs. final answer), so summary-reward noise no longer reaches tool tokens; +2.53 / +1.36 / +9.15 pp over matched GRPO on Toucan / BFCL / τ²-Bench at 7B.
+* [CompoWorld](../papers/2609.33665.md) - keeps standard GRPO (zero KL and entropy coefficients, one advantage for all agent tokens) but changes the reward: each rubric criterion is weighted by λ + (1 − its pass rate in the rollout group), so criteria the group rarely satisfies earn more; RL adds 1.2 points on average over SFT across eight agent benchmarks.
