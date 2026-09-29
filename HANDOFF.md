@@ -396,6 +396,17 @@ The Human Owner observed that a human keeps a paper after reading it while an LL
 | Existing values | All 22 non-`unread` notes (19 papers, 2 sources, 1 `summarized`) reset to `unread`, because agent-set `read` could not be told apart from human reading | Restore those `status:` lines from commit `06124b3`, the last state before the reset |
 | Write path | The viewer's Status row saves through os-ui's dev-server endpoint `/api/paper-wiki/status` → `scripts/set_status.py` (one frontmatter line) → `generate_viz.py`; the static viewer and GitHub Pages copy stay read-only (os-ui/DESIGN.md authorization boundary) | Remove `paper-status-plugin.ts` from `vite.config.ts` |
 
+**CI gate decision (2026-09-30, Human Owner):**
+
+Asked how contributors' pull requests should be gated, the Human Owner chose 「我自己也遵守规则」 (no owner bypass) and 「审批人数设为0，后续如果项目有新的maintainer 可以更改」.
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Gate | `main` changes only through pull requests whose `checks` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) passes: `verify.sh`, the own-code unit tests, a fresh-`viz.html` comparison, and the os-ui build. No path filter, so the required check always reports | Delete the ruleset, or drop the required check |
+| Bypass | None, the owner included. Local work goes on a topic branch; `autoreadpaper` reaches `main` through a PR; the nightly run still pushes only `autoreadpaper` | Add the repository-admin role to the ruleset's bypass list |
+| Approvals | 0 required: only maintainers can merge, so a merge is the review. Raise it when a second maintainer joins | Set required approvals in the ruleset |
+| Bot PRs | PRs opened with `GITHUB_TOKEN` start no workflows, so both bot workflows dispatch `ci.yml` on their branch; the mattpocock sync merges with `--auto`, which needs the repository's auto-merge setting on | Revert the two workflows to plain `gh pr merge` and add a bypass |
+
 ## Deviations from the original plan
 
 - **2026-07-19 directional MVP sequencing reset** — After personally running the successful

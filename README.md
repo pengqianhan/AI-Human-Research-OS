@@ -36,6 +36,7 @@ folders are organized by material type rather than by a fixed workflow.
 - [Core Directories](#core-directories)
 - [Minimal Workflow](#minimal-workflow)
 - [Optional Layers](#optional-layers)
+- [Contributing](#contributing)
 - [License](#license)
 - [Roadmap](#roadmap)
 - [Similar Projects](#similar-projects)
@@ -150,6 +151,11 @@ conversations, run through os-harness, and turning installed skills on or off.
 Decision records: [ADR-0003](docs/adr/0003-subscription-cli-harness.md)
 (subscription-CLI harness) and [ADR-0004](docs/adr/0004-root-agent-as-skill.md)
 (root agent as a skill).
+
+## Contributing
+
+Changes reach `main` only through pull requests that pass
+[CI](.github/workflows/ci.yml). See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

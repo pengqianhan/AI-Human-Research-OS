@@ -1,0 +1,79 @@
+name: CI
+
+# The gate for main: its ruleset lets a pull request merge only after the
+# `checks` job below passes, for everyone including the owner. It runs on every
+# PR with no path filter, because a required check that is skipped never
+# reports and would block the PR forever.
+#
+# Fork PRs run on `pull_request` (never `pull_request_target`), so contributed
+# code gets the read-only token below and no secrets; a first-time
+# contributor's run also waits for maintainer approval.
+#
+# PRs opened by a workflow's GITHUB_TOKEN trigger no workflows, so the bot
+# workflows start this one with `gh workflow run ci.yml --ref <branch>`; the
+# run lands on the PR's head commit and satisfies the same required check.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.2.0 # publishes no moving major tag
+
+      # verify.sh runs offline with --no-python-downloads, so the pinned
+      # interpreter must already be installed.
+      - name: Install the pinned Python
+        run: uv python install "$(cat .python-version)"
+
+      - name: Repository consistency (verify.sh)
+        run: ./verify.sh
+
+      - name: Unit tests
+        run: |
+          py() { uv run --no-project --python "$(cat .python-version)" -- python "$@"; }
+          hub=research-skills-hub/open-paper-skills
+          py -m unittest discover -s "$hub/paper-wiki-manager/scripts" -p 'test_*.py'
+          py -m unittest discover -s "$hub/research-project-manager/scripts" -p 'test_*.py'
+          py -m unittest discover -s "$hub/filetree-simple/tests" -p 'test_*.py'
+          # test_live skips itself unless OS_HARNESS_LIVE=1; CI never sets it.
+          py -m unittest discover -s os-harness/tests
+
+      # A committed viz.html that lags its notes still validates, so compare it
+      # with a fresh render.
+      - name: paper-wiki/viz.html is regenerated
+        run: |
+          uv run --no-project --python "$(cat .python-version)" -- python \
+            research-skills-hub/open-paper-skills/paper-wiki-manager/scripts/generate_viz.py \
+            paper-wiki --output "$RUNNER_TEMP/viz.html"
+          cmp -s paper-wiki/viz.html "$RUNNER_TEMP/viz.html" || {
+            echo "::error file=paper-wiki/viz.html::viz.html is stale; run paper-wiki-manager's generate_viz.py and commit it"
+            exit 1
+          }
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: os-ui/frontend/package-lock.json
+
+      - name: os-ui type-check and build
+        working-directory: os-ui/frontend
+        run: |
+          npm ci
+          npm run build

@@ -102,3 +102,8 @@ from the repository root.
 Fix failures introduced by the task; report pre-existing failures separately.
 Run other checks proportionate to the change. Broaden or repeat them only for
 new changes, failures, or unresolved concerns.
+
+`main` accepts changes only through pull requests whose
+[CI](.github/workflows/ci.yml) passes, from agents and the human alike. Commit
+on a topic branch and open a PR into `main`; [CONTRIBUTING.md](CONTRIBUTING.md)
+describes the flow.
