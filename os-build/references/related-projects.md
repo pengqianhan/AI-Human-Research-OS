@@ -5,7 +5,9 @@ references, but are not close enough to list under "Similar Projects" in the
 [README](../../README.md#similar-projects). Descriptions follow each project's
 own summary; links were checked on 2026-09-29. Add a project here when it
 informs the OS without being a research environment of the same kind; move it
-to the README list when it is.
+to the README list when it is. A weekly
+[keyword scan](../../.github/workflows/scan-related-projects.yml) of GitHub
+proposes new entries in a pull request; prune them there before merging.
 
 ## Research agents and workbenches
 
