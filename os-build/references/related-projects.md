@@ -39,6 +39,7 @@ to the README list when it is.
 - [duoduo](https://github.com/openduo/duoduo): an autonomous agent runtime.
 - [rome](https://github.com/rome-os/rome): a compounding agent OS for recursive
   agents.
+- [EvoScientist](https://github.com/EvoScientist/EvoScientist): EvoScientist is an out-of-the-box, self-evolving AI research buddy that adopts a human-on-the-loop paradigm—autonomously exploring, refining scientific judgment, and co-evolving alongside human researchers.
 
 ## Skills and lists
 
