@@ -10,6 +10,7 @@ import { LocalSkillsPanel } from "../components/LocalSkillsPanel";
 import { AgentChat } from "../components/AgentChat";
 import { Chip } from "../components/Chip";
 import { Disclosure } from "../components/Disclosure";
+import { LIVE } from "../lib/mode";
 
 interface Props {
   state: OsState;
@@ -79,25 +80,28 @@ export function ProjectPage({ state }: Props) {
             <span>
               Portfolio / <b className="text-ink">{project.name}</b>
             </span>
-            <span className="ml-auto flex gap-1" role="group" aria-label="Project view">
-              {(["overview", "agent"] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  aria-pressed={view === v}
-                  onClick={() => setView(v)}
-                  className={
-                    "rounded border px-2.5 py-[3px] text-[11.5px] " +
-                    (view === v ? "border-ink bg-ink text-white" : "border-grid bg-panel text-ink-soft")
-                  }
-                >
-                  {v === "overview" ? "Overview" : "Agent"}
-                </button>
-              ))}
-            </span>
+            {/* The Agent view talks to the dev server; a published build has only the overview. */}
+            {LIVE && (
+              <span className="ml-auto flex gap-1" role="group" aria-label="Project view">
+                {(["overview", "agent"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={view === v}
+                    onClick={() => setView(v)}
+                    className={
+                      "rounded border px-2.5 py-[3px] text-[11.5px] " +
+                      (view === v ? "border-ink bg-ink text-white" : "border-grid bg-panel text-ink-soft")
+                    }
+                  >
+                    {v === "overview" ? "Overview" : "Agent"}
+                  </button>
+                ))}
+              </span>
+            )}
           </div>
 
-          {view === "agent" ? (
+          {LIVE && view === "agent" ? (
             <div className="h-[62vh] min-h-[420px] overflow-hidden rounded border border-grid">
               <AgentChat
                 cwd={`projects-folder/${project.name}`}

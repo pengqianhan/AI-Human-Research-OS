@@ -14,6 +14,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write # dispatch CI on the PR branch (see ci.yml)
 
 concurrency:
   group: scan-related-projects
@@ -57,4 +58,6 @@ jobs:
             --title "related-projects: GitHub scan $DATE" \
             --body-file "$RUNNER_TEMP/pr-body.md")"
           gh pr edit "$PR" --add-reviewer "$OWNER" || echo "Could not request review from $OWNER."
+          # A PR opened with GITHUB_TOKEN starts no workflows; run the required CI.
+          gh workflow run ci.yml --ref "$BRANCH"
           echo "Opened $PR"

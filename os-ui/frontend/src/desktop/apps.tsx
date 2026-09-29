@@ -5,6 +5,7 @@ import { ProjectPage } from "../pages/ProjectPage";
 import { StorePage } from "../pages/StorePage";
 import { PaperWikiPage } from "../pages/PaperWikiPage";
 import { RootAgentPage } from "../pages/RootAgentPage";
+import { LIVE } from "../lib/mode";
 
 export type AppId = "dash" | "proj" | "store" | "paperwiki" | "agent";
 
@@ -65,7 +66,7 @@ const paperWikiIcon = (
   </svg>
 );
 
-export const APPS: AppDef[] = [
+const ALL_APPS: AppDef[] = [
   {
     id: "dash",
     title: "Dashboard",
@@ -109,3 +110,6 @@ export const APPS: AppDef[] = [
     render: () => <RootAgentPage />,
   },
 ];
+
+/** The Root Agent conversation needs the dev server; a published build drops it. */
+export const APPS: AppDef[] = LIVE ? ALL_APPS : ALL_APPS.filter((app) => app.id !== "agent");
