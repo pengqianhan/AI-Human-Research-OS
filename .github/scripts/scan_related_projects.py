@@ -65,9 +65,22 @@ EXCLUDE = re.compile(
     r"social media|reddit|instagram|tiktok|crawler|爬虫|投资",
     re.IGNORECASE,
 )
+# A skill repo must also be about research: after dropping web-search "deep
+# research" and similar phrases, names like Nous Research, "X-inspired", and
+# "data science", one of these terms has to remain in its name or description.
+NOT_RESEARCH = re.compile(
+    r"\b(deep|web|market|legal|security|nous|user|ux|competitor)[\s-]+research|"
+    r"\w*research-inspired|\bdata[\s-]+scien\w*",
+    re.IGNORECASE,
+)
+RESEARCH_TERM = re.compile(
+    r"research|scien|academ|scholar|\bpapers?\b|literature|manuscript|"
+    r"experiment|\bph\.?d\b|thesis|科研|学术|论文|研究",
+    re.IGNORECASE,
+)
 REPO_URL = re.compile(r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)")
 EMOJI = re.compile(
-    "[\U0001F000-\U0001FAFF☀-➿⬀-⯿️‍]"
+    "[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D]"
 )
 
 
@@ -125,6 +138,11 @@ def section_for(repo):
     return SKILLS if re.search(r"skill", text, re.IGNORECASE) else RESEARCH
 
 
+def is_research(repo):
+    text = NOT_RESEARCH.sub("", f"{repo['name']} {repo['description']}")
+    return bool(RESEARCH_TERM.search(text))
+
+
 def clean_description(text, limit=220):
     text = EMOJI.sub("", text or "")
     text = text.split(" | ")[0]  # "English | 中文" bilingual descriptions
@@ -177,7 +195,8 @@ def pr_body(added, below, since, min_stars, min_skill_stars):
         "PR you close without merging, will not be proposed again.",
         "",
         f"Filter: pushed since {since}, at least {min_stars} stars "
-        f"({min_skill_stars} for skill repos), not archived or a fork, not "
+        f"({min_skill_stars} and a research topic for skill repos), not "
+        "archived or a fork, not "
         "already listed; ranked by number of matched queries, "
         "then stars. Descriptions are the repos' own GitHub descriptions; "
         "relevance was matched by keyword only, not judged.",
@@ -227,7 +246,8 @@ def main():
          and (r["description"] or "").strip()
          and not EXCLUDE.search(f"{r['name']} {r['description']}")
          and (section_for(r) != SKILLS
-              or r["stargazers_count"] >= args.min_skill_stars)),
+              or (r["stargazers_count"] >= args.min_skill_stars
+                  and is_research(r)))),
         key=lambda r: (-len(r["queries"]), -r["stargazers_count"]),
     )
     added, below = eligible[: args.max], eligible[args.max : args.max + 10]
