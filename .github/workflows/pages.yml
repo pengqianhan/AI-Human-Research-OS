@@ -58,6 +58,8 @@ jobs:
       # Relative base: the site lives under /AI-Human-Research-OS/.
       - name: Build os-ui
         working-directory: os-ui/frontend
+        env:
+          VITE_REPO_URL: ${{ github.server_url }}/${{ github.repository }} # menu-bar GitHub link
         run: |
           npm ci
           npx vite build --base=./

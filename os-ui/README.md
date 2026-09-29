@@ -137,7 +137,9 @@ The public copy is built this way by
 <https://pengqianhan.github.io/AI-Human-Research-OS/>, with the paper wiki at
 `paper-wiki/viz.html` under it. It is built from the checkout, so only tracked
 files reach it; changes on `main` appear once `main` is merged into
-`autoreadpaper`.
+`autoreadpaper`. The workflow sets `VITE_REPO_URL` to the repository it builds
+from, which puts a GitHub link at the right end of the menu bar; builds without
+it show none.
 
 ## Design Stance
 
