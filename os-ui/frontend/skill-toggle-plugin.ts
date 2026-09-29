@@ -82,7 +82,9 @@ export function skillTogglePlugin(): Plugin {
               target,
               ...(collection ? ["--collection", collection] : []),
             ];
-            const { stdout } = await run(bin, args, { cwd: REPO_ROOT });
+            // windowsHide: see paper-status-plugin.ts (0xC0000142 once the
+            // terminal that started the dev server is gone).
+            const { stdout } = await run(bin, args, { cwd: REPO_ROOT, windowsHide: true });
 
             // Refresh the snapshot so the page reflects the change immediately
             // instead of waiting for the next generator poll. The toggle has
@@ -93,6 +95,7 @@ export function skillTogglePlugin(): Plugin {
             try {
               await run(bin, [...base, GENERATOR], {
                 cwd: resolve(REPO_ROOT, "os-ui/generator"),
+                windowsHide: true,
               });
             } catch (error) {
               const err = error as { stderr?: string; message?: string };
