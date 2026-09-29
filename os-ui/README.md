@@ -124,8 +124,20 @@ npm run build
 The output goes to `frontend/dist/`, which is gitignored. The frontend loads
 `state.json` and the Paper Wiki viewer by relative paths, so a bundle built with
 `npx vite build --base=./` also works from a sub-path or another origin, such as
-a private claude.ai artifact. The skill toggle and the Paper Wiki status
-buttons need the dev server; a static bundle shows the status read-only.
+a private claude.ai artifact.
+
+Any production build is view-only: the write and agent endpoints exist only on
+the dev server, and [src/lib/mode.ts](frontend/src/lib/mode.ts) hides their
+controls — no Root Agent window, no project Agent view, no skill toggles, no
+copy-command dock button, and the Paper Wiki Status row reads without buttons.
+
+The public copy is built this way by
+[.github/workflows/pages.yml](../.github/workflows/pages.yml) on every push to
+`autoreadpaper` and served at
+<https://pengqianhan.github.io/AI-Human-Research-OS/>, with the paper wiki at
+`paper-wiki/viz.html` under it. It is built from the checkout, so only tracked
+files reach it; changes on `main` appear once `main` is merged into
+`autoreadpaper`.
 
 ## Design Stance
 

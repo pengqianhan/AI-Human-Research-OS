@@ -407,6 +407,15 @@ Asked how contributors' pull requests should be gated, the Human Owner chose 「
 | Approvals | 0 required: only maintainers can merge, so a merge is the review. Raise it when a second maintainer joins | Set required approvals in the ruleset |
 | Bot PRs | PRs opened with `GITHUB_TOKEN` start no workflows, so both bot workflows dispatch `ci.yml` on their branch; the mattpocock sync merges with `--auto`, which needs the repository's auto-merge setting on | Revert the two workflows to plain `gh pr merge` and add a bypass |
 
+**Public site decision (2026-09-30, Human Owner):**
+
+Offered `main` (CI-checked) or `autoreadpaper` as the GitHub Pages source for a view-only os-ui, the Human Owner chose 「autoreadpaper, 先保证更新的论文可以第一时间让读者访问到，main 更新后我会再merge 到autoreadpaper」.
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Site content | The view-only os-ui production build replaces the paper-wiki-only site; the wiki stays at `paper-wiki/viz.html`, so the old link works. Production builds hide the Root Agent window, project Agent view, skill toggles, and the copy-command dock button (`os-ui/frontend/src/lib/mode.ts`) | Restore the previous `pages.yml` from Git (stage `paper-wiki/` plus a redirect `index.html`) |
+| Source branch | `autoreadpaper`, deployed on every push; OS state on the site lags `main` until the Human Owner merges `main` into `autoreadpaper` | Switch the `pages.yml` trigger to `main` |
+
 ## Deviations from the original plan
 
 - **2026-07-19 directional MVP sequencing reset** — After personally running the successful
