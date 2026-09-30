@@ -26,6 +26,13 @@ agent windows' **Papers** button flips one source in
 command. The switches bind the agents' paper search, so they sit next to the
 conversation, behind the same token; the write is one boolean, reversible and
 visible in Git.
+The same day, preparing the OS for public release, the Human Owner authorized
+a fourth: the Papers panel's **Keys** section stores or clears one of the
+per-user keys `paper-search` knows (`OPENALEX_API_KEY`, `NCBI_API_KEY`,
+`HF_TOKEN`) in the repository's gitignored `.env`, through the skill's `keys`
+command. Unlike the other writes it is deliberately invisible to Git: the
+value travels on stdin, is refused unless Git ignores `.env`, and never comes
+back to the browser, which learns only whether each key is set.
 Everything else, including install and delete buttons, resident services, SSE,
 and any further action endpoint, remains gated by GOAL.md M4: evidence first,
 then explicit human confirmation.
@@ -34,7 +41,7 @@ then explicit human confirmation.
 
 - `os-ui` is an observation dashboard with agent conversations. Its write
   actions are the skill enable/disable toggle (2026-07-22), the paper
-  reading-status buttons (2026-09-30), the paper-source switches
+  reading-status buttons (2026-09-30), the paper-source switches and keys
   (2026-09-30), and the agent
   conversations (2026-09-26: the Root Agent window and each project's Agent
   view), which send messages to os-harness sessions.
@@ -44,7 +51,8 @@ then explicit human confirmation.
 - The filesystem remains the source of truth. It is also the only write
   surface: the toggle renames a file, the status buttons rewrite one
   frontmatter line, and the source switches rewrite one JSON boolean, rather
-  than mutating hidden state.
+  than mutating hidden state. The one exception is the Keys section, whose
+  `.env` line stays out of Git on purpose because it holds a secret.
 - Removing `os-ui/` must leave the Research OS unaffected.
 - The UI is infrastructure, not a project in `projects-folder/` and not a
   portfolio row.
@@ -243,7 +251,7 @@ The old tab-shell concept is superseded.
 ## 8. Non-goals
 
 - No write operations beyond the skill enable/disable toggle, the paper
-  reading-status buttons, and the paper-source switches. The toggle: a
+  reading-status buttons, and the paper-source switches and keys. The toggle: a
   symlinked install moves into the
   target's `.disabled/` directory, a copied one renames its `SKILL.md` to
   `SKILL.md.disabled`. No skill content is created or deleted, and installing
@@ -251,8 +259,10 @@ The old tab-shell concept is superseded.
   already exists. The status buttons change only the `status:` line of a note
   under `paper-wiki/papers/` or `paper-wiki/sources/`, never note content.
   The source switches change only one source's boolean in
-  `memory/paper-sources.json`; os-ui itself runs no paper search.
-- No resident services or SSE until M4. All three write endpoints are Vite
+  `memory/paper-sources.json`; os-ui itself runs no paper search. The Keys
+  section sets or removes only the `.env` line of one of those three names and
+  never reads a value back.
+- No resident services or SSE until M4. All the write endpoints are Vite
   dev-server middleware: they exist only while `start.sh` runs and die with
   Ctrl-C.
 - No execution buttons until M4. Install and remove stay copy-only.

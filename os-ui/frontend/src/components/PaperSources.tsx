@@ -7,6 +7,21 @@ interface SourceRow {
   enabled: boolean;
 }
 
+/** A per-user key as the server reports it: never its value. */
+interface KeyRow {
+  name: string;
+  label: string;
+  sources: string[];
+  set: boolean;
+  from: "environment" | ".env" | null;
+  get_url: string;
+}
+
+interface Status {
+  sources: SourceRow[];
+  keys: KeyRow[];
+}
+
 /** A monogram in each source's colour; the OS ships no third-party logos. */
 const TILE: Record<string, { label: string; bg: string; fg: string }> = {
   alphaxiv: { label: "αX", bg: "#B31B1B", fg: "#FFFFFF" },
@@ -58,30 +73,124 @@ function Switch({ on, busy }: { on: boolean; busy: boolean }) {
   );
 }
 
+function KeyItem({ row, busy, onSave }: { row: KeyRow; busy: boolean; onSave: (value: string) => Promise<boolean> }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("");
+  const fromEnv = row.from === "environment";
+
+  async function save(next: string) {
+    if (await onSave(next)) {
+      setValue("");
+      setEditing(false);
+    }
+  }
+
+  return (
+    <div className="px-3 py-1.5" title={fromEnv ? "Set in the environment, which overrides .env" : undefined}>
+      <div className="flex items-center gap-2">
+        <span className="flex -space-x-[3px]">
+          {row.sources.map((source) => (
+            <Tile key={source} id={source} size={16} />
+          ))}
+        </span>
+        <span className="flex-1 text-[12.5px] text-ink">{row.label}</span>
+        <span
+          className={
+            "font-mono-heading rounded-[2px] px-1.5 py-px text-[10px] " +
+            (row.set ? "bg-[#E4F0ED] text-verify" : "bg-[#EDF0F1] text-stale")
+          }
+        >
+          {row.set ? (fromEnv ? "env" : "set") : "none"}
+        </span>
+        {!fromEnv && (
+          <button
+            type="button"
+            aria-expanded={editing}
+            aria-label={`${row.set ? "Change" : "Add"} ${row.label} key`}
+            onClick={() => setEditing((v) => !v)}
+            className="font-mono-heading rounded border border-grid px-1.5 text-[10.5px] text-ink hover:bg-paper"
+          >
+            {row.set ? "edit" : "add"}
+          </button>
+        )}
+      </div>
+      {editing && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void save(value);
+          }}
+          className="mt-1.5 flex flex-col gap-1.5"
+        >
+          <input
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={row.name}
+            aria-label={`${row.label} key`}
+            className="font-mono-heading min-w-0 rounded border border-grid bg-paper px-2 py-1 text-[11.5px] text-ink"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={busy || value.trim() === ""}
+              className="font-mono-heading rounded border border-ink bg-ink px-2 py-[2px] text-[11px] text-white disabled:opacity-40"
+            >
+              Save
+            </button>
+            {row.set && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void save("")}
+                className="font-mono-heading rounded border border-grid px-2 py-[2px] text-[11px] text-danger hover:bg-paper disabled:opacity-40"
+              >
+                Clear
+              </button>
+            )}
+            <a
+              href={row.get_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto text-[11px] text-signal hover:underline"
+            >
+              Get a key ↗
+            </a>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
 /**
  * The Papers button in an agent window's header: which literature sources the
  * paper-search skill may query, switched on and off here the way OpenResearch
- * does in its composer. The switches are one repository file
- * (memory/paper-sources.json) shared by every agent, so each open re-reads it.
+ * does in its composer, and the user's own keys that raise those sources'
+ * limits. Switches live in memory/paper-sources.json and keys in the
+ * gitignored .env, both shared by every agent, so each open re-reads them. A
+ * key goes in and is never shown again: the server reports only whether it is set.
  */
 export function PaperSources({ token }: { token: string }) {
-  const [rows, setRows] = useState<SourceRow[] | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
 
   const call = useCallback(
-    async (change?: { source: string; enabled: boolean }) => {
-      const res = await fetch("/api/paper-sources", {
-        method: change ? "POST" : "GET",
-        headers: { "X-OS-UI-Token": token, ...(change ? { "Content-Type": "application/json" } : {}) },
-        body: change ? JSON.stringify(change) : undefined,
+    async (path = "", body?: unknown) => {
+      const res = await fetch(`/api/paper-sources${path}`, {
+        method: body === undefined ? "GET" : "POST",
+        headers: { "X-OS-UI-Token": token, ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+        body: body === undefined ? undefined : JSON.stringify(body),
         cache: "no-store",
       });
-      const data = (await res.json().catch(() => ({}))) as { sources?: SourceRow[]; error?: string };
+      const data = (await res.json().catch(() => ({}))) as Partial<Status> & { error?: string };
       if (!res.ok || data.sources === undefined) throw new Error(data.error ?? `HTTP ${res.status}`);
-      return data.sources;
+      return { sources: data.sources, keys: data.keys ?? [] };
     },
     [token],
   );
@@ -89,7 +198,7 @@ export function PaperSources({ token }: { token: string }) {
   useEffect(() => {
     let live = true;
     call()
-      .then((next) => live && setRows(next))
+      .then((next) => live && setStatus(next))
       .catch((e: unknown) => live && setError(e instanceof Error ? e.message : String(e)));
     return () => {
       live = false;
@@ -112,20 +221,24 @@ export function PaperSources({ token }: { token: string }) {
     };
   }, [open]);
 
-  async function toggle(row: SourceRow) {
-    if (saving !== null) return;
-    setSaving(row.id);
+  /** One write at a time; `busy` names what is saving. True when it succeeded. */
+  async function write(busy: string, path: string, body: unknown): Promise<boolean> {
+    if (saving !== null) return false;
+    setSaving(busy);
     setError(null);
     try {
-      setRows(await call({ source: row.id, enabled: !row.enabled }));
+      setStatus(await call(path, body));
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+      return false;
     } finally {
       setSaving(null);
     }
   }
 
-  if (rows === null && error === null) return null;
+  if (status === null && error === null) return null;
+  const rows = status?.sources ?? null;
   const on = rows?.filter((row) => row.enabled) ?? [];
 
   return (
@@ -156,7 +269,7 @@ export function PaperSources({ token }: { token: string }) {
       </button>
 
       {open && (
-        <div className="window-shadow absolute right-0 top-full z-20 mt-1 w-56 rounded-lg border border-grid bg-panel py-1">
+        <div className="window-shadow absolute right-0 top-full z-20 mt-1 max-h-[70vh] w-64 overflow-y-auto rounded-lg border border-grid bg-panel py-1">
           <div className="font-mono-heading px-3 pb-1 pt-1.5 text-[10px] uppercase tracking-[.05em] text-stale">
             Paper sources
           </div>
@@ -167,7 +280,7 @@ export function PaperSources({ token }: { token: string }) {
               role="switch"
               aria-checked={row.enabled}
               disabled={saving !== null}
-              onClick={() => void toggle(row)}
+              onClick={() => void write(row.id, "", { source: row.id, enabled: !row.enabled })}
               title={row.about}
               className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-paper disabled:cursor-wait"
             >
@@ -176,6 +289,21 @@ export function PaperSources({ token }: { token: string }) {
               <Switch on={row.enabled} busy={saving === row.id} />
             </button>
           ))}
+          {status !== null && status.keys.length > 0 && (
+            <>
+              <div className="font-mono-heading mt-1 border-t border-grid px-3 pb-1 pt-2 text-[10px] uppercase tracking-[.05em] text-stale">
+                Keys
+              </div>
+              {status.keys.map((row) => (
+                <KeyItem
+                  key={row.name}
+                  row={row}
+                  busy={saving !== null}
+                  onSave={(value) => write(row.name, "/key", { name: row.name, value })}
+                />
+              ))}
+            </>
+          )}
           {error !== null && <p className="px-3 py-1 text-[11px] text-danger">{error}</p>}
         </div>
       )}

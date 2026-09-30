@@ -295,7 +295,7 @@ class CredentialTests(unittest.TestCase):
 
     def test_rate_limit_names_the_next_step(self) -> None:
         self.use()
-        self.assertIn("set OPENALEX_API_KEY in the repository's .env", ps.with_hint("biorxiv", "HTTP 429: slow down"))
+        self.assertIn("add OPENALEX_API_KEY under Keys in os-ui's Papers panel", ps.with_hint("biorxiv", "HTTP 429: slow down"))
         self.assertIn("--mode keyword", ps.with_hint("pwc", "HTTP 429: slow down"))
         self.assertEqual(ps.with_hint("openalex", "HTTP 500: boom"), "HTTP 500: boom")
         self.use(OPENALEX_API_KEY="oa-secret")
@@ -319,6 +319,78 @@ class CredentialTests(unittest.TestCase):
         self.assertEqual((rows["huggingface"]["credential"], rows["huggingface"]["credential_set"]), ("HF_TOKEN", False))
         self.assertIsNone(rows["alphaxiv"]["credential"])
         self.assertNotIn("oa-secret", out.getvalue())
+
+
+class KeysCommandTests(unittest.TestCase):
+    """`keys --set/--clear`: what os-ui's Keys section runs."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "memory").mkdir()
+        self.config = self.root / "memory" / "paper-sources.json"
+        self.config.write_text("{}", encoding="utf-8")
+        self.env = self.root / ".env"
+        self.saved = dict(ps.KEYS)
+        # A temporary directory is not a repository: check-ignore exits 128.
+        ignored = mock.patch.object(ps.subprocess, "run", return_value=mock.Mock(returncode=0))
+        ignored.start()
+        self.addCleanup(ignored.stop)
+        clean_env = mock.patch.dict(ps.os.environ, {}, clear=True)
+        clean_env.start()
+        self.addCleanup(clean_env.stop)
+
+    def tearDown(self) -> None:
+        ps.KEYS.clear()
+        ps.KEYS.update(self.saved)
+        self.tmp.cleanup()
+
+    def keys(self, *argv: str, stdin: str = "") -> tuple[int, str, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(ps.sys, "stdin", io.StringIO(stdin)), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = ps.main(["--config", str(self.config), "keys", *argv])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_set_writes_in_place_and_reports_only_a_flag(self) -> None:
+        self.env.write_text("# OpenAlex key\nOPENALEX_API_KEY=\nOTHER=keep me\n", encoding="utf-8")
+        code, out, _ = self.keys("--set", "OPENALEX_API_KEY", "--json", stdin="oa-key-123456\n")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.env.read_text(encoding="utf-8"), "# OpenAlex key\nOPENALEX_API_KEY=oa-key-123456\nOTHER=keep me\n")
+        rows = {row["name"]: row for row in json.loads(out)["keys"]}
+        self.assertEqual((rows["OPENALEX_API_KEY"]["set"], rows["OPENALEX_API_KEY"]["from"]), (True, ".env"))
+        self.assertEqual(rows["OPENALEX_API_KEY"]["sources"], ["openalex", "biorxiv"])
+        self.assertNotIn("oa-key-123456", out)
+
+    def test_clear_removes_the_line_and_an_emptied_file(self) -> None:
+        self.env.write_text("HF_TOKEN=hf_abcdefgh\n", encoding="utf-8")
+        self.assertEqual(self.keys("--clear", "HF_TOKEN")[0], 0)
+        self.assertFalse(self.env.exists())
+
+    def test_malformed_values_are_refused_without_echoing_them(self) -> None:
+        for bad in ("short", "two words here", "quote'd-value-123", "x" * 300):
+            code, out, err = self.keys("--set", "NCBI_API_KEY", stdin=bad)
+            self.assertEqual(code, 2)
+            self.assertNotIn(bad, err + out)
+        self.assertFalse(self.env.exists())
+
+    def test_unknown_key_names_are_rejected(self) -> None:
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            ps.main(["--config", str(self.config), "keys", "--set", "AWS_SECRET_ACCESS_KEY"])
+
+    def test_a_tracked_env_file_is_refused(self) -> None:
+        with mock.patch.object(ps.subprocess, "run", return_value=mock.Mock(returncode=1)):
+            code, _, err = self.keys("--set", "HF_TOKEN", stdin="hf_abcdefgh")
+        self.assertEqual(code, 2)
+        self.assertIn("not ignored by Git", err)
+        self.assertFalse(self.env.exists())
+
+    def test_environment_values_are_reported_as_such(self) -> None:
+        with mock.patch.dict(ps.os.environ, {"HF_TOKEN": "hf_fromenv1"}):
+            _, out, _ = self.keys("--json")
+        row = next(r for r in json.loads(out)["keys"] if r["name"] == "HF_TOKEN")
+        self.assertEqual((row["set"], row["from"]), (True, "environment"))
+        self.assertNotIn("hf_fromenv1", out)
 
 
 if __name__ == "__main__":

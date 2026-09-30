@@ -21,6 +21,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 import urllib.error
@@ -72,6 +73,14 @@ CREDENTIALS: dict[str, tuple[str, str]] = {
     "huggingface": ("HF_TOKEN", "a read token from https://huggingface.co/settings/tokens raises "
                     "the anonymous rate limit"),
 }
+# Each key once: who issues it and where the user gets one (os-ui links there).
+KEY_INFO: dict[str, tuple[str, str]] = {
+    "OPENALEX_API_KEY": ("OpenAlex", "https://openalex.org/settings/api"),
+    "NCBI_API_KEY": ("NCBI", "https://account.ncbi.nlm.nih.gov/settings/"),
+    "HF_TOKEN": ("Hugging Face", "https://huggingface.co/settings/tokens"),
+}
+# One token, no whitespace or quotes, so the `.env` line needs no escaping.
+KEY_VALUE = re.compile(r"[A-Za-z0-9._~+/=:-]{8,256}")
 KEYS: dict[str, str] = {}
 
 ALPHAXIV_API = "https://api.alphaxiv.org"
@@ -152,9 +161,13 @@ def env_file_for(config: Path | None) -> Path | None:
     return config.parent.parent / ".env"
 
 
+def env_key(line: str) -> str:
+    return line.strip().removeprefix("export ").partition("=")[0].strip()
+
+
 def load_credentials(env_file: Path | None) -> dict[str, str]:
     """The known keys only; the environment wins over `.env`."""
-    names = {name for name, _ in CREDENTIALS.values()}
+    names = set(KEY_INFO)
     found: dict[str, str] = {}
     if env_file is not None and env_file.is_file():
         for line in env_file.read_text(encoding="utf-8").splitlines():
@@ -170,6 +183,53 @@ def load_credentials(env_file: Path | None) -> dict[str, str]:
         if os.environ.get(name, "").strip():
             found[name] = os.environ[name].strip()
     return {name: value for name, value in found.items() if value}
+
+
+def ensure_ignored(env_file: Path) -> None:
+    """Refuse to store a key where a commit could publish it."""
+    try:
+        result = subprocess.run(["git", "check-ignore", "-q", env_file.name], cwd=env_file.parent,
+                                capture_output=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return  # no Git, so no commit to leak through
+    if result.returncode == 1:  # 0 = ignored; 128 = not a repository
+        raise UsageError(f"{env_file} is not ignored by Git; add `.env` to .gitignore before storing keys in it")
+
+
+def save_key(env_file: Path, name: str, value: str | None) -> None:
+    """Set or remove one `NAME=value` line, keeping every other line as it was."""
+    lines = env_file.read_text(encoding="utf-8").splitlines() if env_file.is_file() else []
+    new = f"{name}={value}" if value is not None else None
+    kept: list[str] = []
+    for line in lines:
+        if env_key(line) != name:
+            kept.append(line)
+        elif new is not None:  # in place, under the template's comment
+            kept.append(new)
+            new = None
+    if new is not None:
+        kept.append(new)
+    if not any(line.strip() for line in kept):
+        env_file.unlink(missing_ok=True)
+        return
+    env_file.touch(mode=0o600, exist_ok=True)  # owner-only where the OS has modes
+    env_file.write_text("\n".join(kept) + "\n", encoding="utf-8", newline="\n")
+
+
+def key_rows() -> list[dict[str, Any]]:
+    """Which keys are set and where from; never their values."""
+    rows = []
+    for name, (label, url) in KEY_INFO.items():
+        origin = "environment" if os.environ.get(name, "").strip() else ".env" if name in KEYS else None
+        rows.append({
+            "name": name,
+            "label": label,
+            "sources": [s for s, (key, _) in CREDENTIALS.items() if key == name],
+            "set": name in KEYS,
+            "from": origin,
+            "get_url": url,
+        })
+    return rows
 
 
 def redact(text: str) -> str:
@@ -189,7 +249,7 @@ def with_hint(source: str, message: str) -> str:
     name, benefit = CREDENTIALS[source]
     if name in KEYS:
         return f"{message} ({name} is set, so its daily budget may be used up; it resets daily.)"
-    return f"{message} Next step: set {name} in the repository's .env; {benefit}."
+    return f"{message} Next step: add {name} under Keys in os-ui's Papers panel, or in the repository's .env; {benefit}."
 
 
 # --- HTTP ------------------------------------------------------------------
@@ -630,18 +690,50 @@ def cmd_sources(args: argparse.Namespace, config: Path | None) -> int:
         switches = save_switches(config, changes)
     else:
         switches = load_switches(config)
+    payload = status(config, switches)
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        for row in payload["sources"]:
+            key = f"  [{row['credential']} {'set' if row['credential_set'] else 'not set'}]" if row["credential"] else ""
+            print(f"{row['id']:<12} {'on ' if row['enabled'] else 'off'}  {row['name']}: {row['about']}{key}")
+        print(f"switches: {config or 'none found (every source on)'}")
+    return 0
+
+
+def status(config: Path | None, switches: dict[str, bool]) -> dict[str, Any]:
+    """What os-ui's Papers panel shows: the switches and which keys are set."""
     rows = []
     for source, (name, about) in SOURCES.items():
         credential = CREDENTIALS.get(source, (None, ""))[0]
         rows.append({"id": source, "name": name, "about": about, "enabled": switches[source],
                      "credential": credential, "credential_set": credential in KEYS})
+    return {"config": str(config) if config else None, "sources": rows, "keys": key_rows()}
+
+
+def cmd_keys(args: argparse.Namespace, config: Path | None) -> int:
+    name = args.set_key or args.clear
+    if name:
+        env_file = env_file_for(config)
+        if env_file is None:
+            raise UsageError(f"no {CONFIG_NAME.as_posix()} above the working directory, so no repository .env")
+        ensure_ignored(env_file)
+        if args.set_key:
+            # stdin, not argv: a command line is visible to every local process.
+            value = sys.stdin.read().strip()
+            if not KEY_VALUE.fullmatch(value):
+                raise UsageError(f"{name}: expected one token of 8 to 256 letters, digits, or ._~+/=:- on stdin")
+            save_key(env_file, name, value)
+        else:
+            save_key(env_file, name, None)
+        KEYS.clear()
+        KEYS.update(load_credentials(env_file))
     if args.json:
-        print(json.dumps({"config": str(config) if config else None, "sources": rows}, ensure_ascii=False, indent=2))
+        print(json.dumps(status(config, load_switches(config)), ensure_ascii=False, indent=2))
     else:
-        for row in rows:
-            key = f"  [{row['credential']} {'set' if row['credential_set'] else 'not set'}]" if row["credential"] else ""
-            print(f"{row['id']:<12} {'on ' if row['enabled'] else 'off'}  {row['name']}: {row['about']}{key}")
-        print(f"switches: {config or 'none found (every source on)'}")
+        for row in key_rows():
+            state = f"set ({row['from']})" if row["set"] else "not set"
+            print(f"{row['name']:<17} {state:<18} {', '.join(row['sources'])}  get one: {row['get_url']}")
     return 0
 
 
@@ -664,6 +756,12 @@ def build_parser() -> argparse.ArgumentParser:
     sources.add_argument("--enable", action="append", default=[], choices=list(SOURCES))
     sources.add_argument("--disable", action="append", default=[], choices=list(SOURCES))
     sources.add_argument("--json", action="store_true")
+
+    keys = commands.add_parser("keys", help="show which per-user keys are set, or store or clear one in .env")
+    change = keys.add_mutually_exclusive_group()
+    change.add_argument("--set", dest="set_key", choices=list(KEY_INFO), help="store the value read from stdin")
+    change.add_argument("--clear", choices=list(KEY_INFO))
+    keys.add_argument("--json", action="store_true")
     return parser
 
 
@@ -676,7 +774,8 @@ def main(argv: list[str] | None = None) -> int:
         config = find_config(args.config)
         KEYS.clear()
         KEYS.update(load_credentials(env_file_for(config)))
-        return cmd_search(args, config) if args.command == "search" else cmd_sources(args, config)
+        command = {"search": cmd_search, "sources": cmd_sources, "keys": cmd_keys}[args.command]
+        return command(args, config)
     except UsageError as err:
         print(f"paper_search: {err}", file=sys.stderr)
         return 2

@@ -82,12 +82,13 @@ Known source behaviour:
 Every user brings their own optional keys: `OPENALEX_API_KEY` (OpenAlex and
 bioRxiv), `NCBI_API_KEY` (PubMed), and `HF_TOKEN` (Hugging Face). The script
 reads them from the environment, else from the repository's gitignored `.env`
-(template: [`.env.example`](../../../.env.example)); `sources` shows which are
-set. alphaXiv and PwC need none.
+(template: [`.env.example`](../../../.env.example)); `uv run $PS keys` shows
+which are set. alphaXiv and PwC need none.
 
 A rate-limited source (`HTTP 429`) comes back with the key that lifts the
-limit. Relay that next step to the human; they create and paste the key. Keep
-key values out of commits, prompts, and logs.
+limit. Relay that next step to the human: they paste the key under **Keys** in
+os-ui's Papers panel, which runs `keys --set NAME` with the value on stdin, or
+edit `.env` themselves. Keep key values out of commits, prompts, and logs.
 
 ## Reading an alphaXiv paper
 
