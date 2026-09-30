@@ -26,6 +26,11 @@ const MAX_PROMPT = 20_000;
  */
 const TOKEN = process.env.OS_UI_TOKEN || randomBytes(6).toString("hex");
 
+/** The same gate for the agent windows' other endpoints (paper-sources-plugin.ts). */
+export function hasToken(req: Connect.IncomingMessage): boolean {
+  return req.headers["x-os-ui-token"] === TOKEN;
+}
+
 type Record_ = Record<string, unknown>;
 
 /** Tuple, not string[]: the caller destructures the binary out of the front. */
@@ -160,7 +165,7 @@ export function chatPlugin(): Plugin {
           res.setHeader("Content-Type", "application/json");
           res.end(JSON.stringify(body));
         };
-        if (req.headers["x-os-ui-token"] !== TOKEN) return send(401, { error: "token required" });
+        if (!hasToken(req)) return send(401, { error: "token required" });
 
         const url = new URL(req.url ?? "/", "http://localhost");
         void (async () => {

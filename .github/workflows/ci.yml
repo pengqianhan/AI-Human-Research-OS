@@ -50,6 +50,7 @@ jobs:
           hub=research-skills-hub/open-paper-skills
           py -m unittest discover -s "$hub/paper-wiki-manager/scripts" -p 'test_*.py'
           py -m unittest discover -s "$hub/research-project-manager/scripts" -p 'test_*.py'
+          py -m unittest discover -s "$hub/paper-search/scripts" -p 'test_*.py'
           py -m unittest discover -s "$hub/filetree-simple/tests" -p 'test_*.py'
           # test_live skips itself unless OS_HARNESS_LIVE=1; CI never sets it.
           py -m unittest discover -s os-harness/tests

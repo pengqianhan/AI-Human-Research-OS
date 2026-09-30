@@ -40,7 +40,18 @@ Two entry points share one chat component:
 
 Every turn runs on your own Claude Code or Codex login. For a new
 conversation the header picks the agent (remembered) and the permission mode
-(`full` by default; `workspace` and `read-only` as in os-harness). The list
+(`full` by default; `workspace` and `read-only` as in os-harness). The
+header's **Papers** button shows which literature sources the
+[paper-search](../research-skills-hub/open-paper-skills/paper-search/SKILL.md)
+skill may query (alphaXiv, OpenAlex, bioRxiv, PubMed, Hugging Face, Papers
+with Code) and switches each on or off, as OpenResearch does in its composer.
+The switches live in
+[memory/paper-sources.json](../memory/paper-sources.json) and apply to every
+agent, in every window and outside the UI. The panel's **Keys** section takes
+your own optional keys (OpenAlex, NCBI, Hugging Face), each with a link to get
+one free, and stores them in the repository's gitignored `.env`. A saved key
+is never shown again; the panel only marks it `set` (or `env` when an
+environment variable provides it). The list
 shows the harness sessions of that directory; the trace replays with the
 agent's tool calls, polls every 2 s while a turn runs, and a running turn can
 be stopped. One agent runs per directory at a time: starting a second
@@ -56,7 +67,11 @@ agent with full permissions: without the token, `/api/chat/*` answers 401.
 Endpoints (dev server only, in [frontend/chat-plugin.ts](frontend/chat-plugin.ts)):
 `GET /api/chat/sessions?cwd=`, `GET /api/chat/session?id=`,
 `POST /api/chat/send` (`{cwd, agent, mode, session?, text}`), and
-`POST /api/chat/stop` (`{session}`). `cwd` is empty for the repository root or
+`POST /api/chat/stop` (`{session}`); the Papers button uses
+`GET`/`POST /api/paper-sources` (`{source, enabled}`) and
+`POST /api/paper-sources/key` (`{name, value}`; an empty value clears), in
+[frontend/paper-sources-plugin.ts](frontend/paper-sources-plugin.ts), behind
+the same token. `cwd` is empty for the repository root or
 `projects-folder/<Name>` for a registered project; anything else is refused.
 The plugin only starts, resumes, stops, and reads harness sessions; the traces
 live in `os-harness/sessions/`. A static build has no chat, like it has no

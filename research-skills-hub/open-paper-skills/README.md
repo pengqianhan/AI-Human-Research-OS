@@ -33,6 +33,7 @@ at source commit `8f854bd`.
 | [explain-paper-html](explain-paper-html/SKILL.md) | Build an evidence-traceable interactive HTML lesson from an academic paper, verified in a browser before hand-off. | Original, Pengqian Han |
 | [research-project-manager](research-project-manager/SKILL.md) | Create, validate, update, sync, and archive Research Projects under `projects-folder/` against one template contract. | Original, Pengqian Han |
 | [project-dispatch](project-dispatch/SKILL.md) | Act as the root agent: brief, dispatch, track, and review project work run through `os-harness`. | Original, Pengqian Han |
+| [paper-search](paper-search/SKILL.md) | Search six literature sources in one command with one result shape, honouring the human's per-source on/off switches. | Adapted from [alphaXiv OpenResearch](https://github.com/alphaXiv/OpenResearch) (MIT), adding Hugging Face Papers and the [Papers with Code MCP server](https://github.com/huggingface/pwc-cli#mcp-server) |
 
 ## Installation
 
@@ -60,6 +61,11 @@ table; symlink or copy form comes from the collection's `SOURCE.md`. See
   behavior matrices.
 - `okf-repo-organizer`: runs its bundled validator with `uv run` (installs the
   declared PEP 723 dependency automatically), or Python 3.11+ with PyYAML.
+- `paper-search`: run its script with `uv run`, which installs the declared
+  `truststore` dependency (certificate checks by the OS); Python 3.11+
+  standard library otherwise. Optional per-user keys (`OPENALEX_API_KEY`,
+  `NCBI_API_KEY`, `HF_TOKEN`) go in the repository's gitignored `.env`; copy
+  [`.env.example`](../../.env.example).
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
 - `map-then-territory`: no local setup, but requires the `grilling`,
@@ -459,6 +465,23 @@ Have nanochat_cpu rerun its matrix learning-rate probe with three seeds.
 How is the nanochat_cpu run going?
 Review the finished run and tell me whether it meets the brief.
 Stop the running nanochat_cpu session.
+```
+
+## paper-search
+
+Searches alphaXiv, OpenAlex, bioRxiv, PubMed, Hugging Face Papers, and the
+Papers with Code MCP server in parallel and returns one merged, deduplicated
+JSON result list. A source the human switched off in
+`memory/paper-sources.json` (the **Papers** button in os-ui's agent windows)
+refuses to run.
+
+Example requests:
+
+```text
+Find recent papers on KV cache compression, with code if possible.
+What prior work exists on LLM-guided circle packing?
+Search only alphaXiv and Hugging Face for sparse autoencoder feature splitting.
+Turn off PubMed and bioRxiv for paper search.
 ```
 
 ## License

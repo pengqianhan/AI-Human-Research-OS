@@ -46,14 +46,14 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: Hypothesis, not a finding. The human framed "reuse the user's code-agent subscription instead of buying an API key" as an implementation question to study in Orca and OpenResearch. Whether a distributed product may drive a user's consumer subscription is also set by each provider's usage terms, which can change and can differ between launching the official CLI and handling its OAuth tokens directly.
 - source: inferred
 - confidence: low
-- evidence: 2026-09-26 request asked only "how do they implement it" and named subscription reuse as a selling point; neither studied repo discusses provider terms, and Orca refreshes Claude OAuth tokens and calls usage endpoints itself. Later the same day, shown the terms risk and Pi's own warning that third-party use of a Claude subscription is billed as extra usage, the human chose the official-CLI route. That choice fits the hypothesis being addressed, but the personal-versus-public question was not answered, so the blind spot is not yet resolved.
+- evidence: 2026-09-26 request asked only "how do they implement it" and named subscription reuse as a selling point; neither studied repo discusses provider terms, and Orca refreshes Claude OAuth tokens and calls usage endpoints itself. Later the same day, shown the terms risk and Pi's own warning that third-party use of a Claude subscription is billed as extra usage, the human chose the official-CLI route. That choice fits the hypothesis being addressed, but the personal-versus-public question was not answered, so the blind spot is not yet resolved. 2026-09-30: answered the learning edge: “我的research OS 以后要发布为产品，让其他用户使用” (public release to other users). Asked which way the product should reach the literature APIs, and accepted per-user keys over a shared one. Told that alphaXiv's third-party terms still needed checking, they replied with the access mechanism (“alphaxiv的mcp 应该是需要登录的 … 我登录后就可以用了”) rather than the terms. This fits the hypothesis, now widened from subscriptions to data-source APIs; still low confidence.
 - created: 2026-09-26
-- last_updated: 2026-09-26
+- last_updated: 2026-09-30
 - status: active
 - domain: Research OS product and distribution
-- scope: Subscription reuse in a product distributed to other users; no claim about the human's personal local use.
-- last_verified: 2026-09-26
+- scope: Access to third-party services (agent subscriptions, literature APIs) in a product publicly released to other users; no claim about the human's personal local use.
+- last_verified: 2026-09-30
 - freshness: current
 - responsibility_relevance:
   - Before designing credential handling or public distribution, point to the current provider terms and prefer launching official CLIs over touching their tokens.
-- next_learning_edge: Ask whether the product is for personal use, a small group, or public release, since that decides how much the terms constrain the design.
+- next_learning_edge: Before public release, go through each provider's terms with the human (alphaXiv's public API first) and see whether they treat the terms, not the login, as the gate.
