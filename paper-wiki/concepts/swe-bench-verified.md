@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - software-engineering
 - llm-agents
-timestamp: 2026-09-24T00:00:00Z
+timestamp: 2026-09-30T00:00:00Z
 ---
 
 # Definition
@@ -22,3 +22,4 @@ SWE-bench evaluates coding agents on resolving real GitHub issues from open-sour
 * [RRSI](../papers/2609.24972.md) - out-of-distribution target for a harness evolved only on Terminal-Bench 2.1: +1.8 (82.0 → 83.8) with Claude Opus 4.8 and +2.2 (76.8 → 79.0) with Gemini 3.5 Flash, never scored during search.
 * [ZGCM-1](../papers/2609.13356.md) - appendix diagnostic on a fixed internal 50-task subset with mini-SWE-agent v2: 2 of 50 resolved (4.0%).
 * [One to More, More to One](../papers/2609.23377.md) - used only to profile benchmark composition with SWE Labeler: 87.0% bug fixes and 86.2% single-file changes, vs. 47.3% bug fixes and 59.2% cross-module changes in SWE-bench Pro.
+* [Raven](../papers/2609.33439.md) - Raven-Code leads by 0.6 points with DeepSeek-V4-Flash and 1.2 with Claude Opus 4.8 (3 and 6 of 500 tasks), with network access allowed during generation; separately, the reused HarnessBank results improve held-out Pass@1 by 5.1 points on a 26-task test split, which does not pass that paper's paired-gain criterion.

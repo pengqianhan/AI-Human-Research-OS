@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-09-30T00:00:00Z
 ---
 
 # Definition
@@ -32,6 +32,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [SLCA-GRPO](../papers/2609.29050.md) - a frozen GPT-OSS-120B judge scores final-answer quality (1–5) as the summary reward, and the method's point is that this judge's noise is routed only to summary tokens, never to tool-call tokens.
 * [Game Arena](../papers/2609.31473.md) - positioned against judge- and preference-based evaluation: every leaderboard metric comes from game outcomes (wins, chips, team victory), which the paper argues avoids judge subjectivity, verbosity bias, and sycophancy.
 * [TraceDance](../papers/2609.33295.md) - a three-model panel (GPT-5.6-Sol, Gemini-3.5-Flash, Claude Opus 4.8) grades single agent turns on behavior-specific 0-5 rubrics; against two human annotators it reaches 81.0% pass/fail agreement and κ = 0.40 (humans with each other: κ = 0.31), but every judge scores more leniently than humans, and GPT-5.6-Sol shows a small self-preference (0.22 points).
+* [Raven](../papers/2609.33439.md) - an LLM judge grades DeepResearch Mixed answers for semantic equivalence with the reference, and GPT-5.6 Luna judges an internal grader for the visual-design benchmarks, whose scores the authors say are not comparable with official leaderboards.
+* [Follow the Entities (CorpusMap)](../papers/2609.37226.md) - GPT-5.6 Sol judges every answer-quality metric; re-judging the GPT-5.5 answers with DeepSeek-V4-Pro keeps CorpusMap first on all five metrics and reproduces the method ranking exactly on three (Kendall's τ = 1.00), less closely on WixQA context recall (0.47) and factuality (0.83).
 
 # Notes
 

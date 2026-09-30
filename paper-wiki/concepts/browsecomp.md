@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - search-agents
-timestamp: 2026-09-23T00:00:00Z
+timestamp: 2026-09-30T00:00:00Z
 ---
 
 # Definition
@@ -18,6 +18,7 @@ BrowseComp (Wei et al., 2025) is a benchmark of short-answer questions deliberat
 
 * [Iris](../papers/2609.04304.md) - primary headline benchmark (with BrowseComp-ZH); Iris-mini/Iris-pro report 82.2/88.6 on BrowseComp and 84.8/85.1 on BrowseComp-ZH, the paper's strongest reported open-source results in each parameter range.
 * [ZGCM-1](../papers/2609.13356.md) - a from-scratch 7B model reporting 19.43 with a 64-step ReAct harness. Its comparisons (e.g., Claude 4 Sonnet 12.20, Qwen3-235B-A22B 2.30) are taken from other reports rather than same-harness reruns.
+* [Raven](../papers/2609.33439.md) - one of four sources pooled in DeepResearch Mixed; with DeepSeek-V4-Flash, Raven-Research answers 69.3% of its BrowseComp questions against at most 62.4% for MiroFlow and DeepSeek-Harness on the same backbone and search tools, with one LLM-judged attempt per question.
 
 # Related
 
