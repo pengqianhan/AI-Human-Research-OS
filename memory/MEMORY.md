@@ -15,6 +15,7 @@
 |---|---|---|
 | `agent_led_research` | `off` | Options: `off`, `scout_only`, `full_gated`. Human-led research is the default; agent-led ideas require the configured gate, provenance, a stage, bounded resources, and the same evaluator protocol. |
 | `parallelism` | portfolio always on; intra-project parallelism on demand | Track multiple projects in the portfolio, but start intra-project multi-agent work only when a task is decomposable, verifiable, and worth the merge cost. |
+| `paper_sources` | [paper-sources.json](paper-sources.json) | Literature sources the `paper-search` skill may query (alphaXiv, OpenAlex, bioRxiv, PubMed, Hugging Face, Papers with Code); the Human Owner flips them from the **Papers** button in os-ui's agent windows. A source that is off stays off on every route. |
 
 ## Active Projects
 
