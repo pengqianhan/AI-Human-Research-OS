@@ -38,6 +38,7 @@ Project paths below are relative to the project being worked on.
 | Write or assess research claims | Project `paper_skeleton.md`; use `paper/main.tex` for the paper and the evaluation contract below for assessment |
 | Capture or promote an idea | [ideas/index.md](ideas/index.md); use `okf-repo-organizer` for structural normalization |
 | Create, register, validate, or archive a project | `research-project-manager`, then the copied project's `index.md` |
+| Search for papers or related work | `paper-search`; its source switches bind every route to a source |
 | Add or organize research reading | [paper-wiki/index.md](paper-wiki/index.md) and `paper-wiki-manager` |
 | Find reusable skills | [research-skills-hub/index.md](research-skills-hub/index.md) |
 | Need user context or handle personal information | [human/index.md](human/index.md); read `human/private/` only when explicitly requested |

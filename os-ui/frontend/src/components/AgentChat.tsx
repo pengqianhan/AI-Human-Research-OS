@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, ReactNode } from "react";
 import { Badge } from "./Badge";
 import type { BadgeTone } from "./Badge";
+import { PaperSources } from "./PaperSources";
 import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
@@ -327,6 +328,7 @@ export function AgentChat({ cwd, heading, intro, examples }: Props) {
             </span>
           )}
           <span className="ml-auto flex items-center gap-2">
+            {!needToken && <PaperSources token={readToken()} />}
             <Badge tone={STATUS_TONE[status] ?? "mute"}>{status}</Badge>
             {running && (
               <button

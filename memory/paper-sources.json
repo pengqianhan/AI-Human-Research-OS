@@ -1,0 +1,8 @@
+{
+  "alphaxiv": true,
+  "openalex": true,
+  "biorxiv": true,
+  "pubmed": true,
+  "huggingface": true,
+  "pwc": true
+}
