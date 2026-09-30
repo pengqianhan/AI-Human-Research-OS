@@ -63,8 +63,9 @@ table; symlink or copy form comes from the collection's `SOURCE.md`. See
   declared PEP 723 dependency automatically), or Python 3.11+ with PyYAML.
 - `paper-search`: run its script with `uv run`, which installs the declared
   `truststore` dependency (certificate checks by the OS); Python 3.11+
-  standard library otherwise. An optional `OPENALEX_API_KEY` lifts OpenAlex's
-  anonymous rate limit.
+  standard library otherwise. Optional per-user keys (`OPENALEX_API_KEY`,
+  `NCBI_API_KEY`, `HF_TOKEN`) go in the repository's gitignored `.env`; copy
+  [`.env.example`](../../.env.example).
 - `uv-env`: requires or installs the `uv` Python package manager.
 - `research-skill-installer`: no additional local setup required.
 - `map-then-territory`: no local setup, but requires the `grilling`,

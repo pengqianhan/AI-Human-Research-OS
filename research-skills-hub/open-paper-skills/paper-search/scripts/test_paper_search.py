@@ -235,5 +235,91 @@ class SwitchTests(unittest.TestCase):
         self.assertEqual([h["id"] for h in hits], ["2601.18005"])
 
 
+class CredentialTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "memory").mkdir()
+        self.config = self.root / "memory" / "paper-sources.json"
+        self.config.write_text("{}", encoding="utf-8")
+        self.env = self.root / ".env"
+        self.env.write_text(
+            "# comment\n"
+            "export OPENALEX_API_KEY='oa-secret'\n"
+            "NCBI_API_KEY=ncbi-secret # inline comment\n"
+            "HF_TOKEN=\n"
+            "UNRELATED_SECRET=never-read\n",
+            encoding="utf-8",
+        )
+        self.saved = dict(ps.KEYS)
+
+    def tearDown(self) -> None:
+        ps.KEYS.clear()
+        ps.KEYS.update(self.saved)
+        self.tmp.cleanup()
+
+    def use(self, **keys: str) -> None:
+        ps.KEYS.clear()
+        ps.KEYS.update(keys)
+
+    def test_env_file_sits_beside_memory(self) -> None:
+        self.assertEqual(ps.env_file_for(self.config), self.env)
+        self.assertIsNone(ps.env_file_for(self.root / "paper-sources.json"))
+        self.assertIsNone(ps.env_file_for(None))
+
+    def test_only_known_keys_are_read_and_the_environment_wins(self) -> None:
+        with mock.patch.dict(ps.os.environ, {"NCBI_API_KEY": "from-env", "HF_TOKEN": ""}, clear=True):
+            keys = ps.load_credentials(self.env)
+        self.assertEqual(keys, {"OPENALEX_API_KEY": "oa-secret", "NCBI_API_KEY": "from-env"})
+
+    def test_each_key_reaches_only_its_source(self) -> None:
+        self.use(OPENALEX_API_KEY="oa-secret", NCBI_API_KEY="ncbi-secret", HF_TOKEN="hf-secret")
+        with mock.patch.object(ps, "get_json", return_value={"results": []}) as get:
+            ps.search_openalex("q", ps.Options())
+        self.assertIn("api_key=oa-secret", get.call_args.args[0])
+
+        search = {"esearchresult": {"idlist": ["111"]}}
+        with mock.patch.object(ps, "get_json", return_value=search) as get, \
+                mock.patch.object(ps, "http", return_value=PUBMED) as fetch:
+            ps.search_pubmed("q", ps.Options())
+        self.assertIn("api_key=ncbi-secret", get.call_args.args[0])
+        self.assertIn("api_key=ncbi-secret", fetch.call_args.args[0])
+
+        with mock.patch.object(ps, "get_json", return_value=[]) as get:
+            ps.search_huggingface("q", ps.Options())
+        self.assertEqual(get.call_args.args[1], {"Authorization": "Bearer hf-secret"})
+
+        with mock.patch.object(ps, "get_json", return_value=[]) as get:
+            ps.search_alphaxiv("q", ps.Options())
+        self.assertNotIn("secret", get.call_args.args[0])
+
+    def test_rate_limit_names_the_next_step(self) -> None:
+        self.use()
+        self.assertIn("set OPENALEX_API_KEY in the repository's .env", ps.with_hint("biorxiv", "HTTP 429: slow down"))
+        self.assertIn("--mode keyword", ps.with_hint("pwc", "HTTP 429: slow down"))
+        self.assertEqual(ps.with_hint("openalex", "HTTP 500: boom"), "HTTP 500: boom")
+        self.use(OPENALEX_API_KEY="oa-secret")
+        self.assertIn("daily budget may be used up", ps.with_hint("openalex", "HTTP 429: slow down"))
+
+    def test_keys_never_reach_error_messages(self) -> None:
+        self.use(OPENALEX_API_KEY="oa-secret")
+
+        def leaky(query: str, opts: ps.Options) -> list:
+            raise ps.SourceError("HTTP 403: bad key oa-secret")
+
+        _, errors = ps.run_search("q", ["openalex"], ps.Options(), {"openalex": leaky})
+        self.assertEqual(errors, {"openalex": "HTTP 403: bad key [REDACTED]"})
+
+    def test_sources_reports_whether_each_key_is_set(self) -> None:
+        out = io.StringIO()
+        with mock.patch.dict(ps.os.environ, {}, clear=True), contextlib.redirect_stdout(out):
+            ps.main(["--config", str(self.config), "sources", "--json"])
+        rows = {row["id"]: row for row in json.loads(out.getvalue())["sources"]}
+        self.assertEqual((rows["openalex"]["credential"], rows["openalex"]["credential_set"]), ("OPENALEX_API_KEY", True))
+        self.assertEqual((rows["huggingface"]["credential"], rows["huggingface"]["credential_set"]), ("HF_TOKEN", False))
+        self.assertIsNone(rows["alphaxiv"]["credential"])
+        self.assertNotIn("oa-secret", out.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

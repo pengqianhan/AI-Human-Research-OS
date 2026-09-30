@@ -58,6 +58,22 @@ SOURCES: dict[str, tuple[str, str]] = {
     "pwc": ("Papers with Code", "Papers with Code catalog via its MCP server: code and citation counts"),
 }
 
+# Optional per-user keys, each raising one source's limits. Every user brings
+# their own: a key shipped with the OS would pool all users' traffic into one
+# budget and expose it in a public repository. Values come from the
+# environment, else from the repository's gitignored `.env`.
+CREDENTIALS: dict[str, tuple[str, str]] = {
+    "openalex": ("OPENALEX_API_KEY", "a free key from https://openalex.org/settings/api raises the "
+                 "daily budget 10x ($0.10 to $1, about 100 to 1,000 searches)"),
+    "biorxiv": ("OPENALEX_API_KEY", "bioRxiv is searched through OpenAlex; a free key from "
+                "https://openalex.org/settings/api raises the daily budget 10x"),
+    "pubmed": ("NCBI_API_KEY", "a free key from your NCBI account settings raises the limit "
+               "from 3 to 10 requests per second"),
+    "huggingface": ("HF_TOKEN", "a read token from https://huggingface.co/settings/tokens raises "
+                    "the anonymous rate limit"),
+}
+KEYS: dict[str, str] = {}
+
 ALPHAXIV_API = "https://api.alphaxiv.org"
 OPENALEX_API = "https://api.openalex.org"
 PUBMED_API = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
@@ -126,6 +142,56 @@ def save_switches(path: Path, changes: dict[str, bool]) -> dict[str, bool]:
     return load_switches(path)
 
 
+# --- credentials -----------------------------------------------------------
+
+
+def env_file_for(config: Path | None) -> Path | None:
+    """The repository's `.env`, beside the `memory/` that holds the switches."""
+    if config is None or config.parent.name != "memory":
+        return None
+    return config.parent.parent / ".env"
+
+
+def load_credentials(env_file: Path | None) -> dict[str, str]:
+    """The known keys only; the environment wins over `.env`."""
+    names = {name for name, _ in CREDENTIALS.values()}
+    found: dict[str, str] = {}
+    if env_file is not None and env_file.is_file():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            key, sep, value = line.strip().removeprefix("export ").partition("=")
+            value = value.strip()
+            if value[:1] in ("'", '"'):
+                value = value[1:].split(value[0], 1)[0]
+            else:
+                value = value.split(" #", 1)[0].strip()
+            if sep and key.strip() in names:
+                found[key.strip()] = value
+    for name in names:
+        if os.environ.get(name, "").strip():
+            found[name] = os.environ[name].strip()
+    return {name: value for name, value in found.items() if value}
+
+
+def redact(text: str) -> str:
+    for value in KEYS.values():
+        text = text.replace(value, "[REDACTED]")
+    return text
+
+
+def with_hint(source: str, message: str) -> str:
+    """Tell the user the next step when a rate limit is what failed."""
+    if not message.startswith("HTTP 429"):
+        return message
+    if source == "pwc":
+        return f"{message} Next step: hybrid search allows 10 calls a minute; retry with --mode keyword."
+    if source not in CREDENTIALS:
+        return message
+    name, benefit = CREDENTIALS[source]
+    if name in KEYS:
+        return f"{message} ({name} is set, so its daily budget may be used up; it resets daily.)"
+    return f"{message} Next step: set {name} in the repository's .env; {benefit}."
+
+
 # --- HTTP ------------------------------------------------------------------
 
 
@@ -159,9 +225,9 @@ def error_message(body: str) -> str:
     return body
 
 
-def get_json(url: str) -> Any:
+def get_json(url: str, headers: dict[str, str] | None = None) -> Any:
     try:
-        return json.loads(http(url))
+        return json.loads(http(url, headers=headers))
     except json.JSONDecodeError as err:
         raise SourceError(f"invalid JSON from {url.split('?')[0]}: {err}") from None
 
@@ -283,10 +349,8 @@ def search_openalex(query: str, opts: Options, biorxiv: bool = False) -> list[di
     params = {"search": query, "per_page": str(min(opts.limit, 200)), "select": OPENALEX_SELECT}
     if filters:
         params["filter"] = ",".join(filters)
-    # Anonymous search is throttled under load; a free key lifts that.
-    for env, name in (("OPENALEX_API_KEY", "api_key"), ("OPENALEX_MAILTO", "mailto")):
-        if os.environ.get(env):
-            params[name] = os.environ[env]
+    if "OPENALEX_API_KEY" in KEYS:
+        params["api_key"] = KEYS["OPENALEX_API_KEY"]
     data = get_json(f"{OPENALEX_API}/works?{urllib.parse.urlencode(params)}")
     return parse_openalex(data, "biorxiv" if biorxiv else "openalex")
 
@@ -323,13 +387,14 @@ def search_pubmed(query: str, opts: Options) -> list[dict[str, Any]]:
         params.update(datetype="pdat",
                       mindate=(opts.after or "1800-01-01").replace("-", "/"),
                       maxdate=(opts.before or "3000-12-31").replace("-", "/"))
-    found = get_json(f"{PUBMED_API}/esearch.fcgi?{urllib.parse.urlencode(params)}")["esearchresult"]
+    key = {"api_key": KEYS["NCBI_API_KEY"]} if "NCBI_API_KEY" in KEYS else {}
+    found = get_json(f"{PUBMED_API}/esearch.fcgi?{urllib.parse.urlencode(params | key)}")["esearchresult"]
     if found.get("ERROR"):
         raise SourceError(str(found["ERROR"]))
     ids = found.get("idlist") or []
     if not ids:
         return []
-    fetch = {"db": "pubmed", "id": ",".join(ids), "retmode": "xml", "tool": "research-os-paper-search"}
+    fetch = {"db": "pubmed", "id": ",".join(ids), "retmode": "xml", "tool": "research-os-paper-search"} | key
     return parse_pubmed(http(f"{PUBMED_API}/efetch.fcgi?{urllib.parse.urlencode(fetch)}"))
 
 
@@ -389,7 +454,8 @@ def search_huggingface(query: str, opts: Options) -> list[dict[str, Any]]:
     # The API has no date filter, so a window is applied to a wider pool.
     windowed = bool(opts.after or opts.before)
     pool = min(opts.limit * 4, 100) if windowed else opts.limit
-    rows = get_json(f"{HF_API}/api/papers/search?{urllib.parse.urlencode({'q': query, 'limit': pool})}")
+    auth = {"Authorization": f"Bearer {KEYS['HF_TOKEN']}"} if "HF_TOKEN" in KEYS else None
+    rows = get_json(f"{HF_API}/api/papers/search?{urllib.parse.urlencode({'q': query, 'limit': pool})}", auth)
     hits = parse_huggingface(rows)
     if windowed:
         hits = [h for h in hits if in_window(h.get("publication_date"), opts)]
@@ -508,9 +574,9 @@ def run_search(query: str, sources: list[str], opts: Options,
         try:
             answered.append(future.result())
         except SourceError as err:
-            errors[source] = str(err)
+            errors[source] = with_hint(source, redact(str(err)))
         except Exception as err:  # a malformed response must not sink the other sources
-            errors[source] = f"{type(err).__name__}: {err}"
+            errors[source] = redact(f"{type(err).__name__}: {err}")
     return merge(answered), errors
 
 
@@ -564,12 +630,17 @@ def cmd_sources(args: argparse.Namespace, config: Path | None) -> int:
         switches = save_switches(config, changes)
     else:
         switches = load_switches(config)
-    rows = [{"id": s, "name": name, "about": about, "enabled": switches[s]} for s, (name, about) in SOURCES.items()]
+    rows = []
+    for source, (name, about) in SOURCES.items():
+        credential = CREDENTIALS.get(source, (None, ""))[0]
+        rows.append({"id": source, "name": name, "about": about, "enabled": switches[source],
+                     "credential": credential, "credential_set": credential in KEYS})
     if args.json:
         print(json.dumps({"config": str(config) if config else None, "sources": rows}, ensure_ascii=False, indent=2))
     else:
         for row in rows:
-            print(f"{row['id']:<12} {'on ' if row['enabled'] else 'off'}  {row['name']}: {row['about']}")
+            key = f"  [{row['credential']} {'set' if row['credential_set'] else 'not set'}]" if row["credential"] else ""
+            print(f"{row['id']:<12} {'on ' if row['enabled'] else 'off'}  {row['name']}: {row['about']}{key}")
         print(f"switches: {config or 'none found (every source on)'}")
     return 0
 
@@ -603,6 +674,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         config = find_config(args.config)
+        KEYS.clear()
+        KEYS.update(load_credentials(env_file_for(config)))
         return cmd_search(args, config) if args.command == "search" else cmd_sources(args, config)
     except UsageError as err:
         print(f"paper_search: {err}", file=sys.stderr)

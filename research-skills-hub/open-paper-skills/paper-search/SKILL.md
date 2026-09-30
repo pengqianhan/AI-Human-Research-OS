@@ -70,14 +70,31 @@ an arXiv id, a DOI, an OpenAlex `W…` id, a PMID, or a PwC catalog id.
 
 Known source behaviour:
 
-- OpenAlex throttles anonymous search under load (`HTTP 429`, which also hits
-  `biorxiv`). A free key in `OPENALEX_API_KEY` lifts it.
 - PwC allows 10 hybrid searches per minute per IP; bursts need `--mode keyword`.
   `PWC_MCP_URL` points at another server, such as a local `pwc-mcp`.
 - Hugging Face has no date filter, so a window is applied to a wider pool
   afterwards and can return fewer results than `--limit`.
 - A PubMed window matches print or electronic dates, while `publication_date`
   shows the electronic one, so a hit can predate the window.
+
+## Keys
+
+Every user brings their own optional keys: `OPENALEX_API_KEY` (OpenAlex and
+bioRxiv), `NCBI_API_KEY` (PubMed), and `HF_TOKEN` (Hugging Face). The script
+reads them from the environment, else from the repository's gitignored `.env`
+(template: [`.env.example`](../../../.env.example)); `sources` shows which are
+set. alphaXiv and PwC need none.
+
+A rate-limited source (`HTTP 429`) comes back with the key that lifts the
+limit. Relay that next step to the human; they create and paste the key. Keep
+key values out of commits, prompts, and logs.
+
+## Reading an alphaXiv paper
+
+When the harness has a logged-in alphaXiv connector (Claude Code's, for
+instance), use it to read an alphaXiv hit's full text or put questions to its
+PDF. It belongs to the `alphaxiv` source, so it follows that switch. Search
+itself stays with `$PS`, which needs no login and works in every harness.
 
 ## Switch a source
 
