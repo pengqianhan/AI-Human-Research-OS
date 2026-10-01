@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-08-20T00:00:00Z
+timestamp: 2026-10-01T22:25:31Z
 ---
 
 # Scope
@@ -24,6 +24,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [Iris](../papers/2609.04304.md) - alternates supervised fine-tuning and RL against live search in "climbing" rounds, distilling each RL round's hardest-solved, most-efficient rollouts back into the next SFT pass as a self-paced curriculum, rather than running either objective to convergence alone.
 * [NeoHorse-1](../papers/2609.08183.md) - updates weights with a routing-guided three-stage SFT curriculum extended to routing-guided on-policy distillation, using a harness router's re-estimated capability-demand score (not the served-model identity, which also reflects deployment policy and availability) as the ordering/credit signal for both stages, rather than an RL reward or evolution-strategies fitness score.
 * [Multi-module GRPO](../papers/2508.04660.md) - extends GRPO from single-policy, single-prompt rollout groups to modular LM programs by grouping rollouts at the *module* level — aligning calls to the same named module across trajectories rather than decomposing one trajectory into transitions or snapshots — using a uniform program-level outcome reward as credit for every module-level group; reports 7% average gains over untuned baselines alone and 11% when staged after prompt optimization (MIPROv2) via BetterTogether, at roughly 13x the GPU-hours of prompt optimization alone.
+* [Context Language Models](../papers/2609.37725.md) - trains context editing with stepwise GRPO that broadcasts each trajectory's outcome advantage to its segments, plus a success-gated efficiency advantage that ranks only successful trajectories by prefix-reuse FLOPs; lifts Qwen3.5-9B from 28.8% to 42.5% on BrowseComp-Plus.
 
 # Synthesis
 

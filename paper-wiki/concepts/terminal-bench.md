@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-09-22T00:00:00Z
+timestamp: 2026-10-01T22:25:31Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [Recuris](../papers/2608.24876.md) - uses Terminal-Bench 2.1 (87 tasks, Terminus-2 agent) for its test-time adaptation mode specifically, because the benchmark's tasks share no tools or policies across each other — cross-task memory evolution admits no patch in thirteen runs, so only within-task retry-plus-adaptation applies, and the paper's own decomposition shows the attempt-budget/retry effect (+26.4 points) dominates the learning effect from adaptation itself (+2.3 points, interval including zero).
 * [AutoSaddler](../papers/2608.23041.md) - automatically optimizes a Terminus 2 base harness on Terminal-Bench 2.0 (40 test tasks), raising Pass@1 from a 40.0% base to 50.0%, surpassing both automated baselines (GEPA 42.5%, Meta-Harness 43.3%) and the manually expert-tuned Terminus KIRA harness (47.5%).
 * [Code2Skill](../papers/2609.05571.md) - uses TerminalBench (Merrill et al., 2026) as one of eight evaluation benchmarks; retrieved code-derived skills from CodeSkillBank show large gains under generation-time prompting for DS4-Flash specifically (Sec. 5.4), among the paper's strongest single-benchmark results.
+* [Context Language Models](../papers/2609.37725.md) - uses TerminalBench 2.1 (89 tasks, 32K budget) in its zero-shot context-management comparison, where CLM with Qwen3.6-27B matches Codex-style summarization while using 70% of its prefix-reuse FLOPs.
 
 # Notes
 
