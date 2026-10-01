@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Scope
@@ -27,6 +27,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [One to More, More to One](../papers/2609.23377.md) - shows pooled agentic RL on repository-level SWE hides a "category see-saw" that category-balanced data does not remove, then trains three same-origin category experts with Refresh-Repair-Expand (RLOO + K1-in-reward Agentic-miniRL, mastery refresh, SFT on the expert's own verified successes, frontier expansion) and merges them into one Qwen3.6-27B student by label-routed multi-teacher on-policy distillation with ReLU-gated extrapolation (58.04% on audited SWE-bench Pro-618, +2.54 over pooled RL and higher in every category).
 * [SLCA-GRPO](../papers/2609.29050.md) - adds a *structural* credit-assignment axis for tool-calling agents: separately normalized tool-execution and summary-quality advantages are routed only to tool-call tokens and final-answer tokens respectively, inside one policy and one rollout group; +2.53 / +1.36 / +9.15 pp over matched GRPO (Toucan / BFCL / τ²-Bench, 7B), with a factorial control showing the gain comes from blocking the summary→tool path.
 * [CompoWorld](../papers/2609.33665.md) - SFT on 3K trajectories from composed multi-service environments, then GRPO on 1K tasks with a Completion-Focused Rubric Reward that weights each rubric criterion by λ + (1 − its group pass rate); Qwen3.6-35B-A3B gains 9.17 points on average across eight benchmarks, but RL adds only 1.2 points over SFT and the authors attribute most of the gain to SFT.
+* [AREX-2](../papers/2609.38288.md) - supervised imitation of whole multi-round improvement trajectories from GitHub ML repositories and online-judge problems, with failed rounds kept in context but given no loss, so the model learns to recover from setbacks; Qwen3.8-27B reaches 81.8 Any Medal on MLE-bench Lite (with skills in context) and keeps improving through a 5-hour Frontier-CS budget.
 
 # Synthesis
 
@@ -35,6 +36,8 @@ Agentic ESOpt and Agent Lightning give this topic its first direct methodologica
 SLCA-GRPO adds a third credit-assignment axis to this topic, beside the temporal one (Agent Lightning's transitions, ContextPilot's snapshots) and the module one (mmGRPO). It splits a single trajectory's tokens by *role* — tool calls vs. final answer — and gives each role its own group-normalized advantage. Its controls also answer a question the minimalist-GRPO papers leave open. Simply reweighting a unified reward (up to 5:1 toward the tool reward) recovers only part of the gain, so *where* an advantage lands matters, not just how rewards are mixed. Like ContextPilot it argues from variance reduction, but it needs no extra rollouts.
 
 CompoWorld reshapes the reward rather than where the advantage lands. SLCA-GRPO splits credit by token role; CompoWorld keeps one advantage for all agent tokens but reweights *rubric criteria* inside the reward, giving more weight to criteria the rollout group rarely satisfies. Its motivation is a failure mode that rubric-reward GRPO papers elsewhere in this wiki (ScienceBuddy's weighted rubric score, PaperGym's per-criterion score) do not isolate: after SFT, uniform rubric averages are already high while full task completion stays rare, so the reward stops moving. Its evidence is also a caution for the topic. The reweighting helps on an internal evaluation curve, yet on the eight benchmarks RL adds only 1.2 points over SFT and slightly lowers one, so the training *data* (composed environments) mattered far more than the RL objective in this paper.
+
+AREX-2 changes what a training example is rather than the optimizer. Most papers here train on trajectory-level rewards or on successful single attempts; AREX-2 keeps a whole long trajectory if its final score clears a threshold, failures included, and applies the loss only to decisions that made progress (diagnosis, repair, strategy change, improved submission). Its stage-wise ablation separates what this training adds (13.6 MLE-bench Lite points with skills and rounds held fixed) from what skills and a larger round budget give an untrained base model (28.8 to 68.2). Its transfer claim to deep research is weaker than it looks, because the comparison models (AREX 4B and 122B) also differ in base model.
 
 # Open Questions
 
@@ -48,3 +51,4 @@ CompoWorld reshapes the reward rather than where the advantage lands. SLCA-GRPO 
 * One to More, More to One's category experts plus multi-teacher distillation beat pooled RL, but with several times the training compute and with checkpoint selection on the reporting benchmark — does a compute- and selection-matched pooled run (same rollouts, same SFT-on-own-successes) close the gap, and does the per-category "see-saw" also appear in the other papers' multi-task RL runs once their scores are broken down by task category?
 * SLCA-GRPO's structural (tool vs. summary) routing and the temporal credit methods (GiGPO, SPO, VinePPO, or ContextPilot's branch-and-average) are claimed to compose, but no paper here tests the combination — does per-step credit inside the tool segment add to segment-locked routing, or do the two target the same variance?
 * CompoWorld's completion-focused weighting cannot help on a criterion that every rollout in a group fails. Would pairing it with a curriculum that raises task difficulty gradually, or with per-segment credit like SLCA-GRPO's, turn its internal evaluation gain into a benchmark gain larger than the 1.2 points RL added over SFT?
+* AREX-2 keeps failed rounds in context but excludes them from the loss. Is that what teaches recovery, or would training on the same trajectories with failures removed transfer as well? And would RL on the same long-horizon environments, with best-so-far score as reward, beat imitation of a teacher's trajectories?

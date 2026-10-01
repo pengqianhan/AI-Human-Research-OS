@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Scope
@@ -38,6 +38,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [RRSI](../papers/2609.24972.md) - offers generic acceptance gates (a pre-scoring leakage critic, a noise-band floor, a cost-per-gain constraint, pruning of unproductive components) that address the risk of self-evolution loops fitting their own evaluation tasks. It is demonstrated on whole-harness evolution rather than on a single skill or memory component.
 * [One to More, More to One](../papers/2609.23377.md) - a teacher-free self-improvement loop at the weight level (Refresh-Repair-Expand): each SWE category expert re-probes its own per-instance mastery after every RL and SFT phase, replays only its own verifier-approved successful trajectories (more for low-mastery instances), and re-selects its next task frontier, recovering 61-73% of the training instances that regressed during RL.
 * [Self-Evolving Coding Agents (HexaAnything)](../papers/2609.35432.md) - proposes a seven-operation, evaluation-gated loop over a versioned bundle (world program, policy, harness, data, memory, evaluator config) for physical agents, with four evolution targets (harness, data and environments, model, embodiment and compute); it demonstrates tool evolution (RoboDojo 0%/40%/0% → 80%/100%/100%, and a real-robot toss tool with two versions rolled back) and one data-to-model update, leaving the other targets as future work.
+* [False Frontiers](../papers/2609.39102.md) - measures a failure of self-generated practice tasks scored by a self-trained evaluator: in a proposer-solver loop for search agents, proposer and solver come to agree on the same wrong answers ("co-cheating"), so in-loop reward rises while an external audit's false-agreement mass climbs from under 0.5% to 6-9% over three rounds; scoring each source's questions with a solver never trained on that source (CrossFit) halves it.
 
 # Synthesis
 
@@ -45,10 +46,12 @@ OpenSkill and DecentMem both target continual agent improvement but differ in me
 
 HexaAnything brings this topic's diagnose-propose-validate loop into physical settings and adds two things the software-only papers do not need. First, an *evidence ladder* (E0 an artifact runs, through E4 it transfers to a real robot or a documented shift) that says how strong the evidence behind an admitted change is, so a better harness is not mistaken for a better model. Second, a verifier that must stay independent of the proposing model *because* admitted traces become training data; this is the same concern Prime Agent's persisted exploit illustrates, now raised to the level of the next model checkpoint. Its measured evolution is mostly tool-level, and the tool histories show the non-monotone paths this topic's gates are meant to handle: a revision that drops Pour vase from 40% to 0% before the next one reaches 100%, and real-robot versions rejected and rolled back on operator judgment.
 
+False Frontiers gives a quantified case of the verifier-independence concern that RSIAgent and HexaAnything design around. Its loop updates weights rather than a skill or harness, and its "gate" is the solver whose agreement rewards the proposer. Because that solver trains on the proposer's own pseudo-labels, an error can return as reward, and an external audit finds false agreement rising round by round while in-loop agreement looks like progress. Two of its findings carry over to the gates above. Checking each proposal more carefully before admission (multi-sample verification) helps little, because the return path stays open. What helps is controlling the *training ancestry* of the evaluator, so it never learned from the source it judges. A separate evaluator that saw the same data does not help.
+
 # Open Questions
 
 * How should generated skills be represented so they remain reusable and auditable?
-* What makes a self-built verifier reliable enough to guide agent improvement?
+* What makes a self-built verifier reliable enough to guide agent improvement? False Frontiers suggests one testable condition: the verifier must not have learned from artifacts derived from what it is judging. Do harness- and skill-level gates in this topic (for example held-out sets built by the same model that proposes edits) have an analogous return path?
 * How can self-evolution workflows avoid overfitting to synthetic practice tasks?
 * Does per-agent memory evolution in DecentMem lead to agents that specialize or diverge in ways that reduce team coherence?
 * When should episode-level execution records be promoted into global patterns, reusable skills, or permanent harness changes?

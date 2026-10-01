@@ -5,7 +5,7 @@ description: A deep-research question-answering benchmark used to evaluate agent
 tags:
 - benchmarks
 - deep-research-agents
-timestamp: 2026-08-31T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Definition
@@ -17,3 +17,4 @@ DeepSearchQA is a deep-research benchmark referenced by this wiki's agentic-sear
 * [JIT-Agent](../papers/2608.25593.md) - headline deep-research benchmark; GLM-5.2 equipped with a JIT-Agent-synthesized harness reaches 85.1-93.9 depending on backbone, the top score reported anywhere in the paper, improving on the strongest fixed-harness comparator by 4.7 points (85.1 vs. 80.4 on DeepSeek-V4-Flash).
 * [Apodex 1.1](../papers/2608.23283.md) - one of several general-reasoning/deep-search benchmarks (alongside Humanity's Last Exam) used in Apodex's own comparison tables against Claude Opus 5 and other systems.
 * [Iris](../papers/2609.04304.md) - one of four headline evaluation benchmarks; Iris-mini/Iris-pro report 86.9/92.9 F1, the strongest scores among open-source search agents in their parameter ranges reported in the paper's own comparison table.
+* [AREX-2](../papers/2609.38288.md) - 93.8 F1, third in its comparison table behind Kimi-K3 (95.0) and Claude Fable 5 (94.2), with no new deep-research training data beyond the earlier AREX recipe.

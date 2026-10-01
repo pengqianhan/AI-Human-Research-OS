@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-09-30T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Definition
@@ -34,6 +34,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [TraceDance](../papers/2609.33295.md) - a three-model panel (GPT-5.6-Sol, Gemini-3.5-Flash, Claude Opus 4.8) grades single agent turns on behavior-specific 0-5 rubrics; against two human annotators it reaches 81.0% pass/fail agreement and κ = 0.40 (humans with each other: κ = 0.31), but every judge scores more leniently than humans, and GPT-5.6-Sol shows a small self-preference (0.22 points).
 * [Raven](../papers/2609.33439.md) - an LLM judge grades DeepResearch Mixed answers for semantic equivalence with the reference, and GPT-5.6 Luna judges an internal grader for the visual-design benchmarks, whose scores the authors say are not comparable with official leaderboards.
 * [Follow the Entities (CorpusMap)](../papers/2609.37226.md) - GPT-5.6 Sol judges every answer-quality metric; re-judging the GPT-5.5 answers with DeepSeek-V4-Pro keeps CorpusMap first on all five metrics and reproduces the method ranking exactly on three (Kendall's τ = 1.00), less closely on WixQA context recall (0.47) and factuality (0.83).
+* [False Frontiers](../papers/2609.39102.md) - gpt-6-astra/high builds an evidence-backed reference from each source document and judges saved pseudo-labels and solver responses in a post-hoc audit that never affects training; about 14% of audited cases stay unresolved, and no human agreement check is reported.
+* [Mid-Harness](../papers/2609.39982.md) - uses an LLM as a pre-execution judge of candidate terminal actions (listwise, pointwise, or pairwise); pairwise comparison works best for self-verification, a LoRA verifier distilled from GPT-5.6 Sol's pairwise judgments raises teacher agreement from 59.01% to 74.58%, and GPT-5.6 Terra reviews the remaining disagreements.
 
 # Notes
 

@@ -25,5 +25,3 @@ GraphRAG (Edge et al., 2024, Microsoft) targets "global" questions about a whole
 # Notes
 
 GraphRAG and CorpusMap both build entity structure offline, but use it differently: GraphRAG folds the graph into retrieval and summarization, and the generator sees only what that step returns, whereas CorpusMap stores entity pages as files that an agent reads and follows. CorpusMap's benchmarks ask multi-document factual questions rather than the global sensemaking questions GraphRAG was designed for, so its low score there reflects task fit as well as the index (reader note).
-</content>
-</invoke>

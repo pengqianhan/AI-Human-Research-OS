@@ -11,6 +11,7 @@
 * [GISA](gisa.md) - General information-seeking benchmark with structured item, set, list, and table answers.
 * [GraphRAG](graphrag.md) - Microsoft's graph-based RAG that builds an LLM-extracted entity graph and community summaries over a corpus and answers global questions by map-reducing over them.
 * [GRPO](grpo.md) - Value-free RL algorithm that estimates advantage from a group of same-prompt responses rather than a learned critic.
+* [Humanity's Last Exam](humanitys-last-exam.md) - 2,500-question expert-written multimodal academic benchmark built to stay hard for frontier LLMs; agent papers usually report its text-only subset.
 * [LIBERO-Pro](libero-pro.md) - A perturbed variant of the LIBERO tabletop-manipulation benchmark that stress-tests a frozen vision-language-action policy under deployment perturbations such as instruction redirection and object-position swaps.
 * [LLM-as-a-Judge](llm-as-a-judge.md) - Using a language model to score, rank, or select other model outputs.
 * [LoCoMo](locomo.md) - Very-long-term conversational memory benchmark spanning single-hop, multi-hop, open-domain, and temporal reasoning.
@@ -23,6 +24,7 @@
 * [On-policy distillation](on-policy-distillation.md) - Training a student on its own trajectories by matching a teacher's per-token distribution.
 * [PaperBench](paperbench.md) - Benchmark where agents replicate 20 ICML 2024 papers from scratch, graded against 8,316 rubric sub-tasks.
 * [Reward hacking](reward-hacking.md) - An agent or policy raising its measured reward or benchmark score by exploiting the grader, environment, or evaluation channel instead of accomplishing the intended task.
+* [Search-R1](search-r1.md) - Outcome-reward RL that trains an LLM to interleave reasoning with search calls, masking retrieved tokens from the loss; a standard baseline for RL-trained search agents.
 * [SkillsBench](skillsbench.md) - 87-task, 8-domain benchmark with curated Agent Skills and deterministic verifiers, run with and without Skills to measure how much they help.
 * [SWE-bench Pro](swe-bench-pro.md) - Enterprise repository-level software-engineering benchmark spanning multiple real codebases.
 * [SWE-bench Verified](swe-bench-verified.md) - Human-validated subset of SWE-bench for repository-level issue resolution.

@@ -29,5 +29,3 @@ Scores are not comparable across these papers because the Skill condition differ
 # Related
 
 * [Agent skill libraries](../topics/agent-skill-libraries.md) - the topic this benchmark most directly measures: whether a library of reusable procedures changes downstream task success.
-</content>
-</invoke>

@@ -10,6 +10,7 @@
 * [Agent security and red teaming](agent-security.md) - Papers about assessing and defending the security of deployed AI agents and the infrastructure, protocols, and models beneath them.
 * [Agent self-evolution](agent-self-evolution.md) - Papers about agents that improve their own skills, verification signals, or behavior after deployment.
 * [Agent skill libraries](agent-skill-libraries.md) - Papers about building, validating, and maintaining reusable libraries of executable agent skills.
+* [Agent test-time scaling](agent-test-time-scaling.md) - Papers about spending more inference-time compute on one agent task (more candidate actions or trajectories, stronger verification, or more improvement rounds) and about when that compute turns into higher task success.
 * [Agentic robot manipulation](robot-manipulation-agents.md) - Papers about LLM, VLM, and coding agents that solve robot manipulation tasks by writing control programs, orchestrating frozen policies through a harness, or generating demonstrations that train robot policies.
 * [Autonomous research](autonomous-research.md) - Papers about AI systems that autonomously generate, test, and refine research hypotheses or artifacts over long horizons.
 * [Context engineering](context-engineering.md) - Papers about assembling, measuring, and governing the information environment in which AI agents reason and act.

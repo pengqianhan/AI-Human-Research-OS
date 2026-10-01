@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - ml-engineering
 - llm-agents
-timestamp: 2026-07-07T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Definition
@@ -19,6 +19,7 @@ MLE-Bench evaluates AI agents on machine-learning engineering by having them sol
 * [Toward Generalist Autonomous Research via Hypothesis-Tree Refinement](../papers/2606.11926.md) - Arbor reports 86.36% Any Medal on MLE-Bench Lite with GPT-5.5; its ablations on the same benchmark support the value of the hypothesis tree and insight feedback.
 * [EurekAgent: Agent Environment Engineering is All You Need For Autonomous Scientific Discovery](../papers/2606.13662.md) - reports an 85.71% any-medal rate on a selected seven-task MLE-Bench Lite subset.
 * [Repo-To-Skill: Distilling GitHub Repositories Into AI4AI Skills](../papers/2609.02749.md) - reports on the **full** 75-task MLE-Bench suite, not the Lite subset this page is titled after: distilled skills raise Codex+GPT-5.5's Any Medal from 31.11% to 72.89% (+134.3% relative), the largest of DisCo's four reported benchmark gains.
+* [AREX-2](../papers/2609.38288.md) - 81.8 Any Medal (three seeds, OpenMLE protocol, 12 hours per task) with general and task-specific skills in context; its five-stage ablation separates skills and more rounds (base Qwen3.8-27B 28.8 → 68.2) from training on long improvement trajectories (68.2 → 81.8).
 
 # Notes
 

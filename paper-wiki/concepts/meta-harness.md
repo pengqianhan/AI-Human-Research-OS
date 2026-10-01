@@ -6,7 +6,7 @@ resource: https://arxiv.org/abs/2603.28052
 tags:
 - agent-harness-engineering
 - harness-evolution
-timestamp: 2026-09-25T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ Meta-Harness (Lee, Nair, Zhang, Lee, Khattab, and Finn, arXiv:2603.28052, COLM 2
 * [SoL-Pi](../papers/2609.20519.md) - cites Meta-Harness as a direct automated-harness-optimization peer (search over executable harness programs with held-out transfer and a performance/context-cost Pareto frontier) and builds its search/validation separation in response to the generalization concern such methods raise.
 * [RRSI](../papers/2609.24972.md) - runs Meta-Harness as a same-budget baseline. It is the strongest evolve-set method on Harvey LAB (93.0 vs. H₀ 89.4) but adds only +0.9 to the out-of-distribution average, which is RRSI's central evidence that unregularized evolution overfits.
 * [ScienceBuddy](../papers/2609.17523.md) - cites Meta-Harness as prior harness search, but narrows each proposal to one bounded, schema-checked edit and nests the search inside an outer RL loop on the task model.
+* [Mid-Harness](../papers/2609.39982.md) - cites Meta-Harness as automated harness optimization and takes the opposite approach: the harness code stays fixed and compute goes into sampling and verifying each action at the model-call boundary.
 
 # Notes
 

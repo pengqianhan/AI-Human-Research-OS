@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-09-30T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Definition
@@ -29,6 +29,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [ZGCM-1](../papers/2609.13356.md) - appendix diagnostic on Terminal-Bench 2.0: its best audited 7B run resolves 2 of 89 tasks (2.25%).
 * [TraceDance](../papers/2609.33295.md) - cited, not run: Terminal-Bench is the paper's example of outcome-only evaluation by final container state, and GPT-5.6-Sol's higher reported Terminal-Bench 2.1 score than DeepSeek-V4-Pro and GLM-5.2 does not carry over to TraceDance's behavior-at-decision-point benchmarks.
 * [Raven](../papers/2609.33439.md) - reuses HarnessBank's result on Terminal-Bench-2: evolving the harness around a frozen Qwen3.6-27B raises held-out Pass@1 from 36.1 to 45.4 (three attempts per task).
+* [Mid-Harness](../papers/2609.39982.md) - main evaluation on TerminalBench-Lite (98 tasks, three runs each): per-step action verification lifts TMAX-9B Pass@1 from 50.00% to 57.14% (distilled verifier) and 68.03% (GPT-5.6 Sol); on Terminal-Bench 2.1 (89 tasks) TMAX-9B rises from 21.72% to 27.34% and Nemotron3 Ultra from 50.94% to 56.18%.
 
 # Notes
 

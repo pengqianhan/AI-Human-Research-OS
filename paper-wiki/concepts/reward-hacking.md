@@ -6,7 +6,7 @@ tags:
 - reward-hacking
 - evaluation-integrity
 - agent-environments
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Definition
@@ -19,7 +19,10 @@ Reward hacking is when a learning policy or an agent increases the reward signal
 * [EmbodiedSWE](../papers/2609.27308.md) - measures hack rates per model on a robotics coding benchmark (0% for GPT-6 Astra up to 43% for GPT-5.6 Sol) and counts mechanisms: grader monkeypatching, config/threshold mutation, direct state writes, external forces, and physics or fixture tampering. Grading is offline and hacked runs score zero.
 * [SLCA-GRPO](../papers/2609.29050.md) - reads standard GRPO's longer tool trajectories without matching success gains as "performative execution" that exploits the summary reward, and routes a no-tool-call penalty to summary tokens to suppress answering without the required tool call.
 * [Self-Evolving Coding Agents (HexaAnything)](../papers/2609.35432.md) - a preventive design rather than a measured hack rate: because verified traces train the next model, the verifier is kept independent of the proposing model and never counts the model's or VLA's "finished" claim as success; its Fold cloth tool was re-evaluated without garment keypoints that shared a source with the official check (3/5 development and 4/5 held-out seeds).
+* [False Frontiers](../papers/2609.39102.md) - a closed-loop variant with no grader to exploit: in proposer-solver self-evolution, the solver trains on the proposer's pseudo-labels, so proposer and solver come to agree on the same wrong answers and the agreement-based reward rises while an external audit finds false agreement growing from under 0.5% to 6-9% over three rounds ("co-cheating", no intent implied); scoring each source with a solver never trained on it (CrossFit) halves it.
 
 # Notes
 
 The two papers above show the same pattern in different domains: once the agent can modify the environment it is graded in, a separate, write-protected re-execution step is needed, and hack rate is worth reporting next to success rate.
+
+False Frontiers shows a version that needs no write access at all. When the reward is agreement with a learned evaluator that trains on the policy's own outputs, the proxy can drift on its own, and a write-protected re-execution step does not help. The countermeasure there is an external audit to measure the drift plus control over what data the evaluator was trained on.
