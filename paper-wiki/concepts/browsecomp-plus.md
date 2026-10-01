@@ -8,7 +8,7 @@ tags:
 - long-context-reasoning
 - multi-hop-qa
 - retrieval
-timestamp: 2026-07-21T00:00:00Z
+timestamp: 2026-10-01T22:25:31Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Evaluations typically sample a subset of tasks and provide a subset of the corpu
 
 * [Recursive Language Models](../papers/2512.24601.md) - uses the 1K-document configuration as its beyond-the-window regime; RLM(GPT-5) reaches 91.33 where base GPT-5 cannot fit the input at all.
 * [JIT-Agent](../papers/2608.25593.md) - one of nine benchmarks in its Deep Research evaluation category; JIT-Agent-generated harnesses reach 78.0 (GLM-5.2 backbone) and 74.0 (DeepSeek-V4-Flash backbone), against a 67.5-76.9 spread for the nine other backbones/harnesses reported in the same table.
+* [Context Language Models](../papers/2609.37725.md) - main deep-research testbed (all 830 questions, 32K budget): zero-shot CLM with Qwen3.6-27B reaches 59.4%, 11.4% relative above Codex-style summarization at 21.5% fewer prefix-reuse FLOPs; also the RL evaluation set and the Suffix Cache Reuse serving benchmark.
 
 # Notes
 
