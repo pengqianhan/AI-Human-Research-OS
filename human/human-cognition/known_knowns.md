@@ -18,6 +18,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260923-002 - Recommended defaults in grilling rounds are accepted without close reading: executive decisions inside a round are effectively the agent's; directional vetoes happen separately.
 - cog-20260927-001 - Glance-first GUI: state shown with visual elements and minimal text; sentences only after a click.
 - cog-20260930-001 - Human and LLM remember papers differently: a human retains what they read, while an LLM keeps a paper only through its note, so the human marks their own reading in the note for agents to look up.
+- cog-20261002-001 - Own habit as the default, user choice as a setting: in the published OS, the human's personal workflow (reading papers via HF read, then alphaXiv) ships as a default that each user can change.
 
 ## Entries
 
@@ -43,15 +44,15 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human can articulate the desired end state and research collaboration flows, while explicitly delegating detailed technical route design beyond their current knowledge.
 - source: user-confirmed
 - confidence: high
-- evidence: The human described intake from ideas, documents, papers, and partial experiments; autonomous continuation; project and hub skill learning; and parallel agent research, while stating they cannot provide detailed implementation instructions. 2026-09-23: opened the project-management design with an outcome statement only (a skill as the agents' interface to `projects-folder/`, mirroring the paper-wiki and skill-hub skills) and left the whole route — operation set, state source, contract location, tracking, verification plan — to three grilling rounds, accepting every recommended default. 2026-09-26: extended the vision to a product — users bring their own coding-agent subscription (after seeing Orca and alphaXiv OpenResearch), the human talks only to one root agent that coordinates per-project agents to cut attention loss when switching projects, and the OS manages session traces so agents can reflect on history — and again delegated the mechanism analysis to the agent. Same day: named Pi Agent as the intended long-term engine but chose subscription-driven Claude/Codex CLIs for speed, accepted the recommended OpenResearch-style adapter layering by restating it, and delegated implementation and verification with one constraint: “尽量简单的实现，不要太复杂，简单有效最好”. Later that day they cut the first example project twice, from a 30-minute run to “只要它小到足够让所有用户能够作为例子试验一遍即可”, stating the priority outright: “我们的任务重点是构建 AI Home Research OS，这个训练只是作为一个小例子”. Example projects exist to let any user try the OS once; their research content is secondary. 2026-09-27: cancelled the long-planned first real project outright (“我只需要保留 Example Project 和 Nano Chat 这两个 Project 作为示例就可以了。Circle Packing 我觉得可以删除”), keeping the portfolio to the two examples. 2026-09-30: specified the unified paper search the same way, by pointing at a reference product and naming the additions (“参考openresearch 给 我的research OS 设计一个统一的paper 搜索接口，在openresearch 的基础上添加hugging face 和 … pwc-cli#mcp-server 的来源，同时像openresearch那样添加按钮来开闭来源”), leaving the CLI, result shape, switch storage, and UI placement to the agent. A reference product plus named deltas recurs as their way to specify a feature (OpenResearch also seeded the harness layering and the nanochat example).
+- evidence: The human described intake from ideas, documents, papers, and partial experiments; autonomous continuation; project and hub skill learning; and parallel agent research, while stating they cannot provide detailed implementation instructions. 2026-09-23: opened the project-management design with an outcome statement only (a skill as the agents' interface to `projects-folder/`, mirroring the paper-wiki and skill-hub skills) and left the whole route — operation set, state source, contract location, tracking, verification plan — to three grilling rounds, accepting every recommended default. 2026-09-26: extended the vision to a product — users bring their own coding-agent subscription (after seeing Orca and alphaXiv OpenResearch), the human talks only to one root agent that coordinates per-project agents to cut attention loss when switching projects, and the OS manages session traces so agents can reflect on history — and again delegated the mechanism analysis to the agent. Same day: named Pi Agent as the intended long-term engine but chose subscription-driven Claude/Codex CLIs for speed, accepted the recommended OpenResearch-style adapter layering by restating it, and delegated implementation and verification with one constraint: “尽量简单的实现，不要太复杂，简单有效最好”. Later that day they cut the first example project twice, from a 30-minute run to “只要它小到足够让所有用户能够作为例子试验一遍即可”, stating the priority outright: “我们的任务重点是构建 AI Home Research OS，这个训练只是作为一个小例子”. Example projects exist to let any user try the OS once; their research content is secondary. 2026-09-27: cancelled the long-planned first real project outright (“我只需要保留 Example Project 和 Nano Chat 这两个 Project 作为示例就可以了。Circle Packing 我觉得可以删除”), keeping the portfolio to the two examples. 2026-09-30: specified the unified paper search the same way, by pointing at a reference product and naming the additions (“参考openresearch 给 我的research OS 设计一个统一的paper 搜索接口，在openresearch 的基础上添加hugging face 和 … pwc-cli#mcp-server 的来源，同时像openresearch那样添加按钮来开闭来源”), leaving the CLI, result shape, switch storage, and UI placement to the agent. A reference product plus named deltas recurs as their way to specify a feature (OpenResearch also seeded the harness layering and the nanochat example). 2026-10-02: before approving the paper-search read order they asked how it compared with OpenResearch's unified paper interface (「和…OpenResearch…中统一的论文搜索接口相比有什么优点和缺点」), and held execution until the logic was settled (「先不执行，先来聊一下执行逻辑」); they then approved the hybrid design in one word.
 - created: 2026-07-16
-- last_updated: 2026-09-30
+- last_updated: 2026-10-02
 - status: active
 - domain: Research OS product direction
 - scope: Outcome and value-level product direction, not implementation architecture or technology selection.
 - capability_level: awareness
 - evidence_type: explanation
-- last_verified: 2026-09-30
+- last_verified: 2026-10-02
 - freshness: current
 - responsibility_relevance:
   - Preserve human authority over research goals, autonomy limits, budgets, irreversible actions, and acceptance criteria.
@@ -163,3 +164,25 @@ timestamp: 2026-07-04T00:00:00+12:00
   - Leave `status` at `unread` after agent reading, however complete the note is; the note body carries the agent's understanding.
 - related:
   - [cog-20260923-001](#cog-20260923-001-human-read-agent-write-division-of-the-os)
+
+## cog-20261002-001 Own habit as the default, user choice as a setting
+
+- content: The human separates their own workflow from what the published Research OS imposes. Their habit becomes the default, and users get a manual choice. For papers, they read full text with Hugging Face's `hf papers read` first and the alphaXiv MCP second, and those two cover the papers they usually read. They want users of the released OS to pick the literature sources and their order themselves.
+- source: user-confirmed
+- confidence: medium
+- evidence: 2026-10-02, while designing `paper-search fetch`: 「我自己在找论文的时候更喜欢用hf read 如果找不到就用alphaxiv 的 mcp，这两个工具基本能覆盖我常读的论文，但是我发布了research OS，我希望我的用户在用这个产品的时候可以手动选择论文的来源」. They accepted a configurable `read_order` defaulting to `huggingface → alphaxiv → arxiv` rather than a fixed route.
+- created: 2026-10-02
+- last_updated: 2026-10-02
+- status: active
+- domain: Research OS product design
+- scope: Literature sources and read order in paper-search; no claim yet that every personal workflow should become a user setting.
+- capability_level: awareness
+- evidence_type: explanation
+- last_verified: 2026-10-02
+- freshness: current
+- responsibility_relevance:
+  - When a design mirrors the human's own tool habit, ship it as the default behind a user-changeable setting rather than a hard-coded route, and say which default came from their habit.
+  - Read papers for this human through HF first and alphaXiv second unless the configured read order says otherwise.
+- related:
+  - [cog-20260716-002](#cog-20260716-002-outcome-level-research-os-vision)
+  - [cog-20260724-001](unknown_knowns.md#cog-20260724-001-agent-neutrality-as-a-veto)
