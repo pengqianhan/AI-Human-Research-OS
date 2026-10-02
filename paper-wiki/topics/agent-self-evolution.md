@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-02T00:00:00Z
 ---
 
 # Scope
@@ -39,6 +39,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [One to More, More to One](../papers/2609.23377.md) - a teacher-free self-improvement loop at the weight level (Refresh-Repair-Expand): each SWE category expert re-probes its own per-instance mastery after every RL and SFT phase, replays only its own verifier-approved successful trajectories (more for low-mastery instances), and re-selects its next task frontier, recovering 61-73% of the training instances that regressed during RL.
 * [Self-Evolving Coding Agents (HexaAnything)](../papers/2609.35432.md) - proposes a seven-operation, evaluation-gated loop over a versioned bundle (world program, policy, harness, data, memory, evaluator config) for physical agents, with four evolution targets (harness, data and environments, model, embodiment and compute); it demonstrates tool evolution (RoboDojo 0%/40%/0% → 80%/100%/100%, and a real-robot toss tool with two versions rolled back) and one data-to-model update, leaving the other targets as future work.
 * [False Frontiers](../papers/2609.39102.md) - measures a failure of self-generated practice tasks scored by a self-trained evaluator: in a proposer-solver loop for search agents, proposer and solver come to agree on the same wrong answers ("co-cheating"), so in-loop reward rises while an external audit's false-agreement mass climbs from under 0.5% to 6-9% over three rounds; scoring each source's questions with a solver never trained on that source (CrossFit) halves it.
+* [ActiveSaddler](../papers/2610.00906.md) - harness self-improvement whose training curriculum co-evolves with the harness: failures become bandit arms that are re-scored each iteration, resolved weaknesses lose priority, recurring ones regain it, and the controller explores unseen scenarios mainly when few unresolved arms remain.
 
 # Synthesis
 

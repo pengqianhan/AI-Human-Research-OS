@@ -7,7 +7,7 @@ tags:
 - harness-evolution
 - coding-agents
 - repository-understanding
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-02T00:00:00Z
 ---
 
 # Scope
@@ -50,6 +50,7 @@ This topic tracks work on the executable software layer around a foundation mode
 * [Raven](../papers/2609.33439.md) - a "harness of harnesses": treats each model-harness pair, including Claude Code, Codex, Hermes Agent, and OpenClaw behind ACP or CLI adapters, as a unit that a host agent assigns through an admission-checked DAG, and evolves its own four specialist harnesses around a frozen model through Memory, Planning, Capability, and Action interfaces with gated screening (from HarnessBank); it reports same-backbone gains per specialist but no end-to-end test of the composed system.
 * [Omni-IO Skills](../papers/2609.31847.md) - extends an unchanged host agent to any-to-any media production with a Skill layer, an MCP tool contract with swappable providers, dependency-checked wave-scheduled execution graphs, and an append-only asset registry; measured only against the bare agent (input support from about 40% to 100% on UniM-90).
 * [Mid-Harness](../papers/2609.39982.md) - leaves the harness loop and the generator unchanged and adds compute in the model-call wrapper: each step samples several candidate actions and a verifier picks one before execution; with TMAX-9B on TerminalBench-Lite, pairwise self-verification lifts Pass@1 from 50.00% to 54.76%, a distilled verifier to 57.14%, and a GPT-5.6 Sol verifier to 68.03%.
+* [ActiveSaddler](../papers/2610.00906.md) - keeps AutoSaddler's optimizer unchanged and adapts which training scenarios feed each update: LLM-induced failure-pattern arms, LLM learning-progress scores, and an LLM explore-or-repair controller; with gpt-5.5, +4.4 points on GAIA2 and +7.5 on Terminal-Bench 2.0 over a fixed scenario order, and +3.0 when wrapped around GEPA.
 
 # Synthesis
 
@@ -58,6 +59,8 @@ Harness Handbook asks where requested harness behavior lives in code so evolutio
 Raven and Omni-IO Skills move the unit of harness engineering in two directions. Raven moves it up a level: whole model-harness pairs, its own specialists and third-party agents behind adapters, become components that a host composes through typed graphs. This is the wrapping move LongHorizon-Harness makes for one long task, applied instead to dividing work across specialists. Omni-IO Skills moves it outward: the host agent is untouched, and the harness adds output modalities through Skills, a provider-agnostic tool contract, and a persistent asset registry. Both keep the model fixed, and neither isolates its own components: Raven's composed system is never compared end to end with a strong single agent, and Omni-IO is compared only with the bare agent.
 
 Mid-Harness marks a boundary case for this topic. Most papers here change the harness itself (tools, state, control flow) or search over harness code; Mid-Harness changes nothing in the harness loop and inserts its intervention into the model-call wrapper, where candidate actions are sampled and compared before the harness executes one. That makes it compatible with any of the harnesses above, and its transfer runs across two harnesses (Vanillux2 and Terminus-2). Its finding that the verifier, not the number of candidates, sets the gain parallels this topic's results that the same model can score very differently depending on the layer around it.
+
+ActiveSaddler adds an axis the diagnose-write-validate loops above leave fixed: which training scenarios produce the evidence for the next patch. Most optimizers here (AutoSaddler, Meta-Harness, GEPA) fix their mini-batches before optimization begins. ActiveSaddler induces failure-pattern arms from diagnosed failures and spends rollouts on weaknesses that are still active. Its ablations show category-level and scenario-level arms both do worse, which matches Recuris's finding that a typed, component-level failure description is a better repair target than an outcome. Its own list of discovered arms also shows a risk this topic has not measured: on GAIA2 many arms describe matching the grader's output format, so an optimizer that targets persistent failures may also learn the evaluator's conventions.
 
 # Open Questions
 
@@ -80,3 +83,4 @@ Mid-Harness marks a boundary case for this topic. Most papers here change the ha
 * RRSI shows that four same-budget harness-evolution methods lose most of their evolve-set gain out of distribution, and two fall below the starting harness. Which of its regularizers — leakage critic, noise-band floor, cost-per-gain rule, pruning — carries that transfer, and does a critic from a different model family than the proposer reject fewer genuine improvements?
 * Raven's theory says composing harnesses adds coverage only when every individual agent falls below the reliability target while planning and per-node errors stay small. Can those error terms be measured on real harnesses, and would one agent given the union of all specialists' tools close most of the gap, as the paper's own parity example concedes it could?
 * Mid-Harness adds verification at the model-call boundary without touching the harness, and its gains differ by task domain (+20.5 points on software-engineering tasks but −10.0 on scientific computing at 27B). Would a harness that exposes action reversibility or environment state to the verifier close the gap on the state-dependent later steps where its verifier is weakest?
+* ActiveSaddler's curriculum steers optimization toward whatever keeps failing, and several of its GAIA2 arms are grader-format conventions. How should a harness optimizer tell task-behavior weaknesses from evaluator-specific ones, and how much of the reported held-out gain survives when patches from format-only arms are removed?

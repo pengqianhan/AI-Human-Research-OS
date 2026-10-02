@@ -6,7 +6,7 @@ resource: https://arxiv.org/abs/2603.28052
 tags:
 - agent-harness-engineering
 - harness-evolution
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-02T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Meta-Harness (Lee, Nair, Zhang, Lee, Khattab, and Finn, arXiv:2603.28052, COLM 2
 * [RRSI](../papers/2609.24972.md) - runs Meta-Harness as a same-budget baseline. It is the strongest evolve-set method on Harvey LAB (93.0 vs. H₀ 89.4) but adds only +0.9 to the out-of-distribution average, which is RRSI's central evidence that unregularized evolution overfits.
 * [ScienceBuddy](../papers/2609.17523.md) - cites Meta-Harness as prior harness search, but narrows each proposal to one bounded, schema-checked edit and nests the search inside an outer RL loop on the task model.
 * [Mid-Harness](../papers/2609.39982.md) - cites Meta-Harness as automated harness optimization and takes the opposite approach: the harness code stays fixed and compute goes into sampling and verifying each action at the model-call boundary.
+* [ActiveSaddler](../papers/2610.00906.md) - same-budget baseline with gpt-5.5: 54.2% on GAIA2 and 66.7% on Terminal-Bench 2.0, against 59.8% and 80.0% for AutoSaddler with ActiveSaddler's adaptive curriculum.
 
 # Notes
 

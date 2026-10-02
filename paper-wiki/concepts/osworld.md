@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - gui-computer-use-agents
 - agent-harness-engineering
-timestamp: 2026-09-22T00:00:00Z
+timestamp: 2026-10-02T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ OSWorld evaluates computer-use agents on long-horizon, open-ended tasks executed
 * [LongHorizon-Harness](../papers/2608.01964.md) - uses OSWorld 2.0 (108 desktop-workflow tasks, official Docker VM infrastructure) as one of three matched-comparison benchmarks for its Manage-Execute-Audit harness, reporting binary and partial accuracy under a hybrid GUI+CLI tool pool where official baselines are GUI-only.
 * [UI-Mate](../papers/2608.15930.md) - uses OSWorld-Verified as a primary benchmark for its base training stack (open-weight state-of-the-art general computer-use results) and, via the paired-protocol design of its own new OSWorkerBench, argues OSWorld's instruction-only setup cannot isolate whether a demonstration helps beyond what the instruction alone conveys.
 * [RecreationWorld](../papers/2609.22000.md) - cites OSWorld 2.0 as the GUI-operation research line it positions its own hybrid GUI+code recreation task against, and separately uses it as one of five out-of-distribution transfer benchmarks: two model initializations fine-tuned on 35,000 recreation trajectories both finish above their first checkpoint on OSWorld 2.0 alongside four other external benchmarks, evidence the recreation training transfers to a benchmark it was never trained on.
+* [AutoGUIWorld](../papers/2610.01215.md) - evaluates on 361 OSWorld tasks (Google Drive tasks excluded) by mean task score with partial credit: fine-tuning Qwen3.5-35B-A3B on image-generated trajectories raises it from 33.0% to 40.8%, with multi-app tasks 12.0 → 20.9 but Chrome tasks 39.0 → 26.0.
 
 # Notes
 
