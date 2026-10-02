@@ -44,8 +44,11 @@ conversation the header picks the agent (remembered) and the permission mode
 header's **Papers** button shows which literature sources the
 [paper-search](../research-skills-hub/open-paper-skills/paper-search/SKILL.md)
 skill may query (alphaXiv, OpenAlex, bioRxiv, PubMed, Hugging Face, Papers
-with Code) and switches each on or off, as OpenResearch does in its composer.
-The switches live in
+with Code, arXiv) and switches each on or off, as OpenResearch does in its
+composer; bioRxiv and PubMed start off. Its **Read order** section is a chain of
+tiles for the sources a paper's full text is read from, first tried first:
+click a tile to move it one step earlier, and a switched-off source shows dimmed
+and is skipped. The switches and the read order live in
 [memory/paper-sources.json](../memory/paper-sources.json) and apply to every
 agent, in every window and outside the UI. The panel's **Keys** section takes
 your own optional keys (OpenAlex, NCBI, Hugging Face), each with a link to get
@@ -68,7 +71,8 @@ Endpoints (dev server only, in [frontend/chat-plugin.ts](frontend/chat-plugin.ts
 `GET /api/chat/sessions?cwd=`, `GET /api/chat/session?id=`,
 `POST /api/chat/send` (`{cwd, agent, mode, session?, text}`), and
 `POST /api/chat/stop` (`{session}`); the Papers button uses
-`GET`/`POST /api/paper-sources` (`{source, enabled}`) and
+`GET`/`POST /api/paper-sources` (`{source, enabled}`),
+`POST /api/paper-sources/read-order` (`{order}`), and
 `POST /api/paper-sources/key` (`{name, value}`; an empty value clears), in
 [frontend/paper-sources-plugin.ts](frontend/paper-sources-plugin.ts), behind
 the same token. `cwd` is empty for the repository root or

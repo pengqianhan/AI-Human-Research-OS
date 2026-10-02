@@ -210,11 +210,12 @@ class SwitchTests(unittest.TestCase):
             code = ps.main(["--config", str(self.config), *argv])
         return code, out.getvalue(), err.getvalue()
 
-    def test_missing_keys_mean_on(self) -> None:
+    def test_missing_keys_take_the_defaults(self) -> None:
+        self.config.write_text(json.dumps({"pubmed": True, "openalex": False}), encoding="utf-8")
         switches = ps.load_switches(self.config)
-        self.assertFalse(switches["pubmed"])
-        self.assertTrue(all(on for source, on in switches.items() if source != "pubmed"))
-        self.assertTrue(all(ps.load_switches(None).values()))
+        self.assertEqual((switches["pubmed"], switches["openalex"], switches["biorxiv"]), (True, False, False))
+        defaults = ps.load_switches(None)
+        self.assertEqual({s for s, on in defaults.items() if not on}, {"biorxiv", "pubmed"})
 
     def test_sources_command_flips_switches_and_keeps_other_keys(self) -> None:
         code, out, _ = self.run_cli("sources", "--enable", "pubmed", "--disable", "pwc", "--json")
@@ -246,9 +247,9 @@ class SwitchTests(unittest.TestCase):
         report = json.loads(out)
         self.assertEqual(code, 0)
         self.assertNotIn("pubmed", report["searched"])
-        self.assertEqual(report["disabled"], ["pubmed"])
+        self.assertEqual(report["disabled"], ["biorxiv", "pubmed"])  # pubmed by the file, biorxiv by default
         self.assertEqual(report["errors"], {"pwc": "upstream down"})
-        self.assertEqual(len(report["results"]), len(ps.SOURCES) - 2)
+        self.assertEqual(len(report["results"]), len(ps.SOURCES) - 3)
 
     def test_every_searched_source_failing_exits_1(self) -> None:
         def down(query: str, opts: ps.Options) -> list:

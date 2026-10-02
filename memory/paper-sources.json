@@ -1,8 +1,14 @@
 {
   "alphaxiv": true,
   "openalex": true,
-  "biorxiv": true,
-  "pubmed": true,
+  "biorxiv": false,
+  "pubmed": false,
   "huggingface": true,
-  "pwc": true
+  "pwc": true,
+  "arxiv": true,
+  "read_order": [
+    "huggingface",
+    "alphaxiv",
+    "arxiv"
+  ]
 }

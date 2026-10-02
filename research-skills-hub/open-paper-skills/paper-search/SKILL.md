@@ -130,7 +130,9 @@ instance), use it to put questions to a paper's PDF. It belongs to the
 
 ## Switch a source
 
-Only on the human's word, since the switches are the human's choice:
+bioRxiv and PubMed start switched off and every other source starts on; a
+source the switch file leaves out keeps that default. Change a switch only on
+the human's word, since the switches are the human's choice:
 
 ```bash
 uv run $PS sources --disable pubmed
