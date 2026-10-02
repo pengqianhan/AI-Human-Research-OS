@@ -3,13 +3,16 @@
 # requires-python = ">=3.11"
 # dependencies = ["truststore>=0.10"]
 # ///
-"""Search papers across every literature source the human has switched on.
+"""Search papers across every literature source the human has switched on,
+and read one paper through the sources in the human's read order.
 
 One command, one result shape, and a per-source on/off switch: the design of
-alphaXiv OpenResearch's `orx discover` (MIT), reimplemented here and extended
-with Hugging Face Papers and the Papers with Code MCP server. The switches live
-in `memory/paper-sources.json`; os-ui's agent windows flip them through the
-`sources` command, and a source switched off refuses to run.
+alphaXiv OpenResearch's `orx discover` and `orx paper` (MIT), reimplemented here
+and extended with Hugging Face Papers, the Papers with Code MCP server, and
+arXiv's own API (the query and rate-limit rules of google-deepmind
+science-skills' `literature_search_arxiv`, Apache-2.0). The switches and the
+read order live in `memory/paper-sources.json`; os-ui's agent windows change
+them through the `sources` command, and a source switched off refuses to run.
 
 Standard library plus the optional `truststore`, which `uv run paper_search.py`
 installs from the header above.
@@ -23,6 +26,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -30,6 +34,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable
 
@@ -57,7 +62,10 @@ SOURCES: dict[str, tuple[str, str]] = {
     "pubmed": ("PubMed", "Biomedical and life-science journals via NCBI E-utilities"),
     "huggingface": ("Hugging Face", "Hugging Face Papers: arXiv ML papers with upvotes and code links"),
     "pwc": ("Papers with Code", "Papers with Code catalog via its MCP server: code and citation counts"),
+    "arxiv": ("arXiv", "arXiv's own API: fielded queries (ti:, au:, abs:, cat:) and official metadata"),
 }
+# The sources `fetch` can read a full text from, in the default read order.
+READERS = ("huggingface", "alphaxiv", "arxiv")
 
 # Optional per-user keys, each raising one source's limits. Every user brings
 # their own: a key shipped with the OS would pool all users' traffic into one
@@ -84,6 +92,10 @@ KEY_VALUE = re.compile(r"[A-Za-z0-9._~+/=:-]{8,256}")
 KEYS: dict[str, str] = {}
 
 ALPHAXIV_API = "https://api.alphaxiv.org"
+ALPHAXIV_WEB = "https://www.alphaxiv.org"
+ARXIV_API = "https://export.arxiv.org/api/query"
+ARXIV_WEB = "https://arxiv.org"
+ATOM = {"a": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 OPENALEX_API = "https://api.openalex.org"
 PUBMED_API = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 HF_API = "https://huggingface.co"
@@ -142,13 +154,25 @@ def load_switches(path: Path | None) -> dict[str, bool]:
     return {source: data.get(source, True) is not False for source in SOURCES}
 
 
-def save_switches(path: Path, changes: dict[str, bool]) -> dict[str, bool]:
+def save_switches(path: Path, changes: dict[str, Any]) -> dict[str, bool]:
     data = read_config(path)
     data.update(changes)
     ordered = {source: data.get(source, True) is not False for source in SOURCES}
     ordered.update({k: v for k, v in data.items() if k not in SOURCES})
     path.write_text(json.dumps(ordered, indent=2) + "\n", encoding="utf-8", newline="\n")
     return load_switches(path)
+
+
+def check_read_order(order: Any, where: str) -> list[str]:
+    if (not isinstance(order, list) or not order or len(set(order)) != len(order)
+            or any(reader not in READERS for reader in order)):
+        raise UsageError(f"{where}: read_order takes distinct readers from {', '.join(READERS)}, got {order!r}")
+    return order
+
+
+def load_read_order(path: Path | None) -> list[str]:
+    """The sources `fetch` tries for a full text, first tried first."""
+    return check_read_order(read_config(path).get("read_order", list(READERS)), str(path))
 
 
 # --- credentials -----------------------------------------------------------
@@ -275,7 +299,10 @@ def http(url: str, data: bytes | None = None, headers: dict[str, str] | None = N
 
 
 def error_message(body: str) -> str:
-    """The human-readable part of an error body (OpenAlex sends JSON)."""
+    """The human-readable part of an error body (OpenAlex sends JSON, arXiv Atom)."""
+    summary = re.search(r"<summary>(.*?)</summary>", body, re.S)
+    if summary:
+        return summary.group(1)
     try:
         data = json.loads(body)
     except json.JSONDecodeError:
@@ -613,6 +640,67 @@ def parse_pwc(result: dict[str, Any]) -> list[dict[str, Any]]:
     return hits
 
 
+ARXIV_GAP = 3.0  # arXiv's terms: at most one request every three seconds
+_arxiv_last = [0.0]
+
+
+def arxiv_http(url: str, headers: dict[str, str] | None = None) -> bytes:
+    wait = _arxiv_last[0] + ARXIV_GAP - time.monotonic()
+    if wait > 0:
+        time.sleep(wait)
+    try:
+        return http(url, headers=headers)
+    finally:
+        _arxiv_last[0] = time.monotonic()
+
+
+ARXIV_FIELD = re.compile(r"\b(?:ti|au|abs|co|jr|cat|rn|id|all|submittedDate):", re.I)
+
+
+def arxiv_query(query: str, opts: Options) -> str:
+    """A query in arXiv's syntax. Plain words would be OR-ed, so they are AND-ed;
+    keyword mode searches the exact phrase; a fielded query passes through."""
+    if ARXIV_FIELD.search(query):
+        q = query
+    elif opts.mode == "keyword":
+        q = 'all:"{}"'.format(query.replace('"', ""))
+    else:
+        q = " AND ".join(f"all:{word}" for word in query.split())
+    if opts.after or opts.before:
+        low = (opts.after or "1991-01-01").replace("-", "") + "0000"
+        high = (opts.before or "2999-12-31").replace("-", "") + "2359"
+        q = f"({q}) AND submittedDate:[{low} TO {high}]"
+    return q
+
+
+def search_arxiv(query: str, opts: Options) -> list[dict[str, Any]]:
+    params = {"search_query": arxiv_query(query, opts), "max_results": str(opts.limit), "sortBy": "relevance"}
+    return parse_arxiv(arxiv_http(f"{ARXIV_API}?{urllib.parse.urlencode(params)}"))
+
+
+def parse_arxiv(xml: bytes) -> list[dict[str, Any]]:
+    hits = []
+    for entry in ET.fromstring(xml).findall("a:entry", ATOM):
+        url = entry.findtext("a:id", "", ATOM)
+        if url.endswith("/api/errors"):  # arXiv reports a bad query as an entry
+            raise SourceError(clip(entry.findtext("a:summary", "", ATOM), 300))
+        paper_id = re.sub(r"v\d+$", "", url.split("/abs/", 1)[-1])
+        hits.append(
+            make_hit(
+                "arxiv",
+                paper_id,
+                entry.findtext("a:title", "", ATOM),
+                abstract=clip(entry.findtext("a:summary", "", ATOM), 100_000),
+                publication_date=day(entry.findtext("a:published", "", ATOM)),
+                authors=[a.findtext("a:name", "", ATOM) for a in entry.findall("a:author", ATOM)],
+                url=f"{ARXIV_WEB}/abs/{paper_id}",
+                doi=entry.findtext("arxiv:doi", None, ATOM),
+                venue=entry.findtext("arxiv:journal_ref", None, ATOM),
+            )
+        )
+    return hits
+
+
 SEARCHERS: dict[str, Callable[[str, Options], list[dict[str, Any]]]] = {
     "alphaxiv": search_alphaxiv,
     "openalex": search_openalex,
@@ -620,6 +708,7 @@ SEARCHERS: dict[str, Callable[[str, Options], list[dict[str, Any]]]] = {
     "pubmed": search_pubmed,
     "huggingface": search_huggingface,
     "pwc": search_pwc,
+    "arxiv": search_arxiv,
 }
 
 
@@ -638,6 +727,175 @@ def run_search(query: str, sources: list[str], opts: Options,
         except Exception as err:  # a malformed response must not sink the other sources
             errors[source] = redact(f"{type(err).__name__}: {err}")
     return merge(answered), errors
+
+
+# --- reading one paper -----------------------------------------------------
+
+DOI = re.compile(r"10\.\d{4,9}/[^\s?#]+", re.I)
+NEW_ARXIV = re.compile(r"\d{4}\.\d{4,5}")
+OLD_ARXIV = re.compile(r"[a-z-]+(?:\.[a-z]{2})?/\d{7}", re.I)
+
+
+def classify(raw: str) -> tuple[str, str]:
+    """Which source a paper id belongs to, from its shape, in the manner of
+    `orx paper`: (kind, id) with kind arxiv, biorxiv, openalex, or pubmed."""
+    text = raw.strip()
+    lower = text.lower()
+    pmid = re.fullmatch(r"(?:pmid:)?\s*(\d{1,9})", lower) or re.search(r"pubmed\.ncbi\.nlm\.nih\.gov/(\d+)", lower)
+    if pmid:
+        return "pubmed", pmid.group(1)
+    doi = DOI.search(text)
+    if doi:
+        value = doi.group(0).rstrip("/.")
+        if value.lower().startswith("10.48550/arxiv."):
+            return "arxiv", value.split(".", 2)[2]
+        return ("biorxiv" if value.startswith("10.1101/") else "openalex"), f"doi:{value}"
+    work = re.fullmatch(r"(?:https?://openalex\.org/)?(W\d+)", text, re.I)
+    if work:
+        return "openalex", work.group(1).upper()
+    found = NEW_ARXIV.search(text) or OLD_ARXIV.search(text)
+    if found:
+        return "arxiv", found.group(0)
+    raise UsageError(f"{raw!r} is not an arXiv id or URL, a DOI, an OpenAlex W id, or a PubMed id")
+
+
+class HtmlText(HTMLParser):
+    """arXiv's LaTeXML page as plain text: headings marked with #, math kept as
+    its TeX source, page chrome and scripts dropped."""
+
+    SKIP = {"script", "style", "nav", "header", "footer", "button", "form"}
+    BLOCK = {"p", "div", "section", "article", "li", "tr", "br", "figcaption",
+             "table", "blockquote", "dt", "dd", "caption", "figure"}
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self.skip = 0
+        self.math = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in self.SKIP:
+            self.skip += 1
+        elif self.skip:
+            return
+        elif tag == "math":
+            if not self.math:
+                self.parts.append(f" ${dict(attrs).get('alttext') or ''}$ ")
+            self.math += 1
+        elif re.fullmatch(r"h[1-6]", tag):
+            self.parts.append("\n\n" + "#" * int(tag[1]) + " ")
+        elif tag in self.BLOCK:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in self.SKIP:
+            self.skip = max(self.skip - 1, 0)
+        elif tag == "math":
+            self.math = max(self.math - 1, 0)
+        elif not self.skip and re.fullmatch(r"h[1-6]", tag):
+            self.parts.append("\n\n")
+
+    def handle_data(self, data: str) -> None:
+        if not self.skip and not self.math:
+            self.parts.append(data)
+
+
+def html_text(html: str) -> str:
+    parser = HtmlText()
+    parser.feed(html)
+    parser.close()
+    lines = (re.sub(r"\s+", " ", line).strip() for line in "".join(parser.parts).splitlines())
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip() + "\n"
+
+
+MIN_CHARS = 5000
+SECTION = re.compile(r"(?:#+\s*)?(?:[0-9IVX]+\.?\s*)?(?:introduction|background|related work|preliminaries|"
+                     r"methods?|methodology|approach|experiments?|evaluation|results|discussion|conclusions?)\b", re.I)
+
+
+def incomplete(text: str) -> str | None:
+    """Why a full text looks cut short, or None when it reads as a paper. Hugging
+    Face sometimes serves only a figure's alt text for a fresh submission."""
+    size = len(text.strip())
+    if size < MIN_CHARS:
+        return f"only {size} characters"
+    if not any(len(line) <= 80 and SECTION.match(line.strip()) for line in text.splitlines()):
+        return "no section heading such as Introduction or Method"
+    return None
+
+
+def get_text(url: str, headers: dict[str, str] | None = None,
+             fetch: Callable[..., bytes] = http) -> str | None:
+    """A page as text, or None when the source has no such paper."""
+    try:
+        return fetch(url, headers=headers).decode("utf-8", "replace")
+    except SourceError as err:
+        if str(err).startswith("HTTP 404"):
+            return None
+        raise
+
+
+def hf_auth() -> dict[str, str] | None:
+    return {"Authorization": f"Bearer {KEYS['HF_TOKEN']}"} if "HF_TOKEN" in KEYS else None
+
+
+def read_huggingface(paper_id: str, report: bool) -> str | None:
+    return get_text(f"{HF_API}/papers/{paper_id}.md", hf_auth())
+
+
+def read_alphaxiv(paper_id: str, report: bool) -> str | None:
+    return get_text(f"{ALPHAXIV_WEB}/{'overview' if report else 'abs'}/{paper_id}.md")
+
+
+def read_arxiv(paper_id: str, report: bool) -> str | None:
+    html = get_text(f"{ARXIV_WEB}/html/{paper_id}", fetch=arxiv_http)
+    return html_text(html) if html is not None else None
+
+
+READ: dict[str, Callable[[str, bool], str | None]] = {
+    "huggingface": read_huggingface,
+    "alphaxiv": read_alphaxiv,
+    "arxiv": read_arxiv,
+}
+READ_URL = {
+    "huggingface": HF_API + "/papers/{}",
+    "alphaxiv": ALPHAXIV_WEB + "/abs/{}",
+    "arxiv": ARXIV_WEB + "/html/{}",
+}
+
+
+def arxiv_metadata(paper_id: str, switches: dict[str, bool]) -> dict[str, Any] | None:
+    """Bibliographic facts from arXiv itself, else from Hugging Face."""
+    if switches["arxiv"]:
+        query = urllib.parse.urlencode({"id_list": paper_id})
+        hits = parse_arxiv(arxiv_http(f"{ARXIV_API}?{query}"))
+        if hits:
+            return hits[0]
+    if switches["huggingface"]:
+        data = get_json(f"{HF_API}/api/papers/{paper_id}", hf_auth())
+        return parse_huggingface([{"paper": data}])[0]
+    return None
+
+
+def lookup(kind: str, paper_id: str) -> dict[str, Any] | None:
+    """Metadata for a DOI, OpenAlex id, or PMID; these sources hold no full text."""
+    if kind == "pubmed":
+        params = {"db": "pubmed", "id": paper_id, "retmode": "xml", "tool": "research-os-paper-search"}
+        if "NCBI_API_KEY" in KEYS:
+            params["api_key"] = KEYS["NCBI_API_KEY"]
+        hits = parse_pubmed(http(f"{PUBMED_API}/efetch.fcgi?{urllib.parse.urlencode(params)}"))
+    else:
+        params = {"select": OPENALEX_SELECT}
+        if "OPENALEX_API_KEY" in KEYS:
+            params["api_key"] = KEYS["OPENALEX_API_KEY"]
+        try:
+            work = get_json(f"{OPENALEX_API}/works/{paper_id}?{urllib.parse.urlencode(params)}")
+        except SourceError as err:
+            if str(err).startswith("HTTP 404"):
+                return None
+            raise
+        hits = parse_openalex({"results": [work]}, kind)
+    return hits[0] if hits else None
 
 
 # --- CLI -------------------------------------------------------------------
@@ -680,10 +938,86 @@ def cmd_search(args: argparse.Namespace, config: Path | None) -> int:
     return 1 if len(errors) == len(sources) else 0
 
 
+def cmd_fetch(args: argparse.Namespace, config: Path | None) -> int:
+    switches = load_switches(config)
+    kind, paper_id = classify(args.paper)
+    report: dict[str, Any] = {"paper": args.paper, "id": paper_id, "kind": kind}
+
+    if kind != "arxiv":
+        if args.via or args.report:
+            raise UsageError("--via and --report read arXiv papers; a DOI or PubMed id has metadata only")
+        if not switches[kind]:
+            raise UsageError(f"{SOURCES[kind][0]} is switched off in {config}; it holds this id's record")
+        try:
+            report["metadata"] = lookup(kind, paper_id)
+        except SourceError as err:
+            report["errors"] = {kind: with_hint(kind, redact(str(err)))}
+            report["metadata"] = None
+        report["note"] = "no full text from this source; follow the record's url or doi"
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["metadata"] else 1
+
+    if args.report and args.via not in (None, "alphaxiv"):
+        raise UsageError("--report reads alphaXiv's overview; it cannot come through another source")
+    order = ["alphaxiv"] if args.report else [args.via] if args.via else load_read_order(config)
+    off = [r for r in order if not switches[r]]
+    if (args.via or args.report) and off:
+        raise UsageError(
+            f"{SOURCES[off[0]][0]} is switched off in {config}. The human turns sources on in os-ui's "
+            f"agent window or with `sources --enable`; read through the sources that are on instead."
+        )
+    report["read_order"] = order
+
+    tried: list[dict[str, str]] = []
+    text = source = None
+    for reader in order:
+        if not switches[reader]:
+            tried.append({"source": reader, "outcome": "switched off"})
+            continue
+        try:
+            found = READ[reader](paper_id, args.report)
+        except SourceError as err:
+            tried.append({"source": reader, "outcome": "error: " + with_hint(reader, redact(str(err)))})
+            continue
+        if found is None:
+            problem = "not found"
+        else:
+            cut = None if args.report else incomplete(found)
+            problem = f"incomplete: {cut}" if cut else None
+        if problem:
+            tried.append({"source": reader, "outcome": problem})
+            continue
+        tried.append({"source": reader, "outcome": "ok"})
+        text, source = found, reader
+        break
+    report["tried"] = tried
+
+    try:
+        report["metadata"] = arxiv_metadata(paper_id, switches)
+    except SourceError as err:
+        report["metadata"] = None
+        report["metadata_error"] = redact(str(err))
+
+    if text is None:
+        report["pdf"] = f"{ARXIV_WEB}/pdf/{paper_id}"
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 1
+    out = args.out or Path(tempfile.gettempdir()) / "paper-search" / (
+        f"{paper_id.replace('/', '_')}.{source}.{'report' if args.report else 'full'}.md")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    report.update(source=source, url=READ_URL[source].format(paper_id), file=str(out), chars=len(text))
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0
+
+
 def cmd_sources(args: argparse.Namespace, config: Path | None) -> int:
-    changes = {s: True for s in args.enable} | {s: False for s in args.disable}
+    changes: dict[str, Any] = {s: True for s in args.enable} | {s: False for s in args.disable}
     if set(args.enable) & set(args.disable):
         raise UsageError("a source cannot be both enabled and disabled")
+    if args.read_order is not None:
+        changes["read_order"] = check_read_order(
+            [r.strip() for r in args.read_order.split(",") if r.strip()], "--read-order")
     if changes:
         if config is None:
             raise UsageError(f"no {CONFIG_NAME.as_posix()} above the working directory; pass --config")
@@ -697,6 +1031,7 @@ def cmd_sources(args: argparse.Namespace, config: Path | None) -> int:
         for row in payload["sources"]:
             key = f"  [{row['credential']} {'set' if row['credential_set'] else 'not set'}]" if row["credential"] else ""
             print(f"{row['id']:<12} {'on ' if row['enabled'] else 'off'}  {row['name']}: {row['about']}{key}")
+        print(f"read order: {' -> '.join(payload['read_order'])}")
         print(f"switches: {config or 'none found (every source on)'}")
     return 0
 
@@ -708,7 +1043,8 @@ def status(config: Path | None, switches: dict[str, bool]) -> dict[str, Any]:
         credential = CREDENTIALS.get(source, (None, ""))[0]
         rows.append({"id": source, "name": name, "about": about, "enabled": switches[source],
                      "credential": credential, "credential_set": credential in KEYS})
-    return {"config": str(config) if config else None, "sources": rows, "keys": key_rows()}
+    return {"config": str(config) if config else None, "sources": rows,
+            "read_order": load_read_order(config), "keys": key_rows()}
 
 
 def cmd_keys(args: argparse.Namespace, config: Path | None) -> int:
@@ -752,9 +1088,19 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("--published-after", metavar="YYYY-MM-DD")
     search.add_argument("--published-before", metavar="YYYY-MM-DD")
 
+    fetch = commands.add_parser("fetch", help="read one paper: the full text through the read order, "
+                                "or the record of a DOI, OpenAlex id, or PubMed id")
+    fetch.add_argument("paper", help="arXiv id or URL, DOI, OpenAlex W id, or PubMed id")
+    fetch.add_argument("--via", choices=READERS, help="read through this source only")
+    fetch.add_argument("--report", action="store_true",
+                       help="alphaXiv's ~10 KB overview of the paper instead of its full text")
+    fetch.add_argument("--out", type=Path, help="file for the text (default: under the system temp directory)")
+
     sources = commands.add_parser("sources", help="list the sources, or switch them on or off")
     sources.add_argument("--enable", action="append", default=[], choices=list(SOURCES))
     sources.add_argument("--disable", action="append", default=[], choices=list(SOURCES))
+    sources.add_argument("--read-order", metavar="A,B,C",
+                         help=f"readers `fetch` tries, first tried first (default: {','.join(READERS)})")
     sources.add_argument("--json", action="store_true")
 
     keys = commands.add_parser("keys", help="show which per-user keys are set, or store or clear one in .env")
@@ -774,7 +1120,7 @@ def main(argv: list[str] | None = None) -> int:
         config = find_config(args.config)
         KEYS.clear()
         KEYS.update(load_credentials(env_file_for(config)))
-        command = {"search": cmd_search, "sources": cmd_sources, "keys": cmd_keys}[args.command]
+        command = {"search": cmd_search, "fetch": cmd_fetch, "sources": cmd_sources, "keys": cmd_keys}[args.command]
         return command(args, config)
     except UsageError as err:
         print(f"paper_search: {err}", file=sys.stderr)

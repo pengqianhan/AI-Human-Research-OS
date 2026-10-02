@@ -33,7 +33,7 @@ at source commit `8f854bd`.
 | [explain-paper-html](explain-paper-html/SKILL.md) | Build an evidence-traceable interactive HTML lesson from an academic paper, verified in a browser before hand-off. | Original, Pengqian Han |
 | [research-project-manager](research-project-manager/SKILL.md) | Create, validate, update, sync, and archive Research Projects under `projects-folder/` against one template contract. | Original, Pengqian Han |
 | [project-dispatch](project-dispatch/SKILL.md) | Act as the root agent: brief, dispatch, track, and review project work run through `os-harness`. | Original, Pengqian Han |
-| [paper-search](paper-search/SKILL.md) | Search six literature sources in one command with one result shape, honouring the human's per-source on/off switches. | Adapted from [alphaXiv OpenResearch](https://github.com/alphaXiv/OpenResearch) (MIT), adding Hugging Face Papers and the [Papers with Code MCP server](https://github.com/huggingface/pwc-cli#mcp-server) |
+| [paper-search](paper-search/SKILL.md) | Search seven literature sources in one command with one result shape, and read one paper's full text through the human's read order, honouring per-source on/off switches. | Adapted from [alphaXiv OpenResearch](https://github.com/alphaXiv/OpenResearch) (MIT), adding Hugging Face Papers, the [Papers with Code MCP server](https://github.com/huggingface/pwc-cli#mcp-server), and arXiv after [science-skills' `literature_search_arxiv`](https://github.com/google-deepmind/science-skills) (Apache-2.0) |
 
 ## Installation
 
@@ -48,8 +48,8 @@ table; symlink or copy form comes from the collection's `SOURCE.md`. See
   `karpathy-coding-rules`, `sell-research-honestly`, `session-handoff`,
   `skill-organizer`, and `task-file-builder`: no additional local setup
   required.
-- `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+; the
-  `hf` CLI is optional for faster paper fetching.
+- `paper-wiki-manager`: runs bundled scripts with `uv` or Python 3.11+, and
+  fetches papers through `paper-search`.
 - `filetree-simple`: Python 3.9+ standard library; Git is not required.
 - `research-project-manager`: Python 3.11+ standard library (`tomllib`); run
   its script with `uv run` as `verify.sh` does.
@@ -469,11 +469,13 @@ Stop the running nanochat_cpu session.
 
 ## paper-search
 
-Searches alphaXiv, OpenAlex, bioRxiv, PubMed, Hugging Face Papers, and the
-Papers with Code MCP server in parallel and returns one merged, deduplicated
-JSON result list. A source the human switched off in
-`memory/paper-sources.json` (the **Papers** button in os-ui's agent windows)
-refuses to run.
+Searches alphaXiv, OpenAlex, bioRxiv, PubMed, Hugging Face Papers, the Papers
+with Code MCP server, and arXiv in parallel and returns one merged,
+deduplicated JSON result list. `fetch` reads one paper's full text from the
+first source in the human's read order (default Hugging Face, alphaXiv, arXiv)
+that returns a complete text, and returns the record of a DOI or PubMed id. A
+source the human switched off in `memory/paper-sources.json` (the **Papers**
+button in os-ui's agent windows) refuses to run.
 
 Example requests:
 
@@ -481,7 +483,9 @@ Example requests:
 Find recent papers on KV cache compression, with code if possible.
 What prior work exists on LLM-guided circle packing?
 Search only alphaXiv and Hugging Face for sparse autoencoder feature splitting.
+Read the full text of arXiv 2609.37725.
 Turn off PubMed and bioRxiv for paper search.
+Read papers from alphaXiv first, then Hugging Face.
 ```
 
 ## License

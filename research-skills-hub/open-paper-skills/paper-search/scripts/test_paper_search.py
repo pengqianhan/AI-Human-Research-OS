@@ -69,6 +69,19 @@ PWC = {"items": [{
     "code_repository_count": 0}]}
 
 
+ARXIV = b"""<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom"><entry>
+<id>http://arxiv.org/abs/2609.37725v1</id><title>Context Language
+  Models</title><summary>  We introduce CLMs.
+</summary><published>2026-09-29T14:50:08Z</published>
+<author><name>Rulin Shao</name></author><author><name>Pang Wei Koh</name></author>
+<arxiv:doi>10.1/clm</arxiv:doi><arxiv:journal_ref>Preprint 2026</arxiv:journal_ref>
+</entry><entry><id>http://arxiv.org/abs/hep-th/9711200v3</id><title>Old style</title></entry></feed>"""
+
+ARXIV_ERROR = b"""<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>https://arxiv.org/api/errors</id>
+<title>Error</title><summary>incorrect id format for 1234.12345</summary></entry></feed>"""
+
+
 class ParserTests(unittest.TestCase):
     def test_alphaxiv_keeps_votes_and_flattened_snippets(self) -> None:
         [hit] = ps.parse_alphaxiv(ALPHAXIV)
@@ -110,6 +123,28 @@ class ParserTests(unittest.TestCase):
         self.assertEqual((first["citations"], first["code_repos"], first["official_code"]), (90000, 42, True))
         self.assertEqual(second["id"], "456")
         self.assertNotIn("official_code", second)
+
+    def test_arxiv_drops_versions_and_keeps_official_fields(self) -> None:
+        first, second = ps.parse_arxiv(ARXIV)
+        self.assertEqual((first["id"], first["title"]), ("2609.37725", "Context Language Models"))
+        self.assertEqual(first["abstract"], "We introduce CLMs.")
+        self.assertEqual(first["authors"], ["Rulin Shao", "Pang Wei Koh"])
+        self.assertEqual((first["doi"], first["venue"]), ("10.1/clm", "Preprint 2026"))
+        self.assertEqual(first["url"], "https://arxiv.org/abs/2609.37725")
+        self.assertEqual(second["id"], "hep-th/9711200")
+
+    def test_arxiv_error_entry_is_a_source_error(self) -> None:
+        with self.assertRaisesRegex(ps.SourceError, "incorrect id format"):
+            ps.parse_arxiv(ARXIV_ERROR)
+        self.assertEqual(ps.error_message(ARXIV_ERROR.decode()), "incorrect id format for 1234.12345")
+
+    def test_arxiv_query_forms(self) -> None:
+        self.assertEqual(ps.arxiv_query("context language models", ps.Options()),
+                         "all:context AND all:language AND all:models")  # plain words would be OR-ed
+        self.assertEqual(ps.arxiv_query('a "b"', ps.Options(mode="keyword")), 'all:"a b"')
+        self.assertEqual(ps.arxiv_query("au:koh AND ti:context", ps.Options()), "au:koh AND ti:context")
+        self.assertEqual(ps.arxiv_query("ti:x", ps.Options(after="2026-09-01")),
+                         "(ti:x) AND submittedDate:[202609010000 TO 299912312359]")
 
     def test_long_author_lists_are_cut(self) -> None:
         hit = ps.make_hit("x", "1", "t", authors=[f"A{i}" for i in range(20)])
@@ -233,6 +268,141 @@ class SwitchTests(unittest.TestCase):
         with mock.patch.object(ps, "get_json", return_value=HUGGINGFACE):
             hits = ps.search_huggingface("q", ps.Options(limit=5, after="2026-01-01"))
         self.assertEqual([h["id"] for h in hits], ["2601.18005"])
+
+
+PAPER = "Title\n\n1Introduction\n" + "Body text. " * 600  # Hugging Face's heading style
+
+
+class ReadingTests(unittest.TestCase):
+    def test_classify_routes_each_id_shape(self) -> None:
+        cases = {
+            "2609.37725": ("arxiv", "2609.37725"),
+            "https://arxiv.org/abs/2609.37725v2": ("arxiv", "2609.37725"),
+            "https://www.alphaxiv.org/overview/2401.12345": ("arxiv", "2401.12345"),
+            "https://arxiv.org/abs/hep-th/9711200v3": ("arxiv", "hep-th/9711200"),
+            "10.48550/arXiv.1706.03762": ("arxiv", "1706.03762"),
+            "https://doi.org/10.1101/2020.04.19.049254": ("biorxiv", "doi:10.1101/2020.04.19.049254"),
+            "10.1038/nature14539": ("openalex", "doi:10.1038/nature14539"),
+            "https://openalex.org/W2100837269": ("openalex", "W2100837269"),
+            "pmid:38308006": ("pubmed", "38308006"),
+            "https://pubmed.ncbi.nlm.nih.gov/38308006/": ("pubmed", "38308006"),
+        }
+        for raw, expected in cases.items():
+            self.assertEqual(ps.classify(raw), expected, raw)
+        with self.assertRaises(ps.UsageError):
+            ps.classify("attention is all you need")
+
+    def test_incomplete_catches_short_and_headless_texts(self) -> None:
+        self.assertIsNone(ps.incomplete(PAPER))
+        self.assertIsNone(ps.incomplete("## 2 Method\n" + "x " * 3000))
+        self.assertEqual(ps.incomplete("Title: fig.svg\n\nMarkdown Content:\na bar graph"), "only 45 characters")
+        self.assertIn("no section heading", ps.incomplete("word " * 2000))
+
+    def test_html_text_keeps_headings_and_tex(self) -> None:
+        html = ('<header>arXiv chrome</header><script>x()</script><h2>1 Introduction</h2>'
+                '<p>Let <math alttext="c_{t}"><mi>c</mi></math> be&nbsp;the context.</p>')
+        self.assertEqual(ps.html_text(html), "## 1 Introduction\n\nLet $c_{t}$ be the context.\n")
+
+
+class FetchTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.config = Path(self.tmp.name) / "paper-sources.json"
+        self.config.write_text("{}", encoding="utf-8")
+        self.out = Path(self.tmp.name) / "paper.md"
+        self.calls: list[str] = []
+        meta = mock.patch.object(ps, "arxiv_metadata", return_value={"source": "arxiv", "title": "T"})
+        meta.start()
+        self.addCleanup(meta.stop)
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def readers(self, **answers: object) -> mock._patch:
+        def reader(name: str):
+            def read(paper_id: str, report: bool) -> str | None:
+                self.calls.append(f"{name}:{'report' if report else 'full'}")
+                answer = answers.get(name)
+                if isinstance(answer, Exception):
+                    raise answer
+                return answer
+            return read
+        return mock.patch.dict(ps.READ, {name: reader(name) for name in ps.READERS})
+
+    def fetch(self, *argv: str) -> tuple[int, dict, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = ps.main(["--config", str(self.config), "fetch", *argv, "--out", str(self.out)])
+        return code, json.loads(out.getvalue()) if out.getvalue() else {}, err.getvalue()
+
+    def test_a_cut_short_text_falls_through_to_the_next_reader(self) -> None:
+        with self.readers(huggingface="Title: fig.svg", alphaxiv=PAPER):
+            code, report, _ = self.fetch("2609.37725")
+        self.assertEqual(code, 0)
+        self.assertEqual(report["tried"], [{"source": "huggingface", "outcome": "incomplete: only 14 characters"},
+                                           {"source": "alphaxiv", "outcome": "ok"}])
+        self.assertEqual((report["source"], report["url"]), ("alphaxiv", "https://www.alphaxiv.org/abs/2609.37725"))
+        self.assertEqual(self.out.read_text(encoding="utf-8"), PAPER)
+        self.assertEqual(report["metadata"]["title"], "T")
+
+    def test_the_configured_order_is_followed_and_switched_off_readers_skipped(self) -> None:
+        self.config.write_text(json.dumps({"arxiv": False, "read_order": ["arxiv", "alphaxiv", "huggingface"]}))
+        with self.readers(alphaxiv=None, huggingface=PAPER):
+            code, report, _ = self.fetch("2609.37725")
+        self.assertEqual(code, 0)
+        self.assertEqual([t["outcome"] for t in report["tried"]], ["switched off", "not found", "ok"])
+        self.assertEqual(self.calls, ["alphaxiv:full", "huggingface:full"])
+
+    def test_via_a_switched_off_source_is_refused(self) -> None:
+        self.config.write_text(json.dumps({"alphaxiv": False}))
+        with self.readers(alphaxiv=PAPER, huggingface=PAPER):
+            code, _, err = self.fetch("2609.37725", "--via", "alphaxiv")
+            self.assertEqual(code, 2)
+            self.assertIn("alphaXiv is switched off", err)
+            code, _, err = self.fetch("2609.37725", "--report")
+            self.assertEqual(code, 2)
+        self.assertEqual(self.calls, [])
+
+    def test_report_reads_the_alphaxiv_overview_as_is(self) -> None:
+        with self.readers(alphaxiv="# Report\nshort"):
+            code, report, _ = self.fetch("2609.37725", "--report")
+        self.assertEqual((code, report["source"]), (0, "alphaxiv"))
+        self.assertEqual(self.calls, ["alphaxiv:report"])
+
+    def test_every_reader_failing_exits_1_with_the_pdf_link(self) -> None:
+        with self.readers(huggingface=ps.SourceError("HTTP 429: slow down"), alphaxiv=None, arxiv="short"):
+            code, report, _ = self.fetch("2609.37725")
+        self.assertEqual(code, 1)
+        self.assertIn("HF_TOKEN", report["tried"][0]["outcome"])  # the rate-limit hint
+        self.assertEqual(report["pdf"], "https://arxiv.org/pdf/2609.37725")
+        self.assertFalse(self.out.exists())
+
+    def test_metadata_failure_does_not_lose_the_text(self) -> None:
+        with self.readers(huggingface=PAPER), \
+                mock.patch.object(ps, "arxiv_metadata", side_effect=ps.SourceError("HTTP 503: busy")):
+            code, report, _ = self.fetch("2609.37725")
+        self.assertEqual((code, report["metadata"], report["metadata_error"]), (0, None, "HTTP 503: busy"))
+
+    def test_a_doi_returns_its_record_only(self) -> None:
+        record = ps.make_hit("openalex", "10.1038/nature14539", "Deep learning")
+        with mock.patch.object(ps, "lookup", return_value=record) as lookup:
+            code, report, _ = self.fetch("10.1038/nature14539")
+            self.assertEqual((code, report["metadata"]["title"]), (0, "Deep learning"))
+            lookup.assert_called_once_with("openalex", "doi:10.1038/nature14539")
+            self.assertEqual(self.fetch("10.1038/nature14539", "--via", "arxiv")[0], 2)
+        self.config.write_text(json.dumps({"pubmed": False}))
+        self.assertEqual(self.fetch("pmid:38308006")[0], 2)
+
+    def test_read_order_is_set_validated_and_reported(self) -> None:
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = ps.main(["--config", str(self.config), "sources", "--read-order", "alphaxiv, arxiv", "--json"])
+        self.assertEqual((code, json.loads(out.getvalue())["read_order"]), (0, ["alphaxiv", "arxiv"]))
+        self.assertEqual(json.loads(self.config.read_text())["read_order"], ["alphaxiv", "arxiv"])
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            code = ps.main(["--config", str(self.config), "sources", "--read-order", "pubmed"])
+        self.assertEqual(code, 2)
+        self.assertIn("read_order takes distinct readers", err.getvalue())
 
 
 class CredentialTests(unittest.TestCase):
