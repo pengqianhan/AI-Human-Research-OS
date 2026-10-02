@@ -20,10 +20,10 @@ Use `paper-wiki/` as the default wiki root unless the user names a different pat
 When adding or updating a paper:
 
 1. Parse the arXiv ID from the URL, user input, or PDF filename/path. For a PDF, check the filename first (e.g., `2401.00001.pdf`); if the ID is not in the filename, extract it from the PDF header or `arxiv.org` URL embedded in the document.
-   **If no ID can be extracted** (user provided only a title or keyword): run `hf papers search "TITLE" --limit 5 --format agent` (or fall back to the `literature_search_arxiv` skill if HF CLI is unavailable), show the top candidates to the user, and wait for confirmation before proceeding. Do not guess the ID.
+   **If no ID can be extracted** (user provided only a title or keyword): resolve it with `paper-search` as described in Fetching Papers.
 2. Read the existing paper file if `paper-wiki/papers/<arxiv_id>.md` already exists. If it exists, read and follow [`references/repeated-ingestion.md`](references/repeated-ingestion.md) before editing; never append a second generated note or template wholesale.
 3. Read `assets/paper-wiki.toml` from this skill and follow its paper body profile settings.
-4. Fetch metadata and paper content. Use the **HF CLI fast path** (see below) when `hf` is available — run `which hf` to check. Fall back to arXiv API or web fetch only when HF CLI is unavailable or returns no result. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources.
+4. Fetch metadata and paper content through `paper-search` as described in Fetching Papers. Prefer arXiv for bibliographic facts; use project pages, GitHub, Hugging Face paper pages, or Semantic Scholar only as additional sources, and only through a source the human has switched on.
 5. Create or update one paper concept under `paper-wiki/papers/`.
 6. Complete the fidelity pass in Paper Documents against the retrieved full paper and every additional source used.
 7. Read `[localized_notes].enabled` in `assets/paper-wiki.toml`. When true, create or update the `zh-CN` mirror under `paper-wiki/papers_zh/<arxiv_id>.md` following Chinese Paper Notes.
@@ -107,25 +107,17 @@ Do not change `paper_body.default_profile` after creating a custom template unle
 
 For a wiki-specific template, write to a separate config and pass it to validation with `--config <path/to/paper-wiki.toml>`. Avoid overwriting global `section_descriptions` for common section names unless the user explicitly asks for a different meaning; prefer unique section names for specialized templates.
 
-## HF CLI Fast Path
+## Fetching Papers
 
-When `hf` is installed (`which hf` succeeds), use it as the primary fetch mechanism instead of browser or API calls.
-
-| Goal | Command |
-|---|---|
-| Structured metadata (title, authors, date, abstract) | `hf papers info ARXIV_ID` |
-| Full paper as Markdown | `hf papers read ARXIV_ID` |
-| Search by keyword when no ID is known | `hf papers search "QUERY" --limit 5` |
+Reach papers through the `paper-search` skill (`$PS` is its `scripts/paper_search.py`), which honours the human's per-source switches and read order in `memory/paper-sources.json`. A source switched off there stays off on every route, including web fetches and MCP connectors; when the note needs one, say so and let the human decide.
 
 **Input resolution:**
 
-* **arXiv URL** (`arxiv.org/abs/2401.00001` or `arxiv.org/pdf/2401.00001`): strip to `2401.00001`.
-* **HF paper URL** (`huggingface.co/papers/2401.00001`): strip to `2401.00001`.
-* **Bare ID** (`2401.00001` or `2401.00001v2`): drop the version suffix before passing to `hf papers`.
+* **arXiv, alphaXiv, or Hugging Face paper URL, or a bare ID** (with or without a version suffix): pass it to `fetch` as is; it extracts the versionless ID.
 * **PDF file path**: check the filename first; if no numeric ID is present, run `grep -a 'arxiv.org' "$PDF" | head -5` to extract an embedded URL.
-* **Natural-language title or description only**: run `hf papers search "QUERY" --limit 5 --format agent` to get candidate IDs, then confirm with the user or pick the best match.
+* **Natural-language title or description only**: run `uv run $PS search "TITLE" --mode keyword --limit 5`. Proceed without asking only when exactly one candidate's title equals the given title once case and punctuation are ignored, and name that candidate in your reply. Otherwise show the top candidates to the user and wait for confirmation before proceeding; never guess the ID.
 
-Use `hf papers read` output as the primary source for the paper body summary. Supplement with `hf papers info` fields to fill required frontmatter fields (`title`, `authors`, `date`, `abstract`). Do not reproduce the full `hf papers read` output verbatim in the paper note; distil it into the configured body sections.
+**Fetch:** run `uv run $PS fetch ARXIV_ID`. It writes the full text from the first source in the read order that returns a complete text to the file its JSON report names, and fills `metadata` (title, authors, date, abstract) from arXiv, else Hugging Face. Read the file as the primary source for the paper body summary; distil it into the configured body sections rather than reproducing it. Cite the report's `source` and `url` under `# Citations`, and note in the body which source the text came from. On exit 1, no source returned a complete text: report the `tried` outcomes and the `pdf` link to the user rather than fetching through another route.
 
 ## Topic Documents
 
@@ -162,7 +154,7 @@ Ensure links are bidirectional: the paper links to the concept (typically in its
 
 ## Source Documents
 
-When the input is a non-paper source (a blog post, documentation page, or talk) with no arXiv ID, add it under `paper-wiki/sources/<slug>.md` instead of `papers/`. Fetch it with a web request (the HF CLI / arXiv fast path does not apply). Use `type: Reference` and the source frontmatter in `references/schema.md`: `resource` is the source URL (its identity), `authors`/`published`/`medium` are optional, and the filename is a lowercase hyphenated slug derived from the title.
+When the input is a non-paper source (a blog post, documentation page, or talk) with no arXiv ID, add it under `paper-wiki/sources/<slug>.md` instead of `papers/`. Fetch it with a web request (`paper-search fetch` does not apply). Use `type: Reference` and the source frontmatter in `references/schema.md`: `resource` is the source URL (its identity), `authors`/`published`/`medium` are optional, and the filename is a lowercase hyphenated slug derived from the title.
 
 For a blog, survey, or tutorial that organizes others' work rather than presenting one contribution, use the `synthesis-source` body profile from `assets/paper-wiki.toml`; read that profile for its current section list and drafting guidance rather than duplicating the list here. The profile keys on the content type (synthesis), so an arXiv **survey paper** can use it too — do not treat it as blog-specific.
 
