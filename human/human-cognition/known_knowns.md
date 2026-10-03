@@ -170,15 +170,15 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human separates their own workflow from what the published Research OS imposes. Their habit becomes the default, and users get a manual choice. For papers, they read full text with Hugging Face's `hf papers read` first and the alphaXiv MCP second, and those two cover the papers they usually read. They want users of the released OS to pick the literature sources and their order themselves.
 - source: user-confirmed
 - confidence: medium
-- evidence: 2026-10-02, while designing `paper-search fetch`: 「我自己在找论文的时候更喜欢用hf read 如果找不到就用alphaxiv 的 mcp，这两个工具基本能覆盖我常读的论文，但是我发布了research OS，我希望我的用户在用这个产品的时候可以手动选择论文的来源」. They accepted a configurable `read_order` defaulting to `huggingface → alphaxiv → arxiv` rather than a fixed route.
+- evidence: 2026-10-02, while designing `paper-search fetch`: 「我自己在找论文的时候更喜欢用hf read 如果找不到就用alphaxiv 的 mcp，这两个工具基本能覆盖我常读的论文，但是我发布了research OS，我希望我的用户在用这个产品的时候可以手动选择论文的来源」. They accepted a configurable `read_order` defaulting to `huggingface → alphaxiv → arxiv` rather than a fixed route. 2026-10-03: set the shipped source defaults from their own usage the same way (「bioRxiv、PubMed 这两个我完全用不到，可以设置为默认关闭。OpenAlex … 可以保留」), leaving both switchable in the Papers panel.
 - created: 2026-10-02
-- last_updated: 2026-10-02
+- last_updated: 2026-10-03
 - status: active
 - domain: Research OS product design
 - scope: Literature sources and read order in paper-search; no claim yet that every personal workflow should become a user setting.
 - capability_level: awareness
 - evidence_type: explanation
-- last_verified: 2026-10-02
+- last_verified: 2026-10-03
 - freshness: current
 - responsibility_relevance:
   - When a design mirrors the human's own tool habit, ship it as the default behind a user-changeable setting rather than a hard-coded route, and say which default came from their habit.

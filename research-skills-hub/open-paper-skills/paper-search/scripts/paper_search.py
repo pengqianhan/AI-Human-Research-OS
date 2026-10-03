@@ -64,6 +64,9 @@ SOURCES: dict[str, tuple[str, str]] = {
     "pwc": ("Papers with Code", "Papers with Code catalog via its MCP server: code and citation counts"),
     "arxiv": ("arXiv", "arXiv's own API: fielded queries (ti:, au:, abs:, cat:) and official metadata"),
 }
+# Off until the human switches them on: biology sources outside the fields the
+# OS ships for. Every other source starts on.
+DEFAULT_OFF = {"biorxiv", "pubmed"}
 # The sources `fetch` can read a full text from, in the default read order.
 READERS = ("huggingface", "alphaxiv", "arxiv")
 
@@ -149,15 +152,15 @@ def read_config(path: Path | None) -> dict[str, Any]:
 
 
 def load_switches(path: Path | None) -> dict[str, bool]:
-    """Every source is on unless the file says `false` for it."""
+    """A source the file leaves out keeps its default: on, except DEFAULT_OFF."""
     data = read_config(path)
-    return {source: data.get(source, True) is not False for source in SOURCES}
+    return {source: data.get(source, source not in DEFAULT_OFF) is not False for source in SOURCES}
 
 
 def save_switches(path: Path, changes: dict[str, Any]) -> dict[str, bool]:
     data = read_config(path)
     data.update(changes)
-    ordered = {source: data.get(source, True) is not False for source in SOURCES}
+    ordered = {source: data.get(source, source not in DEFAULT_OFF) is not False for source in SOURCES}
     ordered.update({k: v for k, v in data.items() if k not in SOURCES})
     path.write_text(json.dumps(ordered, indent=2) + "\n", encoding="utf-8", newline="\n")
     return load_switches(path)
@@ -1032,7 +1035,7 @@ def cmd_sources(args: argparse.Namespace, config: Path | None) -> int:
             key = f"  [{row['credential']} {'set' if row['credential_set'] else 'not set'}]" if row["credential"] else ""
             print(f"{row['id']:<12} {'on ' if row['enabled'] else 'off'}  {row['name']}: {row['about']}{key}")
         print(f"read order: {' -> '.join(payload['read_order'])}")
-        print(f"switches: {config or 'none found (every source on)'}")
+        print(f"switches: {config or 'none found (defaults)'}")
     return 0
 
 

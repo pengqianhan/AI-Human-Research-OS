@@ -53,6 +53,8 @@ function script(args: string[], input = ""): Promise<{ code: number; stdout: str
  * - `GET /api/paper-sources`: the switches and which per-user keys are set.
  * - `POST /api/paper-sources` `{source, enabled}`: flip one source's switch in
  *   memory/paper-sources.json.
+ * - `POST /api/paper-sources/read-order` `{order}`: set the sources `fetch`
+ *   reads a paper's full text from, first tried first.
  * - `POST /api/paper-sources/key` `{name, value}`: store one key in the
  *   repository's gitignored .env, or clear it when `value` is empty. The value
  *   reaches the script on stdin and never comes back: responses carry only
@@ -76,7 +78,7 @@ export function paperSourcesPlugin(): Plugin {
         if (!hasToken(req)) return send(401, { error: "token required" });
         const path = new URL(req.url ?? "/", "http://localhost").pathname;
         const route = `${req.method} ${path}`;
-        if (!["GET /", "POST /", "POST /key"].includes(route)) return send(404, { error: `no route ${route}` });
+        if (!["GET /", "POST /", "POST /read-order", "POST /key"].includes(route)) return send(404, { error: `no route ${route}` });
 
         // Serialized so two quick clicks cannot interleave their rewrites.
         const job = queue.then(async () => {
@@ -89,6 +91,14 @@ export function paperSourcesPlugin(): Plugin {
               if (!SOURCE_ID.test(source)) return send(400, { error: `bad source: ${source}` });
               if (typeof body.enabled !== "boolean") return send(400, { error: "enabled must be true or false" });
               args.push(body.enabled ? "--enable" : "--disable", source);
+            } else if (route === "POST /read-order") {
+              const body = await readJson(req);
+              const order = body.order;
+              if (!Array.isArray(order) || order.length === 0 || !order.every((s) => typeof s === "string" && SOURCE_ID.test(s))) {
+                return send(400, { error: "order must be a list of source ids" });
+              }
+              // paper_search.py checks the ids against its readers.
+              args.push("--read-order", order.join(","));
             } else if (route === "POST /key") {
               const body = await readJson(req);
               const name = String(body.name ?? "");

@@ -19,6 +19,8 @@ interface KeyRow {
 
 interface Status {
   sources: SourceRow[];
+  /** Where paper-search reads a paper's full text from, first tried first. */
+  read_order: string[];
   keys: KeyRow[];
 }
 
@@ -30,6 +32,7 @@ const TILE: Record<string, { label: string; bg: string; fg: string }> = {
   pubmed: { label: "PM", bg: "#1F6FA8", fg: "#FFFFFF" },
   huggingface: { label: "HF", bg: "#FFD21E", fg: "#17262E" },
   pwc: { label: "PC", bg: "#1C9C9A", fg: "#FFFFFF" },
+  arxiv: { label: "ar", bg: "#46566B", fg: "#FFFFFF" },
 };
 const FALLBACK_TILE = { label: "?", bg: "#52646E", fg: "#FFFFFF" };
 
@@ -70,6 +73,51 @@ function Switch({ on, busy }: { on: boolean; busy: boolean }) {
         }
       />
     </span>
+  );
+}
+
+/**
+ * The read order as a chain of tiles. Clicking a tile moves it one step
+ * earlier; a switched-off source stays in place, dimmed, and is skipped.
+ */
+function ReadOrder({
+  order,
+  rows,
+  busy,
+  onChange,
+}: {
+  order: string[];
+  rows: SourceRow[];
+  busy: boolean;
+  onChange: (next: string[]) => void;
+}) {
+  return (
+    <div className="px-3 py-1.5">
+      <div className="flex items-center gap-1.5">
+        {order.map((id, i) => {
+          const row = rows.find((r) => r.id === id);
+          const name = row?.name ?? id;
+          const off = row !== undefined && !row.enabled;
+          const label = `${i + 1}. ${name}${off ? " (off, skipped)" : ""}${i > 0 ? ": read earlier" : ""}`;
+          return (
+            <span key={id} className="flex items-center gap-1.5">
+              {i > 0 && <span aria-hidden="true" className="text-[11px] text-stale">→</span>}
+              <button
+                type="button"
+                disabled={busy || i === 0}
+                onClick={() => onChange([...order.slice(0, i - 1), id, ...order.slice(i - 1, i), ...order.slice(i + 1)])}
+                title={label}
+                aria-label={label}
+                className="rounded-[3px] enabled:hover:ring-2 enabled:hover:ring-signal disabled:cursor-default"
+              >
+                <Tile id={id} size={20} dim={off} />
+              </button>
+            </span>
+          );
+        })}
+      </div>
+      <p className="mt-1 text-[10.5px] text-stale">click a tile to read it earlier</p>
+    </div>
   );
 }
 
@@ -190,7 +238,7 @@ export function PaperSources({ token }: { token: string }) {
       });
       const data = (await res.json().catch(() => ({}))) as Partial<Status> & { error?: string };
       if (!res.ok || data.sources === undefined) throw new Error(data.error ?? `HTTP ${res.status}`);
-      return { sources: data.sources, keys: data.keys ?? [] };
+      return { sources: data.sources, read_order: data.read_order ?? [], keys: data.keys ?? [] };
     },
     [token],
   );
@@ -289,6 +337,19 @@ export function PaperSources({ token }: { token: string }) {
               <Switch on={row.enabled} busy={saving === row.id} />
             </button>
           ))}
+          {status !== null && rows !== null && status.read_order.length > 0 && (
+            <>
+              <div className="font-mono-heading mt-1 border-t border-grid px-3 pb-1 pt-2 text-[10px] uppercase tracking-[.05em] text-stale">
+                Read order
+              </div>
+              <ReadOrder
+                order={status.read_order}
+                rows={rows}
+                busy={saving !== null}
+                onChange={(order) => void write("read-order", "/read-order", { order })}
+              />
+            </>
+          )}
           {status !== null && status.keys.length > 0 && (
             <>
               <div className="font-mono-heading mt-1 border-t border-grid px-3 pb-1 pt-2 text-[10px] uppercase tracking-[.05em] text-stale">
