@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - embodied-text-environments
 - long-horizon-agents
-timestamp: 2026-10-02T00:00:00Z
+timestamp: 2026-10-03T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ ALFWorld (Shridhar et al., arXiv:2010.03768, ICLR 2021) aligns text-game version
 * [SkillOpt-Lite](../papers/2607.03451.md) - one of six benchmarks; with GPT-5.4-nano it reaches 81.3%, 9.5 points above SkillOpt.
 * [EnvHarness](../papers/2608.19880.md) - one of five existing environments it wraps with plug-in components that reshape initial state, rules, or task composition while keeping the original verifier.
 * [PoS](../papers/2610.01415.md) - execution benchmark (valid_unseen, 134 tasks, 50 actions); explicit, validated belief states reach 88.81% with Qwen3.7-Plus against 72.39% for LongHorizon-Harness, with the gain concentrated in Transform tasks.
+* [RASO](../papers/2609.38024.md) - one of four skill-optimization benchmarks (39 / 18 train / validation games, the 134 out-of-distribution evaluation games); retrieval-grounded skill optimization reaches 74.13 with GPT-5.6-Luna and 51.00 with Qwen-3.5-9B, the latter 7.47 points above the best retrieval-free optimizer.
 
 # Notes
 

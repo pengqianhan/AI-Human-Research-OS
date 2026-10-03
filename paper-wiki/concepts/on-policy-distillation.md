@@ -5,7 +5,7 @@ description: Training a student on its own sampled trajectories by matching a te
 tags:
 - on-policy-distillation
 - post-training-feedback
-timestamp: 2026-09-24T00:00:00Z
+timestamp: 2026-10-03T00:00:00Z
 ---
 
 # Definition
@@ -26,6 +26,7 @@ The second variant is what makes OPD a channel for arbitrary natural-language su
 * [PaperGym](../papers/2608.31119.md) - uses context-conditioned OPD ("OPSD," same-model teacher) with the raw rubric itself as privileged context, withheld at inference; an ablation finds this beats conditioning the teacher on the reference answer, or on rubric plus reference answer together, for downstream research-plan generation quality.
 * [NeoHorse-1](../papers/2609.08183.md) - extends a routing-guided three-stage curriculum from SFT to OPD: at each stage the student generates responses from recorded pre-response contexts, and a fixed teacher supplies a next-token distribution over the student's own top-K generated candidates plus one aggregated overflow bin, minimized via a response-length-normalized reverse KL; the rollout checkpoint is periodically refreshed so later-stage contexts get teacher supervision on more recent student behavior.
 * [One to More, More to One](../papers/2609.23377.md) - label-routed multi-teacher OPD (MOPD) merges three same-origin SWE category experts into one student, adding ReLU-gated reward extrapolation that keeps only tokens where the routed expert beats the shared base; pure distillation mode, with no environment reward in the student loss, recovers 80.8-111.1% of each expert's gain.
+* [X-Tree](../papers/2609.32993.md) - context-conditioned, same-weights OPSD for agents (ScienceWorld, WebShop) where the privileged context is a deterministically mined skill tree rendered as text instead of an LLM-written skill bank; a logistic confidence gate pulls the student toward the teacher only on tokens the context makes more likely. The mined rendering matches or beats gpt-oss-120b- and GPT-o3-written banks, an empty context gives no gain, and a word-scrambled rendering keeps most of it.
 
 # Notes
 
@@ -36,6 +37,7 @@ The same paper reports that iteratively promoting the student to teacher improve
 The wiki's two earliest papers exercise the two variants from the Definition on opposite ends: LLM-as-a-Coach uses context-conditioned OPD (same-model teacher, external signal entering only through prompt content) to avoid needing a stronger model at all; VoiceMem uses teacher-parametric OPD (a genuinely stronger, proprietary closed-source teacher) specifically because the target capability — explicit memory access in a speech-in/text-out model — does not exist in the student's own distribution to be elicited by context alone. PaperGym adds a third context-conditioned data point that appears to cut against LLM-as-a-Coach's own warning above: its teacher is conditioned on the *raw* rubric — exactly the "Rubrics Only" condition LLM-as-a-Coach's ablation found suboptimal relative to extracted experience — yet PaperGym reports this as its best-performing privileged-context variant. See [Post-training feedback](../topics/post-training-feedback.md)'s synthesis for why this is not a direct contradiction (different tasks, different comparison baselines) and what it leaves open.
 
 NeoHorse-1 does not cleanly fit either named variant: its paper text ("a fixed teacher supplies a next-token distribution... conditioned on the corresponding context and the student's preceding response tokens") never states whether the teacher is a distinct, stronger model (teacher-parametric) or the same model under different conditioning (context-conditioned) — this wiki's note on it deliberately preserves that ambiguity rather than guessing. What is unambiguous is the *scheduling* mechanism, which none of the other three papers here share: NeoHorse-1 reuses the identical routing-derived three-stage curriculum for both SFT and OPD, so which recorded contexts a student sees for distillation at each stage is governed by the same capability-demand signal that orders SFT examples, rather than a separately designed OPD-specific sampling scheme.
+X-Tree is the first agent-environment OPSD paper here and the first to replace the LLM-authored privileged context with a counted artifact. Its scrambled-context ablation (WebShop 3B: 76.5 scrambled vs 77.1 intact vs 74.2 empty) is a caution for every context-conditioned OPSD result above: much of the teacher's advantage can come from the vocabulary the context introduces rather than from its procedural content.
 
 # Related
 
