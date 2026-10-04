@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Scope
@@ -30,6 +30,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [AREX-2](../papers/2609.38288.md) - supervised imitation of whole multi-round improvement trajectories from GitHub ML repositories and online-judge problems, with failed rounds kept in context but given no loss, so the model learns to recover from setbacks; Qwen3.8-27B reaches 81.8 Any Medal on MLE-bench Lite (with skills in context) and keeps improving through a 5-hour Frontier-CS budget.
 * [X-Tree](../papers/2609.32993.md) - changes the unit of training rather than the optimizer: a deterministically mined hierarchy of reusable sub-procedures enters GRPO as the training instance (offline RL from gold prefixes with a depth-scaled completion bonus, WebArena 18.4 → 22.9 SR at matched compute), as an adaptive reward bonus that is active only while the verifier cannot separate a rollout group (ScienceWorld and WebShop, 1.5B-7B), and as the self-teacher's privileged context in on-policy self-distillation, where it matches LLM-written skill banks.
 * [GraphForge](../papers/2609.38923.md) - SFT of Qwen3.6-27B and 35B-A3B on 2,169 teacher trajectories over real-file workspaces whose tasks and rubrics derive from one evidence graph, then rejection fine-tuning with the evidence-anchored rubric as the selection signal; gains on GDPVal-AA, Workspace-Bench-Lite, and SpreadsheetBench II transfer across three scaffolds, and anchored selection beats random selection on every benchmark.
+* [Context Language Models](../papers/2609.37725.md) - stepwise GRPO for a model that edits its own context: the trajectory-level outcome advantage is assigned to every segment, and a *success-gated efficiency advantage* re-ranks only successful trajectories within a group by prefix-reuse FLOPs (zero for failures, zero when fewer than two successes) so cheaper correct runs are preferred without rewarding deletion itself. Training Qwen3.5-9B on OpenResearcher lifts held-out BrowseComp-Plus from 28.8% to 42.5%, 0.4 points above a summary harness trained with the same recipe at 1.34 versus 2.19 PFLOPs per question.
 
 # Synthesis
 
@@ -59,3 +60,4 @@ GraphForge sits with CompoWorld and AREX-2 on the data side of this topic: the o
 * AREX-2 keeps failed rounds in context but excludes them from the loss. Is that what teaches recovery, or would training on the same trajectories with failures removed transfer as well? And would RL on the same long-horizon environments, with best-so-far score as reward, beat imitation of a teacher's trajectories?
 * X-Tree's adaptive bonus helps most at small rollout counts (n = 4) and fades at n = 16, and its three integrations were never combined. Does a tree-node completion bonus still add anything once a policy is trained with large groups and dense verifiers, and does mining the tree from the improving policy's own rollouts (the authors' stated next step) keep the gain or collapse into reinforcing whatever the policy already does?
 * GraphForge's judge both admits SFT trajectories and selects RFT candidates, and its own perturbation audit shows it misses row- and number-level corruption inside cited evidence. How much of the SFT and RFT gain survives when admitted trajectories are re-checked by an independent judge or by deterministic numeric checks, and would the anchored-vs-unanchored RFT gap widen or close?
+* Context Language Models gate their efficiency reward on success so that the policy is never paid for deleting context. SLCA-GRPO and X-Tree also add shaped terms to a group-normalized outcome advantage. Is success-gating a general recipe for cost-shaped agentic RL, and does it still hold when the cost metric (here prefix-reuse FLOPs) is only loosely tied to the real serving cost the deployment pays?

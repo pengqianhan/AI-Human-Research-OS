@@ -7,7 +7,7 @@ tags:
 - prompt-optimization
 - agent-harness-engineering
 - agent-self-evolution
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ GEPA (Agrawal et al., "GEPA: Reflective Prompt Evolution Can Outperform Reinforc
 * [AutoSaddler](../papers/2608.23041.md) - baseline on GAIA2 (54.6% vs. AutoSaddler's 62.0%), SWE-Bench Pro, and Terminal-Bench 2.0; AutoSaddler characterizes it as prompt-centric optimization driven by shallow reflection.
 * [ActiveSaddler](../papers/2610.00906.md) - baseline (54.2% GAIA2, 65.8% Terminal-Bench 2.0 with gpt-5.5) and a second host optimizer: letting ActiveSaddler choose GEPA's training batches raises its GAIA2 score to 57.2%.
 * [RASO](../papers/2609.38024.md) - one of four skill-update baselines (own rerun): with GPT-5.6-Luna it is the second-best retrieval-free updater on SpreadsheetBench (54.53 vs SkillOpt 57.02, RASO 63.33), while with Qwen-3.5-9B it degrades the initial skill on SpreadsheetBench (24.05 vs 27.74).
+* [Context Language Models](../papers/2609.37725.md) - reuses GEPA's reflective prompt-evolution loop (Agrawal et al., 2026) to evolve context-management *skill documents* for a self-editing model: rollouts on a training split, a proposer writes candidate skills from the traces, selection on a dev split, one final held-out evaluation; with Claude Fable 5.1 proposing for Qwen3.6-27B (assisted) or Opus 5 as both agent and proposer (self-evolution), the evolved skills expand the accuracy-versus-compute Pareto frontier on ContextBench, up to +35.9 held-out points on KV Store.
 
 # Notes
 

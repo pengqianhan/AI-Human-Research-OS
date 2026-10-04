@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Definition
@@ -36,6 +36,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [Follow the Entities (CorpusMap)](../papers/2609.37226.md) - GPT-5.6 Sol judges every answer-quality metric; re-judging the GPT-5.5 answers with DeepSeek-V4-Pro keeps CorpusMap first on all five metrics and reproduces the method ranking exactly on three (Kendall's τ = 1.00), less closely on WixQA context recall (0.47) and factuality (0.83).
 * [False Frontiers](../papers/2609.39102.md) - gpt-6-astra/high builds an evidence-backed reference from each source document and judges saved pseudo-labels and solver responses in a post-hoc audit that never affects training; about 14% of audited cases stay unresolved, and no human agreement check is reported.
 * [Mid-Harness](../papers/2609.39982.md) - uses an LLM as a pre-execution judge of candidate terminal actions (listwise, pointwise, or pairwise); pairwise comparison works best for self-verification, a LoRA verifier distilled from GPT-5.6 Sol's pairwise judgments raises teacher agreement from 59.01% to 74.58%, and GPT-5.6 Terra reviews the remaining disagreements.
+* [RSIGame](../papers/2609.39045.md) - a Qwen3.8-27B judge scores every main-table result against hidden GameCraft-Bench rubrics (mean of three replay-and-score runs; median range 0.73 points across 529 artifacts), while the same model family serves as the explorer agent and the SFT student; the paper checks judge dependence by re-scoring 40 tasks with GPT-5.5 (same method ordering) and by a 20-task free-play study with blind agents, and it keeps the development loop's own quality monitor isolated from the judge's rubric, scores, and feedback.
 
 # Notes
 

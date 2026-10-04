@@ -7,7 +7,7 @@ tags:
 - verification
 - agent-evaluation
 - long-horizon-agents
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Scope
@@ -19,6 +19,7 @@ This topic tracks how extra compute at inference time, on a single task, raises 
 * [LLM-as-a-Verifier](../papers/2607.05391.md) - scales the *selector* for parallel trajectories: a training-free verifier scored from the expectation over score-token logits, scaled by granularity, repeated evaluation, and criteria decomposition, with a probabilistic pivot tournament that keeps best-of-N selection affordable.
 * [AREX-2](../papers/2609.38288.md) - scales *rounds within one task*: defines self-improvement as best-so-far score rising with the round budget, splits it into gain per round and number of productive rounds, and trains the model on long improvement trajectories so later rounds stay productive.
 * [Mid-Harness](../papers/2609.39982.md) - scales *actions within one trajectory*: samples several candidate actions per step and verifies them before execution at the model-harness boundary, and shows this composes with Best-of-T and Sequential Refine at lower estimated token cost than more trajectories alone.
+* [RSIGame](../papers/2609.39045.md) - scales *development rounds within one task* and measures the scaling curve directly (Figure 3, 40 GameCraft-Bench tasks): under the same per-round budget, Play2Code plateaus or regresses as rounds are added while RSIGame keeps converting rounds into quality, and the gain splits into a local explore-diagnose-improve loop that is volatile on its own and a global monitor that retains the best checkpoint and stops at saturation, matching much longer fixed-budget runs with fewer rounds.
 
 # Synthesis
 
@@ -34,3 +35,4 @@ Cost reporting differs across the three. Mid-Harness reports idealized parallel 
 * Does a policy trained for long-horizon improvement (AREX-2) still benefit from per-action verification (Mid-Harness), or does training absorb the gain verification provides?
 * Verifiers err most on later, state-dependent steps (Mid-Harness: 68.13% teacher agreement at turns 1-4 against 54.07% at turns 17-32). Can verification effort be spent adaptively on irreversible or environment-changing actions, and how much of the gain does that keep?
 * AREX-2's decomposition into gain per round (r̄) and productive rounds (T*) is defined but not estimated. Can it be measured for verifier-based methods too, so that "keeps improving with budget" becomes a comparable number across papers?
+* RSIGame's development-time scaling depends on a monitor that can compare whole builds without the benchmark's rubric. AREX-2 and Mid-Harness use verifiers tied to the task's own success signal. When no cheap external verifier exists, how much of round-level scaling survives with a proxy monitor, and how should the proxy be audited (RSIGame uses a 20-task free-play study) before its best-checkpoint decisions are trusted?

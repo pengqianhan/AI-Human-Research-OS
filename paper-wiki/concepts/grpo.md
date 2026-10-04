@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Definition
@@ -29,3 +29,4 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [SLCA-GRPO](../papers/2609.29050.md) - keeps GRPO's group normalization but applies it separately to a dense tool-execution reward and a summary-judge reward, routing each advantage only to its own token segment (tool calls vs. final answer), so summary-reward noise no longer reaches tool tokens; +2.53 / +1.36 / +9.15 pp over matched GRPO on Toucan / BFCL / τ²-Bench at 7B.
 * [CompoWorld](../papers/2609.33665.md) - keeps standard GRPO (zero KL and entropy coefficients, one advantage for all agent tokens) but changes the reward: each rubric criterion is weighted by λ + (1 − its pass rate in the rollout group), so criteria the group rarely satisfies earn more; RL adds 1.2 points on average over SFT across eight agent benchmarks.
 * [X-Tree](../papers/2609.32993.md) - GRPO in two settings with the same mined skill tree: offline, each tree node is a GRPO instance rolled out from the gold prefix with a step-matching reward plus a depth-scaled completion bonus (no environment); online, an adaptive bonus for executed tree nodes is added to the verifier reward and fades as the group's success rate rises, supplying gradient in all-fail groups where plain GRPO has none.
+* [Context Language Models](../papers/2609.37725.md) - stepwise GRPO for a self-editing context: the group-normalized trajectory-level outcome advantage is assigned to every model call in the trajectory, and a success-gated efficiency advantage clip((c̄ − cᵢ)/c̄, −1, 1) re-ranks only successful trajectories by prefix-reuse FLOPs (zero for failures and for groups with fewer than two successes), chosen over rewarding edit count or removed volume to avoid reward hacking; Qwen3.5-9B goes 28.8% → 42.5% on held-out BrowseComp-Plus with 1.34 PFLOPs per question against 2.19 for an identically trained summary harness.

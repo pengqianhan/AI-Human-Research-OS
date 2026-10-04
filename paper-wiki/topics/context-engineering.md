@@ -6,7 +6,7 @@ tags:
 - context-engineering
 - llm-agents
 - agent-reliability
-timestamp: 2026-10-02T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Scope
@@ -27,6 +27,7 @@ This topic tracks the design and runtime management of agent context: instructio
 * [EvoOntology](../papers/2609.15779.md) - governs a specific slice of the information environment — domain semantics over heterogeneous data sources — by exposing a self-evolving ontology through queryable MCP tools instead of injecting it as static prompt text; its own ablation against a matched static-prompt baseline (same builder-agent content, prepended instead of queried) isolates the queryable-vs-injected design choice and finds injection can cost up to 15.0 points, direct evidence for this topic's assembly-time authority/precedence question in one concrete setting.
 * [Follow the Entities (CorpusMap)](../papers/2609.37226.md) - shapes the information environment before any question: recurring entities become persistent, source-attributed Entity Pages stored beside the raw files, and each question arrives with a short list of candidate file paths (no content), so the agent reads structure on demand; free-form LLM-written wiki pages, by contrast, do not reliably beat the raw corpus.
 * [PoS](../papers/2610.01415.md) - replaces the history with an explicit belief (entities, states, relations, plus epistemic and achievement gaps) that a Belief Sentinel validates every step, and detects stalls as persistent gaps with stagnation or recurring states; beats raw history, ACON, PACE, HiAgent, and LongHorizon-Harness on four benchmarks with three backbones at about 5x the tokens of raw history on RCA-100.
+* [Context Language Models](../papers/2609.37725.md) - the most autonomous point on this topic's spectrum: the live context is mirrored as a file the model rewrites with Bash, every edit synchronized into the next turn, so the model rather than the harness defines compaction, offloading, and in-place updates. Zero-shot on Qwen3.6-27B at 32K it scores 59.4% on BrowseComp-Plus (+11.4% relative over Codex-style summarization at 21.5% fewer prefix-reuse FLOPs), matches summarization on Terminal-Bench 2.1 at 70% of its FLOPs, and its ContextBench pilot shows summary, folding, RLM, Self-Compact, and ACM all failing simple synthetic retention, in-place-edit, and offload-evict tasks. The strategy can then be changed by one sentence, evolved as a skill, or trained with GRPO.
 
 # Synthesis
 
@@ -49,3 +50,5 @@ PoS turns the topic's compression-versus-state question into a comparison. Its b
 * Agent READMEs shows non-functional requirements are rarely specified in the static seed file itself — do any of this topic's runtime mechanisms (context-quality scoring, retrieval, compression) compensate for that omission during a session, or does an absent NFR instruction stay absent all the way through execution regardless of how well the runtime layer manages everything else?
 * CorpusMap finds that direct entity-to-entity edges add nothing once the agent can search, because they only shorten paths it already crosses. Does this hold for other agent-facing structures (ontologies, wikis, memory graphs), so that such layers should expose item-to-source links and leave relation-finding to search?
 * PoS spends more tokens validating its belief than acting on it (822K for the Sentinel against 281K for the task agent per RCA-100 episode). Would a raw-history agent given the same extra budget, for example as self-verification or retries, close the gap, and which parts of belief maintenance survive a cheaper validator?
+* Context Language Models give the model unrestricted write access to its own live context and name the resulting risk: edits become a channel through which injected or self-generated instructions persist across turns. How should an editable context preserve the trust boundaries this topic asks about (source authority, freshness, precedence) when the model can rewrite the record of where each span came from, and can an append-only audit log or a second-model diff review keep the flexibility without the exposure?
+* CLM's zero-shot comparison measures untrained constrained-action baselines (Self-Compact, ACM) against an untrained unrestricted editor on one backbone. Does the advantage of the file interface survive once both sides are trained (CLM's own RL result is parity with a trained summary harness at lower cost), and would a controlled ablation that varies only the editing interface with model and prompt fixed show the same ordering?

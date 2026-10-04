@@ -6,7 +6,7 @@ tags:
 - recursive-self-improvement
 - ai-safety
 - agent-self-evolution
-timestamp: 2026-09-25T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Scope
@@ -22,6 +22,7 @@ This topic tracks papers that treat recursive self-improvement (RSI) — an AI s
 * [RRSI](../papers/2609.24972.md) - argues that harness-level RSI *itself* needs regularization, because a finite evolve set reused adaptively turns apparent self-improvement into benchmark fitting, noise chasing, or complexity growth. It supplies a mechanism-level safeguard that complements this topic's taxonomies and project studies.
 * [ZGCM-1](../papers/2609.13356.md) - an AI-native model-development report in which nine contributors rate agent autonomy across 11 R&D tasks on an L1–L5 rubric. Operational work (experimentation/monitoring, deployment) is rated L4 and architecture and algorithm design L2, a second project-internal autonomy profile alongside [Atria Dawn](../papers/2609.15818.md).
 * [ScienceBuddy](../papers/2609.17523.md) - names its method "recursive-in-recursive self-improvement": an inner loop of validation-gated harness edits with the task model fixed, nested inside rubric-reward GRPO with the harness fixed, redeployed to researchers each cycle. The authors themselves note the reflector that proposes edits stays fixed, so the improvement mechanism does not improve; on this topic's scale it is a model-plus-harness co-evolution loop, not self-referential RSI.
+* [RSIGame](../papers/2609.39045.md) - names its method recursive self-improvement at two nested levels: a training-free loop whose shared checklist and retained champion persist across up to 30 development rounds, and a training loop that fine-tunes the generator on the verified traces that loop produced (Qwen3.8-27B one-shot 37.07 → 48.22 on GameCraft-Bench Godot). The controller that decides what to improve stays fixed, so like ScienceBuddy it is a controlled artifact-plus-weights loop rather than self-referential RSI; its distinctive contribution to this topic is the evaluator-isolated quality monitor and saturation stop that keep long-horizon self-improvement from regressing.
 
 # Synthesis
 
@@ -34,3 +35,4 @@ Atria Dawn supplies this topic's first project-internal empirical grounding for 
 * The paper's three challenges were each illustrated with a single case study drawn from one external source — do the same failure patterns (regression despite persistence, attribution confounds between search quality and mechanism quality, evaluator-gaming under repeated self-assessment) reproduce across a wider sample of self-evolving systems, including ones already tracked in [Agent self-evolution](agent-self-evolution.md)?
 * Atria Dawn's own four open challenges (diverse-direction generation with pre-result value assessment, converting experience into intrinsic research capability, maintaining oversight as agent-action volume scales, authority-allocation protocols) were derived from one team's development experience rather than mapped onto [The Last AI Built by Humans](../papers/2609.11873.md)'s formal taxonomy or Headroom-Closed Index — would doing so place Atria Dawn's own reported decision-attribution numbers at a specific, comparable autonomy level, and would a second project's data land at a materially different level?
 * Should an RSI loop be credited for improvement only when it survives a held-out, noise-adjusted gate (RRSI's argument), and would applying such a gate to the self-reported development gains in Atria Dawn or ZGCM-1's AI-native R&D change their autonomy assessments?
+* RSIGame's reliability case rests on a global monitor that reads a proxy rubric aimed at the same four quality dimensions as the hidden benchmark rubric, with a 20-task free-play study as the check that gains are not proxy-fitting. For RSI loops whose acceptance signal is a self-chosen proxy of the external objective, how large does the independent check need to be before "sustained improvement" can be distinguished from optimizing the proxy?

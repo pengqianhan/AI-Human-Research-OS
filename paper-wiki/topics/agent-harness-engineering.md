@@ -7,7 +7,7 @@ tags:
 - harness-evolution
 - coding-agents
 - repository-understanding
-timestamp: 2026-10-02T00:00:00Z
+timestamp: 2026-10-04T00:00:00Z
 ---
 
 # Scope
@@ -51,6 +51,7 @@ This topic tracks work on the executable software layer around a foundation mode
 * [Omni-IO Skills](../papers/2609.31847.md) - extends an unchanged host agent to any-to-any media production with a Skill layer, an MCP tool contract with swappable providers, dependency-checked wave-scheduled execution graphs, and an append-only asset registry; measured only against the bare agent (input support from about 40% to 100% on UniM-90).
 * [Mid-Harness](../papers/2609.39982.md) - leaves the harness loop and the generator unchanged and adds compute in the model-call wrapper: each step samples several candidate actions and a verifier picks one before execution; with TMAX-9B on TerminalBench-Lite, pairwise self-verification lifts Pass@1 from 50.00% to 54.76%, a distilled verifier to 57.14%, and a GPT-5.6 Sol verifier to 68.03%.
 * [ActiveSaddler](../papers/2610.00906.md) - keeps AutoSaddler's optimizer unchanged and adapts which training scenarios feed each update: LLM-induced failure-pattern arms, LLM learning-progress scores, and an LLM explore-or-repair controller; with gpt-5.5, +4.4 points on GAIA2 and +7.5 on Terminal-Bench 2.0 over a fixed scenario order, and +3.0 when wrapped around GEPA.
+* [Context Language Models](../papers/2609.37725.md) - moves one harness responsibility, context management, out of the harness and into the model: the live context becomes a file the model edits with Bash, search tools are exposed as in-context skills rather than a fixed tool interface, and the paper reads existing harness compaction policies as "procedural memory" that can be steered by instruction, evolved as skills with a GEPA-style loop, or internalized with RL. Zero-shot it beats harness-defined and action-based compaction on BrowseComp-Plus and matches Codex-style summarization on Terminal-Bench 2.1 at lower compute; it also motivates a serving co-design (Suffix Cache Reuse) because in-the-middle context edits break prefix caching.
 
 # Synthesis
 
@@ -84,3 +85,4 @@ ActiveSaddler adds an axis the diagnose-write-validate loops above leave fixed: 
 * Raven's theory says composing harnesses adds coverage only when every individual agent falls below the reliability target while planning and per-node errors stay small. Can those error terms be measured on real harnesses, and would one agent given the union of all specialists' tools close most of the gap, as the paper's own parity example concedes it could?
 * Mid-Harness adds verification at the model-call boundary without touching the harness, and its gains differ by task domain (+20.5 points on software-engineering tasks but −10.0 on scientific computing at 27B). Would a harness that exposes action reversibility or environment state to the verifier close the gap on the state-dependent later steps where its verifier is weakest?
 * ActiveSaddler's curriculum steers optimization toward whatever keeps failing, and several of its GAIA2 arms are grader-format conventions. How should a harness optimizer tell task-behavior weaknesses from evaluator-specific ones, and how much of the reported held-out gain survives when patches from format-only arms are removed?
+* Context Language Models propose distilling harness context policies into model behavior and eventually into weights, framing harnesses as procedural memory the model can absorb. Which of this topic's harness components (compaction, state externalization, skill routing, verification) are context transformations a model could take over, which depend on side effects or isolation the model should not control, and does moving a policy into the model make it harder to audit than the same policy in harness code?
