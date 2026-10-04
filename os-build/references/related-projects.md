@@ -44,6 +44,25 @@ proposes new entries in a pull request; prune them there before merging.
 - [Anti-Autoresearch](https://github.com/wanshuiyin/Anti-Autoresearch): Don't
   trust an autoresearch paper at face value. Reviewer-side integrity forensics
   (self-consistency + fabrication), deterministic verdict.
+- [XScientist](https://github.com/smileformylove/XScientist): Turn ideas into
+  autonomous research with Git-like evidence histories—inspectable,
+  reproducible, and reversible.
+- [agi](https://github.com/hyperspaceai/agi): The first distributed AGI system.
+  Thousands of autonomous AI agents collaboratively train models, share
+  experiments via P2P gossip, and push breakthroughs here. Fully peer-to-peer.
+  Join from your browser or CLI.
+- [aideml](https://github.com/WecoAI/aideml): AIDE: an LLM agent for machine
+  learning engineering - the research Weco grew out of. Referenced in OpenAI
+  MLE-bench.
+- [autocontext](https://github.com/greyhaven-ai/autocontext): a recursive
+  self-improving harness designed to help your agents (and future iterations of
+  those agents) succeed on any task.
+- [luxas](https://github.com/Muuuun/luxas): An autonomous research colleague —
+  from a question to a compiled manuscript, while you sleep.
+- [CORAL](https://github.com/Human-Agent-Society/CORAL): Open-source
+  autoresearch powered by autonomous coding agents. Run Claude Code, OpenCode,
+  and Codex with grading, shared knowledge, and multi-agent evolution. Accepted
+  at COLM 2026.
 
 ## Agent runtimes and operating systems
 
@@ -82,6 +101,21 @@ proposes new entries in a pull request; prune them there before merging.
   software factories: explore ideas, write specs, implement, review, and run
   autonomous research. Works with Claude Code, Codex, and other skill-compatible
   agents.
+- [scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills):
+  Turn any AI agent into an AI Scientist. The #1 Agent Skills library for
+  science, used by 250,000+ scientists worldwide.
+- [autoresearch](https://github.com/uditgoenka/autoresearch): Claude
+  Autoresearch Skill — Autonomous goal-directed iteration for Claude Code.
+  Inspired by Karpathy's autoresearch. Modify → Verify → Keep/Discard → Repeat
+  forever.
+- [codex-autoresearch](https://github.com/leo-lilinxiao/codex-autoresearch):
+  Codex Autoresearch Skill — A self-directed iterative system for Codex that
+  continuously cycles through: modify, verify, retain or discard, and repeat
+  indefinitely. Inspired by Karpathy’s autoresearch concept.
+- [open-science](https://github.com/ai4s-research/open-science): Open Science
+  Desktop — local-first, model-agnostic AI research workbench for macOS, Windows
+  & Linux. Open-source Claude Science desktop alternative built on Tauri + MCP +
+  agent skills.
 
 ## Articles
 
