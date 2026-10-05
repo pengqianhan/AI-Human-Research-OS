@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - knowledge-reasoning
 - deep-research
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-05T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Humanity's Last Exam (HLE; Phan et al., 2025) is a closed-ended academic benchma
 * [Raven](../papers/2609.33439.md) - text-only exact-match HLE is one of four sources in its pooled DeepResearch Mixed set; Raven-Research reaches 60.0% on its HLE questions with DeepSeek-V4-Flash, against at most 43.3% for the other harnesses.
 * [Apodex 1.1](../papers/2608.23283.md) - one of its general-reasoning and deep-search benchmarks, where Apodex 1.1 scores below Claude Opus 5.
 * [ASI-Bench](../papers/2608.17271.md) - cited as a knowledge-only benchmark with no execution or research autonomy, to motivate a benchmark that grades end-to-end research under withdrawn guidance.
+* [HyperBrowseComp](../papers/2610.03574.md) - cited, not run: an example of a benchmark built to keep discriminative power as models improve, but one that tests closed-ended expertise rather than sustained open-web search.
 
 # Notes
 

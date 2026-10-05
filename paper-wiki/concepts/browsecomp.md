@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - search-agents
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-05T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ BrowseComp (Wei et al., 2025) is a benchmark of short-answer questions deliberat
 * [ZGCM-1](../papers/2609.13356.md) - a from-scratch 7B model reporting 19.43 with a 64-step ReAct harness. Its comparisons (e.g., Claude 4 Sonnet 12.20, Qwen3-235B-A22B 2.30) are taken from other reports rather than same-harness reruns.
 * [Raven](../papers/2609.33439.md) - one of four sources pooled in DeepResearch Mixed; with DeepSeek-V4-Flash, Raven-Research answers 69.3% of its BrowseComp questions against at most 62.4% for MiroFlow and DeepSeek-Harness on the same backbone and search tools, with one LLM-judged attempt per question.
 * [AREX-2](../papers/2609.38288.md) - 84.0 with no new search training data; under a recursive research process with no correctness feedback, accuracy rises from 64.8 at 47 turns to 84.0 at 143 turns, more than 12 points ahead of AREX (122B) at about 140 turns.
+* [HyperBrowseComp](../papers/2610.03574.md) - extends BrowseComp's single-short-answer design to 423 questions authored natively in 13 languages, most needing non-text evidence, and adds a no-internet filter because BrowseComp-style trivia is drifting into parametric knowledge; best accuracy 31.68%.
 
 # Related
 

@@ -8,6 +8,7 @@
 * [Agent harness engineering](agent-harness-engineering.md) - Papers about understanding, modifying, evaluating, and evolving the software layer that turns foundation models into agents.
 * [Agent memory](agent-memory.md) - Papers about architectures for extracting, consolidating, and retrieving long-term memory in AI agents.
 * [Agent security and red teaming](agent-security.md) - Papers about assessing and defending the security of deployed AI agents and the infrastructure, protocols, and models beneath them.
+* [Agent selection bias](agent-selection-bias.md) - Papers about systematic biases in what LLM agents choose on a user's behalf (items, sources, sites, tools), measured against how well the options actually meet the request.
 * [Agent self-evolution](agent-self-evolution.md) - Papers about agents that improve their own skills, verification signals, or behavior after deployment.
 * [Agent skill libraries](agent-skill-libraries.md) - Papers about building, validating, and maintaining reusable libraries of executable agent skills.
 * [Agent test-time scaling](agent-test-time-scaling.md) - Papers about spending more inference-time compute on one agent task (more candidate actions or trajectories, stronger verification, or more improvement rounds) and about when that compute turns into higher task success.

@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - text-environments
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-05T00:00:00Z
 ---
 
 # Definition
@@ -18,6 +18,7 @@ WebShop (Yao et al., arXiv:2207.01206, NeurIPS 2022) is a simulated shopping web
 
 * [RASO](../papers/2609.38024.md) - one of four skill-optimization benchmarks (80 / 40 / 500 split, 500 test instructions). GPT-5.6-Luna gains are within about a point (RASO 46.61 vs GEPA 45.54), but with Qwen-3.5-9B retrieval-grounded initialization lifts the skill from 12.54 to 23.27 and RASO reaches 24.73 against 13.43 for the best baseline.
 * [X-Tree](../papers/2609.32993.md) - online RLVR and on-policy self-distillation testbed: 48 skills mined from 1,824 trajectories; the adaptive skill bonus adds up to +3.6 success and +4.6 graded score over outcome-only GRPO at 1.5B-7B, and a tree mined from only 100 trajectories already helps.
+* [Source Preference in the Wild](../papers/2610.03195.md) - uses 1,500 WebShop goals only as Shopping requests with structured requirements, while the items come from live Tavily web search rather than the simulator; WebShop-request products also form the DPO pairs for its fake-source and Amazon-rebalancing experiments.
 
 # Notes
 

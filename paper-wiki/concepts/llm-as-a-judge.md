@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-10-04T00:00:00Z
+timestamp: 2026-10-05T00:00:00Z
 ---
 
 # Definition
@@ -37,6 +37,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [False Frontiers](../papers/2609.39102.md) - gpt-6-astra/high builds an evidence-backed reference from each source document and judges saved pseudo-labels and solver responses in a post-hoc audit that never affects training; about 14% of audited cases stay unresolved, and no human agreement check is reported.
 * [Mid-Harness](../papers/2609.39982.md) - uses an LLM as a pre-execution judge of candidate terminal actions (listwise, pointwise, or pairwise); pairwise comparison works best for self-verification, a LoRA verifier distilled from GPT-5.6 Sol's pairwise judgments raises teacher agreement from 59.01% to 74.58%, and GPT-5.6 Terra reviews the remaining disagreements.
 * [RSIGame](../papers/2609.39045.md) - a Qwen3.8-27B judge scores every main-table result against hidden GameCraft-Bench rubrics (mean of three replay-and-score runs; median range 0.73 points across 529 artifacts), while the same model family serves as the explorer agent and the SFT student; the paper checks judge dependence by re-scoring 40 tasks with GPT-5.5 (same method ordering) and by a 20-task free-play study with blind agents, and it keeps the development loop's own quality monitor isolated from the judge's rubric, scores, and feedback.
+* [Source Preference in the Wild](../papers/2610.03195.md) - a source-blind Qwen3.8-27B judge (URLs and source names removed) decides which request requirements each search result's title and snippet satisfy, which defines the matched pairs; on 850 human-annotated results its agreement with annotators (Krippendorff's α 0.65-0.75) is close to the annotators' agreement with each other (0.67-0.72).
+* [HyperBrowseComp](../papers/2610.03574.md) - each answering model grades its own response from a fresh context against the reference aliases; re-scoring all 3,384 responses with Gemini 3.7 Flash, GLM-4.7, and Kimi K2 Thinking changes aggregate accuracy by at most 0.80 points (98.79-99.32% agreement), which the authors take as evidence that self-grading is safe for short, unambiguous answers.
 
 # Notes
 

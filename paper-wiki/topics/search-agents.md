@@ -7,7 +7,7 @@ tags:
 - information-seeking
 - web-agents
 - reinforcement-learning
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-05T00:00:00Z
 ---
 
 # Scope
@@ -22,6 +22,8 @@ This topic tracks agents whose core task is searching external sources (the live
 * [ZGCM-1](../papers/2609.13356.md) - places search capability inside a from-scratch, fully open 7B model through MDP-style agentic mid-training and schema-aligned agentic SFT. It reports 63.1 on WebWalkerQA and 19.4 on BrowseComp, but most web baselines are copied from other reports rather than rerun in its harness.
 * [Follow the Entities (CorpusMap)](../papers/2609.37226.md) - a local-corpus search agent improved by reorganizing the corpus rather than the policy: an offline entity-document map with source-attributed Entity Pages lifts quality 6.4-11.7 points over raw shell-command search with 34-57% fewer input tokens (geometric mean), though most of the gain depends on BM25-selected candidate documents supplied with the question.
 * [False Frontiers](../papers/2609.39102.md) - trains search agents with no human QA data through a proposer-solver loop, shows its agreement-based reward drifting from correctness over rounds ("co-cheating"), and fixes the feedback path with source-level cross-fitting (CrossFit), +8.8/8.4 Cover-EM over coupled self-evolution at Qwen3.5-4B/9B.
+* [Source Preference in the Wild](../papers/2610.03195.md) - studies the filtering step of end-to-end search: across 12 agent models, items that meet the same requirements are selected more or less often depending on the site they come from, and a less satisfying item from a preferred source beats a better one from a dispreferred source 68% of the time (median).
+* [HyperBrowseComp](../papers/2610.03574.md) - a 423-question, 13-language, multimodal BrowseComp-style benchmark filtered against no-internet answering; best accuracy 31.68% (Gemini 3.7 Flash, built-in search), 57.68% of questions unsolved by all five built-in-search models, and a 7.3-9.5 point accuracy change from swapping built-in search for Exa.
 
 # Synthesis
 
@@ -30,6 +32,8 @@ These three papers attack the same underlying problem — an agent must decide w
 CorpusMap adds a fourth place for that intelligence to live: the corpus itself. Its policy is an ordinary shell-command agent, and the gain comes from an offline entity-document map that makes cross-document links explicit and reusable across questions. Its ablations also bound the claim: without a question-specific candidate list, the map raises quality only slightly and costs more tokens than raw search, so structure and a cheap pre-selection step work together. SearchOS externalizes state per task at run time, while CorpusMap externalizes structure per corpus ahead of time, and the two are compatible.
 
 False Frontiers looks at a different part of the training pipeline: where the training questions and their labels come from. Iris certifies each question once, before training, with a fixed reference model (fails closed-book, solves open-book). False Frontiers' self-evolving loop instead generates questions and pseudo-labels continuously and scores them with the solver it is training, so the check itself can drift. Its audit shows that drift is real and grows by round, and its fix is about evaluator independence (score each source with a solver that never trained on it), not about better questions.
+
+HyperBrowseComp and Source Preference in the Wild look at search agents from the evaluation side and expose two problems the training papers above do not measure. HyperBrowseComp moves the hard part of search out of English text: its 423 questions are written natively in 13 other languages and 64.3% need evidence from videos, scans, images, or maps, and the best built-in-search configuration answers 31.68%. It also shows that the search tool is part of what is being measured: replacing Gemini's built-in search with Exa tools lowers its accuracy by 9.5 points while the same swap raises GPT-5.6 Sol by 7.6, which sharpens the caution raised above about ZGCM-1's comparisons against numbers from other harnesses. Source Preference asks a question none of these papers asks: once results are retrieved, does the agent filter them by fit to the request or by the site they come from? With snippet-only evidence it finds the latter matters a lot, which matters for any search agent that ranks or cites sources.
 
 # Open Questions
 
@@ -40,3 +44,5 @@ False Frontiers looks at a different part of the training pipeline: where the tr
 * ZGCM-1 reports a 7B model beating much larger tool-using models on BrowseComp, but compares against numbers from other harnesses, search providers, and judges. How much of the small-vs-large gap in search-agent results is harness and protocol rather than model?
 * False Frontiers' self-evolved Qwen3.5 agents beat a reproduced Search-R1 on the seven-benchmark open-domain QA suite without human QA data. Does source-level cross-fitting keep its advantage on harder deep-research benchmarks such as BrowseComp, where proposer-generated questions may share evidence across many sources and the source folds stop being independent?
 * CorpusMap builds its structure once per fixed corpus. For live-web search, where there is no fixed corpus, can an entity map be built incrementally from pages already visited and reused across later questions, as CorpusMap's incremental-update experiment does for a growing document set?
+* The search agents trained here (Iris, ZGCM-1, False Frontiers) are evaluated on English or Chinese text benchmarks. How do they do on HyperBrowseComp, where evidence sits in other languages and in videos, scans, and maps, and does training on text-only multi-hop questions transfer at all?
+* Do trained search agents inherit the source preferences that Source Preference in the Wild finds in general-purpose models, and could source-aware training data (balancing which sites supply correct evidence) remove them?

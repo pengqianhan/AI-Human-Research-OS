@@ -36,6 +36,7 @@
 * [SWE-bench Pro](swe-bench-pro.md) - Enterprise repository-level software-engineering benchmark spanning multiple real codebases.
 * [SWE-bench Verified](swe-bench-verified.md) - Human-validated subset of SWE-bench for repository-level issue resolution.
 * [Terminal-Bench](terminal-bench.md) - Benchmark suite for evaluating AI agents on hard, realistic tasks in command-line environments.
+* [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
 * [τ²-Bench](tau2-bench.md) - Dual-control conversational tool-use benchmark (Airline, Retail, Telecom) where both the agent and a simulated user act on shared state, scored by an environment verifier.
 * [WebArena](webarena.md) - 812 long-horizon tasks on self-hosted shop, admin, GitLab, forum, map, and wiki sites with functional evaluators; the standard browser-agent testbed and, via WebArena-Lite, a web-agent fine-tuning target.
 * [WebShop](webshop.md) - Simulated e-commerce site of 1.18 million products and 12,087 instructions where a text agent searches, selects options, and buys, rewarded by attribute, option, and price match.

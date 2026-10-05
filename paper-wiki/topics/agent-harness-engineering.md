@@ -7,7 +7,7 @@ tags:
 - harness-evolution
 - coding-agents
 - repository-understanding
-timestamp: 2026-10-04T00:00:00Z
+timestamp: 2026-10-05T00:00:00Z
 ---
 
 # Scope
@@ -52,6 +52,7 @@ This topic tracks work on the executable software layer around a foundation mode
 * [Mid-Harness](../papers/2609.39982.md) - leaves the harness loop and the generator unchanged and adds compute in the model-call wrapper: each step samples several candidate actions and a verifier picks one before execution; with TMAX-9B on TerminalBench-Lite, pairwise self-verification lifts Pass@1 from 50.00% to 54.76%, a distilled verifier to 57.14%, and a GPT-5.6 Sol verifier to 68.03%.
 * [ActiveSaddler](../papers/2610.00906.md) - keeps AutoSaddler's optimizer unchanged and adapts which training scenarios feed each update: LLM-induced failure-pattern arms, LLM learning-progress scores, and an LLM explore-or-repair controller; with gpt-5.5, +4.4 points on GAIA2 and +7.5 on Terminal-Bench 2.0 over a fixed scenario order, and +3.0 when wrapped around GEPA.
 * [Context Language Models](../papers/2609.37725.md) - moves one harness responsibility, context management, out of the harness and into the model: the live context becomes a file the model edits with Bash, search tools are exposed as in-context skills rather than a fixed tool interface, and the paper reads existing harness compaction policies as "procedural memory" that can be steered by instruction, evolved as skills with a GEPA-style loop, or internalized with RL. Zero-shot it beats harness-defined and action-based compaction on BrowseComp-Plus and matches Codex-style summarization on Terminal-Bench 2.1 at lower compute; it also motivates a serving co-design (Suffix Cache Reuse) because in-the-middle context edits break prefix caching.
+* [Recursive Self-Rewrite](../papers/2610.02826.md) - uses harnesses as discovery tools rather than optimization targets: one model under Terminus 2, StateM, and a verifier-outcome continuation variant solves 759 of 2,929 terminal tasks against 565 for the best single harness, and the same model then rewrites those successes into fresh Terminus 2 trajectories for SFT, so the trained model needs only the general harness at inference.
 
 # Synthesis
 
@@ -62,6 +63,8 @@ Raven and Omni-IO Skills move the unit of harness engineering in two directions.
 Mid-Harness marks a boundary case for this topic. Most papers here change the harness itself (tools, state, control flow) or search over harness code; Mid-Harness changes nothing in the harness loop and inserts its intervention into the model-call wrapper, where candidate actions are sampled and compared before the harness executes one. That makes it compatible with any of the harnesses above, and its transfer runs across two harnesses (Vanillux2 and Terminus-2). Its finding that the verifier, not the number of candidates, sets the gain parallels this topic's results that the same model can score very differently depending on the layer around it.
 
 ActiveSaddler adds an axis the diagnose-write-validate loops above leave fixed: which training scenarios produce the evidence for the next patch. Most optimizers here (AutoSaddler, Meta-Harness, GEPA) fix their mini-batches before optimization begins. ActiveSaddler induces failure-pattern arms from diagnosed failures and spends rollouts on weaknesses that are still active. Its ablations show category-level and scenario-level arms both do worse, which matches Recuris's finding that a typed, component-level failure description is a better repair target than an outcome. Its own list of discovered arms also shows a risk this topic has not measured: on GAIA2 many arms describe matching the grader's output format, so an optimizer that targets persistent failures may also learn the evaluator's conventions.
+
+Recursive Self-Rewrite takes the opposite direction from Context Language Models' proposal to absorb harness policies into the model step by step: it keeps several fixed harnesses, uses each to find solutions the others miss, and moves the *results* into weights by re-executing them under one general harness. Its base-model table is independent evidence for this topic's premise that capability depends on the harness: on Terminal-Bench Hard the same Qwen-3.8-27B scores 33.0% under Terminus 2, 46.0% under StateM, and 66.0% under the continuation variant. The trained model under Terminus 2 does not reach the best harness on that benchmark (63% pass@3), so internalization recovered part of the harness gain, not all of it.
 
 # Open Questions
 
@@ -86,3 +89,4 @@ ActiveSaddler adds an axis the diagnose-write-validate loops above leave fixed: 
 * Mid-Harness adds verification at the model-call boundary without touching the harness, and its gains differ by task domain (+20.5 points on software-engineering tasks but −10.0 on scientific computing at 27B). Would a harness that exposes action reversibility or environment state to the verifier close the gap on the state-dependent later steps where its verifier is weakest?
 * ActiveSaddler's curriculum steers optimization toward whatever keeps failing, and several of its GAIA2 arms are grader-format conventions. How should a harness optimizer tell task-behavior weaknesses from evaluator-specific ones, and how much of the reported held-out gain survives when patches from format-only arms are removed?
 * Context Language Models propose distilling harness context policies into model behavior and eventually into weights, framing harnesses as procedural memory the model can absorb. Which of this topic's harness components (compaction, state externalization, skill routing, verification) are context transformations a model could take over, which depend on side effects or isolation the model should not control, and does moving a policy into the model make it harder to audit than the same policy in harness code?
+* Recursive Self-Rewrite shows harnesses solve partly disjoint task sets for one model. Is that complementarity stable enough to plan around (route tasks to harnesses by domain), or does it mostly reflect sampling noise that more rollouts under one harness would also cover?
