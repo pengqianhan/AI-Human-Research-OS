@@ -11,6 +11,7 @@
 * [Agent selection bias](agent-selection-bias.md) - Papers about systematic biases in what LLM agents choose on a user's behalf (items, sources, sites, tools), measured against how well the options actually meet the request.
 * [Agent self-evolution](agent-self-evolution.md) - Papers about agents that improve their own skills, verification signals, or behavior after deployment.
 * [Agent skill libraries](agent-skill-libraries.md) - Papers about building, validating, and maintaining reusable libraries of executable agent skills.
+* [Agent sycophancy](agent-sycophancy.md) - Papers about LLM agents over-aligning with a user's stated or remembered beliefs, preferences, or identity at the expense of task evidence, including sycophancy induced by long-term memory.
 * [Agent test-time scaling](agent-test-time-scaling.md) - Papers about spending more inference-time compute on one agent task (more candidate actions or trajectories, stronger verification, or more improvement rounds) and about when that compute turns into higher task success.
 * [Agentic robot manipulation](robot-manipulation-agents.md) - Papers about LLM, VLM, and coding agents that solve robot manipulation tasks by writing control programs, orchestrating frozen policies through a harness, or generating demonstrations that train robot policies.
 * [Autonomous research](autonomous-research.md) - Papers about AI systems that autonomously generate, test, and refine research hypotheses or artifacts over long horizons.
@@ -26,6 +27,7 @@
 * [Long-context reasoning](long-context-reasoning.md) - Papers about processing and reasoning over inputs that exceed, or degrade within, a model's usable context window.
 * [Multi-agent systems](multi-agent-systems.md) - Papers about multiple agents coordinating work, state, and reasoning.
 * [Post-training feedback](post-training-feedback.md) - Papers about the signals used to post-train language models when no verifier exists, and what those signals discard.
+* [Proactive agents](proactive-agents.md) - Papers about LLM agents that act on a user's needs without an explicit request, and about deciding what to do, when to compute and present it, and how far to proceed without approval.
 * [Recursive self-improvement](recursive-self-improvement.md) - Papers about AI systems whose improvement mechanisms themselves persistently improve, and the taxonomies, metrics, and safety challenges used to assess how close a system is to genuine RSI.
 * [Research ideation](research-ideation.md) - Papers about turning literature evidence, unresolved bottlenecks, and prior-art checks into defensible research proposals.
 * [Research verifiability](research-verifiability.md) - Papers about tracing scientific claims to supporting artifacts and auditing the integrity of research outputs.
