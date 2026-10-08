@@ -3,6 +3,7 @@
 * [3D generation agents](3d-generation-agents.md) - Papers about MLLM/LLM agents that construct or edit 3D content — worlds, scenes, or CAD objects — through iterative tool use and verifier-gated feedback rather than single-pass generation.
 * [AI for science](ai-for-science.md) - Papers about AI systems that design, run, and revise scientific experiments.
 * [Agent benchmarks and evaluation](agent-benchmarks.md) - Papers whose main contribution is a benchmark, an evaluation protocol, or a method for constructing benchmarks that measure how LLM agents perform and behave.
+* [Agent deception and honesty](agent-deception.md) - Papers about LLM agents misrepresenting task state to the people or systems relying on them, the conditions that elicit it, and how to judge it apart from capability errors.
 * [Agent environments](agent-environments.md) - Papers about the environments, permissions, artifacts, budgets, and interfaces that shape agent behavior.
 * [Agent fine-tuning](agent-fine-tuning.md) - Papers about algorithms and objectives for updating an LLM agent's weights on long-horizon, multi-turn tasks.
 * [Agent harness engineering](agent-harness-engineering.md) - Papers about understanding, modifying, evaluating, and evolving the software layer that turns foundation models into agents.
@@ -19,6 +20,7 @@
 * [Data agents](data-agents.md) - Papers about LLM agents that fulfill natural-language instructions over heterogeneous structured and unstructured data, and the intermediate layers that bridge agent tools and domain semantics.
 * [Embodied navigation](embodied-navigation.md) - Papers about vision-language(-action) models that translate goals and egocentric observations into navigation actions across tasks, scenes, and robot embodiments.
 * [Financial agents](financial-agents.md) - Papers about LLM agents that analyze, trade, or manage risk in financial markets.
+* [Game development agents](game-development-agents.md) - Papers about coding agents that build playable games and improve them across rounds through playtesting, review, and version retention, and about benchmarks that score agent-built games.
 * [Game-playing agents](game-agents.md) - Papers about models and agents that play games — video games through game controls, or board, card, social-deduction, and sandbox games through text or tool interfaces — and the datasets and benchmarks that compare their planning, strategy, and action execution.
 * [GPU kernel optimization](gpu-kernel-optimization.md) - Papers about searching for and evaluating fast GPU kernels, including the cost of on-device measurement.
 * [GUI and computer-use agents](gui-computer-use-agents.md) - Papers about agents that perceive screen state and operate GUIs, desktops, or native applications directly.
@@ -26,6 +28,7 @@
 * [LLM surrogate models](llm-surrogate-models.md) - Papers about using LLMs as predictive surrogates that forecast outcomes instead of generating or acting directly.
 * [Long-context reasoning](long-context-reasoning.md) - Papers about processing and reasoning over inputs that exceed, or degrade within, a model's usable context window.
 * [Multi-agent systems](multi-agent-systems.md) - Papers about multiple agents coordinating work, state, and reasoning.
+* [Personal agents](personal-agents.md) - Papers about agents that act for one person across their accounts, devices, and files over weeks, and about where they run, what they remember, how their actions are approved, and who governs them.
 * [Post-training feedback](post-training-feedback.md) - Papers about the signals used to post-train language models when no verifier exists, and what those signals discard.
 * [Proactive agents](proactive-agents.md) - Papers about LLM agents that act on a user's needs without an explicit request, and about deciding what to do, when to compute and present it, and how far to proceed without approval.
 * [Recursive self-improvement](recursive-self-improvement.md) - Papers about AI systems whose improvement mechanisms themselves persistently improve, and the taxonomies, metrics, and safety challenges used to assess how close a system is to genuine RSI.

@@ -6,7 +6,7 @@ tags:
 - reward-hacking
 - evaluation-integrity
 - agent-environments
-timestamp: 2026-10-04T00:00:00Z
+timestamp: 2026-10-08T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Reward hacking is when a learning policy or an agent increases the reward signal
 * [Self-Evolving Coding Agents (HexaAnything)](../papers/2609.35432.md) - a preventive design rather than a measured hack rate: because verified traces train the next model, the verifier is kept independent of the proposing model and never counts the model's or VLA's "finished" claim as success; its Fold cloth tool was re-evaluated without garment keypoints that shared a source with the official check (3/5 development and 4/5 held-out seeds).
 * [False Frontiers](../papers/2609.39102.md) - a closed-loop variant with no grader to exploit: in proposer-solver self-evolution, the solver trains on the proposer's pseudo-labels, so proposer and solver come to agree on the same wrong answers and the agreement-based reward rises while an external audit finds false agreement growing from under 0.5% to 6-9% over three rounds ("co-cheating", no intent implied); scoring each source with a solver never trained on it (CrossFit) halves it.
 * [Context Language Models](../papers/2609.37725.md) - a preventive design rather than a measured hack: the paper rejects rewarding edit frequency or removed context volume because a model could satisfy either by discarding important information or breaking prefix reuse, and instead gates its efficiency advantage on task success so cheaper trajectories are preferred only among correct ones; its discussion also flags a related integrity risk, that a model with write access to its own context can persist injected or self-generated instructions across turns, citing OpenAI's report of self-inserted instructions in compaction summaries.
+* [DecepEval](../papers/2610.07967.md) - its Coding & Test Exploitation family (432 task pairs) checks whether agents weaken or bypass tests, claim unperformed verification, or hide observed test failures; a test edit counts only when the report conceals it, which separates misreporting from an honest change to the tests.
 
 # Notes
 

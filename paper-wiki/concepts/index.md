@@ -11,6 +11,7 @@
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
 * [GAIA2](gaia2.md) - Simulated-smartphone benchmark of dynamic, asynchronous assistant tasks grouped into persona Universes, used for Universe-disjoint harness-optimization splits.
+* [GameCraft-Bench](gamecraft-bench.md) - 140-task benchmark of complete games built end to end by agents in a real game engine, scored through replayed gameplay against game-specific rubrics on Mechanics, Depth, Visuals, and Art.
 * [GDPVal](gdpval.md) - 1,320-task, 44-occupation benchmark of economically valuable work graded by expert rubrics and pairwise Elo against human deliverables; GDPVal-AA is its 220-task gold subset.
 * [GEPA](gepa.md) - Reflective prompt evolution with Pareto-based candidate selection; a standard prompt-optimization baseline for skill and harness optimizers.
 * [GISA](gisa.md) - General information-seeking benchmark with structured item, set, list, and table answers.

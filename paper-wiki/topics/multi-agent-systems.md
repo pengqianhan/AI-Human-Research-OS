@@ -6,7 +6,7 @@ tags:
 - multi-agent-systems
 - coordination
 - shared-state
-timestamp: 2026-09-30T00:00:00Z
+timestamp: 2026-10-08T00:00:00Z
 ---
 
 # Scope
@@ -35,6 +35,7 @@ This topic tracks papers where multiple agents coordinate reasoning, experimenta
 * [AgentWorld](../papers/2609.31590.md) - an evaluation benchmark rather than a coordination design: 3–20 asymmetric-role agents must coordinate through chat alone in an MMORPG sandbox over 25–55 rounds; the best model solves 52.0%, oracle communication (one agent sees all messages) lifts this to 60.0%, and Causal Collaboration Effectiveness finds under a third of actions on a causal path to success.
 * [Game Arena](../papers/2609.31473.md) - 8-player Werewolf as a mixed cooperative/adversarial multi-agent test, with role-decomposed game-theoretic ratings and a coalition "substitution index" that measures how much replacing one model with another changes a team's win rate.
 * [Raven](../papers/2609.33439.md) - a host-orchestrated team whose members are whole harnesses: native specialists plus Claude Code, Codex, Hermes Agent, and OpenClaw behind adapters. The host submits a typed DAG that the runtime admits before dispatch, handoffs are recorded artifacts, and a new benchmark (MAOB) scores the plan alone, where Raven leads Claude Code and Hermes Agent by about 10 points of exact graph match.
+* [Recursive Game Creator](../papers/2610.08621.md) - a game-studio role pipeline (Designer, Builder, Player, Reviewer) run for several rounds, where the Player writes gameplay policies and the Reviewer judges anonymized trajectories and screenshots without seeing source code or which version is newer before choosing which build to keep.
 
 # Synthesis
 
@@ -43,6 +44,8 @@ Two complementary decentralization strategies appear in this set: 2606.10662 (De
 AgentWorld and Game Arena bring *measurement* to this topic, which has so far collected coordination designs. AgentWorld tests unassisted LLM teams under blackbox chat-only coordination, and its baselines separate two effects: coordination through communication (no-communication 22.9% → chat 52.0%) and centralization (oracle communication 60.0%). The oracle result is a controlled data point for this topic's central-planner-vs.-decentralization question: centralizing information helps, but 40% of tasks still fail. Its Causal Collaboration Effectiveness metric also gives a way to check whether any of the patterns above waste less team effort, not only whether they succeed. Game Arena's Werewolf shows the opposite difficulty. In mixed-motive teams, crediting an individual model is hard: its pairwise-coalition rankings were inconclusive, with 48% of comparisons missing, and only a cooperative-game substitution index separated good teammates.
 
 Raven adds two things. Its team members are heterogeneous harnesses rather than role prompts inside one framework, joined by an explicit, admission-checked topology per request, which places it in Graph Engineering's routing and fan-out/fan-in families. It also states formally when a team can beat every member under one budget: each node needs an agent able to meet its contract, no single agent covers every node, and planning and handoff errors stay small. Its MAOB benchmark scores only the plan, before any worker runs, so it complements AgentWorld, which scores teams executing without a planner.
+
+Recursive Game Creator adds a fourth route to review independence alongside ARIS's cross-family reviewer, Apodex 1.1's narrowed-scope verifier, and RSIAgent's isolated verifier: its Reviewer sees behavioral and visual evidence about two game versions but neither their source code nor which one is newer, so it judges the experience rather than the edit. The paper does not ablate this restriction, so whether it reduces correlated review errors is untested.
 
 # Open Questions
 
