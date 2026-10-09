@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - embodied-text-environments
 - long-horizon-agents
-timestamp: 2026-10-07T00:00:00Z
+timestamp: 2026-10-09T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ ALFWorld (Shridhar et al., arXiv:2010.03768, ICLR 2021) aligns text-game version
 * [PoS](../papers/2610.01415.md) - execution benchmark (valid_unseen, 134 tasks, 50 actions); explicit, validated belief states reach 88.81% with Qwen3.7-Plus against 72.39% for LongHorizon-Harness, with the gain concentrated in Transform tasks.
 * [RASO](../papers/2609.38024.md) - one of four skill-optimization benchmarks (39 / 18 train / validation games, the 134 out-of-distribution evaluation games); retrieval-grounded skill optimization reaches 74.13 with GPT-5.6-Luna and 51.00 with Qwen-3.5-9B, the latter 7.47 points above the best retrieval-free optimizer.
 * [EviSkill](../papers/2610.05030.md) - one of three skill-evolution environments (96 train and 48 validation tasks across six families, the 134 valid_unseen test tasks); EviSkill is best with all six action backbones, for example 96.27 with GPT-5.5 and 91.04 with Qwen3.5-9B, and its cross-epoch ablation is run here.
+* [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - ALFWorld is the environment being *simulated*: a worldbook built from 40 successful trajectories (836 turns) lets a language world model stand in for ALFWorld on 100 held-out Word2World tasks, and 85% of the task agent's simulated action sequences succeed when replayed in real ALFWorld, against 3% with a directly prompted simulator.
 
 # Notes
 

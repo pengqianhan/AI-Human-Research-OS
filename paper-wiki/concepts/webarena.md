@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - browser-agents
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-09T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ WebArena (Zhou et al., arXiv:2307.13854) hosts fully functional, self-contained 
 * [Agentic ESOpt](../papers/2608.17310.md) - full-parameter evolution-strategies fine-tuning of Qwen3.5-27B on WebArena-Lite: 29.47% → 36.16% without skills and 33.94% → 36.36% with a Trace2Skill bank, with per-category gains on GitLab, OSS, and Map.
 * [EnvHarness](../papers/2608.19880.md) - one of five existing environments it wraps with plug-in components that reshape initial state, rules, or task composition while preserving the original verifier.
 * [X-Tree](../papers/2609.32993.md) - offline RL testbed with no environment at training time: 256 skills mined from 7,974 Go-Browse trajectories; Qwen2.5-7B normalized SR on 694 deterministic tasks rises from 18.4 (SFT) to 22.9, with gains concentrated on the procedure-heavy admin, GitLab, and shopping sites.
+* [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - source of the Web worldbook: 50 gpt-5.6-sol trajectories on WebArena through the Playwright MCP interface; the simulator is then scored on AgentWorldBench's 200 Web records, 151 of which cannot be linked to a construction task (gain over its no-worldbook runtime +4.21 with gpt-5.6-sol, +5.00 with deepseek-v4.1-flash).
 
 # Notes
 

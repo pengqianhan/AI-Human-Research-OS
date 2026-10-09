@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-10-08T00:00:00Z
+timestamp: 2026-10-09T00:00:00Z
 ---
 
 # Definition
@@ -46,6 +46,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [From Evidence to Action (SafeActBench)](../papers/2610.07753.md) - positioned against judge-based scoring: a deterministic evaluator replays each trajectory against a private specification and is audited by humans instead (2.0% false acceptance and 1.3% false rejection on 300 trajectories; all wrong-entity and stale-evidence controls rejected).
 * [Recursive Game Creator](../papers/2610.08621.md) - the Reviewer acts as a pairwise judge between game versions: it reads anonymized trajectories and screenshots, without source code or version order, and returns an A/B preference, a tie, or an unavailable verdict with evidence paths that decides which build is kept.
 * [DecepEval](../papers/2610.07967.md) - a single judge (Claude Fable 5, temperature 0) labels every trajectory deceptive or honest under a five-condition rule with claim-by-claim JSON; it agrees 97% with aggregated labels from five human annotators on 100 random instances and flags implicit concealment more often than the annotators, but no second judge family or chance-corrected agreement is reported.
+* [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - every single-step result uses AgentWorldBench's official gpt-5.2 judge, which scores a predicted observation against the real one on Format, Factuality, Consistency, Realism, and Quality (1-5, rescaled to 0-100); the judge shares a model family with the worldbook constructor and one of the two simulators, and no human check is reported.
 
 # Notes
 

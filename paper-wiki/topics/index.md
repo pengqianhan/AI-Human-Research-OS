@@ -36,3 +36,4 @@
 * [Research verifiability](research-verifiability.md) - Papers about tracing scientific claims to supporting artifacts and auditing the integrity of research outputs.
 * [Search agents](search-agents.md) - Papers about agents trained or built to search the live web and synthesize retrieved evidence into verified answers or structured outputs.
 * [Simulated-user evaluation](simulated-user-evaluation.md) - Papers about using LLM-powered persona agents as stand-ins for real users to evaluate AI systems and digital products at scale.
+* [World models as agent environments](world-model-environments.md) - Papers that use a learned model (language, image, or video) to stand in for or render an agent's environment, and the split between what the model simulates and what stays in executable state.

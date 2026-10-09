@@ -6,7 +6,7 @@ tags:
 - agent-environments
 - environment-engineering
 - agent-reliability
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-09T00:00:00Z
 ---
 
 # Scope
@@ -27,6 +27,8 @@ This topic tracks papers where the main design object is not only the agent poli
 * [CompoWorld](../papers/2609.33665.md) - builds 448 typed, independently executable services (10,130 tools) from public MCP specifications with coding agents, simulates the 7.1% of tools that cannot be coded reliably with a type-constrained LLM world model, and composes services along random-walk dependency graphs into probe-verified cross-service training tasks; at equal data, SFT on composed tasks beats SFT on single environments on all four compared benchmarks.
 * [AutoGUIWorld](../papers/2610.01215.md) - replaces the environment with a visual world model for data generation: a pretrained image generator renders each next screenshot from a planned action's intended effect, so no software is deployed for training, and real environments are used only for evaluation.
 * [GraphForge](../papers/2609.38923.md) - a workspace of real public files, assembled per O*NET-derived seed by a search agent and tagged with hidden roles (core, supporting, confuser, ambient), with an evidence graph over the files that compiles into both the task statement and rubric criteria anchored to the files that verify them; verification is per task and per criterion rather than per environment state.
+* [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - builds an environment replica from recorded traces alone when the original system cannot be run: a worldbook of schemas, grounded evidence, and induced rules, operated by a world-model agent with explicit episode state and a validation gate on each state change.
+* [AgentGarten](../papers/2610.12374.md) - code worlds: an engine program written by a coding agent from an image or text holds state and rules, and one shared real-time neural renderer turns its depth or normal maps into first-person frames, so new worlds need coarse geometry rather than per-scene assets.
 
 # Synthesis
 
@@ -36,6 +38,8 @@ CompoWorld changes the unit of environment design from a whole sandbox to a reus
 
 AutoGUIWorld pushes CompoWorld's fidelity trade-off to its end point. CompoWorld simulates the 7.1% of tools it cannot code with an LLM world model; AutoGUIWorld simulates the whole GUI environment with an image generator and keeps no latent state at all, only what the screen shows. That removes deployment cost but also removes the verifier: there is no environment state to check a task against, so quality comes from a VLM judging each before/after pair, and the trajectories are planned success paths rather than explored ones.
 GraphForge is a third point on the fidelity axis that runs from RecreationWorld (real applications) through CompoWorld (mock services) to AutoGUIWorld (a visual world model). It keeps the environment real, actual downloaded files, but gives up programmatic state checking, since a memo or workbook has no state a script can read, and replaces it with a rubric whose every criterion names the files a judge must open. The hidden-role design is also a deliberate distractor layer, confuser files that are plausible but inapplicable, which none of the other environments here build in. Its judge audit is the honest counterpart to RecreationWorld's hacking detectors: deleting a cited worksheet is caught, but corrupted numbers inside it are not, so the environment's verification is strong on structure and weak on content.
+
+Trace2Env and AgentGarten add two more points to the fidelity axis, from opposite directions; [World models as agent environments](world-model-environments.md) compares them in detail. Trace2Env is for the case none of the other papers face: the real environment cannot be run at all, only its past traces read. It replaces RecreationWorld's real application with a language simulator but keeps a verifier of sorts, since every proposed state change is applied to a copy and checked against trace-derived schemas and rules before it is committed; its headline evidence is replay transfer (85% of simulated ALFWorld action sequences succeed in the real environment, against 3% for a directly prompted simulator). AgentGarten keeps the state exact in engine code, as RecreationWorld does, and uses a learned model only for what the agent sees, which removes AutoGUIWorld's verification problem but leaves open whether neural frames change what agents learn.
 
 # Open Questions
 
@@ -49,3 +53,4 @@ GraphForge is a third point on the fidelity axis that runs from RecreationWorld 
 * CompoWorld's services are mock implementations built from public MCP specifications, partly simulated by an LLM. How much does training on such mocks transfer to the real services behind those specifications, and could synthesized services overlap with the applications used in the test benchmarks?
 * AutoGUIWorld's simulated environment has no verifier, only a VLM consistency check per transition. For which skills is a visual-only world model enough (grounding, single-application workflows), and where does training still need a real environment's state and checker?
 * GraphForge's workspaces are public documents distributed as source links, and its rubric judge detects structural evidence failures but not content corruption. For deliverable-producing agents, which checks can be made deterministic (numeric reconciliation against the cited cells, schema of required sheets) so that the judge is left only with what needs reading, and does adding them change which synthesized tasks survive admission?
+* Trace2Env's worldbook gains (over the same runtime without a worldbook) are largest on tasks that appear in its construction traces (+17.86 with gpt-5.6-sol on Terminal records whose task was in construction, against +3.69 or +0.61 on the rest, depending on the backbone). How many traces, and how diverse, does a trace-built replica need before it generalizes to tasks the traces never covered?

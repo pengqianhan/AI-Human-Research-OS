@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-10-05T00:00:00Z
+timestamp: 2026-10-09T00:00:00Z
 ---
 
 # Definition
@@ -33,6 +33,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [ActiveSaddler](../papers/2610.00906.md) - optimizes Terminus 2 on Terminal-Bench 2.0 (30 train, 19 dev, 40 test) with gpt-5.5: 80.0 ± 2.5 test Pass@1 against 72.5 for AutoSaddler with a fixed scenario order and 69.2 for the hand-engineered Terminus-KIRA; the 7.5-point gain is 3 of 40 tasks.
 * [Context Language Models](../papers/2609.37725.md) - Terminal-Bench 2.1 and TBLite as the coding testbeds for zero-shot context management with Qwen3.6-27B at a 32K limit and 100-turn cap: CLM matches Codex-style summarization on TB2.1 at 70% of its prefix-reuse FLOPs and exceeds it on TBLite (73.7% against 67.0%) at 91% of its FLOPs, with MEM1, Self-Compact, ACM, and RLM as the other baselines.
 * [Recursive Self-Rewrite](../papers/2610.02826.md) - evaluates a Qwen-3.8-27B fine-tuned on rewritten multi-harness trajectories under Terminus 2, pass@3 over three runs: Terminal-Bench 2 (89 tasks) 57.0% base, 53.4% direct SFT, 74.2% RSR; Terminal-Bench 3 (74) 0.0%, 5.4%, 9.5%; Terminal-Bench 4 (66) 1.5%, 4.5%, 9.1%; plus the authors' own Terminal-Bench Hard and Long-Horizon Terminal-Bench.
+* [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - not evaluated on directly: 20 successful gpt-5.6-sol Terminus-2 trajectories on Terminal-Bench 2.0 (334 turns) are the construction traces for the Terminal worldbook, which is then scored on AgentWorldBench's 354 Terminal next-observation records (65.42 against 55.76 for direct prompting with gpt-5.6-sol).
 
 # Notes
 

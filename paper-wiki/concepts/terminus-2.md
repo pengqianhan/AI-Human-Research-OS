@@ -8,7 +8,7 @@ tags:
 - agent-harness-engineering
 - terminal-agents
 - coding-agents
-timestamp: 2026-10-05T00:00:00Z
+timestamp: 2026-10-09T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ Terminus 2 is a general-purpose harness for terminal tasks distributed with Harb
 * [Mid-Harness](../papers/2609.39982.md) - the second harness in its transfer runs (Qwen3.5-9B, Nemotron3.5 Lightning, Nemotron3 Ultra), showing per-step action verification works without changing the harness loop.
 * [ActiveSaddler](../papers/2610.00906.md) - the base harness optimized on Terminal-Bench 2.0 with gpt-5.5: 64.2 unoptimized, 80.0 ± 2.5 after optimization, against 69.2 for Terminus-KIRA.
 * [Recursive Self-Rewrite](../papers/2610.02826.md) - the general target harness: harness-assisted successes from StateM and a Terminus 2 continuation variant (RSRT) are rewritten into fresh Terminus 2 trajectories for SFT, and the trained model runs under Terminus 2 alone (Terminal-Bench 2 pass@3 74.2% against 57.0% for the base model).
+* [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - a gpt-5.6-sol Terminus-2 agent, run on Terminal-Bench 2.0 through Harbor, produced the 20 construction trajectories from which the Terminal worldbook is built; Terminus 2's tmux-keystroke actions and terminal-screen observations define the action and observation interface the simulator reproduces.
 
 # Notes
 

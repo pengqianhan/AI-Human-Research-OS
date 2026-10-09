@@ -8,7 +8,7 @@ tags:
 - embodied-text-environments
 - long-horizon-agents
 - scientific-reasoning
-timestamp: 2026-10-07T00:00:00Z
+timestamp: 2026-10-09T00:00:00Z
 ---
 
 # Definition
@@ -19,7 +19,8 @@ ScienceWorld (Wang, Jansen, Côté, and Ammanabrolu, arXiv:2203.07540, EMNLP 202
 
 * [EviSkill](../papers/2610.05030.md) - one of three skill-evolution environments (24 task families; 96 train, 48 validation, 211 official test tasks); several evolution baselines fall below the fixed initial skill here (with GPT-5.5: 54.50-67.30 against 76.78), while EviSkill is first with five of six backbones.
 * [X-Tree](../papers/2609.32993.md) - online RLVR and on-policy self-distillation testbed with 80 mined skills from 1,673 AgentTraj-L trajectories, evaluated on seen (G0), unseen-variation (G1), and unseen-task (G2) folds; at 7B the X-Tree privileged context adds +5.8 success over outcome-only RLVR.
+* [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - SciWorld is simulated rather than played: a worldbook from 30 simulator-verified Measurement gold-path trajectories (1,119 turns) lets a language world model stand in for the environment on 40 tasks; 60% of simulated action sequences succeed on real replay (consistency ratio 0.706) against 45% (0.529) for a directly prompted simulator.
 
 # Notes
 
-The two papers use ScienceWorld for different purposes and different splits (EviSkill a sampled training set and the full official test split for an in-context skill; X-Tree generalization folds for weight training), so their numbers are not comparable. Both find that gains from trajectory-derived knowledge are fragile here: in EviSkill, three of four evolved-skill baselines fall below the unevolved skill with GPT-5.5; in X-Tree, a random tree slightly outscores the mined tree on the unseen-task fold (26.7 against 25.6).
+The papers use ScienceWorld for different purposes and different splits (EviSkill a sampled training set and the full official test split for an in-context skill; X-Tree generalization folds for weight training; Trace2Env 40 Measurement tasks as an environment to simulate), so their numbers are not comparable. Both find that gains from trajectory-derived knowledge are fragile here: in EviSkill, three of four evolved-skill baselines fall below the unevolved skill with GPT-5.5; in X-Tree, a random tree slightly outscores the mined tree on the unseen-task fold (26.7 against 25.6).
