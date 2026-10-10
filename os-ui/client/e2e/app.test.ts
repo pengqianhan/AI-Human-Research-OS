@@ -205,11 +205,14 @@ describe("desktop client on a Research OS folder", () => {
         noToken: await status("/api/chat/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"text":"x"}' }),
         withToken: await status("/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": window.osDesktop!.token } }),
         state: await status("/state.json"),
-        traversal: await status("/..%2f..%2fAGENTS.md"),
+        // package.json really is two steps up from the renderer, in the dev build and in the asar.
+        traversal: await status("/..%2f..%2fpackage.json"),
         wikiHere: await status("/paper-wiki/viz.html"),
       };
     });
     assert.deepEqual(results, { form: 415, plain: 415, noToken: 401, withToken: 200, state: 200, traversal: 404, wikiHere: 404 });
+    const body = await page.evaluate(async () => (await fetch("/..%2f..%2fpackage.json")).text());
+    assert.ok(!body.includes("research-os-desktop"), "a file outside the renderer must not be served");
   });
 
   test("the Paper Wiki runs on its own origin, sealed off from the app", SLOW, async () => {
@@ -258,27 +261,12 @@ describe("desktop client on a Research OS folder", () => {
     await choices.first().waitFor({ timeout: 30_000 });
     assert.equal(await choices.count(), 3, "unread, skimmed, read");
     const current = /^status: (\w+)$/m.exec(readFileSync(join(workspace, "paper-wiki", `${id}.md`), "utf8"))?.[1];
-    const target = current === "skimmed" ? "read" : "skimmed";
+    // "read" is a substring of "unread", so alternate between the two unambiguous labels.
+    const target = current === "skimmed" ? "unread" : "skimmed";
     await choices.filter({ hasText: target }).click();
     // On success the row re-renders with the new value pressed; a failure says "Not saved".
     await frame.locator("#detail-status .status-choices button.active").filter({ hasText: target }).waitFor({ timeout: 90_000 });
     assert.match(readFileSync(join(workspace, "paper-wiki", `${id}.md`), "utf8"), new RegExp(`^status: ${target}$`, "m"));
-  });
-
-  test("navigation never leaves the app; new windows are refused", async () => {
-    await page.evaluate(() => {
-      window.open("app://research-os/");
-      location.href = "file:///etc/hosts";
-    });
-    await page.waitForTimeout(800);
-    assert.equal(page.url(), "app://research-os/");
-    assert.equal(app.windows().length, 1);
-    const frame = await wikiFrame(page);
-    await frame.evaluate(() => {
-      location.href = "file:///etc/hosts";
-    });
-    await page.waitForTimeout(800);
-    assert.ok(frame.url().startsWith("app://paper-wiki/viz.html"), frame.url());
   });
 
   test("the dock regenerates the snapshot", SLOW, async () => {
@@ -295,6 +283,29 @@ describe("desktop client on a Research OS folder", () => {
   test("no Content-Security-Policy violations in the app", () => {
     const violations = logs.filter((l) => /Refused to|Content Security Policy/.test(l) && !l.includes("example.com") && !l.includes("research-os/api"));
     assert.deepEqual(violations, []);
+  });
+
+  // Last on purpose: Playwright waits forever on a main-frame navigation the
+  // app cancelled, and the refused frame navigation logs a CSP message.
+  test("navigation never leaves the app; new windows are refused", async () => {
+    // Targets Chromium itself allows, so only the app's guard (and the frame-src
+    // policy) can stop them: the wiki frame must not become the app origin,
+    // nor the top frame the wiki origin.
+    const frame = await wikiFrame(page);
+    await frame.evaluate(() => {
+      location.href = "app://research-os/";
+    });
+    await page.waitForTimeout(800);
+    // Blocked either by the guard (the frame stays) or by frame-src (an error page).
+    assert.ok(!frame.url().startsWith("app://research-os"), frame.url());
+    await page.evaluate(() => {
+      window.open("app://research-os/");
+      location.href = "app://paper-wiki/viz.html";
+    });
+    await page.waitForTimeout(800);
+    assert.equal(page.url(), "app://research-os/");
+    assert.equal(app.windows().length, 1);
+    assert.equal(await page.evaluate(() => location.href), "app://research-os/");
   });
 });
 

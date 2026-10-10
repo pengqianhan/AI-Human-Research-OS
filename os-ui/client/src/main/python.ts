@@ -13,13 +13,18 @@ export const isExecutableFile: Exists = (file) => {
   }
 };
 
-/** `which`: the first executable called `name` on `path`, honouring PATHEXT on Windows. */
+/**
+ * `which`: the first executable called `name` on `path`. On Windows only .com
+ * and .exe count: the client spawns what it finds without a shell, and
+ * spawn() refuses .bat and .cmd files, so a shim such as pyenv-win's uv.bat
+ * must not hide a real uv.exe later on PATH.
+ */
 export function which(
   name: string,
   path: string,
   platform: NodeJS.Platform = process.platform,
   exists: Exists = isExecutableFile,
-  pathext = ".COM;.EXE;.BAT;.CMD",
+  pathext = ".COM;.EXE",
 ): string | null {
   const windows = platform === "win32";
   const dirs = path.split(windows ? ";" : ":").filter(Boolean);

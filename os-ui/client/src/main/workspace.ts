@@ -1,5 +1,5 @@
 import { existsSync, realpathSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 
 /** What makes a folder a Research OS workspace the client can drive. */
 export const MARKERS = ["AGENTS.md", "os-harness/harness.py", "os-ui/generator/generate.py"];
@@ -35,15 +35,15 @@ export function canonical(dir: string): string {
   }
 }
 
-/** The nearest folder at or above `start` that is a workspace (a development run inside a checkout). */
-export function findEnclosingWorkspace(start: string): string | null {
-  let dir = resolve(start);
-  for (;;) {
-    if (missingMarkers(dir).length === 0) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) return null;
-    dir = parent;
-  }
+/**
+ * The checkout a development run lives in: the client is `os-ui/client`, so
+ * the repository root is two levels up. Only that fixed place is tried, never
+ * any further ancestor, and a packaged app (appPath null) has no checkout.
+ */
+export function checkoutOf(appPath: string | null): string | null {
+  if (appPath === null) return null;
+  const root = resolve(appPath, "..", "..");
+  return missingMarkers(root).length === 0 ? root : null;
 }
 
 /** `--workspace <dir>` or `--workspace=<dir>`. */
@@ -67,14 +67,16 @@ export interface InitialWorkspace {
 
 /**
  * First match wins: the command-line argument, OS_CLIENT_WORKSPACE, the saved
- * setting, then the checkout that contains the running client. An explicit
- * choice that is not a workspace is reported rather than silently replaced.
+ * setting, then (development runs only) the checkout the client sits in. An
+ * explicit choice that is not a workspace is reported rather than silently
+ * replaced.
  */
 export function initialWorkspace(options: {
   argv: readonly string[];
   env: NodeJS.ProcessEnv;
   saved: string | null;
-  appPath: string;
+  /** The running client's folder in a development run; null when packaged. */
+  appPath: string | null;
   cwd: string;
 }): InitialWorkspace {
   const candidates: [string | null | undefined, WorkspaceSource][] = [
@@ -89,6 +91,6 @@ export function initialWorkspace(options: {
     if (problem === null) return { dir, source, problem: null };
     return { dir: null, source, problem };
   }
-  const checkout = findEnclosingWorkspace(options.appPath);
+  const checkout = checkoutOf(options.appPath);
   return { dir: checkout === null ? null : canonical(checkout), source: checkout === null ? null : "checkout", problem: null };
 }

@@ -58,7 +58,8 @@ Switch folders with **File → Open Research OS Folder…** or **Open Recent**.
 **View → Regenerate Snapshot** (Ctrl/Cmd+Shift+R) refreshes on demand; the app
 also refreshes when the files the dashboard reads change, when you come back
 to the window, and every five minutes. **View → Notify When Agent Turns End**
-switches notifications off. Closing the window quits the app; a running agent
+switches notifications off. A web or mail link (in a paper note, for example)
+opens in your browser only after you confirm its address. Closing the window quits the app; a running agent
 turn keeps going and shows up again on the next start.
 
 An app opened from Finder, the Dock, or a desktop launcher does not see your

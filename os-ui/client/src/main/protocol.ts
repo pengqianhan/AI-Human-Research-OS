@@ -128,8 +128,9 @@ export function route(url: string, roots: { renderer: string; workspace: string 
     if (roots.workspace === null) return { kind: "not-found" };
     const rel = safeRelative(pathname);
     if (rel === null || rel === "" || rel === "api" || rel.startsWith("api/")) return { kind: "not-found" };
-    const csp = extname(rel).toLowerCase() === ".html" ? WIKI_CSP : null;
-    return { kind: "file", root: path.join(roots.workspace, "paper-wiki"), rel, fallback: null, csp, confined: true };
+    // Every wiki response carries the policy, not only HTML: an SVG a frame is
+    // sent to is a document too, and would otherwise run its scripts unfenced.
+    return { kind: "file", root: path.join(roots.workspace, "paper-wiki"), rel, fallback: null, csp: WIKI_CSP, confined: true };
   }
   if (parsed.host !== APP_HOST) return { kind: "not-found" };
 
@@ -144,7 +145,8 @@ export function route(url: string, roots: { renderer: string; workspace: string 
   const fallback = extname(file) === "" ? "index.html" : null;
   // The renderer is the app's own bundle (possibly inside an asar archive, where
   // realpath is not available), so it is confined lexically only.
-  return { kind: "file", root: roots.renderer, rel: file, fallback, csp: CSP, confined: false };
+  const page = extname(file).toLowerCase() === ".html" || fallback !== null;
+  return { kind: "file", root: roots.renderer, rel: file, fallback, csp: page ? CSP : null, confined: false };
 }
 
 /** True when `child` is `parent` or inside it (`p` is path.win32 or path.posix in tests). */
@@ -190,7 +192,7 @@ export async function serveFile(route: Extract<Route, { kind: "file" }>): Promis
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
   };
-  if (route.csp !== null && extname(rel).toLowerCase() === ".html") headers["Content-Security-Policy"] = route.csp;
+  if (route.csp !== null) headers["Content-Security-Policy"] = route.csp;
   return new Response(new Uint8Array(body), { status: 200, headers });
 }
 

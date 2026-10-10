@@ -1095,13 +1095,29 @@ def write_state(repo_root: Path, state: dict[str, Any]) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "state.json"
     # Write a sibling and swap it in: a reader (the dev server, the desktop
-    # client) never sees half a file, even if this run is killed.
+    # client) never sees half a file. A failed run leaves no temp file behind.
     tmp_path = out_dir / f"state.json.{os.getpid()}.tmp"
-    tmp_path.write_text(
-        json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    os.replace(tmp_path, out_path)
+    try:
+        tmp_path.write_text(
+            json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        replace_retrying(tmp_path, out_path)
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
     return out_path
+
+
+def replace_retrying(src: Path, dst: Path, attempts: int = 5) -> None:
+    """os.replace, retried briefly: on Windows it fails while a reader holds dst open."""
+    for attempt in range(attempts):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                raise
+            time.sleep(0.1)
 
 
 # --------------------------------------------------------------------------

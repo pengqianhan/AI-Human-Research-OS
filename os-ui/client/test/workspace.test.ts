@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, test } from "node:test";
-import { canonical, describeProblem, findEnclosingWorkspace, initialWorkspace, missingMarkers, workspaceArgument } from "../src/main/workspace.ts";
+import { canonical, checkoutOf, describeProblem, initialWorkspace, missingMarkers, workspaceArgument } from "../src/main/workspace.ts";
 import { tempTree, WORKSPACE_FILES } from "./helpers.ts";
 
 describe("workspace detection", () => {
@@ -21,10 +21,12 @@ describe("workspace detection", () => {
     assert.match(describeProblem("/w", ["the folder itself"])!, /does not exist/);
   });
 
-  test("finds the checkout around the running client", () => {
+  test("a development run finds its checkout at the fixed place only", () => {
     const ws = tempTree({ ...WORKSPACE_FILES, "os-ui/client/package.json": "{}" });
-    assert.equal(findEnclosingWorkspace(join(ws, "os-ui", "client")), ws);
-    assert.equal(findEnclosingWorkspace(tempTree()), null);
+    assert.equal(checkoutOf(join(ws, "os-ui", "client")), ws);
+    assert.equal(checkoutOf(join(ws, "os-ui", "client", "out")), null, "never walks further up");
+    assert.equal(checkoutOf(join(ws, "deep", "a", "b", "c")), null);
+    assert.equal(checkoutOf(null), null, "a packaged app has no checkout");
   });
 
   test("--workspace argument forms", () => {
@@ -62,6 +64,16 @@ describe("initial workspace", () => {
     mkdirSync(checkoutApp, { recursive: true });
     assert.deepEqual(initialWorkspace({ ...base, appPath: checkoutApp }), { dir: ws, source: "checkout", problem: null });
     assert.deepEqual(initialWorkspace(base), { dir: null, source: null, problem: null });
+    assert.deepEqual(initialWorkspace({ ...base, appPath: null }), { dir: null, source: null, problem: null });
+  });
+
+  test("a packaged app never adopts a folder above its install location", () => {
+    // An AppImage mounts under /tmp; a planted /tmp/AGENTS.md (and friends) must not be opened.
+    const planted = tempTree(WORKSPACE_FILES);
+    const installed = join(planted, ".mount_ResearchOS", "resources", "app.asar");
+    mkdirSync(installed, { recursive: true });
+    assert.equal(initialWorkspace({ ...base, appPath: null }).dir, null);
+    assert.equal(initialWorkspace({ ...base, appPath: installed }).dir, null, "even if the path were passed");
   });
 
   test("an explicit folder that is not a workspace is reported, not replaced", () => {

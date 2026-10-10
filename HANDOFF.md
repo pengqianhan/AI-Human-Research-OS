@@ -99,13 +99,15 @@ The Human Owner asked for the OS as a client for macOS, Linux, and Windows
 (see "Desktop client decisions" below). Built in [`os-ui/client/`](os-ui/client/README.md);
 plan and settled design in [os-ui/client/DESIGN.md](os-ui/client/DESIGN.md), record in
 [ADR-0005](docs/adr/0005-desktop-client.md). Verified in the cloud session on Linux
-x64: 87 client unit tests, 56 endpoint tests (`os-ui/frontend`, `npm test`), the
+x64: 90 client unit tests, 56 endpoint tests (`os-ui/frontend`, `npm test`), the
 11-test Playwright E2E suite under Xvfb, `.deb` and AppImage packaging, and the
 packaged app's smoke run.
 
 - [ ] P5: [`desktop.yml`](.github/workflows/desktop.yml) passes on its pull request
       for all six rows (linux/macos/windows × x64/arm64), and `ci.yml`'s new
-      `os-ui endpoint tests` step passes. Next action: read the run; fix or report.
+      `os-ui endpoint tests` step passes. All rows passed at `595c3d8`; the final
+      review's fixes landed after it. Next action: read the run on the PR's head;
+      fix or report.
 - [ ] P6: the Human Owner runs the README checklist
       ([Check it on your machine](os-ui/client/README.md#check-it-on-your-machine)) on
       each OS with a real Claude Code or Codex login. Acceptance: every box ticked,

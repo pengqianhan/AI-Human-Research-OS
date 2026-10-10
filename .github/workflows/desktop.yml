@@ -85,10 +85,10 @@ jobs:
           npm ci --prefix os-ui/client --no-audit --no-fund
 
       - name: Type-check and unit tests
-        working-directory: os-ui/client
         run: |
-          npm run typecheck
-          npm test
+          npm test --prefix os-ui/frontend
+          npm run typecheck --prefix os-ui/client
+          npm test --prefix os-ui/client
 
       - name: Build
         working-directory: os-ui/client

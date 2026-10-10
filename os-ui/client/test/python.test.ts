@@ -21,10 +21,11 @@ describe("which", () => {
     assert.equal(which("uv", "/a::/b", "darwin", has()), null);
   });
 
-  test("Windows: PATHEXT order, lower-case extensions, explicit extension honoured", () => {
-    const exists = has("C:\\tools\\uv.exe", "C:\\npm\\claude.cmd");
+  test("Windows: only .com/.exe, which spawn() can run, in PATH order", () => {
+    const exists = has("C:\\tools\\uv.exe", "C:\\npm\\claude.cmd", "C:\\shims\\uv.bat");
     assert.equal(which("uv", "C:\\none;C:\\tools", "win32", exists), "C:\\tools\\uv.exe");
-    assert.equal(which("claude", "C:\\npm", "win32", exists), "C:\\npm\\claude.cmd");
+    assert.equal(which("uv", "C:\\shims;C:\\tools", "win32", exists), "C:\\tools\\uv.exe", "a .bat shim earlier on PATH is skipped");
+    assert.equal(which("claude", "C:\\npm", "win32", exists), null, "a .cmd shim is not runnable without a shell");
     assert.equal(which("uv.exe", "C:\\tools", "win32", exists), "C:\\tools\\uv.exe");
   });
 });

@@ -108,6 +108,23 @@ describe("login-shell environment", () => {
     assert.ok(r.env.PATH!.startsWith("C:\\Windows;"));
   });
 
+  test("csh and tcsh get -ic; other shells -ilc", async () => {
+    const seen: string[] = [];
+    const runShell = async (_shell: string, args: string[]) => (seen.push(args[0]!), wrap({ PATH: "/bin" }));
+    for (const shell of ["/bin/tcsh", "/bin/csh", "/bin/zsh", "/usr/local/bin/fish"]) {
+      await resolveEnv({ platform: "darwin", env: { SHELL: shell }, home: "/h", execPath: "/e", runShell });
+    }
+    assert.deepEqual(seen, ["-ic", "-ic", "-ilc", "-ilc"]);
+  });
+
+  test("a background job left by an rc file does not hold the probe (POSIX only)", { skip: process.platform === "win32" }, async () => {
+    const started = Date.now();
+    const command = `${probeCommand(process.execPath)!}; sleep 30 &`;
+    const stdout = await runLoginShell("/bin/sh", ["-c", command], { ...process.env, ELECTRON_RUN_AS_NODE: "1" });
+    assert.ok(parseShellEnv(stdout) !== null);
+    assert.ok(Date.now() - started < 4000, `took ${Date.now() - started} ms`);
+  });
+
   test("the real login shell runs (POSIX only)", { skip: process.platform === "win32" }, async () => {
     const command = probeCommand(process.execPath)!;
     const stdout = await runLoginShell("/bin/sh", ["-c", command], { ...process.env, ELECTRON_RUN_AS_NODE: "1" });

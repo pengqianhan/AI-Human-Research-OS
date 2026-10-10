@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, utimesSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, test } from "node:test";
 import { InputPoller, inputPaths, signature } from "../src/main/inputs.ts";
@@ -61,6 +61,12 @@ describe("generator inputs", () => {
 
     writeFileSync(join(root, "projects-folder", "alpha", "Code", "nanochat", ".venv", "lib", "site.py"), "churn");
     assert.equal(sig(), added, "virtual-environment churn is invisible");
+
+    rmSync(join(root, "projects-folder", "alpha", "Code", "runs", "r1", "result.json"));
+    const removedFile = sig();
+    assert.notEqual(removedFile, added, "a removed input is seen");
+    rmSync(join(root, "projects-folder", "beta"), { recursive: true });
+    assert.notEqual(sig(), removedFile, "a removed project is seen");
   });
 
   test("a same-size edit is seen through its mtime", () => {

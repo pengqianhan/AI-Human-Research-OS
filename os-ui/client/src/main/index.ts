@@ -74,6 +74,8 @@ let settings: Settings = loadSettings(settingsFile);
 let resolvedEnv: ResolvedEnv = { env: process.env, source: "inherited", problem: null };
 let childEnv: NodeJS.ProcessEnv = process.env;
 let current: OpenWorkspace | null = null;
+/** Bumped by each openWorkspace call, so only the latest request takes effect. */
+let openSeq = 0;
 let workspaceProblem: string | null = null;
 let win: BrowserWindow | null = null;
 
@@ -106,10 +108,14 @@ function probe(cwd: string): Probe {
     );
 }
 
-async function openWorkspace(dir: string): Promise<void> {
+/** Opens `dir`; false when a newer open superseded this one while it probed for Python. */
+async function openWorkspace(dir: string): Promise<boolean> {
+  const ticket = ++openSeq;
   closeWorkspace();
   workspaceProblem = null;
   const python = await choosePython({ repoRoot: dir, path: childEnv.PATH ?? "", probe: probe(dir) });
+  if (ticket !== openSeq) return false;
+  closeWorkspace(); // never overwrite a live workspace without stopping it
   log(`workspace ${dir}; python: ${python.detail}`);
   const run = processRunner(childEnv);
   const prefix = (): [string, ...string[]] => {
@@ -155,6 +161,7 @@ async function openWorkspace(dir: string): Promise<void> {
   settings = rememberWorkspace(settings, dir);
   persist();
   buildMenu();
+  return true;
 }
 
 function notifyTurn(end: TurnEnd): void {
@@ -172,8 +179,7 @@ async function switchWorkspace(raw: string): Promise<string | null> {
   const dir = canonical(raw);
   const problem = describeProblem(dir, missingMarkers(dir));
   if (problem !== null) return problem;
-  await openWorkspace(dir);
-  if (win !== null && !win.isDestroyed()) win.webContents.reload();
+  if ((await openWorkspace(dir)) && win !== null && !win.isDestroyed()) win.webContents.reload();
   return null;
 }
 
@@ -266,6 +272,33 @@ function isExternal(url: string): boolean {
   return /^(https?:|mailto:)/i.test(url);
 }
 
+let askingToOpen = false;
+
+/**
+ * Opens a web or mail link in the default browser after the user confirms it.
+ * Electron cannot tell which frame asked, and the Paper Wiki frame runs note
+ * HTML, so no link leaves the app unseen; one question at a time, so a page
+ * cannot flood the user.
+ */
+async function openOutside(url: string): Promise<void> {
+  if (!isExternal(url) || askingToOpen) return;
+  askingToOpen = true;
+  try {
+    const options: Electron.MessageBoxOptions = {
+      type: "question",
+      buttons: ["Open", "Cancel"],
+      defaultId: 0,
+      cancelId: 1,
+      message: "Open this link in your browser?",
+      detail: url,
+    };
+    const { response } = win !== null && !win.isDestroyed() ? await dialog.showMessageBox(win, options) : await dialog.showMessageBox(options);
+    if (response === 0) await shell.openExternal(url);
+  } finally {
+    askingToOpen = false;
+  }
+}
+
 function allowedNavigation(url: string, isMainFrame: boolean): boolean {
   if (isMainFrame) return url.startsWith(`${ORIGIN}/`);
   return url.startsWith(`${WIKI_ORIGIN}/`) || url === "about:blank" || url === "about:srcdoc";
@@ -287,7 +320,7 @@ function createWindow(): void {
     screen.getAllDisplays().map((d) => d.workArea),
   );
   const icon = join(__dirname, "icon.png");
-  win = new BrowserWindow({
+  const w = new BrowserWindow({
     ...bounds,
     minWidth: MIN_SIZE.width,
     minHeight: MIN_SIZE.height,
@@ -305,42 +338,41 @@ function createWindow(): void {
       spellcheck: false,
     },
   });
-  if (settings.window?.maximized) win.maximize();
-  win.on("page-title-updated", (event) => event.preventDefault()); // keep "Research OS"
-  win.once("ready-to-show", () => win?.show());
+  win = w;
+  if (settings.window?.maximized) w.maximize();
+  w.on("page-title-updated", (event) => event.preventDefault()); // keep "Research OS"
+  w.once("ready-to-show", () => w.show());
 
-  const contents = win.webContents;
+  const contents = w.webContents;
   contents.setWindowOpenHandler(({ url }) => {
-    if (isExternal(url)) void shell.openExternal(url);
+    void openOutside(url);
     return { action: "deny" };
   });
   // The window stays on the app's origin and frames on the Paper Wiki's; any
-  // other navigation is cancelled, and a web link opens in the browser instead.
+  // other navigation is cancelled, and a web link may open in the browser instead.
   const guard = (event: Electron.Event, url: string, isMainFrame: boolean) => {
     if (allowedNavigation(url, isMainFrame)) return;
     event.preventDefault();
-    if (isExternal(url)) void shell.openExternal(url);
+    void openOutside(url);
   };
   contents.on("will-frame-navigate", (event) => guard(event, event.url, event.isMainFrame));
   contents.on("will-redirect", (event) => guard(event, event.url, event.isMainFrame));
   contents.on("render-process-gone", (_event, details) => log(`renderer gone: ${details.reason}`));
 
-  win.on("focus", () => {
+  w.on("focus", () => {
     const last = current?.generator.last;
     if (current !== null && (last === null || last === undefined || Date.now() - Date.parse(last.at) > FOCUS_REFRESH_MS)) {
       void current.generator.request();
     }
   });
-  win.on("close", () => {
-    if (win === null) return;
-    const normal = win.getNormalBounds();
-    settings = { ...settings, window: { ...normal, maximized: win.isMaximized() } };
+  w.on("close", () => {
+    settings = { ...settings, window: { ...w.getNormalBounds(), maximized: w.isMaximized() } };
     persist();
   });
-  win.on("closed", () => {
-    win = null;
+  w.on("closed", () => {
+    if (win === w) win = null;
   });
-  void win.loadURL(HOME_URL);
+  void w.loadURL(HOME_URL);
 }
 
 /** IPC is answered only for the app's own top frame (the preload exists only there). */
@@ -405,7 +437,7 @@ async function start(): Promise<void> {
     argv: process.argv,
     env: process.env,
     saved: settings.workspace,
-    appPath: app.getAppPath(),
+    appPath: app.isPackaged ? null : app.getAppPath(),
     cwd: process.cwd(),
   });
   if (initial.dir !== null) {
@@ -418,24 +450,31 @@ async function start(): Promise<void> {
   createWindow();
 }
 
-if (!app.requestSingleInstanceLock()) {
+// A second launch hands its own --workspace through the lock: the argv the
+// first instance receives is rebuilt by Chromium, switches first.
+const requestedWorkspace = workspaceArgument(process.argv);
+if (!app.requestSingleInstanceLock({ workspace: requestedWorkspace === null ? null : resolve(process.cwd(), requestedWorkspace) })) {
   app.quit();
 } else {
-  app.on("second-instance", (_event, argv, cwd) => {
-    const requested = workspaceArgument(argv);
-    if (requested !== null) {
-      void switchWorkspace(resolve(cwd, requested)).then(
-        (error) => error !== null && dialog.showErrorBox("Not a Research OS folder", error),
-      );
-    }
-    showWindow();
+  // Nothing reacts to a second launch or a Dock click until startup is done,
+  // or a window would load before the protocol exists and linger hidden.
+  const started = app.whenReady().then(start);
+  app.on("second-instance", (_event, _argv, _cwd, data) => {
+    void started.then(() => {
+      const requested = (data as { workspace?: string | null } | undefined)?.workspace ?? null;
+      if (requested !== null) {
+        void switchWorkspace(requested).then((error) => error !== null && dialog.showErrorBox("Not a Research OS folder", error));
+      }
+      showWindow();
+    });
   });
   // Quit with the last window on every platform, macOS included: the pollers
   // and the notifier never run without a window (no background agent).
   app.on("window-all-closed", () => app.quit());
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    void started.then(() => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
   });
   app.on("before-quit", closeWorkspace);
-  void app.whenReady().then(start);
 }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { describe, test } from "node:test";
 import type { Mount } from "../../frontend/server/api.ts";
 import { createHandler, CSP, isInside, route, safeRelative, splitMounts, WIKI_CSP } from "../src/main/protocol.ts";
@@ -11,6 +11,7 @@ const renderer = tempTree({ "index.html": "<html>app</html>", "assets/app.js": "
 const workspace = tempTree({
   "os-ui/frontend/public/state.json": '{"meta":{}}',
   "paper-wiki/viz.html": "<html>viz</html>",
+  "paper-wiki/figures/fig.svg": "<svg xmlns='http://www.w3.org/2000/svg'><script>fetch('https://x')</script></svg>",
   "paper-wiki/papers/a.md": "# a",
   ".env": "SECRET=1",
   "AGENTS.md": "agents",
@@ -81,6 +82,8 @@ describe("route", () => {
   test("wiki origin", () => {
     const viz = route("app://paper-wiki/viz.html", roots);
     assert.ok(viz.kind === "file" && viz.csp === WIKI_CSP && viz.confined && viz.root === join(workspace, "paper-wiki"));
+    const fig = route("app://paper-wiki/figures/fig.svg", roots);
+    assert.ok(fig.kind === "file" && fig.csp === WIKI_CSP);
     assert.deepEqual(route("app://paper-wiki/api/paper-wiki/status", roots), { kind: "api", pathname: "/api/paper-wiki/status", mounts: "wiki" });
     assert.equal(route("app://paper-wiki/api/chat/send", roots).kind, "not-found");
     assert.equal(route("app://paper-wiki/", roots).kind, "not-found");
@@ -142,6 +145,9 @@ describe("handler", () => {
     assert.equal(viz.headers.get("content-security-policy"), WIKI_CSP);
     const note = await fetchApp("app://paper-wiki/papers/a.md");
     assert.equal(note.headers.get("content-type"), "text/plain; charset=utf-8");
+    const svg = await fetchApp("app://paper-wiki/figures/fig.svg");
+    assert.equal(svg.headers.get("content-type"), "image/svg+xml");
+    assert.equal(svg.headers.get("content-security-policy"), WIKI_CSP, "an SVG is a document too");
   });
 
   test("nothing outside the served folders, through traversal or symlinks", async () => {
@@ -159,8 +165,9 @@ describe("handler", () => {
       "app://paper-wiki/dirlink/x.txt",
       "app://paper-wiki/..%2f.env",
       "app://paper-wiki/papers",
-      "app://research-os/..%2f..%2fAGENTS.md",
-      "app://research-os/%2e%2e/%2e%2e/AGENTS.md",
+      // The renderer and the workspace are sibling temp folders, so these name real files.
+      `app://research-os/..%2f${basename(workspace)}%2fAGENTS.md`,
+      `app://research-os/%2e%2e/${basename(workspace)}/AGENTS.md`,
     ]) {
       assert.equal((await fetchApp(url)).status, 404, url);
     }

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 export const MARKER = "__RESEARCH_OS_ENV__";
 const SHELL_TIMEOUT_MS = 5000;
@@ -90,15 +90,29 @@ export const runLoginShell: ShellRunner = (shell, args, env) =>
     // detached: its own process group, so a timeout kills whatever the rc files started too.
     const child = spawn(shell, args, { env, stdio: ["ignore", "pipe", "ignore"], detached: true });
     let stdout = "";
-    const timer = setTimeout(() => {
+    const stop = () => {
       try {
         if (child.pid !== undefined) process.kill(-child.pid, "SIGKILL");
       } catch {
         child.kill("SIGKILL");
       }
+    };
+    const timer = setTimeout(() => {
+      stop();
       fail(new Error(`${shell} took longer than ${SHELL_TIMEOUT_MS / 1000} s`));
     }, SHELL_TIMEOUT_MS);
-    child.stdout.on("data", (d: Buffer) => (stdout += d.toString("utf8")));
+    child.stdout.on("data", (d: Buffer) => {
+      stdout += d.toString("utf8");
+      // Done once the closing marker arrives: a background job started by an
+      // rc file may hold the pipe open long after the shell itself is finished.
+      const start = stdout.indexOf(MARKER);
+      if (start !== -1 && stdout.indexOf(MARKER, start + MARKER.length) !== -1) {
+        clearTimeout(timer);
+        child.stdout.destroy();
+        stop();
+        done(stdout);
+      }
+    });
     child.on("error", (error) => {
       clearTimeout(timer);
       fail(error);
@@ -147,7 +161,9 @@ export async function resolveEnv(options: {
   const command = probeCommand(options.execPath);
   if (command === null) return finish(env, mergePath([inheritedPath, extras], platform), "inherited", "executable path contains a quote");
   try {
-    const stdout = await (options.runShell ?? runLoginShell)(shell, ["-ilc", command], {
+    // csh and tcsh accept -l only on its own; -ic still reads ~/.tcshrc (as VS Code does).
+    const flags = ["csh", "tcsh"].includes(basename(shell)) ? "-ic" : "-ilc";
+    const stdout = await (options.runShell ?? runLoginShell)(shell, [flags, command], {
       ...env,
       ELECTRON_RUN_AS_NODE: "1",
       DISABLE_AUTO_UPDATE: "true", // oh-my-zsh: no update prompt

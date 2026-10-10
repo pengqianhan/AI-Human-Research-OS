@@ -164,10 +164,13 @@ not share an origin with the app's endpoints, storage, or bridge.
 
 - `contextIsolation`, `sandbox`, no `nodeIntegration`, `webSecurity`; the
   preload exposes six calls and the token, no Node objects.
-- **Content-Security-Policy** as a response header. App pages:
+- **Content-Security-Policy** as a response header. App pages (HTML and the
+  `index.html` fallback):
   `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki; object-src 'none'; base-uri 'none'; form-action 'none'`.
   The viewer: `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
+  It is sent with every wiki response, not only HTML: an SVG a frame is sent
+  to is a document too.
 - **Endpoints:** writes must be `Content-Type: application/json`, which a form
   or a no-cors request cannot send (415 otherwise); `/api/chat` and
   `/api/paper-sources` need a random per-launch token, which the preload hands
@@ -175,7 +178,9 @@ not share an origin with the app's endpoints, storage, or bridge.
   needs `OS_UI_TOKEN`.
 - **Navigation:** `will-frame-navigate` and `will-redirect` keep the top frame
   on `app://research-os/` and subframes on `app://paper-wiki/` (or
-  `about:blank`); http(s) and mailto links open in the default browser; every
+  `about:blank`); an http(s) or mailto link opens in the default browser only
+  after a dialog naming the URL is confirmed, one dialog at a time (Electron
+  cannot tell which frame asked, and the viewer runs note HTML); every
   `window.open` is denied.
 - **IPC** answers only the top frame of `app://research-os/`; no channel takes
   a path.
@@ -185,8 +190,11 @@ not share an origin with the app's endpoints, storage, or bridge.
 - **Trust:** opening a folder runs its scripts with the user's rights. A folder
   chosen in the dialog for the first time is confirmed once ("Open only
   folders you trust"); folders in Open Recent were confirmed before.
-- Single instance: a second launch focuses the window (and opens its
-  `--workspace`, if given).
+- Single instance: a second launch focuses the window and opens its
+  `--workspace`, if given, handed over through the instance lock's data
+  (Chromium rewrites the argv the first instance receives). Second launches and
+  Dock clicks wait until startup has finished, so no window loads before the
+  protocol exists.
 - The app never reads CLI credentials; agent turns run only through
   `os-harness`, which strips API-key variables (ADR-0003).
 
@@ -199,24 +207,29 @@ not share an origin with the app's endpoints, storage, or bridge.
   `AGENTS.md`) and skips its `git` calls when the root has no `.git`; a copy
   without Git inside another Git folder still writes its own `state.json`.
 - First choice, first match wins: `--workspace <dir>`, `OS_CLIENT_WORKSPACE`,
-  the saved setting, the checkout containing the running client (development
-  runs), else none — the welcome state with **Choose folder…**. An explicit
-  choice that is not a workspace is reported, never silently replaced.
+  the saved setting, the checkout of a development run (two levels above
+  `os-ui/client`, never a further ancestor; a packaged app adopts no folder it
+  happens to sit in), else none — the welcome state with **Choose folder…**. An
+  explicit choice that is not a workspace is reported, never silently replaced.
 - Every choice is canonicalized with `realpath`, matching how os-harness
   records session folders (macOS `/var` → `/private/var`, symlinks, junctions,
   subst drives).
 - **File → Open Research OS Folder…** validates, confirms trust, saves, adds to
   **Open Recent** (5 entries), restarts the generator, poller, and notifier,
-  and reloads the window.
+  and reloads the window. When opens overlap, the latest wins: an earlier one
+  still probing for Python is dropped.
 
 ## 5. Process environment
 
 - **Environment.** An app started from Finder, the Dock, or a Linux launcher
   inherits a minimal environment: no PATH to uv, Claude Code, or Codex, and
   none of the user's `OS_HARNESS_*`, `CODEX_HOME`, or proxy variables. On
-  macOS and Linux the client runs the login shell once (`$SHELL -ilc`, stdin
-  closed, own process group, 5 s limit), has it print `process.env` as JSON
-  via the app's own binary (`ELECTRON_RUN_AS_NODE=1`), and lays that over the
+  macOS and Linux the client runs the login shell once (`$SHELL -ilc`; `-ic`
+  for csh and tcsh, which take `-l` only alone; stdin closed, own process
+  group, 5 s limit), has it print `process.env` as JSON between markers via
+  the app's own binary (`ELECTRON_RUN_AS_NODE=1`), stops reading at the closing
+  marker (a background job started by an rc file may hold the pipe open), and
+  lays that over the
   inherited environment, minus the probe shell's own variables (`PWD`,
   `SHLVL`, `TERM*`, …). On Windows GUI apps already inherit the user's
   environment; set such variables as user environment variables, not in a
@@ -227,7 +240,9 @@ not share an origin with the app's endpoints, storage, or bridge.
   and `GSETTINGS_SCHEMA_DIR` into its mount; those entries and `APPDIR`,
   `APPIMAGE`, `ARGV0`, `OWD` are removed before any child starts.
 - **Python.** `uv run --no-project --python <.python-version> -- python`, with
-  uv resolved to an absolute path, as `start.sh` and `verify.sh` run it.
+  uv resolved to an absolute path, as `start.sh` and `verify.sh` run it. On
+  Windows only `.com` and `.exe` count when searching PATH: children are
+  spawned without a shell, which refuses `.bat` and `.cmd` shims.
   Without uv, the first system Python that runs and reports ≥ 3.11 (Windows:
   `py -3`, then `python`, skipping Microsoft Store aliases; macOS: never
   `/usr/bin/python3` without the Command Line Tools, whose stub opens an
@@ -257,7 +272,9 @@ not share an origin with the app's endpoints, storage, or bridge.
   A run longer than 120 s is killed. Each outcome is pushed to the window
   (`onSnapshot`), which reloads `state.json` at once; its 5 s poll stays as a
   fallback. The generator writes `state.json` atomically (a temp file renamed
-  into place), so a killed or failed run never leaves half a file; the window
+  into place, retried briefly while a Windows reader holds the file, and
+  removed if the run fails), so a killed or failed run never leaves half a
+  file; the window
   keeps showing the last snapshot and the System window shows the error.
 - The pollers, the timer, and the notifier stop with the app; the app quits
   when its last window closes, on macOS too.
@@ -367,7 +384,7 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 | Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, window bounds, menu |
 | E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, System window, a Root Agent turn without a token prompt, endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, dock regenerate, settings, no CSP violations, unusable-folder welcome |
 | Package smoke | the same E2E (`OS_CLIENT_E2E_EXECUTABLE=release`) on the unpacked app | the asar layout starts, generates, and isolates the viewer |
-| CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above on six OS/arch rows and uploads installers as artifacts | |
+| CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above, those tests included, on six OS/arch rows and uploads installers as artifacts | |
 
 `erasableSyntaxOnly` and `verbatimModuleSyntax` in both tsconfigs make `tsc`
 reject what Node's type stripping cannot run. The endpoint tests need Node
@@ -382,7 +399,7 @@ reject what Node's type stripping cannot run. The endpoint tests need Node
 | P2 | Client: protocol, workspace, settings, environment, Python, window, menu | the app opens the desktop on this repository | done |
 | P3 | Generator, poller, notifier, doctor, bridge, frontend changes, viewer probe | live controls work in the client; unit tests and `./verify.sh` pass | done |
 | P4 | E2E and package smoke on Linux | Playwright suite passes under Xvfb; the packaged app starts | done in the cloud session |
-| P5 | `desktop.yml`, `ci.yml` step, README | workflows run on the pull request | pending the PR's CI |
+| P5 | `desktop.yml`, `ci.yml` step, README | workflows run on the pull request | done: all six rows green on PR #22, installers uploaded |
 | P6 | Human Owner installs on their machines | README "Check it on your machine" | pending |
 
 ## 15. What the cloud session can and cannot verify
