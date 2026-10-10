@@ -41,6 +41,9 @@ after editing one, run `python docs/brand/render.py` from the repository root.
   tracked copies, [favicon.svg](../../os-ui/frontend/public/favicon.svg) and
   [favicon-256.png](../../os-ui/frontend/public/favicon-256.png). After changing
   an original, copy it again; `./verify.sh` fails while they differ.
+- The [desktop client](../../os-ui/client/README.md) uses
+  [app-icon.png](app-icon.png) as its application icon; its build copies the
+  file and electron-builder derives the `.icns` and `.ico` from it.
 
 ## Colors and type
 

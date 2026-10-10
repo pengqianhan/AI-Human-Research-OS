@@ -33,6 +33,13 @@ per-user keys `paper-search` knows (`OPENALEX_API_KEY`, `NCBI_API_KEY`,
 command. Unlike the other writes it is deliberately invisible to Git: the
 value travels on stdin, is refused unless Git ignores `.env`, and never comes
 back to the browser, which learns only whether each key is set.
+On 2026-10-10 the Human Owner asked for the OS as a desktop client for macOS,
+Windows, and Linux, which authorizes the GOAL.md M4 desktop wrapper only
+([client/DESIGN.md](client/DESIGN.md) §0, ADR-0005). The client serves the same
+endpoints as the dev server, from the same code (`frontend/server/`), and adds
+no write action on repository content; its own additions — regenerating the
+cache `state.json`, the prerequisites check, the in-app snapshot push, and
+notifications when a turn ends — run only while the app runs.
 Everything else, including install and delete buttons, resident services, SSE,
 and any further action endpoint, remains gated by GOAL.md M4: evidence first,
 then explicit human confirmation.
@@ -47,7 +54,9 @@ then explicit human confirmation.
   view), which send messages to os-harness sessions.
 - It renders repository state and copies commands for the human to run; it does
   not execute commands. Skill install and removal are copy-only, like every
-  other command.
+  other command. The desktop client also runs the generator itself (on
+  change and on request) and its prerequisite probes; both only read the
+  repository.
 - The filesystem remains the source of truth. It is also the only write
   surface: the toggle renames a file, the status buttons rewrite one
   frontmatter line, and the source switches rewrite one JSON boolean, rather
@@ -262,10 +271,12 @@ The old tab-shell concept is superseded.
   `memory/paper-sources.json`; os-ui itself runs no paper search. The Keys
   section sets or removes only the `.env` line of one of those three names and
   never reads a value back.
-- No resident services or SSE until M4. All the write endpoints are Vite
-  dev-server middleware: they exist only while `start.sh` runs and die with
-  Ctrl-C.
-- No execution buttons until M4. Install and remove stay copy-only.
+- No resident services or SSE until M4. All the write endpoints are served by
+  the Vite dev server or by the desktop client (`client/`, 2026-10-10), from
+  the same code in `frontend/server/`: they exist only while `start.sh` or the
+  app runs and die with it.
+- No execution buttons until M4, except the desktop client's Regenerate
+  (it runs the read-only generator). Install and remove stay copy-only.
 - No user accounts, multi-user collaboration, or remote deployment of the live
   desktop. The one remote copy is the view-only production build that
   `.github/workflows/pages.yml` publishes to GitHub Pages from `autoreadpaper`

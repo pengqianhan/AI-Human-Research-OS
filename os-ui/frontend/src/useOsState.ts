@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { OsState } from "./types";
+import { desktop } from "./lib/desktop";
 
 const POLL_INTERVAL_MS = 5000;
 const STATE_URL = "./state.json"; // relative, so a static build works from any base path
@@ -71,11 +72,17 @@ export function useOsState(): OsStateStatus {
     void load();
     scheduleNext();
     document.addEventListener("visibilitychange", onVisibilityChange);
+    // The desktop client announces each finished generator run; reload at
+    // once instead of waiting for the next poll.
+    const unsubscribe = desktop?.onSnapshot((event) => {
+      if (event.state === "ok") void load();
+    });
 
     return () => {
       mountedRef.current = false;
       window.clearTimeout(timerRef.current);
       document.removeEventListener("visibilitychange", onVisibilityChange);
+      unsubscribe?.();
     };
   }, []);
 

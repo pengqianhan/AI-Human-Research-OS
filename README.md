@@ -148,9 +148,14 @@ conversations, run through os-harness, and turning installed skills on or off.
 ./os-ui/start.sh   # needs uv and npm; prints the local URL and the Root Agent token
 ```
 
+**Desktop client.** [os-ui/client/](os-ui/client/README.md) is the same
+desktop as an app for macOS, Windows, and Linux: no terminal or token, a
+self-refreshing snapshot, and a notification when an agent turn ends.
+
 Decision records: [ADR-0003](docs/adr/0003-subscription-cli-harness.md)
-(subscription-CLI harness) and [ADR-0004](docs/adr/0004-root-agent-as-skill.md)
-(root agent as a skill).
+(subscription-CLI harness), [ADR-0004](docs/adr/0004-root-agent-as-skill.md)
+(root agent as a skill), and [ADR-0005](docs/adr/0005-desktop-client.md)
+(desktop client).
 
 ## Contributing
 
