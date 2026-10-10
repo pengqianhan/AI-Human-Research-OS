@@ -43,7 +43,10 @@ function copyWorkspace(): string {
   const dest = tempDir("os-client-ws-");
   cpSync(REPO, dest, {
     recursive: true,
-    verbatimSymlinks: true,
+    // Windows: a copied relative link to a folder can come out as a file
+    // symlink, which Python cannot stat (WinError 5), so copy what the links
+    // point at. Elsewhere keep the links as they are, as a checkout has them.
+    ...(process.platform === "win32" ? { dereference: true } : { verbatimSymlinks: true }),
     filter: (src) => {
       const rel = relative(REPO, src).split("\\").join("/");
       return !SKIP_NAMES.has(basename(src)) && !SKIP_PATHS.has(rel);
