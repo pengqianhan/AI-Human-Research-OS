@@ -108,8 +108,9 @@ endings — never prompts, keys, or file contents.
 
 ## Check it on your machine
 
-The cloud session that built the client verified Linux x64 only (DESIGN.md
-§15). On each of your machines:
+The cloud session that built the client verified Linux x64, and `desktop.yml`
+builds and tests every OS on CI runners (DESIGN.md §15). No runner has your
+agent logins or a first open on a real desktop, so on each of your machines:
 
 - [ ] The app opens, asks for (or finds) your folder, and shows the Dashboard.
 - [ ] **System**: Python and at least one agent are `ok`; Claude Code and Codex
