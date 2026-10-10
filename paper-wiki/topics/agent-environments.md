@@ -6,7 +6,7 @@ tags:
 - agent-environments
 - environment-engineering
 - agent-reliability
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Scope
@@ -29,6 +29,7 @@ This topic tracks papers where the main design object is not only the agent poli
 * [GraphForge](../papers/2609.38923.md) - a workspace of real public files, assembled per O*NET-derived seed by a search agent and tagged with hidden roles (core, supporting, confuser, ambient), with an evidence graph over the files that compiles into both the task statement and rubric criteria anchored to the files that verify them; verification is per task and per criterion rather than per environment state.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - builds an environment replica from recorded traces alone when the original system cannot be run: a worldbook of schemas, grounded evidence, and induced rules, operated by a world-model agent with explicit episode state and a validation gate on each state change.
 * [AgentGarten](../papers/2610.12374.md) - code worlds: an engine program written by a coding agent from an image or text holds state and rules, and one shared real-time neural renderer turns its depth or normal maps into first-person frames, so new worlds need coarse geometry rather than per-scene assets.
+* [MiMo-V2.6](../papers/2610.11959.md) - builds RL environments in four domains with audited verifiers (rollout-based audits of whether test rewards agree with an auditor's judgement, eight-rerun stability checks, sanitizer-matched vulnerability reproduction, binary rubric items for knowledge work) and hardens coding environments against solution leakage by stripping build artifacts and caches, truncating Git history, isolating the network, and re-attacking with a hack agent until no exploit is found.
 
 # Synthesis
 
@@ -54,3 +55,4 @@ Trace2Env and AgentGarten add two more points to the fidelity axis, from opposit
 * AutoGUIWorld's simulated environment has no verifier, only a VLM consistency check per transition. For which skills is a visual-only world model enough (grounding, single-application workflows), and where does training still need a real environment's state and checker?
 * GraphForge's workspaces are public documents distributed as source links, and its rubric judge detects structural evidence failures but not content corruption. For deliverable-producing agents, which checks can be made deterministic (numeric reconciliation against the cited cells, schema of required sheets) so that the judge is left only with what needs reading, and does adding them change which synthesized tasks survive admission?
 * Trace2Env's worldbook gains (over the same runtime without a worldbook) are largest on tasks that appear in its construction traces (+17.86 with gpt-5.6-sol on Terminal records whose task was in construction, against +3.69 or +0.61 on the rest, depending on the backbone). How many traces, and how diverse, does a trace-built replica need before it generalizes to tasks the traces never covered?
+* MiMo-V2.6's hack agent kept finding new leaks after each cleanup round, and its "below 2%" hack rate counts only confirmed cases. What stopping rule shows an environment is clean enough to train or evaluate in, and should published agent benchmarks report the same adversarial screening?

@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - software-engineering
 - llm-agents
-timestamp: 2026-10-01T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Definition
@@ -24,3 +24,4 @@ SWE-bench evaluates coding agents on resolving real GitHub issues from open-sour
 * [One to More, More to One](../papers/2609.23377.md) - used only to profile benchmark composition with SWE Labeler: 87.0% bug fixes and 86.2% single-file changes, vs. 47.3% bug fixes and 59.2% cross-module changes in SWE-bench Pro.
 * [Raven](../papers/2609.33439.md) - Raven-Code leads by 0.6 points with DeepSeek-V4-Flash and 1.2 with Claude Opus 4.8 (3 and 6 of 500 tasks), with network access allowed during generation; separately, the reused HarnessBank results improve held-out Pass@1 by 5.1 points on a 26-task test split, which does not pass that paper's paired-gain criterion.
 * [Mid-Harness](../papers/2609.39982.md) - transfer check on the 50-task Verified Mini subset with TMAX-9B: per-step action verification moves Pass@1 from 46.67% to 48.67% and Pass@3 from 54.00% to 62.00% (distilled verifier).
+* [MiMo-V2.6](../papers/2610.11959.md) - evaluates the released 9B model (avg@3): Qwen3.5-9B 60.0, MiMo-V2.6-Distill-Qwen-9B 61.1 after SFT and 66.2 after single-harness RL; across seven harnesses the mean is 53.1, 62.3, and 65.7 after multi-harness RL, with gains on the three held-out harnesses.

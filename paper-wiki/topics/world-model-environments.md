@@ -6,7 +6,7 @@ tags:
 - world-models
 - agent-environments
 - environment-simulation
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Scope
@@ -19,6 +19,7 @@ This topic tracks papers where a learned generative model plays the environment 
 * [AutoGUIWorld](../papers/2610.01215.md) - a pretrained image generator renders each next GUI screenshot from the intended effect of a planned action; no explicit state, quality checked by a VLM judge on before/after pairs.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - a language world model run as an agent over a worldbook rebuilt from traces, with explicit episode state and a validation gate on every state change; judged by whether simulated action sequences still succeed in the real environment.
 * [AgentGarten](../papers/2610.12374.md) - engine code holds state and rules; a real-time video model renders first-person frames from exported depth or normals, so rendering errors cannot enter the state.
+* [Memento 3](../papers/2610.11794.md) - a boundary case: the world model is LLM-written code compiled from a natural-language rulebook, learned online from the real environment and used only for planning, with every accepted version required to reproduce all recorded transitions exactly.
 
 # Synthesis
 
@@ -26,9 +27,12 @@ The four papers place the line between learned simulation and explicit state at 
 
 The evaluation criteria differ accordingly. Trace2Env argues that success inside a simulator is the wrong measure: a direct-prompting simulator lets ALFWorld tasks "succeed" 97% of the time, yet only 3% of those action sequences work in the real environment, against 85% for its state-tracked simulator. AgentGarten has no such check, because its state is the real engine state; its open question is instead whether rendering quality affects what agents learn, which it does not measure. AutoGUIWorld and CompoWorld measure downstream training value on real benchmarks. No paper here yet compares two of these designs on the same tasks.
 
+Memento 3 sits outside the line the other papers draw. Its model does not replace the environment for training or evaluation; the agent keeps acting in the real one and uses the model to plan between real actions. It still answers this topic's question about what the model is trusted with, and more strictly than the others: the executable is trusted only after cell-exact replay of the full interaction record, a criterion close to Trace2Env's replay transfer, applied online and to a model the agent wrote itself.
+
 # Open Questions
 
 * Is replay transfer (Trace2Env's W2R and consistency ratio) the right general criterion for a simulated environment, and can it be applied when no real environment is available to replay in?
 * Does training an agent inside a learned simulator improve it in the real environment, and how does that depend on where state is kept?
 * How much does the observation renderer matter for agent learning when state is exact, for example AgentGarten's neural frames against plain engine graphics on the same worlds?
 * When a model must simulate behavior never seen in traces or code, how should uncertainty be exposed to the acting agent rather than hidden behind a confident observation?
+* Memento 3 accepts a learned code model only when it replays the interaction record exactly. Could the same gate be applied to the trace-built or coding-agent-built environments in this topic (Trace2Env, CompoWorld) before agents train in them, and what replaces it when observations are too rich to match exactly?

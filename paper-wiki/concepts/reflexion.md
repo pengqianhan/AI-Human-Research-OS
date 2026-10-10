@@ -7,7 +7,7 @@ tags:
 - agent-self-evolution
 - learning-from-experience
 - agent-memory
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ Reflexion (Shinn, Cassano, Labash, Gopinath, Narasimhan, and Yao, "Reflexion: La
 * [EvoOntology](../papers/2609.15779.md) - part of the ReAct+Memory baseline family (with Voyager and Self-Refine): episodic memory lifts DDR-Bench Trajectory-Wise from 69.5 to 75.8, still 13.7 points below EvoOntology's typed ontology.
 * [Learn2Play Bench](../papers/2610.08215.md) - one of six experience methods run under one protocol on games with hidden rules: best three-backbone average Max (60.0), but below raw interaction histories on Learning Gain and Slope with Kimi K3 (+14.8 against +16.9 LG).
 * [AgentGarten](../papers/2610.12374.md) - places its round-by-round written playbooks in the Reflexion, ExpeL, and Voyager family, with agents that perceive only rendered frames and hand lessons to fresh agents.
+* [Memento 3](../papers/2610.11794.md) - cited, alongside AutoManual and WALL-E, as textual memory that keeps linguistic reflections on task feedback; Memento 3 contrasts its own rulebook, which states revisable rules about environment dynamics and must be matched by code that replays the interaction record.
 
 # Notes
 

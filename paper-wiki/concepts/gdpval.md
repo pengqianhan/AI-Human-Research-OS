@@ -10,7 +10,7 @@ tags:
 - benchmarks
 - working-agents
 - professional-work
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ GDPVal (Patwardhan et al., arXiv:2510.04374, 2025) evaluates AI on real-world, e
 * [RRSI](../papers/2609.24972.md) - an out-of-distribution transfer target for the agentic-workspace domain, scored by a three-judge cross-vendor panel in both presentation orders; RRSI reaches 52.3 against 48.8 for the starting harness, while two other evolved harnesses end below it.
 * [Raven](../papers/2609.33439.md) - in the reused SkillCorpus experiments, retrieved skills add +1.51 ± 0.49 points pooled; Raven-Design deliverables are also scored by an internal GPT-5.6-Luna grader, and the MAOB planning benchmark is patterned on GDPVal's occupations without reusing its text.
 * [GraphForge](../papers/2609.38923.md) - primary evaluation as Bradley-Terry Elo over GDPVal-AA anchored at GLM-5.3 (OpenHands) = 1667: SFT lifts Qwen3.6-27B from 1380.0 to 1445.7 under OpenHands with overlapping bootstrap intervals; a contamination audit finds zero shared files and 13 of 44 occupations covered, with SFT gains no smaller on uncovered occupations.
+* [MiMo-V2.6](../papers/2610.11959.md) - reports GDPval-AA v2.1 (Artificial Analysis's evaluation framework for GDPval) at 1673 for Pro against 1107 for MiMo-V2.5 Pro, 1708 for Claude Opus 5, 1588 for GPT-5.6 Sol, and 1595 for Claude Fable 5; no Flash score is given.
 
 # Notes
 

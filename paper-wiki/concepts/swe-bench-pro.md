@@ -8,7 +8,7 @@ tags:
 - software-engineering
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-09-30T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ SWE-bench Pro evaluates coding agents on enterprise-style, repository-level soft
 * [One to More, More to One](../papers/2609.23377.md) - primary benchmark as the audited 618-of-731-task subset Pro-618 (excluding 113 tasks flagged by a public determinacy audit plus one OpenAI-documented prompt-test mismatch), split by repository domain into Pro-A/B/C = 221/201/196 for per-category see-saw analysis; final MOPD student reaches 58.04% (base 52.64%).
 * [TraceDance](../papers/2609.33295.md) - cited, not run: GPT-5.6-Sol's higher reported SWE-bench Pro score than DeepSeek-V4-Pro and GLM-5.2 is contrasted with its failure to outperform either model on TraceDance's behavior benchmarks (27.2% vs. 29.3% and 28.6%, within one rank group), as evidence that task completion and in-execution behavior rank models differently.
 * [Raven](../papers/2609.33439.md) - Raven-Code resolves 15 more of the 731 tasks than Claude Code with the same Qwen3.8-27B backbone, with patches generated without network access and graded by the official grader in the authors' internal AgentEval containers.
+* [MiMo-V2.6](../papers/2610.11959.md) - released 9B model (avg@3): 32.0 base, 44.6 after distillation SFT, 47.6 after RL; the seven-harness mean is 27.5, 44.4, and 46.5 after multi-harness RL.
 
 # Notes
 

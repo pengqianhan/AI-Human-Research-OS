@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - gui-computer-use-agents
 - agent-harness-engineering
-timestamp: 2026-10-08T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ OSWorld evaluates computer-use agents on long-horizon, open-ended tasks executed
 * [RecreationWorld](../papers/2609.22000.md) - cites OSWorld 2.0 as the GUI-operation research line it positions its own hybrid GUI+code recreation task against, and separately uses it as one of five out-of-distribution transfer benchmarks: two model initializations fine-tuned on 35,000 recreation trajectories both finish above their first checkpoint on OSWorld 2.0 alongside four other external benchmarks, evidence the recreation training transfers to a benchmark it was never trained on.
 * [AutoGUIWorld](../papers/2610.01215.md) - evaluates on 361 OSWorld tasks (Google Drive tasks excluded) by mean task score with partial credit: fine-tuning Qwen3.5-35B-A3B on image-generated trajectories raises it from 33.0% to 40.8%, with multi-app tasks 12.0 → 20.9 but Chrome tasks 39.0 → 26.0.
 * [nanoMuse](../papers/2610.08699.md) - named, with AndroidWorld, MemGUI-Bench, and OS-Harm, as a planned external benchmark for the open personal agent's screen-operating hands; the paper reports no OSWorld results.
+* [MiMo-V2.6](../papers/2610.11959.md) - reports OSWorld-Verified at 82.0 (Pro) and 80.8 (Flash), below Claude Opus 5 (83.4), GPT-5.6 Sol (83.0), and Claude Fable 5 (86.0).
 
 # Notes
 

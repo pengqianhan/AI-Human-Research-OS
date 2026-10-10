@@ -5,6 +5,8 @@
 * [ALFWorld](alfworld.md) - Text-based household-task environment aligned with ALFRED, a common long-horizon testbed for LLM agents, skill optimization, and context management.
 * [AlphaEvolve](alphaevolve.md) - Google DeepMind's LLM-powered evolutionary coding agent for algorithm and mathematical discovery, a common reference baseline for LLM-driven evolutionary discovery systems.
 * [AppWorld](appworld.md) - Nine simulated everyday apps behind 457 APIs with 750 interactive-coding tasks scored by state-based unit tests that also check for collateral damage.
+* [ARC-AGI-3](arc-agi-3.md) - Interactive benchmark of grid games with unknown rules and goals, scored by action efficiency relative to humans (RHAE), used to test agents that learn an environment through interaction.
+* [AutomationBench](automationbench.md) - Benchmark of cross-application workflow orchestration through REST APIs in simulated SaaS environments, including API discovery and adherence to business rules.
 * [BFCL](bfcl.md) - Berkeley Function-Calling Leaderboard for evaluating tool selection and argument correctness across unseen function schemas, in single-turn, multi-turn, and relevance-detection categories.
 * [BrowseComp](browsecomp.md) - Benchmark of hard-to-find factual questions identified only through indirect, mutually constraining clues, for evaluating web-browsing search agents.
 * [BrowseComp-Plus](browsecomp-plus.md) - Multi-hop deep-research QA benchmark with a verified offline corpus of gold, evidence, and hard-negative documents.

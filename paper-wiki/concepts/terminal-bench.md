@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-10T00:00:00Z
 ---
 
 # Definition
@@ -34,6 +34,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [Context Language Models](../papers/2609.37725.md) - Terminal-Bench 2.1 and TBLite as the coding testbeds for zero-shot context management with Qwen3.6-27B at a 32K limit and 100-turn cap: CLM matches Codex-style summarization on TB2.1 at 70% of its prefix-reuse FLOPs and exceeds it on TBLite (73.7% against 67.0%) at 91% of its FLOPs, with MEM1, Self-Compact, ACM, and RLM as the other baselines.
 * [Recursive Self-Rewrite](../papers/2610.02826.md) - evaluates a Qwen-3.8-27B fine-tuned on rewritten multi-harness trajectories under Terminus 2, pass@3 over three runs: Terminal-Bench 2 (89 tasks) 57.0% base, 53.4% direct SFT, 74.2% RSR; Terminal-Bench 3 (74) 0.0%, 5.4%, 9.5%; Terminal-Bench 4 (66) 1.5%, 4.5%, 9.1%; plus the authors' own Terminal-Bench Hard and Long-Horizon Terminal-Bench.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - not evaluated on directly: 20 successful gpt-5.6-sol Terminus-2 trajectories on Terminal-Bench 2.0 (334 turns) are the construction traces for the Terminal worldbook, which is then scored on AgentWorldBench's 354 Terminal next-observation records (65.42 against 55.76 for direct prompting with gpt-5.6-sol).
+* [MiMo-V2.6](../papers/2610.11959.md) - reports Terminal-Bench 2.1 at 89.9 (Pro) and 87.6 (Flash) against 89.1, 88.8, and 84.3 for Claude Opus 5, GPT-5.6 Sol, and Claude Fable 5, and Terminal-Bench 4.0 at 34.9 and 28.8 against 49.0, 39.9, and 42.4; the released 9B distilled model goes from 27.0 (Qwen3.5-9B) to 37.1 after SFT and 52.8 after RL on 2.1.
 
 # Notes
 
