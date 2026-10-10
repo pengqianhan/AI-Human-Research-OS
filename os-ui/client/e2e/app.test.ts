@@ -156,8 +156,18 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  /** What the app knows about itself, for a failure message: its info() and the tail of its log. */
+  async function diagnostics(): Promise<string> {
+    const info = await page.evaluate(() => window.osDesktop?.info()).catch((error: Error) => `info() failed: ${error.message}`);
+    return `--- osDesktop.info() ---\n${JSON.stringify(info, null, 2)}\n--- app log (tail) ---\n${logs.join("").slice(-6000)}`;
+  }
+
   test("opens the desktop with a freshly generated snapshot", SLOW, async () => {
-    await page.getByText("Desktop client", { exact: true }).waitFor({ timeout: 150_000 });
+    try {
+      await page.getByText("Desktop client", { exact: true }).waitFor({ timeout: 150_000 });
+    } catch (error) {
+      throw new Error(`${(error as Error).message}\n${await diagnostics()}`);
+    }
     assert.ok(existsSync(join(workspace, "os-ui", "frontend", "public", "state.json")), "the generator wrote state.json in the workspace");
     await page.getByText("PORTFOLIO").first().waitFor();
     const title = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.getTitle());
