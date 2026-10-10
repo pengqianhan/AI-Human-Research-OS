@@ -93,7 +93,7 @@ rebuilt glance-first: stage bars, chips, progress bars, count tiles, and an
 activity timeline, with every sentence behind a click (DESIGN.md §4). Checked
 at desktop and phone widths with no text overflow.
 
-### os-ui desktop client (built 2026-10-10, awaiting checks)
+### os-ui desktop client (built 2026-10-10, awaiting the Human Owner's checks)
 
 The Human Owner asked for the OS as a client for macOS, Linux, and Windows
 (see "Desktop client decisions" below). Built in [`os-ui/client/`](os-ui/client/README.md);
@@ -103,11 +103,10 @@ x64: 90 client unit tests, 56 endpoint tests (`os-ui/frontend`, `npm test`), the
 11-test Playwright E2E suite under Xvfb, `.deb` and AppImage packaging, and the
 packaged app's smoke run.
 
-- [ ] P5: [`desktop.yml`](.github/workflows/desktop.yml) passes on its pull request
+- [x] ~~P5: [`desktop.yml`](.github/workflows/desktop.yml) passes on its pull request
       for all six rows (linux/macos/windows × x64/arm64), and `ci.yml`'s new
-      `os-ui endpoint tests` step passes. All rows passed at `595c3d8`; the final
-      review's fixes landed after it. Next action: read the run on the PR's head;
-      fix or report.
+      `os-ui endpoint tests` step passes.~~ Passed at `3f097fd` (PR #22, Desktop client
+      run 6), installers uploaded as that run's artifacts.
 - [ ] P6: the Human Owner runs the README checklist
       ([Check it on your machine](os-ui/client/README.md#check-it-on-your-machine)) on
       each OS with a real Claude Code or Codex login. Acceptance: every box ticked,
@@ -131,7 +130,7 @@ packaged app's smoke run.
   Codex's Windows sandbox is `ready` in `~/.codex` but `updateRequired` in the
   `CODEX_HOME` that Orca sets for sessions it launches, so a harness started
   inside Orca needs `--mode full` for Codex.
-- Also pending: the desktop client's P5 and P6 checks and the GOAL.md M4
+- Also pending: the desktop client's P6 checks and the GOAL.md M4
   annotation (Active Work, "os-ui desktop client"). Its installers are CI
   artifacts of `desktop.yml`; publishing them stays unauthorized.
 - Also pending: the Human Owner has not yet run the `research-project-manager`
