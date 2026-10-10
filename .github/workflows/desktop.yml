@@ -1,0 +1,135 @@
+name: Desktop client
+
+# Tests and packages the desktop client (os-ui/client) on macOS, Windows, and
+# Linux. Advisory: it is not a required check (the gate for main is ci.yml's
+# `checks` job), which is why it may carry a path filter. Installers are kept
+# as workflow artifacts only; publishing releases is not authorized
+# (os-ui/client/DESIGN.md §0).
+#
+# The first three rows run the full end-to-end suite on the dev build and a
+# smoke run of the packaged app; the other three build their architecture
+# natively and smoke-test the packaged app.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "os-ui/**"
+      - "os-harness/**"
+      - "research-skills-hub/open-paper-skills/paper-wiki-manager/**"
+      - ".python-version"
+      - ".github/workflows/desktop.yml"
+  push:
+    branches: [main]
+    paths:
+      - "os-ui/**"
+      - "os-harness/**"
+      - "research-skills-hub/open-paper-skills/paper-wiki-manager/**"
+      - ".python-version"
+      - ".github/workflows/desktop.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x64, os: ubuntu-latest, e2e: true, targets: "--linux deb AppImage --x64" }
+          - { name: macos-arm64, os: macos-latest, e2e: true, targets: "--mac dmg --arm64" }
+          - { name: windows-x64, os: windows-latest, e2e: true, targets: "--win nsis --x64" }
+          - { name: linux-arm64, os: ubuntu-24.04-arm, e2e: false, targets: "--linux deb AppImage --arm64" }
+          - { name: macos-x64, os: macos-15-intel, e2e: false, targets: "--mac dmg --x64" }
+          - { name: windows-arm64, os: windows-11-arm, e2e: false, targets: "--win nsis --arm64" }
+    defaults:
+      run:
+        shell: bash
+    env:
+      # No signing certificates here: macOS builds are ad-hoc signed
+      # (electron-builder.yml), Windows builds are unsigned.
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.2.0 # publishes no moving major tag
+
+      # The client runs the generator and os-harness through uv with this pin.
+      - name: Install the pinned Python
+        run: uv python install "$(cat .python-version)"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            os-ui/frontend/package-lock.json
+            os-ui/client/package-lock.json
+
+      - name: Install packages
+        run: |
+          npm ci --prefix os-ui/frontend --no-audit --no-fund
+          npm ci --prefix os-ui/client --no-audit --no-fund
+
+      - name: Type-check and unit tests
+        working-directory: os-ui/client
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Build
+        working-directory: os-ui/client
+        run: npm run build
+
+      # Ubuntu 24.04 restricts unprivileged user namespaces, which Chromium's
+      # sandbox needs; the test runs keep the sandbox on rather than disable it.
+      - name: Allow Chromium's sandbox
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: End-to-end tests (dev build)
+        if: matrix.e2e
+        working-directory: os-ui/client
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then xvfb-run -a npm run test:e2e; else npm run test:e2e; fi
+
+      - name: Package
+        working-directory: os-ui/client
+        run: npx electron-builder ${{ matrix.targets }} --publish never
+
+      - name: Verify the macOS signature
+        if: runner.os == 'macOS'
+        working-directory: os-ui/client
+        run: codesign --verify --deep --strict release/mac*/"Research OS.app"
+
+      - name: Smoke-test the packaged app
+        working-directory: os-ui/client
+        env:
+          OS_CLIENT_E2E_EXECUTABLE: release
+        run: |
+          pattern='opens the desktop|names the problem|Paper Wiki runs'
+          if [ "$RUNNER_OS" = Linux ]; then
+            xvfb-run -a node --test --test-concurrency=1 --test-name-pattern="$pattern" "e2e/**/*.test.ts"
+          else
+            node --test --test-concurrency=1 --test-name-pattern="$pattern" "e2e/**/*.test.ts"
+          fi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: research-os-${{ matrix.name }}
+          path: |
+            os-ui/client/release/*.dmg
+            os-ui/client/release/*.exe
+            os-ui/client/release/*.deb
+            os-ui/client/release/*.AppImage
+          if-no-files-found: error
+          retention-days: 14

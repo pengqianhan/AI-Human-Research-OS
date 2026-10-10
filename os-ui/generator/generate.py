@@ -23,6 +23,7 @@ import argparse
 import filecmp
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -37,12 +38,20 @@ from typing import Any
 
 
 def find_repo_root(start: Path) -> Path:
-    """Walk upward from `start` until a directory containing .git is found."""
+    """The repository root: by layout, two levels above os-ui/generator, when
+    that directory holds AGENTS.md; otherwise the nearest directory above
+    `start` containing .git.
+
+    Layout comes first so a copy without Git (the OS's default mode) inside
+    some other Git checkout still writes its own os-ui/frontend/public.
+    """
     cur = start.resolve()
+    if len(cur.parents) > 1 and (cur.parents[1] / "AGENTS.md").is_file():
+        return cur.parents[1]
     for candidate in [cur, *cur.parents]:
         if (candidate / ".git").exists():
             return candidate
-    raise SystemExit(f"error: no .git found above {start}")
+    raise SystemExit(f"error: no AGENTS.md or .git found above {start}")
 
 
 def warn(msg: str) -> None:
@@ -149,19 +158,20 @@ def clean_inline_md(text: str) -> str:
 
 def build_meta(repo_root: Path) -> dict[str, Any]:
     repo_head = None
-    try:
-        out = subprocess.run(
-            ["git", "-C", str(repo_root), "rev-parse", "--short", "HEAD"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if out.returncode == 0:
-            repo_head = out.stdout.strip() or None
-        else:
-            warn(f"git rev-parse failed: {out.stderr.strip()}")
-    except Exception as e:  # pragma: no cover - defensive
-        warn(f"git rev-parse errored: {e}")
+    if (repo_root / ".git").exists():  # without Git there is no HEAD to read
+        try:
+            out = subprocess.run(
+                ["git", "-C", str(repo_root), "rev-parse", "--short", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if out.returncode == 0:
+                repo_head = out.stdout.strip() or None
+            else:
+                warn(f"git rev-parse failed: {out.stderr.strip()}")
+        except Exception as e:  # pragma: no cover - defensive
+            warn(f"git rev-parse errored: {e}")
 
     return {
         "schema_version": "0.1",
@@ -989,37 +999,38 @@ PROGRESS_LOG_DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 def build_activity(repo_root: Path, projects: list[dict[str, Any]]) -> list[dict[str, Any]]:
     activity: list[dict[str, Any]] = []
 
-    try:
-        out = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(repo_root),
-                "log",
-                "-15",
-                "--pretty=format:%h|%aI|%s",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if out.returncode == 0:
-            for line in out.stdout.splitlines():
-                parts = line.split("|", 2)
-                if len(parts) != 3:
-                    continue
-                short_hash, date_iso, subject = parts
-                activity.append(
-                    {
-                        "when": date_iso,
-                        "what": subject,
-                        "source": f"git {short_hash}",
-                    }
-                )
-        else:
-            warn(f"git log failed: {out.stderr.strip()}")
-    except Exception as e:  # pragma: no cover - defensive
-        warn(f"git log errored: {e}")
+    if (repo_root / ".git").exists():  # without Git, activity is the progress logs only
+        try:
+            out = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(repo_root),
+                    "log",
+                    "-15",
+                    "--pretty=format:%h|%aI|%s",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if out.returncode == 0:
+                for line in out.stdout.splitlines():
+                    parts = line.split("|", 2)
+                    if len(parts) != 3:
+                        continue
+                    short_hash, date_iso, subject = parts
+                    activity.append(
+                        {
+                            "when": date_iso,
+                            "what": subject,
+                            "source": f"git {short_hash}",
+                        }
+                    )
+            else:
+                warn(f"git log failed: {out.stderr.strip()}")
+        except Exception as e:  # pragma: no cover - defensive
+            warn(f"git log errored: {e}")
 
     projects_folder = repo_root / "projects-folder"
     for proj in projects:
@@ -1083,9 +1094,13 @@ def write_state(repo_root: Path, state: dict[str, Any]) -> Path:
     out_dir = repo_root / "os-ui" / "frontend" / "public"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "state.json"
-    out_path.write_text(
+    # Write a sibling and swap it in: a reader (the dev server, the desktop
+    # client) never sees half a file, even if this run is killed.
+    tmp_path = out_dir / f"state.json.{os.getpid()}.tmp"
+    tmp_path.write_text(
         json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    os.replace(tmp_path, out_path)
     return out_path
 
 

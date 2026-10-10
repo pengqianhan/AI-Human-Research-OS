@@ -83,3 +83,11 @@ jobs:
         run: |
           npm ci
           npm run build
+
+      # The endpoints the dev server and the desktop client share
+      # (os-ui/frontend/server), including one detached os-harness turn with
+      # its fake Claude CLI and a real Vite dev server. The desktop client's
+      # own jobs live in desktop.yml, which is advisory.
+      - name: os-ui endpoint tests
+        working-directory: os-ui/frontend
+        run: npm test

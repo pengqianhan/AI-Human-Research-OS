@@ -6,3 +6,4 @@ Read-only browser interface for observing Research OS state.
 * [DESIGN.md](DESIGN.md) - Settled interaction and visual design decisions.
 * [frontend/](frontend/README.md) - Vite, React, and TypeScript implementation.
 * [generator/](generator/README.md) - Read-only repository state generator.
+* [client/](client/README.md) - Electron desktop client for macOS, Windows, and Linux.
