@@ -58,6 +58,10 @@ jobs:
       # No signing certificates here: macOS builds are ad-hoc signed
       # (electron-builder.yml), Windows builds are unsigned.
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      # electron-builder skips all signing on pull-request builds unless told
+      # otherwise, and an unsigned arm64 app does not start. The only identity
+      # here is the ad-hoc "-", and this workflow has no secrets to expose.
+      CSC_FOR_PULL_REQUEST: "true"
     steps:
       - uses: actions/checkout@v7
 
