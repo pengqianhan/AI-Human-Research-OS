@@ -63,6 +63,29 @@ proposes new entries in a pull request; prune them there before merging.
   autoresearch powered by autonomous coding agents. Run Claude Code, OpenCode,
   and Codex with grading, shared knowledge, and multi-agent evolution. Accepted
   at COLM 2026.
+- [FOREST](https://github.com/mikamikasuki/FOREST): FOREST is a research agent
+  for long-horizon science, where evidence gets lost, errors compound, and goals
+  drift.
+- [evo](https://github.com/evo-hq/evo): turns your codebase into an autoresearch
+  loop — discovers what to measure, instruments the benchmark, then runs tree
+  search with parallel subagents.
+- [wisp-science](https://github.com/xuzhougeng/wisp-science): Open-source,
+  local-first desktop AI research workbench for scientific computing with
+  Python/R, MCP bioinformatics tools, SSH/WSL/GPU runtimes, and OpenAI/Anthropic
+  models.
+- [codex-autoresearch](https://github.com/TheGreenCedar/codex-autoresearch): A
+  codex plugin for running optimization loops inside a codebase. It is useful
+  when you have a measurable target and many possible changes to try: test
+  runtime, build speed, bundle size, model loss, Lighthouse scores,…
+- [scholaraio](https://github.com/ZimoLiao/scholaraio): Scholar All-In-One: A
+  research infrastructure for AI agents.
+- [ScienceBuddy](https://github.com/Gen-Verse/ScienceBuddy): ScienceBuddy:
+  Recursive-in-Recursive Self-Improvement for Interactive Scientific Agents.
+- [ResearchClawBench](https://github.com/InternScience/ResearchClawBench):
+  ResearchClawBench: Evaluating AI Agents for Automated Research from
+  Re-Discovery to New-Discovery.
+- [Polaris](https://github.com/ZJU-REAL/Polaris): Toward Autonomous Scientific
+  Discovery.
 
 ## Agent runtimes and operating systems
 
@@ -116,6 +139,13 @@ proposes new entries in a pull request; prune them there before merging.
   Desktop — local-first, model-agnostic AI research workbench for macOS, Windows
   & Linux. Open-source Claude Science desktop alternative built on Tauri + MCP +
   agent skills.
+- [ResearcherSkill](https://github.com/krzysztofdudek/ResearcherSkill): One
+  file. Your AI coding agent becomes a scientist. 30+ experiments while you
+  sleep.
+- [Aut_Sci_Write](https://github.com/ShZhao27208/Aut_Sci_Write): Academic
+  research skills suite for AI Agent — literature search/download
+  (WoS+Elsevier+Springer), PDF extraction, figure cropping, review writing,
+  Zotero sync, and PPT/Html generation.
 
 ## Articles
 
