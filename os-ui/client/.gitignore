@@ -1,0 +1,3 @@
+# Build output of scripts/build.mjs and electron-builder
+out/
+release/

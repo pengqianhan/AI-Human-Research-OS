@@ -825,10 +825,11 @@
 
   // ---------- reading status ----------
   // `status` is the human's own reading state, so only the human changes it.
-  // The viewer can save it only when os-ui's dev server is behind the page:
-  // POST /api/paper-wiki/status rewrites the note's frontmatter and regenerates
-  // viz.html. Opened from disk or any static host, the probe fails and the
-  // Status row stays read-only.
+  // The viewer can save it only when os-ui's dev server or desktop client is
+  // behind the page: POST /api/paper-wiki/status rewrites the note's
+  // frontmatter and regenerates viz.html. Opened from disk the probe is
+  // skipped; on a static host it fails. Either way the Status row stays
+  // read-only.
   const STATUS_API = "/api/paper-wiki/status";
   let statusWritable = false;
 
@@ -915,7 +916,7 @@
     }
   }
 
-  if (location.protocol === "http:" || location.protocol === "https:") {
+  if (location.protocol !== "file:") {
     fetch(STATUS_API)
       .then((res) => (res.ok ? res.json() : null))
       .then((body) => {

@@ -6,6 +6,7 @@ import { PaperSources } from "./PaperSources";
 import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
+import { desktop } from "../lib/desktop";
 
 interface Props {
   /** "" for the repository root (the root agent); "projects-folder/<Name>" for a project's agent. */
@@ -70,6 +71,8 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 class TokenError extends Error {}
 
 function readToken(): string {
+  // The desktop client hands its per-launch token over through the bridge.
+  if (desktop !== null) return desktop.token;
   try {
     return localStorage.getItem(TOKEN_KEY) ?? "";
   } catch {

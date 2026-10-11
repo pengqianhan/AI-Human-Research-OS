@@ -1,0 +1,51 @@
+# electron-builder configuration for the Research OS desktop client.
+# Build: npm run package (this OS) — see README.md for per-OS commands.
+appId: io.github.pengqianhan.researchos
+productName: Research OS
+copyright: MIT License
+artifactName: Research-OS-${version}-${os}-${arch}.${ext}
+directories:
+  output: release
+  buildResources: resources
+files:
+  - out/**/*
+  - "!out/**/*.map"
+  - package.json
+icon: out/icon.png
+asar: true
+publish: null
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  # Ad-hoc signature: without one an arm64 build will not start. To sign with a
+  # Developer ID instead, pass -c.mac.identity="Developer ID Application: ..."
+  # -c.mac.hardenedRuntime=true and notarize (README.md, Signing).
+  identity: "-"
+  hardenedRuntime: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  buildUniversalInstaller: false
+  shortcutName: Research OS
+
+linux:
+  category: Development
+  synopsis: Desktop client for the AI-Human Research OS
+  executableName: research-os
+  syncDesktopName: true
+  maintainer: Research OS contributors <pengqianhan@users.noreply.github.com>
+  target:
+    - target: deb
+      arch: [x64, arm64]
+    - target: AppImage
+      arch: [x64, arm64]

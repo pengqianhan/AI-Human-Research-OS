@@ -16,6 +16,8 @@ os-ui/frontend/
 ├── index.html              # minimal HTML shell mounted by React
 ├── package.json            # npm scripts and dependencies
 ├── vite.config.ts          # Vite dev/build config
+├── *-plugin.ts             # dev-server adapters for the endpoints in server/
+├── server/                 # the endpoints, shared with the desktop client (os-ui/client)
 ├── tailwind.config.js      # Tailwind color/font aliases
 ├── postcss.config.js       # Tailwind/PostCSS config
 ├── tsconfig.json           # TypeScript config
@@ -31,7 +33,9 @@ os-ui/frontend/
     ├── useOsState.ts       # fetch + polling logic for state.json
     ├── lib/
     │   ├── format.ts       # date and inline-Markdown formatting helpers
-    │   └── skills.ts       # store flattening and install-command builders
+    │   ├── skills.ts       # store flattening and install-command builders
+    │   ├── mode.ts         # LIVE (dev server or desktop client) and DESKTOP
+    │   └── desktop.ts      # the desktop client's window.osDesktop bridge
     ├── dev-fixtures/
     │   └── roundTrack.fixture.ts
     ├── desktop/
@@ -92,6 +96,15 @@ npm run build
 
 The build output goes to `dist/`, which is gitignored.
 
+Endpoint tests (the shared `server/` core, a real os-harness turn with its fake
+Claude CLI, and a real Vite dev server; Node 22.18+ for its TypeScript
+support):
+
+```bash
+cd os-ui/frontend
+npm test
+```
+
 ## Common Edits
 
 - Colors and fonts: edit CSS variables in `src/index.css` and aliases in
@@ -100,7 +113,7 @@ The build output goes to `dist/`, which is gitignored.
 - Dock copy commands: edit constants in `src/desktop/Dock.tsx`.
 - Skill install command construction: edit `src/lib/skills.ts`. The
   per-location enable/disable toggle lives in `src/components/SkillInstalls.tsx`
-  and posts to the Vite middleware in `skill-toggle-plugin.ts`.
+  and posts to `/api/skill/toggle` (`server/skillToggle.ts`).
 - `state.json` shape: update `src/types.ts`, `os-ui/DESIGN.md`, and the
   generator together.
 - Fixed UI copy: edit the page or component that owns the text. Dynamic

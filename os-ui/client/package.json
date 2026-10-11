@@ -1,0 +1,33 @@
+{
+  "name": "research-os-desktop",
+  "productName": "Research OS",
+  "desktopName": "research-os.desktop",
+  "version": "0.1.0",
+  "description": "Desktop client for the AI-Human Research OS: the os-ui desktop with its agent conversations, on macOS, Windows, and Linux.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": {
+    "name": "pengqianhan",
+    "email": "pengqianhan@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/pengqianhan/AI-Human-Research-OS/tree/main/os-ui/client",
+  "main": "out/main.cjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs && electron .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:e2e": "node --test --test-concurrency=1 \"e2e/**/*.test.ts\"",
+    "package": "node scripts/build.mjs && electron-builder --publish never",
+    "package:dir": "node scripts/build.mjs && electron-builder --dir --publish never"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3",
+    "esbuild": "0.28.2",
+    "playwright-core": "1.63.0",
+    "typescript": "5.9.3"
+  }
+}

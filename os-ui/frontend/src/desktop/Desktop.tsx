@@ -6,6 +6,7 @@ import type { AppId } from "./apps";
 import { Dock } from "./Dock";
 import { WindowFrame } from "./WindowFrame";
 import type { WinGeom } from "./WindowFrame";
+import { desktop } from "../lib/desktop";
 
 interface Win extends WinGeom {
   minimized: boolean;
@@ -64,6 +65,16 @@ export function Desktop({ state }: { state: OsState }) {
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The desktop client's Help menu opens the System window.
+  useEffect(
+    () =>
+      desktop?.onCommand((command) => {
+        if (command === "open-system") openApp("system");
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   // When the browser window shrinks, pull every window back into reach so
   // none is stranded fully off the desktop.

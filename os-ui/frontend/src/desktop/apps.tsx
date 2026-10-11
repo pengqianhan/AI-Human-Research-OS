@@ -5,9 +5,10 @@ import { ProjectPage } from "../pages/ProjectPage";
 import { StorePage } from "../pages/StorePage";
 import { PaperWikiPage } from "../pages/PaperWikiPage";
 import { RootAgentPage } from "../pages/RootAgentPage";
-import { LIVE } from "../lib/mode";
+import { SystemPage } from "../pages/SystemPage";
+import { DESKTOP, LIVE } from "../lib/mode";
 
-export type AppId = "dash" | "proj" | "store" | "paperwiki" | "agent";
+export type AppId = "dash" | "proj" | "store" | "paperwiki" | "agent" | "system";
 
 /** One dock app: identity, icon, default window size, and page content. */
 export interface AppDef {
@@ -66,6 +67,14 @@ const paperWikiIcon = (
   </svg>
 );
 
+const systemIcon = (
+  <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <rect x="2" y="3" width="14" height="10" rx="1.5" />
+    <path d="M6.5 16h5M9 13v3" />
+    <path d="m5.5 8.2 1.6 1.6 3-3.3" strokeLinejoin="round" />
+  </svg>
+);
+
 const ALL_APPS: AppDef[] = [
   {
     id: "dash",
@@ -109,7 +118,21 @@ const ALL_APPS: AppDef[] = [
     fill: true,
     render: () => <RootAgentPage />,
   },
+  {
+    id: "system",
+    title: "System",
+    icon: systemIcon,
+    defaultW: 760,
+    defaultH: 600,
+    render: () => <SystemPage />,
+  },
 ];
 
-/** The Root Agent conversation needs the dev server; a published build drops it. */
-export const APPS: AppDef[] = LIVE ? ALL_APPS : ALL_APPS.filter((app) => app.id !== "agent");
+/**
+ * The Root Agent conversation needs a live server (dev server or desktop
+ * client); a published build drops it. System exists only in the desktop
+ * client.
+ */
+export const APPS: AppDef[] = ALL_APPS.filter(
+  (app) => (app.id !== "agent" || LIVE) && (app.id !== "system" || DESKTOP),
+);

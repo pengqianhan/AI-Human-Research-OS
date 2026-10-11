@@ -2,7 +2,8 @@
 
 `os-ui/` is a read-only observation window for the AI-Human Research OS. It
 renders the repository's current state in a browser using a desktop-OS
-metaphor. It does not execute actions or write source files; the filesystem
+metaphor. The same desktop also ships as an app for macOS, Windows, and Linux:
+the [desktop client](client/README.md). It does not execute actions or write source files; the filesystem
 remains the only source of truth. Removing `os-ui/` does not affect the OS
 itself.
 
@@ -62,12 +63,15 @@ conversation while one is running is refused (HTTP 409), the same Write
 Lease rule that `project-dispatch` follows.
 
 It needs the **Root Agent token** that `start.sh` prints when the dev server
-starts (`OS_UI_TOKEN` sets it; otherwise it is random per start). The window
+starts (`OS_UI_TOKEN` sets it; otherwise it is random per start; the desktop
+client supplies its own). The window
 asks for it once and keeps it in `localStorage`. The token exists because the
 dev server may be reached through a public tunnel and this endpoint runs an
 agent with full permissions: without the token, `/api/chat/*` answers 401.
 
-Endpoints (dev server only, in [frontend/chat-plugin.ts](frontend/chat-plugin.ts)):
+Endpoints (dev server and desktop client; the logic is in
+[frontend/server/](frontend/server/), and the dev server mounts it through
+[frontend/chat-plugin.ts](frontend/chat-plugin.ts) and its siblings):
 `GET /api/chat/sessions?cwd=`, `GET /api/chat/session?id=`,
 `POST /api/chat/send` (`{cwd, agent, mode, session?, text}`), and
 `POST /api/chat/stop` (`{session}`); the Papers button uses
@@ -145,9 +149,9 @@ The output goes to `frontend/dist/`, which is gitignored. The frontend loads
 `npx vite build --base=./` also works from a sub-path or another origin, such as
 a private claude.ai artifact.
 
-Any production build is view-only: the write and agent endpoints exist only on
-the dev server, and [src/lib/mode.ts](frontend/src/lib/mode.ts) hides their
-controls — no Root Agent window, no project Agent view, no skill toggles, no
+Any production build is view-only outside the desktop client: the write and
+agent endpoints exist only on the dev server and in the client, and
+[src/lib/mode.ts](frontend/src/lib/mode.ts) hides their controls — no Root Agent window, no project Agent view, no skill toggles, no
 copy-command dock button, and the Paper Wiki Status row reads without buttons.
 
 The public copy is built this way by
@@ -187,6 +191,8 @@ palette, typography, and read-only semantics.
 - [ ] Split governance or activity into separate dock apps only if real use
       shows that the Dashboard is too dense.
 - [ ] M4-gated: replace polling with a small file-watching service plus SSE.
+      (The desktop client pushes snapshot events to its own window over IPC;
+      that lives and dies with the app and is not this item.)
 - [ ] M4-gated: add real execution endpoints and buttons.
 - [ ] M4-gated: add `agent_activity` heartbeat semantics only if OS Feedback
       proves that observed repository state is insufficient.
@@ -202,4 +208,6 @@ os-ui/
   mockup.html        # static visual mockup with fake data
   generator/         # Python read-only scanner -> state.json
   frontend/          # Vite + React + TypeScript + Tailwind desktop UI
+    server/          # the endpoints, shared by the dev server and the client
+  client/            # Electron desktop client (macOS, Windows, Linux)
 ```
