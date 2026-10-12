@@ -7,7 +7,7 @@ tags:
 - harness-evolution
 - coding-agents
 - repository-understanding
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # Scope
@@ -58,6 +58,7 @@ This topic tracks work on the executable software layer around a foundation mode
 * [Learn2Play Bench](../papers/2610.08215.md) - a learning-from-experience benchmark with a same-backbone harness comparison: Claude Code lifts Claude Opus 5 from Max 74.5 to 81.8 and Codex lifts GPT-5.6-SOL from 57.0 to 74.3 over OpenCode, and OpenCode in turn beats six per-action self-evolving methods on the same backbone at lower token cost by batching actions and dropping repeated feedback.
 * [MiMo-V2.6](../papers/2610.11959.md) - treats the harness as a training variable: production harnesses are rejected as RL substrates because their safeguards and prompts sit outside the task reward, and RL instead runs under several mini-harnesses recombined from one minimal agent loop; DeepSWE Pass@1 on three held-out harnesses (codex, claude code, mini-swe-agent) rises from about 50% to 66% during training, though without a single-harness control.
 * [SuperNav](../papers/2610.12126.md) - a navigation harness for an unmodified MLLM: Markdown Navigation Skills, MCP tools returning four labelled views, an image-point motion interface over geometric or learned backends, goal-progress records, and media-only context pruning. On a 120-episode OVON subset, removing Skills drops success from 68.33% to 35.00% and a front-only tool interface drops it to 52.50%, while swapping the decision model leaves the system working.
+* [ProgramGym](../papers/2610.13395.md) - Program-Agent wraps Claude Code in three isolated sessions (an analyst that explores the reference program and freezes its findings, an implementer with no access to the reference, a read-only reviewer that turns verified discrepancies into the next round's requirements) plus an independent build gate with retry and rollback; on ProgramBench it lifts Qwen3.8-27B from 34.87% to 55.71% Tests Passed against 42.84% from fine-tuning, and for the fine-tuned model one round (43.49%) is about equal to a single session (42.84%) with most of the gain arriving by round three (54.13%).
 
 # Synthesis
 
@@ -78,6 +79,8 @@ Recursive Game Creator is another large same-model harness effect: GPT-6 Astra (
 Learn2Play Bench measures the harness effect on *learning across episodes*, not only on single-task success, and finds it in both directions SafeActBench separates: vendor harnesses raise every metric for their own model (Learning Gain +21.3 to +27.1 for Opus 5 under Claude Code, +14.5 to +22.2 for GPT-5.6-SOL under Codex), and the general OpenCode harness beats research self-evolving methods on the same backbone. Its cost table points to a concrete mechanism for the second effect: OpenCode makes about 8 model calls per episode for Kimi K3 against 27 for the raw-history Memory method, because it executes several actions per response and strips repeated feedback, and it scores higher at roughly half the estimated cost. The first effect is attributed to model-harness co-training on the authority of vendor statements; like Recursive Game Creator's, it is not isolated by an ablation, and it rests on three trials per configuration.
 
 MiMo-V2.6 and SuperNav extend this topic in two directions. MiMo-V2.6 moves harness variation into training: where ASI-Bench and Learn2Play show a fixed model's score moving with the harness, MiMo trains across recombined mini-harnesses and reports gains on harnesses it never trained under (without a single-harness control to attribute them). SuperNav moves the coding-agent harness pattern onto a robot and supplies an ablation of its parts: procedural Skills account for more of the success than the tool interface, and without them the agent travels less than half as far per episode.
+
+ProgramGym adds a direct harness-against-weights comparison on one benchmark: the same 27B model gains 20.84 points of tests passed from a staged workflow and 7.97 from fine-tuning, while the workflow adds only 1.29 points for a stronger model that already scores 57.68% in a single session. That suggests the workflow substitutes for capability the weaker model lacks more than it adds to what a stronger model already does (reader inference from two models). The components (session isolation, withholding the reference from the implementer, build-gated rollback) are not ablated, so the paper shows that review rounds matter, not which rule carries the effect.
 
 # Open Questions
 

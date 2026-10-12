@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - gui-computer-use-agents
 - agent-harness-engineering
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # Definition
@@ -23,7 +23,10 @@ OSWorld evaluates computer-use agents on long-horizon, open-ended tasks executed
 * [AutoGUIWorld](../papers/2610.01215.md) - evaluates on 361 OSWorld tasks (Google Drive tasks excluded) by mean task score with partial credit: fine-tuning Qwen3.5-35B-A3B on image-generated trajectories raises it from 33.0% to 40.8%, with multi-app tasks 12.0 → 20.9 but Chrome tasks 39.0 → 26.0.
 * [nanoMuse](../papers/2610.08699.md) - named, with AndroidWorld, MemGUI-Bench, and OS-Harm, as a planned external benchmark for the open personal agent's screen-operating hands; the paper reports no OSWorld results.
 * [MiMo-V2.6](../papers/2610.11959.md) - reports OSWorld-Verified at 82.0 (Pro) and 80.8 (Flash), below Claude Opus 5 (83.4), GPT-5.6 Sol (83.0), and Claude Fable 5 (86.0).
+* [SoftwareGym](../papers/2610.12611.md) - evaluates on 244 OSWorld tasks from eight application domains with three rollouts per task: Qwen3.5-9B fine-tuned only on synthesized-application trajectories goes from 41.39% to 56.97% Pass@3 and from 28.40% to 46.77% single-run average, against 61.48% and 48.06% for matched-size training on OSWorld-application trajectories.
 
 # Notes
 
 Results across these papers are not directly comparable: RSIAgent and LongHorizon-Harness both use the 0808-offline OSWorld 2.0 split but different backbone models, tool pools (RSIAgent's code-as-policy harness vs. LongHorizon-Harness's hybrid GUI+CLI pool), and mechanisms under test (frozen causal memory vs. an externalized Manage-Execute-Audit state layer), so neither paper's reported gain isolates the other's contribution. UI-Mate uses the OSWorld-Verified variant rather than 2.0, and its own stated motivation for introducing OSWorkerBench is precisely that OSWorld's instruction-only task format cannot measure what a same-task demonstration adds — a limitation this wiki's other two OSWorld-using papers do not address, since neither evaluates demonstration-conditioned performance. RecreationWorld's use is different in kind from all three papers above: rather than reporting a single-point OSWorld 2.0 score for a fixed mechanism, it tracks OSWorld 2.0 performance across two training checkpoint sweeps to evidence transfer from a differently-structured source task (application recreation) — its own paper is explicit that the resulting score trajectories are "not uniformly monotonic," so the OSWorld 2.0 numbers should be read as "finished above the first checkpoint," not as a smooth improvement curve.
+
+SoftwareGym's headline numbers are Pass@3, task-level success across three rollouts at temperature 1, on a 244-task subset. They are not comparable with the single-run or partial-credit scores above; its own appendix gives single-run averages, which are several points lower (Seed 2.1 Pro is 79.51% Pass@3 and 70.41% as a three-run average).

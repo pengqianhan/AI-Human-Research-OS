@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # Scope
@@ -47,6 +47,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [Learn2Play Bench](../papers/2610.08215.md) - a benchmark for this topic's mechanisms rather than a new one: six ways of carrying experience across episodes (none, raw histories, Reflexion, EvoTest, ReasoningBank, AWM) run under one protocol on 20 games with hidden rules; raw histories lead all four metrics with Kimi K3 but not with Claude Opus 5, and a lesson drawn from one failure can block exploration for the rest of a run.
 * [AgentGarten](../papers/2610.12374.md) - agents that see only neurally rendered first-person frames improve across rounds by writing Markdown playbooks (one lesson per file) that fresh agents inherit; hide-and-seek shelters appear by round 4 and ramp crossings by round 10, from single runs with no validation gate on what is written.
 * [Memento 3](../papers/2610.11794.md) - the mutable object is a world model of the environment: a Markdown rulebook and the Python code compiled from it, revised after each real action by a frozen LLM that chooses to retain, revise the rulebook, or repair the code. A revision is used only if the LLM judges the code faithful to the rulebook and replay reproduces every recorded frame exactly; every version is committed to Git so earlier hypotheses can be diffed or restored.
+* [EmbodiedCLBench](../papers/2610.13021.md) - a benchmark rather than a method: agents do two basic household tasks, then an advanced task composed of the same atomic actions, carrying either the raw trajectories or a self-written skill summary; advanced-task success rises from 3-12% to 16-52% and 22-38% across four harnesses and two models, but one learning sample gives nearly all of the gain and up to six give no more.
 
 # Synthesis
 
@@ -62,6 +63,8 @@ EviSkill splits the single validation gate of SkillOpt-style loops in two. A loc
 Learn2Play Bench tests the representation question this topic usually leaves implicit: whether experience should be kept raw or distilled. On games built so that pretrained knowledge does not help, keeping complete interaction histories beats reflection, workflow induction, and evolved prompts with one backbone (Kimi K3), but EvoTest and Reflexion lead peak score with Claude Opus 5, so the answer depends on the model. Its case analysis names the failure every distilling loop above risks: one failed fusion became a prompt rule forbidding a whole class of untested fusions, and the run plateaued. That is the same persistence problem as Prime Agent's exploit, but for a false negative rather than an exploit. A score-based validation gate would probably not catch it (a reader inference): in the reported run the score rose from 46 to 83 and then plateaued, so the rule never lowered the score it would be checked against. AgentGarten's playbooks are this topic's mechanism with no gate at all, handed between independent agents; its round-by-round gains are reported from single runs without a no-playbook control, so they show the loop can work in rendered physical worlds but do not yet measure how much the playbooks contribute.
 
 Memento 3 supplies a design that Learn2Play's finding asks for. Learn2Play shows a distilled rule can freeze an error that raw history would have exposed; Memento 3 keeps the raw record *and* a rulebook, and admits a rulebook revision only with code that replays the whole record cell for cell. That is a stricter gate than the validation comparisons used by the skill-level loops above, but it is available only where the environment is deterministic and its observations can be predicted exactly; the paper's own Pong study already relaxes it.
+
+EmbodiedCLBench supplies a measurement this topic's method papers mostly lack: how the benefit of self-collected experience scales with its amount. Its answer is that it does not, past the first sample, for raw trajectories and written skills alike. Read with Learn2Play Bench, which found that distilled lessons can freeze a wrong rule, this points at the same weak spot from two sides: writing experience down is easy, and getting the second and later pieces of experience to add anything is the open problem. The benchmark's protocol is short (two related tasks held in one context) and has no control with unrelated experience, so part of the first-sample jump may be familiarity with the environment's step pattern rather than reuse of skills.
 
 # Open Questions
 
@@ -85,3 +88,4 @@ Memento 3 supplies a design that Learn2Play's finding asks for. Learn2Play shows
 * EviSkill keeps locally supported edits from rejected revisions in the working skill that generates the next epoch's evidence. Can a wrong provisional edit steer later trajectories toward evidence that supports keeping it, and would replaying provisional edits against tasks outside their own evidence break that loop?
 * Learn2Play shows a distilled rule can stop exploration without lowering the score it is checked against. Should self-evolution loops keep each learned rule linked to the episodes that support it and mark rules drawn from a single observation as tentative, and would that recover the gap to raw histories without their context cost?
 * Memento 3's acceptance has two halves: exact replay, which is mechanical, and a judgement by the same LLM that the code is faithful to the rulebook, for which no error rate is reported. How often does a rulebook that passes that judgement state a rule the code does not actually implement, and does such a rulebook then mislead later revisions the way Learn2Play's frozen rules do?
+* EmbodiedCLBench finds no gain from a second through sixth learning sample. Is that a ceiling of the tasks (one example already reveals the environment's step pattern), of the memory format, or of the harnesses, and does it hold when experience must be retrieved from a long stream rather than handed over as two related tasks?

@@ -6,7 +6,7 @@ tags:
 - agent-skills
 - skill-libraries
 - self-evolution
-timestamp: 2026-10-07T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # Scope
@@ -28,6 +28,7 @@ This topic tracks papers that treat agent capabilities as reusable, validated sk
 * [RASO](../papers/2609.38024.md) - treats the public GitSkills corpus as a prior for optimizing one skill: section-level BM25 retrieval plus Cross-Harness Adaptation rewrites retrieved procedure into the target harness's vocabulary, both to initialize a skill with zero rollouts and to repair diagnosed failures during updates; unadapted retrieval (SkillRouter) is often worse than no skill, and RASO beats TextGrad, GEPA, SkillOpt, and WikiSkill on four benchmarks with two models.
 * [X-Tree](../papers/2609.32993.md) - the topic's counter-position: reusable sub-procedures are mined from trajectories by counting (recurrence, length, success), never written by an LLM, and consumed by training (offline RL instances, an RLVR bonus, an OPSD privileged context) rather than retrieved at inference; the same tree also beats four LLM-written in-context skill banks on MiniWoB++.
 * [EviSkill](../papers/2610.05030.md) - improves one skill document per environment with edits that each carry replayable evidence (the exact trajectory step ranges that justify them), re-executes those ranges under the edited skill to accept, repair, or reject each edit, and keeps replay-supported edits from validation-rejected revisions in a provisional ledger; best in 14 of 18 settings against Trace2Skill, EvoSkill, SkillGrad, and SkillOpt on ALFWorld, AppWorld, and ScienceWorld.
+* [EmbodiedCLBench](../papers/2610.13021.md) - a controlled test of whether writing a skill beats keeping the raw experience: after the same two basic tasks, agents carry either full trajectories or a self-written Markdown skill summary into an unseen composed task; trajectories win in 5 of 8 harness-model pairs and skills in 3, skills shift step-level decisions less, and neither improves with more learning tasks.
 
 # Synthesis
 
@@ -37,6 +38,8 @@ Raven and Omni-IO Skills add evidence on two later lifecycle stages, selection a
 RASO and X-Tree pull the topic in opposite directions on where a skill should live. RASO is the first paper here to treat a public skill corpus as the *input* to skill optimization rather than its output, and its SkillRouter result sharpens Raven's selection evidence: retrieval without adaptation can fall below no skill, and the adaptation step (strip domain nouns, drop procedures without a counterpart in the target harness, keep tool claims only when the harness description corroborates them) is what makes a foreign skill usable. That is a concrete answer to this topic's portability question, though it works per target harness rather than by making the package itself portable. X-Tree questions the premise shared by every other paper here, that skills are text an LLM writes and an agent reads: it recovers the hierarchy from the trajectories themselves with no LLM calls and trains it into the weights, and reports that LLM-written banks from small models can hurt in context while the counted tree does not. The two are complementary in evidence as well: RASO's gains are largest for a frontier backbone on document and spreadsheet tasks, X-Tree's for small open models on web and text-game environments.
 
 EviSkill adds provenance at the level of a single edit, which this topic has so far tracked for whole skills (SkillFoundry's validated packages, Code2Skill's reconstruction check). Each line it adds to a skill keeps a pointer to the trajectory steps that motivated it, and the line is kept only if re-running those steps under the edited skill changes the behavior as intended. Its results also put a number on a risk the "improve an existing skill" papers mostly report as a footnote: on ScienceWorld with GPT-5.5, three of four evolution baselines end below the unevolved initial skill (54.50-67.30 against 76.78). Its own margins on AppWorld are within one or two test tasks, and its optimizer is GPT-5.5 even for 4B and 9B action models, so how much of the gain comes from replay rather than a stronger editor is not yet isolated.
+
+EmbodiedCLBench is evidence about this topic's premise rather than about any library: under identical experience, a self-written skill summary did not reliably beat the raw trajectories it was distilled from, and adding more source tasks improved neither. Its skills are single unvalidated summaries, not the validated and maintained libraries most papers here build, so the result bounds what unvalidated distillation buys rather than what a curated library can do.
 
 # Open Questions
 

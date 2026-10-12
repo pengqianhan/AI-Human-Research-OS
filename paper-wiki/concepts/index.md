@@ -33,6 +33,7 @@
 * [OSWorld](osworld.md) - Benchmark for evaluating multimodal computer-use agents on open-ended, real-world desktop tasks executed inside real operating-system environments.
 * [On-policy distillation](on-policy-distillation.md) - Training a student on its own trajectories by matching a teacher's per-token distribution.
 * [PaperBench](paperbench.md) - Benchmark where agents replicate 20 ICML 2024 papers from scratch, graded against 8,316 rubric sub-tasks.
+* [ProgramBench](programbench.md) - 200 program-reproduction tasks: rebuild a program's observable behavior from an execute-only reference binary and its documentation, scored by black-box test pass rates.
 * [Reflexion](reflexion.md) - Verbal self-reflection for language agents: lessons written after each attempt are kept in an episodic memory and guide later attempts, with no weight updates; a standard baseline for learning from experience in context.
 * [Reward hacking](reward-hacking.md) - An agent or policy raising its measured reward or benchmark score by exploiting the grader, environment, or evaluation channel instead of accomplishing the intended task.
 * [ScienceWorld](scienceworld.md) - Interactive text environment of elementary-school science experiments; a long-horizon testbed for LLM agents, skill evolution, and agent RL.

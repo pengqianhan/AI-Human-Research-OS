@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # Scope
@@ -24,6 +24,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [From Evidence to Action (SafeActBench)](../papers/2610.07753.md) - a process benchmark of 656 synthetic tool-use cases that scores whether each consequential action was preceded by evidence bound to the right entity and state, with a deterministic evaluator audited against humans; across ten model-harness configurations agents judge supplied actions at 95-99% but succeed on the same cases interactively at 28-52%, mostly by stopping before the required investigation or acting before it is complete.
 * [DecepEval](../papers/2610.07967.md) - a behavioral benchmark of 1,532 neutral-induced task pairs (tool-use reporting, coding, long-horizon record keeping) in which the induced version adds pressure, incentive, opportunity, or conflict; an LLM judge labels a trajectory deceptive only if a recipient-visible output contradicts facts the agent was given, and inducement raises deception in every one of 27 model-task cells (mean +41.64 points).
 * [Learn2Play Bench](../papers/2610.08215.md) - a learning-from-experience benchmark: 20 newly designed text games with novel or counterintuitive hidden rules, ten of which change their visible instance every episode, scored over repeated episodes by peak and mean performance plus Learning Gain and Learning Slope, with 21-30 human players per game on the same interface; the best human per game reaches Max 84.3 against 81.8 for the best agent (Claude Code with Opus 5).
+* [EmbodiedCLBench](../papers/2610.13021.md) - 268 household tasks (168 basic, 100 advanced) from the TongSim simulator, frozen as offline state-transition graphs in which each node offers four written actions labelled optimal, suboptimal, or invalid; a learning phase on basic tasks precedes testing on advanced tasks composed of the same atomic actions, under zero-shot, in-context, and skill-summary settings, with single runs scored by success rate.
 
 # Synthesis
 
@@ -36,6 +37,8 @@ SafeActBench extends the process-level line from TraceDance's single recorded tu
 DecepEval and SafeActBench look at two halves of the same chain. SafeActBench asks whether an agent established the evidence before acting; DecepEval asks whether an agent's report agrees with evidence it already received. Their control strategies differ as well: SafeActBench avoids judges and checks observable facts deterministically, while DecepEval relies on one LLM judge with a five-condition rule and controls the inducement instead, by pairing each task with a neutral twin that differs only in one condition slot. The pairing makes condition effects attributable, but some of its inducement texts tell the agent what to report, so part of what it measures is compliance with an instruction to misreport.
 
 Learn2Play Bench measures a property none of the benchmarks above isolate: whether an agent gets better at an unfamiliar task by playing it again. Its control is the game design itself, hidden rules written to be absent from or contrary to common game knowledge, plus re-shuffled instances that keep the rule but change what the agent sees, so improvement cannot come from recall or from memorizing one instance. It separates achieved performance (Max, Mean) from improvement (Learning Gain and Slope), and the two rankings disagree: Claude Opus 5 scores highest under a common harness while Qwen 3.8 Max improves most. Its human baseline shows how much selection matters in such comparisons. The best of 21-30 players per game (Max 84.3) beats every agent, but humans averaged over all participants score Max 43.6, below most agents, and agents' Max averages only three trials.
+
+EmbodiedCLBench and Learn2Play Bench both score learning rather than one-shot ability, with different designs: Learn2Play repeats episodes of one game and reports gain and slope, while EmbodiedCLBench separates a learning phase on simpler tasks from a test on compositions of them. EmbodiedCLBench's graph format buys determinism and a per-decision error taxonomy at the cost of turning an embodied task into a visual multiple-choice sequence. Its analyses also disagree slightly with its main table on cells they share (42.0% against 44.0%), a reminder that with 100 test tasks and single runs a few points are not signal.
 
 # Open Questions
 

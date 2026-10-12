@@ -7,7 +7,7 @@ tags:
 - computer-use-agents
 - desktop-automation
 - in-context-demonstration-learning
-timestamp: 2026-10-08T00:00:00Z
+timestamp: 2026-10-12T00:00:00Z
 ---
 
 # Scope
@@ -22,6 +22,7 @@ This topic tracks agents that act directly on graphical interfaces — desktops,
 * [GameHorizon Suite](../papers/2609.25001.md) - evaluates models on AAA video games in the same raw keyboard-mouse action space as desktop computer use; both GUI agents tested (GELab-Zero-4B-Preview, UI-TARS-1.5-7B) fall into its lowest tier, and UI-TARS-1.5-7B scores 3.7 points below its own general-purpose base (Qwen2.5-VL-7B), suggesting GUI post-training can reduce transfer to other screen-and-control domains.
 * [AutoGUIWorld](../papers/2610.01215.md) - synthesizes GUI trajectories without deploying software: a planner scripts actions and their visual effects, gpt-image-2 edits each screenshot into the next, a grounding model labels clicks, and a VLM filters inconsistent transitions; 79,266 samples lift Qwen3.5-35B-A3B on OSWorld (33.0 → 40.8), Windows Agent Arena, macOSWorld, ScienceBoard (14.0 → 32.2), and ScreenSpot-Pro (31.7 → 57.1).
 * [nanoMuse](../papers/2610.08699.md) - puts screen control inside an open personal agent: on Android and desktops, operating the screen is the last rung of a ladder below skills, MCP servers, logged-in page fetches, and the browser, run as a one-action-per-screenshot loop in which the model must state each step in a sentence that a rule-based gate checks for committing words before the gesture runs; no success rates are reported.
+* [SoftwareGym](../papers/2610.12611.md) - trains on software that did not exist before: 182 agent-written desktop applications supply the trajectories, and Qwen3.5-9B fine-tuned only on them goes from 41.39% to 56.97% Pass@3 on 244 OSWorld tasks (28.40% to 46.77% single-run average), within about 1.3 points of matched-size training on OSWorld applications by single-run average.
 
 # Synthesis
 
@@ -30,6 +31,8 @@ UI-Mate and MAI-UI both target the gap between static-trajectory training and re
 AutoGUIWorld attacks the coverage problem that UI-Mate's closed-loop pipeline, MAI-UI's online RL, and RecreationWorld's VM pool all solve by running more real software: it does not run the software at all. An image generator renders each next screen from a planner's description of the intended change, which makes specialized applications (CAD, scientific, audio) far cheaper to cover. Its measured costs are specific: 2-3% of transitions contradict their action, concentrated in text entry, drag, and scroll; the data contains almost no failures or recoveries; and Chrome, its largest domain, gets worse on two benchmarks. Its 80k synthetic samples beat 350k AgentNet human-demonstration samples on four benchmarks, though under different inference settings, and no ablation separates what the generated transitions add from the click labels a separate grounding model supplies.
 
 nanoMuse treats screen operation as a deployment question rather than a capability one. Every other paper here asks how to make a GUI agent succeed more often; nanoMuse asks when a personal agent should use the screen at all (only when no skill, MCP server, logged-in fetch, or browser route works, echoing MAI-UI's added MCP-call action) and how to govern a step once it does. Its answer is that a policy cannot judge a screenshot but can judge the model's own description of the step, so each gesture is preceded by a sentence the gate reads for committing words, plus the Android accessibility text under the finger. This makes the agent's stated intent part of the safety boundary, and it has not been evaluated: the paper reports no success rate and no test of whether descriptions and gestures can diverge.
+
+SoftwareGym and AutoGUIWorld answer the same question, how to get GUI training data without wrapping more real applications, from opposite ends. AutoGUIWorld deploys nothing and has an image generator draw each next screenshot, so it has no environment state and no verifier; SoftwareGym has coding agents write complete applications that run, persist state, and can be checked programmatically, at about $70 per application. SoftwareGym's 9B model gains on every OSWorld domain it evaluates, whereas AutoGUIWorld's larger model gained on multi-application tasks and lost on Chrome. The two use different base models, task subsets, and metrics (Pass@3 over three rollouts against mean task score), so this is a comparison of patterns, not of numbers.
 
 # Open Questions
 
@@ -42,3 +45,4 @@ nanoMuse treats screen operation as a deployment question rather than a capabili
 * RecreationWorld finds recreated applications are typically far smaller and more structurally concentrated than their references (median 16.9% of reference LOC) yet the highest-scoring model has the *lowest* median code volume — what implementation choices, beyond raw code volume, actually explain higher behavioral fidelity, and would UI-Mate's demonstration-guided procedural structure or MAI-UI's expanded action space change that relationship if applied to recreation-style tasks?
 * AutoGUIWorld's generated trajectories almost never contain a failed step. Can an image-generator world model also produce realistic errors and their visible consequences, so synthetic data teaches recovery, and does training on such data narrow the gap on long multi-app tasks that stays large even after its gains?
 * nanoMuse gates each screen action on the operator's own sentence describing it. How often does that description disagree with the gesture actually executed, especially when on-screen content tries to mislead the operator, and does adding the accessibility text under the target close the gap on desktops where many controls are unlabeled icons?
+* SoftwareGym builds eight of its twelve categories to mirror OSWorld's application domains. How much of the transfer to real applications survives when the synthesized categories share no function set with the test applications?
