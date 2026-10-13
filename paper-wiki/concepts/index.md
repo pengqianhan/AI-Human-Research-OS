@@ -33,6 +33,7 @@
 * [OSWorld](osworld.md) - Benchmark for evaluating multimodal computer-use agents on open-ended, real-world desktop tasks executed inside real operating-system environments.
 * [On-policy distillation](on-policy-distillation.md) - Training a student on its own trajectories by matching a teacher's per-token distribution.
 * [PaperBench](paperbench.md) - Benchmark where agents replicate 20 ICML 2024 papers from scratch, graded against 8,316 rubric sub-tasks.
+* [PinchBench](pinchbench.md) - Practical productivity and data-analysis tasks for LLMs running as OpenClaw agents, each scored from 0 to 100.
 * [ProgramBench](programbench.md) - 200 program-reproduction tasks: rebuild a program's observable behavior from an execute-only reference binary and its documentation, scored by black-box test pass rates.
 * [Reflexion](reflexion.md) - Verbal self-reflection for language agents: lessons written after each attempt are kept in an episodic memory and guide later attempts, with no weight updates; a standard baseline for learning from experience in context.
 * [Reward hacking](reward-hacking.md) - An agent or policy raising its measured reward or benchmark score by exploiting the grader, environment, or evaluation channel instead of accomplishing the intended task.
@@ -46,6 +47,7 @@
 * [Terminal-Bench](terminal-bench.md) - Benchmark suite for evaluating AI agents on hard, realistic tasks in command-line environments.
 * [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
 * [τ²-Bench](tau2-bench.md) - Dual-control conversational tool-use benchmark (Airline, Retail, Telecom) where both the agent and a simulated user act on shared state, scored by an environment verifier.
+* [VitaBench](vitabench.md) - Interactive multi-turn tasks in everyday service applications, run against an LLM user simulator and scored by a rubric-based trajectory evaluator.
 * [WebArena](webarena.md) - 812 long-horizon tasks on self-hosted shop, admin, GitLab, forum, map, and wiki sites with functional evaluators; the standard browser-agent testbed and, via WebArena-Lite, a web-agent fine-tuning target.
 * [WebShop](webshop.md) - Simulated e-commerce site of 1.18 million products and 12,087 instructions where a text agent searches, selects options, and buys, rewarded by attribute, option, and price match.
 * [WideSearch](widesearch.md) - Bilingual benchmark for collecting broad sets of verifiable facts into complete tables.

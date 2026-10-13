@@ -7,7 +7,7 @@ tags:
 - computer-use-agents
 - desktop-automation
 - in-context-demonstration-learning
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-13T00:00:00Z
 ---
 
 # Scope
@@ -23,6 +23,7 @@ This topic tracks agents that act directly on graphical interfaces — desktops,
 * [AutoGUIWorld](../papers/2610.01215.md) - synthesizes GUI trajectories without deploying software: a planner scripts actions and their visual effects, gpt-image-2 edits each screenshot into the next, a grounding model labels clicks, and a VLM filters inconsistent transitions; 79,266 samples lift Qwen3.5-35B-A3B on OSWorld (33.0 → 40.8), Windows Agent Arena, macOSWorld, ScienceBoard (14.0 → 32.2), and ScreenSpot-Pro (31.7 → 57.1).
 * [nanoMuse](../papers/2610.08699.md) - puts screen control inside an open personal agent: on Android and desktops, operating the screen is the last rung of a ladder below skills, MCP servers, logged-in page fetches, and the browser, run as a one-action-per-screenshot loop in which the model must state each step in a sentence that a rule-based gate checks for committing words before the gesture runs; no success rates are reported.
 * [SoftwareGym](../papers/2610.12611.md) - trains on software that did not exist before: 182 agent-written desktop applications supply the trajectories, and Qwen3.5-9B fine-tuned only on them goes from 41.39% to 56.97% Pass@3 on 244 OSWorld tasks (28.40% to 46.77% single-run average), within about 1.3 points of matched-size training on OSWorld applications by single-run average.
+* [ExpActivator](../papers/2609.33304.md) - training-free personalization for mobile GUI agents: at every step the current screenshot is matched to the user's recorded screens in the frozen backbone's own visual features and the one best-matching past action is supplied as a reference; on AndroidIntent (82 users) it raises within-trajectory step success by 2.4-8.2 points across four 8-9B backbones with about one-fifth the history tokens, in offline evaluation against recorded actions.
 
 # Synthesis
 
@@ -33,6 +34,8 @@ AutoGUIWorld attacks the coverage problem that UI-Mate's closed-loop pipeline, M
 nanoMuse treats screen operation as a deployment question rather than a capability one. Every other paper here asks how to make a GUI agent succeed more often; nanoMuse asks when a personal agent should use the screen at all (only when no skill, MCP server, logged-in fetch, or browser route works, echoing MAI-UI's added MCP-call action) and how to govern a step once it does. Its answer is that a policy cannot judge a screenshot but can judge the model's own description of the step, so each gesture is preceded by a sentence the gate reads for committing words, plus the Android accessibility text under the finger. This makes the agent's stated intent part of the safety boundary, and it has not been evaluated: the paper reports no success rate and no test of whether descriptions and gestures can diverge.
 
 SoftwareGym and AutoGUIWorld answer the same question, how to get GUI training data without wrapping more real applications, from opposite ends. AutoGUIWorld deploys nothing and has an image generator draw each next screenshot, so it has no environment state and no verifier; SoftwareGym has coding agents write complete applications that run, persist state, and can be checked programmatically, at about $70 per application. SoftwareGym's 9B model gains on every OSWorld domain it evaluates, whereas AutoGUIWorld's larger model gained on multi-application tasks and lost on Chrome. The two use different base models, task subsets, and metrics (Pass@3 over three rollouts against mean task score), so this is a comparison of patterns, not of numbers.
+
+ExpActivator and UI-Mate both condition a GUI policy on prior experience at inference time, at different grains. UI-Mate turns demonstrations into subtask-level workflows; ExpActivator supplies one recorded action, chosen again at each screen, and its controls show the grain matters: a whole retrieved trajectory in the prompt performs like no history after the first step, while one action selected from that same trajectory adds 5.4 points. Its setting is one user's own history rather than general demonstrations, and its evaluation is correspondingly narrow: step-level agreement with what that user did, with the true action prefix supplied, on one dataset. It does not measure live task completion, which the OSWorld-style evaluations elsewhere in this topic do.
 
 # Open Questions
 
@@ -46,3 +49,4 @@ SoftwareGym and AutoGUIWorld answer the same question, how to get GUI training d
 * AutoGUIWorld's generated trajectories almost never contain a failed step. Can an image-generator world model also produce realistic errors and their visible consequences, so synthetic data teaches recovery, and does training on such data narrow the gap on long multi-app tasks that stays large even after its gains?
 * nanoMuse gates each screen action on the operator's own sentence describing it. How often does that description disagree with the gesture actually executed, especially when on-screen content tries to mislead the operator, and does adding the accessibility text under the target close the gap on desktops where many controls are unlabeled icons?
 * SoftwareGym builds eight of its twelve categories to mirror OSWorld's application domains. How much of the transfer to real applications survives when the synthesized categories share no function set with the test applications?
+* ExpActivator's gains are measured as agreement with a user's recorded next action under teacher forcing. Does step-level reference selection still help in live execution, where following a slightly wrong reference changes the next screen, and on tasks the user has rarely done before?

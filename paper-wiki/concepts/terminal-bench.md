@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-10-13T00:00:00Z
 ---
 
 # Definition
@@ -35,6 +35,8 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [Recursive Self-Rewrite](../papers/2610.02826.md) - evaluates a Qwen-3.8-27B fine-tuned on rewritten multi-harness trajectories under Terminus 2, pass@3 over three runs: Terminal-Bench 2 (89 tasks) 57.0% base, 53.4% direct SFT, 74.2% RSR; Terminal-Bench 3 (74) 0.0%, 5.4%, 9.5%; Terminal-Bench 4 (66) 1.5%, 4.5%, 9.1%; plus the authors' own Terminal-Bench Hard and Long-Horizon Terminal-Bench.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - not evaluated on directly: 20 successful gpt-5.6-sol Terminus-2 trajectories on Terminal-Bench 2.0 (334 turns) are the construction traces for the Terminal worldbook, which is then scored on AgentWorldBench's 354 Terminal next-observation records (65.42 against 55.76 for direct prompting with gpt-5.6-sol).
 * [MiMo-V2.6](../papers/2610.11959.md) - reports Terminal-Bench 2.1 at 89.9 (Pro) and 87.6 (Flash) against 89.1, 88.8, and 84.3 for Claude Opus 5, GPT-5.6 Sol, and Claude Fable 5, and Terminal-Bench 4.0 at 34.9 and 28.8 against 49.0, 39.9, and 42.4; the released 9B distilled model goes from 27.0 (Qwen3.5-9B) to 37.1 after SFT and 52.8 after RL on 2.1.
+* [TerminalHorizon](../papers/2610.13166.md) - primary evaluation for a model fine-tuned on about 3k synthesized long-horizon trajectories: Qwen3.5-27B under Terminus 2 goes from 46.3 to 55.0 on 1.0 (80 tasks), from 41.6 to 55.8 on 2.0, and from 46.82 to 60.67 on 2.1 (89 tasks each), mean pass@1 over three runs with a three-hour limit; the 2.0 base score is taken from the model card.
+* [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets: coding agents edit a Terminus 2 starter against 10 development instances and are scored on 40 held-out ones; gap closure ranges from -10.0 to 7.7 across five builders, no run differs significantly from its starter, and the unchanged starter's score has a standard deviation of 14.5 points across five evaluations.
 
 # Notes
 

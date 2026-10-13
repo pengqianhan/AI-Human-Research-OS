@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - gui-computer-use-agents
 - agent-harness-engineering
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-13T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ OSWorld evaluates computer-use agents on long-horizon, open-ended tasks executed
 * [nanoMuse](../papers/2610.08699.md) - named, with AndroidWorld, MemGUI-Bench, and OS-Harm, as a planned external benchmark for the open personal agent's screen-operating hands; the paper reports no OSWorld results.
 * [MiMo-V2.6](../papers/2610.11959.md) - reports OSWorld-Verified at 82.0 (Pro) and 80.8 (Flash), below Claude Opus 5 (83.4), GPT-5.6 Sol (83.0), and Claude Fable 5 (86.0).
 * [SoftwareGym](../papers/2610.12611.md) - evaluates on 244 OSWorld tasks from eight application domains with three rollouts per task: Qwen3.5-9B fine-tuned only on synthesized-application trajectories goes from 41.39% to 56.97% Pass@3 and from 28.40% to 46.77% single-run average, against 61.48% and 48.06% for matched-size training on OSWorld-application trajectories.
+* [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets: coding agents edit a screenshot ReAct starter against 10 development instances and are scored on 25 held-out ones; starters score 0 to 16 and candidates 4 to 16, gap closure ranges from -9.1 to 12.0, and no run differs significantly from its starter.
 
 # Notes
 

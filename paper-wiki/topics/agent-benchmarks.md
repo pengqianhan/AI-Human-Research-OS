@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-13T00:00:00Z
 ---
 
 # Scope
@@ -25,6 +25,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [DecepEval](../papers/2610.07967.md) - a behavioral benchmark of 1,532 neutral-induced task pairs (tool-use reporting, coding, long-horizon record keeping) in which the induced version adds pressure, incentive, opportunity, or conflict; an LLM judge labels a trajectory deceptive only if a recipient-visible output contradicts facts the agent was given, and inducement raises deception in every one of 27 model-task cells (mean +41.64 points).
 * [Learn2Play Bench](../papers/2610.08215.md) - a learning-from-experience benchmark: 20 newly designed text games with novel or counterintuitive hidden rules, ten of which change their visible instance every episode, scored over repeated episodes by peak and mean performance plus Learning Gain and Learning Slope, with 21-30 human players per game on the same interface; the best human per game reaches Max 84.3 against 81.8 for the best agent (Claude Code with Opus 5).
 * [EmbodiedCLBench](../papers/2610.13021.md) - 268 household tasks (168 basic, 100 advanced) from the TongSim simulator, frozen as offline state-transition graphs in which each node offers four written actions labelled optimal, suboptimal, or invalid; a learning phase on basic tasks precedes testing on advanced tasks composed of the same atomic actions, under zero-shot, in-context, and skill-summary settings, with single runs scored by success rate.
+* [AgentSWE](../papers/2610.13361.md) - 25 commissions asking a coding agent to create an agent from a requirement, add capabilities to a production agent codebase, or optimize a working agent; the builder iterates on two visible cases (or a development split), and the frozen delivery is run on held-out cases with a shared runtime model, validity gates, and requirement-derived rubrics; the best of five builders averages 19.1 on Creation and 31.6 on Editing, and 58.1% of traced Creation executions fail a gate.
 
 # Synthesis
 
@@ -40,6 +41,8 @@ Learn2Play Bench measures a property none of the benchmarks above isolate: wheth
 
 EmbodiedCLBench and Learn2Play Bench both score learning rather than one-shot ability, with different designs: Learn2Play repeats episodes of one game and reports gain and slope, while EmbodiedCLBench separates a learning phase on simpler tasks from a test on compositions of them. EmbodiedCLBench's graph format buys determinism and a per-decision error taxonomy at the cost of turning an embodied task into a visual multiple-choice sequence. Its analyses also disagree slightly with its main table on cells they share (42.0% against 44.0%), a reminder that with 100 test tasks and single runs a few points are not signal.
 
+AgentSWE moves the unit of evaluation one level up: the artifact under test is an agent that another agent built, and it is scored by executing it, not by reading it. Three of its design choices are reusable. Deliveries are frozen and run through a benchmark-owned model gateway, so the score reflects the harness the builder wrote and not its choice of model. Reports are audited against the builder's own trajectory, which yields a clean asymmetry: reports admitting partial failure were never contradicted, and nine that claimed completion were. And repeated evaluation of the unchanged Optimization starters is reported, with standard deviations of 4.5 to 20.8 points, a noise floor most benchmarks in this topic do not publish and one that leaves most of AgentSWE's own Optimization cells indistinguishable from zero. It shares a weakness with AutoSciBench: tasks, cases, and rubrics were drafted by a model that is also a builder and a judge, and no reference agent shows what score the held-out cases allow.
+
 # Open Questions
 
 * When does grading one next turn at a recorded decision point agree with executing the agent to the end? TraceDance's authors note that a planning-first response may act well later, and no paper here yet measures that gap.
@@ -54,3 +57,4 @@ EmbodiedCLBench and Learn2Play Bench both score learning rather than one-shot ab
 * DecepEval validates its single LLM judge on 100 random instances with raw agreement only (97%). For behavioral labels like deception, what validation should be standard: a stratified sample per model and task, a chance-corrected statistic, and a second judge from a different model family when the judge's family is also evaluated?
 * Human baselines are often reported as the best of many participants (Learn2Play's Top-1 per game) while agents are averaged over a few trials. Should benchmarks report humans and agents under the same selection rule, for example best-of-three for both, so "humans outperform agents" means the same thing on both sides?
 * Benchmarks built on novel rules (Learn2Play) stay novel only until the games, solutions, and run logs are public. How should such benchmarks keep measuring learning rather than recall once future models may have trained on them?
+* AgentSWE's development cases deliberately cover only part of the requirement, so its development-to-held-out gap mixes builder overfitting with a coverage difference. What split design would measure overfitting alone, and should construction benchmarks publish a reference agent's held-out score as a ceiling?

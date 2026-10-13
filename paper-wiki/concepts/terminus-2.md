@@ -8,7 +8,7 @@ tags:
 - agent-harness-engineering
 - terminal-agents
 - coding-agents
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-13T00:00:00Z
 ---
 
 # Definition
@@ -26,6 +26,8 @@ Terminus 2 is a general-purpose harness for terminal tasks distributed with Harb
 * [ActiveSaddler](../papers/2610.00906.md) - the base harness optimized on Terminal-Bench 2.0 with gpt-5.5: 64.2 unoptimized, 80.0 ± 2.5 after optimization, against 69.2 for Terminus-KIRA.
 * [Recursive Self-Rewrite](../papers/2610.02826.md) - the general target harness: harness-assisted successes from StateM and a Terminus 2 continuation variant (RSRT) are rewritten into fresh Terminus 2 trajectories for SFT, and the trained model runs under Terminus 2 alone (Terminal-Bench 2 pass@3 74.2% against 57.0% for the base model).
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - a gpt-5.6-sol Terminus-2 agent, run on Terminal-Bench 2.0 through Harbor, produced the 20 construction trajectories from which the Terminal worldbook is built; Terminus 2's tmux-keystroke actions and terminal-screen observations define the action and observation interface the simulator reproduces.
+* [TerminalHorizon](../papers/2610.13166.md) - the harness for collecting DeepSeek-V4-Pro-0813 teacher trajectories in 1,535 synthesized environments and for all Terminal-Bench evaluation (with a JSON parser, and summarization triggered below 131,072 tokens of remaining context), and the base of its 12-hour research harness for the RSI-Exam cases.
+* [AgentSWE](../papers/2610.13361.md) - the starter agent of its Terminal-Bench Optimization task, which coding agents are commissioned to improve; the unchanged starter's held-out score ranges from 2.5 to 35.0 across five evaluations, which the paper reports as evaluation noise.
 
 # Notes
 

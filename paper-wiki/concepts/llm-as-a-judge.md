@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-10-13T00:00:00Z
 ---
 
 # Definition
@@ -47,6 +47,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [Recursive Game Creator](../papers/2610.08621.md) - the Reviewer acts as a pairwise judge between game versions: it reads anonymized trajectories and screenshots, without source code or version order, and returns an A/B preference, a tie, or an unavailable verdict with evidence paths that decides which build is kept.
 * [DecepEval](../papers/2610.07967.md) - a single judge (Claude Fable 5, temperature 0) labels every trajectory deceptive or honest under a five-condition rule with claim-by-claim JSON; it agrees 97% with aggregated labels from five human annotators on 100 random instances and flags implicit concealment more often than the annotators, but no second judge family or chance-corrected agreement is reported.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - every single-step result uses AgentWorldBench's official gpt-5.2 judge, which scores a predicted observation against the real one on Format, Factuality, Consistency, Realism, and Quality (1-5, rescaled to 0-100); the judge shares a model family with the worldbook constructor and one of the two simulators, and no human check is reported.
+* [TerminalHorizon](../papers/2610.13166.md) - gpt-5.6-luna at high reasoning effort reads each complete teacher trajectory without the reward or a success label and decides KEEP or DROP on validity, environment-grounded progress, and multi-turn training value (two trajectories per task from 1,535 tasks, 2,852 kept); the same model judges 190 candidate train-test pairs for contamination and flags none. No human check of either judgment is reported.
+* [AgentSWE](../papers/2610.13361.md) - after deterministic validity gates, a frontier model at its highest effort (GPT-5.6 Sol for Creation, DeepSeek-V4.1-Flash for Editing) applies a requirement-derived rubric to each execution's artifacts, trace, and resulting state, with ceilings bound to recorded violations; the judge shares a model family with at least one builder and also grades the static code assessment, and no agreement with human scoring is reported.
 
 # Notes
 

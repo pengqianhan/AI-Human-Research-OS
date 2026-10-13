@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-13T00:00:00Z
 ---
 
 # Scope
@@ -35,6 +35,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [MiMo-V2.6](../papers/2610.11959.md) - a disclosed industrial recipe: one mixed-task GRPO run per model (1,568 prompts x 16 rollouts, 2.7-3.7B tokens per step, up to 1M context, $2.6M for the 1.02T-parameter Pro) across code, general, visual, and cyber tasks under several mini-harnesses, with groupwise agentic grading that moves positive advantage toward better passing rollouts, length and tool-error penalties, a frozen MoE router, and multi-teacher on-policy distillation afterwards; DeepSWE v1.1 rises from 58.4 to 72.6 during RL.
 * [SoftwareGym](../papers/2610.12611.md) - plain SFT of Qwen3.5-9B (language model only, vision encoder frozen) on 49,445 examples (from 3,715 trajectories before length filtering) collected in synthesized desktop applications, kept only when an outcome judge and a process judge both score at least 0.8; a matched-size comparison finds synthesized-application data close to native OSWorld-application data on OSWorld by single-run average (46.77% against 48.06%) and ahead on the synthesized benchmark.
 * [ProgramGym](../papers/2610.13395.md) - full-parameter SFT of Qwen3.8-27B on 64,505 context segments from DeepSeek-V4-Flash-0731 rollouts filtered by test pass rate; Tests Passed on ProgramBench rises from 34.87% to 42.84% under Claude Code while Almost Resolved falls from 3.50% to 1.50%, and under the Program-Agent workflow the gain from training shrinks to 0.54 points.
+* [TerminalHorizon](../papers/2610.13166.md) - full-parameter SFT of Qwen3.5-27B (and the 35B-A3B and 122B-A10B models) on 2,852 DeepSeek-V4-Pro-0813 trajectories from 1,535 synthesized terminal environments, kept by an LLM filter that judges process without seeing the reward and retains informative failures; Terminal-Bench 2.1 rises from 46.82% to 60.67% and all 12 reported benchmarks improve, with the comparison to larger datasets made per trajectory, not per token.
 
 # Synthesis
 
@@ -55,6 +56,8 @@ MiMo-V2.6 shows what the mechanisms above look like when combined at production 
 
 SoftwareGym and ProgramGym are both plain SFT on trajectories from agent-built environments, and together they show two ways such results can be narrower than the headline. ProgramGym's fine-tuned model passes more tests on average but completes fewer programs, and its advantage over the base model nearly vanishes once both run inside a review-and-revise workflow, so part of what SFT bought is something a better harness also supplies. SoftwareGym's gain holds on single-run averages as well as best-of-three, but its matched-size comparison shows synthesized data roughly tying native data on the real benchmark rather than adding to it. ProgramGym's teacher is a stronger model than its student, SoftwareGym does not name its trajectory source in the sections read, and neither trains on unfiltered trajectories, so neither separates the environment's verified signal from distillation.
 
+TerminalHorizon makes the strongest data-efficiency claim among the SFT papers here (about 3k trajectories against 32k for Terminal-Universe on the same base model and harness) and is the clearest case of why trajectory count is a poor unit: its trajectories average 52.8 turns and train at up to 262,144 tokens per sequence, and token volume is not reported for either side of that comparison. Its filter also differs from its neighbours'. ProgramGym filters by test pass rate, SoftwareGym by outcome and process judges that must both score at least 0.8, GraphForge by anchored rubrics; TerminalHorizon's reviewer never sees the outcome and keeps failed trajectories whose process is sound, in line with AREX-2's choice to keep failures. TerminalHorizon does not train on its unfiltered set, so whether its filter matters is untested; GraphForge remains the one paper in this group that compares its selection rule with random selection. Like ProgramGym it distills a stronger teacher, and like ProgramGym it has no control that separates the environments' contribution from the teacher's.
+
 # Open Questions
 
 * Does evolution strategies' reported horizon-dependent advantage over policy-gradient RL hold on frontier-scale models and real (non-controlled) long-horizon tasks, not just the paper's controlled Sudoku crossover?
@@ -74,3 +77,4 @@ SoftwareGym and ProgramGym are both plain SFT on trajectories from agent-built e
 * Recursive Self-Rewrite trains on rewrites that are about six times more numerous than the raw trajectories it compares against. With the data volume matched, how much of its gain over direct SFT remains, and does rewriting still help when the source and deployment harnesses are the same?
 * MiMo-V2.6 pools four domains in one run with 68% coding tasks, while One to More, More to One finds pooled RL hides category regressions even inside SWE tasks. Does the see-saw appear across domains at this scale, and do MiMo's groupwise graders (described for code tasks and open-ended visual design) widen it by giving some domains a richer signal than others?
 * ProgramGym's SFT raised average tests passed and lowered near-complete solutions. Is that a property of filtering on pass rate over mostly easy tasks, and would filtering or weighting by completion reverse it?
+* TerminalHorizon and Terminal-Universe share a base model and harness but differ tenfold in trajectory count and by an unreported factor in tokens. Would reporting SFT results per training token change which synthesis methods look data-efficient, and is the benefit of long trajectories more than the benefit of more tokens?
