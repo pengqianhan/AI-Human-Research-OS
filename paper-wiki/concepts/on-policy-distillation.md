@@ -5,7 +5,7 @@ description: Training a student on its own sampled trajectories by matching a te
 tags:
 - on-policy-distillation
 - post-training-feedback
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Definition
@@ -28,6 +28,7 @@ The second variant is what makes OPD a channel for arbitrary natural-language su
 * [One to More, More to One](../papers/2609.23377.md) - label-routed multi-teacher OPD (MOPD) merges three same-origin SWE category experts into one student, adding ReLU-gated reward extrapolation that keeps only tokens where the routed expert beats the shared base; pure distillation mode, with no environment reward in the student loss, recovers 80.8-111.1% of each expert's gain.
 * [X-Tree](../papers/2609.32993.md) - context-conditioned, same-weights OPSD for agents (ScienceWorld, WebShop) where the privileged context is a deterministically mined skill tree rendered as text instead of an LLM-written skill bank; a logistic confidence gate pulls the student toward the teacher only on tokens the context makes more likely. The mined rendering matches or beats gpt-oss-120b- and GPT-o3-written banks, an empty context gives no gain, and a word-scrambled rendering keeps most of it.
 * [MiMo-V2.6](../papers/2610.11959.md) - MOPD2 follows mixed-task RL: besides full student rollouts supervised by RL-trained domain teachers, the student samples single turns from history prefixes taken from teacher rollouts or SFT demonstrations, each supervised token by token by a preassigned teacher; SFT-trained teachers cover domains without reliable rewards. The final results are not separated from the preceding RL stage.
+* [Agent-Reflex](../papers/2610.17953.md) - context-conditioned, same-weights OPD added to noisy agentic RL: the policy re-scores its own action tokens with its environment's reflection skill card prepended, and SEED's sigmoid weight on the detached log-probability shift scales each token's term; removing the term lowers both AgentNoiseBench settings (45.9 to 43.7 and 12.3 to 9.5).
 
 # Notes
 

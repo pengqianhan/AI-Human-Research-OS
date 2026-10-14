@@ -7,7 +7,7 @@ tags:
 - mcp
 - tool-use
 - agent-infrastructure
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Definition
@@ -27,6 +27,7 @@ The Model Context Protocol (MCP) standardizes how a language-model application d
 * [Omni-IO Skills](../papers/2609.31847.md) - exposes multimodal understanding, generation, and utility operations as MCP tools behind one contract (task type, prompt, parameters, asset inputs), while a separate provider layer binds each tool to a concrete model and fallback so backends can change without editing Skills.
 * [nanoMuse](../papers/2610.08699.md) - MCP servers, alongside skills and command-line tools, are the first rung of the personal agent's ladder for reaching an app; the agent falls back to logged-in page fetches, the browser, and finally the device screen only when no such tool works.
 * [SuperNav](../papers/2610.12126.md) - a robot's navigation operations (scene initialization, four-view panorama, turning, visual-point navigation, session closure) are exposed to Codex CLI as a whitelisted set of MCP tools; the whitelist bounds environment actions, while the ban on reading scene assets and ground truth through the filesystem is instruction-level only.
+* [Agent-Reflex](../papers/2610.17953.md) - 557 high-usage MCP servers from the Smithery registry seed its executable training environments, and every benchmark is run in the standard MCP interaction format.
 
 # Related
 

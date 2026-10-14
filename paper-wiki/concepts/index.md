@@ -1,6 +1,7 @@
 # Concept
 
 * [Agent Workflow Memory](agent-workflow-memory.md) - Induces reusable multi-step workflows from an agent's past experience and supplies them to later tasks; a common baseline for procedure reuse in web and interactive agents.
+* [Agent-World](agent-world.md) - Environment synthesis that mines databases from real service themes, validates generated tools against them, and co-evolves environments and policies.
 * [AgentScope](agentscope.md) - Open-source, Alibaba-developed multi-agent LLM platform providing model/memory/tool abstractions, a ReAct-based agent core, and infrastructure for both population-scale simulation and developer-facing agentic application deployment.
 * [ALFWorld](alfworld.md) - Text-based household-task environment aligned with ALFRED, a common long-horizon testbed for LLM agents, skill optimization, and context management.
 * [AlphaEvolve](alphaevolve.md) - Google DeepMind's LLM-powered evolutionary coding agent for algorithm and mathematical discovery, a common reference baseline for LLM-driven evolutionary discovery systems.
@@ -13,6 +14,7 @@
 * [Context rot](context-rot.md) - Degradation of model quality as context grows, even inside the physical context window.
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
+* [EnvScaler](envscaler.md) - Programmatic synthesis of tool-interactive training environments with executable tools and verifiable tasks, and the RL task pool built that way.
 * [GAIA2](gaia2.md) - Simulated-smartphone benchmark of dynamic, asynchronous assistant tasks grouped into persona Universes, used for Universe-disjoint harness-optimization splits.
 * [GameCraft-Bench](gamecraft-bench.md) - 140-task benchmark of complete games built end to end by agents in a real game engine, scored through replayed gameplay against game-specific rubrics on Mechanics, Depth, Visuals, and Art.
 * [GDPVal](gdpval.md) - 1,320-task, 44-occupation benchmark of economically valuable work graded by expert rubrics and pairwise Elo against human deliverables; GDPVal-AA is its 220-task gold subset.
@@ -20,7 +22,9 @@
 * [GISA](gisa.md) - General information-seeking benchmark with structured item, set, list, and table answers.
 * [GraphRAG](graphrag.md) - Microsoft's graph-based RAG that builds an LLM-extracted entity graph and community summaries over a corpus and answers global questions by map-reducing over them.
 * [GRPO](grpo.md) - Value-free RL algorithm that estimates advantage from a group of same-prompt responses rather than a learned critic.
+* [Harvey LAB](harvey-lab.md) - Harvey's 1,251-task legal-work benchmark across 24 practice areas, scored by an LLM judge against per-task criteria.
 * [Humanity's Last Exam](humanitys-last-exam.md) - 2,500-question expert-written multimodal academic benchmark built to stay hard for frontier LLMs; agent papers usually report its text-only subset.
+* [JobBench](jobbench.md) - 65 end-to-end professional job tasks in seven occupational domains, with deliverables judged against a weighted rubric.
 * [LIBERO-Pro](libero-pro.md) - A perturbed variant of the LIBERO tabletop-manipulation benchmark that stress-tests a frozen vision-language-action policy under deployment perturbations such as instruction redirection and object-position swaps.
 * [LLM-as-a-Judge](llm-as-a-judge.md) - Using a language model to score, rank, or select other model outputs.
 * [LoCoMo](locomo.md) - Very-long-term conversational memory benchmark spanning single-hop, multi-hop, open-domain, and temporal reasoning.
@@ -51,3 +55,4 @@
 * [WebArena](webarena.md) - 812 long-horizon tasks on self-hosted shop, admin, GitLab, forum, map, and wiki sites with functional evaluators; the standard browser-agent testbed and, via WebArena-Lite, a web-agent fine-tuning target.
 * [WebShop](webshop.md) - Simulated e-commerce site of 1.18 million products and 12,087 instructions where a text agent searches, selects options, and buys, rewarded by attribute, option, and price match.
 * [WideSearch](widesearch.md) - Bilingual benchmark for collecting broad sets of verifiable facts into complete tables.
+* [WorkBuddy-Bench](workbuddy-bench.md) - Tencent's Code, Web, and Office agent benchmark graded by hidden tests, file checks, and LLM or VLM judge items.

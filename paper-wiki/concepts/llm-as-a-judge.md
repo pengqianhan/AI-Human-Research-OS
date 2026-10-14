@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-10-13T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Definition
@@ -49,6 +49,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - every single-step result uses AgentWorldBench's official gpt-5.2 judge, which scores a predicted observation against the real one on Format, Factuality, Consistency, Realism, and Quality (1-5, rescaled to 0-100); the judge shares a model family with the worldbook constructor and one of the two simulators, and no human check is reported.
 * [TerminalHorizon](../papers/2610.13166.md) - gpt-5.6-luna at high reasoning effort reads each complete teacher trajectory without the reward or a success label and decides KEEP or DROP on validity, environment-grounded progress, and multi-turn training value (two trajectories per task from 1,535 tasks, 2,852 kept); the same model judges 190 candidate train-test pairs for contamination and flags none. No human check of either judgment is reported.
 * [AgentSWE](../papers/2610.13361.md) - after deterministic validity gates, a frontier model at its highest effort (GPT-5.6 Sol for Creation, DeepSeek-V4.1-Flash for Editing) applies a requirement-derived rubric to each execution's artifacts, trace, and resulting state, with ceilings bound to recorded violations; the judge shares a model family with at least one builder and also grades the static code assessment, and no agreement with human scoring is reported.
+* [Harness²](../papers/2610.14224.md) - all three benchmarks are judge-scored in whole or part: JobBench by Claude Opus 4.8, the same model as the harness editor and output selector; LAB by Claude Sonnet 4.6; WorkBuddy-Bench's model-graded items by Gemini 3.5 Flash, also one of the executors. A guard keeps rubrics and scores out of every editing session.
 
 # Notes
 

@@ -8,7 +8,7 @@ tags:
 - conversational-agents
 - simulated-users
 - tool-use
-timestamp: 2026-10-13T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ VitaBench (He et al., 2025, "VitaBench: Benchmarking LLM Agents with Versatile I
 * [TerminalHorizon](../papers/2610.13166.md) - transfer benchmark for a model fine-tuned only on terminal trajectories: Qwen3.5-27B goes from 20.5 to 31.8 Avg@4 on the English Cross-domain set (four runs per task, 300-step limit), with DeepSeek-V4-Pro-0813 as both user simulator and trajectory judge.
 * [CompoWorld](../papers/2609.33665.md) - VitaBench and VitaBench 2.0 are two of its eight evaluation benchmarks: training on composed multi-service environments adds 10.50 and 1.62 points over the Qwen3.6-35B-A3B backbone, with frontier models still ahead on 2.0.
 * [NeoHorse-1](../papers/2609.08183.md) - one of four end-to-end agentic benchmarks for its 4B and 9B models, run once under the official harness with DeepSeek-V4-Flash substituted as user simulator and judge because the recommended models were unavailable.
+* [Agent-Reflex](../papers/2610.17953.md) - main-suite benchmark: 17.5 as the macro-average of four domains under Avg@4, against 16.0 for EnvACE-8B and 6.8 for Reflexion-8B; also the base of AgentNoiseBench's Vita setting, where its 12.3 is below the 14.2 quoted for NoisyAgent.
 
 # Notes
 

@@ -6,7 +6,7 @@ tags:
 - benchmarks
 - tool-calling
 - function-calling
-timestamp: 2026-09-28T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Definition
@@ -19,6 +19,7 @@ BFCL (Berkeley Function-Calling Leaderboard; Patil et al., ICML 2025) evaluates 
 * [NeoHorse-1](../papers/2609.08183.md) - BFCL V4 is one of its agentic tool-use benchmarks, and part of the 5-benchmark subset used for its data ablations.
 * [Atria Dawn](../papers/2609.15818.md) - lists BFCL v4 among the 12 General Agentic Intelligence benchmarks in its model-evaluation table.
 * [Iris](../papers/2609.04304.md) - cites BFCL as a general tool-use domain, not targeted in training, to which its search-specialized data and models transferred positively.
+* [Agent-Reflex](../papers/2610.17953.md) - BFCL V4 in a five-benchmark tool-use suite: 52.9 by official averaging over six categories, against 51.4 for Agent-World-8B and 40.4 for the Qwen3-8B backbone.
 
 # Notes
 

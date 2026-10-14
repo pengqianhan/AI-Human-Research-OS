@@ -6,7 +6,7 @@ resource: https://arxiv.org/abs/2603.28052
 tags:
 - agent-harness-engineering
 - harness-evolution
-timestamp: 2026-10-04T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ Meta-Harness (Lee, Nair, Zhang, Lee, Khattab, and Finn, arXiv:2603.28052, COLM 2
 * [Mid-Harness](../papers/2609.39982.md) - cites Meta-Harness as automated harness optimization and takes the opposite approach: the harness code stays fixed and compute goes into sampling and verifying each action at the model-call boundary.
 * [ActiveSaddler](../papers/2610.00906.md) - same-budget baseline with gpt-5.5: 54.2% on GAIA2 and 66.7% on Terminal-Bench 2.0, against 59.8% and 80.0% for AutoSaddler with ActiveSaddler's adaptive curriculum.
 * [Context Language Models](../papers/2609.37725.md) - cites Meta-Harness as the offline, agent-optimized alternative to hand-engineered context-management harnesses, then moves the optimized object out of harness code: the context policy becomes model behavior that a GEPA-style skill-evolution loop or RL can improve, with the paper arguing a harness is "reusable procedures for managing context" that can be rewritten as skills and eventually absorbed into weights.
+* [Harness²](../papers/2610.14224.md) - offline baseline searched on the training halves of WorkBuddy-Bench and JobBench and on LAB's 24-task dev set, then deployed unchanged; one label-free Harness² step beats it in eleven of twelve benchmark-configuration cells (the exception is LAB with Gemini 3.5 Flash under Codex, 76.5 against 75.6), and the paper reports Meta-Harness using more compute than Harness² at k = 5.
 
 # Notes
 

@@ -7,7 +7,7 @@ tags:
 - verification
 - agent-evaluation
 - long-horizon-agents
-timestamp: 2026-10-04T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Scope
@@ -20,6 +20,7 @@ This topic tracks how extra compute at inference time, on a single task, raises 
 * [AREX-2](../papers/2609.38288.md) - scales *rounds within one task*: defines self-improvement as best-so-far score rising with the round budget, splits it into gain per round and number of productive rounds, and trains the model on long improvement trajectories so later rounds stay productive.
 * [Mid-Harness](../papers/2609.39982.md) - scales *actions within one trajectory*: samples several candidate actions per step and verifies them before execution at the model-harness boundary, and shows this composes with Best-of-T and Sequential Refine at lower estimated token cost than more trajectories alone.
 * [RSIGame](../papers/2609.39045.md) - scales *development rounds within one task* and measures the scaling curve directly (Figure 3, 40 GameCraft-Bench tasks): under the same per-round budget, Play2Code plateaus or regresses as rounds are added while RSIGame keeps converting rounds into quality, and the gain splits into a local explore-diagnose-improve loop that is volatile on its own and a global monitor that retains the best checkpoint and stops at saturation, matching much longer fixed-budget runs with fewer rounds.
+* [Harness²](../papers/2610.14224.md) - scales *harness edits for one task*: parallel recursion composes from k candidates of each scope and their runs, sequential recursion chains k edit steps; both rise monotonically from k = 1 to 5 on WorkBuddy-Bench Code and Office (parallel 76.5 to 80.8 and 79.5 to 83.4), while per-task revision without probes and retrieval memory gain less or inconsistently.
 
 # Synthesis
 
@@ -29,6 +30,8 @@ AREX-2 locates the bottleneck elsewhere: in whether the policy can keep turning 
 
 Cost reporting differs across the three. Mid-Harness reports idealized parallel latency, verifier tokens, and reference-priced dollars; LLM-as-a-Verifier states its tournament's cost as O(Nk²) comparisons rather than O(N²); AREX-2 reports budgets in hours and turns. A shared cost unit would be needed to say which lever is cheapest for a given gain.
 
+Harness² adds another lever to this topic's four: compute spent on the harness for this one task. Parallel recursion widens the pool of candidate harnesses and their runs, and sequential recursion deepens a chain of edits, the harness analogue of AREX-2's rounds. Both rise monotonically from k = 1 to 5 on WorkBuddy-Bench, while Harness Scaling (per-task revision without probes) regresses between k = 2 and 3 and ReasoningBank's memory-aware scaling fluctuates. Like LLM-as-a-Verifier and Mid-Harness it ends with a selector over complete outputs, and its failure analysis repeats their lesson that selection is where gains leak: one case picks a 55-point output over a 95-point one. It reports cost as total tokens, a fourth unit beside the three already used here.
+
 # Open Questions
 
 * At a matched token or dollar budget, which lever gives the most success on the same benchmark: more actions per step, more trajectories, more rounds, or more reasoning effort for a single candidate? Mid-Harness lists the last comparison as untested.
@@ -36,3 +39,4 @@ Cost reporting differs across the three. Mid-Harness reports idealized parallel 
 * Verifiers err most on later, state-dependent steps (Mid-Harness: 68.13% teacher agreement at turns 1-4 against 54.07% at turns 17-32). Can verification effort be spent adaptively on irreversible or environment-changing actions, and how much of the gain does that keep?
 * AREX-2's decomposition into gain per round (r̄) and productive rounds (T*) is defined but not estimated. Can it be measured for verifier-based methods too, so that "keeps improving with budget" becomes a comparable number across papers?
 * RSIGame's development-time scaling depends on a monitor that can compare whole builds without the benchmark's rubric. AREX-2 and Mid-Harness use verifiers tied to the task's own success signal. When no cheap external verifier exists, how much of round-level scaling survives with a proxy monitor, and how should the proxy be audited (RSIGame uses a 20-task free-play study) before its best-checkpoint decisions are trusted?
+* At matched tokens, does editing the harness for a task (Harness²) beat sampling more trajectories under the original harness with the same selector? The paper specifies a Best-of-k baseline but reports no number for it in the text or tables.

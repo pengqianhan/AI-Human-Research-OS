@@ -6,7 +6,7 @@ tags:
 - agent-skills
 - skill-libraries
 - self-evolution
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-14T00:00:00Z
 ---
 
 # Scope
@@ -29,6 +29,7 @@ This topic tracks papers that treat agent capabilities as reusable, validated sk
 * [X-Tree](../papers/2609.32993.md) - the topic's counter-position: reusable sub-procedures are mined from trajectories by counting (recurrence, length, success), never written by an LLM, and consumed by training (offline RL instances, an RLVR bonus, an OPSD privileged context) rather than retrieved at inference; the same tree also beats four LLM-written in-context skill banks on MiniWoB++.
 * [EviSkill](../papers/2610.05030.md) - improves one skill document per environment with edits that each carry replayable evidence (the exact trajectory step ranges that justify them), re-executes those ranges under the edited skill to accept, repair, or reject each edit, and keeps replay-supported edits from validation-rejected revisions in a provisional ledger; best in 14 of 18 settings against Trace2Skill, EvoSkill, SkillGrad, and SkillOpt on ALFWorld, AppWorld, and ScienceWorld.
 * [EmbodiedCLBench](../papers/2610.13021.md) - a controlled test of whether writing a skill beats keeping the raw experience: after the same two basic tasks, agents carry either full trajectories or a self-written Markdown skill summary into an unseen composed task; trajectories win in 5 of 8 harness-model pairs and skills in 3, skills shift step-level decisions less, and neither improves with more learning tasks.
+* [Agent-Reflex](../papers/2610.17953.md) - 1,170 reflection skills mined per environment from matched success and failure trajectories of nine models under injected tool errors, each a structured record (trigger, diagnosis, recovery among retry, switch, ask, or abort, reversibility flags); the library is used only to generate and distill training signal and is absent at inference.
 
 # Synthesis
 
@@ -40,6 +41,8 @@ RASO and X-Tree pull the topic in opposite directions on where a skill should li
 EviSkill adds provenance at the level of a single edit, which this topic has so far tracked for whole skills (SkillFoundry's validated packages, Code2Skill's reconstruction check). Each line it adds to a skill keeps a pointer to the trajectory steps that motivated it, and the line is kept only if re-running those steps under the edited skill changes the behavior as intended. Its results also put a number on a risk the "improve an existing skill" papers mostly report as a footnote: on ScienceWorld with GPT-5.5, three of four evolution baselines end below the unevolved initial skill (54.50-67.30 against 76.78). Its own margins on AppWorld are within one or two test tasks, and its optimizer is GPT-5.5 even for 4B and 9B action models, so how much of the gain comes from replay rather than a stronger editor is not yet isolated.
 
 EmbodiedCLBench is evidence about this topic's premise rather than about any library: under identical experience, a self-written skill summary did not reliably beat the raw trajectories it was distilled from, and adding more source tasks improved neither. Its skills are single unvalidated summaries, not the validated and maintained libraries most papers here build, so the result bounds what unvalidated distillation buys rather than what a curated library can do.
+
+Agent-Reflex uses a skill library to train a policy rather than to prompt one. Its skills are mined per environment from paired successes and failures, kept as structured records, and stripped from every stored training input, so the deployed policy carries no library at all. That gives a different reading of EmbodiedCLBench's result, in which a self-written skill did not reliably beat the raw trajectories it summarized as context: Agent-Reflex's ablation finds that keeping the skill-derived SFT data while removing the distillation term lowers noise robustness, which the authors read as the gain coming from the token-level signal rather than from exposure to the skills (one benchmark, one backbone). EviSkill also keeps one skill document per environment and accepts edits only on replayed evidence; it shows environment-level skills can be maintained with evidence at run time, Agent-Reflex that they can be trained into weights, and no paper here compares the two uses of the same library.
 
 # Open Questions
 
@@ -56,3 +59,4 @@ EmbodiedCLBench is evidence about this topic's premise rather than about any lib
 * RASO adapts a retrieved skill to one target harness at optimization time, while this topic's portability question asks what metadata would let one package serve many harnesses. Could the adaptation rules (domain-noun removal, harness-corroborated tool claims) be run once per harness and stored as variants inside the skill package, and would a package carrying its own harness description make Cross-Harness Adaptation unnecessary?
 * X-Tree's counted hierarchy beats LLM-written skill banks as in-context advice on MiniWoB++ and matches them as OPSD context, at zero LLM cost. For which skill types does an LLM author still add value over counting: procedures that recur rarely, that need explanation to be followed, or that span tools whose actions cannot be canonicalized to a shared alphabet?
 * EviSkill stores, with each skill edit, the trajectory step ranges that justified it. Should a skill package carry that per-line provenance after optimization ends, so a maintainer can re-run the motivating case before deleting or rewriting a line, and does replay acceptance on those motivating steps predict whether the line helps on tasks that did not produce it?
+* Does a skill library mined from failure contrasts across many models carry more than one mined from a single model's own failures? Agent-Reflex samples nine models for contrasts but does not ablate the pool.
