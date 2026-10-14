@@ -15,6 +15,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260908-001 - Lingua franca for shared artifacts: keeps UI chrome and skill docs in English and confines Chinese to the human's own note content.
 - cog-20260929-001 - Reuse-first templates: a template is the greatest common divisor of its projects, so no project starts from scratch, and each project must stay exportable as its own repository.
 - cog-20260929-002 - Scripted tooling before a scheduled agent: for one mechanical recurring chore (the related-projects scan), preferred a `gh` keyword script over a Claude scheduled task; low confidence.
+- cog-20261014-001 - A gate that needs routine human clearing is removed, not staffed: for the skill mirror sync, twice dropped a manual safeguard for automation plus an audit trail, while keeping the machine-enforced CI gate; medium confidence.
 
 ## Entries
 
@@ -99,3 +100,25 @@ timestamp: 2026-07-04T00:00:00+12:00
 - related:
   - [cog-20260724-002](known_knowns.md#cog-20260724-002-branch-as-the-containment-boundary-for-unattended-agent-work)
   - [cog-20260923-001](known_knowns.md#cog-20260923-001-human-read-agent-write-division-of-the-os)
+
+## cog-20261014-001 A gate that needs routine human clearing is removed, not staffed
+
+- content: When a safeguard turns into a step the human must clear by hand on a recurring basis, the human resolves it by removing the step and relying on automation plus an audit trail, and accepts the stated risk. Offered machinery that would preserve the safeguard, they prefer the option that deletes a mechanism. Gates a machine enforces are kept.
+- source: inferred
+- confidence: medium
+- evidence: Two decisions on the `mattpocock-skills` mirror. 2026-07-24: after a refresh PR sat unmerged, the sync was changed to merge its own PR (ADR 0001 amendment). 2026-10-14: a refresh PR failed CI because installed copies no longer matched the hub. The agent recommended keeping the version pin and changing `verify.sh` to tolerate a lagging copy, and listed a workflow reinstall step and a clearer failure message as alternatives. The human proposed a fourth route themself, symlinking the installs (「如果那几个不是软链接安装的skill也改为软链接安装是不是就可以彻底解决了」), and chose it (「走软链接」) after being told it gives up "inert until installed" for the three installed skills. Counter-evidence that bounds the scope: on 2026-09-30 the human kept the required CI check on `main` with no owner bypass (「我自己也遵守规则」), a gate that clears itself.
+- created: 2026-10-14
+- last_updated: 2026-10-14
+- status: active
+- domain: automation and governance design
+- scope: Safeguards on the third-party skill mirror in this repository, both observed on one subsystem with a trusted upstream; no claim about gates on research results, evaluation, publication, or consequential project decisions.
+- evidence_type: explanation
+- last_verified: 2026-10-14
+- freshness: current
+- responsibility_relevance:
+  - When proposing a safeguard, state who clears it and how often; prefer one a machine enforces over one a person must remember.
+  - When a mechanism misbehaves, offer the fix that removes a mechanism next to the fixes that add one.
+  - State the risk being given up in one sentence, let the human accept it, and record it with a reversal path.
+- related:
+  - [cog-20260929-002](unknown_knowns.md#cog-20260929-002-scripted-tooling-before-a-scheduled-agent-for-mechanical-chores)
+  - [cog-20260724-002](known_knowns.md#cog-20260724-002-branch-as-the-containment-boundary-for-unattended-agent-work)
