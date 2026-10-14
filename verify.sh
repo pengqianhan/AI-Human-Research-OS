@@ -96,8 +96,8 @@ fi
 
 # 4. Installed-skill integrity (ADR 0002). The hub is canonical. Every install
 #    is either a symlink back to it or a copy, and which one is not a free
-#    choice: a collection whose SOURCE.md declares `Install form: copy` (an
-#    auto-refreshed read-only mirror) must be copied, everything else linked.
+#    choice: a collection whose SOURCE.md declares `Install form: copy` must
+#    be copied, everything else linked.
 #    A plain `diff -rq` cannot be used against a symlinked install — it follows
 #    the link and compares the hub with itself, so it passes unconditionally.
 verify_installs() {

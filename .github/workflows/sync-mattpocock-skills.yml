@@ -5,6 +5,12 @@ name: Sync mattpocock-skills mirror
 # as the required CI passes (auto-merge). The PR exists only as an audit trail
 # of what landed — there is no review gate (ADR 0001, superseded 2026-07-24:
 # upstream is a maintained repo we track).
+#
+# Installed skills from this mirror are symlinks (ADR 0002, amended
+# 2026-10-14), so a merged refresh changes them in place. When upstream removes
+# or renames an installed skill, CI fails this PR on the dangling link and
+# auto-merge waits: remove that install on main first, then re-run this
+# workflow.
 
 on:
   schedule:
