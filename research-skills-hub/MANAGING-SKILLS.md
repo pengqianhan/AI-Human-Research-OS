@@ -24,11 +24,13 @@ Which form an install takes is read from the collection's `SOURCE.md`, not
 decided per install:
 
 - A collection whose `SOURCE.md` declares `` Install form: `copy` `` is
-  **copied**. Today that is only `mattpocock-skills`, an auto-refreshed
-  read-only mirror — the copy is what pins the version so a weekly upstream
-  sync cannot silently change a skill already in use.
+  **copied**, which pins the installed version until a deliberate reinstall.
+  No collection declares it today.
 - Everything else is **symlinked**. Editing the installed path edits the hub,
-  so the two can never drift apart.
+  so the two can never drift apart. That includes `mattpocock-skills`, the
+  auto-refreshed read-only mirror: its installed skills change whenever a
+  weekly upstream sync merges, and an edit made through the link is
+  overwritten by the next one (ADR 0002, 2026-10-14 amendment).
 
 ## Where skills go — the target table
 

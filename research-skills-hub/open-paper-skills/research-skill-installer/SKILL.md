@@ -18,9 +18,9 @@ Run from the repository root unless you pass `--repo`. In the examples below,
 
 **Install form is decided by the source, not per skill.** A collection whose
 `SOURCE.md` declares ``Install form: `copy` `` is copied; everything else is
-symlinked back to the hub. Today only `mattpocock-skills` declares `copy`,
-because weekly CI replaces it wholesale with `rsync --delete` — there the copy
-is what pins the version. Never hand-place a skill to get the other form; if a
+symlinked back to the hub. Every collection is symlinked today, including the
+weekly-refreshed `mattpocock-skills` mirror, so its installs change when an
+upstream sync merges. Never hand-place a skill to get the other form; if a
 form looks wrong, the fix is the collection's `SOURCE.md`, not the install.
 
 **Targets come from `assets/targets.toml`.** Adding a target is a table row.
@@ -112,9 +112,14 @@ every other install untouched, and `status` still lists the location, marked
 - Do not copy, link, move, or delete a hub skill by hand; every install path is
   written through this script, which refuses to touch anything outside the
   target table.
-- Do not edit a skill inside `mattpocock-skills` or any other collection
-  declaring `Install form: copy` — the next upstream sync overwrites it. Adapt
-  by cherry-picking into `collected-skills/` under a new name (ADR 0001).
+- Do not edit a skill inside `mattpocock-skills`, at its hub path or through an
+  installed link — the next upstream sync overwrites it. Adapt by
+  cherry-picking into `collected-skills/` under a new name (ADR 0001).
+- When an upstream sync removes or renames an installed `mattpocock-skills`
+  skill, `verify.sh` fails that sync PR on the dangling link. `remove` resolves
+  a skill through its hub source, which is already gone on the sync branch: run
+  `remove <skill> --yes` on `main` in its own PR, re-run the sync workflow, and
+  install the new name once the refresh has merged.
 - Editing a **symlinked** install edits the hub. That is intended and is why no
   `sync-back` command exists, but it means an edit under `.claude/skills/` is a
   real change to `research-skills-hub/` and will show up in `git status` there.

@@ -36,7 +36,8 @@ This narrows, but does not remove, the human gate:
 
 - It applies **only** to the `mattpocock-skills` mirror. `collected-skills/`
   intake and the `discover-academic-skills` scout stay human-gated.
-- Landing in the mirror is not installation. Installing a mirrored skill into any
+- *(Narrowed 2026-10-14 — see the next amendment.)* Landing in the mirror is not
+  installation. Installing a mirrored skill into any
   agent directory remains a deliberate `research-skill-installer` action, and the
   constitution's "review a third-party skill's scripts before installing" still
   governs that step.
@@ -44,6 +45,19 @@ This narrows, but does not remove, the human gate:
 Accepted risk: upstream compromise reaches `main` unreviewed. Mitigation is the
 PR trail (every refresh is a reviewable squash commit) and the fact that mirrored
 code is inert until installed.
+
+## Amendment 2026-10-14: installed mirror skills follow the mirror
+
+[ADR 0002](0002-skill-install-form-and-targets.md)'s amendment of the same date
+symlinks installed `mattpocock-skills` skills. Choosing to install a mirrored
+skill is still a deliberate, reviewed `research-skill-installer` action, but
+once installed it follows every merged refresh with no reinstall.
+
+"Inert until installed" therefore covers only skills that are not installed.
+For the installed ones (`grilling`, `wayfinder`, and `writing-for-agents` on
+2026-10-14), an upstream compromise reaches the agent directories unreviewed,
+not just `main`. The Human Owner accepted this on 2026-10-14; the PR trail
+remains the mitigation.
 
 ## Consequences
 

@@ -25,7 +25,9 @@ Editing the installed path *is* editing the hub, so drift becomes impossible
 rather than merely detectable, and `sync-back` has nothing left to do.
 
 **Copy** when the collection declares itself an auto-refreshed read-only
-mirror. Today that is only `mattpocock-skills`, which a weekly CI job replaces
+mirror. *(Superseded for `mattpocock-skills` on 2026-10-14; the copy form
+itself remains. See the amendment below.)* Today that is only
+`mattpocock-skills`, which a weekly CI job replaces
 wholesale with `rsync --delete` under [ADR
 0001](0001-external-skill-intake-and-sync.md). Symlinking there would break two
 things at once: the installed copy is what **pins the version**, so merging a
@@ -56,6 +58,7 @@ installed path is the hub; copied skills are the auto-refresh mirror, which ADR
   paying for when the source can move underneath you. For collections the owner
   writes, it just reintroduces the sync problem.
 - **Symlink everything.** Rejected on the `mattpocock-skills` evidence above.
+  **Adopted in effect on 2026-10-14 — see the amendment below.**
 - **Per-skill choice of link or copy at install time** (`asm install` vs `asm
   link`). Rejected: it makes "is this one linked or copied?" a fact to remember
   per skill instead of one derivable from the collection's declared policy.
@@ -65,6 +68,60 @@ installed path is the hub; copied skills are the auto-refresh mirror, which ADR
   `asm install` copies and `asm link` is a development-only live-reload tool —
   so the convergence here is on the copy-as-version-pin reasoning, not on
   symlinking as an install strategy.
+
+## Amendment 2026-10-14: the mirror is symlinked too
+
+`mattpocock-skills` now declares `Install form: symlink`, and its three
+installed skills (`grilling`, `wayfinder`, `writing-for-agents`, in both
+repository targets) are links like every other install. The copy form stays in
+the installer and `verify.sh` for a collection that needs a version pin; no
+collection declares it today.
+
+The pin never worked as designed. `verify.sh` requires a copied install to
+match the hub byte for byte, so the state described above, a change "staged
+until a deliberate reinstall", could not exist on `main`. A refresh that
+touched an installed skill failed the required check instead and blocked the
+whole mirror: the 2026-10-12 refresh
+([PR #24](https://github.com/pengqianhan/AI-Human-Research-OS/pull/24)) changed
+two of the three installed skills and stayed red until both were reinstalled by
+hand on the sync branch.
+
+Offered three ways out on 2026-10-14, the Human Owner chose symlinks:
+
+- **Keep the pin and teach `verify.sh` to tell a lagging copy from an edited
+  one.** Not taken: the pin pays for itself only when someone reads the upstream
+  diff before reinstalling.
+- **Reinstall the copies from the sync workflow.** Not taken: it gives up the
+  same pin, adds a workflow step, and leaves a skill renamed upstream behind as
+  a stale orphan that no check reports.
+- **Symlink.** Taken.
+
+Consequences:
+
+- A merged refresh changes installed mirror skills in place. Because the refresh
+  auto-merges ([ADR 0001](0001-external-skill-intake-and-sync.md)), an upstream
+  change, or an upstream compromise, becomes live agent instructions without a
+  human reading it. That risk is accepted. What remains is the PR trail (each
+  refresh is one revertable squash commit) and the fact that *which* skills are
+  installed is still a deliberate installer action: the sync installs nothing
+  new.
+- An upstream rename or removal of an installed skill leaves a dangling link,
+  which `verify.sh` reports, so that sync PR fails before it merges (simulated
+  on 2026-10-14 by removing `productivity/grilling`). The installer's `remove`
+  resolves a skill through its hub source and cannot run on the sync branch,
+  where the source is already gone: run `remove <skill> --yes` on `main` in its
+  own PR, re-run the sync workflow, which rebuilds its branch from `main`, and
+  install the new name once the refresh has merged.
+- Editing an installed mirror skill edits the mirror, and the next refresh
+  overwrites it. ADR 0001's rule is unchanged: adapt by cherry-picking into
+  `collected-skills/`.
+- `sync-back` stays deleted: a link into a read-only mirror has nothing to
+  promote.
+
+To reverse: restore the `Install form: copy` block in
+`mattpocock-skills/scripts/refresh.sh` and `SOURCE.md`, then run
+`install --update` for each installed mirror skill. Sync PRs that touch those
+skills will fail again unless `verify.sh` also learns to accept a lagging copy.
 
 ## Disabling one location
 
