@@ -1,6 +1,7 @@
 # Concept
 
 * [Agent Workflow Memory](agent-workflow-memory.md) - Induces reusable multi-step workflows from an agent's past experience and supplies them to later tasks; a common baseline for procedure reuse in web and interactive agents.
+* [Agent World Model (AWM)](agent-world-model.md) - Synthesis of executable tool environments with persistent backend state for agentic RL, used as training data and as an environment-scaling baseline.
 * [Agent-World](agent-world.md) - Environment synthesis that mines databases from real service themes, validates generated tools against them, and co-evolves environments and policies.
 * [AgentScope](agentscope.md) - Open-source, Alibaba-developed multi-agent LLM platform providing model/memory/tool abstractions, a ReAct-based agent core, and infrastructure for both population-scale simulation and developer-facing agentic application deployment.
 * [ALFWorld](alfworld.md) - Text-based household-task environment aligned with ALFRED, a common long-horizon testbed for LLM agents, skill optimization, and context management.
@@ -30,10 +31,12 @@
 * [LoCoMo](locomo.md) - Very-long-term conversational memory benchmark spanning single-hop, multi-hop, open-domain, and temporal reasoning.
 * [LongMemEval](longmemeval.md) - 500-question, six-category benchmark for long-term interactive memory in chat assistants.
 * [Meta-Harness](meta-harness.md) - Outer-loop optimization of executable agent-harness code by an agentic proposer reading past candidates' code, scores, and traces; the common baseline for automated harness evolution.
+* [mini-swe-agent](mini-swe-agent.md) - Minimal Bash-interface coding-agent harness from the SWE-agent line, used as a neutral scaffold, shared baseline harness, held-out transfer harness, and skeleton.
 * [MLE-Bench Lite](mle-bench-lite.md) - Lighter subset of MLE-Bench for Kaggle-derived ML-engineering agent evaluation.
 * [Model Context Protocol (MCP)](model-context-protocol.md) - Standard for how a language-model application discovers and invokes external tools via named, schema-described servers.
 * [OfficeQA](officeqa.md) - 246 numeric questions over about 89,000 pages of U.S. Treasury Bulletins requiring document parsing, cross-table retrieval, and numerical reasoning within a relative error tolerance.
 * [OOLONG](oolong.md) - Long-context benchmark requiring semantic transformation and aggregation over nearly every input entry.
+* [OpenCode](opencode.md) - Open-source coding-agent harness used as a vendor-neutral fixed harness for building or running agents and as a baseline in same-backbone harness comparisons.
 * [OSWorld](osworld.md) - Benchmark for evaluating multimodal computer-use agents on open-ended, real-world desktop tasks executed inside real operating-system environments.
 * [On-policy distillation](on-policy-distillation.md) - Training a student on its own trajectories by matching a teacher's per-token distribution.
 * [PaperBench](paperbench.md) - Benchmark where agents replicate 20 ICML 2024 papers from scratch, graded against 8,316 rubric sub-tasks.
@@ -50,6 +53,7 @@
 * [SWE-bench Verified](swe-bench-verified.md) - Human-validated subset of SWE-bench for repository-level issue resolution.
 * [Terminal-Bench](terminal-bench.md) - Benchmark suite for evaluating AI agents on hard, realistic tasks in command-line environments.
 * [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
+* [ToolSandbox](toolsandbox.md) - Stateful, conversational tool-use benchmark scored against ordered milestones, reported in this wiki on scenario subsets with a similarity metric.
 * [τ²-Bench](tau2-bench.md) - Dual-control conversational tool-use benchmark (Airline, Retail, Telecom) where both the agent and a simulated user act on shared state, scored by an environment verifier.
 * [VitaBench](vitabench.md) - Interactive multi-turn tasks in everyday service applications, run against an LLM user simulator and scored by a rubric-based trajectory evaluator.
 * [WebArena](webarena.md) - 812 long-horizon tasks on self-hosted shop, admin, GitLab, forum, map, and wiki sites with functional evaluators; the standard browser-agent testbed and, via WebArena-Lite, a web-agent fine-tuning target.

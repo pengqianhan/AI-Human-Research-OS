@@ -8,7 +8,7 @@ tags:
 - tool-use
 - coding-agents
 - stateful-environments
-timestamp: 2026-10-07T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ AppWorld (Trivedi et al., arXiv:2407.18901, ACL 2024) has two parts. The AppWorl
 * [EviSkill](../papers/2610.05030.md) - one of three skill-evolution environments (official 90 train, 57 dev, 168 test_normal tasks); EviSkill's least consistent environment, first or tied first with three of six action backbones and below at least one baseline with the other three.
 * [Raven](../papers/2609.33439.md) - one of the seven HarnessBank benchmarks whose published harness-evolution results Raven reuses: held-out Pass@1 41.3 → 56.7 with a frozen Qwen3.6-27B.
 * [From Evidence to Action (SafeActBench)](../papers/2610.07753.md) - a reference point in its benchmark comparison: stateful, but with no explicit scoring of trajectory checks, pre-action evidence, entity/state binding, result propagation, or investigated non-action.
+* [ActionOPD](../papers/2610.19820.md) - transfer benchmark on 168 Normal and 417 Challenge tasks (one trial, 50 steps): distilled Qwen3 students reach at most 17.9 Normal and 7.7 Challenge TGC, against 84.5 and 74.8 for the DeepSeek-V4-Flash teacher, the largest teacher-student gap in its suite.
 
 # Notes
 

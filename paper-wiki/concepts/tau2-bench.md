@@ -8,7 +8,7 @@ tags:
 - tool-calling
 - conversational-agents
 - simulated-users
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ timestamp: 2026-10-14T00:00:00Z
 * [AI-Trader](../papers/2512.10971.md) - cites Tau2Bench as an example of the "static task bank plus dynamic execution" family of agent benchmarks that it contrasts with fully live evaluation.
 * [TerminalHorizon](../papers/2610.13166.md) - transfer benchmark on the v1.0.1 base split: after terminal-only fine-tuning Qwen3.5-27B goes from 79.0 to 84.5 on Airline (50 tasks) and from 84.9 to 87.5 on Retail (114 tasks), mean task success over four runs with DeepSeek-V4-Pro-0813 as user simulator and assertion judge.
 * [Agent-Reflex](../papers/2610.17953.md) - main-suite benchmark for an 8B policy trained on noisy synthetic environments: 62.1 averaged over Retail, Airline, and Telecom against 54.6 for Agent-World-8B (mean of three runs; most baseline rows quoted from their papers); also the base of AgentNoiseBench's τ² setting, where it averages 45.9 under tool and user noise.
+* [ActionOPD](../papers/2610.19820.md) - transfer benchmark and the testbed for its KD/OPD comparison, ablations, and Self-ActionOPD, with a Qwen3.5-9B user and natural-language assertions disabled; Qwen3-4B distilled from Qwen3-32B reaches 40.0 test pass¹ against 29.2 for the base, with pass⁴ as four-trial all-success.
 
 # Notes
 

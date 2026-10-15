@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - coding-agents
 - program-reproduction
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Definition
@@ -19,6 +19,7 @@ ProgramBench (Yang et al., 2026, "ProgramBench: Can Language Models Rebuild Prog
 * [ProgramGym](../papers/2610.13395.md) - primary evaluation and source of the task definition for its 1,648 training environments: Qwen3.8-27B goes from 34.87% to 42.84% Tests Passed after fine-tuning and to 55.71% under the Program-Agent workflow, with Resolved at 0.00-0.50% in every row.
 * [RecreationWorld](../papers/2609.22000.md) - one of five out-of-distribution transfer benchmarks: two models fine-tuned on recreation trajectories both finish above their first evaluated checkpoint, under a common Claude Code scaffold with one trial per task per checkpoint.
 * [MiMo-V2.6](../papers/2610.11959.md) - listed in its evaluation table at 26.5 for MiMo-V2.6-Pro, against 37.0 for a frontier model in the same table.
+* [Doc2Harness](../papers/2610.20344.md) - cited, not run: repository-level generation judged by end-to-end tests generated from a reference executable through fuzzing; Doc2Harness's deliverable, a harness merged from twelve harnesses' documentation, has no reference implementation to test against.
 
 # Notes
 

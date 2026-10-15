@@ -8,7 +8,7 @@ tags:
 - agent-environments
 - tool-use
 - agentic-rl
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Definition
@@ -20,7 +20,8 @@ EnvScaler (Song et al., 2026, "EnvScaler: Scaling Tool-Interactive Environments 
 * [Agent-Reflex](../papers/2610.17953.md) - EnvScaler-8B is the strongest environment-scaling baseline on AgentNoiseBench (18.2 against Agent-Reflex's 29.1) and scores 50.9 on the five-benchmark tool-use suite; ORPO reuses 2.5K EnvScaler RL tasks, and evaluation follows the EnvScaler protocol.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - three EnvScaler environments (Food, Shopping, Benefits) are among its seven single-step fidelity testbeds, with a few reserved successful trajectories each used for construction.
 * [CompoWorld](../papers/2609.33665.md) - cited with AgentScaler, ScaleEnv, and Agent-World as the environment-scaling line it extends by composing services into cross-service tasks.
+* [ActionOPD](../papers/2610.19820.md) - the second training source: 755 tasks from 49 environments (of 2,550 source tasks) after integrity and static-feasibility screening, with a simulated user in the loop; 5 of every 64 task starts per step.
 
 # Notes
 
-EnvScaler and [Agent-World](agent-world.md) come from the same Renmin University group as Agent-Reflex. This page is assembled from the three citing papers; the EnvScaler paper itself has not been added to the wiki.
+EnvScaler and [Agent-World](agent-world.md) come from the same Renmin University group as Agent-Reflex. This page is assembled from the citing papers; the EnvScaler paper itself has not been added to the wiki.

@@ -5,7 +5,7 @@ description: Training a student on its own sampled trajectories by matching a te
 tags:
 - on-policy-distillation
 - post-training-feedback
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Definition
@@ -29,6 +29,7 @@ The second variant is what makes OPD a channel for arbitrary natural-language su
 * [X-Tree](../papers/2609.32993.md) - context-conditioned, same-weights OPSD for agents (ScienceWorld, WebShop) where the privileged context is a deterministically mined skill tree rendered as text instead of an LLM-written skill bank; a logistic confidence gate pulls the student toward the teacher only on tokens the context makes more likely. The mined rendering matches or beats gpt-oss-120b- and GPT-o3-written banks, an empty context gives no gain, and a word-scrambled rendering keeps most of it.
 * [MiMo-V2.6](../papers/2610.11959.md) - MOPD2 follows mixed-task RL: besides full student rollouts supervised by RL-trained domain teachers, the student samples single turns from history prefixes taken from teacher rollouts or SFT demonstrations, each supervised token by token by a preassigned teacher; SFT-trained teachers cover domains without reliable rewards. The final results are not separated from the preceding RL stage.
 * [Agent-Reflex](../papers/2610.17953.md) - context-conditioned, same-weights OPD added to noisy agentic RL: the policy re-scores its own action tokens with its environment's reflection skill card prepended, and SEED's sigmoid weight on the detached log-probability shift scales each token's term; removing the term lowers both AgentNoiseBench settings (45.9 to 43.7 and 12.3 to 9.5).
+* [ActionOPD](../papers/2610.19820.md) - action-level OPD from a generation-only teacher: student candidates at student-visited states are rewarded by semantic agreement with three sampled teacher actions and trained by a clipped group-relative policy gradient, with no teacher log-probabilities or shared tokenizer; on τ²-bench it is level with sampled-token reverse-KL OPD on test pass¹ (40.0 against 39.6) and behind on pass⁴ (14.2 against 17.5). Self-ActionOPD gives a same-weights teacher privileged task information.
 
 # Notes
 
@@ -40,6 +41,8 @@ The wiki's two earliest papers exercise the two variants from the Definition on 
 
 NeoHorse-1 does not cleanly fit either named variant: its paper text ("a fixed teacher supplies a next-token distribution... conditioned on the corresponding context and the student's preceding response tokens") never states whether the teacher is a distinct, stronger model (teacher-parametric) or the same model under different conditioning (context-conditioned) — this wiki's note on it deliberately preserves that ambiguity rather than guessing. What is unambiguous is the *scheduling* mechanism, which none of the other three papers here share: NeoHorse-1 reuses the identical routing-derived three-stage curriculum for both SFT and OPD, so which recorded contexts a student sees for distillation at each stage is governed by the same capability-demand signal that orders SFT examples, rather than a separately designed OPD-specific sampling scheme.
 X-Tree is the first agent-environment OPSD paper here and the first to replace the LLM-authored privileged context with a counted artifact. Its scrambled-context ablation (WebShop 3B: 76.5 scrambled vs 77.1 intact vs 74.2 empty) is a caution for every context-conditioned OPSD result above: much of the teacher's advantage can come from the vocabulary the context introduces rather than from its procedural content.
+
+ActionOPD fits neither variant in the Definition cleanly, because its teacher supplies samples, not a distribution: the student's reward is how many sampled teacher actions its own next action matches, so the method is on-policy and teacher-supervised but optimized like RL. That allows a teacher from any model family (a DeepSeek teacher trains Qwen students) at the cost of an LLM matcher whose errors become reward errors, and of an objective that, as its appendix shows, is maximized by collapsing onto the teacher's most likely action.
 
 # Related
 

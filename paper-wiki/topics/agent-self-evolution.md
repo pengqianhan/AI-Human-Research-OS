@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-10-12T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Scope
@@ -48,6 +48,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [AgentGarten](../papers/2610.12374.md) - agents that see only neurally rendered first-person frames improve across rounds by writing Markdown playbooks (one lesson per file) that fresh agents inherit; hide-and-seek shelters appear by round 4 and ramp crossings by round 10, from single runs with no validation gate on what is written.
 * [Memento 3](../papers/2610.11794.md) - the mutable object is a world model of the environment: a Markdown rulebook and the Python code compiled from it, revised after each real action by a frozen LLM that chooses to retain, revise the rulebook, or repair the code. A revision is used only if the LLM judges the code faithful to the rulebook and replay reproduces every recorded frame exactly; every version is committed to Git so earlier hypotheses can be diffed or restored.
 * [EmbodiedCLBench](../papers/2610.13021.md) - a benchmark rather than a method: agents do two basic household tasks, then an advanced task composed of the same atomic actions, carrying either the raw trajectories or a self-written skill summary; advanced-task success rises from 3-12% to 16-52% and 22-38% across four harnesses and two models, but one learning sample gives nearly all of the gain and up to six give no more.
+* [Seeing, Maintaining, and Learning](../papers/2610.19366.md) - a memory survey that draws a line this topic can use: rewriting records, keys, or skill descriptions under a fixed rule is memory updating (T2); self-evolution (T3) requires feedback to persistently revise the policy that writes, maintains, or retrieves memory, validated on later cases. Only 17 of 297 multimodal memory architectures qualify, all with explicit memory.
 
 # Synthesis
 
@@ -65,6 +66,8 @@ Learn2Play Bench tests the representation question this topic usually leaves imp
 Memento 3 supplies a design that Learn2Play's finding asks for. Learn2Play shows a distilled rule can freeze an error that raw history would have exposed; Memento 3 keeps the raw record *and* a rulebook, and admits a rulebook revision only with code that replays the whole record cell for cell. That is a stricter gate than the validation comparisons used by the skill-level loops above, but it is available only where the environment is deterministic and its observations can be predicted exactly; the paper's own Pong study already relaxes it.
 
 EmbodiedCLBench supplies a measurement this topic's method papers mostly lack: how the benefit of self-collected experience scales with its amount. Its answer is that it does not, past the first sample, for raw trajectories and written skills alike. Read with Learn2Play Bench, which found that distilled lessons can freeze a wrong rule, this points at the same weak spot from two sides: writing experience down is easy, and getting the second and later pieces of experience to add anything is the open problem. The benchmark's protocol is short (two related tasks held in one context) and has no control with unrelated experience, so part of the first-sample jump may be familiarity with the environment's step pattern rather than reuse of skills.
+
+The multimodal memory survey offers a test that most papers here leave implicit: whether the mutable object is memory content or the rule that manages it. Its own boundary rule says that edits to retrieval keys, skill descriptions, or usage statistics stay T2 while the selection and update mechanism is stable, so by that rule the skill-content loops above (SkillOpt, EviSkill, RASO) would count as memory updating with a fixed proposer and gate, while Recuris, which patches the invocation policy and checkers that govern memory use, fits its T3 (reader mapping; the survey cites none of these papers). Its T3 requirements, an addressable policy component, feedback attributed to that component, and a revision validated on later or held-out cases for regressions, match the validation gates this topic's papers build, and its finding that policy evolution appears only where memory is explicit fits how these systems keep their mutable object as text or code.
 
 # Open Questions
 
@@ -89,3 +92,4 @@ EmbodiedCLBench supplies a measurement this topic's method papers mostly lack: h
 * Learn2Play shows a distilled rule can stop exploration without lowering the score it is checked against. Should self-evolution loops keep each learned rule linked to the episodes that support it and mark rules drawn from a single observation as tentative, and would that recover the gap to raw histories without their context cost?
 * Memento 3's acceptance has two halves: exact replay, which is mechanical, and a judgement by the same LLM that the code is faithful to the rulebook, for which no error rate is reported. How often does a rulebook that passes that judgement state a rule the code does not actually implement, and does such a rulebook then mislead later revisions the way Learn2Play's frozen rules do?
 * EmbodiedCLBench finds no gain from a second through sixth learning sample. Is that a ceiling of the tasks (one example already reveals the environment's step pattern), of the memory format, or of the harnesses, and does it hold when experience must be retrieved from a long stream rather than handed over as two related tasks?
+* The multimodal memory survey separates updating memory content (T2) from revising the rule that manages it (T3). For the skill-evolution loops here, which edit skill text under a fixed proposer and gate, is there a measurable difference between evolving the content and evolving the procedure, and does the latter transfer better to new tasks?

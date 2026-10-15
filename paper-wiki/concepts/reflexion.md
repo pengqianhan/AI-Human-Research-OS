@@ -7,7 +7,7 @@ tags:
 - agent-self-evolution
 - learning-from-experience
 - agent-memory
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ Reflexion (Shinn, Cassano, Labash, Gopinath, Narasimhan, and Yao, "Reflexion: La
 * [AgentGarten](../papers/2610.12374.md) - places its round-by-round written playbooks in the Reflexion, ExpeL, and Voyager family, with agents that perceive only rendered frames and hand lessons to fresh agents.
 * [Memento 3](../papers/2610.11794.md) - cited, alongside AutoManual and WALL-E, as textual memory that keeps linguistic reflections on task feedback; Memento 3 contrasts its own rulebook, which states revisable rules about environment dynamics and must be matched by code that replays the interaction record.
 * [Agent-Reflex](../papers/2610.17953.md) - inference-time baseline on Qwen3-8B: 44.7 overall on five tool-use benchmarks against 40.2 for the backbone, but 6.8 against 11.4 on VitaBench, where the paper argues a critique written by the failing policy cannot contradict a well-formed wrong tool return.
+* [Seeing, Maintaining, and Learning](../papers/2610.19366.md) - cited among the text-agent foundations that multimodal memory inherits: Reflexion stores feedback as reusable linguistic lessons, a reflective record beside MemGPT's context management, MemoryBank's forgetting, and Voyager's executable skill library.
 
 # Notes
 

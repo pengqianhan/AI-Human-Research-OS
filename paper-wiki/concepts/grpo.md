@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-10-15T00:00:00Z
 ---
 
 # Definition
@@ -32,3 +32,4 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [Context Language Models](../papers/2609.37725.md) - stepwise GRPO for a self-editing context: the group-normalized trajectory-level outcome advantage is assigned to every model call in the trajectory, and a success-gated efficiency advantage clip((c̄ − cᵢ)/c̄, −1, 1) re-ranks only successful trajectories by prefix-reuse FLOPs (zero for failures and for groups with fewer than two successes), chosen over rewarding edit count or removed volume to avoid reward hacking; Qwen3.5-9B goes 28.8% → 42.5% on held-out BrowseComp-Plus with 1.34 PFLOPs per question against 2.19 for an identically trained summary harness.
 * [MiMo-V2.6](../papers/2610.11959.md) - GRPO at 1,568 prompts x 16 rollouts per step with prompt-mean loss aggregation (to slow response-length growth), asynchronous partial rollouts, and separate importance-ratio clip bounds for positive and negative advantages tuned from policy entropy; passing rollouts in a group no longer share one advantage, since an agentic grader ranks them and redistributes the positive advantage (GAR) or multiplies the test reward by rubric scores (GRS).
 * [Agent-Reflex](../papers/2610.17953.md) - ORPO's outcome term normalizes verifier returns over a mixed group of eight rollouts, a quarter of them in perturbed environments, rather than within the clean and perturbed subsets; GRPO is also one of five RL algorithms ORPO is compared with over 100 steps.
+* [ActionOPD](../papers/2610.19820.md) - groups are four student candidates at the same state rather than rollouts for the same prompt; rewards are centered on the group mean and divided by one batch-wide standard deviation, groups with equal rewards are dropped, and the reward is agreement with sampled teacher actions instead of an outcome, under PPO clipping with dual clip 3 and no KL term.
