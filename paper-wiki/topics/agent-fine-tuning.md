@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # Scope
@@ -38,6 +38,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [TerminalHorizon](../papers/2610.13166.md) - full-parameter SFT of Qwen3.5-27B (and the 35B-A3B and 122B-A10B models) on 2,852 DeepSeek-V4-Pro-0813 trajectories from 1,535 synthesized terminal environments, kept by an LLM filter that judges process without seeing the reward and retains informative failures; Terminal-Bench 2.1 rises from 46.82% to 60.67% and all 12 reported benchmarks improve, with the comparison to larger datasets made per trajectory, not per token.
 * [Agent-Reflex](../papers/2610.17953.md) - three stages on Qwen3-8B: 54K verified SFT trajectories in which the policy itself repairs, restarts, or follows a (sometimes wrong) user correction after a failure, guided by a mined reflection skill that is then stripped from the input; then noisy agentic RL on 2.5K EnvScaler tasks plus same-model on-policy distillation with the skill card as privileged context; 58.6 overall on five tool-use benchmarks against 53.6 for Agent-World-8B, with most baseline rows copied from their papers.
 * [ActionOPD](../papers/2610.19820.md) - on-policy distillation at the level of semantic actions from a generation-only teacher: at each state the student reaches, four candidates are rewarded by agreement with three sampled teacher actions (canonical checks plus an LLM matcher), the best is executed, and all are trained with a group-relative clipped objective and no outcome reward; Qwen3-4B and 8B gain 3.3-6.9 points on a four-benchmark average, about level with token-level OPD on τ² pass¹ and behind it and offline KD on pass⁴.
+* [Mosaic](../papers/2610.22174.md) - multi-session agentic RL for trajectories split by context compaction or subagent forking: each session is its own training segment, the GRPO advantage is rescaled by the within-outcome rank of session count without changing sign, and each non-final session adds a type-normalized reward from its change in answer likelihood; on BrowseComp with Qwen3.5-4B it beats broadcasting by 3.55 points with compaction and about one point with subagents.
 
 # Synthesis
 
@@ -64,6 +65,8 @@ Agent-Reflex differs from the SFT papers above in where its training data comes 
 
 ActionOPD changes what the distillation papers here match. NeoHorse-1, One to More, More to One, MiMo-V2.6, X-Tree, and Agent-Reflex all distill through token-level distributions, which needs the teacher's log-probabilities or the student's own weights; ActionOPD scores the student's next action by whether it means the same as a sampled teacher action, so a DeepSeek teacher can train a Qwen student. Like X-Tree and Agent-Reflex it uses GRPO-style group normalization, but its groups are candidates at one state rather than whole rollouts, and only the best candidate is executed, which steers the visited states toward the teacher's choices. Its evidence is thinner than its design: each configuration is trained once, the KD and OPD baselines are not compute-matched, the LLM matcher is not audited, and the larger student gains less than the smaller one. Its Self-ActionOPD variant is the action-level counterpart of the privileged same-weights distillation in X-Tree and Agent-Reflex.
 
+Mosaic adds a case this topic's credit-assignment papers assume away: a trajectory whose context is not one continuous prefix. When compaction or a subagent fork starts a new session, it trains each session as a separate segment and replaces the broadcast trajectory advantage with two terms. The first rescales the outcome advantage by the session count's rank among same-outcome rollouts, bounded so that it never flips the sign. The second is a per-session shaping reward from the change in the policy's likelihood of the reference answer, normalized separately for normal, compaction, and subagent sessions. The design parallels SLCA-GRPO, which also normalizes segment rewards separately within a GRPO group and routes each advantage to its own tokens, and its shaping reward is IGPO's turn-level information gain moved to session boundaries. Its evidence is one 4B model on one benchmark without seeds: +3.55 points over broadcasting with compaction, about one point with subagents, where single-session GRPO comes within 0.6 points while using fewer sessions.
+
 # Open Questions
 
 * Does evolution strategies' reported horizon-dependent advantage over policy-gradient RL hold on frontier-scale models and real (non-controlled) long-horizon tasks, not just the paper's controlled Sudoku crossover?
@@ -86,3 +89,4 @@ ActionOPD changes what the distillation papers here match. NeoHorse-1, One to Mo
 * TerminalHorizon and Terminal-Universe share a base model and harness but differ tenfold in trajectory count and by an unreported factor in tokens. Would reporting SFT results per training token change which synthesis methods look data-efficient, and is the benefit of long trajectories more than the benefit of more tokens?
 * Agent-Reflex's skill cards are privileged context during training and are stripped at inference. Would giving the same cards to the trained policy at inference add to what distillation put in the weights, or duplicate it, and does the answer change for failure families the cards do not cover?
 * ActionOPD's agreement reward gives no credit for being right and, as its appendix notes, is maximized by collapsing onto the teacher's most likely action. On tasks where the teacher is often wrong, or where several actions are valid, does adding an outcome reward to the agreement reward help more than either alone?
+* Mosaic's session reward needs a reference answer string. For agents trained against tests or rubrics, as in the coding and environment papers here, what replaces answer likelihood as the potential across a compaction or a fork, and does type-conditioned normalization still matter?

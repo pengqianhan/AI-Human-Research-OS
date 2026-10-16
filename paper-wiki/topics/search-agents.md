@@ -7,7 +7,7 @@ tags:
 - information-seeking
 - web-agents
 - reinforcement-learning
-timestamp: 2026-10-05T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # Scope
@@ -24,6 +24,7 @@ This topic tracks agents whose core task is searching external sources (the live
 * [False Frontiers](../papers/2609.39102.md) - trains search agents with no human QA data through a proposer-solver loop, shows its agreement-based reward drifting from correctness over rounds ("co-cheating"), and fixes the feedback path with source-level cross-fitting (CrossFit), +8.8/8.4 Cover-EM over coupled self-evolution at Qwen3.5-4B/9B.
 * [Source Preference in the Wild](../papers/2610.03195.md) - studies the filtering step of end-to-end search: across 12 agent models, items that meet the same requirements are selected more or less often depending on the site they come from, and a less satisfying item from a preferred source beats a better one from a dispreferred source 68% of the time (median).
 * [HyperBrowseComp](../papers/2610.03574.md) - a 423-question, 13-language, multimodal BrowseComp-style benchmark filtered against no-internet answering; best accuracy 31.68% (Gemini 3.7 Flash, built-in search), 57.68% of questions unsolved by all five built-in-search models, and a 7.3-9.5 point accuracy change from swapping built-in search for Exa.
+* [Mosaic](../papers/2610.22174.md) - trains a Qwen3.5-4B search agent (search and visit tools) for trajectories longer than one context: with compaction it reaches 38.86 on BrowseComp at 2.35 sessions per question, against 35.31 for broadcast multi-session RL and 34.68 for single-session GRPO run with compaction.
 
 # Synthesis
 
@@ -34,6 +35,8 @@ CorpusMap adds a fourth place for that intelligence to live: the corpus itself. 
 False Frontiers looks at a different part of the training pipeline: where the training questions and their labels come from. Iris certifies each question once, before training, with a fixed reference model (fails closed-book, solves open-book). False Frontiers' self-evolving loop instead generates questions and pseudo-labels continuously and scores them with the solver it is training, so the check itself can drift. Its audit shows that drift is real and grows by round, and its fix is about evaluator independence (score each source with a solver that never trained on it), not about better questions.
 
 HyperBrowseComp and Source Preference in the Wild look at search agents from the evaluation side and expose two problems the training papers above do not measure. HyperBrowseComp moves the hard part of search out of English text: its 423 questions are written natively in 13 other languages and 64.3% need evidence from videos, scans, images, or maps, and the best built-in-search configuration answers 31.68%. It also shows that the search tool is part of what is being measured: replacing Gemini's built-in search with Exa tools lowers its accuracy by 9.5 points while the same swap raises GPT-5.6 Sol by 7.6, which sharpens the caution raised above about ZGCM-1's comparisons against numbers from other harnesses. Source Preference asks a question none of these papers asks: once results are retrieved, does the agent filter them by fit to the request or by the site they come from? With snippet-only evidence it finds the latter matters a lot, which matters for any search agent that ranks or cites sources.
+
+Mosaic is the first entry here that trains a search agent for questions that outgrow one context. Its comparison shows that RL on single-context rollouts does not by itself teach an agent to use compaction: single-session GRPO run with compaction uses 1.24 sessions per question and reaches 34.68, while multi-session training reaches 35.31 (broadcast) and 38.86 (Mosaic), from 24.80 untrained. Its session reward is the change in likelihood of a short reference answer, which BrowseComp-style questions supply and the table- and report-style outputs elsewhere in this topic do not, so its credit assignment does not carry over to them unchanged.
 
 # Open Questions
 
@@ -46,3 +49,4 @@ HyperBrowseComp and Source Preference in the Wild look at search agents from the
 * CorpusMap builds its structure once per fixed corpus. For live-web search, where there is no fixed corpus, can an entity map be built incrementally from pages already visited and reused across later questions, as CorpusMap's incremental-update experiment does for a growing document set?
 * The search agents trained here (Iris, ZGCM-1, False Frontiers) are evaluated on English or Chinese text benchmarks. How do they do on HyperBrowseComp, where evidence sits in other languages and in videos, scans, and maps, and does training on text-only multi-hop questions transfer at all?
 * Do trained search agents inherit the source preferences that Source Preference in the Wild finds in general-purpose models, and could source-aware training data (balancing which sites supply correct evidence) remove them?
+* Mosaic gains less from multi-session training with subagent forking than with compaction. For search agents that parallelize through subagents, is that a limit of crediting a fork by its immediate information gain, or a sign that a 4B model already gets most of what forked search can give?

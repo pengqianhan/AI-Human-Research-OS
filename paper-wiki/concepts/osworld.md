@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - gui-computer-use-agents
 - agent-harness-engineering
-timestamp: 2026-10-13T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # Definition
@@ -25,9 +25,12 @@ OSWorld evaluates computer-use agents on long-horizon, open-ended tasks executed
 * [MiMo-V2.6](../papers/2610.11959.md) - reports OSWorld-Verified at 82.0 (Pro) and 80.8 (Flash), below Claude Opus 5 (83.4), GPT-5.6 Sol (83.0), and Claude Fable 5 (86.0).
 * [SoftwareGym](../papers/2610.12611.md) - evaluates on 244 OSWorld tasks from eight application domains with three rollouts per task: Qwen3.5-9B fine-tuned only on synthesized-application trajectories goes from 41.39% to 56.97% Pass@3 and from 28.40% to 46.77% single-run average, against 61.48% and 48.06% for matched-size training on OSWorld-application trajectories.
 * [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets: coding agents edit a screenshot ReAct starter against 10 development instances and are scored on 25 held-out ones; starters score 0 to 16 and candidates 4 to 16, gap closure ranges from -9.1 to 12.0, and no run differs significantly from its starter.
+* [OpenGCUA](../papers/2610.22200.md) - the 82-task offline subset of OSWorld-v2 v2.1 (26 internet tasks excluded) for all comparisons, scored by mean partial score and full success with the latest attempt per task kept; its full design lifts eight frozen models from 45.3 to 64.9 mean partial score (GPT-6 Astra 67.1 to 75.7, GLM-5.3-Flash 29.6 to 64.9) against batched GUI-only actions.
 
 # Notes
 
 Results across these papers are not directly comparable: RSIAgent and LongHorizon-Harness both use the 0808-offline OSWorld 2.0 split but different backbone models, tool pools (RSIAgent's code-as-policy harness vs. LongHorizon-Harness's hybrid GUI+CLI pool), and mechanisms under test (frozen causal memory vs. an externalized Manage-Execute-Audit state layer), so neither paper's reported gain isolates the other's contribution. UI-Mate uses the OSWorld-Verified variant rather than 2.0, and its own stated motivation for introducing OSWorkerBench is precisely that OSWorld's instruction-only task format cannot measure what a same-task demonstration adds — a limitation this wiki's other two OSWorld-using papers do not address, since neither evaluates demonstration-conditioned performance. RecreationWorld's use is different in kind from all three papers above: rather than reporting a single-point OSWorld 2.0 score for a fixed mechanism, it tracks OSWorld 2.0 performance across two training checkpoint sweeps to evidence transfer from a differently-structured source task (application recreation) — its own paper is explicit that the resulting score trajectories are "not uniformly monotonic," so the OSWorld 2.0 numbers should be read as "finished above the first checkpoint," not as a smooth improvement curve.
 
 SoftwareGym's headline numbers are Pass@3, task-level success across three rollouts at temperature 1, on a 244-task subset. They are not comparable with the single-run or partial-credit scores above; its own appendix gives single-run averages, which are several points lower (Seed 2.1 Pro is 79.51% Pass@3 and 70.41% as a three-run average).
+
+OpenGCUA and RSIAgent both use an 82-task offline OSWorld 2.0 split but different versions (v2.1 against 0808) and different harnesses: OpenGCUA's GPT-6 Astra scores 67.1 (batched GUI) and 75.7 (full design) in its own harness, while RSIAgent quotes 72.60 from official reports. OpenGCUA reports selected single runs without variance and keeps the latest attempt per task, not the best, so its numbers are best compared within its own tables.

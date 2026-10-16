@@ -10,7 +10,7 @@ tags:
 - benchmarks
 - spreadsheet-agents
 - data-agents
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ SpreadsheetBench (Ma et al., arXiv:2406.14991, NeurIPS 2024) collects spreadshee
 * [EnvHarness](../papers/2608.19880.md) - one of five existing environments it wraps with plug-in components while preserving the original verifier.
 * [RASO](../papers/2609.38024.md) - 400 tasks split 80 / 40 / 280; the benchmark with its largest gains (GPT-5.6-Luna 63.33 vs 57.02 for SkillOpt) and where 92.9% of retrieved skills come from a different harness, motivating Cross-Harness Adaptation.
 * [GraphForge](../papers/2609.38923.md) - SpreadsheetBench II as one of three working-agent evaluation benchmarks: SFT on 2,169 synthesized trajectories lifts Qwen3.6-27B from 10.3 to 24.0 under Claude Code, and evidence-anchored rubric selection gives the clearest rejection-fine-tuning advantage here (+1.0 vs −1.8 for an unanchored judge).
+* [Self-evolving Agent Harness](../papers/2610.18813.md) - converts SkillOpt-Lite's HarnessOpt table into its case for runtime revision: GPT-5.4-nano with HarnessOpt and skill reaches 77.58% against 76.20% for GPT-5.5 with SkillOpt, and HarnessOpt plus skill beats SkillOpt-Lite by 5.69 to 11.39 points across four models; the paper reads this as model-harness pairing, not superiority at matched cost.
 
 # Notes
 

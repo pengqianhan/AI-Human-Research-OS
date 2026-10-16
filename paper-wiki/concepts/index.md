@@ -3,6 +3,8 @@
 * [Agent Workflow Memory](agent-workflow-memory.md) - Induces reusable multi-step workflows from an agent's past experience and supplies them to later tasks; a common baseline for procedure reuse in web and interactive agents.
 * [Agent World Model (AWM)](agent-world-model.md) - Synthesis of executable tool environments with persistent backend state for agentic RL, used as training data and as an environment-scaling baseline.
 * [Agent-World](agent-world.md) - Environment synthesis that mines databases from real service themes, validates generated tools against them, and co-evolves environments and policies.
+* [Agentic Context Engineering (ACE)](agentic-context-engineering.md) - Context adaptation that keeps an evolving playbook updated by generation, reflection, and curation with incremental edits; a reference method for improving agents without weight updates.
+* [Agents' Last Exam (ALE)](agents-last-exam.md) - Living benchmark of long-horizon, economically valuable professional tasks with verifiable outcomes, and the source of a five-layer system view of agents.
 * [AgentScope](agentscope.md) - Open-source, Alibaba-developed multi-agent LLM platform providing model/memory/tool abstractions, a ReAct-based agent core, and infrastructure for both population-scale simulation and developer-facing agentic application deployment.
 * [ALFWorld](alfworld.md) - Text-based household-task environment aligned with ALFRED, a common long-horizon testbed for LLM agents, skill optimization, and context management.
 * [AlphaEvolve](alphaevolve.md) - Google DeepMind's LLM-powered evolutionary coding agent for algorithm and mathematical discovery, a common reference baseline for LLM-driven evolutionary discovery systems.
@@ -12,7 +14,9 @@
 * [BFCL](bfcl.md) - Berkeley Function-Calling Leaderboard for evaluating tool selection and argument correctness across unseen function schemas, in single-turn, multi-turn, and relevance-detection categories.
 * [BrowseComp](browsecomp.md) - Benchmark of hard-to-find factual questions identified only through indirect, mutually constraining clues, for evaluating web-browsing search agents.
 * [BrowseComp-Plus](browsecomp-plus.md) - Multi-hop deep-research QA benchmark with a verified offline corpus of gold, evidence, and hard-negative documents.
+* [Context compaction](context-compaction.md) - Shortening an agent's accumulated context mid-task by summarizing history or replacing tool outputs and images, with costs in what is lost, prompt-cache reuse, and RL training.
 * [Context rot](context-rot.md) - Degradation of model quality as context grows, even inside the physical context window.
+* [Darwin Gödel Machine (DGM)](darwin-godel-machine.md) - Self-improving coding agent that rewrites its own code, validates each version on coding benchmarks, and keeps an open-ended archive of agents; the standard reference for self-modifying agents and archive-based search.
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
 * [EnvScaler](envscaler.md) - Programmatic synthesis of tool-interactive training environments with executable tools and verifiable tasks, and the RL task pool built that way.

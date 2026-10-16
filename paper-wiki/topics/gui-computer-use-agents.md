@@ -7,7 +7,7 @@ tags:
 - computer-use-agents
 - desktop-automation
 - in-context-demonstration-learning
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-10-16T00:00:00Z
 ---
 
 # Scope
@@ -25,6 +25,7 @@ This topic tracks agents that act directly on graphical interfaces — desktops,
 * [SoftwareGym](../papers/2610.12611.md) - trains on software that did not exist before: 182 agent-written desktop applications supply the trajectories, and Qwen3.5-9B fine-tuned only on them goes from 41.39% to 56.97% Pass@3 on 244 OSWorld tasks (28.40% to 46.77% single-run average), within about 1.3 points of matched-size training on OSWorld applications by single-run average.
 * [ExpActivator](../papers/2609.33304.md) - training-free personalization for mobile GUI agents: at every step the current screenshot is matched to the user's recorded screens in the frozen backbone's own visual features and the one best-matching past action is supplied as a reference; on AndroidIntent (82 users) it raises within-trajectory step success by 2.4-8.2 points across four 8-9B backbones with about one-fifth the history tokens, in offline evaluation against recorded actions.
 * [SwitchMem](../papers/2610.17928.md) - at every step a router on the frozen actor's hidden state decides whether a retrieved demonstration step is shown as a text description or a screenshot; with Qwen3.5-9B it beats the best fixed form by 2.1 points on AITW and 0.7 on LearnGUI (significant, offline step-level scoring) and by 2 of 92 tasks on online MobileMiniWoB++ (not significant), and showing both forms at once is worst on LearnGUI.
+* [OpenGCUA](../papers/2610.22200.md) - defines a generalist computer-use agent by three per-step model decisions (what to observe, how to act, how to organize) over GUI, accessibility, shell, and API interfaces; code execution plus model-chosen screenshots and a todo ledger lift eight frozen models from 45.3 to 64.9 mean partial score on the 82-task offline OSWorld-v2 set, and a preliminary macOS harness addresses shared control, background windows, and existing user state.
 
 # Synthesis
 
@@ -40,6 +41,8 @@ ExpActivator and UI-Mate both condition a GUI policy on prior experience at infe
 
 SwitchMem and ExpActivator both make a memory decision at every step of a mobile GUI task from the frozen backbone's own representations, and both are evaluated mostly offline against recorded actions. ExpActivator chooses which recorded action to show; SwitchMem keeps a per-step retrieved demonstration and chooses whether its screen appears as text or as a screenshot. Its finding that both forms together score 10.5 points below the screenshot alone on LearnGUI bears on the richer context other papers here add (UI-Mate's workflows, MAI-UI's tool outputs): for a 9B actor, more evidence in the prompt did not mean better actions (reader inference from one benchmark). Its effects are small, 0.7 to 2.1 points offline and two tasks of 92 online, and the online result is not significant, so this topic's open question about live execution applies to it as well.
 
+OpenGCUA widens this topic from GUI-level action to generalist computer use, where the model picks among GUI, accessibility, shell, and API interfaces each step and writes the step as a program. Against batched GUI-only execution on eight frozen models it adds 19.6 OSWorld-v2 points and halves steps, and against batched GUI+CLI with the same interfaces it still adds 4.4 to 9.1 points. In its formalization the hybrid designs this topic tracks, such as MAI-UI's added tool-use actions and RecreationWorld's interleaved GUI and coding trajectories, differ in which of three decisions the model makes rather than in which interfaces exist (reader mapping). Its real-device section names conditions the offline benchmarks here do not test: a user sharing the pointer and focus, background windows that a desktop screenshot does not show, and tasks that start among existing files and sessions. Its four-task study already shows models differing more in reasoning cost (19.4 times between GPT-6 Astra and Qwen3.8-Max) than in completion under one harness, with dollar cost ranking them the other way.
+
 # Open Questions
 
 * How should a demonstration-guided GUI agent transfer procedural structure across related-but-non-identical tasks (the variant-demo problem), rather than only replaying guidance from the same task?
@@ -54,3 +57,4 @@ SwitchMem and ExpActivator both make a memory decision at every step of a mobile
 * SoftwareGym builds eight of its twelve categories to mirror OSWorld's application domains. How much of the transfer to real applications survives when the synthesized categories share no function set with the test applications?
 * ExpActivator's gains are measured as agreement with a user's recorded next action under teacher forcing. Does step-level reference selection still help in live execution, where following a slightly wrong reference changes the next screen, and on tasks the user has rarely done before?
 * SwitchMem chooses between two forms of one retrieved step. Would the same router learn when to show no memory, or both forms, given that on MobileMiniWoB++ the actor without memory beats fixed text and fixed image memory?
+* OpenGCUA's real-device harness prefers accessibility actions and background delivery so the agent does not disturb its user. How often does that order fail on desktop applications with poor accessibility support, and do the training pipelines here (SoftwareGym, RecreationWorld) produce agents that choose interfaces well or only agents that use the GUI well?
