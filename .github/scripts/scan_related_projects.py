@@ -37,23 +37,25 @@ SKILLS = "Skills and lists"
 # description, or topics. Generic agent-OS and harness queries are left out on
 # purpose: keyword search cannot tell a research-relevant runtime from noise,
 # so those stay hand-curated.
-QUERIES = [
-    '"AI scientist"',
-    '"autoresearch"',
-    '"auto research"',
-    '"autonomous research"',
-    '"idea to paper"',
-    '"research workbench"',
-    '"scientific discovery" agent',
-    '"research assistant" "claude code"',
-    '"academic research" agent',
-    '"research skills"',
-    '"science skills"',
-    "topic:ai-scientist",
-    "topic:auto-research",
-    "topic:autoresearch",
-    "topic:research-agent",
+# Queries in one group are synonyms, and a phrase also matches the topic of the
+# same name, so a repo tagged `autoresearch` hits two queries for one label.
+# Candidates are ranked by matched groups, not queries, then by stars.
+QUERY_GROUPS = [
+    ['"AI scientist"', "topic:ai-scientist"],
+    ['"autoresearch"', '"auto research"', "topic:autoresearch",
+     "topic:auto-research"],
+    ['"autonomous research"'],
+    ['"idea to paper"'],
+    ['"research workbench"'],
+    ['"scientific discovery" agent'],
+    ['"research assistant" "claude code"'],
+    ['"academic research" agent'],
+    ['"research skills"'],
+    ['"science skills"'],
+    ["topic:research-agent"],
 ]
+QUERIES = [q for group in QUERY_GROUPS for q in group]
+GROUP_OF = {q: i for i, group in enumerate(QUERY_GROUPS) for q in group}
 
 # Lists and surveys belong in the Human Owner's awesome-AI-for-research, and
 # these domains share the words "research" or "autonomous" but not the topic.
@@ -143,6 +145,11 @@ def is_research(repo):
     return bool(RESEARCH_TERM.search(text))
 
 
+def rank(repo):
+    groups = {GROUP_OF[q] for q in repo["queries"]}
+    return (-len(groups), -repo["stargazers_count"])
+
+
 def clean_description(text, limit=220):
     text = EMOJI.sub("", text or "")
     text = text.split(" | ")[0]  # "English | 中文" bilingual descriptions
@@ -197,8 +204,8 @@ def pr_body(added, below, since, min_stars, min_skill_stars):
         f"Filter: pushed since {since}, at least {min_stars} stars "
         f"({min_skill_stars} and a research topic for skill repos), not "
         "archived or a fork, not "
-        "already listed; ranked by number of matched queries, "
-        "then stars. Descriptions are the repos' own GitHub descriptions; "
+        "already listed; ranked by number of matched query groups "
+        "(synonymous queries count once), then stars.Descriptions are the repos' own GitHub descriptions; "
         "relevance was matched by keyword only, not judged.",
         "",
         "| Repo | Stars | Last push | Section | Matched queries |",
@@ -248,7 +255,7 @@ def main():
          and (section_for(r) != SKILLS
               or (r["stargazers_count"] >= args.min_skill_stars
                   and is_research(r)))),
-        key=lambda r: (-len(r["queries"]), -r["stargazers_count"]),
+        key=rank,
     )
     added, below = eligible[: args.max], eligible[args.max : args.max + 10]
     print(f"{len(hits)} repos seen, {len(eligible)} eligible, {len(added)} proposed.")
