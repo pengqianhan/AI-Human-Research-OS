@@ -205,7 +205,8 @@ def pr_body(added, below, since, min_stars, min_skill_stars):
         f"({min_skill_stars} and a research topic for skill repos), not "
         "archived or a fork, not "
         "already listed; ranked by number of matched query groups "
-        "(synonymous queries count once), then stars.Descriptions are the repos' own GitHub descriptions; "
+        "(synonymous queries count once), then stars. "
+        "Descriptions are the repos' own GitHub descriptions; "
         "relevance was matched by keyword only, not judged.",
         "",
         "| Repo | Stars | Last push | Section | Matched queries |",
