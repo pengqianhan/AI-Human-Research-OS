@@ -66,17 +66,10 @@ proposes new entries in a pull request; prune them there before merging.
 - [FOREST](https://github.com/mikamikasuki/FOREST): FOREST is a research agent
   for long-horizon science, where evidence gets lost, errors compound, and goals
   drift.
-- [evo](https://github.com/evo-hq/evo): turns your codebase into an autoresearch
-  loop — discovers what to measure, instruments the benchmark, then runs tree
-  search with parallel subagents.
 - [wisp-science](https://github.com/xuzhougeng/wisp-science): Open-source,
   local-first desktop AI research workbench for scientific computing with
   Python/R, MCP bioinformatics tools, SSH/WSL/GPU runtimes, and OpenAI/Anthropic
   models.
-- [codex-autoresearch](https://github.com/TheGreenCedar/codex-autoresearch): A
-  codex plugin for running optimization loops inside a codebase. It is useful
-  when you have a measurable target and many possible changes to try: test
-  runtime, build speed, bundle size, model loss, Lighthouse scores,…
 - [scholaraio](https://github.com/ZimoLiao/scholaraio): Scholar All-In-One: A
   research infrastructure for AI agents.
 - [ScienceBuddy](https://github.com/Gen-Verse/ScienceBuddy): ScienceBuddy:
@@ -127,21 +120,10 @@ proposes new entries in a pull request; prune them there before merging.
 - [scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills):
   Turn any AI agent into an AI Scientist. The #1 Agent Skills library for
   science, used by 250,000+ scientists worldwide.
-- [autoresearch](https://github.com/uditgoenka/autoresearch): Claude
-  Autoresearch Skill — Autonomous goal-directed iteration for Claude Code.
-  Inspired by Karpathy's autoresearch. Modify → Verify → Keep/Discard → Repeat
-  forever.
-- [codex-autoresearch](https://github.com/leo-lilinxiao/codex-autoresearch):
-  Codex Autoresearch Skill — A self-directed iterative system for Codex that
-  continuously cycles through: modify, verify, retain or discard, and repeat
-  indefinitely. Inspired by Karpathy’s autoresearch concept.
 - [open-science](https://github.com/ai4s-research/open-science): Open Science
   Desktop — local-first, model-agnostic AI research workbench for macOS, Windows
   & Linux. Open-source Claude Science desktop alternative built on Tauri + MCP +
   agent skills.
-- [ResearcherSkill](https://github.com/krzysztofdudek/ResearcherSkill): One
-  file. Your AI coding agent becomes a scientist. 30+ experiments while you
-  sleep.
 - [Aut_Sci_Write](https://github.com/ShZhao27208/Aut_Sci_Write): Academic
   research skills suite for AI Agent — literature search/download
   (WoS+Elsevier+Springer), PDF extraction, figure cropping, review writing,
