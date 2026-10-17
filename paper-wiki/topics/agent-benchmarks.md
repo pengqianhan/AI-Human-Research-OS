@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Scope
@@ -27,6 +27,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [EmbodiedCLBench](../papers/2610.13021.md) - 268 household tasks (168 basic, 100 advanced) from the TongSim simulator, frozen as offline state-transition graphs in which each node offers four written actions labelled optimal, suboptimal, or invalid; a learning phase on basic tasks precedes testing on advanced tasks composed of the same atomic actions, under zero-shot, in-context, and skill-summary settings, with single runs scored by success rate.
 * [AgentSWE](../papers/2610.13361.md) - 25 commissions asking a coding agent to create an agent from a requirement, add capabilities to a production agent codebase, or optimize a working agent; the builder iterates on two visible cases (or a development split), and the frozen delivery is run on held-out cases with a shared runtime model, validity gates, and requirement-derived rubrics; the best of five builders averages 19.1 on Creation and 31.6 on Editing, and 58.1% of traced Creation executions fail a gate.
 * [Doc2Harness](../papers/2610.20344.md) - a construction benchmark scored without a judge: the artifact is a coding-agent harness a model builds from a specification, run as a black box by a scripted mock model on 328 cases with effects read from model requests, disk, exit code, and output, and positive controls that fail a prohibition case whose pass came only from the feature never running; KR-20 0.913, with pass rates from 53.05% to 27.44% across 19 models.
+* [FDE-Gym](../papers/2610.22350.md) - 95 customer-delivery tasks from 20 expert-adapted scenarios in 18 sectors, scored by normalized uplift on the customer's own metric minus a hidden stakeholder-contact charge, with admission anchors (doing nothing scores 0, the reference at least 0.95, literal compliance at most 0.2, shortcuts at most 0.8); at the sponsor-request level the best of 13 configurations averages 0.56 and resolves 14 tasks.
 
 # Synthesis
 
@@ -46,6 +47,8 @@ AgentSWE moves the unit of evaluation one level up: the artifact under test is a
 
 Doc2Harness sits beside AgentSWE as a benchmark whose test object is something an agent built, and beside SafeActBench as one that scores without an LLM judge. Its distinctive control targets a failure the other process benchmarks here do not name: an assertion that something must *not* happen passes trivially if the feature under test never ran. Each such case is gated by a control that changes only the input or the access route and asserts an outcome that must occur if the observation works; 130 of its 328 cases carry one. It also publishes a reliability statistic (KR-20 0.913 over 57 builds) and a per-category split into floor, ceiling, and discriminating cases, which most benchmarks here omit. Its weak points are ones this topic already asks about: the suite was refined partly on harnesses the evaluated models built, and no reference implementation shows what score the specification allows, the same gap as AgentSWE's missing reference agent.
 
+FDE-Gym turns anchor-based checks into an admission rule rather than an after-the-fact audit. A task enters only if doing nothing scores 0, the reference at least 0.95, literal compliance at most 0.2, and named shortcut strategies at most 0.8, and the graders were tested against more than 270 shortcut and bypass strategies. AgentSWE's held-out cases and Doc2Harness's positive controls ask whether a benchmark catches deliveries that pass by doing the wrong thing; FDE-Gym's literal-compliance cap asks the same of underspecified requests. Its exception for requests that are correct and complete keeps "distrust the sponsor" from becoming a winning shortcut. Its instruction ladder (L0 to L3 over one fixed world and grader) is a reusable way to locate where agents fail: for leading models the drop is at withheld constraints (0.28), not at a misdirected request (0.04 more), against the authors' own initial hypothesis. Two features limit outside checking: the 75 variants and all reference solutions are held out, and the authors run the leaderboard, so the anchors can be verified independently only on three public tasks.
+
 # Open Questions
 
 * When does grading one next turn at a recorded decision point agree with executing the agent to the end? TraceDance's authors note that a planning-first response may act well later, and no paper here yet measures that gap.
@@ -62,3 +65,4 @@ Doc2Harness sits beside AgentSWE as a benchmark whose test object is something a
 * Benchmarks built on novel rules (Learn2Play) stay novel only until the games, solutions, and run logs are public. How should such benchmarks keep measuring learning rather than recall once future models may have trained on them?
 * AgentSWE's development cases deliberately cover only part of the requirement, so its development-to-held-out gap mixes builder overfitting with a coverage difference. What split design would measure overfitting alone, and should construction benchmarks publish a reference agent's held-out score as a ceiling?
 * Doc2Harness's positive controls turn vacuous passes of prohibition tests into failures. How many passes of "must not happen" checks in other benchmarks (SafeActBench's no-action cases, refusal checks in security benchmarks) would survive a comparable control?
+* FDE-Gym subtracts a hidden, expert-set contact charge, and that charge decides many resolutions (GPT-6 Astra's systems reach 0.8 uplift on 36 tasks, 9 of which stay resolved). Should delivery benchmarks report uplift and contact cost as separate primary results, and would rankings survive a different pricing schedule?

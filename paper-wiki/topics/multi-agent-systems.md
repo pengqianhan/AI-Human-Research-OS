@@ -6,7 +6,7 @@ tags:
 - multi-agent-systems
 - coordination
 - shared-state
-timestamp: 2026-10-08T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Scope
@@ -36,6 +36,7 @@ This topic tracks papers where multiple agents coordinate reasoning, experimenta
 * [Game Arena](../papers/2609.31473.md) - 8-player Werewolf as a mixed cooperative/adversarial multi-agent test, with role-decomposed game-theoretic ratings and a coalition "substitution index" that measures how much replacing one model with another changes a team's win rate.
 * [Raven](../papers/2609.33439.md) - a host-orchestrated team whose members are whole harnesses: native specialists plus Claude Code, Codex, Hermes Agent, and OpenClaw behind adapters. The host submits a typed DAG that the runtime admits before dispatch, handoffs are recorded artifacts, and a new benchmark (MAOB) scores the plan alone, where Raven leads Claude Code and Hermes Agent by about 10 points of exact graph match.
 * [Recursive Game Creator](../papers/2610.08621.md) - a game-studio role pipeline (Designer, Builder, Player, Reviewer) run for several rounds, where the Player writes gameplay policies and the Reviewer judges anonymized trajectories and screenshots without seeing source code or which version is newer before choosing which build to keep.
+* [AutoSFT](../papers/2610.22194.md) - a meta agent that delegates training and evaluation to an executor (which returns only file paths and may not read scores), gathers one proposal each from four analysis subagents whose skills differ only in their starting evidence, and calls a synthesis subagent for undersupplied capabilities; each role is added and measured on its own.
 
 # Synthesis
 
@@ -46,6 +47,8 @@ AgentWorld and Game Arena bring *measurement* to this topic, which has so far co
 Raven adds two things. Its team members are heterogeneous harnesses rather than role prompts inside one framework, joined by an explicit, admission-checked topology per request, which places it in Graph Engineering's routing and fan-out/fan-in families. It also states formally when a team can beat every member under one budget: each node needs an agent able to meet its contract, no single agent covers every node, and planning and handoff errors stay small. Its MAOB benchmark scores only the plan, before any worker runs, so it complements AgentWorld, which scores teams executing without a planner.
 
 Recursive Game Creator adds a fourth route to review independence alongside ARIS's cross-family reviewer, Apodex 1.1's narrowed-scope verifier, and RSIAgent's isolated verifier: its Reviewer sees behavioral and visual evidence about two game versions but neither their source code nor which one is newer, so it judges the experience rather than the edit. The paper does not ablate this restriction, so whether it reduces correlated review errors is untested.
+
+AutoSFT gives this topic a role-by-role ablation, which most systems here lack. Adding an executor halves context compactions (ten to five) without changing the decision logic. Adding four analysis subagents, whose skills share the proposal section word for word and differ only in the evidence they start from, moves 55% of actions into repair and resupervision, families the single agent never used. Diversity therefore comes from starting evidence rather than from different action menus, following the result it cites from Anthropic's automated researcher that distinct starting directions keep parallel agents diverse. The executor's skill is also a narrow-scope restriction like the reviewer restrictions tracked here (ARIS, Apodex 1.1, RSIAgent): it is told what to run and cannot read the scores, so it cannot steer the round.
 
 # Open Questions
 
@@ -61,3 +64,4 @@ Recursive Game Creator adds a fourth route to review independence alongside ARIS
 * EvoScientist's Evolution Manager Agent role is a dedicated cross-task memory-curation function distinct from any executor, reviewer, orchestrator, or debate role this topic's other nine patterns use — would adding a comparable persistent-memory-curator role to a within-task coordination pattern (e.g., ARIS's executor/reviewer pair, or Apodex 1.1's Agent Team) improve outcomes across tasks the way it does for EvoScientist, or is the benefit specific to the multi-stage, long-horizon structure of end-to-end scientific discovery?
 * AgentWorld finds a human-written shared plan *hurts* when agents cannot communicate (22.9% → 17.6%) and that chat volume does not predict success — would this topic's structured-state patterns (task boards, shared verified context) close the gap to AgentWorld's oracle-communication upper bound, and does a CCE-style causal-contribution metric rank those patterns differently from task success?
 * Does a better plan on Raven's MAOB (higher agreement with a reference graph) lead to better executed deliverables, given that valid alternative plans can differ from the reference and the benchmark never runs the workers?
+* AutoSFT's four analysis subagents differ only in their starting evidence. Would one agent prompted in turn with the same four scopes give the same diversity at lower cost, or does keeping their contexts separate matter in itself?

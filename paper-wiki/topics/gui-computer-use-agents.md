@@ -7,7 +7,7 @@ tags:
 - computer-use-agents
 - desktop-automation
 - in-context-demonstration-learning
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Scope
@@ -26,6 +26,7 @@ This topic tracks agents that act directly on graphical interfaces — desktops,
 * [ExpActivator](../papers/2609.33304.md) - training-free personalization for mobile GUI agents: at every step the current screenshot is matched to the user's recorded screens in the frozen backbone's own visual features and the one best-matching past action is supplied as a reference; on AndroidIntent (82 users) it raises within-trajectory step success by 2.4-8.2 points across four 8-9B backbones with about one-fifth the history tokens, in offline evaluation against recorded actions.
 * [SwitchMem](../papers/2610.17928.md) - at every step a router on the frozen actor's hidden state decides whether a retrieved demonstration step is shown as a text description or a screenshot; with Qwen3.5-9B it beats the best fixed form by 2.1 points on AITW and 0.7 on LearnGUI (significant, offline step-level scoring) and by 2 of 92 tasks on online MobileMiniWoB++ (not significant), and showing both forms at once is worst on LearnGUI.
 * [OpenGCUA](../papers/2610.22200.md) - defines a generalist computer-use agent by three per-step model decisions (what to observe, how to act, how to organize) over GUI, accessibility, shell, and API interfaces; code execution plus model-chosen screenshots and a todo ledger lift eight frozen models from 45.3 to 64.9 mean partial score on the 82-task offline OSWorld-v2 set, and a preliminary macOS harness addresses shared control, background windows, and existing user state.
+* [MAI-Gym](../papers/2610.20939.md) - an open platform that runs evaluation, data collection, and online RL through one harness over mobile, computer, and web (ten benchmarks, 20,000 parallel environments), synthesizes resettable app clones, invented apps, cross-app worlds, and execution-tested verifiers, and trains MAI-Gym-9B to 78.4% on MobileWorld and 76.2% on OSWorld-Verified in one joint GRPO run; RL in a ticketing-app clone lifts the real app on a physical phone from 28.8% to 48.1%.
 
 # Synthesis
 
@@ -43,6 +44,8 @@ SwitchMem and ExpActivator both make a memory decision at every step of a mobile
 
 OpenGCUA widens this topic from GUI-level action to generalist computer use, where the model picks among GUI, accessibility, shell, and API interfaces each step and writes the step as a program. Against batched GUI-only execution on eight frozen models it adds 19.6 OSWorld-v2 points and halves steps, and against batched GUI+CLI with the same interfaces it still adds 4.4 to 9.1 points. In its formalization the hybrid designs this topic tracks, such as MAI-UI's added tool-use actions and RecreationWorld's interleaved GUI and coding trajectories, differ in which of three decisions the model makes rather than in which interfaces exist (reader mapping). Its real-device section names conditions the offline benchmarks here do not test: a user sharing the pointer and focus, background windows that a desktop screenshot does not show, and tasks that start among existing files and sessions. Its four-task study already shows models differing more in reasoning cost (19.4 times between GPT-6 Astra and Qwen3.8-Max) than in completion under one harness, with dollar cost ranking them the other way.
 
+MAI-Gym is the training-side companion to OpenGCUA from the same team, and the two pull in different directions on action format. OpenGCUA finds that programs over GUI and shell beat batched GUI+CLI actions for frozen frontier models. MAI-Gym trains a 9B policy on batched GUI+CLI actions and reaches 76.2% on OSWorld-Verified, but stays low in computer environments it never trained in (3.7/11.3 on OSWorld 2.0, 15.2 on MyPCBench), so whether code as action would help a small trained policy is open (reader connection). It also gives this topic its first sim-to-real numbers for GUI training. Clone-only RL in a 12306 replica raises the real app from 28.8% to 48.1% on 52 tasks, while the clone-to-real gap widens from 7.7 to 25.0 points, and RL on invented apps with no demonstrations raises held-out success from 25.8% to 45.2%. Its gain split echoes SoftwareGym's SFT-only result in direction: most of MAI-Gym-9B's improvement comes from the SFT warm-up (Task-OOD average 29.9 to 66.4) and RL adds a smaller step (cross-domain average 44.1 to 50.5), though the two papers' splits and metrics differ (reader connection).
+
 # Open Questions
 
 * How should a demonstration-guided GUI agent transfer procedural structure across related-but-non-identical tasks (the variant-demo problem), rather than only replaying guidance from the same task?
@@ -58,3 +61,4 @@ OpenGCUA widens this topic from GUI-level action to generalist computer use, whe
 * ExpActivator's gains are measured as agreement with a user's recorded next action under teacher forcing. Does step-level reference selection still help in live execution, where following a slightly wrong reference changes the next screen, and on tasks the user has rarely done before?
 * SwitchMem chooses between two forms of one retrieved step. Would the same router learn when to show no memory, or both forms, given that on MobileMiniWoB++ the actor without memory beats fixed text and fixed image memory?
 * OpenGCUA's real-device harness prefers accessibility actions and background delivery so the agent does not disturb its user. How often does that order fail on desktop applications with poor accessibility support, and do the training pipelines here (SoftwareGym, RecreationWorld) produce agents that choose interfaces well or only agents that use the GUI well?
+* MAI-Gym's clone-only RL widens the clone-to-real gap from 7.7 to 25.0 points even as real-app success rises. Which clone differences (layout, latency, pop-ups, login state) cause the widening, and would a few real-device rollouts mixed into training close it more cheaply than better clones?

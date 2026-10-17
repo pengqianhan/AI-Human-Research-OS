@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-10-13T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Definition
@@ -37,6 +37,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [MiMo-V2.6](../papers/2610.11959.md) - reports Terminal-Bench 2.1 at 89.9 (Pro) and 87.6 (Flash) against 89.1, 88.8, and 84.3 for Claude Opus 5, GPT-5.6 Sol, and Claude Fable 5, and Terminal-Bench 4.0 at 34.9 and 28.8 against 49.0, 39.9, and 42.4; the released 9B distilled model goes from 27.0 (Qwen3.5-9B) to 37.1 after SFT and 52.8 after RL on 2.1.
 * [TerminalHorizon](../papers/2610.13166.md) - primary evaluation for a model fine-tuned on about 3k synthesized long-horizon trajectories: Qwen3.5-27B under Terminus 2 goes from 46.3 to 55.0 on 1.0 (80 tasks), from 41.6 to 55.8 on 2.0, and from 46.82 to 60.67 on 2.1 (89 tasks each), mean pass@1 over three runs with a three-hour limit; the 2.0 base score is taken from the model card.
 * [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets: coding agents edit a Terminus 2 starter against 10 development instances and are scored on 40 held-out ones; gap closure ranges from -10.0 to 7.7 across five builders, no run differs significantly from its starter, and the unchanged starter's score has a standard deviation of 14.5 points across five evaluations.
+* [FDE-Gym](../papers/2610.22350.md) - Terminal-Bench 2.1 success rates from Vals AI are set beside FDE-Gym delivery scores: models solving up to 88% of its tasks score 0.19 to 0.56 on FDE-Gym, where the leading model resolves 15% of tasks; the paper stresses that success rates and normalized uplift are different quantities.
 
 # Notes
 

@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Definition
@@ -34,3 +34,4 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [Agent-Reflex](../papers/2610.17953.md) - ORPO's outcome term normalizes verifier returns over a mixed group of eight rollouts, a quarter of them in perturbed environments, rather than within the clean and perturbed subsets; GRPO is also one of five RL algorithms ORPO is compared with over 100 steps.
 * [ActionOPD](../papers/2610.19820.md) - groups are four student candidates at the same state rather than rollouts for the same prompt; rewards are centered on the group mean and divided by one batch-wide standard deviation, groups with equal rewards are dropped, and the reward is agreement with sampled teacher actions instead of an outcome, under PPO clipping with dual clip 3 and no KL term.
 * [Mosaic](../papers/2610.22174.md) - keeps GRPO's group-relative outcome advantage but multiplies it by (1 - 0.2u), where u is the centered rank of session count within same-outcome rollouts, so the sign never changes; adds fallbacks for all-success and all-failure groups and a session-level shaping term, and aggregates each rollout's session segments into one token-weighted objective.
+* [MAI-Gym](../papers/2610.20939.md) - main recipe for joint mobile and computer GUI RL (group size 8, per-token loss, KL loss 1e-3, constant learning rate 1e-6), combined with policy-adaptive budgets that give never-solved and mastered tasks 4 and 2 attempts, with a task's advantages computed only after all its attempts finish; compared with SAO, which shows no clear training-time advantage.

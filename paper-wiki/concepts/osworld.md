@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - gui-computer-use-agents
 - agent-harness-engineering
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Definition
@@ -26,6 +26,7 @@ OSWorld evaluates computer-use agents on long-horizon, open-ended tasks executed
 * [SoftwareGym](../papers/2610.12611.md) - evaluates on 244 OSWorld tasks from eight application domains with three rollouts per task: Qwen3.5-9B fine-tuned only on synthesized-application trajectories goes from 41.39% to 56.97% Pass@3 and from 28.40% to 46.77% single-run average, against 61.48% and 48.06% for matched-size training on OSWorld-application trajectories.
 * [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets: coding agents edit a screenshot ReAct starter against 10 development instances and are scored on 25 held-out ones; starters score 0 to 16 and candidates 4 to 16, gap closure ranges from -9.1 to 12.0, and no run differs significantly from its starter.
 * [OpenGCUA](../papers/2610.22200.md) - the 82-task offline subset of OSWorld-v2 v2.1 (26 internet tasks excluded) for all comparisons, scored by mean partial score and full success with the latest attempt per task kept; its full design lifts eight frozen models from 45.3 to 64.9 mean partial score (GPT-6 Astra 67.1 to 75.7, GLM-5.3-Flash 29.6 to 64.9) against batched GUI-only actions.
+* [MAI-Gym](../papers/2610.20939.md) - OSWorld-Verified (361 tasks, 100-step limit) is a Task-OOD headline benchmark: MAI-Gym-9B reaches 76.2% from 41.8% for the Qwen3.5-9B base, above UI-Venus-2-9B (70.8%) and within 2.5 points of GPT-5.5; OSWorld 2.0 (108 tasks, 500-step limit) is an Env-OOD test at 3.7 binary and 11.3 partial. Half its 2,000 released tasks are synthesized in OSWorld environments.
 
 # Notes
 
@@ -34,3 +35,5 @@ Results across these papers are not directly comparable: RSIAgent and LongHorizo
 SoftwareGym's headline numbers are Pass@3, task-level success across three rollouts at temperature 1, on a 244-task subset. They are not comparable with the single-run or partial-credit scores above; its own appendix gives single-run averages, which are several points lower (Seed 2.1 Pro is 79.51% Pass@3 and 70.41% as a three-run average).
 
 OpenGCUA and RSIAgent both use an 82-task offline OSWorld 2.0 split but different versions (v2.1 against 0808) and different harnesses: OpenGCUA's GPT-6 Astra scores 67.1 (batched GUI) and 75.7 (full design) in its own harness, while RSIAgent quotes 72.60 from official reports. OpenGCUA reports selected single runs without variance and keeps the latest attempt per task, not the best, so its numbers are best compared within its own tables.
+
+MAI-Gym's OSWorld-Verified result is in-environment: its RL tasks are synthesized inside OSWorld environments, though no benchmark task is used, and most of its baselines come from published reports run in other harnesses. Its OSWorld 2.0 figures (3.7/11.3 for MAI-Gym-9B, 20.3/54.8 for Claude Opus 4.8) use all 108 tasks with a 500-step limit, unlike the 82-task offline splits that OpenGCUA and RSIAgent report.

@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Scope
@@ -39,6 +39,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [Agent-Reflex](../papers/2610.17953.md) - three stages on Qwen3-8B: 54K verified SFT trajectories in which the policy itself repairs, restarts, or follows a (sometimes wrong) user correction after a failure, guided by a mined reflection skill that is then stripped from the input; then noisy agentic RL on 2.5K EnvScaler tasks plus same-model on-policy distillation with the skill card as privileged context; 58.6 overall on five tool-use benchmarks against 53.6 for Agent-World-8B, with most baseline rows copied from their papers.
 * [ActionOPD](../papers/2610.19820.md) - on-policy distillation at the level of semantic actions from a generation-only teacher: at each state the student reaches, four candidates are rewarded by agreement with three sampled teacher actions (canonical checks plus an LLM matcher), the best is executed, and all are trained with a group-relative clipped objective and no outcome reward; Qwen3-4B and 8B gain 3.3-6.9 points on a four-benchmark average, about level with token-level OPD on τ² pass¹ and behind it and offline KD on pass⁴.
 * [Mosaic](../papers/2610.22174.md) - multi-session agentic RL for trajectories split by context compaction or subagent forking: each session is its own training segment, the GRPO advantage is rescaled by the within-outcome rank of session count without changing sign, and each non-final session adds a type-normalized reward from its change in answer likelihood; on BrowseComp with Qwen3.5-4B it beats broadcasting by 3.55 points with compaction and about one point with subagents.
+* [MAI-Gym](../papers/2610.20939.md) - one joint online GRPO run for mobile and computer GUI tasks (Qwen3.5-9B, 5,000 synthesized tasks, 512 GPUs, about 96 hours) that beats three weighted merges of per-domain experts; adds policy-adaptive task budgets (a full group for frontier tasks, 4 attempts for never-solved and 2 for mastered ones), window-wise packing that trains each history window once, and a per-token k3 KL gate between trainer and rollout log-probabilities.
 
 # Synthesis
 
@@ -67,6 +68,8 @@ ActionOPD changes what the distillation papers here match. NeoHorse-1, One to Mo
 
 Mosaic adds a case this topic's credit-assignment papers assume away: a trajectory whose context is not one continuous prefix. When compaction or a subagent fork starts a new session, it trains each session as a separate segment and replaces the broadcast trajectory advantage with two terms. The first rescales the outcome advantage by the session count's rank among same-outcome rollouts, bounded so that it never flips the sign. The second is a per-session shaping reward from the change in the policy's likelihood of the reference answer, normalized separately for normal, compaction, and subagent sessions. The design parallels SLCA-GRPO, which also normalizes segment rewards separately within a GRPO group and routes each advantage to its own tokens, and its shaping reward is IGPO's turn-level information gain moved to session boundaries. Its evidence is one 4B model on one benchmark without seeds: +3.55 points over broadcasting with compaction, about one point with subagents, where single-session GRPO comes within 0.6 points while using fewer sessions.
 
+MAI-Gym addresses two costs of RL on screenshot trajectories that the text-agent methods here do not face. Step-wise training re-encodes the shared history at every step, and whole-trajectory packing outgrows memory. Window-wise packing trains each window of 10 steps once, with loss only on its new steps, cutting training tokens per trajectory by 84.7% and update time by 62.6% against step-wise history, at an 18.9% lower rollout rate. Its policy-adaptive sampling addresses a GRPO cost the papers here mostly leave implicit: a group whose attempts all get the same reward gives no gradient. It gives never-solved and mastered tasks small budgets of 4 and 2 attempts instead of dropping them, so they are rechecked as the policy changes, and spends full groups on tasks the policy sometimes solves. Its joint-versus-merge comparison (78.4 and 76.2 against at best 76.4 and 74.8) is one run per setting, with the joint run given the two experts' combined budget.
+
 # Open Questions
 
 * Does evolution strategies' reported horizon-dependent advantage over policy-gradient RL hold on frontier-scale models and real (non-controlled) long-horizon tasks, not just the paper's controlled Sudoku crossover?
@@ -90,3 +93,4 @@ Mosaic adds a case this topic's credit-assignment papers assume away: a trajecto
 * Agent-Reflex's skill cards are privileged context during training and are stripped at inference. Would giving the same cards to the trained policy at inference add to what distillation put in the weights, or duplicate it, and does the answer change for failure families the cards do not cover?
 * ActionOPD's agreement reward gives no credit for being right and, as its appendix notes, is maximized by collapsing onto the teacher's most likely action. On tasks where the teacher is often wrong, or where several actions are valid, does adding an outcome reward to the agreement reward help more than either alone?
 * Mosaic's session reward needs a reference answer string. For agents trained against tests or rubrics, as in the coding and environment papers here, what replaces answer likelihood as the potential across a compaction or a fork, and does type-conditioned normalization still matter?
+* MAI-Gym gates RL runs on the k3 estimator of the KL divergence between trainer and rollout log-probabilities, to catch corrupted kernels, misaligned packed histories, and version skew. What threshold separates benign numerical mismatch from a fault, and how often do the text-agent RL runs here train on such mismatches unnoticed?

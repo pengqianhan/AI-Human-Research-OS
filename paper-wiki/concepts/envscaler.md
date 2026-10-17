@@ -8,7 +8,7 @@ tags:
 - agent-environments
 - tool-use
 - agentic-rl
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ EnvScaler (Song et al., 2026, "EnvScaler: Scaling Tool-Interactive Environments 
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - three EnvScaler environments (Food, Shopping, Benefits) are among its seven single-step fidelity testbeds, with a few reserved successful trajectories each used for construction.
 * [CompoWorld](../papers/2609.33665.md) - cited with AgentScaler, ScaleEnv, and Agent-World as the environment-scaling line it extends by composing services into cross-service tasks.
 * [ActionOPD](../papers/2610.19820.md) - the second training source: 755 tasks from 49 environments (of 2,550 source tasks) after integrity and static-feasibility screening, with a simulated user in the loop; 5 of every 64 task starts per step.
+* [MAI-Gym](../papers/2610.20939.md) - cited among the verifiable environments behind RL progress in tool use, which the paper argues GUI agents lack because every attempt needs its own reset device.
 
 # Notes
 

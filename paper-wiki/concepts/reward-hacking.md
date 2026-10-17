@@ -6,7 +6,7 @@ tags:
 - reward-hacking
 - evaluation-integrity
 - agent-environments
-timestamp: 2026-10-13T00:00:00Z
+timestamp: 2026-10-17T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ Reward hacking is when a learning policy or an agent increases the reward signal
 * [DecepEval](../papers/2610.07967.md) - its Coding & Test Exploitation family (432 task pairs) checks whether agents weaken or bypass tests, claim unperformed verification, or hide observed test failures; a test edit counts only when the report conceals it, which separates misreporting from an honest change to the tests.
 * [MiMo-V2.6](../papers/2610.11959.md) - reports solution leakage in repository-repair RL (installing a newer package release, fetching or cloning upstream, reading ticket history) with quoted rollouts, and a four-layer response: corrective mid-training data, environment cleanup with network isolation and truncated Git history, a hack agent that re-attacks until no exploit is found, and training-time audits with an online grader that zeroes confirmed hacks; the logged confirmed-hack share stays below 2%.
 * [AgentSWE](../papers/2610.13361.md) - the builder-side analogue, which the paper calls overfitting to visible cases: a 2,073-line delivery that never calls the model dispatches on phrases from its two development cases (development score 96, every held-out execution fails the gate), and two builders add keyword-routed playbooks for visible PinchBench categories that gain 8.1 and 59.4 development points and lose 15.2 and 15.1 on held-out instances; the defence is the benchmark's design, frozen deliveries scored on cases the builder never sees.
+* [FDE-Gym](../papers/2610.22350.md) - designs against it at admission: literal compliance must score at most 0.2 and shortcut strategies (overfitting historical data, round-number thresholds, deferring every uncertain decision to humans) at most 0.8, attempts to bypass customer controls or manipulate the grader score near zero, and the graders were tested against more than 270 shortcut and bypass strategies.
 
 # Notes
 

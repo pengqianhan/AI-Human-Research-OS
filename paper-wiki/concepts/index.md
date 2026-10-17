@@ -8,6 +8,7 @@
 * [AgentScope](agentscope.md) - Open-source, Alibaba-developed multi-agent LLM platform providing model/memory/tool abstractions, a ReAct-based agent core, and infrastructure for both population-scale simulation and developer-facing agentic application deployment.
 * [ALFWorld](alfworld.md) - Text-based household-task environment aligned with ALFRED, a common long-horizon testbed for LLM agents, skill optimization, and context management.
 * [AlphaEvolve](alphaevolve.md) - Google DeepMind's LLM-powered evolutionary coding agent for algorithm and mathematical discovery, a common reference baseline for LLM-driven evolutionary discovery systems.
+* [AndroidWorld](androidworld.md) - Live Android environment with 116 parameterized task workflows across 20 real apps, rewarded from system state; the standard online benchmark for mobile GUI agents.
 * [AppWorld](appworld.md) - Nine simulated everyday apps behind 457 APIs with 750 interactive-coding tasks scored by state-based unit tests that also check for collateral damage.
 * [ARC-AGI-3](arc-agi-3.md) - Interactive benchmark of grid games with unknown rules and goals, scored by action efficiency relative to humans (RHAE), used to test agents that learn an environment through interaction.
 * [AutomationBench](automationbench.md) - Benchmark of cross-application workflow orchestration through REST APIs in simulated SaaS environments, including API discovery and adherence to business rules.
@@ -37,6 +38,7 @@
 * [Meta-Harness](meta-harness.md) - Outer-loop optimization of executable agent-harness code by an agentic proposer reading past candidates' code, scores, and traces; the common baseline for automated harness evolution.
 * [mini-swe-agent](mini-swe-agent.md) - Minimal Bash-interface coding-agent harness from the SWE-agent line, used as a neutral scaffold, shared baseline harness, held-out transfer harness, and skeleton.
 * [MLE-Bench Lite](mle-bench-lite.md) - Lighter subset of MLE-Bench for Kaggle-derived ML-engineering agent evaluation.
+* [MobileWorld](mobileworld.md) - 201-task, 20-app mobile benchmark with long cross-app tasks plus agent-user-interaction and MCP categories, built as a harder successor to AndroidWorld.
 * [Model Context Protocol (MCP)](model-context-protocol.md) - Standard for how a language-model application discovers and invokes external tools via named, schema-described servers.
 * [OfficeQA](officeqa.md) - 246 numeric questions over about 89,000 pages of U.S. Treasury Bulletins requiring document parsing, cross-table retrieval, and numerical reasoning within a relative error tolerance.
 * [OOLONG](oolong.md) - Long-context benchmark requiring semantic transformation and aggregation over nearly every input entry.
