@@ -79,6 +79,23 @@ proposes new entries in a pull request; prune them there before merging.
   Re-Discovery to New-Discovery.
 - [Polaris](https://github.com/ZJU-REAL/Polaris): Toward Autonomous Scientific
   Discovery.
+- [Agon](https://github.com/AutoResearch-Factory/Agon): Claude Code plugin for
+  autonomous AI research — multi-agent loops take a bare topic all the way to
+  running experiments, with no human-written experimental code.
+- [station](https://github.com/dualverse-ai/station): The Station is an
+  open-world multi-agent environment where AI agents pursue autonomous
+  scientific discovery and build a shared literature.
+- [EffectiveAutoResearch-EAR-](https://github.com/liyingze07-svg/EffectiveAutoResearch-EAR-):
+  An open research workbench for idea discovery, autonomous mathematics, and
+  evidence-grounded rebuttals.
+- [pi-autoresearch](https://github.com/davebcn87/pi-autoresearch): Autonomous
+  experiment loop extension for pi.
+- [PaperBanana](https://github.com/dwzhu-pku/PaperBanana): PaperBanana:
+  Automating Academic Illustration For AI Scientists.
+- [claude-scholar](https://github.com/Galaxy-Dawn/claude-scholar):
+  Semi-automated research assistant for academic research and software
+  development. Supports Claude Code, Codex CLI, Kimi Code CLI, and OpenCode
+  across ideation, coding, experiments, writing, and publication.
 
 ## Agent runtimes and operating systems
 
@@ -128,6 +145,20 @@ proposes new entries in a pull request; prune them there before merging.
   research skills suite for AI Agent — literature search/download
   (WoS+Elsevier+Springer), PDF extraction, figure cropping, review writing,
   Zotero sync, and PPT/Html generation.
+- [academic-research-skills](https://github.com/Imbad0202/academic-research-skills):
+  Academic Research Skills for Claude Code: research → write → review → revise →
+  finalize.
+- [Auto-claude-code-research-in-sleep](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep):
+  ARIS (Auto-Research-In-Sleep) — Lightweight Markdown-only skills for
+  autonomous ML research: cross-model review loops, idea discovery, and
+  experiment automation.
+- [AI-Research-SKILLs](https://github.com/Orchestra-Research/AI-Research-SKILLs):
+  Comprehensive open-source library of AI research and engineering skills for
+  any AI model. Package the skills and your claude code/codex/gemini agent will
+  be an AI research agent with full horsepower.
+- [academic-research-skills-codex](https://github.com/Imbad0202/academic-research-skills-codex):
+  Codex-native Academic Research Skills suite for human-in-the-loop academic
+  research workflows.
 
 ## Articles
 
