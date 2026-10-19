@@ -48,6 +48,7 @@
 * [PaperBench](paperbench.md) - Benchmark where agents replicate 20 ICML 2024 papers from scratch, graded against 8,316 rubric sub-tasks.
 * [PinchBench](pinchbench.md) - Practical productivity and data-analysis tasks for LLMs running as OpenClaw agents, each scored from 0 to 100.
 * [ProgramBench](programbench.md) - 200 program-reproduction tasks: rebuild a program's observable behavior from an execute-only reference binary and its documentation, scored by black-box test pass rates.
+* [Ralph loop](ralph-loop.md) - Relaunching an agent on the same workspace each time it stops until a completion criterion is met, judged by the agent itself or by a separate reviewer.
 * [Reflexion](reflexion.md) - Verbal self-reflection for language agents: lessons written after each attempt are kept in an episodic memory and guide later attempts, with no weight updates; a standard baseline for learning from experience in context.
 * [Reward hacking](reward-hacking.md) - An agent or policy raising its measured reward or benchmark score by exploiting the grader, environment, or evaluation channel instead of accomplishing the intended task.
 * [ScienceWorld](scienceworld.md) - Interactive text environment of elementary-school science experiments; a long-horizon testbed for LLM agents, skill evolution, and agent RL.

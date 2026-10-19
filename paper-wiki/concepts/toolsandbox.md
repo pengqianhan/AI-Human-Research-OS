@@ -8,7 +8,7 @@ tags:
 - tool-calling
 - conversational-agents
 - stateful-environments
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-19T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ ToolSandbox (Lu et al., "ToolSandbox: A Stateful, Conversational, Interactive Ev
 * [ActionOPD](../papers/2610.19820.md) - transfer benchmark on 490 strictly local scenarios, four scheduled trials each and at most 30 messages, averaging similarity over all 1,960 trials: Qwen3-4B rises from 55.5 to 63.3 and Qwen3-8B from 57.7 to 62.5 after distillation.
 * [Agent-Reflex](../papers/2610.17953.md) - a stratified 200-task subset in its five-benchmark tool-use suite.
 * [From Evidence to Action (SafeActBench)](../papers/2610.07753.md) - related work: placed with AgentBench, AppWorld, and τ-bench among interactive tool-use benchmarks, as the one that adds milestone ordering; ToolSandbox's authors are named among the closest critics.
+* [BizBench](../papers/2610.20424.md) - cited for policy-governed tool use with knowledge access, among benchmarks whose focus on final success BizBench says can miss intermediate violations; ToolSandbox's own milestone scoring already checks ordered intermediate steps (reader observation).
 
 # Notes
 

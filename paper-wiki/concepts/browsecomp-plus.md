@@ -8,7 +8,7 @@ tags:
 - long-context-reasoning
 - multi-hop-qa
 - retrieval
-timestamp: 2026-10-05T00:00:00Z
+timestamp: 2026-10-19T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ Evaluations typically sample a subset of tasks and provide a subset of the corpu
 * [JIT-Agent](../papers/2608.25593.md) - one of nine benchmarks in its Deep Research evaluation category; JIT-Agent-generated harnesses reach 78.0 (GLM-5.2 backbone) and 74.0 (DeepSeek-V4-Flash backbone), against a 67.5-76.9 spread for the nine other backbones/harnesses reported in the same table.
 * [Context Language Models](../papers/2609.37725.md) - primary zero-shot and RL benchmark, run with search exposed as in-context skills and a 32K context limit: Qwen3.6-27B reaches 59.4%, 11.4% relative above Codex-style summarization with 21.5% fewer prefix-reuse FLOPs, against MEM1, Self-Compact, ACM, and RLM baselines on one backbone; RL on OpenResearcher lifts Qwen3.5-9B from 28.8% to 42.5% on held-out BrowseComp-Plus, and Suffix Cache Reuse matches standard SGLang here at 65% of its empirical prefix-reuse FLOPs.
 * [HyperBrowseComp](../papers/2610.03574.md) - cited as the fixed-corpus alternative it deliberately does not take: HyperBrowseComp evaluates on the live web, trading BrowseComp-Plus's identical retrieval surface for realism and accepting drift over time.
+* [CarryOn](../papers/2610.18784.md) - a random 100-question subset with BM25 (five 512-token snippets per call, no full-document retrieval, 60 turns), graded by Qwen3-32B: its context runtime lifts Claude Opus 4.7 from 49% to 56% at 22.9% fewer tokens; GPT-5 (52%) and o3 (50%) are regraded from the benchmark authors' released runs on the same questions.
 
 # Notes
 

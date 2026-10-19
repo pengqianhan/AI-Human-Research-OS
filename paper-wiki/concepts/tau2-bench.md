@@ -8,7 +8,7 @@ tags:
 - tool-calling
 - conversational-agents
 - simulated-users
-timestamp: 2026-10-17T00:00:00Z
+timestamp: 2026-10-19T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ timestamp: 2026-10-17T00:00:00Z
 * [Agent-Reflex](../papers/2610.17953.md) - main-suite benchmark for an 8B policy trained on noisy synthetic environments: 62.1 averaged over Retail, Airline, and Telecom against 54.6 for Agent-World-8B (mean of three runs; most baseline rows quoted from their papers); also the base of AgentNoiseBench's τ² setting, where it averages 45.9 under tool and user noise.
 * [ActionOPD](../papers/2610.19820.md) - transfer benchmark and the testbed for its KD/OPD comparison, ablations, and Self-ActionOPD, with a Qwen3.5-9B user and natural-language assertions disabled; Qwen3-4B distilled from Qwen3-32B reaches 40.0 test pass¹ against 29.2 for the base, with pass⁴ as four-trial all-success.
 * [FDE-Gym](../papers/2610.22350.md) - cited through XYEval, which turns τ²-bench and other tasks into XY problems (the user asks about an attempted solution rather than the real problem) with relative drops of up to 46.7%; FDE-Gym's leading models lose only 0.04 more when the sponsor's request is misdirected.
+* [BizBench](../papers/2610.20424.md) - extends the τ family's policy-governed, user-simulated setting with versioned guidance, workflows linked by shared resources and deadlines, and deterministic process checks over execution histories; its runner follows τ-Knowledge's rule for context overflow.
 
 # Notes
 

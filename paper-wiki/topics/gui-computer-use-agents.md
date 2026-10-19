@@ -7,7 +7,7 @@ tags:
 - computer-use-agents
 - desktop-automation
 - in-context-demonstration-learning
-timestamp: 2026-10-17T00:00:00Z
+timestamp: 2026-10-19T00:00:00Z
 ---
 
 # Scope
@@ -27,6 +27,7 @@ This topic tracks agents that act directly on graphical interfaces — desktops,
 * [SwitchMem](../papers/2610.17928.md) - at every step a router on the frozen actor's hidden state decides whether a retrieved demonstration step is shown as a text description or a screenshot; with Qwen3.5-9B it beats the best fixed form by 2.1 points on AITW and 0.7 on LearnGUI (significant, offline step-level scoring) and by 2 of 92 tasks on online MobileMiniWoB++ (not significant), and showing both forms at once is worst on LearnGUI.
 * [OpenGCUA](../papers/2610.22200.md) - defines a generalist computer-use agent by three per-step model decisions (what to observe, how to act, how to organize) over GUI, accessibility, shell, and API interfaces; code execution plus model-chosen screenshots and a todo ledger lift eight frozen models from 45.3 to 64.9 mean partial score on the 82-task offline OSWorld-v2 set, and a preliminary macOS harness addresses shared control, background windows, and existing user state.
 * [MAI-Gym](../papers/2610.20939.md) - an open platform that runs evaluation, data collection, and online RL through one harness over mobile, computer, and web (ten benchmarks, 20,000 parallel environments), synthesizes resettable app clones, invented apps, cross-app worlds, and execution-tested verifiers, and trains MAI-Gym-9B to 78.4% on MobileWorld and 76.2% on OSWorld-Verified in one joint GRPO run; RL in a ticketing-app clone lifts the real app on a physical phone from 28.8% to 48.1%.
+* [CarryOn](../papers/2610.18784.md) - a context runtime evaluated on the full OSWorld 2.0 set (500 steps) with Claude Opus 4.7's native computer-use interface: partial score 43.9% to 49.7%, binary 15.7% to 19.4%, input context held near 65K tokens where the baseline passes 200K, and cost per task down 35.9%.
 
 # Synthesis
 
@@ -46,6 +47,8 @@ OpenGCUA widens this topic from GUI-level action to generalist computer use, whe
 
 MAI-Gym is the training-side companion to OpenGCUA from the same team, and the two pull in different directions on action format. OpenGCUA finds that programs over GUI and shell beat batched GUI+CLI actions for frozen frontier models. MAI-Gym trains a 9B policy on batched GUI+CLI actions and reaches 76.2% on OSWorld-Verified, but stays low in computer environments it never trained in (3.7/11.3 on OSWorld 2.0, 15.2 on MyPCBench), so whether code as action would help a small trained policy is open (reader connection). It also gives this topic its first sim-to-real numbers for GUI training. Clone-only RL in a 12306 replica raises the real app from 28.8% to 48.1% on 52 tasks, while the clone-to-real gap widens from 7.7 to 25.0 points, and RL on invented apps with no demonstrations raises held-out success from 25.8% to 45.2%. Its gain split echoes SoftwareGym's SFT-only result in direction: most of MAI-Gym-9B's improvement comes from the SFT warm-up (Task-OOD average 29.9 to 66.4) and RL adds a smaller step (cross-domain average 44.1 to 50.5), though the two papers' splits and metrics differ (reader connection).
 
+CarryOn brings context management into this topic's long-horizon desktop setting, where finished edits already live in documents, slides, and forms the agent can reopen. Instead of summarizing the screenshots and actions that produced them, it keeps references to those objects and checks them read-only (file exists, hash changed, valid document container), while the agent's native filter still keeps the ten most recent screenshots. On OSWorld 2.0 this holds input context near 65K tokens and makes runs cheaper from about turn 200 onward. Its 49.7% partial score is within half a point of the published GPT-5.5 and Claude Opus 4.8 results, which come from other runs and, for GPT-5.5, batched actions, so the like-for-like evidence is the gain over the same Claude Opus 4.7 agent (reader observation).
+
 # Open Questions
 
 * How should a demonstration-guided GUI agent transfer procedural structure across related-but-non-identical tasks (the variant-demo problem), rather than only replaying guidance from the same task?
@@ -62,3 +65,4 @@ MAI-Gym is the training-side companion to OpenGCUA from the same team, and the t
 * SwitchMem chooses between two forms of one retrieved step. Would the same router learn when to show no memory, or both forms, given that on MobileMiniWoB++ the actor without memory beats fixed text and fixed image memory?
 * OpenGCUA's real-device harness prefers accessibility actions and background delivery so the agent does not disturb its user. How often does that order fail on desktop applications with poor accessibility support, and do the training pipelines here (SoftwareGym, RecreationWorld) produce agents that choose interfaces well or only agents that use the GUI well?
 * MAI-Gym's clone-only RL widens the clone-to-real gap from 7.7 to 25.0 points even as real-app success rises. Which clone differences (layout, latency, pop-ups, login state) cause the widening, and would a few real-device rollouts mixed into training close it more cheaply than better clones?
+* CarryOn's Grounder can verify that a document exists and changed but not that it shows the right content. Could the screenshot-based verifiers GUI agents already use serve as stronger Grounder checks, and would that close the binary-score gap in its carrier ablation, where hiding the carriers scored higher on binary success (25.00% against 22.50%)?

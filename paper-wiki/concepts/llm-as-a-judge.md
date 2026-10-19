@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-10-19T00:00:00Z
 ---
 
 # Definition
@@ -50,6 +50,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [TerminalHorizon](../papers/2610.13166.md) - gpt-5.6-luna at high reasoning effort reads each complete teacher trajectory without the reward or a success label and decides KEEP or DROP on validity, environment-grounded progress, and multi-turn training value (two trajectories per task from 1,535 tasks, 2,852 kept); the same model judges 190 candidate train-test pairs for contamination and flags none. No human check of either judgment is reported.
 * [AgentSWE](../papers/2610.13361.md) - after deterministic validity gates, a frontier model at its highest effort (GPT-5.6 Sol for Creation, DeepSeek-V4.1-Flash for Editing) applies a requirement-derived rubric to each execution's artifacts, trace, and resulting state, with ceilings bound to recorded violations; the judge shares a model family with at least one builder and also grades the static code assessment, and no agreement with human scoring is reported.
 * [Harness²](../papers/2610.14224.md) - all three benchmarks are judge-scored in whole or part: JobBench by Claude Opus 4.8, the same model as the harness editor and output selector; LAB by Claude Sonnet 4.6; WorkBuddy-Bench's model-graded items by Gemini 3.5 Flash, also one of the executors. A guard keeps rubrics and scores out of every editing session.
+* [Into the Unknown](../papers/2610.19159.md) - a GPT-6-Astra agentic judge (Codex harness, four runs, 3-of-4 per-node majority) answers author-verified rubric questions; chosen over Claude-Opus-5.5 for paper-level consistency (86.5% against 57.7% same overall grade on 52 submissions), it agrees with all 41 expert judgments on whether a direction was met but 64% (pooled) on quality and impact, and it is also the best-scoring evaluated agent.
 
 # Notes
 
@@ -70,3 +71,5 @@ LLM-as-a-Verifier contributes a mechanistic explanation rather than a new failur
 Foundations of Proactive Agents points to a construct-validity risk rather than a calibration one: a judge asked to rate trust from an interaction log may in effect rate competence. Its judges give high understandability and competence scores (4.72 and 4.60 for Claude Opus 5) to agents whose intervention depth matches the user's stated preference only about half the time, while people in its scenario study cut trust sharply after a single such over-reach. The evidence is indirect, since humans rated separate vignettes rather than the judged trajectories, but it argues for keeping a rule-based measure of the behavior in question (here, intervention-depth agreement) beside any judged score of a related attitude. LMBuild shows the complementary practice for perceptual judging: fit the judge's scale to human ratings on a small pre-declared set, freeze it, and report system-level and item-level agreement separately, since the two differ by up to 0.30 in Spearman correlation there.
 
 AutoSciBench and SafeActBench mark two ends for benchmark builders. AutoSciBench lets the generator models also judge whether their own tasks are verifiable and how good they are; inter-judge agreement shows the two judges rank tasks alike, not that either is right, and the GPT-5.6 Sol judge separates its own set from Opus 4.8's by 0.58 points where the Opus 4.8 judge separates them by 0.12. SafeActBench removes the judge from scoring entirely and spends the validation effort on auditing the deterministic evaluator against humans, which is possible because every requirement is an observable fact about the trajectory.
+
+Into the Unknown separates two kinds of judge consistency: Claude-Opus-5.5 is more consistent node by node (94.9% against 89.7% on direction nodes) yet less consistent on paper-level decisions, because its disagreements fall on the nodes that decide a pass. With all-or-nothing gates, node-level agreement can overstate how reproducible a verdict is.
