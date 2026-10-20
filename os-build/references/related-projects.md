@@ -9,6 +9,12 @@ to the README list when it is. A weekly
 [keyword scan](../../.github/workflows/scan-related-projects.yml) of GitHub
 proposes new entries in a pull request; prune them there before merging.
 
+When pruning, drop loops that modify, measure, and keep changes against one
+codebase metric (Karpathy-style autoresearch): they optimize code rather than
+carry long-horizon research. Prefer system-level projects, with their own
+infrastructure and extension points, to skill collections, which simplify as
+models improve.
+
 ## Research agents and workbenches
 
 - [OpenScience](https://github.com/synthetic-sciences/openscience): an
@@ -54,9 +60,6 @@ proposes new entries in a pull request; prune them there before merging.
 - [aideml](https://github.com/WecoAI/aideml): AIDE: an LLM agent for machine
   learning engineering - the research Weco grew out of. Referenced in OpenAI
   MLE-bench.
-- [autocontext](https://github.com/greyhaven-ai/autocontext): a recursive
-  self-improving harness designed to help your agents (and future iterations of
-  those agents) succeed on any task.
 - [luxas](https://github.com/Muuuun/luxas): An autonomous research colleague —
   from a question to a compiled manuscript, while you sleep.
 - [CORAL](https://github.com/Human-Agent-Society/CORAL): Open-source
@@ -72,8 +75,6 @@ proposes new entries in a pull request; prune them there before merging.
   models.
 - [scholaraio](https://github.com/ZimoLiao/scholaraio): Scholar All-In-One: A
   research infrastructure for AI agents.
-- [ScienceBuddy](https://github.com/Gen-Verse/ScienceBuddy): ScienceBuddy:
-  Recursive-in-Recursive Self-Improvement for Interactive Scientific Agents.
 - [ResearchClawBench](https://github.com/InternScience/ResearchClawBench):
   ResearchClawBench: Evaluating AI Agents for Automated Research from
   Re-Discovery to New-Discovery.
@@ -96,6 +97,14 @@ proposes new entries in a pull request; prune them there before merging.
 - [rome](https://github.com/rome-os/rome): a compounding agent OS for recursive
   agents.
 - [EvoScientist](https://github.com/EvoScientist/EvoScientist): EvoScientist is an out-of-the-box, self-evolving AI research buddy that adopts a human-on-the-loop paradigm—autonomously exploring, refining scientific judgment, and co-evolving alongside human researchers.
+
+## Self-improving systems (RSI)
+
+- [autocontext](https://github.com/greyhaven-ai/autocontext): a recursive
+  self-improving harness designed to help your agents (and future iterations of
+  those agents) succeed on any task.
+- [ScienceBuddy](https://github.com/Gen-Verse/ScienceBuddy): ScienceBuddy:
+  Recursive-in-Recursive Self-Improvement for Interactive Scientific Agents.
 
 ## Skills and lists
 
