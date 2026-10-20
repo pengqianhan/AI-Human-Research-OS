@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - search-agents
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-10-20T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ BrowseComp (Wei et al., 2025) is a benchmark of short-answer questions deliberat
 * [HyperBrowseComp](../papers/2610.03574.md) - extends BrowseComp's single-short-answer design to 423 questions authored natively in 13 languages, most needing non-text evidence, and adds a no-internet filter because BrowseComp-style trivia is drifting into parametric knowledge; best accuracy 31.68%.
 * [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets (50 development and 100 held-out questions, a search ReAct starter) and the only one where coding agents reliably improve the starter: four of five builders end above it and three gains pass a sign test (for example 4 to 35 and 18 to 46), one after the builder found its own first candidate had dropped an Authorization header.
 * [Mosaic](../papers/2610.22174.md) - the only evaluation benchmark (1,266 questions, LLM-judged by deepseek-v4-flash), chosen because it forces multi-session trajectories; Qwen3.5-4B rises from 24.80 untrained to 38.86 with Mosaic under compaction and to 32.46 under subagent forking.
+* [OpenVLHarness](../papers/2610.26860.md) - BrowseComp-VL, WebWatcher's vision-language extension (399 questions), is one of six search benchmarks: with text search, image search, and webpage tools, GPT-6 Astra goes from 46.12 to 63.91 and Qwen3-VL-8B from 21.05 to 32.33.
 
 # Related
 

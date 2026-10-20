@@ -10,7 +10,7 @@ tags:
 - benchmarks
 - working-agents
 - professional-work
-timestamp: 2026-10-17T00:00:00Z
+timestamp: 2026-10-20T00:00:00Z
 ---
 
 # Definition
@@ -26,6 +26,7 @@ GDPVal (Patwardhan et al., arXiv:2510.04374, 2025) evaluates AI on real-world, e
 * [GraphForge](../papers/2609.38923.md) - primary evaluation as Bradley-Terry Elo over GDPVal-AA anchored at GLM-5.3 (OpenHands) = 1667: SFT lifts Qwen3.6-27B from 1380.0 to 1445.7 under OpenHands with overlapping bootstrap intervals; a contamination audit finds zero shared files and 13 of 44 occupations covered, with SFT gains no smaller on uncovered occupations.
 * [MiMo-V2.6](../papers/2610.11959.md) - reports GDPval-AA v2.1 (Artificial Analysis's evaluation framework for GDPval) at 1673 for Pro against 1107 for MiMo-V2.5 Pro, 1708 for Claude Opus 5, 1588 for GPT-5.6 Sol, and 1595 for Claude Fable 5; no Flash score is given.
 * [FDE-Gym](../papers/2610.22350.md) - listed with Vending-Bench, E-Commerce Bench, and Remote Labor Index as outcome benchmarks; FDE-Gym differs by measuring an engineering deliverable's effect on a business metric, reproducible without human judges.
+* [CoworkEnv](../papers/2610.24960.md) - cited as an evaluation of economically valuable professional tasks; CoworkEnv itself evaluates on Claw-Eval and ClawMark.
 
 # Notes
 

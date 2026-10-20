@@ -6,7 +6,7 @@ resource: https://arxiv.org/abs/2603.28052
 tags:
 - agent-harness-engineering
 - harness-evolution
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-10-20T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ Meta-Harness (Lee, Nair, Zhang, Lee, Khattab, and Finn, arXiv:2603.28052, COLM 2
 * [Context Language Models](../papers/2609.37725.md) - cites Meta-Harness as the offline, agent-optimized alternative to hand-engineered context-management harnesses, then moves the optimized object out of harness code: the context policy becomes model behavior that a GEPA-style skill-evolution loop or RL can improve, with the paper arguing a harness is "reusable procedures for managing context" that can be rewritten as skills and eventually absorbed into weights.
 * [Harness²](../papers/2610.14224.md) - offline baseline searched on the training halves of WorkBuddy-Bench and JobBench and on LAB's 24-task dev set, then deployed unchanged; one label-free Harness² step beats it in eleven of twelve benchmark-configuration cells (the exception is LAB with Gemini 3.5 Flash under Codex, 76.5 against 75.6), and the paper reports Meta-Harness using more compute than Harness² at k = 5.
 * [Self-evolving Agent Harness](../papers/2610.18813.md) - placed among whole-agent and repository-level search, where changes to shared context, scheduling, or recovery can alter unchanged components, and listed under Pareto selection (cost-performance frontiers) in its mapping of harness optimizers to evolutionary-search structures.
+* [Self-HPO](../papers/2610.22791.md) - harness-only baseline with Opus 4.8 as proposer and the same search budget: 69.1% on SWE-bench Verified and 63.5% on average over three SWE-bench variants. HPO, which adds RL updates between searches with the same proposer, reaches 71.6% and 66.3%, and Meta-Harness itself beats SFT on Opus 4.8's trajectories by 8.9 points on average.
 
 # Notes
 

@@ -6,7 +6,7 @@ tags:
 - coding-agents
 - agent-harness-engineering
 - agent-harness
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-10-20T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ mini-swe-agent is a minimal agent harness associated with the SWE-agent project;
 * [ProgramGym](../papers/2610.13395.md) - ProgramBench's release-time flagship rows, which ProgramGym copies, were run under mini-SWE-agent, so they are not directly comparable with ProgramGym's Claude Code runs.
 * [LLM-as-a-Verifier](../papers/2607.05391.md) - the scaffold for its SWE-Bench Verified experiments, with a heterogeneous pool of three candidate trajectories.
 * [ZGCM-1](../papers/2609.13356.md) - mini-SWE-agent v2 at 250 steps for its SWE-bench Verified Mini50 diagnostic.
+* [Self-HPO](../papers/2610.22791.md) - the seed harness for Qwen3.5-35B-A3B (61.0% on SWE-bench Verified); evolved harnesses are Python subclasses of its agent class that override `step()` with budget warnings, an empty-patch guard, an API check, and a git-diff fallback. Its frontier comparison quotes leaderboard results run under mini-swe-agent.
 
 # Notes
 

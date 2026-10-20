@@ -15,6 +15,7 @@
 * [BFCL](bfcl.md) - Berkeley Function-Calling Leaderboard for evaluating tool selection and argument correctness across unseen function schemas, in single-turn, multi-turn, and relevance-detection categories.
 * [BrowseComp](browsecomp.md) - Benchmark of hard-to-find factual questions identified only through indirect, mutually constraining clues, for evaluating web-browsing search agents.
 * [BrowseComp-Plus](browsecomp-plus.md) - Multi-hop deep-research QA benchmark with a verified offline corpus of gold, evidence, and hard-negative documents.
+* [Claw-Eval](claw-eval.md) - 300 human-verified agent tasks across service orchestration, multimodal, and multi-turn dialogue groups, graded from traces, audit logs, and snapshots for completion, safety, and robustness with Pass@k and Pass^k.
 * [Context compaction](context-compaction.md) - Shortening an agent's accumulated context mid-task by summarizing history or replacing tool outputs and images, with costs in what is lost, prompt-cache reuse, and RL training.
 * [Context rot](context-rot.md) - Degradation of model quality as context grows, even inside the physical context window.
 * [Darwin Gödel Machine (DGM)](darwin-godel-machine.md) - Self-improving coding agent that rewrites its own code, validates each version on coding benchmarks, and keeps an open-ended archive of agents; the standard reference for self-modifying agents and archive-based search.
@@ -25,6 +26,7 @@
 * [GameCraft-Bench](gamecraft-bench.md) - 140-task benchmark of complete games built end to end by agents in a real game engine, scored through replayed gameplay against game-specific rubrics on Mechanics, Depth, Visuals, and Art.
 * [GDPVal](gdpval.md) - 1,320-task, 44-occupation benchmark of economically valuable work graded by expert rubrics and pairwise Elo against human deliverables; GDPVal-AA is its 220-task gold subset.
 * [GEPA](gepa.md) - Reflective prompt evolution with Pareto-based candidate selection; a standard prompt-optimization baseline for skill and harness optimizers.
+* [GiGPO](gigpo.md) - Critic-free agent RL that adds step-level advantages from actions taken at matching states across trajectories to GRPO's episode-level advantages; a standard temporal credit-assignment method.
 * [GISA](gisa.md) - General information-seeking benchmark with structured item, set, list, and table answers.
 * [GraphRAG](graphrag.md) - Microsoft's graph-based RAG that builds an LLM-extracted entity graph and community summaries over a corpus and answers global questions by map-reducing over them.
 * [GRPO](grpo.md) - Value-free RL algorithm that estimates advantage from a group of same-prompt responses rather than a learned critic.
@@ -54,6 +56,7 @@
 * [ScienceWorld](scienceworld.md) - Interactive text environment of elementary-school science experiments; a long-horizon testbed for LLM agents, skill evolution, and agent RL.
 * [ScreenSpot-Pro](screenspot-pro.md) - GUI grounding benchmark of high-resolution professional-application screenshots scored by point-in-box accuracy.
 * [Search-R1](search-r1.md) - Outcome-reward RL that trains an LLM to interleave reasoning with search calls, masking retrieved tokens from the loss; a standard baseline for RL-trained search agents.
+* [Self-Harness](self-harness.md) - An agent improves its own harness by mining weaknesses from traces, proposing minimal edits, and accepting them after regression tests; the self-proposed harness-only baseline beside Meta-Harness.
 * [SkillsBench](skillsbench.md) - 87-task, 8-domain benchmark with curated Agent Skills and deterministic verifiers, run with and without Skills to measure how much they help.
 * [SpreadsheetBench](spreadsheetbench.md) - Forum-derived spreadsheet-manipulation tasks judged by producing the expected result on several test workbooks; SpreadsheetBench II extends it to end-to-end business workflows.
 * [SWE-bench Pro](swe-bench-pro.md) - Enterprise repository-level software-engineering benchmark spanning multiple real codebases.

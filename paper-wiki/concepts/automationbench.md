@@ -8,7 +8,7 @@ tags:
 - tool-use
 - working-agents
 - workflow-automation
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-10-20T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ AutomationBench (Shepard and Salimans, 2026) evaluates agents on workflows that 
 * [MiMo-V2.6](../papers/2610.11959.md) - tracked during RL and reported at 53.1 (Pro) and 52.3 (Flash) against 16.0 for MiMo-V2.5 Pro and 50.3, 45.8, and 46.2 for Claude Opus 5, GPT-5.6 Sol, and Claude Fable 5; the released 9B distilled model goes from 5.0 (Qwen3.5-9B) to 30.3 after SFT and 33.1 after RL.
 * [TerminalHorizon](../papers/2610.13166.md) - transfer benchmark for a model trained only on terminal trajectories: on v1.0.6 (600 rollouts over the public set, the official api tool set, a 50-step limit, three runs) Qwen3.5-27B goes from 5.5 to 17.2 Pass Rate and from 26.4 to 49.7 Partial score.
 * [BizBench](../papers/2610.20424.md) - cited for scoring final application states without prescribing tool-call sequences; BizBench keeps that freedom but adds checks at consequential steps, such as whether a transfer was approved before execution.
+* [CoworkEnv](../papers/2610.24960.md) - cited among benchmarks of multi-application work and workflow constraints; its synthesized training tasks likewise span several services with business rules and distractor records.
 
 # Notes
 

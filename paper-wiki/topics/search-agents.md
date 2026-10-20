@@ -7,7 +7,7 @@ tags:
 - information-seeking
 - web-agents
 - reinforcement-learning
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-10-20T00:00:00Z
 ---
 
 # Scope
@@ -25,6 +25,7 @@ This topic tracks agents whose core task is searching external sources (the live
 * [Source Preference in the Wild](../papers/2610.03195.md) - studies the filtering step of end-to-end search: across 12 agent models, items that meet the same requirements are selected more or less often depending on the site they come from, and a less satisfying item from a preferred source beats a better one from a dispreferred source 68% of the time (median).
 * [HyperBrowseComp](../papers/2610.03574.md) - a 423-question, 13-language, multimodal BrowseComp-style benchmark filtered against no-internet answering; best accuracy 31.68% (Gemini 3.7 Flash, built-in search), 57.68% of questions unsolved by all five built-in-search models, and a 7.3-9.5 point accuracy change from swapping built-in search for Exa.
 * [Mosaic](../papers/2610.22174.md) - trains a Qwen3.5-4B search agent (search and visit tools) for trajectories longer than one context: with compaction it reaches 38.86 on BrowseComp at 2.35 sessions per question, against 35.31 for broadcast multi-session RL and 34.68 for single-session GRPO run with compaction.
+* [OpenVLHarness](../papers/2610.26860.md) - a training-free multimodal harness whose text search, image search, and webpage-visit tools (Serper, summarized by Qwen3-VL-8B, with reusable URL handles) lift six visual search and deep-research benchmarks, for example MMSearch-Plus from 27.97 to 53.70 and BrowseComp-VL from 46.12 to 63.91 with GPT-6 Astra.
 
 # Synthesis
 
@@ -38,6 +39,8 @@ HyperBrowseComp and Source Preference in the Wild look at search agents from the
 
 Mosaic is the first entry here that trains a search agent for questions that outgrow one context. Its comparison shows that RL on single-context rollouts does not by itself teach an agent to use compaction: single-session GRPO run with compaction uses 1.24 sessions per question and reaches 34.68, while multi-session training reaches 35.31 (broadcast) and 38.86 (Mosaic), from 24.80 untrained. Its session reward is the change in likelihood of a short reference answer, which BrowseComp-style questions supply and the table- and report-style outputs elsewhere in this topic do not, so its credit assignment does not carry over to them unchanged.
 
+OpenVLHarness is the first entry here that is neither trained for search nor text-only. A general MLLM gets text search, image search (Google Lens through Serper), and webpage visits, with results summarized by a small Qwen3-VL-8B model and URLs kept as reusable handles, and it lifts every backbone on the six visual search benchmarks. Its failure analysis puts this domain's commonest failure on the decision to search, not on reading the results: an omitted tool call accounts for 49% of Qwen3-VL-8B's failures there, while unusable or ignored correct tool outputs are 3-8% across domains. Two cautions apply. The no-tool and Codex baselines cannot search (Codex's web search was disabled to stop it finding gold answers), so these gains combine search access with harness design; and the GPT-4o judge accepts a report that contains the right answer anywhere, which favors long reports (reader observation).
+
 # Open Questions
 
 * SearchOS's shared-state coordination and WideSeek-R1's trained multi-agent coordination both address the same context-pollution/serial-execution problem for broad search — does combining durable, system-maintained state (SearchOS's approach) with jointly-trained orchestration (WideSeek-R1's approach) outperform either alone, or does trained coordination make explicit state tracking partly redundant?
@@ -50,3 +53,4 @@ Mosaic is the first entry here that trains a search agent for questions that out
 * The search agents trained here (Iris, ZGCM-1, False Frontiers) are evaluated on English or Chinese text benchmarks. How do they do on HyperBrowseComp, where evidence sits in other languages and in videos, scans, and maps, and does training on text-only multi-hop questions transfer at all?
 * Do trained search agents inherit the source preferences that Source Preference in the Wild finds in general-purpose models, and could source-aware training data (balancing which sites supply correct evidence) remove them?
 * Mosaic gains less from multi-session training with subagent forking than with compaction. For search agents that parallelize through subagents, is that a limit of crediting a fork by its immediate information gain, or a sign that a 4B model already gets most of what forked search can give?
+* OpenVLHarness gains most where the bare model cannot search. If its no-tool and Codex baselines got the same Serper tools through a plain interface, how much of the gain on BrowseComp-VL and MMSearch-Plus would remain, and how would it do on HyperBrowseComp's video, scan, and map evidence?
