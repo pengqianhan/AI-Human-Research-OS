@@ -10,8 +10,9 @@ authenticated `gh` CLI:
 
 A repo is skipped when it is already linked from the target file or README.md,
 or when an earlier scan PR proposed it and it is no longer listed (the human
-removed it in review, or closed that PR). The run does nothing while a scan PR
-is still open. Standard library only.
+removed it in review, or closed that PR). A repo the skill hub already links is
+still proposed, with that hub file named in the PR so the entry can link it.
+The run does nothing while a scan PR is still open. Standard library only.
 """
 
 import argparse
@@ -27,16 +28,27 @@ from pathlib import Path
 
 TARGET = Path("os-build/references/related-projects.md")
 LISTED_SOURCES = [TARGET, Path("README.md")]
+HUB = Path("research-skills-hub")
 SCAN_BRANCH = "related-projects-scan"
 MARKER = "related-projects-scan:candidates"
 
 RESEARCH = "Research agents and workbenches"
+RUNTIMES = "Agent runtimes and operating systems"
+RSI = "Self-improving systems (RSI)"
 SKILLS = "Skills and lists"
 
+# Self-improvement (RSI) and system-level queries route their hits to sections
+# of their own. Bare "RSI" is left out: it also names a trading indicator.
+# "agent OS" also names general-purpose runtimes, so a repo matched only by
+# AGENT_OS_QUERIES must also be about research (is_research). Harness
+# queries stay out: keyword search cannot tell a research harness from noise.
+RSI_QUERIES = ['"recursive self-improvement"', '"self-improving" agent',
+               '"self-evolving" agent']
+OS_QUERIES = ['"research OS"', '"research operating system"']
+AGENT_OS_QUERIES = ['"agent OS"', '"agent operating system"']
+
 # GitHub search syntax; quoted text matches as a phrase in the name,
-# description, or topics. Generic agent-OS and harness queries are left out on
-# purpose: keyword search cannot tell a research-relevant runtime from noise,
-# so those stay hand-curated.
+# description, or topics.
 # Queries in one group are synonyms, and a phrase also matches the topic of the
 # same name, so a repo tagged `autoresearch` hits two queries for one label.
 # Candidates are ranked by matched groups, not queries, then by stars.
@@ -53,6 +65,9 @@ QUERY_GROUPS = [
     ['"research skills"'],
     ['"science skills"'],
     ["topic:research-agent"],
+    RSI_QUERIES,
+    OS_QUERIES,
+    AGENT_OS_QUERIES,
 ]
 QUERIES = [q for group in QUERY_GROUPS for q in group]
 GROUP_OF = {q: i for i, group in enumerate(QUERY_GROUPS) for q in group}
@@ -108,6 +123,17 @@ def listed_repos(root):
     return keys
 
 
+def hub_links(root):
+    """Map each repo the skill hub links to its shallowest hub file."""
+    found = {}
+    paths = sorted((root / HUB).rglob("*.md"), key=lambda p: (len(p.parts), p))
+    for path in filter(Path.is_file, paths):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for o, n in REPO_URL.findall(text):
+            found.setdefault(repo_key(o, n), path.relative_to(root).as_posix())
+    return found
+
+
 def scan_prs():
     prs = gh("pr", "list", "--state", "all", "--limit", "200",
              "--json", "number,state,url,headRefName,body")
@@ -137,12 +163,27 @@ def search(since, min_stars, per_query):
 
 def section_for(repo):
     text = f"{repo['name']} {repo['description']}"
-    return SKILLS if re.search(r"skill", text, re.IGNORECASE) else RESEARCH
+    queries = set(repo["queries"])
+    if re.search(r"skill", text, re.IGNORECASE):
+        return SKILLS
+    if queries & {*OS_QUERIES, *AGENT_OS_QUERIES}:
+        return RUNTIMES
+    if queries & set(RSI_QUERIES):
+        return RSI
+    return RESEARCH
 
 
 def is_research(repo):
     text = NOT_RESEARCH.sub("", f"{repo['name']} {repo['description']}")
     return bool(RESEARCH_TERM.search(text))
+
+
+def admissible(repo, min_skill_stars):
+    if section_for(repo) == SKILLS:
+        return repo["stargazers_count"] >= min_skill_stars and is_research(repo)
+    if set(repo["queries"]) <= set(AGENT_OS_QUERIES):
+        return is_research(repo)
+    return True
 
 
 def rank(repo):
@@ -190,9 +231,13 @@ def insert_entries(text, by_section):
     return "\n".join(lines)
 
 
-def pr_body(added, below, since, min_stars, min_skill_stars):
+def pr_body(added, below, hub, since, min_stars, min_skill_stars, max_skills):
+    def in_hub(r):
+        path = hub.get(r["full_name"].lower())
+        return f"`{path}`" if path else ""
+
     rows = [f"| [{r['full_name']}]({r['html_url']}) | {r['stargazers_count']} | "
-            f"{r['pushed_at'][:10]} | {section_for(r)} | "
+            f"{r['pushed_at'][:10]} | {section_for(r)} | {in_hub(r)} | "
             f"{', '.join(q.replace('|', '/') for q in r['queries'])} |"
             for r in added]
     body = [
@@ -202,15 +247,18 @@ def pr_body(added, below, since, min_stars, min_skill_stars):
         "PR you close without merging, will not be proposed again.",
         "",
         f"Filter: pushed since {since}, at least {min_stars} stars "
-        f"({min_skill_stars} and a research topic for skill repos), not "
-        "archived or a fork, not "
+        f"({min_skill_stars} and a research topic for skill repos, at most "
+        f"{max_skills} of them per run; a research topic also for repos matched "
+        "only by agent-OS queries), not archived or a fork, not "
         "already listed; ranked by number of matched query groups "
         "(synonymous queries count once), then stars. "
         "Descriptions are the repos' own GitHub descriptions; "
-        "relevance was matched by keyword only, not judged.",
+        "relevance was matched by keyword only, not judged. "
+        "*In hub* names the skill-hub file that already links the repo; "
+        "link that file from the entry.",
         "",
-        "| Repo | Stars | Last push | Section | Matched queries |",
-        "|---|---|---|---|---|",
+        "| Repo | Stars | Last push | Section | In hub | Matched queries |",
+        "|---|---|---|---|---|---|",
         *rows,
     ]
     if below:
@@ -229,6 +277,9 @@ def main():
     ap.add_argument("--min-stars", type=int, default=50)
     ap.add_argument("--min-skill-stars", type=int, default=100,
                     help="stars required of skill repos (the Skills section)")
+    ap.add_argument("--max-skills", type=int, default=3,
+                    help="skill repos per run, within --max; skill collections "
+                         "matter less as models improve")
     ap.add_argument("--days", type=int, default=60, help="pushed within N days")
     ap.add_argument("--per-query", type=int, default=30)
     args = ap.parse_args()
@@ -253,16 +304,23 @@ def main():
          if k not in skip and not k.startswith(owner + "/")
          and (r["description"] or "").strip()
          and not EXCLUDE.search(f"{r['name']} {r['description']}")
-         and (section_for(r) != SKILLS
-              or (r["stargazers_count"] >= args.min_skill_stars
-                  and is_research(r)))),
+         and admissible(r, args.min_skill_stars)),
         key=rank,
     )
-    added, below = eligible[: args.max], eligible[args.max : args.max + 10]
+    added, below = [], []
+    for r in eligible:
+        room = len(added) < args.max
+        if section_for(r) == SKILLS:
+            room = room and sum(section_for(a) == SKILLS for a in added) < args.max_skills
+        (added if room else below).append(r)
+    below = below[:10]
+    hub = hub_links(root)
     print(f"{len(hits)} repos seen, {len(eligible)} eligible, {len(added)} proposed.")
     for r in added:
+        in_hub = hub.get(r["full_name"].lower())
         print(f"  + {r['full_name']} ({r['stargazers_count']}, "
-              f"{len(r['queries'])} queries) -> {section_for(r)}")
+              f"{len(r['queries'])} queries) -> {section_for(r)}"
+              + (f" [in hub: {in_hub}]" if in_hub else ""))
 
     if not added:
         return
@@ -277,7 +335,8 @@ def main():
         path.write_bytes(text.replace("\n", eol).encode("utf-8"))
     if args.pr_body:
         args.pr_body.write_text(
-            pr_body(added, below, since, args.min_stars, args.min_skill_stars),
+            pr_body(added, below, hub, since, args.min_stars,
+                    args.min_skill_stars, args.max_skills),
             encoding="utf-8")
 
 

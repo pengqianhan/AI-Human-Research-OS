@@ -86,14 +86,14 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: For a recurring chore that a deterministic tool can do, the human may prefer a plain script over a scheduled LLM agent. For the GitHub related-projects scan they accepted noisier keyword matches in exchange, with pruning moved into their own PR review. Recurring work that needs reading and judgment, such as the daily paper routine, stays with an agent.
 - source: inferred
 - confidence: low
-- evidence: 2026-09-29, while the agent was setting up the related-projects scan as a Claude desktop scheduled task modelled on `autoreadpaper`, the human interrupted the registration question with 「我在想可不可以用github cli 根据关键字来扫描，而不用claude 的定时任务呢？」. The scan was rebuilt as a GitHub Actions workflow with a standard-library script, and the Claude task was dropped.
+- evidence: 2026-09-29, while the agent was setting up the related-projects scan as a Claude desktop scheduled task modelled on `autoreadpaper`, the human interrupted the registration question with 「我在想可不可以用github cli 根据关键字来扫描，而不用claude 的定时任务呢？」. The scan was rebuilt as a GitHub Actions workflow with a standard-library script, and the Claude task was dropped. 2026-10-20: when steering the scan toward system-level and RSI projects, the human accepted keyword-script changes (new query groups, a cap on skill collections, an "In hub" column) and kept relevance judgment in their own PR pruning. Neither side proposed an agent-judged scan, so this is consistent with the entry but does not test it.
 - created: 2026-09-29
-- last_updated: 2026-09-29
+- last_updated: 2026-10-20
 - status: active
 - domain: automation design
 - scope: Choosing a mechanism for recurring, unattended repository chores; a single instance, phrased as a question, so it may be about this task's cost or friction rather than a general rule.
 - evidence_type: explanation
-- last_verified: 2026-09-29
+- last_verified: 2026-10-20
 - freshness: current
 - responsibility_relevance:
   - When proposing a recurring automation, offer the scripted option (GitHub Actions, `gh`, a small script) next to the agent option, with the precision lost by dropping judgment, before building either.
