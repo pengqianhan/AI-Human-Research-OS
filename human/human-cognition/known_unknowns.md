@@ -33,7 +33,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - capability_level: awareness
 - evidence_type: self-report
 - last_verified: 2026-07-19
-- freshness: current
+- freshness: possibly-stale
 - responsibility_relevance:
   - The human will need to operate and review delivered TypeScript components.
 - next_learning_edge: After the workflow and selected reference projects clarify a mechanism, implement one fresh TypeScript slice from current APIs using Python analogies; do not restore the deleted spike by default.
@@ -52,7 +52,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - capability_level: awareness
 - evidence_type: self-report
 - last_verified: 2026-07-19
-- freshness: current
+- freshness: possibly-stale
 - responsibility_relevance:
   - The human will own product direction and must be able to operate and review the embedded agent runtime.
 - next_learning_edge: Study the selected reference projects first; revisit one AgentSession mechanism from the latest Pi API only after the workflow identifies why the existing Pi Coding Agent shell is insufficient.
@@ -91,7 +91,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - capability_level: awareness
 - evidence_type: explanation
 - last_verified: 2026-07-16
-- freshness: current
+- freshness: possibly-stale
 - responsibility_relevance:
   - Human decisions remain required for autonomy level, risk tolerance, budgets, protected data, and acceptance criteria; technical investigation and reversible architecture are agent-owned.
 - next_learning_edge: Review a concrete MVP control-loop design and choose its autonomy, budget, and human-approval boundaries with artifact-grounded trade-offs.
@@ -108,4 +108,5 @@ timestamp: 2026-07-04T00:00:00+12:00
 - domain: agent runtime integration
 - scope: LLM tool-call message flow and the `codex-rs` command schema/execution path; no broader claim about JSON, LLMs, or Codex usage.
 - capability_level: awareness
+- freshness: possibly-stale
 - next_learning_edge: Trace one real `shell_command` call from user request to model arguments, schema validation, process spawn, and returned tool result.

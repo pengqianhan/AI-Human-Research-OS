@@ -13,8 +13,29 @@ timestamp: 2026-07-04T00:00:00+12:00
 
 - cog-20260908-002 - Does the paper-wiki graph match the human's mental model of it? Hypothesis: it may be read as a citation network when 74% of its edges are filing structure.
 - cog-20260926-001 - Is subscription reuse seen as a technical question only? Hypothesis: provider terms, not code, may bound what a distributed product can do with users' subscriptions.
+- cog-20261020-001 - Is LLM-led research and RSI a change to the OS's north star? Hypothesis: the stated end goal outruns GOAL.md's human-research-first rule and `agent_led_research: off`, which stay unrevised.
 
 ## Entries
+
+## cog-20261020-001 Is LLM-led research and RSI a change to the OS's north star?
+
+- content: Hypothesis, not a finding. On 2026-10-20 the human named the OS's end goal as making research easy for LLMs, or enabling RSI, meaning both the OS improving itself and research on recursive self-improvement. GOAL.md §1 still puts the human's own research practice first (研究实践优先), and the research policy keeps `agent_led_research: off`. The human may not read the statement as changing either. An OS built toward RSI would need both settled: who may run research unattended, and which frozen evaluator self-improvement is judged against.
+- source: inferred
+- confidence: low
+- evidence: The agent named the gap in the same reply that asked three scan questions. The human answered only those three, so silence may mean "not now" rather than unawareness.
+- created: 2026-10-20
+- last_updated: 2026-10-20
+- status: active
+- domain: Research OS direction and governance
+- scope: How the stated end goal relates to GOAL.md and the research policy; no claim about the human's understanding of RSI itself.
+- last_verified: 2026-10-20
+- freshness: current
+- responsibility_relevance:
+  - Before building OS machinery justified by RSI or agent-led research, ask whether GOAL.md and `agent_led_research` should be revised first; GOAL.md changes only by the human's hand.
+- next_learning_edge: When H3 (trace reflection) or GOAL.md next comes up, ask whether RSI belongs in the north star and what evaluator would judge it.
+- related:
+  - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
+  - [cog-20260716-006](known_unknowns.md#cog-20260716-006-autonomous-research-runtime-design)
 
 ## cog-20260908-002 Does the paper-wiki graph match the human's mental model of it?
 
