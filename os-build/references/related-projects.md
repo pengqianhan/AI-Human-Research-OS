@@ -98,6 +98,9 @@ models improve.
   Semi-automated research assistant for academic research and software
   development. Supports Claude Code, Codex CLI, Kimi Code CLI, and OpenCode
   across ideation, coding, experiments, writing, and publication.
+- [loopx](https://github.com/loopx-project/loopx): Turn long-horizon goals into
+  verifiable results. A local-first semantic control plane and research
+  workbench for long-running agent teams, across sessions and runtimes.
 
 ## Agent runtimes and operating systems
 
@@ -115,6 +118,9 @@ models improve.
 - [rome](https://github.com/rome-os/rome): a compounding agent OS for recursive
   agents.
 - [EvoScientist](https://github.com/EvoScientist/EvoScientist): EvoScientist is an out-of-the-box, self-evolving AI research buddy that adopts a human-on-the-loop paradigm—autonomously exploring, refining scientific judgment, and co-evolving alongside human researchers.
+- [PhyAgentOS-core](https://github.com/PhyAgentOS/PhyAgentOS-core): PhyAgentOS
+  is a Recursive Self-Improving (RSI) physical agent operating system that
+  enables agents to recursively self-improve through agentic workflows.
 
 ## Self-improving systems (RSI)
 
@@ -123,6 +129,25 @@ models improve.
   those agents) succeed on any task.
 - [ScienceBuddy](https://github.com/Gen-Verse/ScienceBuddy): ScienceBuddy:
   Recursive-in-Recursive Self-Improvement for Interactive Scientific Agents.
+- [agno](https://github.com/agno-agi/agno): The self-improving platform for
+  agents.
+- [letta](https://github.com/letta-ai/letta): Platform for stateful agents: AI
+  with advanced memory that can learn and self-improve over time.
+- [prime-agent](https://github.com/PrimeIntellect-ai/prime-agent): A
+  self-improving RLM agent for coding workflows and long-running autonomous
+  tasks.
+- [EverOS](https://github.com/EverMind-AI/EverOS): One portable memory layer for
+  every AI agent: local-first, Markdown-native, user-owned, and self-evolving
+  across apps, tools, and workflows.
+- [hive](https://github.com/aden-hive/hive): Multi-Agent Harness for Production
+  AI.
+- [PraisonAI](https://github.com/MervinPraison/PraisonAI): PraisonAI — Hire a
+  24/7 AI Workforce. Stop writing boilerplate and start shipping autonomous
+  self-improving agents that research, plan, code, and execute tasks.
+- [evolver](https://github.com/EvoMap/evolver): The GEP-powered self-evolving
+  engine for AI agents. Auditable evolution with Genes, Capsules, and Events.
+- [reef](https://github.com/Human-Agent-Society/reef): Infrastructure for
+  continually self‑improving agents.
 
 ## Skills and lists
 
