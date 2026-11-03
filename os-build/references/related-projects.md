@@ -101,6 +101,19 @@ models improve.
 - [loopx](https://github.com/loopx-project/loopx): Turn long-horizon goals into
   verifiable results. A local-first semantic control plane and research
   workbench for long-running agent teams, across sessions and runtimes.
+- [Research-Assistant-Agent](https://github.com/zzp1221/Research-Assistant-Agent):
+  Multi-agent research execution system: paper reproduction, benchmark
+  evaluation, AutoResearch and claim-evidence graphs.
+- [PRAXIST](https://github.com/sapientinc/PRAXIST): Autonomous research system
+  for measurable, computer-executable research.
+- [DeepAnalyze](https://github.com/ruc-datalab/DeepAnalyze): DeepAnalyze is the
+  first agentic LLM for autonomous data science. 你的AI数据分析师，自动分析大量数据，一键生成专业分析报告！.
+- [hyperresearch](https://github.com/jordan-gibbs/hyperresearch): Convert Claude
+  Code or Codex into the most intelligent Deep Research Agent. Collect, search,
+  and synthesize web research into a persistent, searchable wiki that builds on
+  itself. Hosted API + MCP: hyperresearch.ai.
+- [SoL-Pi](https://github.com/NVlabs/SoL-Pi): SoL-Pi: Scaling Auto-Research
+  Loops for Efficient Agent Harnesses.
 
 ## Agent runtimes and operating systems
 
@@ -121,6 +134,9 @@ models improve.
 - [PhyAgentOS-core](https://github.com/PhyAgentOS/PhyAgentOS-core): PhyAgentOS
   is a Recursive Self-Improving (RSI) physical agent operating system that
   enables agents to recursively self-improve through agentic workflows.
+- [Octopus-SI-OS](https://github.com/miuuyy/Octopus-SI-OS): A self-evolving
+  agentic OS. A new architecture for agent execution, built on operating-system
+  principles, with the harness as a path toward superintelligence.
 
 ## Self-improving systems (RSI)
 
@@ -148,6 +164,13 @@ models improve.
   engine for AI agents. Auditable evolution with Genes, Capsules, and Events.
 - [reef](https://github.com/Human-Agent-Society/reef): Infrastructure for
   continually self‑improving agents.
+- [Raven](https://github.com/EverMind-AI/Raven): The Harness of Harnesses •
+  built for RSI: a trusted, persistent, self-evolving multi-agent ecosystem for
+  all-domain collaboration.
+- [KiroCrew](https://github.com/kirodotdev/KiroCrew): A persistent workspace for
+  development work that self-improves and continues beyond one session.
+- [letta-code](https://github.com/letta-ai/letta-code): Agents that self-improve
+  with experience.
 
 ## Skills and lists
 
@@ -194,6 +217,10 @@ models improve.
   be an AI research agent with full horsepower. The hub's
   [ml-paper-writing](../../research-skills-hub/collected-skills/ml-paper-writing/SKILL.md)
   is vendored from it.
+- [open-science](https://github.com/aipoch/open-science): The open-source AI
+  research workbench for scientific research and agent workflows. Local-first,
+  model-agnostic desktop app with extensible skills, MCP tools and connectors,
+  Python/R execution and traceable artifacts for…
 
 ## Articles
 
