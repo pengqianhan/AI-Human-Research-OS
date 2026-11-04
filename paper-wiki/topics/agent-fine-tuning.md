@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -42,6 +42,8 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [MAI-Gym](../papers/2610.20939.md) - one joint online GRPO run for mobile and computer GUI tasks (Qwen3.5-9B, 5,000 synthesized tasks, 512 GPUs, about 96 hours) that beats three weighted merges of per-domain experts; adds policy-adaptive task budgets (a full group for frontier tasks, 4 attempts for never-solved and 2 for mastered ones), window-wise packing that trains each history window once, and a per-token k3 KL gate between trainer and rollout log-probabilities.
 * [Self-HPO](../papers/2610.22791.md) - RL (GRPO with reward-balanced groups) under a harness that is re-searched between training phases; RL beats SFT on Opus 4.8 trajectories and rejection-sampling fine-tuning as the policy update (71.6% against 67.2% and 70.5% on SWE-bench Verified), and zero-success groups fall to 6.5% from 11-17% under the seed harness.
 * [CoworkEnv](../papers/2610.24960.md) - LoRA SFT of Qwen3-VL-8B on curated teacher demonstrations from synthesized coworker tasks (Claw-Eval 46.6 to 64.1) and a comparison of GRPO, Dr.GRPO, GDPO, and GiGPO from one supervised warm-up (Overall 54.3 to 60.7), without a score for the warm-up itself.
+* [Axion 1.0](../papers/2611.03233.md) - two SFT stages then GRPO, with no mid-training, DPO, or OPD: strengthened science problems, database-built tool-dependent questions, and a reward with partial credit for verified intermediate targets. HLE-130 goes 47.7, 59.2, 66.2, 70.0 across checkpoints at 35B, while on SEAL-0 RL adds as much as both SFT stages together.
+* [ToolSpace](../papers/2611.05036.md) - SFT on 34,376 tasks decompiled from witnessed tool walks lifts Qwen3.6-35B-A3B from 23.0 to 41.0 over seven tool benchmarks; 48 steps of GRPO on 653 screened tasks add 2.2, mostly on τ³-Bench Banking.
 
 # Synthesis
 
@@ -76,6 +78,8 @@ Self-HPO treats the harness as part of the RL setup that can itself be optimized
 
 CoworkEnv adds a same-start comparison of four group-based estimators on synthesized coworker tasks, which this topic's credit-assignment question can use with care. From one supervised warm-up, GiGPO (step-level advantages from matching states) gives the best Claw-Eval Overall (60.7) and General scores but the lowest Multi-turn score (64.8), while GDPO and GRPO lead Multi-turn (74.9 and 72.5). The configurations differ in more than the estimator (GDPO also changes batch size, Dr.GRPO loss normalization), each is one run, and GiGPO has no ω = 0 control, so the ranking is a profile rather than a test of temporal credit assignment. The pipeline question is also open: the warm-up checkpoint's score is not reported, and every RL run ends below the full-data SFT model (64.1), so what RL adds beyond SFT on these environments is unmeasured (reader observation).
 
+Axion 1.0 and ToolSpace add two stage-by-stage accounts to this topic's question of what RL adds after SFT. CompoWorld found RL adding 1.2 points to SFT on average, and ToolSpace repeats the pattern on multi-service tools (+18.0 from SFT, +2.2 from RL at 35B). Axion separates it by benchmark: on HLE-130 RL adds +3.8 and +6.1 against +18.5 and +27.7 from SFT, but on the search benchmark SEAL-0 it adds as much as both SFT stages together (+9.0 against +9.1, +5.4 against +5.4). RL's share therefore looks tied to how much the test depends on choosing what to do next, not to one fixed ratio (reader inference), which also fits Self-HPO, where RL beats SFT on a teacher's coding trajectories. Both papers also screen RL tasks offline for informative groups, the cost MAI-Gym's sampling budgets and Self-HPO's harness search address during training: Axion keeps a task if one of four samples is correct and rewards vary, ToolSpace if one or two of 16 are correct. Neither compares against no screen. Axion's simplicity argument has its own limit, since no run adds the omitted stages back. It shows that the short recipe reaches these scores, not that mid-training, DPO, or OPD would add nothing, and those scores are best-of-three single runs.
+
 # Open Questions
 
 * Does evolution strategies' reported horizon-dependent advantage over policy-gradient RL hold on frontier-scale models and real (non-controlled) long-horizon tasks, not just the paper's controlled Sudoku crossover?
@@ -102,3 +106,5 @@ CoworkEnv adds a same-start comparison of four group-based estimators on synthes
 * MAI-Gym gates RL runs on the k3 estimator of the KL divergence between trainer and rollout log-probabilities, to catch corrupted kernels, misaligned packed histories, and version skew. What threshold separates benign numerical mismatch from a fault, and how often do the text-agent RL runs here train on such mismatches unnoticed?
 * Self-HPO's evolved harness lowers the share of zero-success groups during RL. Is harness search between RL phases a cheaper way to keep groups informative than adaptive sampling such as Balanced Adaptive Rollout or MAI-Gym's budgets, and do the two add?
 * CoworkEnv's RL runs start from a warm-up whose score is not reported and end below its full SFT model. Starting RL from the strongest SFT checkpoint, does RL on synthesized coworker tasks add anything, and does GiGPO's step-level grouping help where tool states rarely repeat exactly?
+* Axion 1.0's RL gain matches its SFT gain on SEAL-0 but is much smaller on HLE-130, and ToolSpace's RL gain falls mostly on one benchmark. What property of a test predicts RL's share, and does the pattern hold once run-to-run spreads are reported?
+* Axion 1.0 omits mid-training, DPO, and OPD without testing them. On one base model and dataset, what does adding each one back contribute?

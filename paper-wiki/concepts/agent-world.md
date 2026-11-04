@@ -8,7 +8,7 @@ tags:
 - agent-environments
 - tool-use
 - agentic-rl
-timestamp: 2026-10-17T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ Agent-World (Dong et al., 2026, "Agent-World: Scaling Real-World Environment Syn
 * [Apodex 1.1](../papers/2608.23283.md) - cites Agent-World in the environment-construction-as-scaling-axis lineage behind its Environment Scaling surface.
 * [GraphForge](../papers/2609.38923.md) - lists Agent-World and Agent World Model as general-purpose task and environment synthesis, contrasted with its own workspaces of real files.
 * [MAI-Gym](../papers/2610.20939.md) - cited with WebRL, TRACE, and GenEnv as task generation that follows the learner by evolving environments with the agent; MAI-Gym's own version steers GUI task synthesis with diagnoses of failed rollouts.
+* [ToolSpace](../papers/2611.05036.md) - named data-centric baseline (Agent-World-8B 8.9 average against ToolSpace-8B's 19.6); ToolSpace follows its database construction for state-changing environments only, and measures its file-count saving on 500 of its public environments (2,724 to 1,218 files).
 
 # Notes
 

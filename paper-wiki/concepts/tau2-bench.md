@@ -8,7 +8,7 @@ tags:
 - tool-calling
 - conversational-agents
 - simulated-users
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -26,6 +26,7 @@ timestamp: 2026-10-19T00:00:00Z
 * [ActionOPD](../papers/2610.19820.md) - transfer benchmark and the testbed for its KD/OPD comparison, ablations, and Self-ActionOPD, with a Qwen3.5-9B user and natural-language assertions disabled; Qwen3-4B distilled from Qwen3-32B reaches 40.0 test pass¹ against 29.2 for the base, with pass⁴ as four-trial all-success.
 * [FDE-Gym](../papers/2610.22350.md) - cited through XYEval, which turns τ²-bench and other tasks into XY problems (the user asks about an attempted solution rather than the real problem) with relative drops of up to 46.7%; FDE-Gym's leading models lose only 0.04 more when the sponsor's request is misdirected.
 * [BizBench](../papers/2610.20424.md) - extends the τ family's policy-governed, user-simulated setting with versioned guidance, workflows linked by shared resources and deadlines, and deterministic process checks over execution histories; its runner follows τ-Knowledge's rule for context overflow.
+* [ToolSpace](../papers/2611.05036.md) - evaluates τ³-Bench Banking, cited as τ-Knowledge (Qwen3.6-35B-A3B from 9.3 to 34.0, and 42.3 with RL, the paper's largest RL gain), and upgrades it to a 98-task Pro split on which seven frontier models fall by 14.4 to 25.6 points.
 
 # Notes
 

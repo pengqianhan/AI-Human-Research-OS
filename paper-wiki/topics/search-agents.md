@@ -7,7 +7,7 @@ tags:
 - information-seeking
 - web-agents
 - reinforcement-learning
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -26,6 +26,7 @@ This topic tracks agents whose core task is searching external sources (the live
 * [HyperBrowseComp](../papers/2610.03574.md) - a 423-question, 13-language, multimodal BrowseComp-style benchmark filtered against no-internet answering; best accuracy 31.68% (Gemini 3.7 Flash, built-in search), 57.68% of questions unsolved by all five built-in-search models, and a 7.3-9.5 point accuracy change from swapping built-in search for Exa.
 * [Mosaic](../papers/2610.22174.md) - trains a Qwen3.5-4B search agent (search and visit tools) for trajectories longer than one context: with compaction it reaches 38.86 on BrowseComp at 2.35 sessions per question, against 35.31 for broadcast multi-session RL and 34.68 for single-session GRPO run with compaction.
 * [OpenVLHarness](../papers/2610.26860.md) - a training-free multimodal harness whose text search, image search, and webpage-visit tools (Serper, summarized by Qwen3-VL-8B, with reusable URL handles) lift six visual search and deep-research benchmarks, for example MMSearch-Plus from 27.97 to 53.70 and BrowseComp-VL from 46.12 to 63.91 with GPT-6 Astra.
+* [Axion 1.0](../papers/2611.03233.md) - tool-dependent training questions built by filter-select-compute programs over structured databases withheld from the solver, with closed-book-solvable ones removed; SEAL-0 goes from 44.1 to 62.2 at 35B, half of the gain from RL with partial credit for verified intermediate targets.
 
 # Synthesis
 
@@ -41,6 +42,8 @@ Mosaic is the first entry here that trains a search agent for questions that out
 
 OpenVLHarness is the first entry here that is neither trained for search nor text-only. A general MLLM gets text search, image search (Google Lens through Serper), and webpage visits, with results summarized by a small Qwen3-VL-8B model and URLs kept as reusable handles, and it lifts every backbone on the six visual search benchmarks. Its failure analysis puts this domain's commonest failure on the decision to search, not on reading the results: an omitted tool call accounts for 49% of Qwen3-VL-8B's failures there, while unusable or ignored correct tool outputs are 3-8% across domains. Two cautions apply. The no-tool and Codex baselines cannot search (Codex's web search was disabled to stop it finding gold answers), so these gains combine search access with harness design; and the GPT-4o judge accepts a report that contains the right answer anywhere, which favors long reports (reader observation).
 
+Axion 1.0 builds search tasks differently from the rest of this topic. A program fixes the answer and an ordered chain of intermediate targets before an LLM phrases the question, and the source database is blocked during solving, so the facts must be recovered from the open web; questions answerable closed-book are removed. The chain gives RL a partial reward that does not rest on a judge reading a whole report, although an LLM still judges equivalence for some targets, and a later target counts only if all its prerequisites passed. Its domains are those with clean structured records (biology, chemistry, mathematics, geography, aviation), so whether this carries over to table-style or report-style outputs is untested (reader observation). The SEAL-0 scores are best single runs on what appear to be 111 questions (reader inference), and the 122B model scores below the 35B model there (58.6 against 62.2).
+
 # Open Questions
 
 * SearchOS's shared-state coordination and WideSeek-R1's trained multi-agent coordination both address the same context-pollution/serial-execution problem for broad search — does combining durable, system-maintained state (SearchOS's approach) with jointly-trained orchestration (WideSeek-R1's approach) outperform either alone, or does trained coordination make explicit state tracking partly redundant?
@@ -54,3 +57,4 @@ OpenVLHarness is the first entry here that is neither trained for search nor tex
 * Do trained search agents inherit the source preferences that Source Preference in the Wild finds in general-purpose models, and could source-aware training data (balancing which sites supply correct evidence) remove them?
 * Mosaic gains less from multi-session training with subagent forking than with compaction. For search agents that parallelize through subagents, is that a limit of crediting a fork by its immediate information gain, or a sign that a 4B model already gets most of what forked search can give?
 * OpenVLHarness gains most where the bare model cannot search. If its no-tool and Codex baselines got the same Serper tools through a plain interface, how much of the gain on BrowseComp-VL and MMSearch-Plus would remain, and how would it do on HyperBrowseComp's video, scan, and map evidence?
+* Axion 1.0's chained partial credit rewards verified intermediate targets. Does it improve on outcome-only rewards for search RL, and what happens when a question can be answered by a route other than the construction program's chain?

@@ -8,7 +8,7 @@ tags:
 - agent-environments
 - tool-use
 - agentic-rl
-timestamp: 2026-10-17T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ EnvScaler (Song et al., 2026, "EnvScaler: Scaling Tool-Interactive Environments 
 * [CompoWorld](../papers/2609.33665.md) - cited with AgentScaler, ScaleEnv, and Agent-World as the environment-scaling line it extends by composing services into cross-service tasks.
 * [ActionOPD](../papers/2610.19820.md) - the second training source: 755 tasks from 49 environments (of 2,550 source tasks) after integrity and static-feasibility screening, with a simulated user in the loop; 5 of every 64 task starts per step.
 * [MAI-Gym](../papers/2610.20939.md) - cited among the verifiable environments behind RL progress in tool use, which the paper argues GUI agents lack because every attempt needs its own reset device.
+* [ToolSpace](../papers/2611.05036.md) - named data-centric baseline (EnvScaler-8B 8.4 average against ToolSpace-8B's 19.6); its trajectories are also a low-authenticity source, kept only where tool names and schemas match real tools.
 
 # Notes
 

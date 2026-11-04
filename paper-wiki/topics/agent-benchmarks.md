@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -30,6 +30,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [FDE-Gym](../papers/2610.22350.md) - 95 customer-delivery tasks from 20 expert-adapted scenarios in 18 sectors, scored by normalized uplift on the customer's own metric minus a hidden stakeholder-contact charge, with admission anchors (doing nothing scores 0, the reference at least 0.95, literal compliance at most 0.2, shortcuts at most 0.8); at the sponsor-request level the best of 13 configurations averages 0.56 and resolves 14 tasks.
 * [BizBench](../papers/2610.20424.md) - 50 payments-workflow tasks with versioned guidance, 601 discoverable tools, and an LLM customer, where success requires deterministic goal, process, and protection checks over the execution history; the best strict success is 64.0% (one run per task) and 61.3%, and Qwen3.8-27B's 42.0% goal rate falls to 32.7% strict.
 * [Into the Unknown](../papers/2610.19159.md) - 15 unpublished follow-up directions proposed by the original papers' authors, graded by author-verified integrity and direction rubrics with an agentic judge; none of 135 submissions from nine frontier agents is valid, and 114 fail the integrity check.
+* [ToolSpace](../papers/2611.05036.md) - upgrades existing benchmarks by linking their real tool calls to outside tools through witnessed data and state relations, walking longer chains, and reverse-generating tasks with assertion checks; three experts review them (κ = 0.82), and seven frontier models fall by up to 38.2 points on AutomationBench Pro and 25.6 on τ³-Bench Banking Pro.
 
 # Synthesis
 
@@ -55,6 +56,8 @@ BizBench applies SafeActBench's process view to business workflows and adds time
 
 Into the Unknown carries the anchor question into research, where no reference answer exists. The original paper's author fixes an unpublished direction and the necessary conditions a follow-up must meet, and these become integrity and direction rubrics answered by an agentic judge. Its meta-verification is reusable here: the authors' after-reading criticisms are split into items and checked for rubric coverage and agreement, which fall from 100% on whether the direction was met to 75% coverage and 64% agreement (pooled) on quality and impact, showing which questions a rubric can carry. Its weak point is one this topic keeps meeting: the judge, GPT-6-Astra, is also the best-scoring agent, and the expert validation did not include its submissions. Because the main metric is zero for every agent, rankings fall back on that judge's node-level rates.
 
+ToolSpace offers a way to raise the difficulty of an existing benchmark rather than build a new one. It keeps the benchmark's tool world, extends it to outside tools that share data or state, and walks longer chains, so the base benchmark's protocol is the natural comparison. Its evidence for added difficulty is that scores fall and tool calls rise, which does not separate harder orchestration from stricter scoring: trace assertions come from one walk's intermediate snapshots and could reject a valid different route, and the Standard scores come from a public leaderboard while Pro scores come from the authors' runs (reader observation). The same concern arises for Raven's MAOB, where valid plans can differ from a reference. Its expert review (approval by two of three, Fleiss' κ = 0.82) is stronger than most construction checks here, but it reviews tasks and scripts rather than measuring how often valid solutions fail.
+
 # Open Questions
 
 * When does grading one next turn at a recorded decision point agree with executing the agent to the end? TraceDance's authors note that a planning-first response may act well later, and no paper here yet measures that gap.
@@ -74,3 +77,4 @@ Into the Unknown carries the anchor question into research, where no reference a
 * FDE-Gym subtracts a hidden, expert-set contact charge, and that charge decides many resolutions (GPT-6 Astra's systems reach 0.8 uplift on 36 tasks, 9 of which stay resolved). Should delivery benchmarks report uplift and contact cost as separate primary results, and would rankings survive a different pricing schedule?
 * BizBench's process checks and SafeActBench's evidence-before-action checks both score trajectories deterministically. Would a shared trajectory schema (approvals, state changes, evidence reads) let one evaluator serve both, and how many of BizBench's pre-approval execution attempts would SafeActBench classify as acting without evidence?
 * Into the Unknown's judge is also its top agent. Should agentic benchmarks measure a judge's agreement with experts on submissions from every evaluated model family, including the judge's own, before publishing a leaderboard?
+* ToolSpace's Pro splits include assertions on intermediate snapshots from one reference walk. How much of the score drop survives with final-state checks only, and how should an upgraded benchmark report that alongside its base version?

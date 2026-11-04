@@ -9,7 +9,7 @@ tags:
 - context-engineering
 - agent-self-evolution
 - prompt-optimization
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ Agentic Context Engineering (Zhang, Hu, Upasani, Ma, Hong, Kamanuru, Rainton, Wu
 * [AI Agents Do Not Fail Alone](../papers/2607.14275.md) - connects its context-assembly criteria to MemGPT and ACE as prior context-management work.
 * [ScienceBuddy](../papers/2609.17523.md) - listed under persistent procedural adaptation with Reflexion, GEPA, Meta-Harness, and PILOT, as work that predates its recursive loop.
 * [SoL-Pi](../papers/2609.20519.md) - listed among single context-management techniques (with ACON, Context-Folding, AgentFold, Context as a Tool); SoL-Pi instead discovers and selects mechanisms across several harness components.
+* [EvoTeam](../papers/2610.39813.md) - cited in its individual-agent lineage for incremental updates that preserve useful knowledge; its team-scoped rules apply a similar concern to coordination knowledge (reader connection).
 
 # Notes
 

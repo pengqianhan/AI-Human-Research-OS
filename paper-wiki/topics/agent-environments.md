@@ -6,7 +6,7 @@ tags:
 - agent-environments
 - environment-engineering
 - agent-reliability
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -36,6 +36,7 @@ This topic tracks papers where the main design object is not only the agent poli
 * [Agent-Reflex](../papers/2610.17953.md) - 557 executable environments built from high-usage MCP servers, with 20% of tool returns replaced by failures drawn uniformly from eight families mined from 24,510 real error returns on nine public benchmarks; a perturbed task is kept only if a verified recovery exists, and matched success/failure trajectories from nine models become per-environment reflection skills.
 * [MAI-Gym](../papers/2610.20939.md) - GUI training environments built by coding-agent skills: resettable clones of seven real apps whose actions cannot be undone (rail tickets, banking, ride hailing, food delivery, local services, social media), 42 invented deterministic apps with 840 tasks, persona-and-scenario cross-app worlds, and verifiers written apart from golden code and accepted only if they score 0, 1, and 0 on initial, completed, and reset states; new tasks are steered by diagnoses of failed rollouts.
 * [CoworkEnv](../papers/2610.24960.md) - synthesizes multi-service coworker environments (request, cross-service records, tools, and a grader over tool calls and audit records) from capability-driven plans, gates every grader on synthetic complete, empty, and forbidden-call records, and uses the same tasks for SFT demonstrations and RL rollouts; SFT lifts Qwen3-VL-8B on Claw-Eval from 46.6 to 64.1.
+* [ToolSpace](../papers/2611.05036.md) - derives environments from traces: deterministic rules mine data, state, and retry edges between adjacent real tool calls into a weighted graph, which is clustered into 804 environments; only the 181 with state-changing tools get databases, others reuse recorded returns, and tasks come from state-aware walks that must replay from the initial state.
 
 # Synthesis
 
@@ -58,6 +59,8 @@ MAI-Gym separates a task's requirements from its verifier code explicitly. The s
 
 CoworkEnv applies the verifier-first discipline of this topic's code worlds to multi-service office work. Its unit is one specification from which the request, cross-service records, tool interfaces, and grader are all instantiated, and its grading-consistency gate runs each grader on synthetic records: the complete set of required calls must score 1, an empty record 0, and a forbidden call must zero the safety factor. That is MAI-Gym's initial-completed-reset test moved from end states to tool-call and audit records (reader connection), and it has the same limit: a grader that agrees with its own declared checks can still miss what the request means, which the paper concedes for a ticket-update check that ignores the resolution text. Against GraphForge, which anchors every rubric criterion to the files that verify it, CoworkEnv anchors checks to service audit records. Both report SFT gains on professional benchmarks (GraphForge on GDPVal-AA, CoworkEnv on Claw-Eval, which GraphForge cites), but with different students, teachers, and benchmarks, so the two construction choices have not been compared.
 
+ToolSpace changes which object comes first. Most factories here build a world and derive its tools and tasks; ToolSpace mines a graph of tool relations from recorded executions and only then decides what state must exist. Only 22.5% of its environments get a database, and the rest initialize from recorded snapshots or replay recorded returns, a mixed point on this topic's fidelity axis with real interfaces, synthetic databases, and cached observations (reader mapping). CompoWorld is the closest comparison, since both walk a dependency graph to compose cross-service tasks and both fine-tune Qwen3.6-35B-A3B, though ToolSpace does not cite it. CompoWorld samples service-level graphs and checks final-state rubrics, while ToolSpace mines tool-level edges and adds assertions on intermediate snapshots. ToolSpace reports larger gains from that backbone (AutomationBench 8.2 to 45.8 with SFT on 34,376 samples, against 10.33 to 32.33 with 3K SFT samples plus RL), but data size, teacher, and evaluation runs differ, so the mined-versus-sampled question stays open. Its ablation isolates part of it inside one pipeline: LLM-judged edges cost 6.8 points on average, about as much as removing state edges. Cached returns raise a question for RL in particular. The paper specifies replay for matching calls, so what an exploring policy receives for a query the corpus never recorded decides how far this design supports on-policy training (reader question).
+
 # Open Questions
 
 * Which environment controls prevent reward hacking without blocking useful exploration?
@@ -77,3 +80,4 @@ CoworkEnv applies the verifier-first discipline of this topic's code worlds to m
 * Agent-Reflex injects failures at a fixed 20% rate with families drawn uniformly rather than at their logged frequencies. Does training on the logged distribution, or adding temporal failures such as partial writes, change robustness on real services more than on a perturbation benchmark?
 * MAI-Gym accepts a verifier when it scores 0, 1, and 0 on initial, golden-completed, and reset states, but golden code sets the completed state directly. How often does such a verifier still reject valid GUI solutions or accept partial ones, and would scoring end states that agents actually reach catch more of these than its trajectory review does?
 * CoworkEnv's grading gate checks a grader against its own declared checks. Would a second grader written from the request alone, extending its Generator-Discriminator split from safety scenarios to every task, catch checks that miss the request's meaning, and how many accepted tasks would it reject?
+* ToolSpace mines edges only between adjacent calls and reuses recorded returns for stateless tools. How much composition do non-adjacent dependencies add, and what should a stateless environment return for a query the corpus never recorded?

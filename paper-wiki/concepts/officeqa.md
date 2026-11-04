@@ -9,7 +9,7 @@ tags:
 - benchmarks
 - document-agents
 - enterprise-reasoning
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ OfficeQA (Opsahl-Ong et al., "OfficeQA Pro: An Enterprise Benchmark for End-to-E
 * [Iris](../papers/2609.04304.md) - a "Cowork" transfer target not targeted in training, to which Iris's search-specialized data and models transferred positively.
 * [RASO](../papers/2609.38024.md) - 50 / 24 / 172 split; the benchmark where an agent without a skill scores 11.44 with GPT-5.6-Luna, where retrieval-grounded initialization alone reaches 45.74, and where RASO ends at 49.03 against 45.54 for SkillOpt.
 * [MiMo-V2.6](../papers/2610.11959.md) - OfficeQA Pro (avg@1) for the released 9B model: Qwen3.5-9B 9.0, 19.5 after distillation SFT, 24.8 after general-domain GRPO on the released environments.
+* [ToolSpace](../papers/2611.05036.md) - OfficeQA Pro: Qwen3.6-35B-A3B from 45.9 to 48.9 (51.9 with RL) and GLM-5.2 from 56.9 to 67.1, level with Claude Opus 5's 67.2; the smallest data fraction falls slightly below the backbone.
 
 # Notes
 

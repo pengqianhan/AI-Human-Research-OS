@@ -8,7 +8,7 @@ tags:
 - tool-use
 - working-agents
 - workflow-automation
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -22,9 +22,12 @@ AutomationBench (Shepard and Salimans, 2026) evaluates agents on workflows that 
 * [TerminalHorizon](../papers/2610.13166.md) - transfer benchmark for a model trained only on terminal trajectories: on v1.0.6 (600 rollouts over the public set, the official api tool set, a 50-step limit, three runs) Qwen3.5-27B goes from 5.5 to 17.2 Pass Rate and from 26.4 to 49.7 Partial score.
 * [BizBench](../papers/2610.20424.md) - cited for scoring final application states without prescribing tool-call sequences; BizBench keeps that freedom but adds checks at consequential steps, such as whether a transfer was approved before execution.
 * [CoworkEnv](../papers/2610.24960.md) - cited among benchmarks of multi-application work and workflow constraints; its synthesized training tasks likewise span several services with business rules and distractor records.
+* [ToolSpace](../papers/2611.05036.md) - the largest gain among seven benchmarks: Qwen3.6-35B-A3B from 8.2 to 45.8 and GLM-5.2 from 29.3 to 54.7. Its AutomationBench Pro (300 tasks from longer walks over linked outside tools) drops seven frontier models by 11.3 to 38.2 points, for example Claude Opus 5.5 from 59.2 to 26.3.
 
 # Notes
 
 The two papers evaluate different model generations under their own harnesses and reasoning settings, so their frontier-model rows should not be read as one leaderboard.
 
 TerminalHorizon reports the benchmark's two official scores, Pass Rate (all assertions passed) and Partial (the fraction of assertions passed). The other entries quote one figure each, and their notes do not record which of the two it is.
+
+Frontier and backbone rows vary by source: Claude Opus 5 is 50.3 in MiMo-V2.6 and 45.6 in ToolSpace, GPT-5.6 Sol is 45.8 and 47.1, and untrained Qwen3.6-35B-A3B is 10.33 in CompoWorld and 8.2 in ToolSpace.

@@ -6,7 +6,7 @@ tags:
 - context-engineering
 - long-context-reasoning
 - agent-harness-engineering
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ Context compaction is the harness or model operation that shrinks an agent's wor
 * [MAI-Gym](../papers/2610.20939.md) - window-wise history for GUI RL: windows of 10 steps overlapping by 2, appended within a window, with older screenshots collapsed to placeholders (text kept) at boundaries so the prompt prefix changes once every 8 steps; prefix-cache hits rise from 42.5% to 85.9% against step-wise history, and the same windows become training samples.
 * [AutoSFT](../papers/2610.22194.md) - a single research agent's 258,400-token session is compacted ten times in 11.5 hours, mostly because of training and evaluation output; moving execution into a separate executor session halves compactions to five.
 * [CarryOn](../papers/2610.18784.md) - replaces the whole live tail at each fold, but with references to task objects and versioned records rather than a summary; on 40 OSWorld 2.0 tasks, sliding-window and generic-summary compaction fall below the uncompressed baseline (37.41% and 44.94% against 50.32% partial) while CarryOn reaches 55.93%.
+* [Axion 1.0](../papers/2611.03233.md) - QUEST-based condensation divides RL rollouts into sessions that share one reward and advantage, with loss normalized per session, while SFT keeps each complete trajectory (up to 128K tokens) with no summaries replacing earlier context.
 
 # Notes
 

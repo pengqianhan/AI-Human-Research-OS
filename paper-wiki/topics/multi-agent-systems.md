@@ -6,7 +6,7 @@ tags:
 - multi-agent-systems
 - coordination
 - shared-state
-timestamp: 2026-10-17T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -37,6 +37,7 @@ This topic tracks papers where multiple agents coordinate reasoning, experimenta
 * [Raven](../papers/2609.33439.md) - a host-orchestrated team whose members are whole harnesses: native specialists plus Claude Code, Codex, Hermes Agent, and OpenClaw behind adapters. The host submits a typed DAG that the runtime admits before dispatch, handoffs are recorded artifacts, and a new benchmark (MAOB) scores the plan alone, where Raven leads Claude Code and Hermes Agent by about 10 points of exact graph match.
 * [Recursive Game Creator](../papers/2610.08621.md) - a game-studio role pipeline (Designer, Builder, Player, Reviewer) run for several rounds, where the Player writes gameplay policies and the Reviewer judges anonymized trajectories and screenshots without seeing source code or which version is newer before choosing which build to keep.
 * [AutoSFT](../papers/2610.22194.md) - a meta agent that delegates training and evaluation to an executor (which returns only file paths and may not read scores), gathers one proposal each from four analysis subagents whose skills differ only in their starting evidence, and calls a synthesis subagent for undersupplied capabilities; each role is added and measured on its own.
+* [EvoTeam](../papers/2610.39813.md) - a library of reusable teams selected or created per task, with a Chairman recruiting members, handoff rules scoped to the team that learned them, and skills shared across teams; on a mixed stream of 116 tasks it leads Meta-Team on all six held-out metrics (59.58 against 55.55 average), and removing learned rules costs 10.00 on GAIA and 8.75 on LOCA-Bench.
 
 # Synthesis
 
@@ -49,6 +50,8 @@ Raven adds two things. Its team members are heterogeneous harnesses rather than 
 Recursive Game Creator adds a fourth route to review independence alongside ARIS's cross-family reviewer, Apodex 1.1's narrowed-scope verifier, and RSIAgent's isolated verifier: its Reviewer sees behavioral and visual evidence about two game versions but neither their source code nor which one is newer, so it judges the experience rather than the edit. The paper does not ablate this restriction, so whether it reduces correlated review errors is untested.
 
 AutoSFT gives this topic a role-by-role ablation, which most systems here lack. Adding an executor halves context compactions (ten to five) without changing the decision logic. Adding four analysis subagents, whose skills share the proposal section word for word and differ only in the evidence they start from, moves 55% of actions into repair and resupervision, families the single agent never used. Diversity therefore comes from starting evidence rather than from different action menus, following the result it cites from Anthropic's automated researcher that distinct starting directions keep parallel agents diverse. The executor's skill is also a narrow-scope restriction like the reviewer restrictions tracked here (ARIS, Apodex 1.1, RSIAgent): it is told what to run and cannot read the scores, so it cannot steer the round.
+
+EvoTeam bears on this topic's open question about Graph Engineering's "System Evolution" bar. Its rosters and handoff rules persist, change from execution evidence, and carry into later tasks, and a provisional team must pass an admission check, which comes closer than the fixed topologies here. It still stops short of the bar as stated: admission and updates come from LLM reflection rather than validated comparison, and Algorithm 1 has no rollback, merge, or retirement step (reader mapping). Its distinctive claim concerns scope: teams hold what a group has learned about working together, agents hold what each can do, and only the first is isolated. Its ablation shows where that pays. Rules account for the whole lead over Meta-Team on GAIA and LOCA-Bench (without them the scores match Meta-Team's exactly, by reader calculation), while on LoCoBench Refactoring rules lower the score slightly, and on DepMigrate teams without rules do worse than having neither. Its teams are matched by collaboration pattern rather than by benchmark, as one analyst-implementer-verifier team serving three benchmarks shows, and an independent verifier recruited from that roster extends this topic's review-independence thread by role alone, with the same model. The evidence rests on one fixed stream order, and the resulting library's size is not reported.
 
 # Open Questions
 
@@ -65,3 +68,4 @@ AutoSFT gives this topic a role-by-role ablation, which most systems here lack. 
 * AgentWorld finds a human-written shared plan *hurts* when agents cannot communicate (22.9% → 17.6%) and that chat volume does not predict success — would this topic's structured-state patterns (task boards, shared verified context) close the gap to AgentWorld's oracle-communication upper bound, and does a CCE-style causal-contribution metric rank those patterns differently from task success?
 * Does a better plan on Raven's MAOB (higher agreement with a reference graph) lead to better executed deliverables, given that valid alternative plans can differ from the reference and the benchmark never runs the workers?
 * AutoSFT's four analysis subagents differ only in their starting evidence. Would one agent prompted in turn with the same four scopes give the same diversity at lower cost, or does keeping their contexts separate matter in itself?
+* EvoTeam scopes handoff rules by team but shares skills across teams, and by the paper's reported differences a variant left with skill evolution alone scores below unevolved MAS on GAIA. Should skills be scoped too, and how should a team library decide when to merge or retire teams as a stream grows?

@@ -8,7 +8,7 @@ tags:
 - professional-work
 - long-horizon-agents
 - llm-as-a-judge
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ JobBench (Li et al., 2026, "JobBench: Aligning Agent Work with Human Will", arXi
 * [RRSI](../papers/2609.24972.md) - out-of-distribution target for harnesses evolved on Harvey LAB; RRSI reaches 40.7 against 36.0 for the starting harness, the best of five evolution methods.
 * [Atria Dawn](../papers/2609.15818.md) - listed among the General Agentic Intelligence benchmarks in its model-evaluation table, with scores reported as published on the official release website.
 * [Raven](../papers/2609.33439.md) - its new MAOB planning benchmark (140 requests from 137 occupations) is patterned on GDPval and JobBench without reusing their text.
+* [ToolSpace](../papers/2611.05036.md) - Qwen3.6-35B-A3B from 6.4 to 40.0, unchanged by RL, and GLM-5.2 from 43.4 to 57.5, below Claude Opus 5's 68.0.
 
 # Notes
 

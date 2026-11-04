@@ -8,7 +8,7 @@ tags:
 - legal-agents
 - professional-work
 - llm-as-a-judge
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -19,6 +19,7 @@ Harvey LAB, the Legal Agent Benchmark released by Harvey AI in 2026, evaluates a
 
 * [Harness²](../papers/2610.14224.md) - evaluates on a 100-task test split (stratified by practice area, covering all four work types) taken from an earlier Meta-Harness study, judged by Claude Sonnet 4.6, reporting Partial; one improvement step adds 2.0 to 11.8 points, and Meta-Harness, searched on the 24-task dev set, is the stronger method in one of four configurations.
 * [RRSI](../papers/2609.24972.md) - the agentic-workspace evolve suite: harnesses are evolved on 120 tasks and checked on 40 held-out tasks, then transferred to JobBench, GDPval, and APEX-Agents; Meta-Harness reaches the highest evolve-set score (93.0 against 89.4 for the starting harness) and RRSI ties it on held-out tasks (89.2).
+* [ToolSpace](../papers/2611.05036.md) - the weakest gains among its seven benchmarks at small sizes (0.0 at 8B, and 0.8 to 1.7 at 35B, 2.5 with RL), but GLM-5.2 goes from 13.3 to 27.5, above Claude Opus 5's 22.7.
 
 # Notes
 

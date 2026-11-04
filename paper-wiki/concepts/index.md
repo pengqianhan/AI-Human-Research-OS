@@ -22,6 +22,8 @@
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
 * [EnvScaler](envscaler.md) - Programmatic synthesis of tool-interactive training environments with executable tools and verifiable tasks, and the RL task pool built that way.
+* [FrontierScience](frontierscience.md) - Expert-level science benchmark with an Olympiad track and a rubric-graded, PhD-level Research track across physics, chemistry, and biology.
+* [GAIA](gaia.md) - 466 real-world assistant questions at three difficulty levels needing reasoning, multimodal handling, browsing, and tool use, scored by exact match after normalization.
 * [GAIA2](gaia2.md) - Simulated-smartphone benchmark of dynamic, asynchronous assistant tasks grouped into persona Universes, used for Universe-disjoint harness-optimization splits.
 * [GameCraft-Bench](gamecraft-bench.md) - 140-task benchmark of complete games built end to end by agents in a real game engine, scored through replayed gameplay against game-specific rubrics on Mechanics, Depth, Visuals, and Art.
 * [GDPVal](gdpval.md) - 1,320-task, 44-occupation benchmark of economically valuable work graded by expert rubrics and pairwise Elo against human deliverables; GDPVal-AA is its 220-task gold subset.
@@ -35,6 +37,7 @@
 * [JobBench](jobbench.md) - 65 end-to-end professional job tasks in seven occupational domains, with deliverables judged against a weighted rubric.
 * [LIBERO-Pro](libero-pro.md) - A perturbed variant of the LIBERO tabletop-manipulation benchmark that stress-tests a frozen vision-language-action policy under deployment perturbations such as instruction redirection and object-position swaps.
 * [LLM-as-a-Judge](llm-as-a-judge.md) - Using a language model to score, rank, or select other model outputs.
+* [LOCA-Bench](loca-bench.md) - Controllable context growth for agents: mock MCP environments scale from 8K to 256K of reachable information with task semantics fixed, scored by final-state evaluators.
 * [LoCoMo](locomo.md) - Very-long-term conversational memory benchmark spanning single-hop, multi-hop, open-domain, and temporal reasoning.
 * [LongMemEval](longmemeval.md) - 500-question, six-category benchmark for long-term interactive memory in chat assistants.
 * [Meta-Harness](meta-harness.md) - Outer-loop optimization of executable agent-harness code by an agentic proposer reading past candidates' code, scores, and traces; the common baseline for automated harness evolution.
@@ -53,6 +56,7 @@
 * [Ralph loop](ralph-loop.md) - Relaunching an agent on the same workspace each time it stops until a completion criterion is met, judged by the agent itself or by a separate reviewer.
 * [Reflexion](reflexion.md) - Verbal self-reflection for language agents: lessons written after each attempt are kept in an episodic memory and guide later attempts, with no weight updates; a standard baseline for learning from experience in context.
 * [Reward hacking](reward-hacking.md) - An agent or policy raising its measured reward or benchmark score by exploiting the grader, environment, or evaluation channel instead of accomplishing the intended task.
+* [Rollout Routing Replay (R3)](rollout-routing-replay.md) - Records expert routing during RL rollouts and replays it in training, so mixture-of-experts models stay consistent between inference and update.
 * [ScienceWorld](scienceworld.md) - Interactive text environment of elementary-school science experiments; a long-horizon testbed for LLM agents, skill evolution, and agent RL.
 * [ScreenSpot-Pro](screenspot-pro.md) - GUI grounding benchmark of high-resolution professional-application screenshots scored by point-in-box accuracy.
 * [Search-R1](search-r1.md) - Outcome-reward RL that trains an LLM to interleave reasoning with search calls, masking retrieved tokens from the loss; a standard baseline for RL-trained search agents.
@@ -64,6 +68,7 @@
 * [Terminal-Bench](terminal-bench.md) - Benchmark suite for evaluating AI agents on hard, realistic tasks in command-line environments.
 * [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
 * [ToolSandbox](toolsandbox.md) - Stateful, conversational tool-use benchmark scored against ordered milestones, reported in this wiki on scenario subsets with a similarity metric.
+* [Toucan](toucan.md) - 1.5 million tool-agent trajectories from nearly 500 real MCP servers with real tool execution, used here as a training corpus, comparison dataset, and test set.
 * [τ²-Bench](tau2-bench.md) - Dual-control conversational tool-use benchmark (Airline, Retail, Telecom) where both the agent and a simulated user act on shared state, scored by an environment verifier.
 * [VitaBench](vitabench.md) - Interactive multi-turn tasks in everyday service applications, run against an LLM user simulator and scored by a rubric-based trajectory evaluator.
 * [WebArena](webarena.md) - 812 long-horizon tasks on self-hosted shop, admin, GitLab, forum, map, and wiki sites with functional evaluators; the standard browser-agent testbed and, via WebArena-Lite, a web-agent fine-tuning target.
