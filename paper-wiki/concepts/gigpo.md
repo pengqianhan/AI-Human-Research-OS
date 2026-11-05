@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - credit-assignment
 - agent-fine-tuning
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ GiGPO (Feng, Xue, Liu, and An, arXiv:2505.10978, NeurIPS 2025) targets the credi
 * [SLCA-GRPO](../papers/2609.29050.md) - cited as a temporal credit-assignment method (which step deserves credit) beside VinePPO and SPO; SLCA adds a structural axis (tool versus summary tokens) and names the combination with GiGPO as untested.
 * [X-Tree](../papers/2609.32993.md) - cited among multi-turn agent-training methods, via its verl-agent implementation.
 * [ActionOPD](../papers/2610.19820.md) - cited for same-state grouping across trajectories with return-based advantages; ActionOPD instead scores same-state candidates against a shared teacher sample set, without estimating returns.
+* [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - stabilizes FrozenLake across turn budgets but behaves like GRPO on BFCL, where reliable step signals are absent; BudgetMix also adds remaining budget to its anchors.
 
 # Notes
 

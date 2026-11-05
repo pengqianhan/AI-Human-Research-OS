@@ -18,10 +18,12 @@
 * [Claw-Eval](claw-eval.md) - 300 human-verified agent tasks across service orchestration, multimodal, and multi-turn dialogue groups, graded from traces, audit logs, and snapshots for completion, safety, and robustness with Pass@k and Pass^k.
 * [Context compaction](context-compaction.md) - Shortening an agent's accumulated context mid-task by summarizing history or replacing tool outputs and images, with costs in what is lost, prompt-cache reuse, and RL training.
 * [Context rot](context-rot.md) - Degradation of model quality as context grows, even inside the physical context window.
+* [CUA Driver](cua-driver.md) - Open-source computer-use driver with accessibility-addressed and coordinate input under a best-effort background policy; the matched baseline for Hybrid Computer Use.
 * [Darwin Gödel Machine (DGM)](darwin-godel-machine.md) - Self-improving coding agent that rewrites its own code, validates each version on coding benchmarks, and keeps an open-ended archive of agents; the standard reference for self-modifying agents and archive-based search.
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
 * [EnvScaler](envscaler.md) - Programmatic synthesis of tool-interactive training environments with executable tools and verifiable tasks, and the RL task pool built that way.
+* [FrontierPhysics](frontierphysics.md) - 56 end-to-end physics research tasks by the researchers who did the work, passed through a deterministic verifier and blocker rubrics.
 * [FrontierScience](frontierscience.md) - Expert-level science benchmark with an Olympiad track and a rubric-graded, PhD-level Research track across physics, chemistry, and biology.
 * [GAIA](gaia.md) - 466 real-world assistant questions at three difficulty levels needing reasoning, multimodal handling, browsing, and tool use, scored by exact match after normalization.
 * [GAIA2](gaia2.md) - Simulated-smartphone benchmark of dynamic, asynchronous assistant tasks grouped into persona Universes, used for Universe-disjoint harness-optimization splits.
@@ -51,6 +53,7 @@
 * [OSWorld](osworld.md) - Benchmark for evaluating multimodal computer-use agents on open-ended, real-world desktop tasks executed inside real operating-system environments.
 * [On-policy distillation](on-policy-distillation.md) - Training a student on its own trajectories by matching a teacher's per-token distribution.
 * [PaperBench](paperbench.md) - Benchmark where agents replicate 20 ICML 2024 papers from scratch, graded against 8,316 rubric sub-tasks.
+* [Pass@K](pass-at-k.md) - Probability that at least one of K attempts succeeds; Pass@(K,T) adds a limit of T turns per attempt for interactive agents.
 * [PinchBench](pinchbench.md) - Practical productivity and data-analysis tasks for LLMs running as OpenClaw agents, each scored from 0 to 100.
 * [ProgramBench](programbench.md) - 200 program-reproduction tasks: rebuild a program's observable behavior from an execute-only reference binary and its documentation, scored by black-box test pass rates.
 * [Ralph loop](ralph-loop.md) - Relaunching an agent on the same workspace each time it stops until a completion criterion is met, judged by the agent itself or by a separate reviewer.
@@ -69,6 +72,8 @@
 * [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
 * [ToolSandbox](toolsandbox.md) - Stateful, conversational tool-use benchmark scored against ordered milestones, reported in this wiki on scenario subsets with a similarity metric.
 * [Toucan](toucan.md) - 1.5 million tool-agent trajectories from nearly 500 real MCP servers with real tool execution, used here as a training corpus, comparison dataset, and test set.
+* [WeaveBench](weavebench.md) - 114 long-horizon tasks on a real Ubuntu desktop that require combining GUI, CLI, and code in one trajectory, with a trajectory-aware judge.
+* [Windows Agent Arena](windows-agent-arena.md) - OSWorld adapted to a real Windows OS, with more than 150 tasks across applications, tools, and browsers.
 * [τ²-Bench](tau2-bench.md) - Dual-control conversational tool-use benchmark (Airline, Retail, Telecom) where both the agent and a simulated user act on shared state, scored by an environment verifier.
 * [VitaBench](vitabench.md) - Interactive multi-turn tasks in everyday service applications, run against an LLM user simulator and scored by a rubric-based trajectory evaluator.
 * [WebArena](webarena.md) - 812 long-horizon tasks on self-hosted shop, admin, GitLab, forum, map, and wiki sites with functional evaluators; the standard browser-agent testbed and, via WebArena-Lite, a web-agent fine-tuning target.

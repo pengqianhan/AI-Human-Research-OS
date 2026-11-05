@@ -7,7 +7,7 @@ tags:
 - computer-use-agents
 - desktop-automation
 - in-context-demonstration-learning
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -28,6 +28,7 @@ This topic tracks agents that act directly on graphical interfaces — desktops,
 * [OpenGCUA](../papers/2610.22200.md) - defines a generalist computer-use agent by three per-step model decisions (what to observe, how to act, how to organize) over GUI, accessibility, shell, and API interfaces; code execution plus model-chosen screenshots and a todo ledger lift eight frozen models from 45.3 to 64.9 mean partial score on the 82-task offline OSWorld-v2 set, and a preliminary macOS harness addresses shared control, background windows, and existing user state.
 * [MAI-Gym](../papers/2610.20939.md) - an open platform that runs evaluation, data collection, and online RL through one harness over mobile, computer, and web (ten benchmarks, 20,000 parallel environments), synthesizes resettable app clones, invented apps, cross-app worlds, and execution-tested verifiers, and trains MAI-Gym-9B to 78.4% on MobileWorld and 76.2% on OSWorld-Verified in one joint GRPO run; RL in a ticketing-app clone lifts the real app on a physical phone from 28.8% to 48.1%.
 * [CarryOn](../papers/2610.18784.md) - a context runtime evaluated on the full OSWorld 2.0 set (500 steps) with Claude Opus 4.7's native computer-use interface: partial score 43.9% to 49.7%, binary 15.7% to 19.4%, input context held near 65K tokens where the baseline passes 200K, and cost per task down 35.9%.
+* [Hybrid Computer Use](../papers/2610.41432.md) - exposes code, accessibility (AX), and GUI channels to a general agent with compact AX views, batched actions with wait steps, AX diffs, and cross-channel guards; 72.37 Partial on the OSWorld 2.0 full set with GPT-6 Astra, and 2.94 to 12.90 points above CUA Driver on OSWorld 1.0 across four models, with models dividing the channels very differently.
 
 # Synthesis
 
@@ -49,6 +50,8 @@ MAI-Gym is the training-side companion to OpenGCUA from the same team, and the t
 
 CarryOn brings context management into this topic's long-horizon desktop setting, where finished edits already live in documents, slides, and forms the agent can reopen. Instead of summarizing the screenshots and actions that produced them, it keeps references to those objects and checks them read-only (file exists, hash changed, valid document container), while the agent's native filter still keeps the ten most recent screenshots. On OSWorld 2.0 this holds input context near 65K tokens and makes runs cheaper from about turn 200 onward. Its 49.7% partial score is within half a point of the published GPT-5.5 and Claude Opus 4.8 results, which come from other runs and, for GPT-5.5, batched actions, so the like-for-like evidence is the gain over the same Claude Opus 4.7 agent (reader observation).
 
+Hybrid Computer Use and OpenGCUA share the premise that the model should choose among interfaces, and they differ on how an action is composed. OpenGCUA writes each step as a program over GUI and shell, while HCU adds a structured AX tool with references, batches, wait steps, and diffs, and leaves code to the harness. Neither runs the other, and their numbers sit on different task sets (OpenGCUA on 82 offline OSWorld-v2 tasks, HCU on the 108-task full set), so which composition is better is open (reader comparison). HCU's tool-call analysis adds evidence this topic lacked on what models do with free choice: AX is 80% of desktop calls for GPT-5.4 and 68% for Grok 4.7, but 6% for Claude Opus 5.5, which still scores above GPT-5.4 under both interfaces and rarely switches channel after an error. Its ablations come from GPT-5.4 only, so "AX contributes most" may not transfer to a model that hardly uses it (reader inference). It also shows efficiency turning into score through a cap: Gemini 3.8 Flash's +12.90 comes mainly from tasks where the baseline hits the 100-step limit.
+
 # Open Questions
 
 * How should a demonstration-guided GUI agent transfer procedural structure across related-but-non-identical tasks (the variant-demo problem), rather than only replaying guidance from the same task?
@@ -66,3 +69,4 @@ CarryOn brings context management into this topic's long-horizon desktop setting
 * OpenGCUA's real-device harness prefers accessibility actions and background delivery so the agent does not disturb its user. How often does that order fail on desktop applications with poor accessibility support, and do the training pipelines here (SoftwareGym, RecreationWorld) produce agents that choose interfaces well or only agents that use the GUI well?
 * MAI-Gym's clone-only RL widens the clone-to-real gap from 7.7 to 25.0 points even as real-app success rises. Which clone differences (layout, latency, pop-ups, login state) cause the widening, and would a few real-device rollouts mixed into training close it more cheaply than better clones?
 * CarryOn's Grounder can verify that a document exists and changed but not that it shows the right content. Could the screenshot-based verifiers GUI agents already use serve as stronger Grounder checks, and would that close the binary-score gap in its carrier ablation, where hiding the carriers scored higher on binary success (25.00% against 22.50%)?
+* Hybrid Computer Use has no ablation of its action guards, batches, wait steps, or diffs one at a time, and runs only with foreground input. Which of these drives its gain, and does the gain hold on a user-shared desktop with background delivery, as OpenGCUA's real-device section asks?

@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -51,6 +51,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [AgentSWE](../papers/2610.13361.md) - after deterministic validity gates, a frontier model at its highest effort (GPT-5.6 Sol for Creation, DeepSeek-V4.1-Flash for Editing) applies a requirement-derived rubric to each execution's artifacts, trace, and resulting state, with ceilings bound to recorded violations; the judge shares a model family with at least one builder and also grades the static code assessment, and no agreement with human scoring is reported.
 * [Harness²](../papers/2610.14224.md) - all three benchmarks are judge-scored in whole or part: JobBench by Claude Opus 4.8, the same model as the harness editor and output selector; LAB by Claude Sonnet 4.6; WorkBuddy-Bench's model-graded items by Gemini 3.5 Flash, also one of the executors. A guard keeps rubrics and scores out of every editing session.
 * [Into the Unknown](../papers/2610.19159.md) - a GPT-6-Astra agentic judge (Codex harness, four runs, 3-of-4 per-node majority) answers author-verified rubric questions; chosen over Claude-Opus-5.5 for paper-level consistency (86.5% against 57.7% same overall grade on 52 submissions), it agrees with all 41 expert judgments on whether a direction was met but 64% (pooled) on quality and impact, and it is also the best-scoring evaluated agent.
+* [FrontierPhysics](../papers/2611.06910.md) - a reviewer agent in its own sandbox grades trajectories and manuscripts instead of a single LLM call; regrading with Claude Opus 5.5 agrees almost always on GPT-6 Astra but is more lenient on its own family.
+* [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - a GPT-5.6-Sol judge rating each action from 0 to 10 as process reward does not provide consistent supervision, particularly on BFCL.
 
 # Notes
 

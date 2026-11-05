@@ -29,6 +29,7 @@ The Model Context Protocol (MCP) standardizes how a language-model application d
 * [SuperNav](../papers/2610.12126.md) - a robot's navigation operations (scene initialization, four-view panorama, turning, visual-point navigation, session closure) are exposed to Codex CLI as a whitelisted set of MCP tools; the whitelist bounds environment actions, while the ban on reading scene assets and ground truth through the filesystem is instruction-level only.
 * [Agent-Reflex](../papers/2610.17953.md) - 557 high-usage MCP servers from the Smithery registry seed its executable training environments, and every benchmark is run in the standard MCP interaction format.
 * [ToolSpace](../papers/2611.05036.md) - builds a tool-composition graph from runs on real MCP servers, keeping only tasks whose tool definitions exactly match them, plus open corpora, and treats tools rather than databases as the primary unit of environment synthesis.
+* [Hybrid Computer Use](../papers/2610.41432.md) - exposes its accessibility and GUI desktop tools to four agent harnesses through one MCP server, with programmatic tools left in the harness.
 
 # Related
 

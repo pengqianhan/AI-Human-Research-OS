@@ -24,6 +24,7 @@ Humanity's Last Exam (HLE; Phan et al., 2025) is a closed-ended academic benchma
 * [HyperBrowseComp](../papers/2610.03574.md) - cited, not run: an example of a benchmark built to keep discriminative power as models improve, but one that tests closed-ended expertise rather than sustained open-web search.
 * [OpenVLHarness](../papers/2610.26860.md) - HLE-VL, the 330-question multimodal subset judged by GPT-4o: the harness lifts Qwen3-VL-8B from 6.36 to 10.30 and GPT-6 Astra from 49.09 to 56.06; on Qwen2.5-VL-7B the trained AdaReasoner (10.00) scores above it (7.27).
 * [Axion 1.0](../papers/2611.03233.md) - full HLE at 52.2 (35B) and 59.0 (122B) with sites such as Hugging Face blocked, and 59.1 and 64.8 without the blocks, each the best of three runs; stage comparisons use a 130-question text-only subset, where the models go from 47.7 to 70.0 and from 40.8 to 74.6.
+* [FrontierPhysics](../papers/2611.06910.md) - cited as expert-level closed-ended questions, part of the shift toward research-level evaluation.
 
 # Notes
 

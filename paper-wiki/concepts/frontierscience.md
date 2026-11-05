@@ -19,6 +19,7 @@ FrontierScience evaluates expert-level scientific reasoning in frontier language
 * [Axion 1.0](../papers/2611.03233.md) - both tracks in its main table, best single run: Olympiad 86.0 and 87.0, Research 56.7 and 66.7 at 35B and 122B (average rubric scores 6.67 and 7.09), against 63.3 for GPT-5.6 Sol on Research and 40.0 for Agents-A1. Stage I SFT moves 35B Research from 26.7 to 48.3.
 * [Apodex 1.1](../papers/2608.23283.md) - FrontierScience-Research is among its public-benchmark comparison tables, where its Agent Team is the highest-scoring system in its own table; Axion's table lists it at 55.0 (ReAct) and 63.3 (Agent Team).
 * [Into the Unknown](../papers/2610.19159.md) - cited as a benchmark with an existing anchor, where the task is graded against a reference, in contrast with its own open-ended research setting.
+* [FrontierPhysics](../papers/2611.06910.md) - a comparison row in its Table 1 (FrontierScience-Research, 60 tasks, 20 in physics), described as reasoning and QA rather than end-to-end research.
 
 # Notes
 

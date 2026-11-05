@@ -6,7 +6,7 @@ tags:
 - ai-for-science
 - scientific-discovery
 - experiments
-timestamp: 2026-10-07T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -26,6 +26,7 @@ This topic tracks papers about AI systems used to plan, run, and revise scientif
 * [ScienceBuddy](../papers/2609.17523.md) - a released biomedical research workspace (224 tools) whose researcher collaborations are packaged as executable Harbor tasks with task-specific rubrics, which then drive both harness edits and RL of the deployed agent.
 * [Self-Evolving Coding Agents (HexaAnything)](../papers/2609.35432.md) - PhyBench, a simulated Isaac Sim laboratory where an embodied coding agent must design and physically run an experiment (spring constant, g from three pendulums, coupled-oscillator normal modes) and submit an estimate backed by recorded measurements; three frontier models keep mean relative error below 5% on every task, while Qwen3.8-Max produces valid results in at most half its runs.
 * [AutoSciBench](../papers/2610.05140.md) - generates and refines data-analysis tasks for scientific agents in computational biology, materials science, and clinical imaging (question, data files, exact-match answer), revising each task's plan until solver trajectories show no shortcut and all trials fail; ten solvers that score 92.7-97.7% on the MatTools seed spread from 21.3% to 90.0% on the Opus-4.8-generated set.
+* [FrontierPhysics](../papers/2611.06910.md) - evaluates agents on end-to-end physics research in nine domains, from a PI-style brief through literature, experiments, and a manuscript, with tasks and rubrics authored by the original researchers; the best configuration passes 46 of 168 rollouts.
 
 # Synthesis
 
@@ -34,6 +35,8 @@ AutoScientists emphasizes decentralized team organization for sustained experime
 HexaAnything's PhyBench moves this topic from computational experiments to *physical* ones, still in simulation. The agent must operate apparatus with a robot arm, read instruments from camera images, record each measurement with the condition that produced it, and fit a model in code, so a manipulation slip becomes a measurement error rather than a failed step. Its tasks have known reference values hidden from the agent, which makes accuracy checkable in a way open-ended discovery systems cannot offer, but the experiments are textbook physics with prescribed apparatus rather than open research questions.
 
 AutoSciBench takes the evaluation role ASI-Bench and SWE-bench Science play, but automates building the evaluation. Its tasks share PhyBench's hidden-reference design (an exact answer the agent must recover from data), and its target failure is interpretation rather than ASI-Bench's operationalization: refinement rewrites the data so that a direct reading of one intermediate output no longer gives the answer, for example by adding sequencing errors to UMI barcodes, so the agent must check intermediate results against the raw data. Its weak point is the one this topic's discovery systems also face, trust in the reference itself: answers are computed by the generating model, often on simulated data, and no domain expert checks them.
+
+FrontierPhysics joins ASI-Bench and AutoSciBench as outside measurement, and its tasks come from contributors' real projects rather than generated problems, with rubrics written by the people who did the work. Its audit locates failures where this topic's systems mostly do not aim: agents usually know the physics but validate against their own assumptions and miss what an expert would check first, such as Rydberg decay as an error source. That is one configuration's profile, GPT-6 Astra, so it is a hypothesis for other models rather than a finding about them. PhyBench and FrontierPhysics both test physical reasoning, but PhyBench simulates a laboratory for an embodied agent, whereas FrontierPhysics runs in compute sandboxes, with any apparatus simulated as software, as in its Rydberg example (reader comparison).
 
 # Open Questions
 
@@ -46,3 +49,4 @@ AutoSciBench takes the evaluation role ASI-Bench and SWE-bench Science play, but
 * ASI-Bench's main results explicitly exclude external tool access — would AutoScientists', Arbor's, or EurekAgent's own designs (each of which grants agents tool and environment access as a core mechanism) close a meaningful share of the B1→B2 operationalization gap ASI-Bench measures, or does that gap persist even with tools?
 * AutoSciBench generates scientific-analysis tasks whose reference answers come from the generating model's own code. Could the discovery systems in this topic (AutoScientists, Arbor, EurekAgent) be evaluated on such generated tasks without inheriting the generator's errors, and what independent check (expert review, a second analysis pipeline, real rather than simulated data) would a generated scientific task need before its answer counts as ground truth?
 * EvoScientist's evolution memory is driven entirely by outcome-level comparisons (win/lose judgments, execution success/failure) rather than any mechanism for abstracting *why* a direction succeeded or failed into a generalizable claim — would grounding its ideation- and experimentation-memory updates in ASI-Bench-style progressive-guidance-withdrawal probes, or in Arbor's held-out hypothesis admission criteria, produce more transferable distilled knowledge than EvoScientist's own LLM-judged feasibility summaries?
+* FrontierPhysics finds rigor and expert intuition limit agents more than physics knowledge. Can the discovery systems here be scored against its tasks, and would their verification loops change the rigor share, given that its most common example is checking against the agent's own wrong assumption?

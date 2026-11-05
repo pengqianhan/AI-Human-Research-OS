@@ -22,6 +22,7 @@ SkillsBench (Li et al., 2026) measures whether Agent Skills, structured packages
 * [Atria Dawn](../papers/2609.15818.md) - one of the 12 General Agentic Intelligence benchmarks in its model table, where it places second within 2 points of the top reported score, using scores from the official release website.
 * [CompoWorld](../papers/2609.33665.md) - run with OpenHands and skills (Avg@3); training on composed environments adds 15.19 points over the backbone, peaking at 45.13 with 1K SFT examples and falling to 40.91 at 3K.
 * [ToolSpace](../papers/2611.05036.md) - one of seven evaluation benchmarks: Qwen3.6-35B-A3B from 30.7 to 42.4 (45.3 with RL) and GLM-5.2 from 56.7 to 67.8; 8B models stay at about 4 or below.
+* [FrontierPhysics](../papers/2611.06910.md) - runs on the same BenchFlow CLI that SkillsBench uses.
 
 # Notes
 

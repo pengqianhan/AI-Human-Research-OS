@@ -9,7 +9,7 @@ tags:
 - benchmarks
 - agent-benchmarks
 - long-horizon-tasks
-timestamp: 2026-10-16T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,8 @@ Agents' Last Exam (Sun, Han, Zhang, and others, arXiv:2606.05405, 2026) evaluate
 * [CompoWorld](../papers/2609.33665.md) - one of eight evaluation benchmarks, run in Claude Code; compositional environment scaling adds 5.82 points over the backbone.
 * [MiMo-V2.6](../papers/2610.11959.md) - one of its agentic benchmarks; MiMo-V2.6-Pro ties the best frontier figure at 31.6.
 * [RecreationWorld](../papers/2609.22000.md) - cited, with EdgeBench, as another line of long-horizon verifiable-task evaluation.
+* [Hybrid Computer Use](../papers/2610.41432.md) - cites ALE's GUI-as-Tool setup as a precedent for placing GUI interaction inside a general agent.
+* [FrontierPhysics](../papers/2611.06910.md) - cited as a research-level benchmark.
 
 # Notes
 

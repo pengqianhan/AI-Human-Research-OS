@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - gui-computer-use-agents
 - agent-harness-engineering
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -28,6 +28,7 @@ OSWorld evaluates computer-use agents on long-horizon, open-ended tasks executed
 * [OpenGCUA](../papers/2610.22200.md) - the 82-task offline subset of OSWorld-v2 v2.1 (26 internet tasks excluded) for all comparisons, scored by mean partial score and full success with the latest attempt per task kept; its full design lifts eight frozen models from 45.3 to 64.9 mean partial score (GPT-6 Astra 67.1 to 75.7, GLM-5.3-Flash 29.6 to 64.9) against batched GUI-only actions.
 * [MAI-Gym](../papers/2610.20939.md) - OSWorld-Verified (361 tasks, 100-step limit) is a Task-OOD headline benchmark: MAI-Gym-9B reaches 76.2% from 41.8% for the Qwen3.5-9B base, above UI-Venus-2-9B (70.8%) and within 2.5 points of GPT-5.5; OSWorld 2.0 (108 tasks, 500-step limit) is an Env-OOD test at 3.7 binary and 11.3 partial. Half its 2,000 released tasks are synthesized in OSWorld environments.
 * [CarryOn](../papers/2610.18784.md) - full OSWorld 2.0 set (v2026.08.08, 500 steps, partial and binary scores): its context runtime lifts a reproduced Claude Opus 4.7 (max) baseline from 43.9/15.7 to 49.7/19.4 at 35.9% lower cost per task, and lists published results for seven other configurations from the OSWorld 2.0 paper.
+* [Hybrid Computer Use](../papers/2610.41432.md) - main evaluation: OSWorld 2.0 full set (108 tasks, 0808) at 72.37 Partial with GPT-6 Astra and 35.19 Binary with Claude Opus 5, and OSWorld 1.0 for ablations and a four-model comparison against CUA Driver.
 
 # Notes
 

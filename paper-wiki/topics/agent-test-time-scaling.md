@@ -7,7 +7,7 @@ tags:
 - verification
 - agent-evaluation
 - long-horizon-agents
-timestamp: 2026-10-14T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Scope
@@ -21,6 +21,7 @@ This topic tracks how extra compute at inference time, on a single task, raises 
 * [Mid-Harness](../papers/2609.39982.md) - scales *actions within one trajectory*: samples several candidate actions per step and verifies them before execution at the model-harness boundary, and shows this composes with Best-of-T and Sequential Refine at lower estimated token cost than more trajectories alone.
 * [RSIGame](../papers/2609.39045.md) - scales *development rounds within one task* and measures the scaling curve directly (Figure 3, 40 GameCraft-Bench tasks): under the same per-round budget, Play2Code plateaus or regresses as rounds are added while RSIGame keeps converting rounds into quality, and the gain splits into a local explore-diagnose-improve loop that is volatile on its own and a global monitor that retains the best checkpoint and stops at saturation, matching much longer fixed-budget runs with fewer rounds.
 * [Harness²](../papers/2610.14224.md) - scales *harness edits for one task*: parallel recursion composes from k candidates of each scope and their runs, sequential recursion chains k edit steps; both rise monotonically from k = 1 to 5 on WorkBuddy-Bench Code and Office (parallel 76.5 to 80.8 and 79.5 to 83.4), while per-task revision without probes and retrieval memory gain less or inconsistently.
+* [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - separates *sampling breadth* (K trajectories) from *interaction depth* (T turns per trajectory) in Pass@(K,T), and shows RL's advantage over the base model needs a large T even at k = 8; shrinking T can reverse it.
 
 # Synthesis
 
@@ -32,6 +33,8 @@ Cost reporting differs across the three. Mid-Harness reports idealized parallel 
 
 Harness² adds another lever to this topic's four: compute spent on the harness for this one task. Parallel recursion widens the pool of candidate harnesses and their runs, and sequential recursion deepens a chain of edits, the harness analogue of AREX-2's rounds. Both rise monotonically from k = 1 to 5 on WorkBuddy-Bench, while Harness Scaling (per-task revision without probes) regresses between k = 2 and 3 and ReasoningBank's memory-aware scaling fluctuates. Like LLM-as-a-Verifier and Mid-Harness it ends with a selector over complete outputs, and its failure analysis repeats their lesson that selection is where gains leak: one case picks a 55-point output over a 95-point one. It reports cost as total tokens, a fourth unit beside the three already used here.
 
+What Does Multi-Turn RL Really Improve adds an interaction with training to this topic's levers. More turns per trajectory is worth more to an RL-trained policy than to its base model, and at small T the order can flip, so a budget curve depends on how the weights were trained and not only on the task. This fits AREX-2's finding that training changes how long extra rounds stay productive, though AREX-2 trains on improvement trajectories and this paper on task success (reader connection). Mid-Harness's verifiers are weakest on late, state-dependent steps, which is where the RL policy here gains its edge, so combining them could be complementary or redundant, and no paper here has tested it (reader inference).
+
 # Open Questions
 
 * At a matched token or dollar budget, which lever gives the most success on the same benchmark: more actions per step, more trajectories, more rounds, or more reasoning effort for a single candidate? Mid-Harness lists the last comparison as untested.
@@ -40,3 +43,4 @@ Harness² adds another lever to this topic's four: compute spent on the harness 
 * AREX-2's decomposition into gain per round (r̄) and productive rounds (T*) is defined but not estimated. Can it be measured for verifier-based methods too, so that "keeps improving with budget" becomes a comparable number across papers?
 * RSIGame's development-time scaling depends on a monitor that can compare whole builds without the benchmark's rubric. AREX-2 and Mid-Harness use verifiers tied to the task's own success signal. When no cheap external verifier exists, how much of round-level scaling survives with a proxy monitor, and how should the proxy be audited (RSIGame uses a 20-task free-play study) before its best-checkpoint decisions are trusted?
 * At matched tokens, does editing the harness for a task (Harness²) beat sampling more trajectories under the original harness with the same selector? The paper specifies a Best-of-k baseline but reports no number for it in the text or tables.
+* If RL-trained policies need more turns to show their advantage, does action verification (Mid-Harness) or best-of-T selection recover that advantage at tight budgets, or does it only help policies trained under tight budgets, as BudgetMix does?

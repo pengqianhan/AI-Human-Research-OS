@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-05T00:00:00Z
 ---
 
 # Definition
@@ -39,6 +39,8 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets: coding agents edit a Terminus 2 starter against 10 development instances and are scored on 40 held-out ones; gap closure ranges from -10.0 to 7.7 across five builders, no run differs significantly from its starter, and the unchanged starter's score has a standard deviation of 14.5 points across five evaluations.
 * [FDE-Gym](../papers/2610.22350.md) - Terminal-Bench 2.1 success rates from Vals AI are set beside FDE-Gym delivery scores: models solving up to 88% of its tasks score 0.19 to 0.56 on FDE-Gym, where the leading model resolves 15% of tasks; the paper stresses that success rates and normalized uplift are different quantities.
 * [Into the Unknown](../papers/2610.19159.md) - names Terminal-Bench-Science, whose tasks practicing scientists contribute, as the closest prior benchmark in who sets the bar, but notes its tasks ship with oracle solutions and programmatic tests because each is a workflow the scientist has already run.
+* [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - Terminal-Bench 1.0 with a 50-turn budget checks Pass@K, Pass@T, and the likelihood analysis on a more realistic task.
+* [FrontierPhysics](../papers/2611.06910.md) - Terminal-Bench-Science is a comparison row in its Table 1 (70 tasks, 5 in physics).
 
 # Notes
 
