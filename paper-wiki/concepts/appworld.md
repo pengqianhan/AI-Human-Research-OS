@@ -8,7 +8,7 @@ tags:
 - tool-use
 - coding-agents
 - stateful-environments
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ AppWorld (Trivedi et al., arXiv:2407.18901, ACL 2024) has two parts. The AppWorl
 * [From Evidence to Action (SafeActBench)](../papers/2610.07753.md) - a reference point in its benchmark comparison: stateful, but with no explicit scoring of trajectory checks, pre-action evidence, entity/state binding, result propagation, or investigated non-action.
 * [ActionOPD](../papers/2610.19820.md) - transfer benchmark on 168 Normal and 417 Challenge tasks (one trial, 50 steps): distilled Qwen3 students reach at most 17.9 Normal and 7.7 Challenge TGC, against 84.5 and 74.8 for the DeepSeek-V4-Flash teacher, the largest teacher-student gap in its suite.
 * [CoworkEnv](../papers/2610.24960.md) - cited with τ-bench, TheAgentCompany, and AutomationBench as evaluations of multi-application work, user interaction, and workflow constraints; CoworkEnv's own environments grade tool calls and service audit records.
+* [Harness-S](../papers/2611.04277.md) - main benchmark (320 train, 150 validation, 262 test) for sibling-harness rescue training: Qwen3.5-4B under the base harness rises from 48.98 to 56.87 Avg@3 over plain GRPO, and nearly every mechanism and cost analysis is run here.
 
 # Notes
 

@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Definition
@@ -53,6 +53,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [Into the Unknown](../papers/2610.19159.md) - a GPT-6-Astra agentic judge (Codex harness, four runs, 3-of-4 per-node majority) answers author-verified rubric questions; chosen over Claude-Opus-5.5 for paper-level consistency (86.5% against 57.7% same overall grade on 52 submissions), it agrees with all 41 expert judgments on whether a direction was met but 64% (pooled) on quality and impact, and it is also the best-scoring evaluated agent.
 * [FrontierPhysics](../papers/2611.06910.md) - a reviewer agent in its own sandbox grades trajectories and manuscripts instead of a single LLM call; regrading with Claude Opus 5.5 agrees almost always on GPT-6 Astra but is more lenient on its own family.
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - a GPT-5.6-Sol judge rating each action from 0 to 10 as process reward does not provide consistent supervision, particularly on BFCL.
+* [EvoMemState](../papers/2611.03743.md) - DeepSeek-V4-Flash judges answers where benchmarks need a judge while also building every compared system's memory, with no human-agreement check.
+* [VisSearch-Bench](../papers/2611.04894.md) - both Accuracy and Process Score come from an unnamed semantic judge applying per-task scoring prompts to the final answer, though the main text describes rule-based matching.
 
 # Notes
 

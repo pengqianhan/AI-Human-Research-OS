@@ -7,7 +7,7 @@ tags:
 - agent-permissions
 - on-device-agents
 - user-trust
-timestamp: 2026-10-08T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Scope
@@ -18,10 +18,13 @@ This topic tracks the personal agent as a kind of software: one agent that repre
 
 * [nanoMuse](../papers/2610.08699.md) - defines the personal agent, reads Meta's closed Muse from public documents and a copy of its production prompt with each statement source-tagged, and presents an open counterpart in which every device runs a whole agent behind its own permission gate, devices meet over an optional relay, memory is plain files, and the model is the person's choice; it reports sizes and cost estimates but no capability or safety measurements.
 * [Foundations of Proactive Agents](../papers/2609.37267.md) - evaluates personal agents (a model inside OpenClaw, Claude Code, or Codex) that run alongside a simulated user for several days with access to their messages, documents, and calendar, scoring task capability, when to compute and defer, and how far to proceed without approval.
+* [EvoMemState](../papers/2611.03743.md) - memory for a personal agent kept as traceable facts with source quotes, where later statements supersede earlier ones through typed edges instead of overwriting them, plus a trained policy that decides per request which memories apply; evaluated on single requests after synthetic dialogues, not on agents acting for a person over time.
 
 # Synthesis
 
 The two papers approach the same object from opposite ends. nanoMuse is architecture and governance without measurement: it specifies where the agent runs, what the relay stores, and a fixed-order permission gate, and states that no success rate for its screen-operating "hands" exists yet. Foundations of Proactive Agents is measurement without a deployable system: a simulated multi-day testbed across 23 model-harness configurations. They meet on one design question, how far a personal agent may proceed on its own. nanoMuse answers it with scoped grants the person can read and revoke (once, this conversation, always for a named target; payments and passwords never remembered) and an interrupt bar the person can move. Foundations of Proactive Agents measures the cost of getting it wrong: one misaligned intervention costs more trust than an aligned one restores. Neither paper studies real people over weeks, and nanoMuse's grants have not been tested against the intervention-depth preferences the other paper measures.
+
+EvoMemState adds a measured memory design to a topic whose other papers are about architecture and about evaluating action. nanoMuse keeps memory as plain files the person can read; EvoMemState keeps every extracted fact with its source turn and an evidence quote and records later changes as typed edges instead of edits, which keeps a person's history auditable in a similar spirit (reader comparison). Its results come from single requests after synthetic dialogues, not from an agent acting for a person over days, so whether explicit supersession helps a deployed personal agent, and how a person would inspect or correct the states it keeps, remains untested.
 
 # Open Questions
 
@@ -30,3 +33,4 @@ The two papers approach the same object from opposite ends. nanoMuse is architec
 * Can scoped, revocable grants be learned from a person's approvals without the agent widening its own permissions, and does that match the intervention depth people prefer?
 * What evaluation, run on real devices, would measure screen-operating personal agents on success, take-over frequency, and refusal of harmful steps together?
 * Who should hold the shared parts (a relay, synced conversation text, training data from opted-in chats), and what defaults are acceptable for training on personal conversations?
+* When a personal agent keeps superseded and disputed facts instead of deleting them, how should the person see and correct those states, and does showing them change what the person trusts the agent to do?

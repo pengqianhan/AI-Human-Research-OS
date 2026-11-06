@@ -7,7 +7,7 @@ tags:
 - harness-evolution
 - coding-agents
 - repository-understanding
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Scope
@@ -67,6 +67,7 @@ This topic tracks work on the executable software layer around a foundation mode
 * [Self-HPO](../papers/2610.22791.md) - alternates harness search, with the policy under training as the proposer, and GRPO under the selected harness, drawing the next search set from tasks the policy never solved during RL. With Qwen3.5-35B-A3B and mini-SWE-agent the average resolve rate over three SWE-bench variants rises from 57.8% to 64.8% (RL alone 61.9%, harness search alone 60.1%); the evolved harnesses add budget warnings, submission guards, and a patch fallback in `step()`.
 * [OpenVLHarness](../papers/2610.26860.md) - a training-free multimodal harness of backend-independent capability interfaces with per-tool evidence renderers, plus a per-query registry of image, data, and URL handles that later tools and generated code reuse; it adds 9.7 to 12.6 average points across 22 benchmarks and backbones, and chooses between harness search and tool generation by failure profile.
 * [Hybrid Computer Use](../papers/2610.41432.md) - an interface layer rather than a loop: AX and GUI tools over MCP with action guards and one usage skill attach unchanged to Codex, Claude Code, Gemini CLI, and Grok Build, with no planner or subagents, and improve score and cost over CUA Driver on Linux, macOS, and Windows benchmarks.
+* [Harness-S](../papers/2611.04277.md) - evolves 19 sibling harnesses from one base and keeps them all because each repairs different failures, then uses them only to rescue tasks where every base-harness rollout fails; the trained policy, run back under the base harness, beats plain GRPO, resampling, fixed mixtures, Meta-Harness, and reimplemented WHALE and HarnessForge on AppWorld, SWE-Gym, and DBBench.
 
 # Synthesis
 
@@ -104,6 +105,8 @@ OpenVLHarness brings the topic's design questions to multimodal tool use and sep
 
 Hybrid Computer Use isolates one harness component, the tool interface, and shows how much it can move on its own: 55.36% lower cost and 3.29 more points on OSWorld 1.0 with GPT-5.4, against a baseline with the same programmatic tools. Input tokens fall by almost the same share as cost (56.85%), which points to compact views and fewer separate observations as the source of the saving (reader inference). It is also an example of tool outcomes returned with the action, in line with OpenVLHarness's per-tool evidence renderers (reader connection). Its GUI vocabulary test gives a small harness-level finding that may generalize: each model did best with the action names it natively expects (Claude Opus 5.5 +0.82, GPT-5.4 +2.03), and convention errors fell accordingly.
 
+Harness-S turns the output of harness search into training support instead of a deployed artifact. It evolves 19 siblings of one base harness and keeps every valid one, because each repairs different failures, then calls them only when all base-harness rollouts on a task fail, so the policy learns from their successes and is evaluated without them. That differs from Self-HPO, which alternates harness search and RL and deploys the co-evolved pair, and it shares a finding with Recursive Self-Rewrite: the union of several harnesses solves more tasks than any one, and the gain can be moved into weights (reader comparison). Its measurements of locality (an edit repairs some tasks and breaks others) and nonstationarity (a sibling's advantage over the base harness can reverse as the policy trains) also bear on single-harness optimizers such as Meta-Harness: a harness tuned against one checkpoint may stop being best after the next update. The evidence is mostly AppWorld at 4B, and nearly all Table 1 means sit on single-run granularity (reader check).
+
 # Open Questions
 
 * How should agent-visible behavior be mapped to code when runtime dispatch, generated code, or external services defeat static analysis?
@@ -140,3 +143,4 @@ Hybrid Computer Use isolates one harness component, the tool interface, and show
 * Self-HPO's final harness and policy are each worth about 3.5 points alone and 8.5 together on SWE-bench Verified. Should harness papers report harness-policy cross-evaluations as a standard table, and how fast does a tuned harness lose value as its policy keeps training?
 * OpenVLHarness routes each domain to harness search or tool generation from a failure critique's remedy profile. Would the same routing help the coding and computer-use harness optimizers here, which search over text and code edits together?
 * Hybrid Computer Use's native-vocabulary effect is small but consistent across two models. Should tool schemas adapt to the model behind them, and do benchmark comparisons across vendors currently understate models whose calling conventions differ from the harness's?
+* Harness-S's siblings mostly add reminders, rules, and hooks. Do behaviors elicited by tool-level changes (a new API view or action space) also transfer into a policy that later runs without them, or only procedural habits such as paginating, checking schemas, and reading back after writes?

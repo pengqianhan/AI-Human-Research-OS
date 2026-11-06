@@ -8,7 +8,7 @@ tags:
 - information-seeking
 - web-agents
 - multi-hop-reasoning
-timestamp: 2026-07-21T22:58:23Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ Format-specific metrics help distinguish finding one fact from enumerating a com
 # Papers
 
 * [SearchOS-V1](../papers/2607.15257.md) - evaluates whether relational coverage and shared search state improve completeness across all four GISA formats.
+* [VisSearch-Bench](../papers/2611.04894.md) - cited for set, list, and table answers and human search trajectories.
 
 # Notes
 

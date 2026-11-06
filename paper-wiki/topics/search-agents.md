@@ -7,7 +7,7 @@ tags:
 - information-seeking
 - web-agents
 - reinforcement-learning
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Scope
@@ -27,6 +27,7 @@ This topic tracks agents whose core task is searching external sources (the live
 * [Mosaic](../papers/2610.22174.md) - trains a Qwen3.5-4B search agent (search and visit tools) for trajectories longer than one context: with compaction it reaches 38.86 on BrowseComp at 2.35 sessions per question, against 35.31 for broadcast multi-session RL and 34.68 for single-session GRPO run with compaction.
 * [OpenVLHarness](../papers/2610.26860.md) - a training-free multimodal harness whose text search, image search, and webpage-visit tools (Serper, summarized by Qwen3-VL-8B, with reusable URL handles) lift six visual search and deep-research benchmarks, for example MMSearch-Plus from 27.97 to 53.70 and BrowseComp-VL from 46.12 to 63.91 with GPT-6 Astra.
 * [Axion 1.0](../papers/2611.03233.md) - tool-dependent training questions built by filter-select-compute programs over structured databases withheld from the solver, with closed-book-solvable ones removed; SEAL-0 goes from 44.1 to 62.2 at 35B, half of the gain from RL with partial credit for verified intermediate targets.
+* [VisSearch-Bench](../papers/2611.04894.md) - evaluates searching multimodal agents on tasks that link visual evidence across images, objects, and steps: ReAct lifts every backbone above direct answering, the best reaches 26.47%, set-wise tasks stay at or below 11.76%, and direct image inspection beats captions.
 
 # Synthesis
 
@@ -44,6 +45,8 @@ OpenVLHarness is the first entry here that is neither trained for search nor tex
 
 Axion 1.0 builds search tasks differently from the rest of this topic. A program fixes the answer and an ordered chain of intermediate targets before an LLM phrases the question, and the source database is blocked during solving, so the facts must be recovered from the open web; questions answerable closed-book are removed. The chain gives RL a partial reward that does not rest on a judge reading a whole report, although an LLM still judges equivalence for some targets, and a later target counts only if all its prerequisites passed. Its domains are those with clean structured records (biology, chemistry, mathematics, geography, aviation), so whether this carries over to table-style or report-style outputs is untested (reader observation). The SEAL-0 scores are best single runs on what appear to be 111 questions (reader inference), and the 122B model scores below the 35B model there (58.6 against 62.2).
 
+VisSearch-Bench carries the topic's breadth question into images. Its set-wise family, where an agent must check a visual property for every item in a set, is the hardest (at most 11.76% accuracy), the visual counterpart of WideSearch's item-level completeness. Its visual-access ablation gives a measured answer to whether captions can stand in for images: direct inspection wins for all three backbones tested, though only by 2 to 7 of 204 tasks in single runs, while dropping image tools costs up to 10.29 points. The Qwen3.5-397B-A17B base that Iris trains into a text search agent solves 15.69% here with plain ReAct (reader connection).
+
 # Open Questions
 
 * SearchOS's shared-state coordination and WideSeek-R1's trained multi-agent coordination both address the same context-pollution/serial-execution problem for broad search — does combining durable, system-maintained state (SearchOS's approach) with jointly-trained orchestration (WideSeek-R1's approach) outperform either alone, or does trained coordination make explicit state tracking partly redundant?
@@ -58,3 +61,4 @@ Axion 1.0 builds search tasks differently from the rest of this topic. A program
 * Mosaic gains less from multi-session training with subagent forking than with compaction. For search agents that parallelize through subagents, is that a limit of crediting a fork by its immediate information gain, or a sign that a 4B model already gets most of what forked search can give?
 * OpenVLHarness gains most where the bare model cannot search. If its no-tool and Codex baselines got the same Serper tools through a plain interface, how much of the gain on BrowseComp-VL and MMSearch-Plus would remain, and how would it do on HyperBrowseComp's video, scan, and map evidence?
 * Axion 1.0's chained partial credit rewards verified intermediate targets. Does it improve on outcome-only rewards for search RL, and what happens when a question can be answered by a route other than the construction program's chain?
+* Set-wise visual search fails mostly at aggregation, not at single judgments. Would the shared coverage records that SearchOS-V1 keeps for text search raise complete-set accuracy here, or does holding many images in context remain the bottleneck?

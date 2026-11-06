@@ -8,7 +8,7 @@ tags:
 - information-seeking
 - web-agents
 - table-completion
-timestamp: 2026-07-21T22:58:23Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Its item-level metrics score cells independently, while row-level metrics requir
 
 * [SearchOS-V1](../papers/2607.15257.md) - uses WideSearch for its main table-completion results and its schema, scheduling, middleware, and skill analyses.
 * [WideSeek-R1](../papers/2602.04634.md) - main evaluation benchmark; WideSeek-R1-4B leads 5 of 6 metrics among 4B/8B baselines and reaches an item F1 comparable to single-agent DeepSeek-R1-671B at roughly 170x fewer parameters.
+* [VisSearch-Bench](../papers/2611.04894.md) - cited for large-scale gathering with item-level checks, which its set-wise family brings to visual search.
 
 # Notes
 

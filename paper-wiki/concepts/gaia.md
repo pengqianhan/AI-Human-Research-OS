@@ -8,7 +8,7 @@ tags:
 - general-assistant-agents
 - web-browsing
 - tool-use
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ GAIA (Mialon et al., 2023) proposes real-world questions that need reasoning, mu
 * [ContextPilot](../papers/2608.28476.md) - the text-only subset (103 examples, pass@1) among its deep-search evaluations.
 * [OpenHands](../papers/2407.16741.md) - one of 15 existing benchmarks integrated into the platform.
 * [HyperBrowseComp](../papers/2610.03574.md) - cited among web-browsing and search benchmarks that it extends with multilingual and multimodal evidence.
+* [VisSearch-Bench](../papers/2611.04894.md) - cited for multi-step reasoning and tool use in realistic tasks.
 
 # Notes
 

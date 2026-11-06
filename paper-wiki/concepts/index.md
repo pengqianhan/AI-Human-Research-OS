@@ -42,6 +42,8 @@
 * [LOCA-Bench](loca-bench.md) - Controllable context growth for agents: mock MCP environments scale from 8K to 256K of reachable information with task semantics fixed, scored by final-state evaluators.
 * [LoCoMo](locomo.md) - Very-long-term conversational memory benchmark spanning single-hop, multi-hop, open-domain, and temporal reasoning.
 * [LongMemEval](longmemeval.md) - 500-question, six-category benchmark for long-term interactive memory in chat assistants.
+* [MemSyco-Bench](memsyco-bench.md) - Five-task benchmark of memory-induced sycophancy: when a retrieved memory should influence an answer and how valid memory should be used.
+* [MemTrapBench](memtrapbench.md) - Benchmark of memory-induced cognitive traps (Reasoning Fixation and Belief Distortion), where accurate, relevant memories degrade reasoning on the current task.
 * [Meta-Harness](meta-harness.md) - Outer-loop optimization of executable agent-harness code by an agentic proposer reading past candidates' code, scores, and traces; the common baseline for automated harness evolution.
 * [mini-swe-agent](mini-swe-agent.md) - Minimal Bash-interface coding-agent harness from the SWE-agent line, used as a neutral scaffold, shared baseline harness, held-out transfer harness, and skeleton.
 * [MLE-Bench Lite](mle-bench-lite.md) - Lighter subset of MLE-Bench for Kaggle-derived ML-engineering agent evaluation.
@@ -57,6 +59,7 @@
 * [PinchBench](pinchbench.md) - Practical productivity and data-analysis tasks for LLMs running as OpenClaw agents, each scored from 0 to 100.
 * [ProgramBench](programbench.md) - 200 program-reproduction tasks: rebuild a program's observable behavior from an execute-only reference binary and its documentation, scored by black-box test pass rates.
 * [Ralph loop](ralph-loop.md) - Relaunching an agent on the same workspace each time it stops until a completion criterion is met, judged by the agent itself or by a separate reviewer.
+* [ReAct](react.md) - Interleaved reasoning traces and environment actions in one loop; the default minimal agent scaffold and single-agent baseline.
 * [Reflexion](reflexion.md) - Verbal self-reflection for language agents: lessons written after each attempt are kept in an episodic memory and guide later attempts, with no weight updates; a standard baseline for learning from experience in context.
 * [Reward hacking](reward-hacking.md) - An agent or policy raising its measured reward or benchmark score by exploiting the grader, environment, or evaluation channel instead of accomplishing the intended task.
 * [Rollout Routing Replay (R3)](rollout-routing-replay.md) - Records expert routing during RL rollouts and replays it in training, so mixture-of-experts models stay consistent between inference and update.
@@ -68,6 +71,7 @@
 * [SpreadsheetBench](spreadsheetbench.md) - Forum-derived spreadsheet-manipulation tasks judged by producing the expected result on several test workbooks; SpreadsheetBench II extends it to end-to-end business workflows.
 * [SWE-bench Pro](swe-bench-pro.md) - Enterprise repository-level software-engineering benchmark spanning multiple real codebases.
 * [SWE-bench Verified](swe-bench-verified.md) - Human-validated subset of SWE-bench for repository-level issue resolution.
+* [SWE-Gym](swe-gym.md) - 2,438 real Python repository tasks with executable runtimes and unit tests for training software-engineering agents and verifiers.
 * [Terminal-Bench](terminal-bench.md) - Benchmark suite for evaluating AI agents on hard, realistic tasks in command-line environments.
 * [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
 * [ToolSandbox](toolsandbox.md) - Stateful, conversational tool-use benchmark scored against ordered milestones, reported in this wiki on scenario subsets with a similarity metric.

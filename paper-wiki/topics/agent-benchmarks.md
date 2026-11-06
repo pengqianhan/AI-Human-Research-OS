@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Scope
@@ -32,6 +32,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [Into the Unknown](../papers/2610.19159.md) - 15 unpublished follow-up directions proposed by the original papers' authors, graded by author-verified integrity and direction rubrics with an agentic judge; none of 135 submissions from nine frontier agents is valid, and 114 fail the integrity check.
 * [ToolSpace](../papers/2611.05036.md) - upgrades existing benchmarks by linking their real tool calls to outside tools through witnessed data and state relations, walking longer chains, and reverse-generating tasks with assertion checks; three experts review them (κ = 0.82), and seven frontier models fall by up to 38.2 points on AutomationBench Pro and 25.6 on τ³-Bench Banking Pro.
 * [FrontierPhysics](../papers/2611.06910.md) - 56 physics research tasks written by the researchers who did the work, passed only through a deterministic verifier and blocker rubrics graded by a reviewer agent; the best of 26 configurations passes 27.4% of rollouts, and an expert audit of one configuration finds nine false failures of 168.
+* [VisSearch-Bench](../papers/2611.04894.md) - 204 human-built multimodal open-web tasks in five families with reference answers, gold trajectories, and per-task rules for complete-answer Accuracy and partial-credit Process Score; across 16 models and two frameworks the best system solves 26.47% in one Pass@1 run.
 
 # Synthesis
 
@@ -61,6 +62,8 @@ ToolSpace offers a way to raise the difficulty of an existing benchmark rather t
 
 FrontierPhysics puts numbers on a question most benchmarks here leave open: how wrong is the grader? Reading all 168 GPT-6 Astra rollouts moves that configuration from 14.9% to 20.2%, a larger change than the gap between some leaderboard positions. A second reviewer agent agrees on almost all of those decisions but is more lenient on its own model family, and human reference manuscripts average 96.2% on the rubrics. The limit is coverage: only one configuration got this reading, so the correction is not applied evenly across the table it reports (reader observation). Its gate design also separates what several benchmarks here blend into one score: non-blocker quality cannot rescue a failed verifier or blocker, and a correct but weak manuscript passes with a low score.
 
+VisSearch-Bench shows why a strict metric and a partial-credit metric are both needed: GPT-5.5 with ReAct has the best Process Score (49.52) while Kimi-K3 with ReAct solves the most tasks (26.47%), and on set-wise tasks Process Score reaches 44.10 against 8.82% accuracy. Its partial credit is read from the final answer, not the trajectory, so direct answers with no search still earn up to 22.61, which makes it a measure of stated intermediate results rather than of evidence actually found (reader observation). Like several benchmarks here, it rests on one run per system and an unnamed LLM judge, and its top two agents are two tasks apart.
+
 # Open Questions
 
 * When does grading one next turn at a recorded decision point agree with executing the agent to the end? TraceDance's authors note that a planning-first response may act well later, and no paper here yet measures that gap.
@@ -82,3 +85,4 @@ FrontierPhysics puts numbers on a question most benchmarks here leave open: how 
 * Into the Unknown's judge is also its top agent. Should agentic benchmarks measure a judge's agreement with experts on submissions from every evaluated model family, including the judge's own, before publishing a leaderboard?
 * ToolSpace's Pro splits include assertions on intermediate snapshots from one reference walk. How much of the score drop survives with final-state checks only, and how should an upgraded benchmark report that alongside its base version?
 * FrontierPhysics measures reviewer leniency for Claude Opus 5.5 on its own family, while its main results all come from a GPT reviewer. How large is same-family leniency when measured in both directions, and do leaderboards that use one vendor's model as grader need a cross-family correction?
+* VisSearch-Bench's Accuracy and Process Score disagree on the best system. Should leaderboards with partial credit rank by the strict metric, the partial one, or both, and how stable are such rankings across repeated runs?

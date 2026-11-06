@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Scope
@@ -45,6 +45,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [Axion 1.0](../papers/2611.03233.md) - two SFT stages then GRPO, with no mid-training, DPO, or OPD: strengthened science problems, database-built tool-dependent questions, and a reward with partial credit for verified intermediate targets. HLE-130 goes 47.7, 59.2, 66.2, 70.0 across checkpoints at 35B, while on SEAL-0 RL adds as much as both SFT stages together.
 * [ToolSpace](../papers/2611.05036.md) - SFT on 34,376 tasks decompiled from witnessed tool walks lifts Qwen3.6-35B-A3B from 23.0 to 41.0 over seven tool benchmarks; 48 steps of GRPO on 653 screened tasks add 2.2, mostly on τ³-Bench Banking.
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - evaluates GRPO, GiGPO, and PPO on Qwen3-4B and 8B across Pass@(K,T): gains depend on a sufficient turn budget and plain GRPO falls to or below the base model at 25% of it, actions are not better per step but are better after errors and later in a trajectory, and BudgetMix RL, which samples the budget during training, adds 7.5, 5.3, and 4.0 points at tight budgets.
+* [Harness-S](../papers/2611.04277.md) - replaces GRPO groups where all eight base-harness rollouts fail with fresh rollouts of the same policy under eight router-chosen sibling harnesses; at 4B on AppWorld this lifts base-harness Avg@3 from 48.98 to 56.87 with 18.44% more rollouts, above resampling under the base harness with 41.25% more.
 
 # Synthesis
 
@@ -83,6 +84,8 @@ Axion 1.0 and ToolSpace add two stage-by-stage accounts to this topic's question
 
 What Does Multi-Turn RL Really Improve questions the single number this topic usually reports. Its trained models pass the base model's Pass@K boundary at full budget, yet at 25% of the budget GRPO is at or below the base model on all eight model-task pairs in its main table, and on DeepCoder-MT trajectory reward rises 0.331 during training while step reward falls 0.097. Taken with One to More, More to One, where pooled RL hides a category see-saw, it adds a second dimension that an aggregate score can hide (reader connection). The credit-assignment line here (GiGPO, SLCA-GRPO) would predict that better step signals fix this, and the paper supports that only where a signal is reliable: oracle Q-values and GiGPO stabilize FrozenLake, while GiGPO and PPO do not help on BFCL, DeepCoder-MT, or InterCode-SQL. BudgetMix goes around the signal problem by changing what is sampled. Its evidence is small models without reported spreads, and because the budget is printed in the prompt, the gain may be partly learning to read the limit (reader observation).
 
+Harness-S works on the same all-failure groups that dynamic sampling in DAPO discards. Instead of dropping them or resampling in the same context, it changes the execution context and lets the same policy try again under eight sibling harnesses, keeping the new group when any attempt succeeds. Resampling under the base harness with more rollouts (3,616 against 3,032) scores lower on AppWorld, which points to the context change, not the extra samples, as the source of the mixed groups. Its rescued trajectories are on-policy but generated with help the deployed policy will not have, which makes the method closer to learning with privileged information than to plain RL (reader observation). The gains are uneven across metrics: on SWE-Gym, Pass@3 rises 14.37 points at 4B but Avg@3 only 6.25, so the policy finds a fix in one of three attempts more often without becoming reliable (reader calculation).
+
 # Open Questions
 
 * Does evolution strategies' reported horizon-dependent advantage over policy-gradient RL hold on frontier-scale models and real (non-controlled) long-horizon tasks, not just the paper's controlled Sudoku crossover?
@@ -112,3 +115,4 @@ What Does Multi-Turn RL Really Improve questions the single number this topic us
 * Axion 1.0's RL gain matches its SFT gain on SEAL-0 but is much smaller on HLE-130, and ToolSpace's RL gain falls mostly on one benchmark. What property of a test predicts RL's share, and does the pattern hold once run-to-run spreads are reported?
 * Axion 1.0 omits mid-training, DPO, and OPD without testing them. On one base model and dataset, what does adding each one back contribute?
 * BudgetMix prints the remaining budget in the prompt and also varies it in training. How much of its tight-budget gain survives if the budget is varied but hidden, or shown but not varied, and does the effect hold on frontier-scale models?
+* Harness-S trains on rollouts produced under contexts the deployed policy never sees. Compared with a matched-context control (the same number of mixed groups drawn under the base harness), how much of its gain comes from the sibling harnesses' behaviors and how much from simply having fewer all-failure groups?

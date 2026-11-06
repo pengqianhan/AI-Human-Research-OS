@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-06T00:00:00Z
 ---
 
 # Definition
@@ -40,3 +40,5 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [Axion 1.0](../papers/2611.03233.md) - asynchronous GRPO with eight rollouts per question after two SFT stages; the reward is 1 for a correct answer, otherwise partial credit for chained verified targets minus a non-submission penalty, and a task is kept only if, in four offline samples, one is correct and the rewards vary.
 * [ToolSpace](../papers/2611.05036.md) - 48 steps of fully asynchronous GRPO (group size 16, binary execution-based reward) on 653 tasks screened to those with one or two correct rollouts in 16; adds 2.2 to the 35B average, mostly on τ³-Bench Banking.
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - primary algorithm: on Qwen3-4B and 8B it gains at full budget but falls to or below the base model at 25% of the turn budget, and BudgetMix samples the budget per task group.
+* [Harness-S](../papers/2611.04277.md) - the shared optimizer (clipping 0.20 and 0.28, no KL term); Harness-S changes only which trajectories fill a task's group, replacing all-failure groups with rollouts under sibling harnesses.
+* [EvoMemState](../papers/2611.03743.md) - trains a Qwen3-4B policy (G = 8) to write memory-use rules, rewarded by a frozen answer model's score with the rules minus its score without them.
