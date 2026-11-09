@@ -7,7 +7,7 @@ tags:
 - prompt-optimization
 - agent-harness-engineering
 - agent-self-evolution
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ GEPA (Agrawal et al., "GEPA: Reflective Prompt Evolution Can Outperform Reinforc
 * [Context Language Models](../papers/2609.37725.md) - reuses GEPA's reflective prompt-evolution loop (Agrawal et al., 2026) to evolve context-management *skill documents* for a self-editing model: rollouts on a training split, a proposer writes candidate skills from the traces, selection on a dev split, one final held-out evaluation; with Claude Fable 5.1 proposing for Qwen3.6-27B (assisted) or Opus 5 as both agent and proposer (self-evolution), the evolved skills expand the accuracy-versus-compute Pareto frontier on ContextBench, up to +35.9 held-out points on KV Store.
 * [Self-evolving Agent Harness](../papers/2610.18813.md) - cited first among methods that revise prompts from empirical feedback around a fixed model, an interpreted-state update in its taxonomy rather than an executable revision.
 * [Harness-S](../papers/2611.04277.md) - cited for keeping complementary candidates on a Pareto frontier, the single-system counterpart of its sibling-harness pool.
+* [Beneath the Surface](../papers/2611.07624.md) - one of four audited harness-evolution methods, with per-task Pareto selection and a validate filter; reliability improves with MiniSWE but falls with Codex on both benchmarks.
 
 # Notes
 

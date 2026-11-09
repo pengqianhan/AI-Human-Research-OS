@@ -27,6 +27,7 @@
 * [LLM agents](llm-agents.md) - Papers about language-model agents, skills, verification, and autonomous task execution.
 * [LLM surrogate models](llm-surrogate-models.md) - Papers about using LLMs as predictive surrogates that forecast outcomes instead of generating or acting directly.
 * [Long-context reasoning](long-context-reasoning.md) - Papers about processing and reasoning over inputs that exceed, or degrade within, a model's usable context window.
+* [Model routing and handoff in agents](agent-model-routing.md) - Papers about dividing one agent task between models of different cost and capability, by routing, mid-task handoff, or role assignment, and when that saves cost without losing accuracy.
 * [Multi-agent systems](multi-agent-systems.md) - Papers about multiple agents coordinating work, state, and reasoning.
 * [Personal agents](personal-agents.md) - Papers about agents that act for one person across their accounts, devices, and files over weeks, and about where they run, what they remember, how their actions are approved, and who governs them.
 * [Post-training feedback](post-training-feedback.md) - Papers about the signals used to post-train language models when no verifier exists, and what those signals discard.

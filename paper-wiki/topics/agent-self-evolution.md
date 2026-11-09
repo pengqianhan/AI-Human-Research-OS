@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Scope
@@ -51,6 +51,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [Seeing, Maintaining, and Learning](../papers/2610.19366.md) - a memory survey that draws a line this topic can use: rewriting records, keys, or skill descriptions under a fixed rule is memory updating (T2); self-evolution (T3) requires feedback to persistently revise the policy that writes, maintains, or retrieves memory, validated on later cases. Only 17 of 297 multimodal memory architectures qualify, all with explicit memory.
 * [Self-evolving Agent Harness](../papers/2610.18813.md) - two lifecycle requirements for self-evolution (revisions built from the system's own execution feedback with the update mechanism kept, and accepted revisions loaded in later runs), a rule that fixed-rule compaction or log appends do not count, and a mapping of skill and harness optimizers to evolutionary-search structures such as elitist (1+1), archive-based, and quality-diversity search.
 * [EvoTeam](../papers/2610.39813.md) - post-execution reflectors update team rosters, team-scoped handoff rules, and shared agent skills, all frozen before held-out evaluation, so that lessons from one kind of task do not overwrite another's; updates have no paired validation gate, and the appendix shows learned rules sometimes lowering scores.
+* [Beneath the Surface](../papers/2611.07624.md) - audits AHE, HyperAgents, A-Evolve, and GEPA across two harnesses and two benchmarks: all sixteen evolved Champions gain and lose covered tasks, most reliability gains raise per-trial cost, transfer is selective, and four diagnostic-driven operator revisions (AGE) give the best reliability in all four settings.
 
 # Synthesis
 
@@ -74,6 +75,8 @@ The multimodal memory survey offers a test that most papers here leave implicit:
 The Self-evolving Agent Harness paper gives this topic a scope test from a different side than the multimodal memory survey. The survey asks whether the rule that manages memory changes (its T2/T3 line); this paper asks whether a change is built from the system's own feedback, keeps the ability to change again, and loads in a later run. Both exclude compaction or log appends under fixed rules. Its mapping places SkillOpt, SkillOpt-Lite, and SkillClaw under elitist (1+1) search and HarnessBank under quality-diversity search. That explains a weakness the skill loops here share: each acceptance rests on one comparison between an incumbent and a candidate, and the paper's admission margin shows how large an independent validation set that comparison needs before it certifies a gain (reader connection).
 
 EvoTeam adds the question of where an update should live. Most loops in this topic ask whether an update is good; EvoTeam asks how far it should reach. Its case study shows a Meta-Team reflection replacing dozens of accumulated notes with a single one applied to all future tasks, and its remedy confines rule updates to the selected team. That is not a validation gate of the kind EviSkill and the Self-evolving Agent Harness paper examine: updates are accepted by reflection alone, and its appendix reports cases where they lower scores. Scope and gating look complementary (reader connection), because scope limits how far a bad update spreads and a gate stops it earlier. EvoTeam's scope is also partial, since skills and recruitment profiles stay shared, and the paper's own ablation leaves skills in place in every variant.
+
+Beneath the Surface turns the topic's evaluation worries into task-level measurements. Over eight passes, every one of sixteen evolved harnesses both solves tasks its seed could not and fails tasks its seed solved, so a higher score is a net balance, not an accumulation; eight of eleven reliability gains also make each attempt more expensive. Its operator experiments give concrete reasons: the highest-scoring agent is never the one that improves most when expanded, a Champion's useful changes can interfere with each other, and a stricter admission rule throws away the best candidate in most pools. These results come from one evolution run per method on benchmarks whose Train tasks are included in the headline numbers, and AGE, the revised method, is evaluated on the same benchmarks it was designed from (reader observation).
 
 # Open Questions
 
@@ -101,3 +104,4 @@ EvoTeam adds the question of where an update should live. Most loops in this top
 * The multimodal memory survey separates updating memory content (T2) from revising the rule that manages it (T3). For the skill-evolution loops here, which edit skill text under a fixed proposer and gate, is there a measurable difference between evolving the content and evolving the procedure, and does the latter transfer better to new tasks?
 * The Self-evolving Agent Harness places skill-text optimizers in elitist (1+1) search, archive methods in archive-based search, and HarnessBank in quality-diversity search. With model, task pool, and evaluation budget held fixed, does the search structure change how well accepted skills transfer to held-out tasks?
 * EvoTeam limits how far an update spreads, while validation gates such as EviSkill's decide whether to keep it. Does adding a gate to scoped updates remove the cases where EvoTeam's rules lower scores, and at what evaluation cost?
+* Beneath the Surface finds that every evolved harness loses some tasks its seed solved. Would an admission rule that penalizes per-task regressions on a held-out panel reduce this turnover without discarding the best candidates, which its constrained gate did in most pools?

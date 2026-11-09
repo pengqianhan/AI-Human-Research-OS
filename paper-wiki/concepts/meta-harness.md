@@ -6,7 +6,7 @@ resource: https://arxiv.org/abs/2603.28052
 tags:
 - agent-harness-engineering
 - harness-evolution
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -27,6 +27,7 @@ Meta-Harness (Lee, Nair, Zhang, Lee, Khattab, and Finn, arXiv:2603.28052, COLM 2
 * [Self-evolving Agent Harness](../papers/2610.18813.md) - placed among whole-agent and repository-level search, where changes to shared context, scheduling, or recovery can alter unchanged components, and listed under Pareto selection (cost-performance frontiers) in its mapping of harness optimizers to evolutionary-search structures.
 * [Self-HPO](../papers/2610.22791.md) - harness-only baseline with Opus 4.8 as proposer and the same search budget: 69.1% on SWE-bench Verified and 63.5% on average over three SWE-bench variants. HPO, which adds RL updates between searches with the same proposer, reaches 71.6% and 66.3%, and Meta-Harness itself beats SFT on Opus 4.8's trajectories by 8.9 points on average.
 * [Harness-S](../papers/2611.04277.md) - frozen-policy harness-search baseline adapted to a common framework: 48.09 AppWorld Pass@3 at 4B, against 56.87 for Harness-S's frozen-policy sibling pool with per-task routing.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - a harness-optimizer baseline for per-task Harness Primitives, representing methods that select one harness for all tasks.
 
 # Notes
 

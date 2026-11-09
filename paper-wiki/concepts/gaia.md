@@ -8,7 +8,7 @@ tags:
 - general-assistant-agents
 - web-browsing
 - tool-use
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ GAIA (Mialon et al., 2023) proposes real-world questions that need reasoning, mu
 * [OpenHands](../papers/2407.16741.md) - one of 15 existing benchmarks integrated into the platform.
 * [HyperBrowseComp](../papers/2610.03574.md) - cited among web-browsing and search benchmarks that it extends with multilingual and multimodal evidence.
 * [VisSearch-Bench](../papers/2611.04894.md) - cited for multi-step reasoning and tool use in realistic tasks.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - Navigation Primitives (ANTMAN) reach 58.3% on GAIA-Text-103 against 45.6% for iterative sparse retrieval.
 
 # Notes
 

@@ -10,7 +10,7 @@ tags:
 - agent-self-evolution
 - agent-harness-engineering
 - evolutionary-search
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -29,6 +29,7 @@ The Darwin Gödel Machine (Zhang, Hu, Lu, Lange, and Clune, arXiv:2505.22954; IC
 * [Raven](../papers/2609.33439.md) - listed among harness-optimization methods as self-editing code.
 * [Harness²](../papers/2610.14224.md) - cited in its recursive self-improvement related work with STOP and Hyperagents.
 * [Harness-S](../papers/2611.04277.md) - cited for branching from an archive of executable agents, as its directional harness evolution does.
+* [Beneath the Surface](../papers/2611.07624.md) - cited as self-modification that evolves its own coding agent; HyperAgents, an extension of it, is one of the four audited methods.
 
 # Notes
 

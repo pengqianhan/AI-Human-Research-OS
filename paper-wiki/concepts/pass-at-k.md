@@ -6,7 +6,7 @@ tags:
 - metrics
 - test-time-scaling
 - agent-evaluation
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Pass@K is the probability that at least one of K independently sampled attempts 
 * [ToolSpace](../papers/2611.05036.md) - uses Pass@16 as a data filter, keeping RL tasks with one or two correct rollouts in 16.
 * [LLM-as-a-Verifier](../papers/2607.05391.md) - cites a high oracle Pass@K on Terminal-Bench to argue the bottleneck is selecting a trajectory, not generating one.
 * [Harness-S](../papers/2611.04277.md) - reports Pass@3 beside Avg@3; on SWE-Gym its Pass@3 gain over GRPO (14.37 points at 4B) is more than twice its Avg@3 gain.
+* [Beneath the Surface](../papers/2611.07624.md) - reports Avg@8 as reliability and Pass@8 as coverage for evolved harnesses; the two move in opposite directions in four of sixteen lineages.
 
 # Notes
 

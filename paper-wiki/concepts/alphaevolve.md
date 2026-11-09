@@ -8,7 +8,7 @@ tags:
 - evolutionary-search
 - autonomous-research
 - gpu-kernel-optimization
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ AlphaEvolve is an LLM-powered evolutionary coding agent that iteratively propose
 * [PaperGym](../papers/2608.31119.md) - groups AlphaEvolve with DeepScientist under "search-based iterative refinement via evolutionary or Bayesian operators," one of three paradigms for automated-research-capability work, distinguished from PaperGym's own training-driven approach by keeping the base model frozen and bounding output quality by its fixed capacity.
 * [Context Language Models](../papers/2609.37725.md) - takes four AlphaEvolve/OpenEvolve mathematical-optimization problems (circle packing, Heilbronn triangle, min-max/min-distance 2D, Erdős minimum overlap) as open-discovery testbeds and compares a general CLM agent, given the evolutionary algorithm only as in-context guidance, against OpenEvolve and an OpenEvolve-Agent variant with Claude 4.6 Sonnet under 100 scored attempts or five hours; CLM posts the best best-of-run score on all four (e.g., circle packing 2.618 against 2.541, Heilbronn 0.03653 against 0.03127), though the Erdős and min-max margins are small and no variance is reported.
 * [FrontierPhysics](../papers/2611.06910.md) - cited among systems that take on parts of scientific work.
+* [Beneath the Surface](../papers/2611.07624.md) - cited for evolving target programs with executable evaluation feedback.
 
 # Notes
 

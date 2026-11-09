@@ -6,7 +6,7 @@ tags:
 - agent-skills
 - skill-libraries
 - self-evolution
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Scope
@@ -31,6 +31,7 @@ This topic tracks papers that treat agent capabilities as reusable, validated sk
 * [EmbodiedCLBench](../papers/2610.13021.md) - a controlled test of whether writing a skill beats keeping the raw experience: after the same two basic tasks, agents carry either full trajectories or a self-written Markdown skill summary into an unseen composed task; trajectories win in 5 of 8 harness-model pairs and skills in 3, skills shift step-level decisions less, and neither improves with more learning tasks.
 * [Agent-Reflex](../papers/2610.17953.md) - 1,170 reflection skills mined per environment from matched success and failure trajectories of nine models under injected tool errors, each a structured record (trigger, diagnosis, recovery among retry, switch, ask, or abort, reversibility flags); the library is used only to generate and distill training signal and is absent at inference.
 * [Hybrid Computer Use](../papers/2610.41432.md) - one hand-written usage skill for a desktop interface, distilled from development mistakes, measured by ablation over 2,166 traces: malformed-argument rejections fall from 17.37% to 1.36%, default diff feedback rises from 0.2% to 87% of AX action calls, steps fall 14.55%, and score rises 1.59 points.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - libraries of 25,519 Tool Primitives, 1,424 tested Code Primitives, and 82 Lean-checked proof-method contracts, each unit carrying a resident LLM that applies it; new or improved units enter only after domain validation on a path separate from task execution.
 
 # Synthesis
 
@@ -46,6 +47,8 @@ EmbodiedCLBench is evidence about this topic's premise rather than about any lib
 Agent-Reflex uses a skill library to train a policy rather than to prompt one. Its skills are mined per environment from paired successes and failures, kept as structured records, and stripped from every stored training input, so the deployed policy carries no library at all. That gives a different reading of EmbodiedCLBench's result, in which a self-written skill did not reliably beat the raw trajectories it summarized as context: Agent-Reflex's ablation finds that keeping the skill-derived SFT data while removing the distillation term lowers noise robustness, which the authors read as the gain coming from the token-level signal rather than from exposure to the skills (one benchmark, one backbone). EviSkill also keeps one skill document per environment and accepts edits only on replayed evidence; it shows environment-level skills can be maintained with evidence at run time, Agent-Reflex that they can be trained into weights, and no paper here compares the two uses of the same library.
 
 Hybrid Computer Use gives a narrow but clear measurement of what a skill does when it teaches a tool, not a domain. The behavior changes are large (malformed calls down by a factor of about 13) and the outcome change is small (1.59 points, with the without-skill arm within 0.32 of HCU in one of three runs). This fits EmbodiedCLBench's caution that a skill does not always beat its source experience, and suggests a useful distinction: a skill can reliably improve how a tool is called while affecting task success much less (reader inference from one benchmark and model).
+
+HEELO changes what a library entry is: instead of a skill the caller reads and applies, each entry is a resource with its own LLM that applies itself to a natural-language request and reports structured failures. Its controls support the shift: showing the caller the same retrieved components as read-only context scores about as low as having no library (0.3544 against 0.3469 repository delivery), while self-applying Code Primitives reach 0.5134. Its admission path (tests, compilers, or matched development runs before an entry joins) is a validation gate of the kind other papers here use for skills, applied across eight resource types.
 
 # Open Questions
 
@@ -64,3 +67,4 @@ Hybrid Computer Use gives a narrow but clear measurement of what a skill does wh
 * EviSkill stores, with each skill edit, the trajectory step ranges that justified it. Should a skill package carry that per-line provenance after optimization ends, so a maintainer can re-run the motivating case before deleting or rewriting a line, and does replay acceptance on those motivating steps predict whether the line helps on tasks that did not produce it?
 * Does a skill library mined from failure contrasts across many models carry more than one mined from a single model's own failures? Agent-Reflex samples nine models for contrasts but does not ablate the pool.
 * Hybrid Computer Use's skill changes tool-calling behavior much more than task score. Across skill studies here, how often do large behavioral shifts turn into success, and what predicts when they do?
+* If each library entry carries its own resident LLM, how does the cost of keeping entries valid (revalidation after API, documentation, or dependency drift) scale with a library of tens of thousands of entries?

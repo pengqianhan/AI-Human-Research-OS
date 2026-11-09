@@ -6,7 +6,7 @@ tags:
 - recursive-self-improvement
 - ai-safety
 - agent-self-evolution
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Scope
@@ -27,6 +27,7 @@ This topic tracks papers that treat recursive self-improvement (RSI) — an AI s
 * [Harness²](../papers/2610.14224.md) - names two objects, an execution harness refined per task and an improvement harness (a library of adopted harnesses and evidence-backed lessons) updated after every task without labels; the editor model, its prompts, and the decision rule stay fixed, so what improves is the material the improver reads.
 * [Self-evolving Agent Harness](../papers/2610.18813.md) - names harness RSI as a research area, separates self-evolution (the update process) from self-improvement (a gain established by comparison), counts revising the update mechanism as an added level of recursion, and gives conditional generalization, retention, and admission bounds for harness revisions under a fixed update mechanism.
 * [Self-HPO](../papers/2610.22791.md) - the policy trained in each round proposes the next round's harness revisions, so the proposer changes with every RL update; two rounds raise a coding agent's average SWE-bench resolve rate from 57.8% to 64.8%, but whether its proposals themselves improve across rounds is not measured.
+* [Beneath the Surface](../papers/2611.07624.md) - tests whether harness evolution, RSI without weight updates, gives reliable, efficient, and transferable gains; finds coverage turnover in all sixteen lineages, frequent cost premiums, selective transfer, and select and gate rules that misjudge improvement potential.
 
 # Synthesis
 
@@ -37,6 +38,8 @@ Harness² names and separates the two objects this topic's definition turns on: 
 The Self-evolving Agent Harness paper turns this topic's central distinction into definitions. Self-evolution is the update process and self-improvement a gain established by comparison; revising the harness is one level, and revising the update mechanism that produces revisions is another. On that reading most systems here (RRSI, SoL-Pi, ScienceBuddy, Harness²) evolve the harness with a fixed update mechanism, the placement this topic already reached for Harness² by its own test. The paper's theory adds what the autonomy taxonomies here leave out: conditions under which an accepted revision generalizes (stability of the whole update process), is retained (assumed per-step regression budgets that add up), and was rightly admitted (a fresh-validation Hoeffding margin). None of its guarantees covers a revision of the update mechanism, so the recursive step this topic is about still lacks a statistical account. Its case material shares a caveat with The Last AI Built by Humans: it is drawn from external reports (here partly from a preprint and a repository associated with an author sharing the corresponding author's name), not from new experiments.
 
 Self-HPO is a candidate for the step this topic's taxonomies treat as the threshold, because its improvement mechanism, the harness proposer, is the policy that RL updates. That places it past Self-Harness, which The Last AI Built by Humans uses as its example of L2 improvement-strategy autonomy with a frozen proposer. Its search set also follows the policy's failures, but by a fixed rule (tasks never solved during RL) rather than by the system's own choice of what experience to gather, which L3 in that taxonomy would require (reader mapping). The evidence does not yet show the recursive part at work. The pair improves at every step for two rounds, but no experiment holds the solver fixed and compares the trained policy against the base policy as proposer; the only proposer comparison is with Opus 4.8 (71.6 with Opus, 69.5 self-proposed on SWE-bench Verified). Its stopping rule and RL recipe also stay outside what it revises, the same placement this topic reached for Harness² and RRSI (reader observation).
+
+Beneath the Surface is an empirical check on the topic's central claim that an improving system improves its own improvement. It runs HyperAgents, the self-referential method whose operators can edit themselves, beside three methods with fixed operators, and finds the same pattern in all: gains are redistributions of task success, often at higher cost. Its select experiment bears directly on RSI's compounding argument: in all four pools the agent with the highest current score was not the one whose children improved most, so a loop that always builds on its best current version can compound in the wrong direction (reader interpretation).
 
 # Open Questions
 
@@ -50,3 +53,4 @@ Self-HPO is a candidate for the step this topic's taxonomies treat as the thresh
 * Harness²'s improvement harness grows as a library while its editor stays fixed. Would letting the reflector also rewrite the editor's and composer's instructions, as Hyperagents makes its meta-level procedure editable, turn a growing reference library into an improving improver, and how could that be checked without labels?
 * The Self-evolving Agent Harness bounds cover harness revisions under a fixed update mechanism. What would an admission rule look like for a revision of the update mechanism itself, whose effect shows only in the quality of later revisions?
 * Self-HPO's harness proposer is the policy being trained. With the solver and search set held fixed, does the trained policy propose better harnesses than the base policy, and if so, does RL on coding tasks teach harness writing or only change which failures there are to fix?
+* If current score misranks which agent will improve most, what signal should a recursive self-improvement loop use to choose what to build on, and can that signal itself be learned without overfitting the evolution tasks?

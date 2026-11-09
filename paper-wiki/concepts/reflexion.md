@@ -7,7 +7,7 @@ tags:
 - agent-self-evolution
 - learning-from-experience
 - agent-memory
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,8 @@ Reflexion (Shinn, Cassano, Labash, Gopinath, Narasimhan, and Yao, "Reflexion: La
 * [Seeing, Maintaining, and Learning](../papers/2610.19366.md) - cited among the text-agent foundations that multimodal memory inherits: Reflexion stores feedback as reusable linguistic lessons, a reflective record beside MemGPT's context management, MemoryBank's forgetting, and Voyager's executable skill library.
 * [Self-evolving Agent Harness](../papers/2610.18813.md) - cited among existing self-evolution methods that differ in what they modify, how they generate candidates, and how they admit revisions.
 * [EvoTeam](../papers/2610.39813.md) - cited as retaining verbal reflections in episodic memory for later trials; its own reflectors write to three separately scoped stores, teams, team rules, and agent skills.
+* [Beneath the Surface](../papers/2611.07624.md) - cited as inference-time improvement through linguistic feedback in episodic memory.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - cited as harness-level verbal feedback across attempts.
 
 # Notes
 

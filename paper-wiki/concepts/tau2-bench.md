@@ -8,7 +8,7 @@ tags:
 - tool-calling
 - conversational-agents
 - simulated-users
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -27,6 +27,8 @@ timestamp: 2026-11-05T00:00:00Z
 * [FDE-Gym](../papers/2610.22350.md) - cited through XYEval, which turns τ²-bench and other tasks into XY problems (the user asks about an attempted solution rather than the real problem) with relative drops of up to 46.7%; FDE-Gym's leading models lose only 0.04 more when the sponsor's request is misdirected.
 * [BizBench](../papers/2610.20424.md) - extends the τ family's policy-governed, user-simulated setting with versioned guidance, workflows linked by shared resources and deadlines, and deterministic process checks over execution histories; its runner follows τ-Knowledge's rule for context overflow.
 * [ToolSpace](../papers/2611.05036.md) - evaluates τ³-Bench Banking, cited as τ-Knowledge (Qwen3.6-35B-A3B from 9.3 to 34.0, and 42.3 with RL, the paper's largest RL gain), and upgrades it to a 98-task Pro split on which seven frontier models fall by 14.4 to 25.6 points.
+* [Beneath the Surface](../papers/2611.07624.md) - the full 278-task benchmark is the transfer target for harnesses evolved on τ³-Banking; seeds already reach 96.2% and 97.5% Pass@8, and seven of eight Champions lose up to a point of coverage.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - Tool Primitives on Qwen3-8B are reported to lead every reference model at up to 7.7× lower cost than GPT-5.4.
 
 # Notes
 

@@ -4,6 +4,7 @@
 * [Agent World Model (AWM)](agent-world-model.md) - Synthesis of executable tool environments with persistent backend state for agentic RL, used as training data and as an environment-scaling baseline.
 * [Agent-World](agent-world.md) - Environment synthesis that mines databases from real service themes, validates generated tools against them, and co-evolves environments and policies.
 * [Agentic Context Engineering (ACE)](agentic-context-engineering.md) - Context adaptation that keeps an evolving playbook updated by generation, reflection, and curation with incremental edits; a reference method for improving agents without weight updates.
+* [Agentic Harness Engineering](agentic-harness-engineering.md) - AHE: evolves coding-agent harnesses through file-level components, distilled trajectory evidence, and edits paired with checked predictions.
 * [Agents' Last Exam (ALE)](agents-last-exam.md) - Living benchmark of long-horizon, economically valuable professional tasks with verifiable outcomes, and the source of a five-layer system view of agents.
 * [AgentScope](agentscope.md) - Open-source, Alibaba-developed multi-agent LLM platform providing model/memory/tool abstractions, a ReAct-based agent core, and infrastructure for both population-scale simulation and developer-facing agentic application deployment.
 * [ALFWorld](alfworld.md) - Text-based household-task environment aligned with ALFRED, a common long-horizon testbed for LLM agents, skill optimization, and context management.
@@ -21,6 +22,7 @@
 * [CUA Driver](cua-driver.md) - Open-source computer-use driver with accessibility-addressed and coordinate input under a best-effort background policy; the matched baseline for Hybrid Computer Use.
 * [Darwin Gödel Machine (DGM)](darwin-godel-machine.md) - Self-improving coding agent that rewrites its own code, validates each version on coding benchmarks, and keeps an open-ended archive of agents; the standard reference for self-modifying agents and archive-based search.
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
+* [DeepSWE](deepswe.md) - 113 original long-horizon software-engineering tasks in 91 repositories, kept out of upstream code and graded by hand-written verifiers.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
 * [EnvScaler](envscaler.md) - Programmatic synthesis of tool-interactive training environments with executable tools and verifiable tasks, and the RL task pool built that way.
 * [FrontierPhysics](frontierphysics.md) - 56 end-to-end physics research tasks by the researchers who did the work, passed through a deterministic verifier and blocker rubrics.
@@ -36,6 +38,7 @@
 * [GRPO](grpo.md) - Value-free RL algorithm that estimates advantage from a group of same-prompt responses rather than a learned critic.
 * [Harvey LAB](harvey-lab.md) - Harvey's 1,251-task legal-work benchmark across 24 practice areas, scored by an LLM judge against per-task criteria.
 * [Humanity's Last Exam](humanitys-last-exam.md) - 2,500-question expert-written multimodal academic benchmark built to stay hard for frontier LLMs; agent papers usually report its text-only subset.
+* [HyperAgents](hyperagents.md) - Self-referential agents whose meta agent can edit both the task agent and itself; an extension of the Darwin Gödel Machine.
 * [JobBench](jobbench.md) - 65 end-to-end professional job tasks in seven occupational domains, with deliverables judged against a weighted rubric.
 * [LIBERO-Pro](libero-pro.md) - A perturbed variant of the LIBERO tabletop-manipulation benchmark that stress-tests a frozen vision-language-action policy under deployment perturbations such as instruction redirection and object-position swaps.
 * [LLM-as-a-Judge](llm-as-a-judge.md) - Using a language model to score, rank, or select other model outputs.

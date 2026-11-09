@@ -8,7 +8,7 @@ tags:
 - tool-use
 - reasoning-and-acting
 - baselines
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ ReAct (Yao et al., arXiv:2210.03629, "ReAct: Synergizing Reasoning and Acting in
 * [From Evidence to Action (SafeActBench)](../papers/2610.07753.md) - runs models in a shared ReAct harness on Inspect AI beside their family harnesses, showing that the harness changes both success and the dominant failure mode.
 * [Apodex 1.1](../papers/2608.23283.md) - uses ReAct as the minimal scaffold isolating the model's own policy, beside its Agent Team mode.
 * [EvoTeam](../papers/2610.39813.md) - a ReAct single agent is the first baseline for its evolved multi-agent teams.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - a matched-backbone tool-use baseline for Tool Primitives and one of heelo.dev's four ways to call tools.
 
 # Notes
 

@@ -9,7 +9,7 @@ tags:
 - lm-programs
 - prompt-optimization
 - framework
-timestamp: 2026-09-13T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -19,3 +19,5 @@ DSPy (Khattab et al., ICLR 2024) is a framework for programming — rather than 
 # Papers
 
 * [Multi-module GRPO](../papers/2508.04660.md) - open-sources its mmGRPO algorithm as the `dspy.GRPO` optimizer, and uses DSPy's own MIPROv2 prompt optimizer both as a baseline and as the first stage of its BetterTogether(PO, mmGRPO) staged-training recipe.
+* [Beneath the Surface](../papers/2611.07624.md) - cited among optimizers of language-model programs that improve agents without weight updates.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - cited as compiling declarative pipelines of model calls, one of the harness designs that fix one structure across tasks.

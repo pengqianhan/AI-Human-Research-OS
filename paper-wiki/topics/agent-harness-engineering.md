@@ -7,7 +7,7 @@ tags:
 - harness-evolution
 - coding-agents
 - repository-understanding
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Scope
@@ -68,6 +68,8 @@ This topic tracks work on the executable software layer around a foundation mode
 * [OpenVLHarness](../papers/2610.26860.md) - a training-free multimodal harness of backend-independent capability interfaces with per-tool evidence renderers, plus a per-query registry of image, data, and URL handles that later tools and generated code reuse; it adds 9.7 to 12.6 average points across 22 benchmarks and backbones, and chooses between harness search and tool generation by failure profile.
 * [Hybrid Computer Use](../papers/2610.41432.md) - an interface layer rather than a loop: AX and GUI tools over MCP with action guards and one usage skill attach unchanged to Codex, Claude Code, Gemini CLI, and Grok Build, with no planner or subagents, and improve score and cost over CUA Driver on Linux, macOS, and Windows benchmarks.
 * [Harness-S](../papers/2611.04277.md) - evolves 19 sibling harnesses from one base and keeps them all because each repairs different failures, then uses them only to rescue tasks where every base-harness rollout fails; the trained policy, run back under the base harness, beats plain GRPO, resampling, fixed mixtures, Meta-Harness, and reimplemented WHALE and HarnessForge on AppWorld, SWE-Gym, and DBBench.
+* [Beneath the Surface](../papers/2611.07624.md) - evolves a source-editable harness (MiniSWE) and an outer-layer-only one (Codex) with four methods and audits the results task by task: coverage turnover everywhere, cost premiums, harness-dependent transfer, and component interference.
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - builds each task's harness from agent-native primitives, resources with a resident LLM that apply them and message each other, composed per task and revised where failures point; umbrella over eight companion studies, with Dev-Primitives at 55.5% against Codex's 37.3% on Terminal-Bench 4.0 and per-task Harness Primitives at 72.2% against 60.0% on Terminal-Bench 2.0.
 
 # Synthesis
 
@@ -107,6 +109,8 @@ Hybrid Computer Use isolates one harness component, the tool interface, and show
 
 Harness-S turns the output of harness search into training support instead of a deployed artifact. It evolves 19 siblings of one base harness and keeps every valid one, because each repairs different failures, then calls them only when all base-harness rollouts on a task fail, so the policy learns from their successes and is evaluated without them. That differs from Self-HPO, which alternates harness search and RL and deploys the co-evolved pair, and it shares a finding with Recursive Self-Rewrite: the union of several harnesses solves more tasks than any one, and the gain can be moved into weights (reader comparison). Its measurements of locality (an edit repairs some tasks and breaks others) and nonstationarity (a sibling's advantage over the base harness can reverse as the policy trains) also bear on single-harness optimizers such as Meta-Harness: a harness tuned against one checkpoint may stop being best after the next update. The evidence is mostly AppWorld at 4B, and nearly all Table 1 means sit on single-run granularity (reader check).
 
+Two 11-09 papers pull in different directions on what a harness should be. Beneath the Surface shows that evolving one harness for a whole benchmark mixes gains with regressions and that changes interfere when combined; HEELO's Harness Primitives avoid committing to one harness by composing validated control operations per task, and its theory says per-task composition beats the best fixed harness only when selection errors cost less than the heterogeneity gap. Both find that specific, dependency-closed changes beat generic advice (Beneath the Surface's Components against reminders; HEELO's primitives against read-only access to the same components). The comparisons differ in strength: Beneath the Surface reports gains and losses per task over eight passes, while HEELO's per-family results are mostly against single baselines, and its largest Terminal-Bench 4.0 gain is against Codex rather than the stronger Claude Code (reader comparison).
+
 # Open Questions
 
 * How should agent-visible behavior be mapped to code when runtime dispatch, generated code, or external services defeat static analysis?
@@ -144,3 +148,4 @@ Harness-S turns the output of harness search into training support instead of a 
 * OpenVLHarness routes each domain to harness search or tool generation from a failure critique's remedy profile. Would the same routing help the coding and computer-use harness optimizers here, which search over text and code edits together?
 * Hybrid Computer Use's native-vocabulary effect is small but consistent across two models. Should tool schemas adapt to the model behind them, and do benchmark comparisons across vendors currently understate models whose calling conventions differ from the harness's?
 * Harness-S's siblings mostly add reminders, rules, and hooks. Do behaviors elicited by tool-level changes (a new API view or action space) also transfer into a policy that later runs without them, or only procedural habits such as paginating, checking schemas, and reading back after writes?
+* Per-task composition (HEELO's STITCH) and whole-benchmark evolution (the methods audited in Beneath the Surface) have not been compared on the same tasks and budget. Does composing validated primitives per task avoid the regressions that evolved harnesses show, or does it just move them into the selection step?

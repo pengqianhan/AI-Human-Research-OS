@@ -6,7 +6,7 @@ tags:
 - benchmarks
 - tool-calling
 - function-calling
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-09T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ BFCL (Berkeley Function-Calling Leaderboard; Patil et al., ICML 2025) evaluates 
 * [ActionOPD](../papers/2610.19820.md) - BFCL multi-turn (800 tasks, one trial) as a transfer benchmark: Qwen3-4B rises from 34.3 to 42.3 and 44.1 with the two teachers, Qwen3-8B from 39.9 to 45.0 and 45.5.
 * [ToolSpace](../papers/2611.05036.md) - V4: Qwen3.6-35B-A3B from 60.0 to 74.3 and GLM-5.2 from 75.6 to 78.4; at 8B its 65.3 compares with 20.5 to 51.3 for environment-scaling baselines, which the paper reads as those methods teaching the form of function calling but not orchestration.
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - BFCL-v3 with a budget of 24 turns: at 25% of it models reach only 2.5 to 12.2 Pass@8, and RL corrects a failed tool call more often than the base model (41.4% against 27.2%).
+* [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - BFCLv4 (agentic web search and memory function calling) is one of the Tool Primitives benchmarks.
 
 # Notes
 
