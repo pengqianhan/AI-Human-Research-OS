@@ -114,6 +114,12 @@ models improve.
   itself. Hosted API + MCP: hyperresearch.ai.
 - [SoL-Pi](https://github.com/NVlabs/SoL-Pi): SoL-Pi: Scaling Auto-Research
   Loops for Efficient Agent Harnesses.
+- [ToolUniverse](https://github.com/mims-harvard/ToolUniverse): Democratizing AI
+  scientists with ToolUniverse.
+- [claude-code-my-workflow](https://github.com/pedrohcgs/claude-code-my-workflow):
+  A ready-to-fork Claude Code template for academic research — papers, data
+  analysis (R, Stata, Python), slides and teaching — with multi-agent review,
+  enforced quality gates and replication protocols.
 
 ## Agent runtimes and operating systems
 
@@ -171,6 +177,19 @@ models improve.
   development work that self-improves and continues beyond one session.
 - [letta-code](https://github.com/letta-ai/letta-code): Agents that self-improve
   with experience.
+- [EvoAgentX](https://github.com/ANative-Lab/EvoAgentX): EvoAgentX: Building a
+  Self-Evolving Ecosystem of AI Agents.
+- [agent-beacon](https://github.com/Asymptote-Labs/agent-beacon): The
+  cross-harness, self-improving memory layer for AI agents. Join our community:
+  https://discord.com/invite/zdNChS2fBu.
+- [penguin-harness](https://github.com/Prism-Shadow/penguin-harness): Unified
+  and Stable RSI Platform.
+- [Formal-Verification-RSI](https://github.com/sahibzada-allahyar/Formal-Verification-RSI):
+  Formal verification for AI: a Lean 4 + Dafny proof checker that catches fake
+  AI proofs (reward hacking), and verified recursive self-improvement (RSI) for
+  coding agents. AI for math, physics and software engineering.
+- [NeoHorse](https://github.com/TokenRhythm/NeoHorse): NeoHorse-1: Towards
+  Recursive Self-Improvement via Agentic Post-Training with Routing Harness.
 
 ## Skills and lists
 
@@ -221,6 +240,16 @@ models improve.
   research workbench for scientific research and agent workflows. Local-first,
   model-agnostic desktop app with extensible skills, MCP tools and connectors,
   Python/R execution and traceable artifacts for…
+- [science-skills](https://github.com/google-deepmind/science-skills): GDM
+  Science Skills to speed up agentic scientific workflows with better grounding
+  and higher token efficiency. Integrate insights from AlphaGenome, AFDB,
+  UniProt and 30+ other databases and tools.
+- [paper-search-mcp](https://github.com/openags/paper-search-mcp): MCP, CLI,
+  Skills for searching and downloading academic papers from multiple sources
+  like arXiv, PubMed, bioRxiv, etc.
+- [medical-research-skills](https://github.com/aipoch/medical-research-skills):
+  Hundreds of agent skills for medical research, including protocol design, data
+  analysis, evidence insights, and academic writing.
 
 ## Articles
 
