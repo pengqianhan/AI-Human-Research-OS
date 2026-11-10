@@ -7,7 +7,7 @@ tags:
 - agent-self-evolution
 - learning-from-experience
 - agent-memory
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-10T00:00:00Z
 ---
 
 # Definition
@@ -27,6 +27,8 @@ Reflexion (Shinn, Cassano, Labash, Gopinath, Narasimhan, and Yao, "Reflexion: La
 * [EvoTeam](../papers/2610.39813.md) - cited as retaining verbal reflections in episodic memory for later trials; its own reflectors write to three separately scoped stores, teams, team rules, and agent skills.
 * [Beneath the Surface](../papers/2611.07624.md) - cited as inference-time improvement through linguistic feedback in episodic memory.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - cited as harness-level verbal feedback across attempts.
+* [Sage-Taiyi](../papers/2611.12762.md) - cited as retaining task feedback as verbal reflections, among cognitive-science-inspired agent designs.
+* [ReproBridge](../papers/2611.08452.md) - cited as reusable experience kept as verbal feedback, beside Voyager's executable skills.
 
 # Notes
 

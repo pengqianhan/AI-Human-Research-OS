@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-10T00:00:00Z
 ---
 
 # Scope
@@ -33,6 +33,8 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [ToolSpace](../papers/2611.05036.md) - upgrades existing benchmarks by linking their real tool calls to outside tools through witnessed data and state relations, walking longer chains, and reverse-generating tasks with assertion checks; three experts review them (κ = 0.82), and seven frontier models fall by up to 38.2 points on AutomationBench Pro and 25.6 on τ³-Bench Banking Pro.
 * [FrontierPhysics](../papers/2611.06910.md) - 56 physics research tasks written by the researchers who did the work, passed only through a deterministic verifier and blocker rubrics graded by a reviewer agent; the best of 26 configurations passes 27.4% of rollouts, and an expert audit of one configuration finds nine false failures of 168.
 * [VisSearch-Bench](../papers/2611.04894.md) - 204 human-built multimodal open-web tasks in five families with reference answers, gold trajectories, and per-task rules for complete-answer Accuracy and partial-credit Process Score; across 16 models and two frameworks the best system solves 26.47% in one Pass@1 run.
+* [AutoVend](../papers/2610.36980.md) - one agent runs 20 vending machines from a shared warehouse for 180 simulated days through MCP tools, with demand calibrated on real sales records and a fee for every restocking visit; four of five agents finish below a rule-based inventory baseline, and net-asset growth per API dollar ranks the models differently from profit.
+* [ReproBridge](../papers/2611.08452.md) - ReproBridge-Bench scores fresh coding-agent sessions on 1,029 measurements from 36 ICML 2026 Spotlight papers against five human-verified reference runs per task plus an execution-integrity audit; refined hand-off artifacts raise mean success from 76.4% to 92.6% across four models.
 
 # Synthesis
 
@@ -64,6 +66,8 @@ FrontierPhysics puts numbers on a question most benchmarks here leave open: how 
 
 VisSearch-Bench shows why a strict metric and a partial-credit metric are both needed: GPT-5.5 with ReAct has the best Process Score (49.52) while Kimi-K3 with ReAct solves the most tasks (26.47%), and on set-wise tasks Process Score reaches 44.10 against 8.82% accuracy. Its partial credit is read from the final answer, not the trajectory, so direct answers with no search still earn up to 22.61, which makes it a measure of stated intermediate results rather than of evidence actually found (reader observation). Like several benchmarks here, it rests on one run per system and an unnamed LLM judge, and its top two agents are two tasks apart.
 
+Two 11-10 papers change what a benchmark's reference point is. AutoVend scores agents against a classical operations-research rule (newsvendor ordering with weekly visits) instead of against each other, and four of five agents lose to it; without that baseline its leaderboard would read as a ranking of five profitable agents. ReproBridge-Bench replaces the single published number with a distribution from five independent human runs and adds an audit of the execution behind each matching value, because a nearby number can come from a copied or substituted measurement: its Codex auditor invalidated 173 of 869 numerically matching raw-code results for one model. Both also report cost beside success (growth per API dollar; API spend per reproduction round), and in both the cost view reorders or qualifies the headline. Their limits differ: AutoVend has one simulated world and three runs per model, with price response assumed rather than validated, while ReproBridge-Bench keeps only the 70.3% of tasks that humans could reproduce (reader comparison).
+
 # Open Questions
 
 * When does grading one next turn at a recorded decision point agree with executing the agent to the end? TraceDance's authors note that a planning-first response may act well later, and no paper here yet measures that gap.
@@ -86,3 +90,5 @@ VisSearch-Bench shows why a strict metric and a partial-credit metric are both n
 * ToolSpace's Pro splits include assertions on intermediate snapshots from one reference walk. How much of the score drop survives with final-state checks only, and how should an upgraded benchmark report that alongside its base version?
 * FrontierPhysics measures reviewer leniency for Claude Opus 5.5 on its own family, while its main results all come from a GPT reviewer. How large is same-family leniency when measured in both directions, and do leaderboards that use one vendor's model as grader need a cross-family correction?
 * VisSearch-Bench's Accuracy and Process Score disagree on the best system. Should leaderboards with partial credit rank by the strict metric, the partial one, or both, and how stable are such rankings across repeated runs?
+* AutoVend's rule-based baseline beats four of five LLM agents. Which other long-horizon benchmarks here would look different if a classical domain heuristic were on the leaderboard, and should such a baseline be a requirement for sustained-operation benchmarks?
+* ReproBridge-Bench counts a result only if an auditor cannot invalidate its execution, and its auditors miss 20% to 38% of human-identified invalid outcomes. How much do success rates on other execution benchmarks change when numerically correct answers are audited for how they were produced?

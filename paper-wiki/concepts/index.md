@@ -7,6 +7,7 @@
 * [Agentic Harness Engineering](agentic-harness-engineering.md) - AHE: evolves coding-agent harnesses through file-level components, distilled trajectory evidence, and edits paired with checked predictions.
 * [Agents' Last Exam (ALE)](agents-last-exam.md) - Living benchmark of long-horizon, economically valuable professional tasks with verifiable outcomes, and the source of a five-layer system view of agents.
 * [AgentScope](agentscope.md) - Open-source, Alibaba-developed multi-agent LLM platform providing model/memory/tool abstractions, a ReAct-based agent core, and infrastructure for both population-scale simulation and developer-facing agentic application deployment.
+* [AI Scientist-v2](ai-scientist-v2.md) - End-to-end agentic research system using progressive agentic tree search without human-written code templates; a frequent baseline for AI-scientist systems.
 * [ALFWorld](alfworld.md) - Text-based household-task environment aligned with ALFRED, a common long-horizon testbed for LLM agents, skill optimization, and context management.
 * [AlphaEvolve](alphaevolve.md) - Google DeepMind's LLM-powered evolutionary coding agent for algorithm and mathematical discovery, a common reference baseline for LLM-driven evolutionary discovery systems.
 * [AndroidWorld](androidworld.md) - Live Android environment with 116 parameterized task workflows across 20 real apps, rewarded from system state; the standard online benchmark for mobile GUI agents.
@@ -19,6 +20,7 @@
 * [Claw-Eval](claw-eval.md) - 300 human-verified agent tasks across service orchestration, multimodal, and multi-turn dialogue groups, graded from traces, audit logs, and snapshots for completion, safety, and robustness with Pass@k and Pass^k.
 * [Context compaction](context-compaction.md) - Shortening an agent's accumulated context mid-task by summarizing history or replacing tool outputs and images, with costs in what is lost, prompt-cache reuse, and RL training.
 * [Context rot](context-rot.md) - Degradation of model quality as context grows, even inside the physical context window.
+* [CORE-Bench](core-bench.md) - 270 computational-reproducibility tasks from 90 papers, where an agent reproduces a study's results from its provided code and data.
 * [CUA Driver](cua-driver.md) - Open-source computer-use driver with accessibility-addressed and coordinate input under a best-effort background policy; the matched baseline for Hybrid Computer Use.
 * [Darwin Gödel Machine (DGM)](darwin-godel-machine.md) - Self-improving coding agent that rewrites its own code, validates each version on coding benchmarks, and keeps an open-ended archive of agents; the standard reference for self-modifying agents and archive-based search.
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
@@ -79,6 +81,7 @@
 * [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
 * [ToolSandbox](toolsandbox.md) - Stateful, conversational tool-use benchmark scored against ordered milestones, reported in this wiki on scenario subsets with a similarity metric.
 * [Toucan](toucan.md) - 1.5 million tool-agent trajectories from nearly 500 real MCP servers with real tool execution, used here as a training corpus, comparison dataset, and test set.
+* [Vending-Bench](vending-bench.md) - A long-horizon simulation where an LLM agent runs one vending machine, built to test sustained coherent decision-making.
 * [WeaveBench](weavebench.md) - 114 long-horizon tasks on a real Ubuntu desktop that require combining GUI, CLI, and code in one trajectory, with a trajectory-aware judge.
 * [Windows Agent Arena](windows-agent-arena.md) - OSWorld adapted to a real Windows OS, with more than 150 tasks across applications, tools, and browsers.
 * [τ²-Bench](tau2-bench.md) - Dual-control conversational tool-use benchmark (Airline, Retail, Telecom) where both the agent and a simulated user act on shared state, scored by an environment verifier.

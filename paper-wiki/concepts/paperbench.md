@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - research-replication
 - autonomous-research
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-10T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ PaperBench (Starace et al., 2025, arXiv:2504.01848) evaluates whether an AI agen
 * [Repo-To-Skill: Distilling GitHub Repositories Into AI4AI Skills](../papers/2609.02749.md) - evaluates DisCo on the full 20-paper PaperBench task set with the benchmark's official replication grader; distilled skills raise the average replication score from 29.45% to 39.59% (+34.4% relative), improving 18 of 20 papers.
 * [Into the Unknown](../papers/2610.19159.md) - named as the anchor-based contrast (a published result to replicate, graded with an author co-developed rubric) to its own unpublished follow-up directions, and the source of the JSON rubric format its task rubrics follow.
 * [FrontierPhysics](../papers/2611.06910.md) - cited for rubric-based grading of open-ended work.
+* [ReproBridge](../papers/2611.08452.md) - cited as rubric-scored reconstruction of code, execution, and results, in contrast to its binary task success on released artifacts.
 
 # Notes
 
