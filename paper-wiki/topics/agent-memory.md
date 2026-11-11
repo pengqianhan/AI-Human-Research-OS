@@ -6,7 +6,7 @@ tags:
 - agent-memory
 - long-term-memory
 - retrieval
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Scope
@@ -30,6 +30,7 @@ This topic tracks papers about persistent memory systems for LLM agents: how sal
 * [SwitchMem](../papers/2610.17928.md) - treats the modality of a retrieved memory as a per-step decision for a GUI agent: a step-wise oracle over a text and an image rendering of the same demonstration step beats either form fixed, and a router trained on the difference between the actor's hidden states under the two forms recovers part of that gap while passing one form at a time.
 * [Seeing, Maintaining, and Learning](../papers/2610.19366.md) - a survey of multimodal agent memory (images, video, audio, GUIs, embodied 3D state) on two axes: the representation that reaches the reasoner (source or modality-specific, explicit text or structure, latent or parametric, hybrid) and what changes during deployment (T1 static, T2 state under a fixed policy, T3 an evolving policy); in a 297-architecture corpus, 68.7% are T2 and the 17 T3 systems all keep an explicit memory component.
 * [EvoMemState](../papers/2611.03743.md) - keeps unchanged atomic facts in an ontology with SUPERSEDES and CONFLICTS_WITH edges, retrieves seeds plus everything connected to them, and has a GRPO-trained Qwen3-4B policy write 2-4 rules per request on which memories apply; it leads nine memory systems on the overall average, mostly through memory-use benchmarks, while retrieval completeness is only slightly higher.
+* [WikiTrace](../papers/2611.14320.md) - keeps every distilled insight linked to a diagnosis of its source run and to the raw trajectory, and prompts the agent to open them when an insight lacks detail, conflicts with another, or comes from a failed run; 90.2 average on eight suites against 87.0 for the same insights alone, with Regression down from 6.5% to 4.5%.
 
 # Synthesis
 

@@ -6,7 +6,7 @@ tags:
 - reward-hacking
 - evaluation-integrity
 - agent-environments
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Definition
@@ -26,6 +26,7 @@ Reward hacking is when a learning policy or an agent increases the reward signal
 * [AgentSWE](../papers/2610.13361.md) - the builder-side analogue, which the paper calls overfitting to visible cases: a 2,073-line delivery that never calls the model dispatches on phrases from its two development cases (development score 96, every held-out execution fails the gate), and two builders add keyword-routed playbooks for visible PinchBench categories that gain 8.1 and 59.4 development points and lose 15.2 and 15.1 on held-out instances; the defence is the benchmark's design, frozen deliveries scored on cases the builder never sees.
 * [FDE-Gym](../papers/2610.22350.md) - designs against it at admission: literal compliance must score at most 0.2 and shortcut strategies (overfitting historical data, round-number thresholds, deferring every uncertain decision to humans) at most 0.8, attempts to bypass customer controls or manipulate the grader score near zero, and the graders were tested against more than 270 shortcut and bypass strategies.
 * [FrontierPhysics](../papers/2611.06910.md) - global rubrics check for it through trajectories and a HACK tag exists in the failure taxonomy; no rollout in the GPT-6 Astra audit table carries the tag (reader count).
+* [Shortcuts and Boundaries](../papers/2611.12865.md) - formalizes a verifiable reward-context conflict (compliant completion feasible, a violating execution certified to earn more) and separates score manipulation from unauthorized real work; on its Validation mechanism task-only RL lifts reward from .050 to 1.000 while verified repair falls from .979 to .072.
 
 # Notes
 

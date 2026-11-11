@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Scope
@@ -46,6 +46,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [ToolSpace](../papers/2611.05036.md) - SFT on 34,376 tasks decompiled from witnessed tool walks lifts Qwen3.6-35B-A3B from 23.0 to 41.0 over seven tool benchmarks; 48 steps of GRPO on 653 screened tasks add 2.2, mostly on τ³-Bench Banking.
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - evaluates GRPO, GiGPO, and PPO on Qwen3-4B and 8B across Pass@(K,T): gains depend on a sufficient turn budget and plain GRPO falls to or below the base model at 25% of it, actions are not better per step but are better after errors and later in a trajectory, and BudgetMix RL, which samples the budget during training, adds 7.5, 5.3, and 4.0 points at tight budgets.
 * [Harness-S](../papers/2611.04277.md) - replaces GRPO groups where all eight base-harness rollouts fail with fresh rollouts of the same policy under eight router-chosen sibling harnesses; at 4B on AppWorld this lifts base-harness Avg@3 from 48.98 to 56.87 with 18.44% more rollouts, above resampling under the base harness with 41.25% more.
+* [Shortcuts and Boundaries](../papers/2611.12865.md) - task-only GRPO on Qwen3.5-4B raises verified work and certified profitable rule violations together, even with 25% conflict tasks (47 of 48 attempts after 128 updates); a binary history penalty prevents most of it from Base but reverses little once acquired.
 
 # Synthesis
 

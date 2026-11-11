@@ -6,7 +6,7 @@ tags:
 - persona-agents
 - user-simulation
 - agent-benchmarks
-timestamp: 2026-10-19T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Scope
@@ -19,6 +19,7 @@ This topic tracks papers that use LLM agents conditioned on human personas or pr
 * [Foundations of Proactive Agents](../papers/2609.37267.md) - Proactivity-Gym's simulated users (three personas per scenario that differ in how much they delegate) respond to a proactive agent over several simulated days; a deterministic state machine decides each approval, decline, or deferral from the persona, history, and trust state, and Qwen 3.8-27B only phrases the reply, so the generated text cannot grant extra permission.
 * [FDE-Gym](../papers/2610.22350.md) - more than 130 scripted customer stakeholders whose knowledge, misconceptions, disclosure conditions, patience, unavailability, and contact restrictions are fixed in advance, with a small model only mapping questions to topics; each message carries a hidden price, and the grader records which key facts the agent obtained.
 * [BizBench](../papers/2610.20424.md) - an LLM customer (DeepSeek-V4.1-Flash by default) holds private facts and materials, discloses them when asked, and grants approvals bound to a request's current terms, one write or wait at a time; protocol violations fall from 4 of 50 tasks to none with a revised prompt, and strict success varies by at most 3.3 points across four simulator models for a Qwen3.8-27B agent.
+* [FinCosmos](../papers/2611.07464.md) - the simulated user is an examiner who reveals a hidden strategy only when asked, with every turn decision validated by a program; agents elicit 54 to 64% of the unstated details, and experts flag a task-critical simulator error in 3 of 60 sessions.
 
 # Synthesis
 

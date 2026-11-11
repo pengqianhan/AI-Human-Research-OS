@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Definition
@@ -55,6 +55,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - a GPT-5.6-Sol judge rating each action from 0 to 10 as process reward does not provide consistent supervision, particularly on BFCL.
 * [EvoMemState](../papers/2611.03743.md) - DeepSeek-V4-Flash judges answers where benchmarks need a judge while also building every compared system's memory, with no human-agreement check.
 * [VisSearch-Bench](../papers/2611.04894.md) - both Accuracy and Process Score come from an unnamed semantic judge applying per-task scoring prompts to the final answer, though the main text describes rule-based matching.
+* [FinCosmos](../papers/2611.07464.md) - an LLM judge grades 19 of 45 dimensions and is bounded by program scores where both exist; it agrees with experts at κ = 0.87, yet the four vetoes it decides would accept 17 of 35 user-approved sessions that program checks all reject.
 
 # Notes
 

@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Definition
@@ -42,3 +42,4 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - primary algorithm: on Qwen3-4B and 8B it gains at full budget but falls to or below the base model at 25% of the turn budget, and BudgetMix samples the budget per task group.
 * [Harness-S](../papers/2611.04277.md) - the shared optimizer (clipping 0.20 and 0.28, no KL term); Harness-S changes only which trajectories fill a task's group, replacing all-failure groups with rollouts under sibling harnesses.
 * [EvoMemState](../papers/2611.03743.md) - trains a Qwen3-4B policy (G = 8) to write memory-use rules, rewarded by a frozen answer model's score with the rules minus its score without them.
+* [Shortcuts and Boundaries](../papers/2611.12865.md) - trains every policy from Qwen3.5-4B with GRPO on its own group rollouts; the safety variant only subtracts a binary penalty for any historical violation from the reward.

@@ -8,7 +8,7 @@ tags:
 - tool-calling
 - conversational-agents
 - simulated-users
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Definition
@@ -29,6 +29,8 @@ timestamp: 2026-11-09T00:00:00Z
 * [ToolSpace](../papers/2611.05036.md) - evaluates τ³-Bench Banking, cited as τ-Knowledge (Qwen3.6-35B-A3B from 9.3 to 34.0, and 42.3 with RL, the paper's largest RL gain), and upgrades it to a 98-task Pro split on which seven frontier models fall by 14.4 to 25.6 points.
 * [Beneath the Surface](../papers/2611.07624.md) - the full 278-task benchmark is the transfer target for harnesses evolved on τ³-Banking; seeds already reach 96.2% and 97.5% Pass@8, and seven of eight Champions lose up to a point of coverage.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - Tool Primitives on Qwen3-8B are reported to lead every reference model at up to 7.7× lower cost than GPT-5.4.
+* [WikiTrace](../papers/2611.14320.md) - evaluates τ³-bench Retail, cited to the τ-bench and τ²-bench papers, on its own customer-grouped split (38 train, 76 test): 88.2 against 86.8 without memory, the smallest gain of its eight suites.
+* [FinCosmos](../papers/2611.07464.md) - cited with τ-bench as simulated users that hide intent over a closed database with a target state; FinCosmos adopts pass^k from that line and reports 0 for every agent.
 
 # Notes
 

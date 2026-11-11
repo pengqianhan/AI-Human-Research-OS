@@ -8,7 +8,7 @@ tags:
 - tool-use
 - coding-agents
 - stateful-environments
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ AppWorld (Trivedi et al., arXiv:2407.18901, ACL 2024) has two parts. The AppWorl
 * [CoworkEnv](../papers/2610.24960.md) - cited with τ-bench, TheAgentCompany, and AutomationBench as evaluations of multi-application work, user interaction, and workflow constraints; CoworkEnv's own environments grade tool calls and service audit records.
 * [Harness-S](../papers/2611.04277.md) - main benchmark (320 train, 150 validation, 262 test) for sibling-harness rescue training: Qwen3.5-4B under the base harness rises from 48.98 to 56.87 Avg@3 over plain GRPO, and nearly every mechanism and cost analysis is run here.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - one of the knowledge-intensive benchmarks for Knowledge Primitives (SourceLearn).
+* [WikiTrace](../papers/2611.14320.md) - Test-Normal (111 tasks) and Test-Challenge (99) at difficulty 2 and 3: 89.5 and 75.8 task goal completion against 75.4 and 72.7 without memory.
 
 # Notes
 

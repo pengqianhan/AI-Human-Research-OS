@@ -6,7 +6,7 @@ tags:
 - agent-environments
 - environment-engineering
 - agent-reliability
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Scope
@@ -37,6 +37,7 @@ This topic tracks papers where the main design object is not only the agent poli
 * [MAI-Gym](../papers/2610.20939.md) - GUI training environments built by coding-agent skills: resettable clones of seven real apps whose actions cannot be undone (rail tickets, banking, ride hailing, food delivery, local services, social media), 42 invented deterministic apps with 840 tasks, persona-and-scenario cross-app worlds, and verifiers written apart from golden code and accepted only if they score 0, 1, and 0 on initial, completed, and reset states; new tasks are steered by diagnoses of failed rollouts.
 * [CoworkEnv](../papers/2610.24960.md) - synthesizes multi-service coworker environments (request, cross-service records, tools, and a grader over tool calls and audit records) from capability-driven plans, gates every grader on synthetic complete, empty, and forbidden-call records, and uses the same tasks for SFT demonstrations and RL rollouts; SFT lifts Qwen3-VL-8B on Claw-Eval from 46.6 to 64.1.
 * [ToolSpace](../papers/2611.05036.md) - derives environments from traces: deterministic rules mine data, state, and retry edges between adjacent real tool calls into a weighted graph, which is clustered into 804 environments; only the 181 with state-changing tools get databases, others reuse recorded returns, and tasks come from state-aware walks that must replay from the initial state.
+* [Shortcuts and Boundaries](../papers/2611.12865.md) - builds environments where a stated requirement is checked on execution history but not enforced, and each instance is certified to have a feasible compliant completion and a violating trajectory that earns more reward; 8 mechanism families and at least 807 instances.
 
 # Synthesis
 

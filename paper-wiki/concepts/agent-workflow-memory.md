@@ -9,7 +9,7 @@ tags:
 - agent-skill-libraries
 - agent-self-evolution
 - learning-from-experience
-timestamp: 2026-10-09T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Agent Workflow Memory (AWM; Wang, Mao, Fried, and Neubig, arXiv:2409.07429, 2024
 * [X-Tree](../papers/2609.32993.md) - one of four LLM-written skill baselines (with SkillWeaver, WALT, and WebXSkill) against which X-Tree's mined hierarchy is used as in-context advice on MiniWoB++ (Appendix C).
 * [Learn2Play Bench](../papers/2610.08215.md) - one of six experience methods on games with hidden rules; it has the lowest Learning Slope of the non-Naive methods with all three backbones (+0.62 Kimi K3, +0.43 Opus 5, -0.98 GPT-5 Mini), consistent with a method that learns only from successes in games where most early episodes fail.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - cited as trace-to-procedure distillation that serves the acting agent; Trace2Env distills traces into a worldbook for the simulated environment instead.
+* [WikiTrace](../papers/2611.14320.md) - baseline in offline mode on eight suites: 81.6 average against 79.5 without memory, 83.8 with nine build passes, still below injecting WikiTrace's insights alone (87.0).
 
 # Notes
 

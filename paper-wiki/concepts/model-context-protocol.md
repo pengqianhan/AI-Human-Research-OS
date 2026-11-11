@@ -7,7 +7,7 @@ tags:
 - mcp
 - tool-use
 - agent-infrastructure
-timestamp: 2026-11-10T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Definition
@@ -32,6 +32,7 @@ The Model Context Protocol (MCP) standardizes how a language-model application d
 * [Hybrid Computer Use](../papers/2610.41432.md) - exposes its accessibility and GUI desktop tools to four agent harnesses through one MCP server, with programmatic tools left in the harness.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - heelo.dev's MCP server connects Claude Code and Codex to HEELO's primitives for 46 live tasks.
 * [AutoVend](../papers/2610.36980.md) - all 18 tools of the vending benchmark (remote operations, physical execution, and a persistent notebook) are exposed to the agent over MCP.
+* [FinCosmos](../papers/2611.07464.md) - agents receive no data and reach it through vendor web tools plus a Financial Modeling Prep MCP server exposing 247 financial APIs.
 
 # Related
 

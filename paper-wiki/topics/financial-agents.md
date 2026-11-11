@@ -6,7 +6,7 @@ tags:
 - financial-agents
 - financial-trading
 - multi-agent-systems
-timestamp: 2026-09-11T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Scope
@@ -19,6 +19,7 @@ This topic tracks papers where LLM or multi-agent systems make financial decisio
 * [Orchestration Framework for Financial Agents](../papers/2512.02227.md) - FinAgent maps all nine stages of a traditional algorithmic-trading pipeline onto agents coordinated via MCP (orchestrator control) and A2A (agent/memory communication), with protocol-level leakage prevention as an explicit design axis; backtested on a seven-stock equity universe and BTC/USDT.
 * [AI-Trader](../papers/2512.10971.md) - a live, data-uncontaminated benchmark giving six LLM backbones only prices, holdings, and five generic tools across U.S. equities, A-shares, and crypto, finding general intelligence does not predict trading capability and risk-control discipline drives cross-market robustness.
 * [What LLM Trading Agents Actually Do in Production](../papers/2609.05663.md) - a six-month, population-scale measurement record of two production fleets (3,505 real-capital vaults; 500-599 agents on Hyperliquid perpetuals) finding operating-layer mechanics — a risk slider, a leaderboard render boundary, order-path brackets — determine behavior far more than model reasoning or strategy text, sizing is volatility-blind, agents capture almost none of the favorable excursion they reach, and neither fleet shows a directional edge.
+* [FinCosmos](../papers/2611.07464.md) - evaluates quantitative-research deliveries instead of returns: whether the backtest is the user's strategy, respects the data cutoff, and reproduces its reported metrics from the delivered trade log; no session from four coding agents passes the last step.
 
 # Synthesis
 

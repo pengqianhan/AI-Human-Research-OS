@@ -27,6 +27,7 @@
 * [DeepSWE](deepswe.md) - 113 original long-horizon software-engineering tasks in 91 repositories, kept out of upstream code and graded by hand-written verifiers.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.
 * [EnvScaler](envscaler.md) - Programmatic synthesis of tool-interactive training environments with executable tools and verifiable tasks, and the RL task pool built that way.
+* [ExpeL](expel.md) - Experiential-learning agent that extracts natural-language insights from training-task experience and recalls them at inference; a standard experience-memory baseline.
 * [FrontierPhysics](frontierphysics.md) - 56 end-to-end physics research tasks by the researchers who did the work, passed through a deterministic verifier and blocker rubrics.
 * [FrontierScience](frontierscience.md) - Expert-level science benchmark with an Olympiad track and a rubric-graded, PhD-level Research track across physics, chemistry, and biology.
 * [GAIA](gaia.md) - 466 real-world assistant questions at three difficulty levels needing reasoning, multimodal handling, browsing, and tool use, scored by exact match after normalization.
@@ -65,6 +66,7 @@
 * [ProgramBench](programbench.md) - 200 program-reproduction tasks: rebuild a program's observable behavior from an execute-only reference binary and its documentation, scored by black-box test pass rates.
 * [Ralph loop](ralph-loop.md) - Relaunching an agent on the same workspace each time it stops until a completion criterion is met, judged by the agent itself or by a separate reviewer.
 * [ReAct](react.md) - Interleaved reasoning traces and environment actions in one loop; the default minimal agent scaffold and single-agent baseline.
+* [ReasoningBank](reasoningbank.md) - Memory that distills reasoning strategies from self-judged successes and failures, retrieves them at test time, and writes new learnings back.
 * [Reflexion](reflexion.md) - Verbal self-reflection for language agents: lessons written after each attempt are kept in an episodic memory and guide later attempts, with no weight updates; a standard baseline for learning from experience in context.
 * [Reward hacking](reward-hacking.md) - An agent or policy raising its measured reward or benchmark score by exploiting the grader, environment, or evaluation channel instead of accomplishing the intended task.
 * [Rollout Routing Replay (R3)](rollout-routing-replay.md) - Records expert routing during RL rollouts and replays it in training, so mixture-of-experts models stay consistent between inference and update.

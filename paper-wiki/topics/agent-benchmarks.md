@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-10T00:00:00Z
+timestamp: 2026-11-11T00:00:00Z
 ---
 
 # Scope
@@ -35,6 +35,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [VisSearch-Bench](../papers/2611.04894.md) - 204 human-built multimodal open-web tasks in five families with reference answers, gold trajectories, and per-task rules for complete-answer Accuracy and partial-credit Process Score; across 16 models and two frameworks the best system solves 26.47% in one Pass@1 run.
 * [AutoVend](../papers/2610.36980.md) - one agent runs 20 vending machines from a shared warehouse for 180 simulated days through MCP tools, with demand calibrated on real sales records and a fee for every restocking visit; four of five agents finish below a rule-based inventory baseline, and net-asset growth per API dollar ranks the models differently from profit.
 * [ReproBridge](../papers/2611.08452.md) - ReproBridge-Bench scores fresh coding-agent sessions on 1,029 measurements from 36 ICML 2026 Spotlight papers against five human-verified reference runs per task plus an execution-integrity audit; refined hand-off artifacts raise mean success from 76.4% to 92.6% across four models.
+* [FinCosmos](../papers/2611.07464.md) - a simulated investor hides a grammar-sampled strategy, the agent must source its own data and build a backtest under a cutoff, and programs recompute the delivery under 15 veto checks; none of 150 sessions is accepted, and all 35 that the user signed off fail a program check.
 
 # Synthesis
 
