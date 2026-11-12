@@ -7,7 +7,7 @@ tags:
 - coding-agents
 - agent-harness-engineering
 - agent-harness
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ OpenCode (OpenCode Contributors, 2025) is an open-source coding-agent framework 
 * [JIT-Agent](../papers/2608.25593.md) - one of five fixed real-system harness baselines (with Claude Code, Codex, Hermes, and NanoBot) under the same backbone; OpenCode scores 75.9 on DeepSearchQA, 65.0 on xBench-DS, and 48.1 on AgentIF.
 * [SoL-Pi](../papers/2609.20519.md) - one of four third-party comparison harnesses run under GPT-5.6 Sol on EdgeBench.
 * [AgentSWE](../papers/2610.13361.md) - one of the coding harnesses paired with builder models in its harness-model comparison runs.
+* [SparseRead](../papers/2608.22237.md) - one of three frameworks (v1.17.14) in the portability test, connected through a thin plugin adapter; median token reduction 65.2% across six models.
 
 # Notes
 

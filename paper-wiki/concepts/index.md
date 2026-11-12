@@ -1,5 +1,6 @@
 # Concept
 
+* [ACON (Agent Context Optimization)](acon.md) - Context-compression framework for long-horizon agents that condenses observations and histories under a guideline optimized from compression failures; a common compression baseline.
 * [Agent Workflow Memory](agent-workflow-memory.md) - Induces reusable multi-step workflows from an agent's past experience and supplies them to later tasks; a common baseline for procedure reuse in web and interactive agents.
 * [Agent World Model (AWM)](agent-world-model.md) - Synthesis of executable tool environments with persistent backend state for agentic RL, used as training data and as an environment-scaling baseline.
 * [Agent-World](agent-world.md) - Environment synthesis that mines databases from real service themes, validates generated tools against them, and co-evolves environments and policies.

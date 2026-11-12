@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - text-environments
-timestamp: 2026-11-10T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ WebShop (Yao et al., arXiv:2207.01206, NeurIPS 2022) is a simulated shopping web
 * [X-Tree](../papers/2609.32993.md) - online RLVR and on-policy self-distillation testbed: 48 skills mined from 1,824 trajectories; the adaptive skill bonus adds up to +3.6 success and +4.6 graded score over outcome-only GRPO at 1.5B-7B, and a tree mined from only 100 trajectories already helps.
 * [Source Preference in the Wild](../papers/2610.03195.md) - uses 1,500 WebShop goals only as Shopping requests with structured requirements, while the items come from live Tavily web search rather than the simulator; WebShop-request products also form the DPO pairs for its fake-source and Amazon-rebalancing experiments.
 * [AutoVend](../papers/2610.36980.md) - cited as buyer-side shopping evaluation, in contrast to its seller-side sustained operation.
+* [SteerDistill](../papers/2611.13410.md) - success rate 68.41 for the 4-bit Qwen3-8B student against 68.58 for BF16, trained in WebShop's own environment with state compared by product selections, page type, and available choices.
 
 # Notes
 

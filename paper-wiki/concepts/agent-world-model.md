@@ -7,7 +7,7 @@ tags:
 - agent-environments
 - tool-use
 - agentic-rl
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ Agent World Model (AWM; Wang et al., "Agent World Model: Infinity Synthetic Envi
 * [Agent-Reflex](../papers/2610.17953.md) - an environment-scaling baseline (AWM) among the Qwen3-8B methods it compares against, beside EnvScaler and Agent-World.
 * [GraphForge](../papers/2609.38923.md) - listed with Agent-World as general-purpose environment synthesis; GraphForge instead keeps real files and moves verification into an evidence graph.
 * [ToolSpace](../papers/2611.05036.md) - named data-centric baseline (AWM-8B 7.8 average against ToolSpace-8B's 19.6).
+* [SteerDistill](../papers/2611.13410.md) - source of the executable tool-use training tasks for the checkpoint evaluated on BFCL V4 and τ²-Bench; its database state is what divergence localization and local verification compare.
 
 # Notes
 

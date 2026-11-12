@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - long-horizon-planning
 - vision-language-action
-timestamp: 2026-09-28T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Scope
@@ -21,10 +21,13 @@ It also covers games played through text or high-level tool interfaces, where pe
 * [GameHorizon Suite](../papers/2609.25001.md) - a 5,000-hour, 21-title AAA gameplay dataset with directly recorded keyboard-mouse actions and an automatically annotated three-horizon instruction pyramid, plus a 5,000-question offline benchmark and a stepwise-reset Minecraft online track; across 47 models, future-action planning and goal decomposition are the bottleneck, dedicated game VLAs are near chance on unseen AAA games, and offline tiers match online rankings.
 * [Game Arena](../papers/2609.31473.md) - Kaggle's open arena ranking frontier LLMs by head-to-head play through a bare text harness in Chess, heads-up no-limit poker, and 8-player Werewolf, at large scale (900,000 poker hands, 31,472 Werewolf games) with duplicate poker and role-decomposed ratings; rankings are tiered within each game but reorder across games.
 * [AgentWorld](../papers/2609.31590.md) - uses an open-source MMORPG as a cooperative multi-agent testbed but wraps all low-level control in 13 high-level API tools, so scores isolate planning and coordination rather than action execution.
+* [GTAGym](../papers/2611.13028.md) - rebuilds sub-tasks of 75 GTA V missions in a web 3D environment with engine-state success checks (150 tasks, eleven categories); the best model reaches 70.9% against 89.8% for human players, with aerial navigation, interception, and evasion near zero for most models, and scores collapse on dynamic tasks when the game is not paused during inference.
 
 # Synthesis
 
 The three papers sit at different points on the planning-versus-acting axis this topic uses. GameHorizon keeps both and finds planning is the bottleneck even when control is available. AgentWorld removes control through 13 high-level tools; with coordination left as the main difficulty, the best model still solves only 52.0% of tasks. Game Arena removes perception and control entirely through a bare text harness, yet control-like failures return as rule-following errors: weaker models often need more than ten illegal-move retries per chess game, mostly late in the game. Two cautions carry across. Game Arena's rankings reorder across Chess, poker, and Werewolf, so a single game or game genre should not be read as a general strategic or game-playing score. And both evaluation papers measure default API configurations rather than matched reasoning budgets, which matters given this topic's open question on the latency cost of thinking.
+
+[GTAGym](../papers/2611.13028.md) adds a control-side view to this topic. Its models read the scene and plan the route well enough to finish on-foot and indoor tasks, and fail where an action must be timed against a moving vehicle or target: Calibration and Regulation account for 63.2% of annotated first errors. Its pause ablation gives the topic's latency question a number: with the simulation running during inference, GPT-6.1-Sol falls from 62.1% to 39.8% and to zero on following, interception, and evasion. Its online track is a reconstruction of mission objectives, so it measures control under a GTA-like interface, not play of the commercial game.
 
 # Open Questions
 

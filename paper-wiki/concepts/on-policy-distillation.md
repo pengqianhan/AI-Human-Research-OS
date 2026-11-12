@@ -5,7 +5,7 @@ description: Training a student on its own sampled trajectories by matching a te
 tags:
 - on-policy-distillation
 - post-training-feedback
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -31,6 +31,7 @@ The second variant is what makes OPD a channel for arbitrary natural-language su
 * [Agent-Reflex](../papers/2610.17953.md) - context-conditioned, same-weights OPD added to noisy agentic RL: the policy re-scores its own action tokens with its environment's reflection skill card prepended, and SEED's sigmoid weight on the detached log-probability shift scales each token's term; removing the term lowers both AgentNoiseBench settings (45.9 to 43.7 and 12.3 to 9.5).
 * [ActionOPD](../papers/2610.19820.md) - action-level OPD from a generation-only teacher: student candidates at student-visited states are rewarded by semantic agreement with three sampled teacher actions and trained by a clipped group-relative policy gradient, with no teacher log-probabilities or shared tokenizer; on τ²-bench it is level with sampled-token reverse-KL OPD on test pass¹ (40.0 against 39.6) and behind on pass⁴ (14.2 against 17.5). Self-ActionOPD gives a same-weights teacher privileged task information.
 * [Axion 1.0](../papers/2611.03233.md) - deliberately omits OPD, setting its two SFT stages and RL against Agents-A1's domain-routed OPD; no run adds it back, so the comparison is between models rather than an ablation.
+* [SteerDistill](../papers/2611.13410.md) - on-policy quantization-aware distillation with two targets: forward KL to the student's own teacher-steered predictions at locally verified corrected turns, reverse KL to the full-precision teacher elsewhere; plain on-policy QAD is the baseline it beats by 2.41 points on BFCL V4.
 
 # Notes
 

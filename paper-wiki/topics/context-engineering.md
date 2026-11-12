@@ -6,7 +6,7 @@ tags:
 - context-engineering
 - llm-agents
 - agent-reliability
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Scope
@@ -33,6 +33,7 @@ This topic tracks the design and runtime management of agent context: instructio
 * [AutoSFT](../papers/2610.22194.md) - measures what fills a research agent's 258,400-token window over 877 calls (training output 13.4%, rereading the run record 11.8%, applying data actions 9.7%, evaluation output 8.9%, and status polling only 1.7% despite 371 calls) and halves compactions by moving execution into an executor session that returns file paths.
 * [CarryOn](../papers/2610.18784.md) - folds history into continuation carriers that reference files, documents, or application state the agent already changed (or store source-backed findings), plus an execution context of open goals and constraints and a live tail; with Claude Opus 4.7 it raises the OSWorld 2.0 partial score from 43.9% to 49.7% at 51.9% fewer tokens, and beats a same-principle summary rewritten at every fold (55.93% against 50.93% on 40 tasks).
 * [OpenVLHarness](../papers/2610.26860.md) - renders each tool output into a compact observation (overlay, description, normalized boxes) and keeps masks, arrays, images, and URLs in a registry exposed only as handles and descriptors through per-turn Environment Updates; reusable image handles add 3.1 and 4.5 points over a text-only memory variant on Qwen3-VL-8B and 32B.
+* [SparseRead](../papers/2608.22237.md) - controls what external content is admitted before it enters context: the agent states a Read Intent, gets bounded anchored evidence with per-slot coverage, and a gate caps sparse exposure at one full view before falling back; 15.7 to 92.9% fewer tokens across six models and five scenarios with score preserved or improved in 29 of 30 settings.
 
 # Synthesis
 
@@ -51,6 +52,8 @@ AutoSFT adds a byte-level account of where a long-running agent's context goes, 
 CarryOn adds a third answer to the compression-versus-state question. Compression keeps an account of the past, and LongHorizon-Harness and PoS keep a maintained record of the present. For work that already exists in the environment, CarryOn keeps neither: a carrier points at the file, document, or application state and says when it can be reused, and only what those objects do not hold (open goals, constraints, unfinished work) stays in text. Its comparison isolates part of what matters. A sliding window and a generic summary, both shorter than the full history, score below the uncompressed baseline; the same organizing principles written into a summary rewritten at each fold recover most of the loss; and versioned records that persist across folds add 5 more partial-score points on 40 tasks. Its read-only Grounder checks that an object exists and changed, not that it is right, which echoes LongHorizon-Harness's rule that only verified environment facts enter state, at a weaker level of verification (reader connection). Its baselines stop at prompt-based compression, so how object references compare with maintained-state methods such as PoS or LongHorizon-Harness is still open.
 
 OpenVLHarness applies to multimodal tool outputs the move CarryOn makes for task history: keep the payload outside the model's context and give it an identity the model can refer to. Its registry exposes images, typed data bindings (masks, depth arrays, camera parameters), and URLs as handles with short descriptors, listed after every tool turn, and the harness resolves a handle into the input the receiving tool needs. Recursive Language Models' prompt-as-variable idea reappears in its coding agent, which receives binding descriptors and runs with the actual arrays as named variables (reader connection). Its ablation prices the visual part: a text-only memory that describes tool images in up to 160 tokens adds 0.7 and 0.3 points, while reusable image handles add 3.1 and 4.5 more (Qwen3-VL-8B and 32B), mostly on visual search. Its rendering layer is measured only together with restoring full tool schemas, so how much of the capability layer's 3.4 and 3.2 points comes from rendering alone is open.
+
+[SparseRead](../papers/2608.22237.md) moves the control point earlier than the compression and state-externalization papers above: content is filtered at admission, by a stated intent, instead of being summarized once it is in the history. Its baselines put the two approaches side by side, with ACON and observation masking each losing score in five of 15 settings where admission control loses none. Two cautions: the bound it proves is on raw characters per reading episode, not on replayed or billed tokens, and its headline counts come without run counts or task counts.
 
 # Open Questions
 

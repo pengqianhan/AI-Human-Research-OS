@@ -8,7 +8,7 @@ tags:
 - tool-calling
 - conversational-agents
 - simulated-users
-timestamp: 2026-11-11T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -31,6 +31,7 @@ timestamp: 2026-11-11T00:00:00Z
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - Tool Primitives on Qwen3-8B are reported to lead every reference model at up to 7.7× lower cost than GPT-5.4.
 * [WikiTrace](../papers/2611.14320.md) - evaluates τ³-bench Retail, cited to the τ-bench and τ²-bench papers, on its own customer-grouped split (38 train, 76 test): 88.2 against 86.8 without memory, the smallest gain of its eight suites.
 * [FinCosmos](../papers/2611.07464.md) - cited with τ-bench as simulated users that hide intent over a closed database with a target state; FinCosmos adopts pass^k from that line and reports 0 for every agent.
+* [SteerDistill](../papers/2611.13410.md) - Pass@1 31.79 for the 4-bit Qwen3-8B student against 32.64 for BF16, with a GPT-5.6 user simulator; also the benchmark for its training-cost curve and trajectory-length comparison.
 
 # Notes
 

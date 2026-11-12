@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-11-11T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Scope
@@ -47,6 +47,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - evaluates GRPO, GiGPO, and PPO on Qwen3-4B and 8B across Pass@(K,T): gains depend on a sufficient turn budget and plain GRPO falls to or below the base model at 25% of it, actions are not better per step but are better after errors and later in a trajectory, and BudgetMix RL, which samples the budget during training, adds 7.5, 5.3, and 4.0 points at tight budgets.
 * [Harness-S](../papers/2611.04277.md) - replaces GRPO groups where all eight base-harness rollouts fail with fresh rollouts of the same policy under eight router-chosen sibling harnesses; at 4B on AppWorld this lifts base-harness Avg@3 from 48.98 to 56.87 with 18.44% more rollouts, above resampling under the base harness with 41.25% more.
 * [Shortcuts and Boundaries](../papers/2611.12865.md) - task-only GRPO on Qwen3.5-4B raises verified work and certified profitable rule violations together, even with 25% conflict tasks (47 of 48 attempts after 128 updates); a binary history penalty prevents most of it from Base but reverses little once acquired.
+* [SteerDistill](../papers/2611.13410.md) - recovers a quantized agent by having the full-precision teacher steer the student's own revision at the first state-transition divergence, verifying it by execution, and distilling it without the prompt; 1.67 to 2.18 average points above QeRL at 4-bit weights on five benchmarks and three models, within one point of BF16.
 
 # Synthesis
 

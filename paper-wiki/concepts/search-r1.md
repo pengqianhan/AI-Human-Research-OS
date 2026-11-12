@@ -7,7 +7,7 @@ tags:
 - search-agents
 - reinforcement-learning
 - tool-use
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ Search-R1 (Jin et al., 2025) extends R1-style reinforcement learning for reasoni
 * [Iris](../papers/2609.04304.md) - names Search-R1 and ASearcher as the search-agent RL lineage it builds on, before adding reverse-constructed training questions and an SFT-RL "climbing" loop.
 * [Mosaic](../papers/2610.22174.md) - cited among the agentic-RL methods that train LLM agents for multi-turn search through online rollouts and outcome rewards, all of which assume one continuous context per rollout.
 * [Axion 1.0](../papers/2611.03233.md) - cited as extending RL to reasoning interleaved with retrieval; Axion's own RL stage replaces an outcome-only reward with partial credit for verified intermediate targets.
+* [SteerDistill](../papers/2611.13410.md) - follows the Search-R1 setup for its Search QA benchmark (NQ and HotpotQA training, exact match on seven datasets, three passages per query).
 
 # Notes
 

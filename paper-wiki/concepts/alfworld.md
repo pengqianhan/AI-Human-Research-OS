@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - embodied-text-environments
 - long-horizon-agents
-timestamp: 2026-11-11T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -24,6 +24,7 @@ ALFWorld (Shridhar et al., arXiv:2010.03768, ICLR 2021) aligns text-game version
 * [EviSkill](../papers/2610.05030.md) - one of three skill-evolution environments (96 train and 48 validation tasks across six families, the 134 valid_unseen test tasks); EviSkill is best with all six action backbones, for example 96.27 with GPT-5.5 and 91.04 with Qwen3.5-9B, and its cross-epoch ablation is run here.
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - ALFWorld is the environment being *simulated*: a worldbook built from 40 successful trajectories (836 turns) lets a language world model stand in for ALFWorld on 100 held-out Word2World tasks, and 85% of the task agent's simulated action sequences succeed when replayed in real ALFWorld, against 3% with a directly prompted simulator.
 * [WikiTrace](../papers/2611.14320.md) - two of eight suites (valid-seen 101 games, valid-unseen 134) for evidence-linked memory: 98.7 and 98.8 against 94.4 and 94.3 without memory; only 10 tasks are eligible for Gain, and it is the source of the wrong-rule example.
+* [SteerDistill](../papers/2611.13410.md) - success rate 79.75 for the 4-bit Qwen3-8B student against 79.92 for BF16; local verification accepts a correction when the resulting world state matches the reference or both runs succeed.
 
 # Notes
 

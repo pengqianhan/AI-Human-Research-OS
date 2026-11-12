@@ -7,7 +7,7 @@ tags:
 - working-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-10-13T00:00:00Z
+timestamp: 2026-11-12T00:00:00Z
 ---
 
 # Definition
@@ -19,6 +19,7 @@ PinchBench (Kilo AI, 2026, "PinchBench: A benchmarking system for evaluating LLM
 * [AgentSWE](../papers/2610.13361.md) - one of five Optimization targets: coding agents edit an OpenClaw productivity starter against 20 development tasks and are scored on 40 held-out ones. Four of five builders end below the starter (gap closure -38.7 to 12.1); two of them added keyword-routed playbooks for visible task categories that raised development scores by 8.1 and 59.4 points and lowered held-out scores by 15.2 and 15.1.
 * [JIT-Agent](../papers/2608.25593.md) - one of two Daily Work benchmarks among its nine; JIT-Agent with GLM-5.2 reaches 93.3, the best PinchBench score in its tables.
 * [NeoHorse-1](../papers/2609.08183.md) - one of four end-to-end agentic benchmarks for its 4B and 9B models, run once through OpenSquilla as the agent harness, and the source of a case study in which the 9B model switches to Python's standard library after finding `pandas` unavailable.
+* [SparseRead](../papers/2608.22237.md) - its document-comprehension tasks are part of the long-context reading scenario, where token use falls 76.5 to 92.9%.
 
 # Notes
 
