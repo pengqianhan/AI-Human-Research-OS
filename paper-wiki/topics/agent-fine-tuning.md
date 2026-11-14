@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # Scope
@@ -48,6 +48,8 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [Harness-S](../papers/2611.04277.md) - replaces GRPO groups where all eight base-harness rollouts fail with fresh rollouts of the same policy under eight router-chosen sibling harnesses; at 4B on AppWorld this lifts base-harness Avg@3 from 48.98 to 56.87 with 18.44% more rollouts, above resampling under the base harness with 41.25% more.
 * [Shortcuts and Boundaries](../papers/2611.12865.md) - task-only GRPO on Qwen3.5-4B raises verified work and certified profitable rule violations together, even with 25% conflict tasks (47 of 48 attempts after 128 updates); a binary history penalty prevents most of it from Base but reverses little once acquired.
 * [SteerDistill](../papers/2611.13410.md) - recovers a quantized agent by having the full-precision teacher steer the student's own revision at the first state-transition divergence, verifying it by execution, and distilling it without the prompt; 1.67 to 2.18 average points above QeRL at 4-bit weights on five benchmarks and three models, within one point of BF16.
+* [Actor, Judge, or Teacher?](../papers/2611.17167.md) - a frozen decision model (JEV) scores every action of a policy's rollouts after the episode, asked whether the action helped; mean-centered scores added to the GRPO advantage lift Qwen2.5-1.5B from 72.8% to 82.9% on ALFWorld and from 56.8% to 71.4% on WebShop, against GRPO numbers taken from the GiGPO paper, for 22 to 30 USD of queries per run.
+* [Agent-R2](../papers/2611.08219.md) - SFT on about 3k Claude-Opus-4.5 trajectories and rubric-scored GRPO on about 1k tasks, all synthesized from real web workflows and real office files, take Qwen3-4B from a 32.4 to a 51.0 GDPval score; a 4k-SFT control (45.5) shows the RL stage, not extra data, gives the last 5.5 points.
 
 # Synthesis
 
@@ -88,6 +90,8 @@ What Does Multi-Turn RL Really Improve questions the single number this topic us
 
 Harness-S works on the same all-failure groups that dynamic sampling in DAPO discards. Instead of dropping them or resampling in the same context, it changes the execution context and lets the same policy try again under eight sibling harnesses, keeping the new group when any attempt succeeds. Resampling under the base harness with more rollouts (3,616 against 3,032) scores lower on AppWorld, which points to the context change, not the extra samples, as the source of the mixed groups. Its rescued trajectories are on-policy but generated with help the deployed policy will not have, which makes the method closer to learning with privileged information than to plain RL (reader observation). The gains are uneven across metrics: on SWE-Gym, Pass@3 rises 14.37 points at 4B but Avg@3 only 6.25, so the policy finds a fix in one of three attempts more often without becoming reliable (reader calculation).
 
+[Actor, Judge, or Teacher?](../papers/2611.17167.md) and [Agent-R2](../papers/2611.08219.md), from the same group, put a judge into GRPO at two different grains. Agent-R2 keeps one outcome reward per rollout, a rubric score for the deliverable, and gets its largest measured gain from that RL stage (5.5 GDPval points over an SFT control with the same data). The other paper keeps the environment's outcome reward and adds a per-action score from a frozen decision model shown the whole trajectory. Both report that what the judge is asked matters: rubric against no rubric is worth 1.5 points in one run, and a contribution question against an outcome question is the difference between helping and hurting on ALFWorld. Neither reports training-seed variance, and the per-step paper's baseline is another paper's GRPO, so the sizes are less certain than the directions.
+
 # Open Questions
 
 * Does evolution strategies' reported horizon-dependent advantage over policy-gradient RL hold on frontier-scale models and real (non-controlled) long-horizon tasks, not just the paper's controlled Sudoku crossover?
@@ -118,3 +122,4 @@ Harness-S works on the same all-failure groups that dynamic sampling in DAPO dis
 * Axion 1.0 omits mid-training, DPO, and OPD without testing them. On one base model and dataset, what does adding each one back contribute?
 * BudgetMix prints the remaining budget in the prompt and also varies it in training. How much of its tight-budget gain survives if the budget is varied but hidden, or shown but not varied, and does the effect hold on frontier-scale models?
 * Harness-S trains on rollouts produced under contexts the deployed policy never sees. Compared with a matched-context control (the same number of mixed groups drawn under the base harness), how much of its gain comes from the sibling harnesses' behaviors and how much from simply having fewer all-failure groups?
+* Per-step judge scores (Actor, Judge, or Teacher?) and same-state grouping (GiGPO) both give step-level credit on ALFWorld and WebShop and report gains of similar size over GRPO. Run in one codebase with training seeds, which is larger, and do they add?

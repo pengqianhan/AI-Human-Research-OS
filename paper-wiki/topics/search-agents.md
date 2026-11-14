@@ -7,7 +7,7 @@ tags:
 - information-seeking
 - web-agents
 - reinforcement-learning
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # Scope
@@ -28,6 +28,7 @@ This topic tracks agents whose core task is searching external sources (the live
 * [OpenVLHarness](../papers/2610.26860.md) - a training-free multimodal harness whose text search, image search, and webpage-visit tools (Serper, summarized by Qwen3-VL-8B, with reusable URL handles) lift six visual search and deep-research benchmarks, for example MMSearch-Plus from 27.97 to 53.70 and BrowseComp-VL from 46.12 to 63.91 with GPT-6 Astra.
 * [Axion 1.0](../papers/2611.03233.md) - tool-dependent training questions built by filter-select-compute programs over structured databases withheld from the solver, with closed-book-solvable ones removed; SEAL-0 goes from 44.1 to 62.2 at 35B, half of the gain from RL with partial credit for verified intermediate targets.
 * [VisSearch-Bench](../papers/2611.04894.md) - evaluates searching multimodal agents on tasks that link visual evidence across images, objects, and steps: ReAct lifts every backbone above direct answering, the best reaches 26.47%, set-wise tasks stay at or below 11.76%, and direct image inspection beats captions.
+* [DeepStress](../papers/2607.13920.md) - swaps the retrieval tool for a simulator that writes one document per query with controlled trustworthiness, relevance, and factuality; across 12 systems, RL-trained open agents keep answering from sources with credibility red flags, GPT-5 agents abstain or search to the budget, and HotpotQA stays about 34% correct with every document false.
 
 # Synthesis
 
@@ -47,6 +48,8 @@ Axion 1.0 builds search tasks differently from the rest of this topic. A program
 
 VisSearch-Bench carries the topic's breadth question into images. Its set-wise family, where an agent must check a visual property for every item in a set, is the hardest (at most 11.76% accuracy), the visual counterpart of WideSearch's item-level completeness. Its visual-access ablation gives a measured answer to whether captions can stand in for images: direct inspection wins for all three backbones tested, though only by 2 to 7 of 204 tasks in single runs, while dropping image tools costs up to 10.29 points. The Qwen3.5-397B-A17B base that Iris trains into a text search agent solves 15.69% here with plain ReAct (reader connection).
 
+DeepStress looks at what the search agents in this topic do when the evidence is bad. It replaces retrieval with generated documents whose trustworthiness, relevance, and factuality are set by the experimenter, and it reports how agents fail, not only how often. Agents trained with answer-correctness rewards (Search-R1, AutoRefine) follow whatever is in context, including tabloid-styled sources, while GPT-5 agents more often abstain or keep searching. The paper attributes this to narrow RL rewards, but model scale and vendor training differ too. Two of its measurements bear on other entries here: HotpotQA, part of the open-domain suite used by False Frontiers and Search-R1, is 19 to 69% answerable with no search at all, and BrowseComp-Plus drops to about zero without correct evidence, which supports using closed-book filtering as Iris, HyperBrowseComp, and Axion do. Source Preference in the Wild found general models choosing by site identity; here several trained agents ignore site credibility entirely, a different failure with the same cause, source cues not being part of what was rewarded (reader connection).
+
 # Open Questions
 
 * SearchOS's shared-state coordination and WideSeek-R1's trained multi-agent coordination both address the same context-pollution/serial-execution problem for broad search — does combining durable, system-maintained state (SearchOS's approach) with jointly-trained orchestration (WideSeek-R1's approach) outperform either alone, or does trained coordination make explicit state tracking partly redundant?
@@ -62,3 +65,4 @@ VisSearch-Bench carries the topic's breadth question into images. Its set-wise f
 * OpenVLHarness gains most where the bare model cannot search. If its no-tool and Codex baselines got the same Serper tools through a plain interface, how much of the gain on BrowseComp-VL and MMSearch-Plus would remain, and how would it do on HyperBrowseComp's video, scan, and map evidence?
 * Axion 1.0's chained partial credit rewards verified intermediate targets. Does it improve on outcome-only rewards for search RL, and what happens when a question can be answered by a route other than the construction program's chain?
 * Set-wise visual search fails mostly at aggregation, not at single judgments. Would the shared coverage records that SearchOS-V1 keeps for text search raise complete-set accuracy here, or does holding many images in context remain the bottleneck?
+* DeepStress finds answer-reward-trained search agents ignore credibility cues. Would a reliability-aware reward such as RAS teach calibrated abstention, or teach refusal, given that always abstaining scores 1 when evidence is fully unreliable?

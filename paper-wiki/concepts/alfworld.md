@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - embodied-text-environments
 - long-horizon-agents
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ ALFWorld (Shridhar et al., arXiv:2010.03768, ICLR 2021) aligns text-game version
 * [From Traces to Agentic Worlds (Trace2Env)](../papers/2610.06100.md) - ALFWorld is the environment being *simulated*: a worldbook built from 40 successful trajectories (836 turns) lets a language world model stand in for ALFWorld on 100 held-out Word2World tasks, and 85% of the task agent's simulated action sequences succeed when replayed in real ALFWorld, against 3% with a directly prompted simulator.
 * [WikiTrace](../papers/2611.14320.md) - two of eight suites (valid-seen 101 games, valid-unseen 134) for evidence-linked memory: 98.7 and 98.8 against 94.4 and 94.3 without memory; only 10 tasks are eligible for Gain, and it is the source of the wrong-rule example.
 * [SteerDistill](../papers/2611.13410.md) - success rate 79.75 for the 4-bit Qwen3-8B student against 79.92 for BF16; local verification accepts a correction when the resulting world state matches the reference or both runs succeed.
+* [Actor, Judge, or Teacher?](../papers/2611.17167.md) - main environment, with task types split by subgoal dependency (Clean, Heat, Cool need the state change before placement): six decision models act far worse on dependent tasks, and a policy taught by JEV's hindsight progress scores reaches 82.9% overall and 86.8% on dependent tasks.
 
 # Notes
 

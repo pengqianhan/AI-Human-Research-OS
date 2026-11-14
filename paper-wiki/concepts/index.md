@@ -24,6 +24,7 @@
 * [CORE-Bench](core-bench.md) - 270 computational-reproducibility tasks from 90 papers, where an agent reproduces a study's results from its provided code and data.
 * [CUA Driver](cua-driver.md) - Open-source computer-use driver with accessibility-addressed and coordinate input under a best-effort background policy; the matched baseline for Hybrid Computer Use.
 * [Darwin Gödel Machine (DGM)](darwin-godel-machine.md) - Self-improving coding agent that rewrites its own code, validates each version on coding benchmarks, and keeps an open-ended archive of agents; the standard reference for self-modifying agents and archive-based search.
+* [Decision models](decision-models.md) - Models that answer a question about a context with a typed output (option probabilities or a score) instead of generated text, also called System One models; Jev is the first public example.
 * [DeepSearchQA](deepsearchqa.md) - Deep-research question-answering benchmark for evaluating agent search-and-synthesis capability.
 * [DeepSWE](deepswe.md) - 113 original long-horizon software-engineering tasks in 91 repositories, kept out of upstream code and graded by hand-written verifiers.
 * [DSPy](dspy.md) - Framework for compiling declarative multi-stage language-model programs into self-improving pipelines via prompt- and (more recently) weight-optimization.

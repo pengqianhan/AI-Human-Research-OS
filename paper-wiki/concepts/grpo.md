@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # Definition
@@ -45,3 +45,5 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [Shortcuts and Boundaries](../papers/2611.12865.md) - trains every policy from Qwen3.5-4B with GRPO on its own group rollouts; the safety variant only subtracts a binary penalty for any historical violation from the reward.
 * [SteerDistill](../papers/2611.13410.md) - GRPO post-training produces the task-specific BF16 checkpoints used as teacher and initialization, and is the optimizer inside the QeRL baseline.
 * [GTAGym](../papers/2611.13028.md) - LoRA GRPO on Qwen3.8-27B inside the Codex harness, four tasks by eight rollouts per update, with a terminal reward of success plus distance progress for failures.
+* [Actor, Judge, or Teacher?](../papers/2611.17167.md) - adds a frozen judge's mean-centered per-action scores (weight 0.5) to the GRPO outcome advantage; the GRPO baseline is not rerun but taken from the GiGPO paper.
+* [Agent-R2](../papers/2611.08219.md) - RL stage after SFT, with reward equal to a multimodal judge's rubric score over the maximum (zero without a deliverable), group size 4; worth 5.7 GDPval points over SFT alone.

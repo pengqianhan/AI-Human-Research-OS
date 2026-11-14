@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # Scope
@@ -37,6 +37,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [ReproBridge](../papers/2611.08452.md) - ReproBridge-Bench scores fresh coding-agent sessions on 1,029 measurements from 36 ICML 2026 Spotlight papers against five human-verified reference runs per task plus an execution-integrity audit; refined hand-off artifacts raise mean success from 76.4% to 92.6% across four models.
 * [FinCosmos](../papers/2611.07464.md) - a simulated investor hides a grammar-sampled strategy, the agent must source its own data and build a backtest under a cutoff, and programs recompute the delivery under 15 veto checks; none of 150 sessions is accepted, and all 35 that the user signed off fail a program check.
 * [GTAGym](../papers/2611.13028.md) - GTAVBench scores keyboard-and-mouse play by engine-state predicates with no partial credit, and reports how the action-duration cap and inference-time pausing move results (62.1% paused against 39.8% unpaused for one model).
+* [DeepStress](../papers/2607.13920.md) - a stress test, not a leaderboard: five final-answer outcome classes and RAS, which gives abstention or budget exhaustion credit of one minus the evidence reliability; rankings by RAS settle at about 10 tool calls where accuracy rankings need about 50, and a no-search baseline shows HotpotQA is 19 to 69% answerable from parametric knowledge.
 
 # Synthesis
 

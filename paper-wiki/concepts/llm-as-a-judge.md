@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-11-11T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # Definition
@@ -56,6 +56,9 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [EvoMemState](../papers/2611.03743.md) - DeepSeek-V4-Flash judges answers where benchmarks need a judge while also building every compared system's memory, with no human-agreement check.
 * [VisSearch-Bench](../papers/2611.04894.md) - both Accuracy and Process Score come from an unnamed semantic judge applying per-task scoring prompts to the final answer, though the main text describes rule-based matching.
 * [FinCosmos](../papers/2611.07464.md) - an LLM judge grades 19 of 45 dimensions and is bounded by program scores where both exist; it agrees with experts at κ = 0.87, yet the four vetoes it decides would accept 17 of 35 user-approved sessions that program checks all reject.
+* [Actor, Judge, or Teacher?](../papers/2611.17167.md) - judges every action of a trajectory instead of a final response, and varies what the judge sees and is asked: with the whole trajectory, asking whether the action helped separates milestone from no-op actions by 0.36, asking whether the task will succeed by 0.05; dedicated decision models judge better than their prompted base LLMs at 28 to 43% lower cost.
+* [Agent-R2](../papers/2611.08219.md) - a multimodal judge scores rendered deliverables against synthesized rubrics as the RL reward, and a Gemini-3.1-Pro agent judge scores GDPval; three repeats under two judge models keep the 4B model's range above Qwen3-235B's, with per-task correlation 0.93 between judges.
+* [DeepStress](../papers/2607.13920.md) - GPT-4.1 sorts final answers into correct, incorrect, and abstention with an adapted BrowseComp prompt, and a judge flags reasoning steps that voice concerns about document quality.
 
 # Notes
 

@@ -8,7 +8,7 @@ tags:
 - long-context-reasoning
 - multi-hop-qa
 - retrieval
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-14T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ Evaluations typically sample a subset of tasks and provide a subset of the corpu
 * [HyperBrowseComp](../papers/2610.03574.md) - cited as the fixed-corpus alternative it deliberately does not take: HyperBrowseComp evaluates on the live web, trading BrowseComp-Plus's identical retrieval surface for realism and accepting drift over time.
 * [CarryOn](../papers/2610.18784.md) - a random 100-question subset with BM25 (five 512-token snippets per call, no full-document retrieval, 60 turns), graded by Qwen3-32B: its context runtime lifts Claude Opus 4.7 from 49% to 56% at 22.9% fewer tokens; GPT-5 (52%) and o3 (50%) are regraded from the benchmark authors' released runs on the same questions.
 * [SparseRead](../papers/2608.22237.md) - with FRAMES, forms the Web deep search scenario on the fixed corpus; all six models gain 5 to 14 points while using 31.0 to 43.0% fewer tokens.
+* [DeepStress](../papers/2607.13920.md) - 200 of its questions, with its human-verified evidence grounding the simulator's factual documents; correctness falls to about zero when all documents are irrelevant or false, and no-search accuracy is 0.00 to 0.02, so it tests evidence use where HotpotQA does not.
 
 # Notes
 
