@@ -120,6 +120,13 @@ models improve.
   A ready-to-fork Claude Code template for academic research — papers, data
   analysis (R, Stata, Python), slides and teaching — with multi-agent review,
   enforced quality gates and replication protocols.
+- [autokernel](https://github.com/RightNow-AI/autokernel): Autoresearch for GPU
+  kernels. Give it any PyTorch model, go to sleep, wake up to optimized Triton
+  kernels.
+- [Roadmap-Docs](https://github.com/rashakil-ds/Roadmap-Docs): Best Data
+  Science, Data Analytics, AI, and SDE roadmaps. This repository is continually
+  updated based on the top job postings on LinkedIn and Indeed in the data
+  science and AI domain.
 
 ## Agent runtimes and operating systems
 
@@ -190,6 +197,21 @@ models improve.
   coding agents. AI for math, physics and software engineering.
 - [NeoHorse](https://github.com/TokenRhythm/NeoHorse): NeoHorse-1: Towards
   Recursive Self-Improvement via Agentic Post-Training with Routing Harness.
+- [powercontext](https://github.com/oceanbase/powercontext): Agent memory:
+  long-term memory & agent memory handoff. Claude Code & Codex.
+- [Dream-RSI](https://github.com/zhengkid/Dream-RSI): The offical repo for
+  "Dream-RSI: Recursive Self-Improvement through Evolving Worlds".
+- [EvoOntology](https://github.com/ruc-datalab/EvoOntology): EvoOntology: A
+  Self-Evolving Ontology Layer for Data Agents EvoOntology插件为Claude Code/Codex
+  建立&进化本体层.
+- [zylos-core](https://github.com/zylos-ai/zylos-core): Give your AI a life —
+  open-source agent infrastructure for team collaboration.
+- [RSI-Anything](https://github.com/Gen-Verse/RSI-Anything): RSI-Anything:
+  Unlocking Recursive Self-Improvement with World Models.
+- [opencrabs](https://github.com/opencrabs/opencrabs): The all-in-one AI agent.
+  Build mobile apps, frontend, backend, manages files, deep research, schedule
+  tasks and events. Self-improving, self-healing, fully autonomous. TUI, CLI and
+  Daemon.
 
 ## Skills and lists
 
@@ -250,6 +272,13 @@ models improve.
 - [medical-research-skills](https://github.com/aipoch/medical-research-skills):
   Hundreds of agent skills for medical research, including protocol design, data
   analysis, evidence insights, and academic writing.
+- [PaperSpine](https://github.com/WUBING2023/PaperSpine): Open-source AI for
+  Science Skill for research agents. Review literature, run analyses, make
+  scientific figures, and deliver editable papers from chat.
+- [infiAgent](https://github.com/polyuiislab/infiAgent): Build your own Cowork,
+  AI Scientist and other SoTA Agents just by editing config files. Support
+  anthropic skills. An infinite-horizon agent framework designed for
+  long-running, complex tasks.
 
 ## Articles
 
