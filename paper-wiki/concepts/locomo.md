@@ -7,7 +7,7 @@ tags:
 - agent-memory
 - long-term-memory
 - benchmark
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # Definition
@@ -20,3 +20,4 @@ LoCoMo (Maharana et al., ACL 2024, "Evaluating Very Long-Term Conversational Mem
 * [Jev-Mem](../papers/2609.23986.md) - sole evaluation benchmark: 0.777 overall LLM-judge accuracy with a gpt-4o-mini answer model vs. MAGMA 0.700. Its §4.2 prose and Table 1 disagree slightly on several per-category values, including Temporal.
 * [Seeing, Maintaining, and Learning](../papers/2610.19366.md) - listed among image-memory benchmarks in its 82-benchmark landscape, with the caveat that LoCoMo's conversations include shared images but the original QA and summarization experiments replace them with captions; images are used directly only in dialogue generation.
 * [EvoMemState](../papers/2611.03743.md) - LoCoMo (adversarial questions included) and LoCoMo-Refined as recall benchmarks: judge scores at most 46.4 on LoCoMo, where SimpleMem leads on token F1 and relation traversal adds only 0.3 points.
+* [MIRIX-2.0](../papers/2611.12068.md) - main conversational benchmark on 1,540 non-adversarial questions with a gpt-4o-mini majority-of-3 judge: flat memory 85.7%, graph 88.4%, graph plus AutoDream 91.4%, against 91.0% for the authors' rerun of HyperMem (92.7% as HyperMem reports it).

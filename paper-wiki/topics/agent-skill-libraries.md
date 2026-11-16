@@ -6,7 +6,7 @@ tags:
 - agent-skills
 - skill-libraries
 - self-evolution
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # Scope
@@ -32,6 +32,7 @@ This topic tracks papers that treat agent capabilities as reusable, validated sk
 * [Agent-Reflex](../papers/2610.17953.md) - 1,170 reflection skills mined per environment from matched success and failure trajectories of nine models under injected tool errors, each a structured record (trigger, diagnosis, recovery among retry, switch, ask, or abort, reversibility flags); the library is used only to generate and distill training signal and is absent at inference.
 * [Hybrid Computer Use](../papers/2610.41432.md) - one hand-written usage skill for a desktop interface, distilled from development mistakes, measured by ablation over 2,166 traces: malformed-argument rejections fall from 17.37% to 1.36%, default diff feedback rises from 0.2% to 87% of AX action calls, steps fall 14.55%, and score rises 1.59 points.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - libraries of 25,519 Tool Primitives, 1,424 tested Code Primitives, and 82 Lean-checked proof-method contracts, each unit carrying a resident LLM that applies it; new or improved units enter only after domain validation on a path separate from task execution.
+* [MIRIX-2.0](../papers/2611.12068.md) - procedural side of a general memory: after five task sessions a distiller extracts lessons and mistakes from transcript quotes and a curator edits skills whose citations are kept only when the quote checks out; highest mean held-out success among memory methods on ALFWorld and WebShop, within one standard deviation of AWM on ALFWorld.
 
 # Synthesis
 

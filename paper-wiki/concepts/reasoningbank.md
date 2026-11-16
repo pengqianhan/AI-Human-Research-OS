@@ -7,7 +7,7 @@ tags:
 - agent-memory
 - agent-self-evolution
 - learning-from-experience
-timestamp: 2026-11-11T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # Definition
@@ -18,6 +18,7 @@ ReasoningBank (arXiv:2509.25140, 2025; "ReasoningBank: Scaling Agent Self-Evolvi
 
 * [Harness²](../papers/2610.14224.md) - baseline consisting of a fixed harness plus retrieved memory distilled under an answer-free self-judge; Harness² beats it on WorkBuddy-Bench and JobBench in all four executor-harness pairs. The note records that the two papers share an author group.
 * [WikiTrace](../papers/2611.14320.md) - official implementation built once from shared no-memory runs with the true binary outcome instead of a self-judge, and not updated per test task; 81.7 average over eight suites against 79.5 without memory, with Regression at about the level of a no-memory rerun.
+* [MIRIX-2.0](../papers/2611.12068.md) - baseline that falls below no memory on both ALFWorld (66.9% against 69.4%) and WebShop (25.7% against 31.9%) with GPT-6 Luna, cited as evidence that adding experience memory does not by itself help an actor.
 
 # Notes
 

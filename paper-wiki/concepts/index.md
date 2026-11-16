@@ -54,6 +54,7 @@
 * [MemTrapBench](memtrapbench.md) - Benchmark of memory-induced cognitive traps (Reasoning Fixation and Belief Distortion), where accurate, relevant memories degrade reasoning on the current task.
 * [Meta-Harness](meta-harness.md) - Outer-loop optimization of executable agent-harness code by an agentic proposer reading past candidates' code, scores, and traces; the common baseline for automated harness evolution.
 * [mini-swe-agent](mini-swe-agent.md) - Minimal Bash-interface coding-agent harness from the SWE-agent line, used as a neutral scaffold, shared baseline harness, held-out transfer harness, and skeleton.
+* [MIRIX](mirix.md) - A multi-agent memory system with six typed memory components (Core, Episodic, Semantic, Procedural, Resource, Knowledge Vault), each managed by its own agent; a common agent-memory baseline and the base of MIRIX-2.0.
 * [MLE-Bench Lite](mle-bench-lite.md) - Lighter subset of MLE-Bench for Kaggle-derived ML-engineering agent evaluation.
 * [MobileWorld](mobileworld.md) - 201-task, 20-app mobile benchmark with long cross-app tasks plus agent-user-interaction and MCP categories, built as a harder successor to AndroidWorld.
 * [Model Context Protocol (MCP)](model-context-protocol.md) - Standard for how a language-model application discovers and invokes external tools via named, schema-described servers.

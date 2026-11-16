@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-11-14T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # Definition
@@ -59,6 +59,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [Actor, Judge, or Teacher?](../papers/2611.17167.md) - judges every action of a trajectory instead of a final response, and varies what the judge sees and is asked: with the whole trajectory, asking whether the action helped separates milestone from no-op actions by 0.36, asking whether the task will succeed by 0.05; dedicated decision models judge better than their prompted base LLMs at 28 to 43% lower cost.
 * [Agent-R2](../papers/2611.08219.md) - a multimodal judge scores rendered deliverables against synthesized rubrics as the RL reward, and a Gemini-3.1-Pro agent judge scores GDPval; three repeats under two judge models keep the 4B model's range above Qwen3-235B's, with per-task correlation 0.93 between judges.
 * [DeepStress](../papers/2607.13920.md) - GPT-4.1 sorts final answers into correct, incorrect, and abstention with an adapted BrowseComp prompt, and a judge flags reasoning steps that voice concerns about document quality.
+* [VibePrevisBench](../papers/2611.15789.md) - Gemini 4 retells a proxy video blind before seeing the brief and rates only rule-passed facts; three judges agree at Spearman 0.94 to 0.96 on agent means but 0.73 to 0.79 per run, Gemini favors its own family by 1.3 points, and human preference tracks each judge at 0.90 to 0.92.
+* [Aligning AI Teams](../papers/2611.17820.md) - Claude Sonnet 4.6 labels transcripts for testing, discovery, and fixing (the mediators of the safety gap) and scores proposals on a constitution rubric; the cross-check is a second Claude judge (r = 0.95 per run), so agreement is within one model family.
 
 # Notes
 

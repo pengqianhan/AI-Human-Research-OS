@@ -7,7 +7,7 @@ tags:
 - agent-memory
 - long-term-memory
 - benchmark
-timestamp: 2026-09-13T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # Definition
@@ -17,3 +17,4 @@ LongMemEval (Wu et al., ICLR 2025) is a large-scale benchmark for evaluating cha
 # Papers
 
 * [Memanto](../papers/2604.22085.md) - reports 89.8% overall accuracy (Stage 5 of a five-stage ablation), the paper's headline result and its stated state-of-the-art among vector-only memory architectures; maps its D2 (temporal awareness) design desideratum directly onto this benchmark's Knowledge Update and Temporal Reasoning categories and attributes its largest single ablation gain (+20.4pp) to widening retrieval recall specifically to address this benchmark's multi-session questions, which require synthesizing facts distributed across disjoint sessions.
+* [MIRIX-2.0](../papers/2611.12068.md) - LongMemEval-S on 300 questions: flat memory 58.8%, graph 70.0%, graph plus AutoDream 72.6%, 14.3 points above HyperMem (58.3%); two of the reported values are not whole counts over 300 (reader observation).

@@ -6,7 +6,7 @@ tags:
 - multi-agent-systems
 - coordination
 - shared-state
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # Scope
@@ -39,6 +39,8 @@ This topic tracks papers where multiple agents coordinate reasoning, experimenta
 * [AutoSFT](../papers/2610.22194.md) - a meta agent that delegates training and evaluation to an executor (which returns only file paths and may not read scores), gathers one proposal each from four analysis subagents whose skills differ only in their starting evidence, and calls a synthesis subagent for undersupplied capabilities; each role is added and measured on its own.
 * [EvoTeam](../papers/2610.39813.md) - a library of reusable teams selected or created per task, with a Chairman recruiting members, handoff rules scoped to the team that learned them, and skills shared across teams; on a mixed stream of 116 tasks it leads Meta-Team on all six held-out metrics (59.58 against 55.55 average), and removing learned rules costs 10.00 on GAIA and 8.75 on LOCA-Bench.
 * [AgentBaton](../papers/2610.35959.md) - two heterogeneous models share one long-horizon task through a one-time handoff of workspace and history; capable-to-efficient handoffs at the right moment keep most accuracy at a fraction of the cost, and a small learned detector chooses the moment.
+* [Aligning AI Teams](../papers/2611.17820.md) - a safety cost of teams: a PM and eight coders on the same Claude model pick less safe trade-offs than one agent on jointly infeasible safety and business goals; peer review and group chat do not reliably fix it, while a designated, empowered safety lead plus a PM-written safety document does on most models.
+* [MIRIX-2.0](../papers/2611.12068.md) - applies the multi-agent design to memory itself: a Meta Memory Manager routes each input to six typed writer agents, each owning one memory type's schema.
 
 # Synthesis
 
@@ -55,6 +57,8 @@ AutoSFT gives this topic a role-by-role ablation, which most systems here lack. 
 EvoTeam bears on this topic's open question about Graph Engineering's "System Evolution" bar. Its rosters and handoff rules persist, change from execution evidence, and carry into later tasks, and a provisional team must pass an admission check, which comes closer than the fixed topologies here. It still stops short of the bar as stated: admission and updates come from LLM reflection rather than validated comparison, and Algorithm 1 has no rollback, merge, or retirement step (reader mapping). Its distinctive claim concerns scope: teams hold what a group has learned about working together, agents hold what each can do, and only the first is isolated. Its ablation shows where that pays. Rules account for the whole lead over Meta-Team on GAIA and LOCA-Bench (without them the scores match Meta-Team's exactly, by reader calculation), while on LoCoBench Refactoring rules lower the score slightly, and on DepMigrate teams without rules do worse than having neither. Its teams are matched by collaboration pattern rather than by benchmark, as one analyst-implementer-verifier team serving three benchmarks shows, and an independent verifier recruited from that roster extends this topic's review-independence thread by role alone, with the same model. The evidence rests on one fixed stream order, and the resulting library's size is not reported.
 
 AgentBaton adds a cost-driven form of collaboration: not agents with different roles, but one task passed from an expensive model to a cheap one. Its asymmetry result (cheap-to-capable handoffs rarely save money, capable-to-cheap ones keep accuracy once a working artifact and real feedback exist) is an argument against fine-grained per-turn switching, which it beats when reproducing MTRouter. How the history is passed matters too: logfile transfer suits handoffs into a capable model, while in-context transfer was better for GLM-5.3 and Kimi K3 as sources, which the paper links, as a hypothesis, to their exposing full reasoning traces.
+
+[Aligning AI Teams](../papers/2611.17820.md) adds a cost that the capability-focused papers here do not measure: decomposing work across same-model agents can drop system-level checks that a single agent performs, because each agent stays within its assigned module. Its interventions bear on design choices elsewhere in this topic. Critique and review steps, a common ingredient of multi-agent pipelines, did not restore safety, while making one agent responsible for the integrated system and writing the system-level goal down did. A shared group chat helped only partly, on two of five models, so more communication alone was not a substitute for assigned ownership in these tasks.
 
 # Open Questions
 
@@ -73,3 +77,4 @@ AgentBaton adds a cost-driven form of collaboration: not agents with different r
 * AutoSFT's four analysis subagents differ only in their starting evidence. Would one agent prompted in turn with the same four scopes give the same diversity at lower cost, or does keeping their contexts separate matter in itself?
 * EvoTeam scopes handoff rules by team but shares skills across teams, and by the paper's reported differences a variant left with skill evolution alone scores below unevolved MAS on GAIA. Should skills be scoped too, and how should a team library decide when to merge or retire teams as a stream grows?
 * AgentBaton's handoff is one-way. In multi-agent systems where cheaper agents do most of the work, when is a return escalation to a strong model worth its recovery cost?
+* Teams that split a task into modules may lose system-level checks (Aligning AI Teams). Do capability-focused team designs in this topic, such as shared verified context or self-organizing teams, show the same diffusion of responsibility on tasks with a hidden safety trade-off?

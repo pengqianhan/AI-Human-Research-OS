@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-14T00:00:00Z
+timestamp: 2026-11-16T00:00:00Z
 ---
 
 # Scope
@@ -38,6 +38,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [FinCosmos](../papers/2611.07464.md) - a simulated investor hides a grammar-sampled strategy, the agent must source its own data and build a backtest under a cutoff, and programs recompute the delivery under 15 veto checks; none of 150 sessions is accepted, and all 35 that the user signed off fail a program check.
 * [GTAGym](../papers/2611.13028.md) - GTAVBench scores keyboard-and-mouse play by engine-state predicates with no partial credit, and reports how the action-duration cap and inference-time pausing move results (62.1% paused against 39.8% unpaused for one model).
 * [DeepStress](../papers/2607.13920.md) - a stress test, not a leaderboard: five final-answer outcome classes and RAS, which gives abstention or budget exhaustion credit of one minus the evidence reliability; rankings by RAS settle at about 10 tool calls where accuracy rankings need about 50, and a no-search baseline shows HotpotQA is 19 to 69% answerable from parametric knowledge.
+* [VibePrevisBench](../papers/2611.15789.md) - scores only a fresh replay of the delivered program, never the agent's own renders, and restricts its VLM judge to facts the rules already passed; 242 tasks, 11 agents, rankings stable under three judges and 18 scoring variants, and agents that say their render matches the reference err as often as those that do not.
 
 # Synthesis
 
