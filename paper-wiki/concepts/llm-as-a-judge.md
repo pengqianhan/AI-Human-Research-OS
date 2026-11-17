@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-11-16T00:00:00Z
+timestamp: 2026-11-17T00:00:00Z
 ---
 
 # Definition
@@ -61,6 +61,8 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [DeepStress](../papers/2607.13920.md) - GPT-4.1 sorts final answers into correct, incorrect, and abstention with an adapted BrowseComp prompt, and a judge flags reasoning steps that voice concerns about document quality.
 * [VibePrevisBench](../papers/2611.15789.md) - Gemini 4 retells a proxy video blind before seeing the brief and rates only rule-passed facts; three judges agree at Spearman 0.94 to 0.96 on agent means but 0.73 to 0.79 per run, Gemini favors its own family by 1.3 points, and human preference tracks each judge at 0.90 to 0.92.
 * [Aligning AI Teams](../papers/2611.17820.md) - Claude Sonnet 4.6 labels transcripts for testing, discovery, and fixing (the mediators of the safety gap) and scores proposals on a constitution rubric; the cross-check is a second Claude judge (r = 0.95 per run), so agreement is within one model family.
+* [SPILLWAY](../papers/2611.07222.md) - a local gemma4:31b judge with routing and payload views may restore calls a deterministic floor refused, but is never asked about a target inside text the sanitizer removed; without the sanitizer the judge approved a transfer to the attacker's account.
+* [SWE-CoWork](../papers/2611.20218.md) - GPT-6 Astra, itself an evaluated agent, rates 101 Claude-Opus-5.5 trajectories on 16 behavior dimensions before outcomes are attached; it almost never uses the lowest category.
 
 # Notes
 

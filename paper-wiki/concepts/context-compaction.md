@@ -6,7 +6,7 @@ tags:
 - context-engineering
 - long-context-reasoning
 - agent-harness-engineering
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-17T00:00:00Z
 ---
 
 # Definition
@@ -28,6 +28,7 @@ Context compaction is the harness or model operation that shrinks an agent's wor
 * [Axion 1.0](../papers/2611.03233.md) - QUEST-based condensation divides RL rollouts into sessions that share one reward and advantage, with loss normalized per session, while SFT keeps each complete trajectory (up to 128K tokens) with no summaries replacing earlier context.
 * [AutoVend](../papers/2610.36980.md) - over a 180-day episode the conversation history continues across days, and a notebook the agent overwrites is the state designed to survive compaction; two of its four failure cases are corrections that were not carried forward.
 * [GTAGym](../papers/2611.13028.md) - its GTAVBench-AGI branch runs models in the Codex harness with automatic compaction instead of a ten-pair screenshot window; scores rise 0.9 to 10.0 points, and the analysis records Kimi-K3 swapping its objective after a compaction.
+* [SWE-CoWork](../papers/2611.20218.md) - names persistence across context compactions as one of four organizational capabilities and reports per-model median compaction counts; Claude-Opus-5.5 processes a median 47.57M input tokens without compacting.
 
 # Notes
 

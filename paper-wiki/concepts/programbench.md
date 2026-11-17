@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - coding-agents
 - program-reproduction
-timestamp: 2026-10-15T00:00:00Z
+timestamp: 2026-11-17T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ ProgramBench (Yang et al., 2026, "ProgramBench: Can Language Models Rebuild Prog
 * [RecreationWorld](../papers/2609.22000.md) - one of five out-of-distribution transfer benchmarks: two models fine-tuned on recreation trajectories both finish above their first evaluated checkpoint, under a common Claude Code scaffold with one trial per task per checkpoint.
 * [MiMo-V2.6](../papers/2610.11959.md) - listed in its evaluation table at 26.5 for MiMo-V2.6-Pro, against 37.0 for a frontier model in the same table.
 * [Doc2Harness](../papers/2610.20344.md) - cited, not run: repository-level generation judged by end-to-end tests generated from a reference executable through fuzzing; Doc2Harness's deliverable, a harness merged from twelve harnesses' documentation, has no reference implementation to test against.
+* [Accelerate Bench](../papers/2611.20882.md) - borrows ProgramBench's behavioral specification to define optimization tasks by the computation to preserve and the workload to speed up, with no reference patch.
 
 # Notes
 

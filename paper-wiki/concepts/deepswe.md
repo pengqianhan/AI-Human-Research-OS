@@ -8,7 +8,7 @@ tags:
 - coding-agents
 - long-horizon-agents
 - contamination-resistant
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-17T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ DeepSWE (Huang, Lee, Tng, and Ge, arXiv:2607.07946) is a benchmark of 113 origin
 * [Beneath the Surface](../papers/2611.07624.md) - coding transfer target for Champions evolved on Terminal-Bench 2: seven of eight gain coverage, while all four MiniSWE Champions lose reliability.
 * [MiMo-V2.6](../papers/2610.11959.md) - tracks DeepSWE v1.1 during RL, rising from 58.4 to 72.6 for the Pro model.
 * [Doc2Harness](../papers/2610.20344.md) - cites DeepSWE among repository-level benchmarks, noting its per-task hand-written verifier.
+* [SWE-CoWork](../papers/2611.20218.md) - lists DeepSWE 1.1 in its comparison table as a repository benchmark with an underspecified request, repository-only information, and patch tests, the setting it extends with colleagues and workplace records.
 
 # Notes
 

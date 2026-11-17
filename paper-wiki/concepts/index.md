@@ -4,6 +4,7 @@
 * [Agent Workflow Memory](agent-workflow-memory.md) - Induces reusable multi-step workflows from an agent's past experience and supplies them to later tasks; a common baseline for procedure reuse in web and interactive agents.
 * [Agent World Model (AWM)](agent-world-model.md) - Synthesis of executable tool environments with persistent backend state for agentic RL, used as training data and as an environment-scaling baseline.
 * [Agent-World](agent-world.md) - Environment synthesis that mines databases from real service themes, validates generated tools against them, and co-evolves environments and policies.
+* [AgentDojo](agentdojo.md) - An extensible environment for prompt-injection attacks and defenses on tool-calling agents (Banking, Slack, Travel, Workspace suites); the standard setting for indirect prompt-injection defenses.
 * [Agentic Context Engineering (ACE)](agentic-context-engineering.md) - Context adaptation that keeps an evolving playbook updated by generation, reflection, and curation with incremental edits; a reference method for improving agents without weight updates.
 * [Agentic Harness Engineering](agentic-harness-engineering.md) - AHE: evolves coding-agent harnesses through file-level components, distilled trajectory evidence, and edits paired with checked predictions.
 * [Agents' Last Exam (ALE)](agents-last-exam.md) - Living benchmark of long-horizon, economically valuable professional tasks with verifiable outcomes, and the source of a five-layer system view of agents.
@@ -68,6 +69,7 @@
 * [PinchBench](pinchbench.md) - Practical productivity and data-analysis tasks for LLMs running as OpenClaw agents, each scored from 0 to 100.
 * [ProgramBench](programbench.md) - 200 program-reproduction tasks: rebuild a program's observable behavior from an execute-only reference binary and its documentation, scored by black-box test pass rates.
 * [Ralph loop](ralph-loop.md) - Relaunching an agent on the same workspace each time it stops until a completion criterion is met, judged by the agent itself or by a separate reviewer.
+* [RE-Bench](re-bench.md) - Seven ML research-engineering environments where agents and 61 human experts improve working solutions within budgets of up to eight hours, scored against reference solutions.
 * [ReAct](react.md) - Interleaved reasoning traces and environment actions in one loop; the default minimal agent scaffold and single-agent baseline.
 * [ReasoningBank](reasoningbank.md) - Memory that distills reasoning strategies from self-judged successes and failures, retrieves them at test time, and writes new learnings back.
 * [Reflexion](reflexion.md) - Verbal self-reflection for language agents: lessons written after each attempt are kept in an episodic memory and guide later attempts, with no weight updates; a standard baseline for learning from experience in context.
@@ -84,6 +86,7 @@
 * [SWE-Gym](swe-gym.md) - 2,438 real Python repository tasks with executable runtimes and unit tests for training software-engineering agents and verifiers.
 * [Terminal-Bench](terminal-bench.md) - Benchmark suite for evaluating AI agents on hard, realistic tasks in command-line environments.
 * [Terminus 2](terminus-2.md) - General-purpose terminal-agent harness from the Harbor framework; the usual plain baseline on Terminal-Bench and the starting point that harness optimizers patch.
+* [TheAgentCompany](theagentcompany.md) - A simulated software company with internal sites, data, and coworkers for benchmarking agents on professional tasks; the reference point for agents inside a simulated organization.
 * [ToolSandbox](toolsandbox.md) - Stateful, conversational tool-use benchmark scored against ordered milestones, reported in this wiki on scenario subsets with a similarity metric.
 * [Toucan](toucan.md) - 1.5 million tool-agent trajectories from nearly 500 real MCP servers with real tool execution, used here as a training corpus, comparison dataset, and test set.
 * [Vending-Bench](vending-bench.md) - A long-horizon simulation where an LLM agent runs one vending machine, built to test sustained coherent decision-making.

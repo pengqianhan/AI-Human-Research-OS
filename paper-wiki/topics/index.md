@@ -16,6 +16,7 @@
 * [Agent test-time scaling](agent-test-time-scaling.md) - Papers about spending more inference-time compute on one agent task (more candidate actions or trajectories, stronger verification, or more improvement rounds) and about when that compute turns into higher task success.
 * [Agentic robot manipulation](robot-manipulation-agents.md) - Papers about LLM, VLM, and coding agents that solve robot manipulation tasks by writing control programs, orchestrating frozen policies through a harness, or generating demonstrations that train robot policies.
 * [Autonomous research](autonomous-research.md) - Papers about AI systems that autonomously generate, test, and refine research hypotheses or artifacts over long horizons.
+* [Coding agents](coding-agents.md) - Papers about LLM agents that change real software, including the platforms they run in and benchmarks that test what they deliver beyond a single stated patch.
 * [Context engineering](context-engineering.md) - Papers about assembling, measuring, and governing the information environment in which AI agents reason and act.
 * [Data agents](data-agents.md) - Papers about LLM agents that fulfill natural-language instructions over heterogeneous structured and unstructured data, and the intermediate layers that bridge agent tools and domain semantics.
 * [Embodied navigation](embodied-navigation.md) - Papers about vision-language(-action) models that translate goals and egocentric observations into navigation actions across tasks, scenes, and robot embodiments.

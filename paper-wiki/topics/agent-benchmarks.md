@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-16T00:00:00Z
+timestamp: 2026-11-17T00:00:00Z
 ---
 
 # Scope
@@ -39,6 +39,8 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [GTAGym](../papers/2611.13028.md) - GTAVBench scores keyboard-and-mouse play by engine-state predicates with no partial credit, and reports how the action-duration cap and inference-time pausing move results (62.1% paused against 39.8% unpaused for one model).
 * [DeepStress](../papers/2607.13920.md) - a stress test, not a leaderboard: five final-answer outcome classes and RAS, which gives abstention or budget exhaustion credit of one minus the evidence reliability; rankings by RAS settle at about 10 tool calls where accuracy rankings need about 50, and a no-search baseline shows HotpotQA is 19 to 69% answerable from parametric knowledge.
 * [VibePrevisBench](../papers/2611.15789.md) - scores only a fresh replay of the delivered program, never the agent's own renders, and restricts its VLM judge to facts the rules already passed; 242 tasks, 11 agents, rankings stable under three judges and 18 scoring variants, and agents that say their render matches the reference err as often as those that do not.
+* [SWE-CoWork](../papers/2611.20218.md) - 101 coding assignments inside a simulated organization of 26 LLM-played colleagues and versioned records, graded by per-requirement F2P/P2P tests; the leaders pass about 63% of F2P tests but finish under 8% of assignments, and a requirement-level trace locates losses in unraised questions, abandoned deferrals, implementation, early stops, and over-claimed handoffs.
+* [Accelerate Bench](../papers/2611.20882.md) - 32 workload-defined CPU optimization tasks with public tests and a private verifier on held-out inputs; 16 agents score 25.5% to 67.4% Score@1, nearly all programs are correct, and the paper reports re-judging and run-to-run variance and which pairwise gaps a single run resolves.
 
 # Synthesis
 
@@ -72,6 +74,8 @@ VisSearch-Bench shows why a strict metric and a partial-credit metric are both n
 
 Two 11-10 papers change what a benchmark's reference point is. AutoVend scores agents against a classical operations-research rule (newsvendor ordering with weekly visits) instead of against each other, and four of five agents lose to it; without that baseline its leaderboard would read as a ranking of five profitable agents. ReproBridge-Bench replaces the single published number with a distribution from five independent human runs and adds an audit of the execution behind each matching value, because a nearby number can come from a copied or substituted measurement: its Codex auditor invalidated 173 of 869 numerically matching raw-code results for one model. Both also report cost beside success (growth per API dollar; API spend per reproduction round), and in both the cost view reorders or qualifies the headline. Their limits differ: AutoVend has one simulated world and three runs per model, with price response assumed rather than validated, while ReproBridge-Bench keeps only the 70.3% of tasks that humans could reproduce (reader comparison).
 
+Two coding benchmarks added on 2026-11-17 make the same observation about checkable outcomes. In [SWE-CoWork](../papers/2611.20218.md), the leading agents satisfy most individual fail-to-pass tests but rarely an entire assignment, and supplying the full specification raises partial delivery without adding a single completed task. In [Accelerate Bench](../papers/2611.20882.md), nearly every program passes correctness and agents are separated by how much runtime they remove. Both therefore score something past per-check correctness (complete delivery, size of speedup), and both pair outcome scores with process records: requirement-level loss stages in one, technique labels and controlled replays in the other. Accelerate Bench is also explicit about resolution, reporting which pairwise gaps survive task resampling and how much re-judging and rerunning move a score, a reporting practice most single-run benchmarks in this topic lack.
+
 # Open Questions
 
 * When does grading one next turn at a recorded decision point agree with executing the agent to the end? TraceDance's authors note that a planning-first response may act well later, and no paper here yet measures that gap.
@@ -96,3 +100,4 @@ Two 11-10 papers change what a benchmark's reference point is. AutoVend scores a
 * VisSearch-Bench's Accuracy and Process Score disagree on the best system. Should leaderboards with partial credit rank by the strict metric, the partial one, or both, and how stable are such rankings across repeated runs?
 * AutoVend's rule-based baseline beats four of five LLM agents. Which other long-horizon benchmarks here would look different if a classical domain heuristic were on the leaderboard, and should such a baseline be a requirement for sustained-operation benchmarks?
 * ReproBridge-Bench counts a result only if an auditor cannot invalidate its execution, and its auditors miss 20% to 38% of human-identified invalid outcomes. How much do success rates on other execution benchmarks change when numerically correct answers are audited for how they were produced?
+* SWE-CoWork's colleagues are played by an OpenAI model and its trajectory reviewer is an evaluated OpenAI agent. How sensitive are interactive benchmarks' rankings to the family of the simulator and the reviewer, and should such benchmarks report a cross-family check by default?
