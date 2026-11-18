@@ -59,6 +59,7 @@
 * [MLE-Bench Lite](mle-bench-lite.md) - Lighter subset of MLE-Bench for Kaggle-derived ML-engineering agent evaluation.
 * [MobileWorld](mobileworld.md) - 201-task, 20-app mobile benchmark with long cross-app tasks plus agent-user-interaction and MCP categories, built as a harder successor to AndroidWorld.
 * [Model Context Protocol (MCP)](model-context-protocol.md) - Standard for how a language-model application discovers and invokes external tools via named, schema-described servers.
+* [NL2Repo-Bench](nl2repo-bench.md) - A long-horizon benchmark in which a coding agent builds a complete, installable Python library from one natural-language requirements document in an empty workspace, scored by tests.
 * [OfficeQA](officeqa.md) - 246 numeric questions over about 89,000 pages of U.S. Treasury Bulletins requiring document parsing, cross-table retrieval, and numerical reasoning within a relative error tolerance.
 * [OOLONG](oolong.md) - Long-context benchmark requiring semantic transformation and aggregation over nearly every input entry.
 * [OpenCode](opencode.md) - Open-source coding-agent harness used as a vendor-neutral fixed harness for building or running agents and as a baseline in same-backbone harness comparisons.

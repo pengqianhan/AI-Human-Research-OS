@@ -7,7 +7,7 @@ tags:
 - agent-harness-engineering
 - harness-evolution
 - coding-agents
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Definition
@@ -20,6 +20,7 @@ Agentic Harness Engineering (AHE; Lin, Liu, Pan, Lin, Dou, Huang, and others, ar
 * [RRSI](../papers/2609.24972.md) - one of RRSI's compared harness-evolution baselines, with Meta-Harness, TTHE, and HarnessX.
 * [SoL-Pi](../papers/2609.20519.md) - cites AHE as a direct automated-harness-optimization peer that evolves modular coding-harness components from trajectory evidence.
 * [Harness²](../papers/2610.14224.md) - lists AHE among offline whole-harness search methods in its 27-method comparison table, against which it argues for adaptation at deployment.
+* [Self-Improvement Memory](../papers/2611.18856.md) - the minimal AHE seed is one of two coding starting points (TB2.1 to TB4); Full SIM reaches 24.85 on TB4 from it, against 20.61 for harness-only continuation.
 
 # Notes
 

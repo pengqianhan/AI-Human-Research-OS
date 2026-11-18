@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-11-11T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Scope
@@ -53,6 +53,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [EvoTeam](../papers/2610.39813.md) - post-execution reflectors update team rosters, team-scoped handoff rules, and shared agent skills, all frozen before held-out evaluation, so that lessons from one kind of task do not overwrite another's; updates have no paired validation gate, and the appendix shows learned rules sometimes lowering scores.
 * [Beneath the Surface](../papers/2611.07624.md) - audits AHE, HyperAgents, A-Evolve, and GEPA across two harnesses and two benchmarks: all sixteen evolved Champions gain and lose covered tasks, most reliability gains raise per-trial cost, transfer is selective, and four diagnostic-driven operator revisions (AGE) give the best reliability in all four settings.
 * [WikiTrace](../papers/2611.14320.md) - measures experience reuse as Gain (failed tasks now solved) and Regression (solved tasks now failed) against a no-memory rerun floor of 9.7%; existing memory methods regress at about that floor, and checking a lesson against its source run at use time is the only variant clearly below it.
+* [Do LLM Agents Still Need to Be Told How to Self-Improve?](../papers/2611.23219.md) - a teacher instance edits its own player's context from self-generated games alone; Claude Opus-5's text transfers to longer horizons, ARC-AGI-3, a 3D maze world, and GPT 6-Astra, roughly matching GEPA on 20 real games.
 
 # Synthesis
 

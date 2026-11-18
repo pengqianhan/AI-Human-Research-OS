@@ -7,7 +7,7 @@ tags:
 - harness-evolution
 - coding-agents
 - repository-understanding
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Scope
@@ -71,6 +71,7 @@ This topic tracks work on the executable software layer around a foundation mode
 * [Beneath the Surface](../papers/2611.07624.md) - evolves a source-editable harness (MiniSWE) and an outer-layer-only one (Codex) with four methods and audits the results task by task: coverage turnover everywhere, cost premiums, harness-dependent transfer, and component interference.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - builds each task's harness from agent-native primitives, resources with a resident LLM that apply them and message each other, composed per task and revised where failures point; umbrella over eight companion studies, with Dev-Primitives at 55.5% against Codex's 37.3% on Terminal-Bench 4.0 and per-task Harness Primitives at 72.2% against 60.0% on Terminal-Bench 2.0.
 * [SparseRead](../papers/2608.22237.md) - a reading control layer shared by NanoBot, OpenCode, and OpenClaw through thin adapters, with the exposure budget enforced in the core and model-facing guidance only advisory; tokens and time fall in all 18 framework-model settings.
+* [Self-Improvement Memory](../papers/2611.18856.md) - memory for the harness optimizer: inherited harness mechanisms are kept, revised, or removed using their recorded rationale and outcomes when the benchmark or policy model changes.
 
 # Synthesis
 

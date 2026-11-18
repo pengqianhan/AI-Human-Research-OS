@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - long-horizon-planning
 - vision-language-action
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Scope
@@ -22,6 +22,7 @@ It also covers games played through text or high-level tool interfaces, where pe
 * [Game Arena](../papers/2609.31473.md) - Kaggle's open arena ranking frontier LLMs by head-to-head play through a bare text harness in Chess, heads-up no-limit poker, and 8-player Werewolf, at large scale (900,000 poker hands, 31,472 Werewolf games) with duplicate poker and role-decomposed ratings; rankings are tiered within each game but reorder across games.
 * [AgentWorld](../papers/2609.31590.md) - uses an open-source MMORPG as a cooperative multi-agent testbed but wraps all low-level control in 13 high-level API tools, so scores isolate planning and coordination rather than action execution.
 * [GTAGym](../papers/2611.13028.md) - rebuilds sub-tasks of 75 GTA V missions in a web 3D environment with engine-state success checks (150 tasks, eleven categories); the best model reaches 70.9% against 89.8% for human players, with aerial navigation, interception, and evasion near zero for most models, and scores collapse on dynamic tasks when the game is not paused during inference.
+* [Do LLM Agents Still Need to Be Told How to Self-Improve?](../papers/2611.23219.md) - blind play of turn-based games with undisclosed rules as a testbed for self-organized learning, with PuzzleScript, ARC-AGI-3, and MazeBench as held-out benchmarks.
 
 # Synthesis
 

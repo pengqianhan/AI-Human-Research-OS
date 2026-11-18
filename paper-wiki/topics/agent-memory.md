@@ -6,7 +6,7 @@ tags:
 - agent-memory
 - long-term-memory
 - retrieval
-timestamp: 2026-11-16T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Scope
@@ -32,6 +32,7 @@ This topic tracks papers about persistent memory systems for LLM agents: how sal
 * [EvoMemState](../papers/2611.03743.md) - keeps unchanged atomic facts in an ontology with SUPERSEDES and CONFLICTS_WITH edges, retrieves seeds plus everything connected to them, and has a GRPO-trained Qwen3-4B policy write 2-4 rules per request on which memories apply; it leads nine memory systems on the overall average, mostly through memory-use benchmarks, while retrieval completeness is only slightly higher.
 * [WikiTrace](../papers/2611.14320.md) - keeps every distilled insight linked to a diagnosis of its source run and to the raw trajectory, and prompts the agent to open them when an insight lacks detail, conflicts with another, or comes from a failed run; 90.2 average on eight suites against 87.0 for the same insights alone, with Regression down from 6.5% to 4.5%.
 * [MIRIX-2.0](../papers/2611.12068.md) - keeps complete typed records as the system of record and indexes episodic and semantic ones with n-ary frames that cite their source rows; retrieval runs under per-operator budgets and AutoDream merges duplicate entity anchors without rewriting any record; 91.4% on LoCoMo (0.4 points over a rerun of HyperMem) and 72.6% on LongMemEval-S (14.3 points over it), from single runs.
+* [Self-Improvement Memory](../papers/2611.18856.md) - memory for the optimizer rather than the task agent: entries keyed by harness problem hold each attempted fix, its pre-registered prediction, its measured outcome, and where it was tested, read in full by proposer and selector.
 
 # Synthesis
 

@@ -10,7 +10,7 @@ tags:
 - interactive-reasoning
 - game-agents
 - learning-from-experience
-timestamp: 2026-10-10T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Definition
@@ -22,6 +22,7 @@ ARC-AGI-3 (ARC Prize Foundation, 2026, "ARC-AGI-3: a new challenge for frontier 
 * [Prime Agent](../papers/2608.23552.md) - its test-time-scaling study: RHAE Best@1 rises from 30% to 95.5% as output tokens and cost grow, with the harness supplying only the environment interface and an autonomous prompt.
 * [Memento 3](../papers/2610.11794.md) - main evaluation: a rulebook-plus-code world model verified by cell-exact replay clears all 25 public games (183 levels) at mean RHAE 100.0 with 7,518 actions, 44% of the human count; the closest listed baseline (baseline1) scores 99.0.
 * [Learn2Play Bench](../papers/2610.08215.md) - not evaluated on: cited as the closest prior benchmark built on unfamiliar environments, with the objection that it mixes visual ability into the measurement of learning from experience.
+* [Do LLM Agents Still Need to Be Told How to Self-Improve?](../papers/2611.23219.md) - Level 1 of 17 games (those Claude Opus-5 does not solve 8 of 8 times) as a different-engine transfer test; context Opus-5 learned on its own PuzzleScript games improves it by 21%.
 
 # Notes
 

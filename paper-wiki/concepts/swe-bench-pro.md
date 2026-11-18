@@ -8,7 +8,7 @@ tags:
 - software-engineering
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-10-20T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ SWE-bench Pro evaluates coding agents on enterprise-style, repository-level soft
 * [MiMo-V2.6](../papers/2610.11959.md) - released 9B model (avg@3): 32.0 base, 44.6 after distillation SFT, 47.6 after RL; the seven-harness mean is 27.5, 44.4, and 46.5 after multi-harness RL.
 * [Doc2Harness](../papers/2610.20344.md) - cited, not run: an example of software-engineering benchmarks that judge output with the task's unit tests, a criterion the paper argues does not transfer to harnesses, where one feature can be built many ways and the harness cannot finish a downstream task alone.
 * [Self-HPO](../papers/2610.22791.md) - out-of-distribution benchmark on the public set (642 tasks) after Python-only training: 58.3% to 65.2% (Self-HPO) and 66.0% (Opus 4.8 proposer), while SFT on Opus 4.8 trajectories falls to 49.1%.
+* [RepoFactory](../papers/2611.21152.md) - transfer check for repository-generation SFT: Qwen3.5-35B-A3B goes from 42.4 to 47.6 under a Claude Code harness.
 
 # Notes
 

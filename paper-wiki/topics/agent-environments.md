@@ -6,7 +6,7 @@ tags:
 - agent-environments
 - environment-engineering
 - agent-reliability
-timestamp: 2026-11-14T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Scope
@@ -40,6 +40,7 @@ This topic tracks papers where the main design object is not only the agent poli
 * [Shortcuts and Boundaries](../papers/2611.12865.md) - builds environments where a stated requirement is checked on execution history but not enforced, and each instance is certified to have a feasible compliant completion and a violating trajectory that earns more reward; 8 mechanism families and at least 807 instances.
 * [GTAGym](../papers/2611.13028.md) - template-based generator that samples route, actor, and aiming parameters within user ranges to produce RL instances with automatic reward and termination; LoRA GRPO on 50 generated on-foot tasks lifts held-out on-foot accuracy from 54.2% to 72.9% and native GTA V success from 15% to 23%.
 * [Agent-R2](../papers/2611.08219.md) - a task generator for office work grounded in real sources: O*NET-seeded workflows mined from web text, public files retrieved and verified as attachments, and instructions with 15-item rubrics checked against an expert solution; about 4k of 10k candidates survive, and a manual audit finds 85% completable from instruction and attachments.
+* [RepoFactory](../papers/2611.21152.md) - converts repositories into verifiable build-from-specification environments and improves them with a validity-gated objective over call-graph coupling and implementation scope, computed without solver rollouts; repair doubles yield from 33.8% to 69.4%.
 
 # Synthesis
 

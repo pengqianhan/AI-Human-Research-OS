@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - software-engineering
 - llm-agents
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-18T00:00:00Z
 ---
 
 # Definition
@@ -27,3 +27,4 @@ SWE-bench evaluates coding agents on resolving real GitHub issues from open-sour
 * [MiMo-V2.6](../papers/2610.11959.md) - evaluates the released 9B model (avg@3): Qwen3.5-9B 60.0, MiMo-V2.6-Distill-Qwen-9B 61.1 after SFT and 66.2 after single-harness RL; across seven harnesses the mean is 53.1, 62.3, and 65.7 after multi-harness RL, with gains on the three held-out harnesses.
 * [Self-HPO](../papers/2610.22791.md) - primary benchmark (mean of three runs): Qwen3.5-35B-A3B rises from 61.0% to 69.5% with Self-HPO and 71.6% with an Opus 4.8 proposer, against 67.5% for RL alone and 65.2% for self-proposed harness search alone.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - near ceiling for Dev-Primitives (97.0% with GPT-5.6 Sol against 96.2% for mini-SWE-agent); a 100-task sample tests per-task Harness Primitives (80.5% Pass@1 against 79.0% for Codex).
+* [RepoFactory](../papers/2611.21152.md) - transfer check for repository-generation SFT: Qwen3.5-35B-A3B goes from 65.8 to 72.2 under a Claude Code harness.
