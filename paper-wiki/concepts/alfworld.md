@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - embodied-text-environments
 - long-horizon-agents
-timestamp: 2026-11-16T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -27,6 +27,8 @@ ALFWorld (Shridhar et al., arXiv:2010.03768, ICLR 2021) aligns text-game version
 * [SteerDistill](../papers/2611.13410.md) - success rate 79.75 for the 4-bit Qwen3-8B student against 79.92 for BF16; local verification accepts a correction when the resulting world state matches the reference or both runs succeed.
 * [Actor, Judge, or Teacher?](../papers/2611.17167.md) - main environment, with task types split by subgoal dependency (Clean, Heat, Cool need the state change before placement): six decision models act far worse on dependent tasks, and a policy taught by JEV's hindsight progress scores reaches 82.9% overall and 86.8% on dependent tasks.
 * [MIRIX-2.0](../papers/2611.12068.md) - held-out procedural-memory test after learning from 39 training tasks: 76.4 ± 6.2% with GPT-6 Luna against 73.6% for AWM and 69.4% without memory; Clean and Heat improve while Pick, Look, and Pick Two fall below no memory.
+* [The Resolution Hypothesis](../papers/2611.23068.md) - variance grid benchmark needing about 19 runs per method to detect a 3.4 pp margin; no grader shortcut found.
+* [AnyS1](../papers/2611.23751.md) - 134 unseen tasks run through six compiled programs; delegating every enumerable step to the 4B model without a gate drops success from 96.3% to 40.3%, while the gated versions hold 95.5%.
 
 # Notes
 

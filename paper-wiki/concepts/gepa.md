@@ -7,7 +7,7 @@ tags:
 - prompt-optimization
 - agent-harness-engineering
 - agent-self-evolution
-timestamp: 2026-11-18T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ GEPA (Agrawal et al., "GEPA: Reflective Prompt Evolution Can Outperform Reinforc
 * [Harness-S](../papers/2611.04277.md) - cited for keeping complementary candidates on a Pareto frontier, the single-system counterpart of its sibling-harness pool.
 * [Beneath the Surface](../papers/2611.07624.md) - one of four audited harness-evolution methods, with per-task Pareto selection and a validate filter; reliability improves with MiniSWE but falls with Codex on both benchmarks.
 * [Do LLM Agents Still Need to Be Told How to Self-Improve?](../papers/2611.23219.md) - the prescribed baseline: GEPA with Claude Opus-5 on 10 training and 10 validation real PuzzleScript levels, which self-organized learning on invented games roughly matches at the same 150-gameplay budget.
+* [The Resolution Hypothesis](../papers/2611.23068.md) - one of seven evolution methods in the variance grid; its released artifacts are audited for grader shortcuts and its two-rollout parent selection reaches 48.6% pairwise accuracy on a 100-skill pool.
 
 # Notes
 

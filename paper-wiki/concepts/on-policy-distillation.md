@@ -5,7 +5,7 @@ description: Training a student on its own sampled trajectories by matching a te
 tags:
 - on-policy-distillation
 - post-training-feedback
-timestamp: 2026-11-12T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -32,6 +32,7 @@ The second variant is what makes OPD a channel for arbitrary natural-language su
 * [ActionOPD](../papers/2610.19820.md) - action-level OPD from a generation-only teacher: student candidates at student-visited states are rewarded by semantic agreement with three sampled teacher actions and trained by a clipped group-relative policy gradient, with no teacher log-probabilities or shared tokenizer; on τ²-bench it is level with sampled-token reverse-KL OPD on test pass¹ (40.0 against 39.6) and behind on pass⁴ (14.2 against 17.5). Self-ActionOPD gives a same-weights teacher privileged task information.
 * [Axion 1.0](../papers/2611.03233.md) - deliberately omits OPD, setting its two SFT stages and RL against Agents-A1's domain-routed OPD; no run adds it back, so the comparison is between models rather than an ablation.
 * [SteerDistill](../papers/2611.13410.md) - on-policy quantization-aware distillation with two targets: forward KL to the student's own teacher-steered predictions at locally verified corrected turns, reverse KL to the full-precision teacher elsewhere; plain on-policy QAD is the baseline it beats by 2.41 points on BFCL V4.
+* [PIPETTE](../papers/2611.24362.md) - a contrastive self-distillation reward: tokens the policy samples on an injected context are scored by the log-ratio of the same policy under a privileged prefix that says to ignore the known injection and one that says to follow it.
 
 # Notes
 

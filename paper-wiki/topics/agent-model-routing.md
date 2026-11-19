@@ -7,7 +7,7 @@ tags:
 - model-handoff
 - cost-efficiency
 - long-horizon-agents
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Scope
@@ -17,9 +17,11 @@ This topic tracks how agent systems split work between expensive capable models 
 # Papers
 
 * [AgentBaton](../papers/2610.35959.md) - one-time handoffs inside DeepSWE and Terminal-Bench tasks: capable-to-efficient handoffs after a working artifact and real feedback keep most accuracy, efficient-to-capable ones rarely save money, and a Qwen3.5-2B detector picks the handoff turn online, cutting API cost by 65.9% on average over 11 model pairs.
+* [AnyS1](../papers/2611.23751.md) - step-level division of labor inside compiled skill workflows: a 4B decision model answers enumerable steps in one forward pass and a calibrated confidence gate sends the rest to the large model; adds 5 to 19 points of cost saving on top of compilation while staying within about a point of the all-large-model workflow.
 
 # Open Questions
 
 * AgentBaton counts its locally run receiver as free. Under a cost model that charges local inference and the detector, which handoff configurations still sit on the accuracy-cost frontier?
 * Readiness signs for handing off (an artifact exists, feedback was obtained, remaining work is local) come from coding tasks. Do the same signs hold for tool-agent-user, web, or GUI tasks, or does each domain need its own detector?
 * Turn-level handoff and role-level allocation (a strong model only for diagnosis or coordination, as in HEELO's Dev-Primitives) are two ways to use a cheap model. Which gives the better trade-off on the same tasks, and do they combine?
+* AnyS1 delegates single enumerable steps to a 4B scorer only after a skill has been compiled into typed steps, and most of its saving comes from the compilation. In an uncompiled agent loop, can decision points be located at run time cheaply enough for step-level delegation to pay, and how does it compare with AgentBaton's one-time handoff on the same tasks?

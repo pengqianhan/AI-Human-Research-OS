@@ -10,7 +10,7 @@ tags:
 - decision-models
 - system-one-models
 - typed-outputs
-timestamp: 2026-11-13T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ A decision model takes a question and a context and returns a typed answer inste
 
 * [Jev-Mem](../papers/2609.23986.md) - uses Jev as a batched typed-probability controller for memory decisions (typing, relation judgment, routing, retrieval budget, stopping), keeping a generative LLM for answer synthesis only.
 * [Actor, Judge, or Teacher?](../papers/2611.17167.md) - compares three dedicated decision models and three general LLMs given the same questions as actors and judges on ALFWorld, and trains policies with JEV's per-action scores: poor at ordered subgoals when acting, useful as hindsight judges and as step-level teachers.
+* [AnyS1](../papers/2611.23751.md) - trains an open-weight 4B pointer decision model on decision points mined from public skills and uses it as System-1 in compiled workflows with a confidence gate; compared with commercial Jev in the same role it saves slightly more (89% against 84% of the uncompiled agent's cost) at equal task success.
 
 # Notes
 

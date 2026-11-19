@@ -6,7 +6,7 @@ tags:
 - agent-self-evolution
 - agent-skills
 - verification
-timestamp: 2026-11-18T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Scope
@@ -54,6 +54,7 @@ This topic tracks papers about agents that adapt after deployment by building sk
 * [Beneath the Surface](../papers/2611.07624.md) - audits AHE, HyperAgents, A-Evolve, and GEPA across two harnesses and two benchmarks: all sixteen evolved Champions gain and lose covered tasks, most reliability gains raise per-trial cost, transfer is selective, and four diagnostic-driven operator revisions (AGE) give the best reliability in all four settings.
 * [WikiTrace](../papers/2611.14320.md) - measures experience reuse as Gain (failed tasks now solved) and Regression (solved tasks now failed) against a no-memory rerun floor of 9.7%; existing memory methods regress at about that floor, and checking a lesson against its source run at use time is the only variant clearly below it.
 * [Do LLM Agents Still Need to Be Told How to Self-Improve?](../papers/2611.23219.md) - a teacher instance edits its own player's context from self-generated games alone; Claude Opus-5's text transfers to longer horizons, ARC-AGI-3, a 3D maze world, and GPT 6-Astra, roughly matching GEPA on 20 real games.
+* [The Resolution Hypothesis](../papers/2611.23068.md) - a reproducibility study of seven frozen-weight evolution methods on six models (1,030 evolution runs) arguing that the loop is limited by identifying improvements, not proposing them: published margins (median 3.4 pp) sit inside single-run noise, the largest gains come from grader shortcuts, and on Terminal-Bench selection from one or two rollouts picks the better skill at chance.
 
 # Synthesis
 
@@ -79,6 +80,8 @@ The Self-evolving Agent Harness paper gives this topic a scope test from a diffe
 EvoTeam adds the question of where an update should live. Most loops in this topic ask whether an update is good; EvoTeam asks how far it should reach. Its case study shows a Meta-Team reflection replacing dozens of accumulated notes with a single one applied to all future tasks, and its remedy confines rule updates to the selected team. That is not a validation gate of the kind EviSkill and the Self-evolving Agent Harness paper examine: updates are accepted by reflection alone, and its appendix reports cases where they lower scores. Scope and gating look complementary (reader connection), because scope limits how far a bad update spreads and a gate stops it earlier. EvoTeam's scope is also partial, since skills and recruitment profiles stay shared, and the paper's own ablation leaves skills in place in every variant.
 
 Beneath the Surface turns the topic's evaluation worries into task-level measurements. Over eight passes, every one of sixteen evolved harnesses both solves tasks its seed could not and fails tasks its seed solved, so a higher score is a net balance, not an accumulation; eight of eleven reliability gains also make each attempt more expensive. Its operator experiments give concrete reasons: the highest-scoring agent is never the one that improves most when expanded, a Champion's useful changes can interfere with each other, and a stricter admission rule throws away the best candidate in most pools. These results come from one evolution run per method on benchmarks whose Train tasks are included in the headline numbers, and AGE, the revised method, is evaluated on the same benchmarks it was designed from (reader observation).
+
+[The Resolution Hypothesis](../papers/2611.23068.md) is a check on most of the numbers this topic collects. Its variance grid says a method evolved once and evaluated once carries 1.7 to 4.1 pp of standard deviation, while the papers it surveys claim a median 3.4 pp lead from single runs; its audit says the gains large enough to be unmistakable mostly came from adapting to a grader's answer format. Read against the notes here, two things follow (reader assessment). First, margins of a few points between evolution methods in this wiki should be read as unresolved unless the paper reports repeated evolution runs. Second, the papers that validate each accepted edit more carefully (held-out gates, replay on motivating cases, anytime-valid tests) are addressing the bottleneck the study identifies, and its 16-rollout experiment (mean final score 61.4% to 64.4%) is the first direct measurement here of what better selection buys. The study covers frozen-weight text and harness artifacts on four benchmarks; it does not test program evolution with deterministic scoring or weight updates.
 
 # Open Questions
 
@@ -107,3 +110,4 @@ Beneath the Surface turns the topic's evaluation worries into task-level measure
 * The Self-evolving Agent Harness places skill-text optimizers in elitist (1+1) search, archive methods in archive-based search, and HarnessBank in quality-diversity search. With model, task pool, and evaluation budget held fixed, does the search structure change how well accepted skills transfer to held-out tasks?
 * EvoTeam limits how far an update spreads, while validation gates such as EviSkill's decide whether to keep it. Does adding a gate to scoped updates remove the cases where EvoTeam's rules lower scores, and at what evaluation cost?
 * Beneath the Surface finds that every evolved harness loses some tasks its seed solved. Would an admission rule that penalizes per-task regressions on a held-out panel reduce this turnover without discarding the best candidates, which its constrained gate did in most pools?
+* The Resolution Hypothesis shows selection from one or two rollouts is at chance and that 16 rollouts per candidate helps. For a fixed rollout budget, what split between number of candidates and rollouts per candidate maximizes accumulated true gain, and do paired or sequential tests change the answer?

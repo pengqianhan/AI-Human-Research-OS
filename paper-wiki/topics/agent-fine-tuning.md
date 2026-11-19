@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-11-18T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Scope
@@ -51,6 +51,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [Actor, Judge, or Teacher?](../papers/2611.17167.md) - a frozen decision model (JEV) scores every action of a policy's rollouts after the episode, asked whether the action helped; mean-centered scores added to the GRPO advantage lift Qwen2.5-1.5B from 72.8% to 82.9% on ALFWorld and from 56.8% to 71.4% on WebShop, against GRPO numbers taken from the GiGPO paper, for 22 to 30 USD of queries per run.
 * [Agent-R2](../papers/2611.08219.md) - SFT on about 3k Claude-Opus-4.5 trajectories and rubric-scored GRPO on about 1k tasks, all synthesized from real web workflows and real office files, take Qwen3-4B from a 32.4 to a 51.0 GDPval score; a 4k-SFT control (45.5) shows the RL stage, not extra data, gives the last 5.5 points.
 * [RepoFactory](../papers/2611.21152.md) - SFT of Qwen3.5-35B-A3B on 10,947 Qwen3.8-Max trajectories from evolved repository environments: +22.6 on NL2Repo-Bench and +8.5 on average over five coding benchmarks, against +17.5 and +6.4 without environment evolution.
+* [PIPETTE](../papers/2611.24362.md) - adversarial fine-tuning of tool-calling agents against prompt injection: on-policy GRPO with an outcome reward, a judged reasoning reward, and a per-token log-ratio between the policy under a privileged ignore-the-injection prefix and a follow-it prefix, which keeps benign utility at or above the base model where SFT and outcome-only RL lose it.
 
 # Synthesis
 

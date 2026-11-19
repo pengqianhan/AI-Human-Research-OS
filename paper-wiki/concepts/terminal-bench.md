@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-11-18T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -46,6 +46,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - Dev-Primitives (HERMES) resolve 55.5% of 66 Terminal-Bench 4.0 tasks with GPT-5.6 Sol against 37.3% under Codex, but only 1.2 points above Claude Code with Opus 5; Harness Primitives raise Terminal-Bench 2.0 Pass@1 from 60.0% to 72.2% on 45 tasks.
 * [Self-Improvement Memory](../papers/2611.18856.md) - TB2.1 is the coding source and TB4 the target benchmark (33 held-out tasks, five rollouts each), plus a Gemini generation chain on TB2.1.
 * [RepoFactory](../papers/2611.21152.md) - TB2.1 as an out-of-format transfer benchmark: 33.7 to 40.5 for Qwen3.5-35B-A3B after repository-generation SFT, under a Claude Code harness.
+* [The Resolution Hypothesis](../papers/2611.23068.md) - v2.1 has the largest evaluation noise of four benchmarks (4.5 pp); a one-run-per-method table picks the best of four methods 33% of the time, and all candidate-pool and trajectory re-evaluation experiments run on it.
 
 # Notes
 

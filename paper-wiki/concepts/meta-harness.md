@@ -6,7 +6,7 @@ resource: https://arxiv.org/abs/2603.28052
 tags:
 - agent-harness-engineering
 - harness-evolution
-timestamp: 2026-11-18T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -29,6 +29,7 @@ Meta-Harness (Lee, Nair, Zhang, Lee, Khattab, and Finn, arXiv:2603.28052, COLM 2
 * [Harness-S](../papers/2611.04277.md) - frozen-policy harness-search baseline adapted to a common framework: 48.09 AppWorld Pass@3 at 4B, against 56.87 for Harness-S's frozen-policy sibling pool with per-task routing.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - a harness-optimizer baseline for per-task Harness Primitives, representing methods that select one harness for all tasks.
 * [Self-Improvement Memory](../papers/2611.18856.md) - follows Meta-Harness's problem formulation and uses its online text-classification environment; continues optimization across benchmarks and models with a memory for the optimizer.
+* [The Resolution Hypothesis](../papers/2611.23068.md) - a harness-code method in the variance grid; under repaired evaluations its large ALFWorld gains trace to one setting (the initial agent keeps only two history steps).
 
 # Notes
 

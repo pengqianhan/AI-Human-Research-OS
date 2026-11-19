@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-17T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Scope
@@ -41,6 +41,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [VibePrevisBench](../papers/2611.15789.md) - scores only a fresh replay of the delivered program, never the agent's own renders, and restricts its VLM judge to facts the rules already passed; 242 tasks, 11 agents, rankings stable under three judges and 18 scoring variants, and agents that say their render matches the reference err as often as those that do not.
 * [SWE-CoWork](../papers/2611.20218.md) - 101 coding assignments inside a simulated organization of 26 LLM-played colleagues and versioned records, graded by per-requirement F2P/P2P tests; the leaders pass about 63% of F2P tests but finish under 8% of assignments, and a requirement-level trace locates losses in unraised questions, abandoned deferrals, implementation, early stops, and over-claimed handoffs.
 * [Accelerate Bench](../papers/2611.20882.md) - 32 workload-defined CPU optimization tasks with public tests and a private verifier on held-out inputs; 16 agents score 25.5% to 67.4% Score@1, nearly all programs are correct, and the paper reports re-judging and run-to-run variance and which pairwise gaps a single run resolves.
+* [The Resolution Hypothesis](../papers/2611.23068.md) - separates evaluation noise (1.0 to 4.5 pp) from run-to-run variance (0 to 12.3 pp) on ALFWorld, SpreadsheetBench, OfficeQA, and Terminal-Bench v2.1, gives the number of runs a claimed margin needs, and finds shortcuts in the released evaluations of eight of twelve audited benchmarks.
 
 # Synthesis
 
@@ -101,3 +102,4 @@ Two coding benchmarks added on 2026-11-17 make the same observation about checka
 * AutoVend's rule-based baseline beats four of five LLM agents. Which other long-horizon benchmarks here would look different if a classical domain heuristic were on the leaderboard, and should such a baseline be a requirement for sustained-operation benchmarks?
 * ReproBridge-Bench counts a result only if an auditor cannot invalidate its execution, and its auditors miss 20% to 38% of human-identified invalid outcomes. How much do success rates on other execution benchmarks change when numerically correct answers are audited for how they were produced?
 * SWE-CoWork's colleagues are played by an OpenAI model and its trajectory reviewer is an evaluated OpenAI agent. How sensitive are interactive benchmarks' rankings to the family of the simulator and the reviewer, and should such benchmarks report a cross-family check by default?
+* Should agent benchmarks publish their own evaluation noise (the spread of repeated runs of a fixed agent) so that a claimed margin can be compared with the benchmark's resolution, as the Resolution Hypothesis study does for four benchmarks?

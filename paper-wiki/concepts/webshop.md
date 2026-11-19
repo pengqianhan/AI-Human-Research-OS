@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - text-environments
-timestamp: 2026-11-16T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ WebShop (Yao et al., arXiv:2207.01206, NeurIPS 2022) is a simulated shopping web
 * [SteerDistill](../papers/2611.13410.md) - success rate 68.41 for the 4-bit Qwen3-8B student against 68.58 for BF16, trained in WebShop's own environment with state compared by product selections, page type, and available choices.
 * [Actor, Judge, or Teacher?](../papers/2611.17167.md) - second teacher environment: 71.4% success for Qwen2.5-1.5B with hindsight progress scores against 56.8% for GRPO as reported in the GiGPO paper; all four teacher variants are at least 9.8 points above that baseline.
 * [MIRIX-2.0](../papers/2611.12068.md) - held-out procedural-memory test after 40 training tasks: 37.4% success against 36.0% for AWM, 31.9% without memory, and 25.7% for ReasoningBank, with the fewest training and test tokens of the memory methods.
+* [AnyS1](../papers/2611.23751.md) - 500 instructions run through seven compiled programs; the gated 4B model delegates 41% of enumerable decisions at the warm threshold and scores 68.1 against 66.9 for the all-large-model workflow.
 
 # Notes
 

@@ -8,7 +8,7 @@ tags:
 - agent-security
 - prompt-injection
 - tool-use
-timestamp: 2026-11-17T00:00:00Z
+timestamp: 2026-11-19T00:00:00Z
 ---
 
 # Definition
@@ -19,6 +19,7 @@ AgentDojo (Debenedetti et al., NeurIPS 2024 Datasets and Benchmarks, arXiv:2406.
 
 * [SPILLWAY](../papers/2611.07222.md) - main benchmark (suite v1.2.2, full grid, 949 attacked pairs per backbone): a typed-identity egress floor plus rule-based sanitizer holds in-scope attack success at zero on all twelve backbone-by-suite cells, with AgentDojo's checks rescored by executed effect.
 * [CoworkEnv](../papers/2610.24960.md) - cites AgentDojo, with ToolEmu, as an evaluation of safety risks for coworker agents.
+* [PIPETTE](../papers/2611.24362.md) - held-out evaluation for defenders trained only on AgentDyn: five static attacks on 420 pairs each (average attack success 0.48% and 0.43% on two small models), TAP and Genetic search on 40 pairs, benign utility on the 97 clean tasks.
 
 # Notes
 
