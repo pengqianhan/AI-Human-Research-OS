@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - web-agents
 - search-agents
-timestamp: 2026-11-06T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Definition
@@ -25,6 +25,7 @@ BrowseComp (Wei et al., 2025) is a benchmark of short-answer questions deliberat
 * [Mosaic](../papers/2610.22174.md) - the only evaluation benchmark (1,266 questions, LLM-judged by deepseek-v4-flash), chosen because it forces multi-session trajectories; Qwen3.5-4B rises from 24.80 untrained to 38.86 with Mosaic under compaction and to 32.46 under subagent forking.
 * [OpenVLHarness](../papers/2610.26860.md) - BrowseComp-VL, WebWatcher's vision-language extension (399 questions), is one of six search benchmarks: with text search, image search, and webpage tools, GPT-6 Astra goes from 46.12 to 63.91 and Qwen3-VL-8B from 21.05 to 32.33.
 * [VisSearch-Bench](../papers/2611.04894.md) - the text-only open-web reference in its benchmark comparison table; VisSearch-Bench adds images, set answers, and partial credit.
+* [AutoMaster](../papers/2611.26510.md) - the Lite-185 subset released by Traverse is the Search benchmark; gains over successful-trajectory SFT are +2.88 (4B, bootstrap interval includes zero) and +4.68 (9B) points.
 
 # Related
 

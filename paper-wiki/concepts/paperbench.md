@@ -7,7 +7,7 @@ tags:
 - benchmarks
 - research-replication
 - autonomous-research
-timestamp: 2026-11-10T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Definition
@@ -21,6 +21,7 @@ PaperBench (Starace et al., 2025, arXiv:2504.01848) evaluates whether an AI agen
 * [Into the Unknown](../papers/2610.19159.md) - named as the anchor-based contrast (a published result to replicate, graded with an author co-developed rubric) to its own unpublished follow-up directions, and the source of the JSON rubric format its task rubrics follow.
 * [FrontierPhysics](../papers/2611.06910.md) - cited for rubric-based grading of open-ended work.
 * [ReproBridge](../papers/2611.08452.md) - cited as rubric-scored reconstruction of code, execution, and results, in contrast to its binary task success on released artifacts.
+* [TwinLab-Bench](../papers/2611.26248.md) - follows PaperBench's rubric design with full and partial credit conditions, adding core items whose failure zeroes a run and separate items for conclusions and in-run verification.
 
 # Notes
 

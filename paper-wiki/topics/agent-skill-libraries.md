@@ -6,7 +6,7 @@ tags:
 - agent-skills
 - skill-libraries
 - self-evolution
-timestamp: 2026-11-19T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Scope
@@ -35,6 +35,7 @@ This topic tracks papers that treat agent capabilities as reusable, validated sk
 * [MIRIX-2.0](../papers/2611.12068.md) - procedural side of a general memory: after five task sessions a distiller extracts lessons and mistakes from transcript quotes and a curator edits skills whose citations are kept only when the quote checks out; highest mean held-out success among memory methods on ALFWorld and WebShop, within one standard deviation of AWM on ALFWorld.
 * [The Resolution Hypothesis](../papers/2611.23068.md) - on pools of 100 candidate skills for Terminal-Bench, the best of K skills does improve with K (49.2% to 61.8%), but execution scores and LLM trajectory judges cannot tell helpful skills from harmful ones at the one-or-two-rollout budget skill optimizers use.
 * [AnyS1](../papers/2611.23751.md) - mines 17,865 typed decision points from 1,072 public SKILL.md skills, executes synthesized tasks in containers for real states, and trains one 4B pointer model that answers a compiled skill's enumerable steps, deferring to the large model below a confidence threshold.
+* [AutoMaster](../papers/2611.26510.md) - uses skills as a training-time intervention rather than an inference-time library: an agent writes skills that change how a fixed teacher verifies and searches, pilots them, and fine-tunes a student on the guided trajectories with the skill text kept in the input.
 
 # Synthesis
 
@@ -52,6 +53,8 @@ Agent-Reflex uses a skill library to train a policy rather than to prompt one. I
 Hybrid Computer Use gives a narrow but clear measurement of what a skill does when it teaches a tool, not a domain. The behavior changes are large (malformed calls down by a factor of about 13) and the outcome change is small (1.59 points, with the without-skill arm within 0.32 of HCU in one of three runs). This fits EmbodiedCLBench's caution that a skill does not always beat its source experience, and suggests a useful distinction: a skill can reliably improve how a tool is called while affecting task success much less (reader inference from one benchmark and model).
 
 HEELO changes what a library entry is: instead of a skill the caller reads and applies, each entry is a resource with its own LLM that applies itself to a natural-language request and reports structured failures. Its controls support the shift: showing the caller the same retrieved components as read-only context scores about as low as having no library (0.3544 against 0.3469 repository delivery), while self-applying Code Primitives reach 0.5134. Its admission path (tests, compilers, or matched development runs before an entry joins) is a validation gate of the kind other papers here use for skills, applied across eight resource types.
+
+[AutoMaster](../papers/2611.26510.md) uses skills in a different place from the rest of this topic: as text that shapes a teacher's trajectories before they become fine-tuning data, not as a library the deployed agent reads. Its Keep vs. Remove result (keeping the skill text in the training input beats removing it by 2.15 to 4.01 points, with no skills at evaluation) suggests that skill text may also be useful as context during training, a use the inference-time skill papers here do not test.
 
 # Open Questions
 

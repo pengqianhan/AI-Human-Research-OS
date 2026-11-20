@@ -7,7 +7,7 @@ tags:
 - recursive-self-improvement
 - self-modification
 - harness-evolution
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Definition
@@ -23,6 +23,7 @@ HyperAgents (Zhang, Zhao, Yang, Foerster, Clune, Jiang, Devlin, and Shavrina, ar
 * [RRSI](../papers/2609.24972.md) - lists Hyperagents in its self-modifying-agent related work with the Darwin and Huxley-Gödel Machines.
 * [Harness²](../papers/2610.14224.md) - cites Hyperagents in its recursive self-improvement related work as an editable meta-level procedure.
 * [Dream-RSI](../papers/2609.14858.md) - cites Hyperagents among systems that optimize the self-improvement procedure itself, the category Dream-RSI places itself in.
+* [CompoundingKernel](../papers/2611.19230.md) - takes the idea of an LLM meta agent above the task agents; here the meta agent is a per-problem controller that also runs the kernel search by choosing parents and directions for parallel children.
 
 # Notes
 

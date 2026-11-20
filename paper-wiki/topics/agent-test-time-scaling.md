@@ -7,7 +7,7 @@ tags:
 - verification
 - agent-evaluation
 - long-horizon-agents
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Scope
@@ -22,6 +22,7 @@ This topic tracks how extra compute at inference time, on a single task, raises 
 * [RSIGame](../papers/2609.39045.md) - scales *development rounds within one task* and measures the scaling curve directly (Figure 3, 40 GameCraft-Bench tasks): under the same per-round budget, Play2Code plateaus or regresses as rounds are added while RSIGame keeps converting rounds into quality, and the gain splits into a local explore-diagnose-improve loop that is volatile on its own and a global monitor that retains the best checkpoint and stops at saturation, matching much longer fixed-budget runs with fewer rounds.
 * [Harness²](../papers/2610.14224.md) - scales *harness edits for one task*: parallel recursion composes from k candidates of each scope and their runs, sequential recursion chains k edit steps; both rise monotonically from k = 1 to 5 on WorkBuddy-Bench Code and Office (parallel 76.5 to 80.8 and 79.5 to 83.4), while per-task revision without probes and retrieval memory gain less or inconsistently.
 * [What Does Multi-Turn RL Really Improve](../papers/2611.06483.md) - separates *sampling breadth* (K trajectories) from *interaction depth* (T turns per trajectory) in Pass@(K,T), and shows RL's advantage over the base model needs a large T even at k = 8; shrinking T can reverse it.
+* [CompoundingKernel](../papers/2611.19230.md) - in parallel kernel search, throughput rose 3.6x when one warm restart took builds out of the GPU lock, and an LLM controller beat a coded UCB tree on 35 of 38 problems at equal wall time by making 2.4x as many correct attempts, not by better picks; the report puts the limit on scale at reliable measurements per hour, not agent count.
 
 # Synthesis
 

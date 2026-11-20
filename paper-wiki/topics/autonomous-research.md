@@ -6,7 +6,7 @@ tags:
 - autonomous-research
 - autonomous-optimization
 - hypothesis-refinement
-timestamp: 2026-11-05T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Scope
@@ -28,6 +28,7 @@ This topic tracks systems that turn research objectives into iterative, agent-ru
 * [AutoSFT](../papers/2610.22194.md) - an agent-run SFT data-research loop for a fixed base model (Qwen3-1.7B-Base), retrained from the base every round under a fixed token budget; a single Codex agent stays in one action family for 33 rounds, while a meta agent with an executor, four analysis subagents, and a verifier-gated synthesis subagent widens the data actions and adds 6.5 IFEval (analysis) and 3.4 IFEval and 2.9 IFBench (synthesis) in one-component ablations.
 * [Into the Unknown](../papers/2610.19159.md) - an external benchmark in which agents receive a computational science paper with its code and data and an unpublished follow-up direction from its author, and must write the follow-up; across 135 submissions from nine frontier agents with no time limit, none passes integrity, completeness, and the author's bar together, and 114 fail the integrity rubric.
 * [FrontierPhysics](../papers/2611.06910.md) - an external end-to-end benchmark where agents must produce correct numerical results and a manuscript from a high-level brief; no configuration passes more than 46 of 168 rollouts, and audited failures are led by lack of rigor (48%), not physics knowledge.
+* [AutoMaster](../papers/2611.26510.md) - an LLM agent (Codex with GPT-6 Astra) runs five rounds of a post-training study through MCP tools: diagnose teacher and student trajectories, design and pilot skills, select demonstrations, train from the same checkpoint, read evaluation scores and trajectories, and record its final checkpoint choice.
 
 # Synthesis
 

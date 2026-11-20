@@ -10,7 +10,7 @@ tags:
 - agent-self-evolution
 - agent-harness-engineering
 - evolutionary-search
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Definition
@@ -30,6 +30,7 @@ The Darwin Gödel Machine (Zhang, Hu, Lu, Lange, and Clune, arXiv:2505.22954; IC
 * [Harness²](../papers/2610.14224.md) - cited in its recursive self-improvement related work with STOP and Hyperagents.
 * [Harness-S](../papers/2611.04277.md) - cited for branching from an archive of executable agents, as its directional harness evolution does.
 * [Beneath the Surface](../papers/2611.07624.md) - cited as self-modification that evolves its own coding agent; HyperAgents, an extension of it, is one of the four audited methods.
+* [CompoundingKernel](../papers/2611.19230.md) - adopts DGM's archive with parent sampling, kept as one archive per GPU-kernel problem so that many lineages grow in parallel; an LLM controller rather than a fixed rule picks the parent.
 
 # Notes
 

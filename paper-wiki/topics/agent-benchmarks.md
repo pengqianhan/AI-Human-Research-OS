@@ -6,7 +6,7 @@ tags:
 - agent-benchmarks
 - agent-evaluation
 - behavioral-evaluation
-timestamp: 2026-11-19T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Scope
@@ -42,6 +42,7 @@ This topic tracks papers where the main object is *measurement* of LLM agents: n
 * [SWE-CoWork](../papers/2611.20218.md) - 101 coding assignments inside a simulated organization of 26 LLM-played colleagues and versioned records, graded by per-requirement F2P/P2P tests; the leaders pass about 63% of F2P tests but finish under 8% of assignments, and a requirement-level trace locates losses in unraised questions, abandoned deferrals, implementation, early stops, and over-claimed handoffs.
 * [Accelerate Bench](../papers/2611.20882.md) - 32 workload-defined CPU optimization tasks with public tests and a private verifier on held-out inputs; 16 agents score 25.5% to 67.4% Score@1, nearly all programs are correct, and the paper reports re-judging and run-to-run variance and which pairwise gaps a single run resolves.
 * [The Resolution Hypothesis](../papers/2611.23068.md) - separates evaluation noise (1.0 to 4.5 pp) from run-to-run variance (0 to 12.3 pp) on ALFWorld, SpreadsheetBench, OfficeQA, and Terminal-Bench v2.1, gives the number of runs a claimed margin needs, and finds shortcuts in the released evaluations of eight of twelve audited benchmarks.
+* [TwinLab-Bench](../papers/2611.26248.md) - scores self-designed experiments against hidden later lab records with frozen rubrics, core items re-checked twice, invalid-run audits, judge-model swaps, and three memorization controls (changed true state, closed-book probes, zero-budget runs that pass none of 33 tasks).
 
 # Synthesis
 

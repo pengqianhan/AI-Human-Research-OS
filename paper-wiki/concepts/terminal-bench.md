@@ -8,7 +8,7 @@ tags:
 - shell-agents
 - coding-agents
 - agent-harness-engineering
-timestamp: 2026-11-19T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Definition
@@ -47,6 +47,7 @@ Terminal-Bench evaluates AI agents on multi-step tasks performed through a comma
 * [Self-Improvement Memory](../papers/2611.18856.md) - TB2.1 is the coding source and TB4 the target benchmark (33 held-out tasks, five rollouts each), plus a Gemini generation chain on TB2.1.
 * [RepoFactory](../papers/2611.21152.md) - TB2.1 as an out-of-format transfer benchmark: 33.7 to 40.5 for Qwen3.5-35B-A3B after repository-generation SFT, under a Claude Code harness.
 * [The Resolution Hypothesis](../papers/2611.23068.md) - v2.1 has the largest evaluation noise of four benchmarks (4.5 pp); a one-run-per-method table picks the best of four methods 33% of the time, and all candidate-pool and trajectory re-evaluation experiments run on it.
+* [AutoMaster](../papers/2611.26510.md) - v2.1 (89 tasks) is the Terminal benchmark for students fine-tuned on skill-guided teacher trajectories; AutoMaster reaches 28.09% (4B) and 35.58% (9B) against 22.47% and 26.59% for SFT on random successful trajectories.
 
 # Notes
 

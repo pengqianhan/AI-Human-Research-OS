@@ -6,7 +6,7 @@ tags:
 - ai-for-science
 - scientific-discovery
 - experiments
-timestamp: 2026-11-10T00:00:00Z
+timestamp: 2026-11-20T00:00:00Z
 ---
 
 # Scope
@@ -28,6 +28,7 @@ This topic tracks papers about AI systems used to plan, run, and revise scientif
 * [AutoSciBench](../papers/2610.05140.md) - generates and refines data-analysis tasks for scientific agents in computational biology, materials science, and clinical imaging (question, data files, exact-match answer), revising each task's plan until solver trajectories show no shortcut and all trials fail; ten solvers that score 92.7-97.7% on the MatTools seed spread from 21.3% to 90.0% on the Opus-4.8-generated set.
 * [FrontierPhysics](../papers/2611.06910.md) - evaluates agents on end-to-end physics research in nine domains, from a PI-style brief through literature, experiments, and a manuscript, with tasks and rubrics authored by the original researchers; the best configuration passes 46 of 168 rollouts.
 * [Sage-Taiyi](../papers/2611.12762.md) - five expert-guided collaborations carry its proposals into experiments and simulations: a cobalt-catalysed carbonylation optimized from trace to 84% yield, a photocatalytic amination from 13% to 69%, a metamaterial filter, a cast magnesium alloy at 342 MPa, and a compressor impeller at 91.5% CFD efficiency.
+* [TwinLab-Bench](../papers/2611.26248.md) - 52 tasks from real lab records (physical sciences, life sciences, engineering) in which the agent designs its own experiments within a budget and a per-lab TwinLab agent answers from the records and record-fitted calculators; the best of 13 models, Claude Fable 5.2, averages 45.0 of 100, and the most common failure is accepting a mechanism without a discriminating test.
 
 # Synthesis
 
@@ -54,3 +55,4 @@ Sage-Taiyi adds wet-lab and engineering outcomes to a topic whose evidence is mo
 * EvoScientist's evolution memory is driven entirely by outcome-level comparisons (win/lose judgments, execution success/failure) rather than any mechanism for abstracting *why* a direction succeeded or failed into a generalizable claim — would grounding its ideation- and experimentation-memory updates in ASI-Bench-style progressive-guidance-withdrawal probes, or in Arbor's held-out hypothesis admission criteria, produce more transferable distilled knowledge than EvoScientist's own LLM-judged feasibility summaries?
 * FrontierPhysics finds rigor and expert intuition limit agents more than physics knowledge. Can the discovery systems here be scored against its tasks, and would their verification loops change the rigor share, given that its most common example is checking against the agent's own wrong assumption?
 * In Sage-Taiyi's collaborations the agent defines the condition space and an optimizer searches it. How much of the final yield or efficiency depends on the space the agent chose, compared with a space an expert would define for the same optimizer and budget?
+* TwinLab-Bench finds frontier agents most often accept a mechanism without a discriminating test, and lose points on decisions they planned correctly. Would training on its lab twins (with held-out labs) teach discriminating-experiment design, or do the twins' few tasks per field make overfitting the likely outcome?
