@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Meta } from "../types";
+import type { Meta, Policy } from "../types";
 import type { Screen } from "./layoutState";
 import { Icon } from "./icons";
 import type { IconName } from "./icons";
@@ -7,6 +7,7 @@ import { SnapshotStatus } from "./SnapshotStatus";
 
 interface Props {
   meta: Meta;
+  policy: Policy;
   screen: Screen;
   /** The project the workspace shows, when the workspace is the current page. */
   openProject: string | null;
@@ -24,7 +25,7 @@ interface Props {
  * keeps its name through aria-label, and the current page is marked with
  * aria-current.
  */
-export function Sidebar({ meta, screen, openProject, projects, collapsed, onNavigate, onToggleCollapsed }: Props) {
+export function Sidebar({ meta, policy, screen, openProject, projects, collapsed, onNavigate, onToggleCollapsed }: Props) {
   const item = (target: Screen, label: string, icon: IconName) => (
     <NavButton label={label} icon={<Icon name={icon} />} current={screen === target} collapsed={collapsed} onClick={() => onNavigate(target)} />
   );
@@ -75,7 +76,7 @@ export function Sidebar({ meta, screen, openProject, projects, collapsed, onNavi
 
       <div className="min-h-3 flex-1" aria-hidden="true" />
 
-      <SnapshotStatus meta={meta} collapsed={collapsed} />
+      <SnapshotStatus meta={meta} policy={policy} collapsed={collapsed} />
       {item("settings", "Settings", "gear")}
       <button
         type="button"

@@ -13,9 +13,10 @@ interface PluginInfo {
 }
 
 /**
- * TEMPORARY: a fixed list written into the app. The plugin registry
- * (ADR-0006, step 2) replaces it with the plugins actually loaded; until
- * then this page only describes what is built in and what is coming.
+ * TEMPORARY: a fixed list written into the app. The plugin registry being
+ * built in step 1 (ADR-0006; server side in server/registry.ts) is to feed
+ * this page with the plugins actually loaded; until then it only describes
+ * what is built in and what is coming.
  */
 const PLUGINS: PluginInfo[] = [
   {
@@ -108,7 +109,7 @@ export function PluginsPage() {
           <PluginCard key={p.name} plugin={p} />
         ))}
       </div>
-      <p className="src-note mt-4">This list is written into the app until the plugin registry arrives in step 2.</p>
+      <p className="src-note mt-4">This list is written into the app until the plugin registry, being built in step 1, feeds this page.</p>
     </div>
   );
 }

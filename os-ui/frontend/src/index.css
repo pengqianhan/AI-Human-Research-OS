@@ -359,6 +359,16 @@ code, kbd, samp, pre {
     clip: rect(0 0 0 0);
   }
 }
+/* The client's smallest window (960px) with both side panels open. */
+@container views (max-width: 480px) {
+  .views-pane .tab-btn {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  .views-pane .tab-lock {
+    display: none;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

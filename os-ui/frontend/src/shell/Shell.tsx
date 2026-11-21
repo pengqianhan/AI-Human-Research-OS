@@ -39,11 +39,14 @@ export function Shell({ state }: { state: OsState }) {
   /** Go to a page. `focus` moves the keyboard focus to its title (used when the click came from inside a page). */
   const navigate = useCallback(
     (next: Screen, project?: string, focus = false) => {
-      setLayout(project === undefined ? { screen: next } : { screen: next, project });
+      // Another project opens on its default tab, Overview; the same project keeps its tab.
+      setLayout(
+        project === undefined || project === layout.project ? { screen: next } : { screen: next, project, tab: "overview" },
+      );
       setVisited((prev) => (prev.has(next) ? prev : new Set(prev).add(next)));
       focusTitle.current = focus;
     },
-    [setLayout],
+    [setLayout, layout.project],
   );
 
   // The desktop client's Help menu ("System and Prerequisites") opens Settings.
@@ -72,6 +75,7 @@ export function Shell({ state }: { state: OsState }) {
       >
         <Sidebar
           meta={state.meta}
+          policy={state.policy}
           screen={screen}
           openProject={openProject?.name ?? null}
           projects={state.projects.map((p) => p.name)}
@@ -136,10 +140,20 @@ export function Shell({ state }: { state: OsState }) {
   );
 }
 
-/** One page of the layout: hidden, not unmounted, while another page shows. `fill` pages scroll inside themselves. */
+/**
+ * One page of the layout: hidden, not unmounted, while another page shows.
+ * `fill` pages scroll inside themselves. A scrolling page can take focus, so
+ * the arrow keys scroll it (as the old windows' content areas did).
+ */
 function Page({ id, label, screen, fill = false, children }: { id: Screen; label: string; screen: Screen; fill?: boolean; children: ReactNode }) {
   return (
-    <section data-screen={id} aria-label={label} hidden={screen !== id} className={"absolute inset-0 " + (fill ? "overflow-hidden" : "overflow-y-auto")}>
+    <section
+      data-screen={id}
+      aria-label={label}
+      hidden={screen !== id}
+      tabIndex={fill ? undefined : 0}
+      className={"absolute inset-0 focus-visible:outline-offset-[-2px] " + (fill ? "overflow-hidden" : "overflow-y-auto")}
+    >
       {children}
     </section>
   );

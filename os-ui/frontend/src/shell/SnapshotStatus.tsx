@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Meta } from "../types";
+import type { Meta, Policy } from "../types";
 import { formatSnapshotTime, minutesSince } from "../lib/format";
 import { DESKTOP, LIVE } from "../lib/mode";
 import { desktop } from "../lib/desktop";
@@ -13,6 +13,7 @@ export const MODE_LABEL = DESKTOP ? "Desktop client" : LIVE ? "Dev server" : "Pu
 
 /**
  * The sidebar footer: how fresh the data snapshot is, which build this is,
+ * the research policy's agent-led setting (as the old menu bar showed it),
  * and the way to refresh the snapshot. The desktop client regenerates it
  * with a button; the dev server copies the generator command for a
  * terminal; a published build is refreshed by its deploy, so it has neither.
@@ -21,7 +22,7 @@ export const MODE_LABEL = DESKTOP ? "Desktop client" : LIVE ? "Dev server" : "Pu
  * generated_at is more than 10 minutes old on a live build, the chip turns
  * amber and says "stale" instead of pretending to be live.
  */
-export function SnapshotStatus({ meta, collapsed }: { meta: Meta; collapsed: boolean }) {
+export function SnapshotStatus({ meta, policy, collapsed }: { meta: Meta; policy: Policy; collapsed: boolean }) {
   const [, forceTick] = useState(0);
   // Re-check staleness once a minute even if no new state.json arrives.
   useEffect(() => {
@@ -55,6 +56,9 @@ export function SnapshotStatus({ meta, collapsed }: { meta: Meta; collapsed: boo
             {when}
           </div>
           <div className="pl-[13px] text-[11px] text-muted">{MODE_LABEL}</div>
+          <div className="pl-[13px] text-[11px] text-muted" title="Research policy agent_led_research (source: memory/MEMORY.md)">
+            agent-led <b className="font-semibold text-signal">{policy.agent_led_research}</b>
+          </div>
         </>
       )}
       {DESKTOP && <RegenerateButton collapsed={collapsed} />}

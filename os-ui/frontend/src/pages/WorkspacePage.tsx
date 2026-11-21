@@ -1,4 +1,4 @@
-import { useId, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import type { OsState, Project } from "../types";
 import { AgentChat } from "../components/AgentChat";
@@ -44,6 +44,22 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
   const priority = entry?.priority || project.snapshot.priority;
   const owner = entry?.owner || project.snapshot.owner;
   const convId = `${ids}-conversation`;
+  const collapseRef = useRef<HTMLButtonElement | null>(null);
+  const stripRef = useRef<HTMLButtonElement | null>(null);
+  const moveFocus = useRef(false);
+
+  // Collapsing hides the focused button and opening removes the strip; hand
+  // the keyboard focus to the control that takes their place.
+  useEffect(() => {
+    if (!moveFocus.current) return;
+    moveFocus.current = false;
+    (conversationCollapsed ? stripRef.current : collapseRef.current)?.focus();
+  }, [conversationCollapsed]);
+
+  function setCollapsed(collapsed: boolean) {
+    moveFocus.current = true;
+    onConversationCollapsed(collapsed);
+  }
 
   /** Arrow keys move between tabs (disabled ones included, so their badge can be read); Enter or Space selects. */
   function onTabKey(e: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -80,7 +96,8 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
       <div
         className={
           "grid min-h-0 flex-1 gap-3.5 px-3.5 pb-3.5 " +
-          (conversationCollapsed ? "grid-cols-[44px_minmax(0,1fr)]" : "grid-cols-[360px_minmax(0,1fr)]")
+          // the conversation narrows from 360px toward 300px on small windows, so the views keep room
+          (conversationCollapsed ? "grid-cols-[44px_minmax(0,1fr)]" : "grid-cols-[clamp(300px,28vw,360px)_minmax(0,1fr)]")
         }
       >
         <aside aria-label="Project conversation" className="card flex min-h-0 min-w-0 flex-col">
@@ -88,13 +105,14 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
             <div className="flex shrink-0 items-center gap-2 pb-2 pl-4 pr-2.5 pt-3">
               <h2 className="min-w-0 flex-1 text-[13.5px] font-semibold">Project conversation</h2>
               <button
+                ref={collapseRef}
                 type="button"
                 className="icon-btn"
                 aria-expanded={true}
                 aria-controls={convId}
                 aria-label="Collapse conversation"
                 title="Collapse conversation"
-                onClick={() => onConversationCollapsed(true)}
+                onClick={() => setCollapsed(true)}
               >
                 <Icon name="panel" />
               </button>
@@ -118,12 +136,13 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
           </div>
           {conversationCollapsed && (
             <button
+              ref={stripRef}
               type="button"
               aria-expanded={false}
               aria-controls={convId}
               aria-label="Open conversation"
               title="Open conversation"
-              onClick={() => onConversationCollapsed(false)}
+              onClick={() => setCollapsed(false)}
               className="flex h-full w-full flex-col items-center gap-3 rounded-card py-3 text-ink2 hover:bg-accent-tint"
             >
               <Icon name="panel-open" />
@@ -155,7 +174,7 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
                   onKeyDown={(e) => onTabKey(e, i)}
                   onClick={() => (t.id === null ? toast(t.later ?? "") : onTab(t.id))}
                   className={
-                    "inline-flex shrink-0 items-center gap-[7px] whitespace-nowrap rounded-t-[6px] border-b-2 px-2.5 pb-[11px] pt-2.5 text-[13.5px] font-medium focus-visible:outline-offset-[-2px] " +
+                    "tab-btn inline-flex shrink-0 items-center gap-[7px] whitespace-nowrap rounded-t-[6px] border-b-2 px-2.5 pb-[11px] pt-2.5 text-[13.5px] font-medium focus-visible:outline-offset-[-2px] " +
                     (selected ? "border-accent text-ink" : disabled ? "cursor-not-allowed border-transparent text-faint" : "border-transparent text-ink2 hover:text-ink")
                   }
                 >
@@ -164,13 +183,17 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
                 </button>
               );
             })}
-            <span className="mb-1 ml-auto inline-flex shrink-0 items-center gap-1.5 self-center whitespace-nowrap pl-2 text-[12px] text-muted" title="These views only read the project's files">
+            <span className="tab-lock mb-1 ml-auto inline-flex shrink-0 items-center gap-1.5 self-center whitespace-nowrap pl-2 text-[12px] text-muted" title="These views only read the project's files">
               <Icon name="lock" size={14} />
               <span className="tab-note">Read-only</span>
             </span>
           </div>
 
-          <div role="tabpanel" id={`${ids}-panel`} aria-labelledby={`${ids}-tab-${TABS[selectedIndex]?.label ?? "Overview"}`} className="min-h-0 flex-1 overflow-y-auto">
+          <div role="tabpanel" id={`${ids}-panel`} aria-labelledby={`${ids}-tab-${TABS[selectedIndex]?.label ?? "Overview"}`}
+            // focusable, so the arrow keys scroll it even when it holds no control (Code, Paper)
+            tabIndex={0}
+            className="min-h-0 flex-1 overflow-y-auto focus-visible:outline-offset-[-2px]"
+          >
             {tab === "overview" && (
               <div className="mx-auto max-w-[880px] px-6 pb-12 pt-5">
                 <ProjectOverview project={project} />

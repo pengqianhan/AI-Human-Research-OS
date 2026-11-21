@@ -206,8 +206,8 @@ app shows the real snapshot or nothing (list below).
   current question, status, next action, evaluator, owner, evidence), plus an
   amber card for each unregistered folder; and below them a closed **Workspace
   status** with the policy chips, Active Work, Recent Activity, and the
-  governance log, which mockup C has no place for (the Human Owner confirmed
-  this placement on 2026-11-21).
+  governance log, which mockup C has no place for (HANDOFF.md Decisions,
+  "Panels mockup C has no place for", 2026-11-21).
 - **Projects**: one row per project with its stage, status, next action, and
   evidence in full; a row opens the workspace.
 - **Project workspace**: the project's conversation on the left (collapsible
@@ -221,13 +221,35 @@ app shows the real snapshot or nothing (list below).
   Rule for Home and Overview, set by the Human Owner on 2026-09-27: show state
   with visual elements and as few words as possible; sentences appear only
   when the human clicks.
+- **Paper wiki**: the paper-wiki viewer (Graph and Timeline tabs), embedded by `<iframe>` from
+  `paper-wiki/viz.html` rather than reimplemented natively. That file is a
+  generated artifact (source: `research-skills-hub/open-paper-skills/
+  paper-wiki-manager/scripts/{templates/viz.html,static/viz.{css,js}}`) that
+  already vendors its own force-directed graph engine (fcose + cytoscape.js)
+  and stays usable on its own — the GitHub Pages workflow at
+  `.github/workflows/pages.yml` serves it at `paper-wiki/viz.html` inside the
+  published os-ui build. Reimplementing that graph natively in React
+  would duplicate a working, self-contained viewer for no benefit; the iframe
+  keeps a single source of truth. `frontend/public/paper-wiki/` is a
+  gitignored cache copy synced by `start.sh` (same treatment as
+  `state.json`) — re-run `./start.sh` after editing paper-wiki content or the
+  viewer templates. On the Paper wiki page it sits under mockup C's "Paper
+  Wiki · bundled plugin" band and fills the rest of the page, managing its own
+  scrolling. The viewer probes `GET /api/paper-wiki/status`,
+  the `status` handler that the bundled Paper Wiki plugin declares
+  ([frontend/plugins/paper-wiki/plugin.json](frontend/plugins/paper-wiki/plugin.json),
+  code in [frontend/server/paperStatus.ts](frontend/server/paperStatus.ts)); when
+  it answers, a note's Status row becomes unread / skimmed / read buttons.
+  `POST` runs paper-wiki-manager's `set_status.py`, regenerates `viz.html`,
+  and copies the note and viewer into the cache copy, so a reload keeps the
+  change without re-running `start.sh`.
 - **Skills**: hub collections, orphan skills, sync badges, script
   warnings, license labels, per-target install state, and a per-location
   enable/disable toggle; installing elsewhere stays a copied command. How this
   splits between the human and the agent is documented in
   [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
 - **Plugins**: a fixed list, marked temporary in the code until the plugin
-  registry replaces it: Paper Wiki enabled; the Code and Paper views later in
+  registry being built in step 1 feeds this page: Paper Wiki enabled; the Code and Paper views later in
   step 1; the Idea, Skeleton, and Assets views and the Skills Hub in step 2;
   "Load from folder" disabled until step 2.
 - **Settings**: in the desktop client, the workspace folder, the snapshot
@@ -249,29 +271,6 @@ the "New project" card and button, the card's one-line purpose (the current
 question stands in for it), the latest-commit pill and "Last change" fact
 (the portfolio row's evidence and its age stand in), the Agents toggles in
 Settings, and the "Ask the agent about this" bar of the Code and Paper views.
-
-- **Paper wiki**: the paper-wiki viewer (Graph and Timeline tabs), embedded by `<iframe>` from
-   `paper-wiki/viz.html` rather than reimplemented natively. That file is a
-   generated artifact (source: `research-skills-hub/open-paper-skills/
-   paper-wiki-manager/scripts/{templates/viz.html,static/viz.{css,js}}`) that
-   already vendors its own force-directed graph engine (fcose + cytoscape.js)
-   and stays usable on its own — the GitHub Pages workflow at
-   `.github/workflows/pages.yml` serves it at `paper-wiki/viz.html` inside the
-   published os-ui build. Reimplementing that graph natively in React
-   would duplicate a working, self-contained viewer for no benefit; the iframe
-   keeps a single source of truth. `frontend/public/paper-wiki/` is a
-   gitignored cache copy synced by `start.sh` (same treatment as
-   `state.json`) — re-run `./start.sh` after editing paper-wiki content or the
-   viewer templates. On the Paper wiki page it sits under mockup C's "Paper
-   Wiki · bundled plugin" band and fills the rest of the page, managing its own
-   scrolling. The viewer probes `GET /api/paper-wiki/status`,
-   the `status` handler that the bundled Paper Wiki plugin declares
-   ([frontend/plugins/paper-wiki/plugin.json](frontend/plugins/paper-wiki/plugin.json),
-   code in [frontend/server/paperStatus.ts](frontend/server/paperStatus.ts)); when
-   it answers, a note's Status row becomes unread / skimmed / read buttons.
-   `POST` runs paper-wiki-manager's `set_status.py`, regenerates `viz.html`,
-   and copies the note and viewer into the cache copy, so a reload keeps the
-   change without re-running `start.sh`.
 
 ## 5. State Semantics
 
@@ -320,9 +319,11 @@ names them, and components use the names rather than hex codes.
   (passed stages pale accent, the current one solid accent).
 - Width: designed for windows from 1100px to 1600px with no horizontal page
   scroll; panes scroll inside themselves, and page text is held to a
-  readable measure (1080px page column, 880px Overview). When the views pane
-  narrows (both side panels open at 1100px), its "step 2" badges shrink to
-  amber dots.
+  readable measure (1080px page column, 880px Overview). The project
+  conversation is 360px wide, narrowing to 300px on small windows. When the
+  views pane narrows (both side panels open at 1100px), its "step 2" badges
+  shrink to amber dots; at the desktop client's smallest window (960px) the
+  tabs also tighten and the "Read-only" lock hides.
 - Motion: restrained hover lift, the sidebar's width change, and the drawer
   slide; respect `prefers-reduced-motion`.
 - Focus: one 2px accent ring on every control; a whole card shows the ring
