@@ -1,11 +1,12 @@
-# os-ui - Research OS Read-only Desktop
+# os-ui - Research OS App
 
-`os-ui/` is a read-only observation window for the AI-Human Research OS. It
-renders the repository's current state in a browser using a desktop-OS
-metaphor. The same desktop also ships as an app for macOS, Windows, and Linux:
-the [desktop client](client/README.md). It does not execute actions or write source files; the filesystem
-remains the only source of truth. Removing `os-ui/` does not affect the OS
-itself.
+`os-ui/` is the app of the AI-Human Research OS: it shows the repository's
+current state and holds the agent conversations. It ships as an app for
+macOS, Windows, and Linux, the [desktop client](client/README.md), and runs in a
+browser as its development shell. Apart from the narrow writes listed in
+[DESIGN.md](DESIGN.md), it does not execute actions or write source files; the
+filesystem remains the only source of truth. Removing `os-ui/` does not affect
+the OS itself.
 
 A Chinese copy of the previous overview is kept at [README_zh.md](README_zh.md).
 The current build direction is English-first; Chinese UI support can be added
@@ -13,31 +14,49 @@ later when the OS is more mature.
 
 ## Interface
 
-The UI opens as a dot-grid desktop with three layers:
+The layout follows mockup C, "document first", which the Human Owner chose on
+2026-11-21 (`os-ui/mockups/step1/c-document.html`; DESIGN.md §4). It replaced
+the desktop-OS shell of draggable windows and a dock, which stays in
+`frontend/src/desktop/` unused until a later change deletes it.
 
-- **Menu bar**: the OS name, a snapshot freshness chip, and the
-  `agent_led_research` policy chip. Hover the snapshot chip to see the full
-  generated timestamp, schema version, and repository HEAD.
-- **Windows**: five draggable, resizable, minimizable macOS-style windows:
-  **Dashboard**, **Projects**, **Skill Store**, **Paper Wiki** (the
-  standalone `paper-wiki/viz.html` graph and timeline viewer, embedded by iframe — see
-  DESIGN.md §4; here a note's Status row saves your unread / skimmed / read
-  state into the note's file), and **Root Agent** (below).
-- **Dock**: the five app icons on the left, and one copy-only button for
-  snapshot regeneration on the right.
+- **Left navigation**: **Home**, **Projects**, **Paper wiki**, **Skills**,
+  **Plugins**, a **Quick access** list of the registered projects, and at the
+  bottom the snapshot status, **Settings**, and **Collapse** (icons only). The
+  snapshot status shows when the data was generated (amber and "stale" after
+  10 minutes; hover for the timestamp, schema version, and repository HEAD),
+  which build this is, and the refresh control: **Regenerate** in the desktop
+  client, a copy-the-command button in a browser.
+- **Home**: the root agent's prompt bar, which opens in place to the whole
+  conversation (below); one card per project; and a closed **Workspace
+  status** with Active Work, Recent Activity, Governance, and the
+  `agent_led_research` policy chips.
+- **Projects** lists every project; a row or a Home card opens the project's
+  **workspace**: its conversation on the left, collapsible to a thin strip,
+  and its views on the right. **Overview** is the project overview; **Code**
+  and **Paper** arrive later in step 1; **Idea**, **Skeleton**, and **Assets**
+  in step 2.
+- **Paper wiki**: the standalone `paper-wiki/viz.html` graph and timeline
+  viewer, embedded by iframe (DESIGN.md §4); a note's Status row saves your
+  unread / skimmed / read state into the note's file.
+- **Skills**: the skill store. **Plugins**: what is built in and what is
+  coming. **Settings**: in the desktop client, the folder, the snapshot, and
+  the prerequisites and logins.
+
+The app remembers which page and project were open and what was collapsed.
 
 ## Agent conversations
 
 Two entry points share one chat component:
 
-- **Root Agent window** (dock): the conversation with the root agent (GOAL.md
+- **Root agent** (Home): the conversation with the root agent (GOAL.md
   H2). Each message is one [os-harness](../os-harness/README.md) turn at the
   repository root; the agent reads AGENTS.md there and hands project work to
   project agents through the `project-dispatch` skill.
-- **Projects window → Agent**: the conversation with one project's agent. Each
-  message is one turn inside `projects-folder/<Name>/`, so the human can
-  operate a project directly. Runs the root agent dispatched into that project
-  appear in the same list and can be continued with feedback.
+- **Project conversation** (a project's workspace): the conversation with one
+  project's agent. Each message is one turn inside `projects-folder/<Name>/`,
+  so the human can operate a project directly. Runs the root agent dispatched
+  into that project appear in the same list and can be continued with
+  feedback.
 
 Every turn runs on your own Claude Code or Codex login. For a new
 conversation the header picks the agent (remembered) and the permission mode
@@ -51,7 +70,7 @@ tiles for the sources a paper's full text is read from, first tried first:
 click a tile to move it one step earlier, and a switched-off source shows dimmed
 and is skipped. The switches and the read order live in
 [memory/paper-sources.json](../memory/paper-sources.json) and apply to every
-agent, in every window and outside the UI. The panel's **Keys** section takes
+agent, in every conversation and outside the UI. The panel's **Keys** section takes
 your own optional keys (OpenAlex, NCBI, Hugging Face), each with a link to get
 one free, and stores them in the repository's gitignored `.env`. A saved key
 is never shown again; the panel only marks it `set` (or `env` when an
@@ -64,7 +83,7 @@ Lease rule that `project-dispatch` follows.
 
 It needs the **Root Agent token** that `start.sh` prints when the dev server
 starts (`OS_UI_TOKEN` sets it; otherwise it is random per start; the desktop
-client supplies its own). The window
+client supplies its own). The conversation
 asks for it once and keeps it in `localStorage`. The token exists because the
 dev server may be reached through a public tunnel and this endpoint runs an
 agent with full permissions: without the token, `/api/chat/*` answers 401.
@@ -85,9 +104,10 @@ The plugin only starts, resumes, stops, and reads harness sessions; the traces
 live in `os-harness/sessions/`. A static build has no chat, like it has no
 skill toggle.
 
-Dashboard and Projects show state visually (stage bars, chips, progress bars,
-counts, a timeline) and keep sentences behind a click, following the Human
-Owner's 2026-09-27 direction; DESIGN.md §4 lists what each page shows.
+Home and a project's Overview show state visually (stage bars, chips,
+progress bars, counts, a timeline) and keep most sentences behind a click,
+following the Human Owner's 2026-09-27 direction; DESIGN.md §4 lists what each
+page shows.
 
 All displayed data comes from one cache file:
 `frontend/public/state.json`. The generator creates that file by scanning the
@@ -125,7 +145,7 @@ npm run dev
 
 The dev server prints a URL, usually `http://localhost:5173/`.
 
-To view the live dashboard from another device for a while, open a Cloudflare
+To view the live app from another device for a while, open a Cloudflare
 quick tunnel to it (no account needed; the URL is public to anyone who has it
 and dies with the process):
 
@@ -151,8 +171,10 @@ a private claude.ai artifact.
 
 Any production build is view-only outside the desktop client: the write and
 agent endpoints exist only on the dev server and in the client, and
-[src/lib/mode.ts](frontend/src/lib/mode.ts) hides their controls — no Root Agent window, no project Agent view, no skill toggles, no
-copy-command dock button, and the Paper Wiki Status row reads without buttons.
+[src/lib/mode.ts](frontend/src/lib/mode.ts) hides their controls: Home and a
+project's workspace say in one line that conversations run in the desktop app
+or the dev server; there are no skill toggles and no snapshot-refresh button;
+and the Paper Wiki Status row reads without buttons.
 
 The public copy is built this way by
 [.github/workflows/pages.yml](../.github/workflows/pages.yml) on every push to
@@ -174,22 +196,20 @@ files reach it; changes on `main` appear once `main` is merged into
 3. **Honest state beats fake realtime**. The UI shows evidence sources,
    timestamps, staleness, and empty states instead of pretending to know more
    than the files contain.
-4. **Desktop shell, research cockpit content**. The visual identity is
-   engineering graph paper plus flight-progress strips, not a generic product
-   dashboard.
-
-The desktop shell was inspired by [wanman.ai](https://wanman.ai/) and
-[chekusu/wanman](https://github.com/chekusu/wanman), but keeps this OS's own
-palette, typography, and read-only semantics.
+4. **Document first**. Since 2026-11-22 the app reads like a research
+   document: a left navigation, warm paper surfaces, serif titles and reading
+   text, and the agent conversation beside the project it works on (mockup C,
+   DESIGN.md §4 and §7). The earlier desktop shell, inspired by
+   [wanman.ai](https://wanman.ai/) and
+   [chekusu/wanman](https://github.com/chekusu/wanman), and its graph-paper
+   palette are superseded.
 
 ## Follow-up Queue
 
-- [ ] Persist window layout in `localStorage`.
-- [ ] Add keyboard move/resize controls for windows.
+- [ ] Delete the superseded desktop shell in `frontend/src/desktop/` (and the
+      pages only it uses) once the new layout has been accepted.
 - [ ] Feed the round score track from real `Code/runs/<round-id>/result.json`
       files once a project produces them.
-- [ ] Split governance or activity into separate dock apps only if real use
-      shows that the Dashboard is too dense.
 - [ ] M4-gated: replace polling with a small file-watching service plus SSE.
       (The desktop client pushes snapshot events to its own window over IPC;
       that lives and dies with the app and is not this item.)
@@ -205,9 +225,9 @@ os-ui/
   README_zh.md       # Chinese overview retained for reference
   start.sh           # one-command launcher
   DESIGN.md          # architecture, schema, state semantics, and visual spec
-  mockup.html        # static visual mockup with fake data
+  mockup.html        # 2026-07-04 visual mockup with fake data (panel content; palette superseded)
   generator/         # Python read-only scanner -> state.json
-  frontend/          # Vite + React + TypeScript + Tailwind desktop UI
+  frontend/          # Vite + React + TypeScript + Tailwind app UI
     server/          # the endpoints, shared by the dev server and the client
   client/            # Electron desktop client (macOS, Windows, Linux)
 ```
