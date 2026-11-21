@@ -1,7 +1,8 @@
 /**
  * Research OS desktop client: the Electron main process. It owns the window,
- * the app:// protocol (renderer files, workspace files, and the shared os-ui
- * endpoints), the snapshot generator, agent-turn notifications, and the
+ * the app:// protocol (renderer files, workspace files, each bundled plugin's
+ * origin, and the shared os-ui endpoints from the plugin registry), the
+ * snapshot generator, agent-turn notifications, and the
  * prerequisites check. Everything with logic lives in the sibling modules;
  * this file wires them to Electron.
  */
@@ -11,8 +12,12 @@ import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { createMounts } from "../../../frontend/server/api.ts";
+import { BUNDLED_IDS } from "../../../frontend/plugins/bundled.ts";
+import { TRUNK_MOUNTS } from "../../../frontend/server/api.ts";
+import { BUNDLED_HANDLERS } from "../../../frontend/server/pluginHandlers.ts";
 import { processRunner } from "../../../frontend/server/process.ts";
+import { createRegistry, loadPlugins } from "../../../frontend/server/registry.ts";
+import type { Registry } from "../../../frontend/server/registry.ts";
 import type { ApiContext } from "../../../frontend/server/types.ts";
 import type { DesktopInfo, SnapshotEvent, WorkspaceChoice } from "../../../frontend/src/lib/desktop.ts";
 import { CHANNELS } from "../shared/channels.ts";
@@ -23,8 +28,7 @@ import { createLog } from "./log.ts";
 import { menuTemplate } from "./menu.ts";
 import { describeTurn, TurnWatcher } from "./notifier.ts";
 import type { TurnEnd } from "./notifier.ts";
-import { createHandler, HOME_URL, ORIGIN, SCHEME, splitMounts, WIKI_ORIGIN } from "./protocol.ts";
-import type { ApiMounts } from "./protocol.ts";
+import { allowedNavigation, createHandler, HOME_URL, ORIGIN, pluginSites, SCHEME } from "./protocol.ts";
 import { choosePython, isXcodeStub, which } from "./python.ts";
 import type { Probe, PythonChoice } from "./python.ts";
 import { loadSettings, rememberWorkspace, saveSettings } from "./settings.ts";
@@ -38,8 +42,8 @@ const APP_ID = "io.github.pengqianhan.researchos";
 const DOCS_URL = "https://github.com/pengqianhan/AI-Human-Research-OS/blob/main/os-ui/client/README.md";
 /**
  * This launch's token for the token-gated endpoints, as on the dev server. The
- * preload hands it to the top frame only; the Paper Wiki frame is another
- * origin and never sees it.
+ * preload hands it to the top frame only; a plugin's frame (Paper Wiki's) is
+ * another origin and never sees it.
  */
 const TOKEN = randomBytes(16).toString("hex");
 const NOTIFY_POLL_MS = 3000;
@@ -58,7 +62,7 @@ protocol.registerSchemesAsPrivileged([
 interface OpenWorkspace {
   dir: string;
   python: PythonChoice;
-  mounts: ApiMounts;
+  registry: Registry;
   generator: Generator;
   inputs: InputPoller;
   turns: TurnWatcher;
@@ -69,6 +73,19 @@ const settingsFile = join(app.getPath("userData"), "settings.json");
 const logFile = join(app.getPath("userData"), "logs", "main.log");
 const log = createLog(logFile);
 const rendererDir = join(__dirname, "renderer");
+
+/**
+ * The bundled plugins, loaded once at startup from the manifests build.mjs
+ * copies into out/plugins/ (inside the asar archive when packaged): their
+ * origins are framed and navigated to before any workspace is open. Each
+ * workspace opened gets a registry of their endpoints. A plugin that did not
+ * load is logged at start, and its compiled-in handlers are left out, so it
+ * costs its own pages and endpoints rather than every workspace.
+ */
+const bundled = loadPlugins(join(__dirname, "plugins"), BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
+const sites = pluginSites(bundled.plugins);
+const pluginHosts = [...sites.keys()];
+const pluginHandlers = Object.fromEntries(Object.entries(BUNDLED_HANDLERS).filter(([key]) => sites.has(key.split("/")[0]!)));
 
 let settings: Settings = loadSettings(settingsFile);
 let resolvedEnv: ResolvedEnv = { env: process.env, source: "inherited", problem: null };
@@ -155,7 +172,8 @@ async function openWorkspace(dir: string): Promise<boolean> {
     setInterval(() => turns.poll(), NOTIFY_POLL_MS),
     setInterval(() => void generator.request(), PERIODIC_REFRESH_MS),
   ];
-  current = { dir, python, mounts: splitMounts(createMounts(ctx)), generator, inputs, turns, timers };
+  const registry = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: bundled.plugins, factories: pluginHandlers });
+  current = { dir, python, registry, generator, inputs, turns, timers };
   void generator.request();
 
   settings = rememberWorkspace(settings, dir);
@@ -276,9 +294,9 @@ let askingToOpen = false;
 
 /**
  * Opens a web or mail link in the default browser after the user confirms it.
- * Electron cannot tell which frame asked, and the Paper Wiki frame runs note
- * HTML, so no link leaves the app unseen; one question at a time, so a page
- * cannot flood the user.
+ * Electron cannot tell which frame asked, and a plugin's frame runs its own
+ * HTML (Paper Wiki's, note bodies), so no link leaves the app unseen; one
+ * question at a time, so a page cannot flood the user.
  */
 async function openOutside(url: string): Promise<void> {
   if (!isExternal(url) || askingToOpen) return;
@@ -297,11 +315,6 @@ async function openOutside(url: string): Promise<void> {
   } finally {
     askingToOpen = false;
   }
-}
-
-function allowedNavigation(url: string, isMainFrame: boolean): boolean {
-  if (isMainFrame) return url.startsWith(`${ORIGIN}/`);
-  return url.startsWith(`${WIKI_ORIGIN}/`) || url === "about:blank" || url === "about:srcdoc";
 }
 
 function showWindow(): void {
@@ -348,10 +361,10 @@ function createWindow(): void {
     void openOutside(url);
     return { action: "deny" };
   });
-  // The window stays on the app's origin and frames on the Paper Wiki's; any
+  // The window stays on the app's origin and frames on the loaded plugins'; any
   // other navigation is cancelled, and a web link may open in the browser instead.
   const guard = (event: Electron.Event, url: string, isMainFrame: boolean) => {
-    if (allowedNavigation(url, isMainFrame)) return;
+    if (allowedNavigation(url, isMainFrame, pluginHosts)) return;
     event.preventDefault();
     void openOutside(url);
   };
@@ -417,11 +430,18 @@ async function start(): Promise<void> {
   resolvedEnv = await resolveEnv({ platform: process.platform, env: process.env, home: homedir(), execPath: process.execPath });
   childEnv = resolvedEnv.env;
   log(`start ${app.getVersion()} on ${process.platform}-${process.arch}; environment from ${resolvedEnv.source}${resolvedEnv.problem ? ` (${resolvedEnv.problem})` : ""}`);
+  for (const problem of bundled.problems) log(`ERROR plugin: ${problem}`);
+  const lost = BUNDLED_IDS.filter((id) => !sites.has(id));
+  if (lost.length > 0) {
+    log(`ERROR bundled plugins not loaded: ${lost.join(", ")}; their pages and endpoints are unavailable (rebuild the app: npm run build)`);
+  }
+  log(`plugins: ${pluginHosts.join(", ") || "none"}`);
 
   const handler = createHandler(() => ({
     renderer: rendererDir,
     workspace: current?.dir ?? null,
-    mounts: current?.mounts ?? null,
+    sites,
+    registry: current?.registry ?? null,
     token: TOKEN,
   }));
   protocol.handle(SCHEME, handler);
