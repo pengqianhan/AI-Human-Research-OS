@@ -8,7 +8,7 @@ interface Props {
 export function EvaluationsPanel({ entries }: Props) {
   if (entries.length === 0) {
     return (
-      <p className="text-[12.5px] text-stale">
+      <p className="text-[13px] text-muted">
         No review reports yet. Mid-term and final reviews will appear here after they land in Evaluations/.
       </p>
     );
@@ -19,13 +19,13 @@ export function EvaluationsPanel({ entries }: Props) {
       {entries.map((e, idx) => (
         <li
           key={idx}
-          className="flex gap-3 border-b border-dashed border-grid py-[7px] text-[12.5px] last:border-b-0"
+          className="flex gap-3 border-b border-line py-2 text-[13px] last:border-b-0"
         >
-          <time className="font-mono-heading whitespace-nowrap pt-px text-[11px] text-stale">
+          <time className="whitespace-nowrap pt-px text-[11.5px] text-muted">
             {e.date ?? "todo"}
           </time>
           <span className="flex-1">{e.summary}</span>
-          <span className="font-mono-heading ml-auto whitespace-nowrap text-[10.5px] text-stale">
+          <span className="font-mono-heading ml-auto whitespace-nowrap text-[11px] text-faint">
             {e.source}
           </span>
         </li>

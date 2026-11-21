@@ -17,6 +17,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260929-002 - Scripted tooling before a scheduled agent: for one mechanical recurring chore (the related-projects scan), preferred a `gh` keyword script over a Claude scheduled task; low confidence.
 - cog-20261014-001 - A gate that needs routine human clearing is removed, not staffed: for the skill mirror sync, twice dropped a manual safeguard for automation plus an audit trail, while keeping the machine-enforced CI gate; medium confidence.
 - cog-20261121-001 - The running product outranks its documents: checks the agent's claims about a reference product against the installed app and answers with screenshots; medium confidence.
+- cog-20261122-001 - Reading surface before conversation: for the desktop layout, chose the document-first mockup over the conversation-centred one the agent recommended; low confidence.
 
 ## Entries
 
@@ -143,4 +144,24 @@ timestamp: 2026-07-04T00:00:00+12:00
   - When the claim decides a design question and the human has the product installed, ask what they see before relying on documents; run the app or read its defaults in code when possible.
 - related:
   - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
+  - [cog-20260927-001](known_knowns.md#cog-20260927-001-glance-first-gui-visual-state-text-on-click)
+
+## cog-20261122-001 Reading surface before conversation
+
+- content: Offered three layouts for the desktop app, the human picked the one built for reading: project cards carry Home, the root agent is a compact bar that expands on demand, and a project's conversation collapses so a view can be read almost full width. They did not state a reason. The choice suggests that, for them, the research artifacts (projects, paper, code) are the main surface and the agent conversation is a tool beside it.
+- source: inferred
+- confidence: low
+- evidence: 2026-11-21. Asked to choose among mockups A (conversation fills most of Home, existing palette), B (dense dark workbench), and C (document first), with the agent recommending A plus C's collapsible conversation, the human answered only 「选 C」. One choice with no stated reason; the palette and typography of C may have weighed as much as its structure.
+- created: 2026-11-22
+- last_updated: 2026-11-22
+- status: active
+- domain: interface design for the Research OS desktop app
+- scope: The step 1 layout choice; no claim yet about other views or about how much they use the conversation in practice.
+- evidence_type: operation
+- last_verified: 2026-11-22
+- freshness: current
+- responsibility_relevance:
+  - In later mockups (Idea, Skeleton, Assets), default to giving the artifact the width and keeping the conversation collapsible, and say that this default comes from one choice.
+  - When recommending against it, show the alternative as a mockup; a recommendation in prose did not move the choice.
+- related:
   - [cog-20260927-001](known_knowns.md#cog-20260927-001-glance-first-gui-visual-state-text-on-click)

@@ -39,27 +39,27 @@ function severityLabel(sev: string): string {
 export function OsFeedbackPanel({ entries }: Props) {
   if (entries.length === 0) {
     return (
-      <div className="panel rounded border border-grid bg-panel p-4 px-[18px] text-[12.5px] text-stale">
+      <div className="text-[13px] text-muted">
         No OS Feedback records yet. Each round should add one PROJECT_MEMORY.md OS Feedback entry, or explicitly record none.
       </div>
     );
   }
 
   return (
-    <div className="panel rounded border border-grid bg-panel p-4 px-[18px]">
-      <table className="fb-table w-full border-collapse text-[12.5px]">
+    <div className="overflow-x-auto">
+      <table className="fb-table w-full border-collapse text-[13px]">
         <thead>
           <tr>
-            <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
+            <th className="label border-b border-line2 px-2.5 py-1.5 text-left">
               Date
             </th>
-            <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
+            <th className="label border-b border-line2 px-2.5 py-1.5 text-left">
               Mechanism
             </th>
-            <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
+            <th className="label border-b border-line2 px-2.5 py-1.5 text-left">
               Expected vs Actual
             </th>
-            <th className="font-mono-heading border-b border-grid px-2.5 py-1.5 text-left text-[10.5px] font-medium text-stale">
+            <th className="label border-b border-line2 px-2.5 py-1.5 text-left">
               Severity
             </th>
           </tr>
@@ -67,16 +67,16 @@ export function OsFeedbackPanel({ entries }: Props) {
         <tbody>
           {entries.map((e, idx) => (
             <tr key={idx}>
-              <td className="font-mono-heading whitespace-nowrap border-b border-dashed border-grid px-2.5 py-2 align-top text-[11px] text-stale">
+              <td className="whitespace-nowrap border-b border-line px-2.5 py-2 align-top text-[11.5px] tabular-nums text-muted">
                 {e.date ?? "—"}
               </td>
-              <td className="border-b border-dashed border-grid px-2.5 py-2 align-top">
+              <td className="border-b border-line px-2.5 py-2 align-top">
                 {e.mechanism || "—"}
               </td>
-              <td className="border-b border-dashed border-grid px-2.5 py-2 align-top">
+              <td className="border-b border-line px-2.5 py-2 align-top">
                 {e.expected_vs_actual}
               </td>
-              <td className="border-b border-dashed border-grid px-2.5 py-2 align-top">
+              <td className="border-b border-line px-2.5 py-2 align-top">
                 <Badge tone={severityTone(e.severity)}>{severityLabel(e.severity)}</Badge>
               </td>
             </tr>

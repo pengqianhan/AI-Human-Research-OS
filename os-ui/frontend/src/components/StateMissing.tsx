@@ -14,17 +14,17 @@ export function StateMissing() {
   if (DESKTOP) return <DesktopWelcome />;
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
-      <div className="max-w-[560px] rounded border border-grid bg-panel p-8 text-center">
-        <p className="font-mono-heading text-[13px] font-semibold uppercase tracking-[.08em] text-signal">
+      <div className="card max-w-[560px] p-8 text-center">
+        <p className="eyebrow justify-center !text-signal">
           state.json not found
         </p>
-        <p className="mt-3 text-[14px] text-ink-soft">
+        <p className="prose-serif mt-3">
           Run the generator first, then refresh this page.
         </p>
-        <pre className="font-mono-heading mt-4 overflow-x-auto rounded bg-ink px-4 py-3 text-left text-[12.5px] text-[#E8EDEF]">
+        <pre className="cmd-block mt-4 overflow-x-auto px-4 py-3 text-left text-[12.5px]">
           cd os-ui/generator &amp;&amp; uv run python generate.py
         </pre>
-        <p className="mt-4 text-[12px] text-stale">
+        <p className="mt-4 text-[12.5px] text-muted">
           This page retries every 5 seconds; once generation succeeds, it updates automatically.
         </p>
       </div>
@@ -44,25 +44,25 @@ function DesktopWelcome() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-10">
-      <div data-testid="desktop-welcome" className="w-full max-w-[680px] rounded border border-grid bg-panel p-8">
-        <p className="font-mono-heading text-[13px] font-semibold uppercase tracking-[.08em] text-signal">
+      <div data-testid="desktop-welcome" className="card w-full max-w-[680px] p-8">
+        <p className="font-serif text-[24px] font-medium leading-tight text-ink">
           {noFolder ? "Open your Research OS folder" : "Preparing the snapshot"}
         </p>
-        <p className="mt-2 text-[13.5px] text-ink-soft">
+        <p className="prose-serif mt-2">
           {noFolder
             ? "Choose the folder of your Research OS checkout (the one with AGENTS.md)."
-            : "The desktop appears once the generator has read this folder."}
+            : "The app appears once the generator has read this folder."}
         </p>
         {noFolder && (
-          <p className="mt-1 text-[12.5px] text-ink-soft">
+          <p className="mt-2 text-[13px] text-ink2">
             No folder yet?{" "}
-            <a href={REPOSITORY} target="_blank" rel="noreferrer" className="text-signal underline">
+            <a href={REPOSITORY} target="_blank" rel="noreferrer" className="text-accent underline">
               Get the Research OS
             </a>{" "}
             and clone it first.
           </p>
         )}
-        {info?.workspaceProblem && <p className="mt-2 text-[12.5px] text-danger">{info.workspaceProblem}</p>}
+        {info?.workspaceProblem && <p className="mt-2 text-[13px] text-danger">{info.workspaceProblem}</p>}
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           {info?.workspace && (
@@ -75,7 +75,7 @@ function DesktopWelcome() {
             <button
               type="button"
               onClick={() => void desktop?.regenerate()}
-              className="font-mono-heading rounded border border-grid px-3 py-1 text-[12px] text-ink hover:bg-paper"
+              className="btn"
             >
               Regenerate
             </button>

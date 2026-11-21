@@ -64,15 +64,16 @@ export function SkillDrawer({ skill, targets, triggerRef, onClose }: Props) {
     <>
       <div
         className={
-          "scrim fixed inset-0 z-20 bg-[rgba(23,38,46,.18)] " + (isOpen ? "block" : "hidden")
+          "scrim fixed inset-0 z-20 bg-line2 " + (isOpen ? "block" : "hidden")
         }
         onClick={handleClose}
         aria-hidden="true"
       />
       <aside
         className={
-          "drawer fixed top-0 z-30 h-screen w-[400px] overflow-y-auto border-l-2 border-ink bg-panel p-6 transition-[right] duration-[220ms] ease-in-out max-[900px]:w-screen " +
-          (isOpen ? "right-0 shadow-[-8px_0_30px_rgba(23,38,46,.15)]" : "-right-[420px] max-[900px]:-right-full")
+          // invisible when closed, so its buttons leave the tab order once it has slid away
+          "drawer fixed top-0 z-30 h-screen w-[420px] overflow-y-auto bg-card p-6 transition-[right,visibility] duration-[220ms] ease-in-out max-[900px]:w-screen " +
+          (isOpen ? "visible right-0 shadow-sh3" : "invisible -right-[460px] max-[900px]:-right-full")
         }
         role="dialog"
         aria-modal="true"
@@ -83,34 +84,34 @@ export function SkillDrawer({ skill, targets, triggerRef, onClose }: Props) {
           ref={closeBtnRef}
           type="button"
           onClick={handleClose}
-          className="close float-right rounded-[3px] border border-grid bg-panel px-2.5 py-0.5 font-mono-heading text-[12px]"
+          className="close btn btn-sm float-right"
         >
           Close
         </button>
-        <h3 className="font-mono-heading mt-1 break-all text-[16px]">{skill?.name ?? "—"}</h3>
-        <div className="font-mono-heading mb-3.5 text-[11px] text-stale">
+        <h3 className="mt-1 break-all font-serif text-[22px] font-medium leading-tight">{skill?.name ?? "—"}</h3>
+        <div className="font-mono-heading mb-3.5 mt-1 text-[11.5px] text-muted">
           {skill ? `Research-skills-hub / ${skill.collection}` : "—"}
         </div>
 
-        <dl className="my-3.5 text-[12.5px]">
-          <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
+        <dl className="my-3.5 text-[13px]">
+          <dt className="label mt-3">
             Description
           </dt>
-          <dd className="mt-0.5">{skill?.description ?? "—"}</dd>
+          <dd className="prose-serif mt-0.5 text-[14.5px] text-ink">{skill?.description ?? "—"}</dd>
 
-          <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
+          <dt className="label mt-3">
             Installs
           </dt>
           <dd className="mt-0.5">
             {skill ? <SkillInstalls skill={skill} targets={targets} /> : "—"}
           </dd>
 
-          <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
+          <dt className="label mt-3">
             license / upstream
           </dt>
           <dd className="mt-0.5">{skill?.license ?? "unknown (see upstream)"}</dd>
 
-          <dt className="font-mono-heading mt-2.5 text-[10.5px] uppercase tracking-[.05em] text-stale">
+          <dt className="label mt-3">
             Scripts
           </dt>
           <dd className="mt-0.5">
@@ -118,19 +119,19 @@ export function SkillDrawer({ skill, targets, triggerRef, onClose }: Props) {
           </dd>
         </dl>
 
-        <div className="cmd mt-3.5 break-all rounded bg-ink px-3.5 py-3 font-mono-heading text-[11px] leading-[1.6] text-[#E8EDEF]">
+        <div className="cmd cmd-block mt-3.5 break-all px-3.5 py-3 text-[11.5px]">
           {skill ? installCommand(skill) : "—"}
         </div>
         <button
           type="button"
           onClick={handleCopy}
           aria-live="polite"
-          className="copy-btn mt-2 block w-full rounded-[3px] border border-ink bg-panel py-2.5 font-mono-heading text-[12.5px] font-semibold hover:bg-ink hover:text-white"
+          className="copy-btn btn btn-primary mt-2 w-full justify-center py-2.5"
         >
           {copyLabel ?? (skill ? copyButtonLabel(skill) : "Copy install command")}
         </button>
-        <p className="note mt-2.5 text-[11.5px] text-stale">
-          This desktop does not install or delete skills; paste the command into a terminal.
+        <p className="note mt-2.5 text-[12px] text-muted">
+          This app does not install or delete skills; paste the command into a terminal.
           Its only write action is the per-location disable/enable above.
           AGENTS.md requires script review before installing third-party collected skills;
           this UI applies that warning to every skill with scripts/.

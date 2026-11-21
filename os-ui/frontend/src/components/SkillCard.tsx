@@ -12,22 +12,23 @@ export function SkillCard({ skill, onOpen }: Props) {
     <button
       type="button"
       onClick={(e) => onOpen(e.currentTarget)}
-      className="skill flex flex-col gap-2 rounded border border-grid bg-panel p-3.5 px-4 text-left font-sans transition hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(23,38,46,.09)]"
+      className="skill card-flat flex flex-col gap-2 px-[18px] py-4 text-left transition hover:-translate-y-0.5 hover:shadow-sh3"
     >
       <span className="top flex items-start justify-between gap-2">
-        <span className="font-mono-heading break-all text-[13px] font-semibold">{skill.name}</span>
+        <span className="break-all font-serif text-[16.5px] font-medium leading-tight text-ink">{skill.name}</span>
         <SyncBadge sync={skill.sync} />
       </span>
-      <span className="desc line-clamp-2 flex-1 text-[12px] text-ink-soft">{skill.description}</span>
-      <span className="foot flex flex-wrap items-center gap-1.5">
-        <span className="font-mono-heading rounded-[2px] border border-grid px-[7px] py-px text-[10px] text-stale">
+      {/* No flex-1 here: a stretched box would show the lines the clamp cuts off. */}
+      <span className="desc line-clamp-2 font-serif text-[14px] leading-snug text-ink2">{skill.description}</span>
+      <span className="foot mt-auto flex flex-wrap items-center gap-1.5">
+        <span className="rounded-full bg-mute-soft px-2 py-[2px] text-[11px] text-ink2">
           {skill.collection}
         </span>
-        <span className="font-mono-heading rounded-[2px] border border-grid px-[7px] py-px text-[10px] text-stale">
+        <span className="rounded-full bg-mute-soft px-2 py-[2px] text-[11px] text-muted">
           {skill.license ?? "unknown (see upstream)"}
         </span>
         {skill.hasScripts && (
-          <span className="font-mono-heading rounded-[2px] border border-warn px-[7px] py-px text-[10px] text-warn">
+          <span className="rounded-full bg-warn-soft px-2 py-[2px] text-[11px] text-warn">
             has scripts/ · inspect first
           </span>
         )}

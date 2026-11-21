@@ -1,7 +1,11 @@
 # os-ui Design - Research OS Read-only Dashboard
 
-This document is the implementation contract for `os-ui/`. The static visual
-mockup lives in [mockup.html](mockup.html).
+This document is the implementation contract for `os-ui/`. The layout and the
+visual tokens in force follow mockup C, "document first"
+([mockups/step1/c-document.html](mockups/step1/c-document.html)), which the Human Owner chose on
+2026-11-21 (§4, §7). The earlier static mockup, [mockup.html](mockup.html),
+still specifies the content of the dashboard panels; its palette and its tab
+shell are superseded.
 
 Authorization boundary: the human authorized a read-only monitor UI on
 2026-07-04. That exception applies only to observation. On 2026-07-22 the Human
@@ -50,8 +54,8 @@ then explicit human confirmation.
   actions are the skill enable/disable toggle (2026-07-22), the paper
   reading-status buttons (2026-09-30), the paper-source switches and keys
   (2026-09-30), and the agent
-  conversations (2026-09-26: the Root Agent window and each project's Agent
-  view), which send messages to os-harness sessions.
+  conversations (2026-09-26: the root agent, now on Home, and each project's
+  agent, now in its workspace; §4), which send messages to os-harness sessions.
 - It renders repository state and copies commands for the human to run; it does
   not execute commands. Skill install and removal are copy-only, like every
   other command. The desktop client also runs the generator itself (on
@@ -175,49 +179,98 @@ sample records.
 
 ## 4. Information Architecture
 
-Since 2026-07-05 the UI uses a desktop shell: a persistent menu bar, a bottom
-dock, and draggable/zoomable/minimizable windows under `frontend/src/desktop/`.
-The old tab-shell concept is superseded.
+Since 2026-11-22 the UI follows mockup C, "document first"
+([mockups/step1/c-document.html](mockups/step1/c-document.html); HANDOFF.md Decisions, "Layout", and
+[ADR-0006](../docs/adr/0006-desktop-workspace-trunk-and-plugins.md)): a left
+navigation and one page at a time, built in `frontend/src/shell/`. It
+supersedes the desktop shell of 2026-07-05 (menu bar, dock, and draggable
+windows), which is still in `frontend/src/desktop/` but no longer rendered;
+`frontend/src/App.tsx` says how to switch back, and a later change deletes it.
+The tab shell before that is long gone. The mockup fixes structure, palette,
+and type; where it drew sample data or controls with nothing behind them, the
+app shows the real snapshot or nothing (list below).
 
-1. **Dashboard**: portfolio strips (stage bar and chips; the status, evaluator,
-   and next-action sentences open on click), unregistered project warnings,
-   Active Work rows (progress bar; checklist opens on click), an activity
-   timeline (first line; full text opens on click), policy chips, and the
-   collapsed governance log.
-2. **Projects**: a header (stage bar, owner/priority/evaluator chips, four
-   counts), the Snapshot sentences as one-line previews that open on click,
-   and collapsed sections for the round score track, evaluations, OS
-   Feedback, and local skills; plus the Agent view (§1).
-   Rule for both pages, set by the Human Owner on 2026-09-27: show state with
-   visual elements and as few words as possible; sentences appear only when
-   the human clicks.
-3. **Skill Store**: hub collections, orphan skills, sync badges, script
-   warnings, license labels, per-target install state, and a per-location
-   enable/disable toggle; installing elsewhere stays a copied command. How this
-   splits between the human and the agent is documented in
-   [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
-4. **Paper Wiki**: the paper-wiki viewer (Graph and Timeline tabs), embedded by `<iframe>` from
-   `paper-wiki/viz.html` rather than reimplemented natively. That file is a
-   generated artifact (source: `research-skills-hub/open-paper-skills/
-   paper-wiki-manager/scripts/{templates/viz.html,static/viz.{css,js}}`) that
-   already vendors its own force-directed graph engine (fcose + cytoscape.js)
-   and stays usable on its own — the GitHub Pages workflow at
-   `.github/workflows/pages.yml` serves it at `paper-wiki/viz.html` inside the
-   published os-ui build. Reimplementing that graph natively in React
-   would duplicate a working, self-contained viewer for no benefit; the iframe
-   keeps a single source of truth. `frontend/public/paper-wiki/` is a
-   gitignored cache copy synced by `start.sh` (same treatment as
-   `state.json`) — re-run `./start.sh` after editing paper-wiki content or the
-   viewer templates. Its window skips the padded content area every other app
-   uses (`AppDef.fill`), so the viewer fills the window edge-to-edge and
-   manages its own scrolling. The viewer probes `GET /api/paper-wiki/status`,
-   the `status` handler that the bundled Paper Wiki plugin declares
-   ([frontend/plugins/paper-wiki/plugin.json](frontend/plugins/paper-wiki/plugin.json),
-   code in [frontend/server/paperStatus.ts](frontend/server/paperStatus.ts)); when
-   it answers, a note's Status row becomes unread / skimmed / read buttons.
-   `POST` runs paper-wiki-manager's `set_status.py`, regenerates `viz.html`,
-   and copies the note and viewer into the cache copy, so a reload keeps the
-   change without re-running `start.sh`.
+- **Left navigation**: Home, Projects, Paper wiki, Skills, Plugins; Quick
+  access with one entry per registered project; at the bottom the snapshot
+  status, Settings, and a control that collapses the bar to icons. Buttons keep
+  their names as `aria-label` when collapsed, and the current page carries
+  `aria-current`.
+- **Snapshot status** (sidebar footer): the snapshot time, amber and "stale"
+  after 10 minutes on a live build, with generated time, schema, and HEAD on
+  hover; the build ("Desktop client", "Dev server", or "Public snapshot · view
+  only"); and the refresh control: a Regenerate button in the desktop client,
+  a copy-the-command button on the dev server, nothing in a published build.
+- **Home**: the root agent (GOAL.md H2) as a prompt bar that opens in place to
+  the whole conversation with its session list; one card per project built
+  from the portfolio row and the project's Snapshot (path, stage, priority,
+  current question, status, next action, evaluator, owner, evidence), plus an
+  amber card for each unregistered folder; and below them a closed **Workspace
+  status** with the policy chips, Active Work, Recent Activity, and the
+  governance log, which mockup C has no place for (HANDOFF.md Decisions,
+  "Panels mockup C has no place for", 2026-11-21).
+- **Projects**: one row per project with its stage, status, next action, and
+  evidence in full; a row opens the workspace.
+- **Project workspace**: the project's conversation on the left (collapsible
+  to a thin strip) and its view tabs on the right. **Overview** comes first
+  and is the default: a header (stage bar, owner/priority/evaluator chips,
+  four counts), the Snapshot sentences as one-line previews that open on
+  click, and collapsed sections for the round score track, evaluations, OS
+  Feedback, and local skills. **Code** and **Paper** show a placeholder until
+  their view plugins arrive later in step 1; **Idea**, **Skeleton**, and
+  **Assets** are disabled with a "step 2" badge.
+  Rule for Home and Overview, set by the Human Owner on 2026-09-27: show state
+  with visual elements and as few words as possible; sentences appear only
+  when the human clicks.
+- **Paper wiki**: the paper-wiki viewer (Graph and Timeline tabs), embedded by `<iframe>` from
+  `paper-wiki/viz.html` rather than reimplemented natively. That file is a
+  generated artifact (source: `research-skills-hub/open-paper-skills/
+  paper-wiki-manager/scripts/{templates/viz.html,static/viz.{css,js}}`) that
+  already vendors its own force-directed graph engine (fcose + cytoscape.js)
+  and stays usable on its own — the GitHub Pages workflow at
+  `.github/workflows/pages.yml` serves it at `paper-wiki/viz.html` inside the
+  published os-ui build. Reimplementing that graph natively in React
+  would duplicate a working, self-contained viewer for no benefit; the iframe
+  keeps a single source of truth. `frontend/public/paper-wiki/` is a
+  gitignored cache copy synced by `start.sh` (same treatment as
+  `state.json`) — re-run `./start.sh` after editing paper-wiki content or the
+  viewer templates. On the Paper wiki page it sits under mockup C's "Paper
+  Wiki · bundled plugin" band and fills the rest of the page, managing its own
+  scrolling. The viewer probes `GET /api/paper-wiki/status`,
+  the `status` handler that the bundled Paper Wiki plugin declares
+  ([frontend/plugins/paper-wiki/plugin.json](frontend/plugins/paper-wiki/plugin.json),
+  code in [frontend/server/paperStatus.ts](frontend/server/paperStatus.ts)); when
+  it answers, a note's Status row becomes unread / skimmed / read buttons.
+  `POST` runs paper-wiki-manager's `set_status.py`, regenerates `viz.html`,
+  and copies the note and viewer into the cache copy, so a reload keeps the
+  change without re-running `start.sh`.
+- **Skills**: hub collections, orphan skills, sync badges, script
+  warnings, license labels, per-target install state, and a per-location
+  enable/disable toggle; installing elsewhere stays a copied command. How this
+  splits between the human and the agent is documented in
+  [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
+- **Plugins**: a fixed list, marked temporary in the code until the plugin
+  registry being built in step 1 feeds this page: Paper Wiki enabled; the Code and Paper views later in
+  step 1; the Idea, Skeleton, and Assets views and the Skills Hub in step 2;
+  "Load from folder" disabled until step 2.
+- **Settings**: in the desktop client, the workspace folder, the snapshot
+  generator's last run, the prerequisites and agent logins, and "About this
+  client"; the client's Help → System and Prerequisites opens it. In a
+  browser it says these controls live in the desktop app. Agent selection is
+  one line pointing to step 4.
+
+A page stays mounted, hidden, once opened, so a conversation's draft and
+selected session, a running turn's polling, and the Paper Wiki viewer survive
+moving between pages. The sidebar and conversation collapse states, the open
+page, the open project, and its tab are kept in `localStorage`
+(`osui.layout.v1`). A published (non-LIVE) build mounts no conversation: Home
+and the workspace show one line saying conversations run in the desktop app or
+the dev server.
+
+Mockup C elements not built, because nothing in the repository backs them yet:
+the "New project" card and button, the card's one-line purpose (the current
+question stands in for it), the latest-commit pill and "Last change" fact
+(the portfolio row's evidence and its age stand in), the Agents toggles in
+Settings, and the "Ask the agent about this" bar of the Code and Paper views.
 
 ## 5. State Semantics
 
@@ -238,26 +291,43 @@ The old tab-shell concept is superseded.
 
 ## 7. Visual Spec
 
-- Mood: research control room, air-traffic progress strips, engineering graph
-  paper.
-- Palette:
-  - `--paper #F2F4F3`
-  - `--panel #FFFFFF`
-  - `--ink #17262E`
-  - `--ink-soft #52646E`
-  - `--grid #D9E0E2`
-  - `--signal #E8590C`
-  - `--verify #2F7D6D`
-  - `--warn #B7791F`
-  - `--danger #C4564A`
-- Fonts: IBM Plex Mono for headings/data, IBM Plex Sans for body text.
-- Signature elements:
-  - Dashboard portfolio flight strip
-  - Project round score track
-- Motion: restrained hover lift and drawer slide; respect
-  `prefers-reduced-motion`.
-- Desktop shell: white panel windows, 12px radius, soft shadow, centered mono
-  title, traffic lights mapped to semantic colors, and a glass dock.
+Ported from mockup C on 2026-11-22. Every value lives once, as a CSS variable
+in [frontend/src/index.css](frontend/src/index.css); `tailwind.config.js` only
+names them, and components use the names rather than hex codes.
+
+- Mood: a quiet research document: warm paper surfaces, soft shadows instead
+  of borders, serif headings and reading text.
+- Palette (surfaces, back to front, then text, accent, states):
+  - `--bg #f3eee5` page, `--side #ece5d8` navigation, `--paper #faf7f1`
+    inputs and wells, `--card #fffdf9` cards
+  - `--ink #1c1a17`, `--ink2 #4a453d`, `--muted #80786b`, `--faint #b0a796`
+  - `--accent #1e5a56` (selection, links, focus, "ok"), with `--accent-ink`,
+    `--accent-soft`, `--accent-tint`
+  - `--warn #86581a` ("step 2", needs a look), `--signal #a4462c` (P1,
+    running, missing, needs decision), `--danger #a33a2f` (failed, stop),
+    each with a soft background
+  - lines `rgba(70,55,30,.10)` and `.18`; shadows `--sh1`, `--sh2`, `--sh3`
+  - The pre-2026-11-22 names (`--panel`, `--ink-soft`, `--grid`, `--verify`,
+    `--stale`) remain as aliases of these, so older components and the
+    retired desktop shell take the new palette.
+- Fonts: system stacks only, so the app makes no font request: a serif
+  (Iowan Old Style, Palatino, Georgia) for titles and reading text, the
+  system sans for chrome, and a mono (SF Mono, Menlo, Consolas) for paths and
+  code.
+- Shape: 14px card radius, 9px for buttons and small boxes.
+- Signature elements: the project's round score track; the stage bar
+  (passed stages pale accent, the current one solid accent).
+- Width: designed for windows from 1100px to 1600px with no horizontal page
+  scroll; panes scroll inside themselves, and page text is held to a
+  readable measure (1080px page column, 880px Overview). The project
+  conversation is 360px wide, narrowing to 300px on small windows. When the
+  views pane narrows (both side panels open at 1100px), its "step 2" badges
+  shrink to amber dots; at the desktop client's smallest window (960px) the
+  tabs also tighten and the "Read-only" lock hides.
+- Motion: restrained hover lift, the sidebar's width change, and the drawer
+  slide; respect `prefers-reduced-motion`.
+- Focus: one 2px accent ring on every control; a whole card shows the ring
+  when its open button has focus.
 
 ## 8. Non-goals
 

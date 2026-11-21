@@ -11,19 +11,19 @@ export function RoundCards({ rounds }: Props) {
   return (
     <div className="round-cards mt-3.5 grid grid-cols-3 gap-2.5 max-[900px]:grid-cols-1">
       {rounds.map((r) => (
-        <div key={r.id} className="rc rounded border border-grid bg-panel p-3 px-3.5">
-          <div className="font-mono-heading text-[11px] text-stale">
+        <div key={r.id} className="rc card-flat px-4 py-3">
+          <div className="font-mono-heading text-[11px] text-muted">
             {r.artifacts.join(" · ") || r.id}
           </div>
-          <div className="font-mono-heading my-0.5 text-[19px] font-semibold">
+          <div className="my-0.5 font-serif text-[20px] font-medium">
             {r.valid ? (
               <>
-                {r.score ?? "—"} <small className="text-[11px] font-normal text-stale">valid ✓</small>
+                {r.score ?? "—"} <small className="font-sans text-[11px] font-normal text-accent">valid ✓</small>
               </>
             ) : (
-              <span className="text-stale">
+              <span className="text-muted">
                 invalid{" "}
-                <small className="text-[11px] font-normal">
+                <small className="font-sans text-[11px] font-normal">
                   {r.note ?? "invalid"}
                 </small>
               </span>
@@ -34,7 +34,7 @@ export function RoundCards({ rounds }: Props) {
               {r.tasks.map((t) => (
                 <span
                   key={t}
-                  className="font-mono-heading rounded-[2px] border border-dashed border-grid px-2 py-0.5 text-[10.5px] text-ink-soft"
+                  className="font-mono-heading rounded-[5px] bg-mute-soft px-2 py-0.5 text-[11px] text-ink2"
                 >
                   {t}
                 </span>

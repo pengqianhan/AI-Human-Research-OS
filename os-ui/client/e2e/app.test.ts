@@ -16,7 +16,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
-import type { ElectronApplication, Frame, Page } from "playwright-core";
+import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
 
 const CLIENT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = resolve(CLIENT, "../..");
@@ -120,6 +120,16 @@ async function launch(env: Record<string, string>): Promise<{ app: ElectronAppli
   return { app, page, logs };
 }
 
+/** A button of the left navigation, by name (the names hold when the sidebar is collapsed to icons). */
+function nav(page: Page, name: string): Locator {
+  return page.getByRole("navigation", { name: "Main navigation" }).getByRole("button", { name, exact: true });
+}
+
+/** One page of the layout. Pages stay mounted, hidden, once opened, so scope locators to the one in view. */
+function screen(page: Page, id: "home" | "projects" | "workspace" | "wiki" | "skills" | "plugins" | "settings"): Locator {
+  return page.locator(`[data-screen="${id}"]`);
+}
+
 async function wikiFrame(page: Page): Promise<Frame> {
   for (let i = 0; i < 100; i++) {
     const frame = page.frames().find((f) => f.url().startsWith("app://paper-wiki/"));
@@ -165,35 +175,94 @@ describe("desktop client on a Research OS folder", () => {
     return `--- osDesktop.info() ---\n${JSON.stringify(info, null, 2)}\n--- app log (tail) ---\n${logs.join("").slice(-6000)}`;
   }
 
-  test("opens the desktop with a freshly generated snapshot", SLOW, async () => {
+  test("opens Home with a freshly generated snapshot", SLOW, async () => {
     try {
+      // The sidebar footer names the build next to the snapshot time.
       await page.getByText("Desktop client", { exact: true }).waitFor({ timeout: 150_000 });
     } catch (error) {
       throw new Error(`${(error as Error).message}\n${await diagnostics()}`);
     }
     assert.ok(existsSync(join(workspace, "os-ui", "frontend", "public", "state.json")), "the generator wrote state.json in the workspace");
-    await page.getByText("PORTFOLIO").first().waitFor();
+    await screen(page, "home").getByRole("heading", { name: "Home", exact: true }).waitFor();
+    await screen(page, "home").getByRole("heading", { name: "Projects", exact: true }).waitFor();
+    assert.equal(await nav(page, "Home").getAttribute("aria-current"), "page");
     const title = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.getTitle());
     assert.equal(title, "Research OS");
     assert.equal(page.url(), "app://research-os/");
   });
 
-  test("the System window shows the folder and a working Python", SLOW, async () => {
-    await page.getByRole("button", { name: "System", exact: true }).click();
+  test("Settings shows the folder and a working Python", SLOW, async () => {
+    await nav(page, "Settings").click();
     await page.getByTestId("workspace").filter({ hasText: workspace }).waitFor();
     await page.locator('[data-check="workspace"][data-state="ok"]').waitFor();
     await page.locator('[data-check="python"][data-state="ok"]').waitFor({ timeout: 150_000 });
   });
 
+  test("Help → System and Prerequisites opens Settings", async () => {
+    await nav(page, "Home").click();
+    await screen(page, "home").getByRole("heading", { name: "Home", exact: true }).waitFor();
+    // Click the real menu item, so the menu → IPC command → layout path is exercised.
+    const clicked = await app.evaluate(({ Menu }) => {
+      const find = (items: Electron.MenuItem[]): Electron.MenuItem | undefined =>
+        items.map((i) => (i.label === "System and Prerequisites" ? i : i.submenu ? find(i.submenu.items) : undefined)).find((i) => i !== undefined);
+      const item = find(Menu.getApplicationMenu()?.items ?? []);
+      item?.click();
+      return item !== undefined;
+    });
+    assert.ok(clicked, "the Help menu has System and Prerequisites");
+    await screen(page, "settings").getByRole("heading", { name: "Settings", exact: true }).waitFor();
+    assert.equal(await nav(page, "Settings").getAttribute("aria-current"), "page");
+  });
+
   test("a root-agent turn runs through os-harness without a token prompt", SLOW, async () => {
-    await page.getByRole("button", { name: "Root Agent", exact: true }).click();
-    const composer = page.locator('textarea[placeholder^="Message"]');
+    await nav(page, "Home").click();
+    // Home's root-agent bar opens in place to the whole conversation.
+    const root = page.getByRole("region", { name: "Root agent", exact: true });
+    const toggle = root.getByRole("button", { name: "Open conversation" });
+    await toggle.click();
+    assert.equal(await root.getByRole("button", { name: "Close conversation" }).getAttribute("aria-expanded"), "true");
+    await root.getByRole("complementary", { name: "Conversations" }).waitFor();
+    const composer = root.locator('textarea[placeholder^="Message"]');
     await composer.waitFor();
     assert.equal(await page.locator('input[placeholder="token"]').count(), 0, "the client supplies its own token");
     await composer.fill("hello from e2e");
-    await page.getByRole("button", { name: "Send", exact: true }).click();
-    await page.getByText("echo: hello from e2e", { exact: false }).first().waitFor({ timeout: 90_000 });
+    await root.getByRole("button", { name: "Send", exact: true }).click();
+    await root.getByText("echo: hello from e2e", { exact: false }).first().waitFor({ timeout: 90_000 });
     assert.equal(readdirSync(sessions).filter((f) => f.endsWith(".jsonl")).length, 1);
+  });
+
+  test("a project workspace shows its conversation and its views", SLOW, async () => {
+    await nav(page, "Projects").click();
+    const open = screen(page, "projects").getByRole("button", { name: /^Open workspace: / }).first();
+    const name = (await open.getAttribute("aria-label"))!.replace("Open workspace: ", "");
+    await open.click();
+    const ws = screen(page, "workspace");
+    await ws.getByRole("heading", { name, exact: true }).waitFor();
+    assert.equal(await nav(page, name).getAttribute("aria-current"), "page", "Quick access marks the open project");
+    // Overview is the default tab and holds the project overview.
+    assert.equal(await ws.getByRole("tab", { name: "Overview" }).getAttribute("aria-selected"), "true");
+    await ws.getByText("Round score track").waitFor();
+    // The project's own conversation, with its session list, in projects-folder/<name>.
+    const chat = ws.getByRole("region", { name: `${name} agent`, exact: true });
+    const list = chat.getByRole("button", { name: /^Conversations/ });
+    await list.click();
+    assert.equal(await list.getAttribute("aria-expanded"), "true");
+    // The root agent's turn ran at the repository root, so this project's list is empty.
+    await chat.getByText("No conversations here yet.").waitFor();
+    await list.click();
+    await chat.locator('textarea[placeholder^="Message"]').waitFor();
+    assert.equal(await page.locator('input[placeholder="token"]').count(), 0);
+    // Code and Paper are placeholders until their plugins; Idea, Skeleton, Assets are step 2.
+    await ws.getByRole("tab", { name: "Code" }).click();
+    await ws.getByText("This view arrives with the Code view plugin later in step 1", { exact: false }).waitFor();
+    assert.equal(await ws.getByRole("tab", { name: "Idea, step 2" }).getAttribute("aria-disabled"), "true");
+    await ws.getByRole("tab", { name: "Overview" }).click();
+    // The conversation collapses to a strip and opens again.
+    await ws.getByRole("button", { name: "Collapse conversation" }).click();
+    const strip = ws.getByRole("button", { name: "Open conversation" });
+    assert.equal(await strip.getAttribute("aria-expanded"), "false");
+    await strip.click();
+    await chat.waitFor();
   });
 
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {
@@ -217,7 +286,7 @@ describe("desktop client on a Research OS folder", () => {
 
   test("the Paper Wiki runs on its own origin, sealed off from the app", SLOW, async () => {
     const sessionFiles = readdirSync(sessions).length;
-    await page.getByRole("button", { name: "Paper Wiki", exact: true }).click();
+    await nav(page, "Paper wiki").click();
     const frame = await wikiFrame(page);
     assert.equal(frame.url(), "app://paper-wiki/viz.html");
     const probe = await frame.evaluate(async () => {
@@ -269,7 +338,8 @@ describe("desktop client on a Research OS folder", () => {
     assert.match(readFileSync(join(workspace, "paper-wiki", `${id}.md`), "utf8"), new RegExp(`^status: ${target}$`, "m"));
   });
 
-  test("the dock regenerates the snapshot", SLOW, async () => {
+  test("the sidebar regenerates the snapshot", SLOW, async () => {
+    // The control sits in the sidebar footer, so the Paper Wiki stays on screen.
     await page.getByRole("button", { name: "Regenerate the data snapshot" }).click();
     await page.getByText("Snapshot updated").first().waitFor({ timeout: 150_000 });
   });
@@ -291,6 +361,7 @@ describe("desktop client on a Research OS folder", () => {
     // Targets Chromium itself allows, so only the app's guard (and the frame-src
     // policy) can stop them: the wiki frame must not become the app origin,
     // nor the top frame the wiki origin.
+    await nav(page, "Paper wiki").click();
     const frame = await wikiFrame(page);
     await frame.evaluate(() => {
       location.href = "app://research-os/";

@@ -23,15 +23,15 @@ export function ActiveWorkPanel({ section }: Props) {
 
   const head = (
     <>
-      <span className="font-mono-heading min-w-0 flex-1 truncate text-[12px] font-semibold text-ink" title={title}>
+      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink" title={title}>
         {title}
       </span>
       {total > 0 ? (
         <>
-          <span className="h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-paper" aria-hidden="true">
-            <i className="block h-full rounded-full bg-verify" style={{ width: `${pct}%` }} />
+          <span className="h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-line" aria-hidden="true">
+            <i className="block h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
           </span>
-          <span className="font-mono-heading shrink-0 text-[11px] tabular-nums text-verify">
+          <span className="shrink-0 text-[11.5px] font-semibold tabular-nums text-accent">
             {doneCount}/{total}
           </span>
         </>
@@ -44,21 +44,21 @@ export function ActiveWorkPanel({ section }: Props) {
   );
 
   if (total === 0) {
-    return <div className="flex items-center gap-2 rounded border border-grid bg-panel px-3.5 py-2.5 pl-[34px]">{head}</div>;
+    return <div className="card-flat flex items-center gap-2 px-4 py-2.5 pl-[36px]">{head}</div>;
   }
 
   return (
-    <Disclosure className="rounded border border-grid bg-panel px-3.5 py-2.5" summary={head}>
+    <Disclosure className="card-flat px-4 py-2.5" summary={head}>
       <ul className="pl-5">
         {section.items.map((item, idx) => (
           <li
             key={idx}
             className={
-              "list-none py-[3px] text-[12.5px] " +
+              "list-none py-[3px] text-[13px] " +
               (item.done
-                ? "text-stale line-through"
+                ? "text-muted line-through"
                 : idx === firstNotDoneIndex
-                  ? "font-medium text-ink before:mr-1 before:text-signal before:content-['▸']"
+                  ? "font-medium text-ink before:mr-1 before:text-accent before:content-['▸']"
                   : "text-ink-soft")
             }
           >

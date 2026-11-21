@@ -1,8 +1,8 @@
 # Research OS Desktop Client
 
 A desktop app for macOS, Windows, and Linux that opens the
-[os-ui](../README.md) desktop on your Research OS folder, with everything the
-dev server offers — the Root Agent and project agent conversations, skill
+[os-ui](../README.md) app on your Research OS folder, with everything the
+dev server offers — the root agent and project agent conversations, skill
 toggles, the Paper Wiki's reading status, and the Papers panel — without a
 terminal, `bash`, or `./os-ui/start.sh`. It keeps the snapshot fresh by itself
 and notifies you when an agent turn ends.
@@ -21,8 +21,9 @@ settings, and removing it leaves the OS unaffected.
 | [Claude Code](https://docs.claude.com/en/docs/claude-code/setup) or [Codex](https://developers.openai.com/codex/cli), logged in | agent conversations | at least one |
 | Git | Recent Activity and HEAD | optional |
 
-The **System** window (dock, or **Help → System and Prerequisites**) checks
-each of these and links to the installer of anything missing.
+**Settings** (bottom of the left navigation, or **Help → System and
+Prerequisites**) checks each of these and links to the installer of anything
+missing.
 
 ## Install
 
@@ -51,12 +52,12 @@ Desktop client → a run → Artifacts), or build one yourself (below).
    (the one containing `AGENTS.md`); a development run (`npm start`) opens its own clone.
 2. Confirm the folder once: the app runs that folder's scripts (the snapshot
    generator now; os-harness and skill scripts when you use them).
-3. The desktop appears once the snapshot is generated (the first run may take a
+3. **Home** appears once the snapshot is generated (the first run may take a
    minute while uv downloads the pinned Python).
 
 Switch folders with **File → Open Research OS Folder…** or **Open Recent**.
 **View → Regenerate Snapshot** (Ctrl/Cmd+Shift+R) refreshes on demand; the app
-also refreshes when the files the dashboard reads change, when you come back
+also refreshes when the files the app reads change, when you come back
 to the window, and every five minutes. **View → Notify When Agent Turns End**
 switches notifications off. A web or mail link (in a paper note, for example)
 opens in your browser only after you confirm its address. Closing the window quits the app; a running agent
@@ -112,14 +113,29 @@ The cloud session that built the client verified Linux x64, and `desktop.yml`
 builds and tests every OS on CI runners (DESIGN.md §15). No runner has your
 agent logins or a first open on a real desktop, so on each of your machines:
 
-- [ ] The app opens, asks for (or finds) your folder, and shows the Dashboard.
-- [ ] **System**: Python and at least one agent are `ok`; Claude Code and Codex
-      show your logins.
-- [ ] **Root Agent**: a short question gets an answer from your own login.
-- [ ] A project's **Agent** view lists that project's sessions.
-- [ ] **Paper Wiki**: a paper's Status buttons appear and change the note's
+- [ ] The app opens, asks for (or finds) your folder, and shows **Home**: the
+      root-agent bar, a card for each project, and the snapshot time at the
+      bottom of the left navigation.
+- [ ] **Settings** (left navigation, or **Help → System and Prerequisites**):
+      Python and at least one agent are `ok`; Claude Code and Codex show your
+      logins.
+- [ ] **Home → Open conversation**: a short question to the root agent gets an
+      answer from your own login; **Close conversation** folds it back into
+      the bar.
+- [ ] A project card (or **Projects**, or the project under **Quick access**)
+      opens its workspace. **Overview** shows the project; the conversation on
+      the left lists that project's sessions under **Conversations**, and
+      collapses to a thin strip and back. **Code** and **Paper** say they
+      arrive later in step 1; **Idea**, **Skeleton**, and **Assets** are
+      marked "step 2".
+- [ ] **Paper wiki**: a paper's Status buttons appear and change the note's
       `status:` line.
-- [ ] **Skill Store**: a disable/enable toggle works and the store updates.
+- [ ] **Skills**: a disable/enable toggle works and the store updates.
+- [ ] **Regenerate** at the bottom of the left navigation ends with "Snapshot
+      updated".
+- [ ] **Collapse** shrinks the navigation to icons. Quit and reopen: the app
+      comes back on the page and project you left, with the same panels
+      collapsed.
 - [ ] With the window in the background, a finished turn shows a notification.
 - [ ] macOS: Open Anyway works; Windows: the installer and Start-menu entry
       work; Linux: the `.deb` starts from the application menu.

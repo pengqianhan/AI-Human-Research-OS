@@ -6,7 +6,7 @@ interface Props {
 }
 
 const COLOR = {
-  ok: "text-verify",
+  ok: "text-accent",
   warn: "text-warn",
   signal: "text-signal",
   mute: "text-ink",
@@ -15,11 +15,9 @@ const COLOR = {
 /** One number and one word: how much of something a project has. */
 export function StatTile({ value, label, tone = "mute", hint }: Props) {
   return (
-    <div className="rounded border border-grid bg-panel px-3.5 py-2.5" title={hint}>
-      <div className={"font-mono-heading text-[22px] font-semibold leading-none tabular-nums " + COLOR[tone]}>
-        {value}
-      </div>
-      <div className="font-mono-heading mt-1 text-[10px] uppercase tracking-[.06em] text-stale">{label}</div>
+    <div className="card-flat px-4 py-3" title={hint}>
+      <div className={"font-serif text-[26px] font-medium leading-none tabular-nums " + COLOR[tone]}>{value}</div>
+      <div className="label mt-1.5">{label}</div>
     </div>
   );
 }

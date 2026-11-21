@@ -31,7 +31,7 @@ export function SkillInstalls({ skill, targets }: Props) {
 
   if (targets.length === 0) {
     return (
-      <p className="text-[11.5px] text-stale">
+      <p className="text-[12px] text-muted">
         Install locations are unavailable: the generator could not load
         research-skill-installer.
       </p>
@@ -71,7 +71,7 @@ export function SkillInstalls({ skill, targets }: Props) {
 
   return (
     <div className="mt-1">
-      <div className="font-mono-heading mb-2 flex items-baseline justify-between text-[11px] text-stale">
+      <div className="mb-2 flex items-baseline justify-between text-[11.5px] text-muted">
         <span>{skill.installForm ? `${skill.installForm} → hub` : "form unknown"}</span>
         <span>
           {installedCount} of {targets.length} installed
@@ -83,7 +83,7 @@ export function SkillInstalls({ skill, targets }: Props) {
         if (rows.length === 0) return null;
         return (
           <div key={scope} className="mb-2.5">
-            <div className="font-mono-heading text-[10px] uppercase tracking-[.05em] text-stale">
+            <div className="label">
               {scope}
             </div>
             {rows.map((target) => {
@@ -92,22 +92,22 @@ export function SkillInstalls({ skill, targets }: Props) {
               return (
                 <div
                   key={target.name}
-                  className="flex items-center gap-2 border-b border-grid py-1 last:border-b-0"
+                  className="flex items-center gap-2 border-b border-line py-1.5 last:border-b-0"
                 >
                   <span
                     aria-hidden="true"
                     className={
                       "inline-block h-[7px] w-[7px] shrink-0 rounded-full " +
                       (!install
-                        ? "border border-grid"
+                        ? "border border-line2"
                         : install.ok
-                          ? "bg-ink"
+                          ? "bg-accent"
                           : "bg-warn")
                     }
                   />
-                  <span className="font-mono-heading min-w-0 flex-1 truncate text-[11.5px]">
+                  <span className="font-mono-heading min-w-0 flex-1 truncate text-[11.5px] text-ink">
                     {target.name}
-                    <span className="ml-1.5 text-stale">
+                    <span className="ml-1.5 text-faint">
                       {target.display_path ?? target.path}
                     </span>
                   </span>
@@ -115,7 +115,7 @@ export function SkillInstalls({ skill, targets }: Props) {
                   {!LIVE ? (
                     // A published build shows the state; toggling needs the dev server.
                     install && (
-                      <span className="font-mono-heading shrink-0 text-[10.5px] text-stale">
+                      <span className="shrink-0 text-[11px] text-muted">
                         {install.disabled ? "disabled" : "enabled"}
                       </span>
                     )
@@ -125,7 +125,7 @@ export function SkillInstalls({ skill, targets }: Props) {
                       disabled={working}
                       aria-pressed={!install.disabled}
                       onClick={() => void toggle(target.name, install.disabled)}
-                      className="font-mono-heading shrink-0 rounded-[3px] border border-ink px-2 py-px text-[10.5px] hover:bg-ink hover:text-white disabled:opacity-50"
+                      className="btn btn-sm shrink-0"
                     >
                       {working ? "working..." : install.disabled ? "enable" : "disable"}
                     </button>
@@ -137,7 +137,7 @@ export function SkillInstalls({ skill, targets }: Props) {
                     <button
                       type="button"
                       onClick={() => void copyCommand(target.name)}
-                      className="font-mono-heading shrink-0 rounded-[3px] border border-grid px-2 py-px text-[10.5px] text-stale hover:border-ink"
+                      className="btn btn-sm btn-ghost shrink-0"
                       title="Copy the install command for this target"
                     >
                       {copied === target.name ? "copied ✓" : "install ⧉"}
@@ -150,7 +150,7 @@ export function SkillInstalls({ skill, targets }: Props) {
               const install = byTarget.get(target.name);
               if (!install || install.ok) return null;
               return (
-                <p key={`${target.name}-detail`} className="mt-0.5 text-[11px] text-warn">
+                <p key={`${target.name}-detail`} className="mt-0.5 text-[11.5px] text-warn">
                   {target.name}: {install.detail}
                 </p>
               );
@@ -159,9 +159,9 @@ export function SkillInstalls({ skill, targets }: Props) {
         );
       })}
 
-      {error && <p className="mt-1 text-[11px] text-warn">{error}</p>}
+      {error && <p className="mt-1 text-[11.5px] text-warn">{error}</p>}
       {LIVE && (
-        <p className="mt-1 text-[11px] text-stale">
+        <p className="mt-1 text-[11.5px] text-muted">
           Disable never deletes skill content: a linked install moves into the
           target's <code>.disabled/</code>, a copied one renames its SKILL.md.
           Installing somewhere new is still a copied command.
