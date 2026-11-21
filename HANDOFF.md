@@ -45,11 +45,11 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       Acceptance: the Human Owner runs the
       [client checklist](os-ui/client/README.md#check-it-on-your-machine) on macOS
       against the new layout (this also settles P6 below).
-      Started 2026-11-21. Three clickable mockups of the same screens are in
-      [`os-ui/mockups/step1/`](os-ui/mockups/step1/) (A lab notebook, B dense
-      workbench, C document first; open them with the `mockups` preview in
-      `.claude/launch.json`) and wait for the Human Owner's choice; no layout or
-      view code is written before it. The registry is designed as eight small
+      Started 2026-11-21. The Human Owner chose mockup C, "document first"
+      (「选 C」), from three clickable mockups of the same screens;
+      [`os-ui/mockups/step1/c-document.html`](os-ui/mockups/step1/c-document.html)
+      is the reference for the layout, the Code view, and the Paper view (open it
+      with the `mockups` preview in `.claude/launch.json`). The registry is designed as eight small
       changes; the first two (manifest parser, server-side registry) do not
       depend on the layout and are being implemented on branch
       `step1-registry-server`. Open question for the Human Owner before step 2:
@@ -559,7 +559,7 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 | Distribution | Free, open-source, local only: no hosted or paid version; no vendor CLI bundled, modified, installed, or updated by the app; no vendor name or logo in the product name; a first-run sentence says the app launches the user's own CLI on the user's own plan. Publishing installers still needs a separate authorization | A hosted or paid form needs a new decision and, for Codex, OpenAI's partner process |
 | Primary surface | The desktop client, continued from `os-ui/client`. **Supersedes** os-ui's read-only-monitor role; the browser dev server stays as the development shell of the same frontend | Keep the client as an optional wrapper around the monitor |
 | Root agent and project chat | GOAL.md §1's sentence stands: one root agent, visible as soon as the app opens, moves every project forward. Each project also has its own conversation for work inside it (「两个都留」) | Drop either conversation |
-| Layout | Left navigation (Home, Projects, Paper wiki, Skills, Plugins, quick access, Settings); Home opens on the root agent above the project cards; a project shows the conversation on the left and view tabs on the right. **Supersedes** the 2026-07-05 desktop-OS shell, which is removed once the new layout works. The two session mockups fix structure only | Keep `os-ui/frontend/src/desktop/` |
+| Layout | Left navigation (Home, Projects, Paper wiki, Skills, Plugins, quick access, Settings); Home opens on the root agent above the project cards; a project shows the conversation on the left and view tabs on the right. **Supersedes** the 2026-07-05 desktop-OS shell, which is removed once the new layout works. The two session mockups fix structure only. Visual direction, chosen 2026-11-21 from three clickable mockups (「选 C」): C, "document first" — warm and editorial, project cards carry Home with the root agent as a prompt bar that expands in place, and a project's conversation collapses so a view can be read almost full width. The rejected A (lab notebook) and B (dense workbench) are at commit `d780271` | Keep `os-ui/frontend/src/desktop/`; for the visual direction, rebuild from A or B at `d780271` |
 | Project views | Five: Idea, Code, Skeleton, Assets, Paper. Canvas, the sixth the Human Owner named, is deferred until they can say what it holds | Add Canvas as a plugin |
 | Idea view | A DAG stored as one Markdown file per project: nodes are question, hypothesis, experiment, result, claim, each with a status; edges are motivates, tests, supports, refutes. An experiment node points to a run (commit plus result file), a claim node to a `paper_skeleton.md` row | Replace the node vocabulary; the file format stays a table |
 | View editing | Views render workspace files. First version: read-only, plus selecting an item to ask the agent about it. Later, direct editing opens per view, Idea and Skeleton first. **Loosens** "the GUI is for reading, agents write through skills" (cog-20260923-001) | Keep every view read-only |
