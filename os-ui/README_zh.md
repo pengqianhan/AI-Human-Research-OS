@@ -8,7 +8,7 @@ AI-Human Research OS 的应用界面:呈现仓库的真实状态,并承载与 ag
 ## 界面是什么样子
 
 2026-11-22 起,界面采用人类所有者于 2026-11-21 选定的布局稿 C"文档优先"
-(`os-ui/mockups/step1/c-document.html`;决定见 HANDOFF.md Decisions 的 "Layout" 行,
+([mockups/step1/c-document.html](mockups/step1/c-document.html);决定见 HANDOFF.md Decisions 的 "Layout" 行,
 细节见 [DESIGN.md](DESIGN.md) §4、§7)。此前的"桌面操作系统"外壳(可拖动的浮动窗口 +
 底部 Dock)已被取代,代码暂留在 `frontend/src/desktop/` 但不再显示,之后的改动会删除它。
 

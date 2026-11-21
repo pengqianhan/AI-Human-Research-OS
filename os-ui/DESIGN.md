@@ -2,7 +2,7 @@
 
 This document is the implementation contract for `os-ui/`. The layout and the
 visual tokens in force follow mockup C, "document first"
-(`os-ui/mockups/step1/c-document.html`), which the Human Owner chose on
+([mockups/step1/c-document.html](mockups/step1/c-document.html)), which the Human Owner chose on
 2026-11-21 (§4, §7). The earlier static mockup, [mockup.html](mockup.html),
 still specifies the content of the dashboard panels; its palette and its tab
 shell are superseded.
@@ -180,7 +180,7 @@ sample records.
 ## 4. Information Architecture
 
 Since 2026-11-22 the UI follows mockup C, "document first"
-(`os-ui/mockups/step1/c-document.html`; HANDOFF.md Decisions, "Layout", and
+([mockups/step1/c-document.html](mockups/step1/c-document.html); HANDOFF.md Decisions, "Layout", and
 [ADR-0006](../docs/adr/0006-desktop-workspace-trunk-and-plugins.md)): a left
 navigation and one page at a time, built in `frontend/src/shell/`. It
 supersedes the desktop shell of 2026-07-05 (menu bar, dock, and draggable
@@ -264,8 +264,10 @@ Settings, and the "Ask the agent about this" bar of the Code and Paper views.
    `state.json`) — re-run `./start.sh` after editing paper-wiki content or the
    viewer templates. On the Paper wiki page it sits under mockup C's "Paper
    Wiki · bundled plugin" band and fills the rest of the page, managing its own
-   scrolling. The viewer probes `GET /api/paper-wiki/status`
-   ([frontend/paper-status-plugin.ts](frontend/paper-status-plugin.ts)); when
+   scrolling. The viewer probes `GET /api/paper-wiki/status`,
+   the `status` handler that the bundled Paper Wiki plugin declares
+   ([frontend/plugins/paper-wiki/plugin.json](frontend/plugins/paper-wiki/plugin.json),
+   code in [frontend/server/paperStatus.ts](frontend/server/paperStatus.ts)); when
    it answers, a note's Status row becomes unread / skimmed / read buttons.
    `POST` runs paper-wiki-manager's `set_status.py`, regenerates `viz.html`,
    and copies the note and viewer into the cache copy, so a reload keeps the

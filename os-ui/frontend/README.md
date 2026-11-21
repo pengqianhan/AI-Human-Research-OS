@@ -13,7 +13,7 @@ honest empty values instead of inventing repository state.
 ## What you see
 
 Since 2026-11-22 the app uses the layout of mockup C, "document first"
-(`os-ui/mockups/step1/c-document.html`, chosen by the Human Owner on
+([os-ui/mockups/step1/c-document.html](../mockups/step1/c-document.html), chosen by the Human Owner on
 2026-11-21; the decision is the "Layout" row in [HANDOFF.md](../../HANDOFF.md)
 Decisions):
 
@@ -43,7 +43,8 @@ os-ui/frontend/
 ├── index.html              # minimal HTML page React mounts into; loads no web fonts
 ├── package.json            # npm scripts and dependencies
 ├── vite.config.ts          # Vite dev/build config
-├── *-plugin.ts             # dev-server adapters for the endpoints in server/
+├── api-plugin.ts           # serves every endpoint on the dev server, from the plugin registry
+├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each
 ├── server/                 # the endpoints, shared with the desktop client (os-ui/client)
 ├── tailwind.config.js      # Tailwind names for the colours in src/index.css
 ├── postcss.config.js       # Tailwind/PostCSS config
@@ -181,6 +182,17 @@ rewritten in the frontend.
   and posts to `/api/skill/toggle` (`server/skillToggle.ts`).
 - `state.json` shape: update `src/types.ts`, `os-ui/DESIGN.md`, and the
   generator together.
+- Endpoints: the app's own are listed in `TRUNK_MOUNTS` in `server/api.ts`.
+  A bundled plugin's endpoints are named in its `plugins/<id>/plugin.json`
+  (`contributes.handlers`, served at `/api/<id>/<handler>`), and their code is
+  listed in `server/pluginHandlers.ts`; the tests fail if the two disagree.
+  The registry (`server/registry.ts`) joins both lists, and `api-plugin.ts`
+  serves the result on the dev server. Until the desktop client moves to the
+  registry, it takes its endpoints from a second list, `createMounts` in
+  `server/api.ts`. So adding, removing, or changing any endpoint, the app's
+  own or a plugin's, means editing `createMounts` as well; the test "all has
+  exactly createMounts' endpoints and token flags" in
+  `server/registry.test.ts` fails until the two lists agree.
 - What the layout remembers: `src/shell/layoutState.ts` (one `localStorage`
   key, `osui.layout.v1`; clearing it returns to Home with everything open).
 

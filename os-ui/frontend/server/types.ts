@@ -1,6 +1,6 @@
 /**
  * The transport-free shape of os-ui's endpoints. The Vite dev server
- * (../*-plugin.ts) and the desktop client (../../client) each turn their own
+ * (../api-plugin.ts) and the desktop client (../../client) each turn their own
  * requests into an ApiRequest and send back the ApiResponse, so the endpoint
  * rules live in one place.
  */

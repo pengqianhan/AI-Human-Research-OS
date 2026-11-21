@@ -1,0 +1,12 @@
+{
+  "contract": "^1.0",
+  "id": "paper-wiki",
+  "name": "Paper Wiki",
+  "version": "1.0.0",
+  "description": "The paper-wiki/ graph viewer and its reading-status buttons.",
+  "site": { "workspace": "paper-wiki" },
+  "contributes": {
+    "homePanels": [{ "id": "viewer", "title": "Paper Wiki", "entry": "viz.html", "placement": "nav" }],
+    "handlers": ["status"]
+  }
+}

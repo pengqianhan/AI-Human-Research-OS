@@ -95,7 +95,7 @@ uses (TypeScript, plus the Python scripts it calls); Tauri would add Rust.
 
 ### 3.1 Shared API core
 
-The four Vite plugins' logic lives in `os-ui/frontend/server/`, one module per
+The endpoints' logic lives in `os-ui/frontend/server/`, one module per
 endpoint, written against a transport-free interface
 ([server/types.ts](../frontend/server/types.ts)):
 
@@ -115,10 +115,18 @@ interface ApiContext {
 - `json()` is lazy (the queued endpoints read the body inside their job), turns
   an empty body into `{}`, and throws on malformed JSON; each handler turns that
   into its own 500, as before.
-- The plugin files keep their names and exports (`vite.config.ts` untouched)
-  and become adapters: the token check runs first (so an unknown path without
-  a token is still 401), then the Connect request becomes an `ApiRequest`, and
-  every reply carries `Content-Type: application/json`.
+- On the dev server, one serve-only Vite plugin
+  ([frontend/api-plugin.ts](../frontend/api-plugin.ts)) is the adapter. It
+  mounts every endpoint the plugin registry lists
+  ([server/registry.ts](../frontend/server/registry.ts): the app's own
+  endpoints, then each bundled plugin's handlers), each at its own prefix; a
+  token endpoint checks the token first (so an unknown path without a token
+  is still 401), then the Connect request becomes an `ApiRequest`, and every
+  reply carries `Content-Type: application/json`. (Until 2026-11-21 these were
+  four plugin files, one per endpoint, with the same behaviour.) The client
+  still takes its endpoints from `createMounts` in
+  [server/api.ts](../frontend/server/api.ts), which the tests keep equal to
+  the registry.
 - Kept route for route: validation rules, status codes, the per-endpoint
   serialization queues (a failed job never blocks the next), and the 409 Write
   Lease.
