@@ -16,6 +16,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260929-001 - Reuse-first templates: a template is the greatest common divisor of its projects, so no project starts from scratch, and each project must stay exportable as its own repository.
 - cog-20260929-002 - Scripted tooling before a scheduled agent: for one mechanical recurring chore (the related-projects scan), preferred a `gh` keyword script over a Claude scheduled task; low confidence.
 - cog-20261014-001 - A gate that needs routine human clearing is removed, not staffed: for the skill mirror sync, twice dropped a manual safeguard for automation plus an audit trail, while keeping the machine-enforced CI gate; medium confidence.
+- cog-20261121-001 - The running product outranks its documents: checks the agent's claims about a reference product against the installed app and answers with screenshots; medium confidence.
 
 ## Entries
 
@@ -24,14 +25,14 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: The human applies cross-agent portability as a hard constraint on Research OS mechanisms, not as a preference to be traded off. A mechanism that works in one harness but not the others is rejected even when it offers the strongest guarantee.
 - source: inferred
 - confidence: high
-- evidence: While designing autonomous capture for `human-cognition-cache`, the agent proposed a Claude Code Stop hook as the reliability fallback. The human rejected it unprompted, on the grounds that it would leave the OS inapplicable to codex and Pi Coding Agent, and accepted a weaker prompt-level guarantee instead. The criterion had not been stated anywhere in the cache or `INSTRUCTION.md` beforehand.
+- evidence: While designing autonomous capture for `human-cognition-cache`, the agent proposed a Claude Code Stop hook as the reliability fallback. The human rejected it unprompted, on the grounds that it would leave the OS inapplicable to codex and Pi Coding Agent, and accepted a weaker prompt-level guarantee instead. The criterion had not been stated anywhere in the cache or `INSTRUCTION.md` beforehand. 2026-11-21: applied again in the positioning session. The human required the app to support Claude Code, Codex, and Antigravity by default (「默认要像ohmygame 那样支持使用claude code ,codex, agy」) and accepted an agent registry with ACP for further agents; no decision in the session privileges one harness.
 - created: 2026-07-24
-- last_updated: 2026-07-24
+- last_updated: 2026-11-21
 - status: active
 - domain: Research OS architecture and governance
 - scope: Mechanism and tooling selection for the Research OS; no claim about portability preferences in project-level research code.
 - evidence_type: explanation
-- last_verified: 2026-07-24
+- last_verified: 2026-11-21
 - freshness: current
 - responsibility_relevance:
   - Do not propose harness-specific machinery (Claude Code hooks, settings.json automation, provider-only APIs) for OS-level behavior; reach for `AGENTS.md`, skills, and files.
@@ -122,3 +123,24 @@ timestamp: 2026-07-04T00:00:00+12:00
 - related:
   - [cog-20260929-002](unknown_knowns.md#cog-20260929-002-scripted-tooling-before-a-scheduled-agent-for-mechanical-chores)
   - [cog-20260724-002](known_knowns.md#cog-20260724-002-branch-as-the-containment-boundary-for-unattended-agent-work)
+
+## cog-20261121-001 The running product outranks its documents
+
+- content: When the agent describes how a reference product behaves, the human checks the claim against the product running on their own machine and answers with a screenshot. What the shipped app does is, for them, the fact; a design document or an agent's summary of source code is not. They apply this without stating it as a rule.
+- source: inferred
+- confidence: medium
+- evidence: 2026-11-21, twice in one session. Told (from OhMyGame's design document) that Claude Code and Codex runtimes were off by default and that Pi with an API key was the main path, the human sent a screenshot of the Agents settings page and reported use (「我没看到填写apikey的地方，也没看到pi agent，我使用的时候我本地有codex 和 claude code我就可以使用」); the screenshot also showed Antigravity offered through ACP plugins, which the agent had said was unsupported. Earlier in the session they sent a screenshot of OpenResearch's Agents settings and asked the agent to read the code against it. Both corrections changed decisions (the Agents page design, Pi's role). Related earlier behaviour: on 2026-09-26 they judged os-ui's agent integration from the screen, not from the description.
+- created: 2026-11-21
+- last_updated: 2026-11-21
+- status: active
+- domain: evidence standards in product design discussions
+- scope: Claims about how reference products behave, in this repository's design work; no claim about how they weigh papers or research results.
+- evidence_type: operation
+- last_verified: 2026-11-21
+- freshness: current
+- responsibility_relevance:
+  - Label any claim about a reference product by its source (design document, source code, or the running app), and say which was not checked.
+  - When the claim decides a design question and the human has the product installed, ask what they see before relying on documents; run the app or read its defaults in code when possible.
+- related:
+  - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
+  - [cog-20260927-001](known_knowns.md#cog-20260927-001-glance-first-gui-visual-state-text-on-click)

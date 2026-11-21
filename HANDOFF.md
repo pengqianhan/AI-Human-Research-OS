@@ -19,7 +19,63 @@ git show <hash>              # the actual diff for any change
 
 ## Active Work
 
+### Repositioning: desktop workspace over installed coding agents (decided 2026-11-21, nothing built)
+
+The Human Owner repositioned the OS in a grilling session on 2026-11-21: a free,
+local desktop app for researchers who already have Claude Code or Codex, built as
+a trunk with plugins. Rows are under "Positioning and architecture decisions
+(2026-11-21)" in Decisions; reasons, rejected options, and evidence are in
+[ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md). That session
+changed documents only.
+
+[GOAL.md](os-build/GOAL.md), the README's "Current Design Stance", and the opening
+line of [AGENTS.md](AGENTS.md) still carry the earlier direction. Where they
+conflict with the 2026-11-21 rows, the rows are the Human Owner's later decision;
+the files change only through the first item below.
+
+- [ ] Direction-text revision. The agent lists each change to GOAL.md (§1 root
+      constraints, §3 table, §5 milestones, §6 acceptance, §7 non-goals), the
+      README stance, and the AGENTS.md opening line; the Human Owner confirms item
+      by item. Acceptance: no sentence in those three files contradicts a
+      2026-11-21 row, and each replaced GOAL.md clause has a dated supersession note.
+- [ ] Step 1, trunk shell: a registry replaces the compiled-in window list
+      (`os-ui/frontend/src/desktop/apps.tsx`) and the fixed endpoint mounts
+      (`os-ui/frontend/server/api.ts`); the new layout (home with the root agent,
+      project workspace); Code and Paper views; Paper Wiki as the first plugin.
+      Acceptance: the Human Owner runs the
+      [client checklist](os-ui/client/README.md#check-it-on-your-machine) on macOS
+      against the new layout (this also settles P6 below).
+- [ ] Step 2, remaining views: Idea, Skeleton, Assets; Skills Hub as the second
+      plugin; then loading a plugin from a local folder. Acceptance: the Human
+      Owner opens all five views on `nanochat_cpu`.
+- [ ] Step 3, split and Git binding: product separated from the workspace, **New
+      workspace**, each project its own Git repository, runs record their commit.
+      Acceptance: another person installs the app on a clean machine and completes
+      dispatch, run, and report on `nanochat_cpu` without help. The tester gets a
+      CI artifact only on the Human Owner's explicit word, and the instructions
+      name uv and Python as prerequisites until step 4.
+- [ ] Step 4, agent layer: the harness ported to TypeScript with a command-line
+      entry, the Agents page, one resident process per conversation with
+      permission requests relayed to the UI, and an ACP adapter. Acceptance: one
+      turn each on Claude Code and Codex chosen from the Agents page, and
+      `project-dispatch` works through the new entry before `os-harness/*.py` is
+      removed.
+
+Standing rules for these steps: every page gets a clickable mockup the Human Owner
+chooses from before it is built; TypeScript is written and reviewed by agents, and
+every acceptance is a check the Human Owner can run without reading code.
+
+Waiting on the Human Owner, none of it decided by the session: whether to ask
+Anthropic and Google the two open terms questions in ADR-0006 before any release;
+authorization to publish installers.
+
 ### Research OS construction — status (route map deleted 2026-09-23)
+
+2026-11-21: the milestone list below predates the repositioning above. H2 stays and
+its acceptance is still open; H3 moves after step 4; M1 is replaced by step 4's
+agent registry; the M4 gate now covers only a resident daemon, a database, remote
+access, accounts, and unattended scheduling. These take effect in GOAL.md with the
+direction-text revision.
 
 The route map `os-build/map/` and the execution-contract slot
 `os-build/build_phases/` were deleted by Human Owner decision on 2026-09-23
@@ -118,7 +174,10 @@ packaged app's smoke run.
 
 ### Next session
 
-- Focus: the Human Owner accepts or revises the `nanochat_cpu` example, including
+- Focus (2026-11-21): the direction-text revision, then the step 1 mockups; both
+  are the first two items under "Repositioning" above. The older items below are
+  still open.
+- Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
   No project is queued after it; the next OS milestone is H3. On acceptance, append
@@ -472,7 +531,60 @@ The 2026-10-12 `mattpocock-skills` refresh ([PR #24](https://github.com/pengqian
 | Mirror installs are symlinks | `mattpocock-skills` declares `Install form: symlink`; `grilling`, `wayfinder`, and `writing-for-agents` are links in both repository targets, so every install in the repository is a symlink. The copy form stays in the installer and `verify.sh`, unused. Supersedes the mirror clause of D7 and of the 2026-07-22 "Install form is mixed" row; reasoning and rejected alternatives are in the [ADR 0002](research-skills-hub/docs/adr/0002-skill-install-form-and-targets.md) amendment | Restore the `Install form: copy` block in [refresh.sh](research-skills-hub/mattpocock-skills/scripts/refresh.sh) and `SOURCE.md`, then `install --update` the three skills; sync PRs touching them fail again unless `verify.sh` learns to accept a lagging copy |
 | Accepted risk | A merged upstream refresh, which auto-merges unreviewed ([ADR 0001](research-skills-hub/docs/adr/0001-external-skill-intake-and-sync.md)), changes installed mirror skills in place; "inert until installed" now covers only skills that are not installed. An upstream rename or removal dangles the link and fails that sync PR in `verify.sh` before it merges | Same as the row above |
 
+**Positioning and architecture decisions (2026-11-21, user-confirmed grilling session):**
+
+The Human Owner opened with 「我个人倾向于定位成claude code 和 codex之上的一层排布层，在本地已经有
+claude code codex 或者antigravity cli 等工具的情况下，帮助用户更方便的进行research」 and settled
+thirty-nine questions over seven rounds. Surveys of similar projects, vendor terms, and the
+DeepSeek Harness and OhMyGame plugin systems were run by subagents during the session; what
+each row rests on, and how far it was verified, is in
+[ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md). Three rows differ from the
+Human Owner's own words and were shown to them as such before the final confirmation: Canvas
+is deferred from their six views, Git becomes required against the 2026-07 「默认应该支持无git」,
+and third-party plugins may not ship host-side code although Q29 said 「允许」.
+
+| Decision | Default taken | To reverse |
+|---|---|---|
+| Audience | Other researchers who already have Claude Code, Codex, or similar tools installed. **Supersedes** the 2026-07-03 "own research practice is primary" row and GOAL.md §1's rule that the owner's project friction decides what gets built | Restore the 2026-07-03 row and drop the external-tester acceptance |
+| Human role | Human-led. It ships as each workspace's default setting, reusing the `agent_led_research` values; nothing agent-led is built until a user asks (「Q2 A, 之后考虑 B」) | Change the default value and add evaluator and budget controls first |
+| Wedge | 「openresearch 和 ohmygame的结合版」: OpenResearch's Git binding plus an OhMyGame-style multi-view project workspace. No experiment tree, compute dispatch, or database | Reopen as a new directional question; nothing is built on the excluded parts |
+| Evidence source | The positioning counts as proven when another person installs the app on a clean machine and completes dispatch, run, and report on `nanochat_cpu` without help. Until then nothing is claimed as usable by others | Return to owner-project OS Feedback as the trigger |
+| Distribution | Free, open-source, local only: no hosted or paid version; no vendor CLI bundled, modified, installed, or updated by the app; no vendor name or logo in the product name; a first-run sentence says the app launches the user's own CLI on the user's own plan. Publishing installers still needs a separate authorization | A hosted or paid form needs a new decision and, for Codex, OpenAI's partner process |
+| Primary surface | The desktop client, continued from `os-ui/client`. **Supersedes** os-ui's read-only-monitor role; the browser dev server stays as the development shell of the same frontend | Keep the client as an optional wrapper around the monitor |
+| Root agent and project chat | GOAL.md §1's sentence stands: one root agent, visible as soon as the app opens, moves every project forward. Each project also has its own conversation for work inside it (「两个都留」) | Drop either conversation |
+| Layout | Left navigation (Home, Projects, Paper wiki, Skills, Plugins, quick access, Settings); Home opens on the root agent above the project cards; a project shows the conversation on the left and view tabs on the right. **Supersedes** the 2026-07-05 desktop-OS shell, which is removed once the new layout works. The two session mockups fix structure only | Keep `os-ui/frontend/src/desktop/` |
+| Project views | Five: Idea, Code, Skeleton, Assets, Paper. Canvas, the sixth the Human Owner named, is deferred until they can say what it holds | Add Canvas as a plugin |
+| Idea view | A DAG stored as one Markdown file per project: nodes are question, hypothesis, experiment, result, claim, each with a status; edges are motivates, tests, supports, refutes. An experiment node points to a run (commit plus result file), a claim node to a `paper_skeleton.md` row | Replace the node vocabulary; the file format stays a table |
+| View editing | Views render workspace files. First version: read-only, plus selecting an item to ask the agent about it. Later, direct editing opens per view, Idea and Skeleton first. **Loosens** "the GUI is for reading, agents write through skills" (cog-20260923-001) | Keep every view read-only |
+| Bare-CLI use | A workspace stays fully usable from Claude Code or Codex with no app running; the app adds no write action that exists only in the GUI | Allow GUI-only features |
+| Trunk and plugins | A small trunk; Paper Wiki, Skills Hub, and the five views are plugins (「先做好主干，然后把其他功能做成插件」). **Supersedes** the 2026-06-12 plugin model in [memory/MEMORY.md](memory/MEMORY.md) (two plugin types only: skills and project templates). D9 still holds for indexes; a plugin manifest is the one structured file added, and skills stay plain `SKILL.md` | Compile the features back into the app |
+| Plugin contract | An own, small, declarative manifest in OhMyGame's shape with five contribution kinds: home panel, project view, skill, host-side handler, ACP agent. Plugin pages run on their own origin, as the Paper Wiki viewer already does; the contract only grows compatibly, with a declared version range | Adopt another host's format |
+| DeepSeek Harness | Not a host and not a format to match. Shared ground is `SKILL.md` skills in `.agents/skills`, MCP, and ACP, through which DeepSeek Harness can itself be added as an agent. **Supersedes** the same-session wish to stay compatible with its plugin system | Build the views as DeepSeek Harness plugins, accepting its own agent loop as the main chat |
+| Third-party plugins | Allowed, including ones users make (「允许，同时可以让用户自己制作plugin」). They may contribute pages, skills, and ACP agent definitions (the launch command is shown for confirmation). Host-side handlers are for bundled plugins until a permission model exists. A plugin an agent installs does nothing until a person enables it | Open host-side handlers to third parties, or close third-party install |
+| Plugin authoring | Load from a local folder with reload; a plugin-authoring skill and template so the user's own agent writes the plugin; bundled plugins use the same contract. Git and npm sources come after step 3 | Remove local-folder loading |
+| Plugin code and data | A plugin is code on the app side; its data are plain workspace files, so removing a plugin deletes no notes | Let plugins own private stores |
+| Product and workspace | Separated. The app creates a workspace from an empty template; this repository becomes one workspace instance. **Supersedes** the "Scope is this repository" row (2026-07-22) | Keep one repository and add a script that clears personal content |
+| Project repositories | Each project is its own Git repository. D8's location, `projects-folder/<ProjectName>/`, is unchanged; what ends is tracking project files in the workspace repository. `research-project-manager new` initializes the repository from step 3 | Keep projects in the workspace repository |
+| Git | Required. Step one: each run records its commit, and the Code view shows files and changes. Step two, only when parallel runs are needed: a branch per experiment and a worktree per conversation. **Supersedes** idea I4 and the "Product boundary" row as amended 2026-07-18 (Git as an optional enhancement) | Restore the no-Git mode in the generator and client |
+| Agents built in | Claude Code and Codex, detected automatically with version, sign-in, and usage; switched on when signed in; an installation guide when missing | Add or remove a built-in adapter |
+| Other agents | Antigravity, Pi, OpenCode, and DeepSeek Harness come through ACP plugins. The Human Owner asked for 「默认要像ohmygame 那样支持使用claude code ,codex, agy」; Antigravity is bundled but **off until the user enables it**, uses `agy acp` only, and shows a risk notice when enabled, because Google's FAQ does not support wrapping `agy -p` on consumer plans | Make any of them built in |
+| No engine of its own | The trunk has no model and no agent loop. Pi is an optional agent beside the others. **Supersedes** "Pi stays the intended long-term engine" (2026-09-26) and the same-session Q22 answer | Embed Pi as a default runtime, as OhMyGame does |
+| Process model | One resident process per conversation, with permission requests relayed to the UI for the human to answer. **Supersedes** the Agent-harness rows "one CLI process per turn" and "the harness declines any approval request" | Keep per-turn processes |
+| Language | The trunk becomes TypeScript only: `os-harness` and the state generator are ported at step 4, behind the existing 20 harness tests (18 offline, 2 live), with a command-line entry for `project-dispatch`. Python remains in plugin skill scripts, declared by the plugin. **Supersedes** ADR-0003's standard-library-Python form | Keep the Python harness and the uv prerequisite |
+| Who writes TypeScript | Agents. The Human Owner accepts by behaviour: mockups, checklists, end-to-end tests | Resume the Human Owner's own TypeScript learning path first |
+| API keys | The app never pays for, resells, or relays usage; agents that use API keys are the user's own configuration. The built-in Claude Code adapter keeps the "Credentials" row: it still strips API-key variables and never touches OAuth tokens. Replaces GOAL.md's non-goal "不用 API key 计费" in the direction-text revision | Restore the non-goal |
+| Agent configuration | The app never edits an agent's settings, credentials, hooks, or MCP configuration. Skill directories are outside that rule but are written only when the user asks for an install | Not advisable |
+| Existing milestones | H2 kept; H3 after step 4; M1 retired; M4 narrowed; the Pages site returns to publishing only the Paper Wiki viewer when the old shell goes; the cognition cache and `map-then-territory` stay the Human Owner's own workspace skills, not product features | Restore the GOAL.md milestone text |
+| Name | Unchanged: AI-Human Research OS | Rename after the first outside user's feedback |
+
 ## Deviations from the original plan
+
+- **2026-11-21 directional repositioning** — The 2026-07-03 stance (the owner's own
+  research first, machinery only on OS Feedback evidence) is replaced by a desktop product
+  for other researchers, with a plugin host, a required Git binding, and no engine of its
+  own. The Human Owner chose this with no real research project in the portfolio and no
+  outside user; ADR-0006 lists that and the unresolved vendor-terms points as accepted
+  risks. Pi leaves the route as an engine for the second time (after ADR-0003).
 
 - **2026-07-19 directional MVP sequencing reset** — After personally running the successful
   Phase 01 SDK hello and attempting the TypeScript debugger path, the Human Owner judged the
@@ -498,6 +610,11 @@ The 2026-10-12 `mattpocock-skills` refresh ([PR #24](https://github.com/pengqian
 
 ## Intentionally not done
 
+- **2026-11-21 repositioning: scope left out on purpose** — no code or GOAL.md edit in
+  the deciding session; no embedded agent or model; no download or update of vendor CLIs;
+  no multi-account profiles; no Cursor adapter; no experiment tree, compute dispatch, or
+  database; no Canvas view; no hosted or paid form; no published installers; no
+  third-party host-side plugin code.
 - **README roadmap features** (read_paper workflow, group-meeting workspace, CLI,
   deterministic-read bash hooks) — roadmap, not normalization; several need explicit
   confirmation. The paper-wiki item was implemented 2026-07-07 (see Paper-wiki decisions).
