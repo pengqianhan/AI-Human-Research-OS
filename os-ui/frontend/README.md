@@ -194,8 +194,12 @@ rewritten in the frontend.
   in step. `server/registry.test.ts` and `server/api.test.ts` pin the
   resulting prefixes and token flags; update them with any endpoint change.
   The client ships each `plugins/<id>/plugin.json` (and a `site/` folder
-  beside it, if any) in its package, so a new bundled plugin needs only its
-  folder, its id in `plugins/bundled.ts`, and its handlers.
+  beside it, if any) in its package, so on the server and in the client a new
+  bundled plugin needs only its folder, its id in `plugins/bundled.ts`, and
+  its handlers. The renderer does not read the registry yet: it still
+  hard-codes Paper Wiki's frame (`app://paper-wiki/viz.html` in
+  `src/pages/PaperWikiPage.tsx`) until the frontend registry, S4 in
+  [os-ui/PLUGINS.md](../PLUGINS.md), replaces it.
 - What the layout remembers: `src/shell/layoutState.ts` (one `localStorage`
   key, `osui.layout.v1`; clearing it returns to Home with everything open).
 

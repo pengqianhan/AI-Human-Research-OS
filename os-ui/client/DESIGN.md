@@ -155,7 +155,11 @@ The bundled plugins (`BUNDLED_IDS` in
 at startup from `out/plugins/<id>/plugin.json`, which `scripts/build.mjs`
 copies there; every problem, and any bundled plugin that did not load, is
 logged as an `ERROR`. Their ids are the hosts below, the app policy's
-`frame-src`, and the subframe targets the navigation guard allows.
+`frame-src`, and the subframe targets the navigation guard allows. Each folder
+opened gets a registry of their endpoints and the trunk's, built before any
+poller starts; if a loaded plugin's declared handlers and the compiled-in
+factories disagree, the problem is logged as an `ERROR` and the folder opens
+with the trunk's endpoints only.
 
 | URL | Served from |
 |---|---|
@@ -170,11 +174,17 @@ logged as an `ERROR`. Their ids are the hosts below, the app policy's
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
   NUL, COM1, …) are refused before any file access. Workspace files must also
   have their real path (symlinks and junctions resolved) inside their root; the
-  renderer and a plugin's `site/` folder, possibly inside an asar archive, are
-  confined lexically.
-- Endpoints answer 503 while no folder is open, then 404 (no such endpoint on
-  this origin), 415, and 401 in that order. A plugin's handlers never take the
-  token, which never reaches a plugin's frame.
+  renderer and a bundled plugin's `site/` folder, possibly inside an asar
+  archive, are confined lexically; any other plugin's `site/` folder by real
+  path.
+- On a plugin's origin, `api` and `_os` are never files, in any case and
+  without a trailing dot or space (`API/`, `_OS/`, `api./`), and neither is
+  the bare `/`.
+- On the app's origin, and below a plugin's own `/api/<id>/`, endpoints answer
+  503 while no folder is open, then 404 (no such endpoint on this origin),
+  415, and 401, in that order. Any other `api/` path on a plugin's origin is a
+  plain 404, folder or not. A plugin's handlers never take the token, which
+  never reaches a plugin's frame.
 - The scheme is registered standard, secure, fetch-capable, and stream-capable,
   and **not** CORS-enabled, so pages of one origin cannot read another's.
 - The viewer probes its status endpoint whenever it is not opened from disk
@@ -196,8 +206,9 @@ logged as an `ERROR`. Their ids are the hosts below, the app policy's
   `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
   A site in its plugin folder gets the same policy with `'self'` added to
-  `script-src` and `style-src`. Either is sent with every response of the
-  site, not only HTML: an SVG a frame is sent to is a document too.
+  `script-src` and `style-src`. Either is sent with every file the site
+  serves, not only HTML: an SVG a frame is sent to is a document too. A 404,
+  a 405, or an endpoint's JSON reply carries no policy.
 - **Endpoints:** writes must be `Content-Type: application/json`, which a form
   or a no-cors request cannot send (415 otherwise); `/api/chat` and
   `/api/paper-sources` need a random per-launch token, which the preload hands

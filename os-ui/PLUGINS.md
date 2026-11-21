@@ -15,8 +15,14 @@ Status on 2026-11-22:
     does not match a dot segment.
   - On `app://<id>`, only `/api/<id>` and `/api/<id>/...` reach the plugin's mounts. Any
     other `api/` path is a plain 404 file miss, as it was for the wiki, also when no
-    folder is open. Only Paper Wiki's own unknown paths changed: a JSON `no endpoint`
-    404, or 503 with no folder open, where they were a plain 404.
+    folder is open. What changed on Paper Wiki's origin:
+    - its own unknown endpoint paths (`/api/paper-wiki/other`) answer a JSON
+      `no endpoint` 404, or 503 with no folder open, where they were a plain 404;
+    - `_os/` is never a file, so a file under `paper-wiki/_os/` that was served (200)
+      is 404, and a write there 404 rather than 405;
+    - `api` and `_os` are reserved in any case and without a trailing dot or space
+      (`API/`, `_OS/`, `api./`), which a case-insensitive file system or Windows would
+      otherwise resolve to `paper-wiki/api/` or `paper-wiki/_os/`.
   - `createHandler`'s state has no `csp`: `route` derives the app policy from `sites`,
     so the framed origins and the served sites cannot disagree.
   - The app policy no longer allows Google Fonts, which the frontend does not load, so
@@ -24,9 +30,15 @@ Status on 2026-11-22:
     new literal. `appCsp([])` gives `frame-src 'none'`.
   - `WIKI_CSP` is `WORKSPACE_CSP` (any workspace-folder site); `PLUGIN_CSP` is built for
     plugin-folder sites, which are tested on a fixture only (no plugin has `site/` until
-    S6). They need no open folder and have no index fallback (`app://<id>/` is 404).
+    S6). They need no open folder and have no index fallback (`app://<id>/` is 404). A
+    bundled plugin's `site/` is confined lexically (it may sit in the asar archive);
+    any other plugin's by real path, so a link inside it cannot leave it.
   - A bundled plugin that fails to load is logged as `ERROR` and its compiled-in
-    handlers are left out, so `createRegistry` does not throw on every folder opened.
+    handlers are left out. If a loaded plugin's declared handlers and the compiled-in
+    factories disagree (a bundling bug), `createRegistry` still throws; the client's
+    `workspaceRegistry` then logs an `ERROR` and serves the trunk's endpoints alone. It
+    is built before any poller or timer starts, so a folder never opens half-way and
+    the window still opens.
   - The end-to-end suite runs through the new layout, not the dock. The Help menu item
     keeps its label, "System and Prerequisites": it opens Settings, which holds that
     check, and the suite and the client README name it by that label.
