@@ -30,6 +30,7 @@ export default {
         danger: "var(--danger)",
         "danger-soft": "var(--danger-soft)",
         "mute-soft": "var(--mute-soft)",
+        bubble: "var(--bubble)",
         night: "var(--night)",
         "on-night": "var(--on-night)",
         // older names, kept so existing components restyle with the palette

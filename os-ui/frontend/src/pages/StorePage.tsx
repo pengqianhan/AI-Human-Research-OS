@@ -10,6 +10,9 @@ interface Props {
 }
 
 const ALL = "all";
+const FILTER_PILL = "rounded-full px-3 py-[5px] text-[12.5px] font-medium ";
+const FILTER_ON = "bg-accent text-on-accent shadow-sh1";
+const FILTER_OFF = "bg-card text-ink2 shadow-sh1 hover:text-ink";
 
 export function StorePage({ state }: Props) {
   const allSkills = useMemo(() => flattenStore(state.store), [state.store]);
@@ -48,8 +51,8 @@ export function StorePage({ state }: Props) {
           aria-pressed={activeFilter === ALL}
           onClick={() => setActiveFilter(ALL)}
           className={
-            "font-mono-heading rounded-full border px-3.5 py-[5px] text-[12px] " +
-            (activeFilter === ALL ? "border-ink bg-ink text-white" : "border-grid bg-panel text-ink-soft")
+            FILTER_PILL +
+            (activeFilter === ALL ? FILTER_ON : FILTER_OFF)
           }
         >
           All · {allSkills.length}
@@ -61,8 +64,8 @@ export function StorePage({ state }: Props) {
             aria-pressed={activeFilter === name}
             onClick={() => setActiveFilter(name)}
             className={
-              "font-mono-heading rounded-full border px-3.5 py-[5px] text-[12px] " +
-              (activeFilter === name ? "border-ink bg-ink text-white" : "border-grid bg-panel text-ink-soft")
+              FILTER_PILL +
+              (activeFilter === name ? FILTER_ON : FILTER_OFF)
             }
           >
             {name}
@@ -73,10 +76,8 @@ export function StorePage({ state }: Props) {
           aria-pressed={activeFilter === ORPHAN_COLLECTION_LABEL}
           onClick={() => setActiveFilter(ORPHAN_COLLECTION_LABEL)}
           className={
-            "font-mono-heading rounded-full border px-3.5 py-[5px] text-[12px] " +
-            (activeFilter === ORPHAN_COLLECTION_LABEL
-              ? "border-ink bg-ink text-white"
-              : "border-grid bg-panel text-ink-soft")
+            FILTER_PILL +
+            (activeFilter === ORPHAN_COLLECTION_LABEL ? FILTER_ON : FILTER_OFF)
           }
         >
           {ORPHAN_COLLECTION_LABEL}
@@ -88,14 +89,14 @@ export function StorePage({ state }: Props) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search skills..."
           aria-label="Search skills"
-          className="search font-mono-heading ml-auto w-[220px] rounded-[3px] border border-grid bg-panel px-3 py-1.5 text-[12px] text-ink max-[900px]:ml-0 max-[900px]:w-full"
+          className="search ml-auto w-[240px] rounded-[10px] bg-card px-3 py-[7px] text-[13px] text-ink shadow-[inset_0_0_0_1px_var(--line2)] placeholder:text-faint"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-[13px] text-stale">No matching skills.</p>
+        <p className="text-[13.5px] text-muted">No matching skills.</p>
       ) : (
-        <div className="cards grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">
+        <div className="cards grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3.5">
           {filtered.map((s) => (
             <SkillCard
               key={`${s.collection}/${s.name}`}

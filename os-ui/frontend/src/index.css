@@ -48,6 +48,7 @@
   --danger: #a33a2f;      /* failed, stop, error text */
   --danger-soft: #f6e3df;
   --mute-soft: rgba(60, 45, 20, .06);  /* neutral pill background */
+  --bubble: #ece4d5;      /* your own messages in a conversation */
 
   /* Dark surfaces: command blocks and the toast */
   --night: #22211e;
@@ -334,18 +335,28 @@ code, kbd, samp, pre {
   .dock-shadow {
     box-shadow: var(--sh2);
   }
+}
 
-  .line-clamp-2,
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
+/* The workspace's view pane narrows when the window is small and both side
+ * panels are open (about 520px at 1100px). Then the "step 2" badges on its
+ * tabs shrink to amber dots and "Read-only" keeps only its lock, so every tab
+ * stays in view. The tab's accessible name still says "step 2". */
+.views-pane {
+  container: views / inline-size;
+}
+@container views (max-width: 680px) {
+  .views-pane .tab-step {
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    font-size: 0;
+  }
+  .views-pane .tab-note {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
-  }
-  .line-clamp-2 {
-    -webkit-line-clamp: 2;
-  }
-  .line-clamp-3 {
-    -webkit-line-clamp: 3;
+    clip: rect(0 0 0 0);
   }
 }
 

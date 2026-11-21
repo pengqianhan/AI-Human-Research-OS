@@ -18,8 +18,9 @@ export function SkillCard({ skill, onOpen }: Props) {
         <span className="break-all font-serif text-[16.5px] font-medium leading-tight text-ink">{skill.name}</span>
         <SyncBadge sync={skill.sync} />
       </span>
-      <span className="desc line-clamp-2 flex-1 font-serif text-[14px] leading-snug text-ink2">{skill.description}</span>
-      <span className="foot flex flex-wrap items-center gap-1.5">
+      {/* No flex-1 here: a stretched box would show the lines the clamp cuts off. */}
+      <span className="desc line-clamp-2 font-serif text-[14px] leading-snug text-ink2">{skill.description}</span>
+      <span className="foot mt-auto flex flex-wrap items-center gap-1.5">
         <span className="rounded-full bg-mute-soft px-2 py-[2px] text-[11px] text-ink2">
           {skill.collection}
         </span>

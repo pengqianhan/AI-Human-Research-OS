@@ -7,13 +7,27 @@ import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
 import { desktop } from "../lib/desktop";
+import { Icon } from "../shell/icons";
 
 interface Props {
   /** "" for the repository root (the root agent); "projects-folder/<Name>" for a project's agent. */
   cwd: string;
+  /** Names the conversation: shown in the header unless headingVisible is false, and always its accessible name. */
   heading: string;
+  /** Hide the heading when the surrounding card already shows a title. */
+  headingVisible?: boolean;
   intro: ReactNode;
   examples: string[];
+  /**
+   * "split": the conversation list is a column on the left (wide places:
+   * Home, the retired desktop window). "stacked": the list opens over the
+   * thread from a header button (the workspace's narrow conversation pane).
+   */
+  layout?: "split" | "stacked";
+  /** Home's closed prompt bar: only the latest conversation's line and the composer. */
+  collapsed?: boolean;
+  /** Asks the parent to open the full conversation (after sending from the bar, or "Continue"). */
+  onExpand?: () => void;
 }
 
 interface SessionRow {
@@ -102,6 +116,8 @@ function oneLine(value: unknown, limit = 160): string {
   return flat.length > limit ? flat.slice(0, limit - 1) + "…" : flat;
 }
 
+const COMPOSER_MAX_PX = 220;
+
 /**
  * A conversation with one agent in one directory. Every message is one
  * os-harness turn there, on the human's own login: at the repository root
@@ -111,8 +127,12 @@ function oneLine(value: unknown, limit = 160): string {
  * polled while a turn runs; tool calls stay visible so the human can see
  * what was done. Sessions the root agent dispatched into a project appear in
  * that project's list too, and can be resumed with feedback from here.
+ *
+ * The same instance serves every presentation (collapsed bar, split, or
+ * stacked), so the draft, the selected conversation, and the polling of a
+ * running turn survive opening and closing it.
  */
-export function AgentChat({ cwd, heading, intro, examples }: Props) {
+export function AgentChat({ cwd, heading, headingVisible = true, intro, examples, layout = "split", collapsed = false, onExpand }: Props) {
   const ids = useId();
   const [token, setToken] = useState(readToken);
   const [needToken, setNeedToken] = useState(readToken() === "");
@@ -124,7 +144,9 @@ export function AgentChat({ cwd, heading, intro, examples }: Props) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [listOpen, setListOpen] = useState(false);
   const logRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
   // A different directory is a different conversation list.
   useEffect(() => {
@@ -182,7 +204,7 @@ export function AgentChat({ cwd, heading, intro, examples }: Props) {
   useEffect(() => {
     const el = logRef.current;
     if (el !== null) el.scrollTop = el.scrollHeight;
-  }, [session?.events.length]);
+  }, [session?.events.length, collapsed, listOpen]);
 
   function saveToken(e: FormEvent) {
     e.preventDefault();
@@ -194,6 +216,33 @@ export function AgentChat({ cwd, heading, intro, examples }: Props) {
     setNeedToken(false);
     setError(null);
     void loadSessions();
+  }
+
+  function newConversation() {
+    setActiveId(null);
+    setSession(null);
+    setError(null);
+    setListOpen(false);
+  }
+
+  function openConversation(id: string) {
+    setActiveId(id);
+    setError(null);
+    setListOpen(false);
+  }
+
+  /** From the closed bar: open the full conversation on this session and put the cursor in its composer. */
+  function expandOn(id: string) {
+    openConversation(id);
+    onExpand?.();
+    window.requestAnimationFrame(() => composerRef.current?.focus());
+  }
+
+  function fitComposer() {
+    const el = composerRef.current;
+    if (el === null) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, COMPOSER_MAX_PX)}px`;
   }
 
   async function sendMessage() {
@@ -210,7 +259,10 @@ export function AgentChat({ cwd, heading, intro, examples }: Props) {
         cwd,
       });
       setDraft("");
+      window.requestAnimationFrame(fitComposer);
       setActiveId(data.session);
+      setListOpen(false);
+      onExpand?.();
       await loadSession(data.session);
       await loadSessions();
     } catch (e) {
@@ -242,183 +294,252 @@ export function AgentChat({ cwd, heading, intro, examples }: Props) {
   const status = session?.status ?? "new";
   const running = status === "running";
   const activeAgent = session?.meta.agent ?? agent;
-  const selectClass =
-    "rounded border border-grid bg-panel px-1.5 py-[2px] font-mono-heading text-[11.5px] text-ink";
+  const selectClass = "rounded-[7px] border border-line2 bg-card px-1.5 py-[3px] text-[12px] text-ink";
 
-  return (
-    <div className="flex h-full min-h-0 bg-paper">
-      <aside className="flex w-56 shrink-0 flex-col border-r border-grid bg-panel">
-        <div className="flex items-center justify-between border-b border-grid px-3 py-2">
-          <span className="font-mono-heading text-[10px] uppercase tracking-[.05em] text-stale">Conversations</span>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveId(null);
-              setSession(null);
-              setError(null);
+  const tokenForm = (
+    <form onSubmit={saveToken} className="card-flat m-4 max-w-md p-4">
+      <p className="text-[13px] text-ink">
+        This conversation talks to the agent through the local dev server. Paste the
+        <b> Root Agent token</b> that <code>./os-ui/start.sh</code> printed.
+      </p>
+      <div className="mt-3 flex gap-2">
+        <input
+          id={`${ids}-token`}
+          type="password"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="token"
+          aria-label="Root Agent token"
+          className="font-mono-heading min-w-0 flex-1 rounded-[8px] border border-line2 bg-paper px-2.5 py-1.5 text-[12.5px] text-ink"
+        />
+        <button type="submit" className="btn btn-primary">
+          Save
+        </button>
+      </div>
+    </form>
+  );
+
+  const composer = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void sendMessage();
+      }}
+      className={collapsed ? "" : "px-3 pb-3 pt-2"}
+    >
+      {error && <p className="mb-2 text-[12px] text-danger">{error}</p>}
+      <div className="flex flex-col gap-1.5 rounded-[12px] bg-paper py-2 pl-[13px] pr-2 shadow-[inset_0_0_0_1px_var(--line2)] focus-within:shadow-[inset_0_0_0_1.5px_var(--accent)]">
+        <div className="flex items-end gap-2">
+          <textarea
+            id={`${ids}-composer`}
+            ref={composerRef}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              fitComposer();
             }}
-            className="font-mono-heading rounded border border-grid px-2 py-[2px] text-[11px] text-ink hover:bg-paper"
+            onKeyDown={onComposerKey}
+            rows={2}
+            disabled={running || busy}
+            aria-label={`Message ${heading}`}
+            placeholder={
+              running
+                ? "The agent is working; wait for it to finish or stop it."
+                : `Message ${AGENT_LABEL[activeAgent]} (Enter to send, Shift+Enter for a new line)`
+            }
+            className="min-h-[44px] min-w-0 flex-1 resize-none bg-transparent py-0.5 text-[14px] leading-normal text-ink outline-none placeholder:text-faint disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={running || busy || draft.trim() === ""}
+            aria-label={busy ? "Sending…" : "Send"}
+            title="Send (Enter)"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-accent text-on-accent hover:bg-accent-ink disabled:opacity-40"
           >
+            <Icon name="send" size={16} />
+          </button>
+        </div>
+        <div className="flex items-center gap-2 text-[11.5px] text-muted">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-tint px-2 py-[2px] font-medium text-accent-ink">
+            <span aria-hidden="true" className="h-[6px] w-[6px] rounded-full bg-accent" />
+            {AGENT_LABEL[activeAgent]}
+          </span>
+          <span>{session === null ? `new conversation · ${mode}` : `continues this conversation · ${session.meta.mode}`}</span>
+        </div>
+      </div>
+    </form>
+  );
+
+  // ---- Home's closed bar: the latest conversation's line and the composer -------
+  if (collapsed) {
+    if (needToken) return tokenForm;
+    const current = activeId === null ? null : (sessions.find((row) => row.id === activeId) ?? null);
+    const latest = current ?? sessions[0] ?? null;
+    return (
+      <div role="region" aria-label={heading} className="flex flex-col gap-3">
+        <p className="m-0 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-serif text-[15.5px] leading-normal text-ink2">
+          <b className="label mr-1">{current ? "This conversation" : "Latest conversation"}</b>
+          {latest === null ? (
+            <span className="text-muted">No conversations here yet.</span>
+          ) : (
+            <>
+              <span className="min-w-0 truncate">{stripInlineMarkdown(latest.first_prompt) || "(empty)"}</span>
+              <span className="font-sans text-[12px] text-muted">
+                {latest.turns} turn{latest.turns === 1 ? "" : "s"}
+                {latest.updated ? ` · ${relativeTime(latest.updated)}` : ""}
+              </span>
+              <Badge tone={STATUS_TONE[latest.status] ?? "mute"}>{latest.status}</Badge>
+              <button
+                type="button"
+                onClick={() => expandOn(latest.id)}
+                className="btn btn-ghost btn-sm font-sans"
+              >
+                {current ? "Show" : "Continue"}
+              </button>
+            </>
+          )}
+        </p>
+        {composer}
+      </div>
+    );
+  }
+
+  // ---- The conversation list --------------------------------------------------
+  const listId = `${ids}-list`;
+  const list = (
+    <div id={listId} className="flex min-h-0 flex-1 flex-col">
+      {layout === "split" && (
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <span className="label">Conversations</span>
+          <button type="button" onClick={newConversation} className="btn btn-sm">
             + New
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {sessions.length === 0 && (
-            <p className="px-3 py-3 text-[11.5px] text-stale">No conversations here yet.</p>
-          )}
-          {sessions.map((row) => (
-            <button
-              key={row.id}
-              type="button"
-              onClick={() => {
-                setActiveId(row.id);
-                setError(null);
-              }}
-              aria-pressed={row.id === activeId}
-              className={
-                "block w-full border-b border-grid px-3 py-2 text-left hover:bg-paper " +
-                (row.id === activeId ? "bg-paper" : "")
-              }
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-mono-heading text-[10.5px] text-ink-soft">
-                  {AGENT_LABEL[row.agent] ?? row.agent} · {row.mode}
-                </span>
-                <Badge tone={STATUS_TONE[row.status] ?? "mute"}>{row.status}</Badge>
-              </div>
-              <div className="mt-0.5 truncate text-[12px] text-ink">{row.first_prompt || "(empty)"}</div>
-              <div className="font-mono-heading text-[10px] text-stale">
-                {row.turns} turn{row.turns === 1 ? "" : "s"} · {row.updated ? relativeTime(row.updated) : ""}
-              </div>
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center gap-3 border-b border-grid bg-panel px-4 py-2">
-          <span className="font-mono-heading text-[12px] font-medium text-ink">{heading}</span>
-          {session === null ? (
-            <>
-              <label className="flex items-center gap-1.5 text-[11.5px] text-ink-soft">
-                via
-                <select
-                  value={agent}
-                  onChange={(e) => {
-                    const next = e.target.value as AgentId;
-                    setAgent(next);
-                    setPreferredAgent(next);
-                  }}
-                  className={selectClass}
-                >
-                  <option value="claude">Claude Code</option>
-                  <option value="codex">Codex</option>
-                </select>
-              </label>
-              <label className="flex items-center gap-1.5 text-[11.5px] text-ink-soft" title={MODE_HINT[mode]}>
-                mode
-                <select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className={selectClass}>
-                  <option value="full">full</option>
-                  <option value="workspace">workspace</option>
-                  <option value="read-only">read-only</option>
-                </select>
-              </label>
-            </>
-          ) : (
-            <span className="font-mono-heading text-[11px] text-ink-soft">
-              {AGENT_LABEL[session.meta.agent] ?? session.meta.agent}
-              {session.meta.model ? ` · ${session.meta.model}` : ""} · {session.meta.mode}
-            </span>
-          )}
-          <span className="ml-auto flex items-center gap-2">
-            {!needToken && <PaperSources token={readToken()} />}
-            <Badge tone={STATUS_TONE[status] ?? "mute"}>{status}</Badge>
-            {running && (
-              <button
-                type="button"
-                onClick={() => void stopTurn()}
-                className="font-mono-heading rounded border border-grid px-2 py-[2px] text-[11px] text-danger hover:bg-paper"
-              >
-                Stop
-              </button>
-            )}
-          </span>
-        </header>
-
-        {needToken ? (
-          <form onSubmit={saveToken} className="m-4 max-w-md rounded border border-grid bg-panel p-4">
-            <p className="text-[12.5px] text-ink">
-              This window talks to the agent through the local dev server. Paste the
-              <b> Root Agent token</b> that <code className="font-mono-heading">./os-ui/start.sh</code> printed.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <input
-                id={`${ids}-token`}
-                type="password"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder="token"
-                className="min-w-0 flex-1 rounded border border-grid bg-paper px-2 py-1 font-mono-heading text-[12px] text-ink"
-              />
-              <button type="submit" className="rounded border border-ink bg-ink px-3 py-1 font-mono-heading text-[12px] text-white">
-                Save
-              </button>
+      )}
+      <div className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-2">
+        {sessions.length === 0 && <p className="px-2 py-3 text-[12.5px] text-muted">No conversations here yet.</p>}
+        {sessions.map((row) => (
+          <button
+            key={row.id}
+            type="button"
+            onClick={() => openConversation(row.id)}
+            aria-pressed={row.id === activeId}
+            className={"block w-full rounded-[9px] px-2.5 py-2 text-left hover:bg-hover " + (row.id === activeId ? "bg-card shadow-sh1" : "")}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-muted">
+                {AGENT_LABEL[row.agent] ?? row.agent} · {row.mode}
+              </span>
+              <Badge tone={STATUS_TONE[row.status] ?? "mute"}>{row.status}</Badge>
             </div>
-          </form>
+            <div className="mt-0.5 truncate text-[13px] text-ink">{row.first_prompt || "(empty)"}</div>
+            <div className="text-[11px] text-muted">
+              {row.turns} turn{row.turns === 1 ? "" : "s"} · {row.updated ? relativeTime(row.updated) : ""}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ---- Header: list control, agent and mode, Papers, status, Stop -------------
+  const header = (
+    <header className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-b border-line px-3.5 py-2">
+      {layout === "stacked" && !needToken && (
+        <>
+          <button type="button" className="btn btn-sm" aria-expanded={listOpen} aria-controls={listId} onClick={() => setListOpen((v) => !v)}>
+            Conversations <span className="text-muted">{sessions.length}</span>
+            <Icon name="chev-down" size={13} className={listOpen ? "rotate-180" : ""} />
+          </button>
+          <button type="button" onClick={newConversation} className="btn btn-sm">
+            + New
+          </button>
+        </>
+      )}
+      {headingVisible && <span className="text-[13px] font-semibold text-ink">{heading}</span>}
+      {session === null ? (
+        <>
+          <label className="flex items-center gap-1.5 text-[12px] text-ink2">
+            via
+            <select
+              value={agent}
+              onChange={(e) => {
+                const next = e.target.value as AgentId;
+                setAgent(next);
+                setPreferredAgent(next);
+              }}
+              className={selectClass}
+            >
+              <option value="claude">Claude Code</option>
+              <option value="codex">Codex</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-1.5 text-[12px] text-ink2" title={MODE_HINT[mode]}>
+            mode
+            <select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className={selectClass}>
+              <option value="full">full</option>
+              <option value="workspace">workspace</option>
+              <option value="read-only">read-only</option>
+            </select>
+          </label>
+        </>
+      ) : (
+        <span className="text-[12px] text-ink2">
+          {AGENT_LABEL[session.meta.agent] ?? session.meta.agent}
+          {session.meta.model ? ` · ${session.meta.model}` : ""} · {session.meta.mode}
+        </span>
+      )}
+      <span className="ml-auto flex items-center gap-2">
+        {!needToken && <PaperSources token={readToken()} />}
+        <Badge tone={STATUS_TONE[status] ?? "mute"}>{status}</Badge>
+        {running && (
+          <button type="button" onClick={() => void stopTurn()} className="btn btn-sm btn-danger">
+            Stop
+          </button>
+        )}
+      </span>
+    </header>
+  );
+
+  const thread = (
+    <div ref={logRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      {session === null ? (
+        <div className="mx-auto max-w-[60ch] py-6 font-serif text-[15px] leading-relaxed text-ink2">
+          <p className="text-ink">{intro}</p>
+          <ul className="mt-3 list-disc space-y-1 pl-5">
+            {examples.map((example) => (
+              <li key={example}>{example}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <ol className="mx-auto max-w-[72ch] space-y-2.5">
+          {session.events.map((ev, i) => (
+            <EventRow key={i} ev={ev} agentLabel={AGENT_LABEL[session.meta.agent] ?? session.meta.agent} previous={session.events[i - 1]?.type} />
+          ))}
+          {running && <li className="text-[12px] font-medium text-accent">working…</li>}
+        </ol>
+      )}
+    </div>
+  );
+
+  return (
+    <div role="region" aria-label={heading} className="flex h-full min-h-0 rounded-[inherit] bg-paper">
+      {layout === "split" && (
+        <aside aria-label="Conversations" className="flex w-60 shrink-0 flex-col rounded-l-[inherit] border-r border-line bg-side">
+          {list}
+        </aside>
+      )}
+      <section className="flex min-w-0 flex-1 flex-col">
+        {header}
+        {needToken ? (
+          tokenForm
+        ) : layout === "stacked" && listOpen ? (
+          list
         ) : (
           <>
-            <div ref={logRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-              {session === null ? (
-                <div className="mx-auto max-w-lg py-8 text-[12.5px] text-ink-soft">
-                  <p className="text-ink">{intro}</p>
-                  <ul className="mt-3 list-disc space-y-1 pl-5">
-                    {examples.map((example) => (
-                      <li key={example}>{example}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <ol className="space-y-2">
-                  {session.events.map((ev, i) => (
-                    <EventRow key={i} ev={ev} />
-                  ))}
-                  {running && <li className="font-mono-heading text-[11px] text-signal">working…</li>}
-                </ol>
-              )}
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void sendMessage();
-              }}
-              className="border-t border-grid bg-panel px-4 py-3"
-            >
-              {error && <p className="mb-2 text-[11.5px] text-danger">{error}</p>}
-              <div className="flex items-end gap-2">
-                <textarea
-                  id={`${ids}-composer`}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={onComposerKey}
-                  rows={2}
-                  disabled={running || busy}
-                  placeholder={
-                    running
-                      ? "The agent is working; wait for it to finish or stop it."
-                      : `Message ${AGENT_LABEL[activeAgent]} (Enter to send, Shift+Enter for a new line)`
-                  }
-                  className="min-h-[44px] flex-1 resize-y rounded border border-grid bg-paper px-2.5 py-1.5 text-[13px] text-ink disabled:opacity-60"
-                />
-                <button
-                  type="submit"
-                  disabled={running || busy || draft.trim() === ""}
-                  className="font-mono-heading rounded border border-ink bg-ink px-3 py-1.5 text-[12px] text-white disabled:opacity-40"
-                >
-                  {busy ? "Sending…" : "Send"}
-                </button>
-              </div>
-            </form>
+            {thread}
+            {composer}
           </>
         )}
       </section>
@@ -426,60 +547,58 @@ export function AgentChat({ cwd, heading, intro, examples }: Props) {
   );
 }
 
-function EventRow({ ev }: { ev: TraceEvent }) {
+function EventRow({ ev, agentLabel, previous }: { ev: TraceEvent; agentLabel: string; previous: string | undefined }) {
   switch (ev.type) {
     case "prompt":
       return (
-        <li className="flex justify-end">
-          <div className="max-w-[85%] whitespace-pre-wrap rounded-lg border border-ink bg-ink px-3 py-2 text-[13px] text-white">
+        <li className="text-right">
+          <div className="label mb-1">You</div>
+          <div className="inline-block max-w-[88%] whitespace-pre-wrap rounded-[13px_13px_4px_13px] bg-bubble px-3 py-2 text-left text-[13.5px] text-ink">
             {ev.text}
           </div>
         </li>
       );
     case "text":
       return (
-        <li className="flex">
-          <div className="max-w-[85%] whitespace-pre-wrap rounded-lg border border-grid bg-panel px-3 py-2 text-[13px] text-ink">
-            {stripInlineMarkdown(ev.text ?? "")}
-          </div>
+        <li>
+          {previous !== "text" && <div className="label mb-1">{agentLabel}</div>}
+          <div className="whitespace-pre-wrap font-serif text-[15px] leading-relaxed text-ink">{stripInlineMarkdown(ev.text ?? "")}</div>
         </li>
       );
     case "tool":
       return (
-        <li className="font-mono-heading pl-2 text-[11px] text-ink-soft">
+        <li className="font-mono-heading rounded-[8px] bg-mute-soft px-2.5 py-1.5 text-[11.5px] text-muted">
           → {ev.name}: {oneLine(ev.input)}
         </li>
       );
     case "tool_result":
       return (
         <li className="pl-2">
-          <details className="font-mono-heading text-[11px] text-stale">
+          <details className="font-mono-heading text-[11px] text-muted">
             <summary className="cursor-pointer">
               {ev.ok ? "← ok" : <span className="text-warn">← error</span>}: {oneLine(ev.output, 100)}
             </summary>
-            <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap rounded border border-grid bg-panel p-2 text-[10.5px] text-ink-soft">
+            <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap rounded-[8px] bg-card p-2 text-[10.5px] text-ink2 shadow-[inset_0_0_0_1px_var(--line)]">
               {ev.output}
             </pre>
           </details>
         </li>
       );
     case "warning":
-      return <li className="font-mono-heading pl-2 text-[11px] text-warn">! {ev.message}</li>;
+      return <li className="pl-2 text-[12px] text-warn">! {ev.message}</li>;
     case "declined":
-      return <li className="font-mono-heading pl-2 text-[11px] text-warn">× declined {ev.request}</li>;
+      return <li className="pl-2 text-[12px] text-warn">× declined {ev.request}</li>;
     case "started":
       return (
-        <li className="font-mono-heading pl-2 text-[10.5px] text-stale">
+        <li className="font-mono-heading pl-2 text-[10.5px] text-faint">
           {ev.model ?? "model ?"} · {ev.auth ?? "auth ?"}
         </li>
       );
     case "done":
       return ev.ok ? (
-        <li className="font-mono-heading pl-2 text-[10.5px] text-verify">
-          done{typeof ev.duration_ms === "number" ? ` · ${(ev.duration_ms / 1000).toFixed(1)} s` : ""}
-        </li>
+        <li className="pl-2 text-[11.5px] text-accent">done{typeof ev.duration_ms === "number" ? ` · ${(ev.duration_ms / 1000).toFixed(1)} s` : ""}</li>
       ) : (
-        <li className="font-mono-heading pl-2 text-[11px] text-danger">failed: {ev.error}</li>
+        <li className="pl-2 text-[12px] text-danger">failed: {ev.error}</li>
       );
     default:
       return null;

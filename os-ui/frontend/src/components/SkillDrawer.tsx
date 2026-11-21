@@ -71,8 +71,9 @@ export function SkillDrawer({ skill, targets, triggerRef, onClose }: Props) {
       />
       <aside
         className={
-          "drawer fixed top-0 z-30 h-screen w-[420px] overflow-y-auto bg-card p-6 transition-[right] duration-[220ms] ease-in-out max-[900px]:w-screen " +
-          (isOpen ? "right-0 shadow-sh3" : "-right-[460px] max-[900px]:-right-full")
+          // invisible when closed, so its buttons leave the tab order once it has slid away
+          "drawer fixed top-0 z-30 h-screen w-[420px] overflow-y-auto bg-card p-6 transition-[right,visibility] duration-[220ms] ease-in-out max-[900px]:w-screen " +
+          (isOpen ? "visible right-0 shadow-sh3" : "invisible -right-[460px] max-[900px]:-right-full")
         }
         role="dialog"
         aria-modal="true"
