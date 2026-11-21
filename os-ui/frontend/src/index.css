@@ -25,7 +25,7 @@
   /* Text */
   --ink: #1c1a17;         /* body text and headings */
   --ink2: #4a453d;        /* secondary text */
-  --muted: #80786b;       /* labels, captions, timestamps */
+  --muted: #6f675b;       /* labels, captions, timestamps; 4.5:1 or better on --bg, --paper and --card */
   --faint: #b0a796;       /* disabled items and source notes */
 
   /* Lines and hover wash (warm, translucent) */

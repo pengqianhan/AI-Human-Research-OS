@@ -19,7 +19,7 @@ git show <hash>              # the actual diff for any change
 
 ## Active Work
 
-### Repositioning: desktop workspace over installed coding agents (decided 2026-11-21, nothing built)
+### Repositioning: desktop workspace over installed coding agents (decided 2026-11-21, step 1 in progress)
 
 The Human Owner repositioned the OS in a grilling session on 2026-11-21: a free,
 local desktop app for researchers who already have Claude Code or Codex, built as
@@ -49,12 +49,20 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       (「选 C」), from three clickable mockups of the same screens;
       [`os-ui/mockups/step1/c-document.html`](os-ui/mockups/step1/c-document.html)
       is the reference for the layout, the Code view, and the Paper view (open it
-      with the `mockups` preview in `.claude/launch.json`). The registry is designed as eight small
-      changes; the first two (manifest parser, server-side registry) do not
-      depend on the layout and are being implemented on branch
-      `step1-registry-server`. Open question for the Human Owner before step 2:
-      may a third-party plugin add its own left-navigation item, or only home
-      panels and project views?
+      with the `mockups` preview in `.claude/launch.json`).
+      State on 2026-11-22, with the design and its remaining order in
+      [os-ui/PLUGINS.md](os-ui/PLUGINS.md):
+      - Done: the manifest parser and the server-side registry (S1, S2), and the
+        new layout as a shell that re-houses every existing page (S7). Overview is
+        the default project tab; Code and Paper are placeholder tabs.
+      - Next, in order: the client serves plugin origins from the registry (S3),
+        the frontend registry (S4), the path-checked read channel (S5), the Code
+        and Paper view plugins (S6), then deleting `os-ui/frontend/src/desktop/`
+        (S8) once the Human Owner has run the client checklist.
+      - Waiting on the Human Owner: whether the Paper view may vendor Mozilla's
+        PDF.js (Apache-2.0, about 1.8 MB) to render `main.pdf`; whether a
+        third-party plugin may add its own left-navigation item, or only home
+        panels and project views (needed before step 2).
 - [ ] Step 2, remaining views: Idea, Skeleton, Assets; Skills Hub as the second
       plugin; then loading a plugin from a local folder. Acceptance: the Human
       Owner opens all five views on `nanochat_cpu`.
@@ -184,8 +192,8 @@ packaged app's smoke run.
 
 ### Next session
 
-- Focus (2026-11-21): the step 1 mockups, the second item under "Repositioning"
-  above. The older items below are still open.
+- Focus (2026-11-22): step 1's next change, S3 in [os-ui/PLUGINS.md](os-ui/PLUGINS.md),
+  under "Repositioning" above. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
