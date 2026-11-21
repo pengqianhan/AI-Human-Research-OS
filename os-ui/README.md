@@ -70,18 +70,18 @@ dev server may be reached through a public tunnel and this endpoint runs an
 agent with full permissions: without the token, `/api/chat/*` answers 401.
 
 Endpoints (dev server and desktop client; the logic is in
-[frontend/server/](frontend/server/), and the dev server mounts it through
-[frontend/chat-plugin.ts](frontend/chat-plugin.ts) and its siblings):
+[frontend/server/](frontend/server/), and the dev server mounts every endpoint
+through [frontend/api-plugin.ts](frontend/api-plugin.ts)):
 `GET /api/chat/sessions?cwd=`, `GET /api/chat/session?id=`,
 `POST /api/chat/send` (`{cwd, agent, mode, session?, text}`), and
 `POST /api/chat/stop` (`{session}`); the Papers button uses
 `GET`/`POST /api/paper-sources` (`{source, enabled}`),
 `POST /api/paper-sources/read-order` (`{order}`), and
 `POST /api/paper-sources/key` (`{name, value}`; an empty value clears), in
-[frontend/paper-sources-plugin.ts](frontend/paper-sources-plugin.ts), behind
+[frontend/server/paperSources.ts](frontend/server/paperSources.ts), behind
 the same token. `cwd` is empty for the repository root or
 `projects-folder/<Name>` for a registered project; anything else is refused.
-The plugin only starts, resumes, stops, and reads harness sessions; the traces
+The chat endpoint only starts, resumes, stops, and reads harness sessions; the traces
 live in `os-harness/sessions/`. A static build has no chat, like it has no
 skill toggle.
 
