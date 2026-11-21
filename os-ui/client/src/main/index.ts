@@ -16,7 +16,7 @@ import { BUNDLED_IDS } from "../../../frontend/plugins/bundled.ts";
 import { TRUNK_MOUNTS } from "../../../frontend/server/api.ts";
 import { BUNDLED_HANDLERS } from "../../../frontend/server/pluginHandlers.ts";
 import { processRunner } from "../../../frontend/server/process.ts";
-import { createRegistry, loadPlugins } from "../../../frontend/server/registry.ts";
+import { loadPlugins } from "../../../frontend/server/registry.ts";
 import type { Registry } from "../../../frontend/server/registry.ts";
 import type { ApiContext } from "../../../frontend/server/types.ts";
 import type { DesktopInfo, SnapshotEvent, WorkspaceChoice } from "../../../frontend/src/lib/desktop.ts";
@@ -28,7 +28,7 @@ import { createLog } from "./log.ts";
 import { menuTemplate } from "./menu.ts";
 import { describeTurn, TurnWatcher } from "./notifier.ts";
 import type { TurnEnd } from "./notifier.ts";
-import { allowedNavigation, createHandler, HOME_URL, ORIGIN, pluginSites, SCHEME } from "./protocol.ts";
+import { allowedNavigation, createHandler, HOME_URL, ORIGIN, pluginSites, SCHEME, workspaceRegistry } from "./protocol.ts";
 import { choosePython, isXcodeStub, which } from "./python.ts";
 import type { Probe, PythonChoice } from "./python.ts";
 import { loadSettings, rememberWorkspace, saveSettings } from "./settings.ts";
@@ -164,6 +164,11 @@ async function openWorkspace(dir: string): Promise<boolean> {
       return event.state === "ok" ? null : (event.error ?? "generator failed");
     },
   };
+  // Built before any poller or timer starts, and never throws: a bundling
+  // drift costs the plugins' endpoints, not the workspace or the window.
+  const registry = workspaceRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: bundled.plugins, factories: pluginHandlers }, (problem) =>
+    log(`ERROR ${problem}`),
+  );
   const inputs = new InputPoller(dir, () => void generator.request());
   inputs.start(INPUT_POLL_MS);
   const turns = new TurnWatcher(sessionsDir, notifyTurn);
@@ -172,7 +177,6 @@ async function openWorkspace(dir: string): Promise<boolean> {
     setInterval(() => turns.poll(), NOTIFY_POLL_MS),
     setInterval(() => void generator.request(), PERIODIC_REFRESH_MS),
   ];
-  const registry = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: bundled.plugins, factories: pluginHandlers });
   current = { dir, python, registry, generator, inputs, turns, timers };
   void generator.request();
 

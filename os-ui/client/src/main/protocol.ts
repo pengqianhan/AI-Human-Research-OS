@@ -4,8 +4,10 @@ import * as path from "node:path";
 import { matchMount } from "../../../frontend/server/api.ts";
 import type { Mount } from "../../../frontend/server/api.ts";
 import { safeRelative } from "../../../frontend/server/manifest.ts";
-import type { LoadedPlugin, Registry } from "../../../frontend/server/registry.ts";
-import type { ApiRequest } from "../../../frontend/server/types.ts";
+import type { PluginSource } from "../../../frontend/server/manifest.ts";
+import { createRegistry } from "../../../frontend/server/registry.ts";
+import type { HandlerFactory, LoadedPlugin, Registry, TrunkMount } from "../../../frontend/server/registry.ts";
+import type { ApiContext, ApiRequest } from "../../../frontend/server/types.ts";
 
 /**
  * A URL path as a safe relative path, or null. It lives with the plugin
@@ -27,12 +29,15 @@ export const HOME_URL = `${ORIGIN}/`;
  * viewer, for one, renders note bodies written from outside sources as HTML.
  * - `workspace`: a folder of the open workspace, served in place and confined
  *   by real path (Paper Wiki: paper-wiki/; bundled plugins only);
- * - `plugin`: the `site/` folder shipped beside the plugin's plugin.json,
- *   confined lexically, since it may sit inside the app's asar archive.
+ * - `plugin`: the `site/` folder beside the plugin's plugin.json. A bundled
+ *   plugin's is the app's own and may sit inside the asar archive, where
+ *   realpath is not available, so it is confined lexically; any other
+ *   plugin's is confined by real path, so a link in it cannot leave it.
  * `reads` are the workspace roots the plugin's read channel will serve (S5).
  */
 export interface PluginSite {
   id: string;
+  source: PluginSource;
   reads: readonly string[];
   files: { kind: "plugin"; dir: string } | { kind: "workspace"; rel: string };
 }
@@ -49,7 +54,7 @@ export function pluginSites(plugins: readonly LoadedPlugin[]): ReadonlyMap<strin
       source === "bundled" && manifest.site !== undefined
         ? { kind: "workspace", rel: manifest.site.workspace }
         : { kind: "plugin", dir: path.join(dir, "site") };
-    sites.set(manifest.id, { id: manifest.id, reads: manifest.reads ?? [], files });
+    sites.set(manifest.id, { id: manifest.id, source, reads: manifest.reads ?? [], files });
   }
   return sites;
 }
@@ -150,6 +155,16 @@ export type Route =
 const RESERVED = ["api", "_os"];
 
 /**
+ * Whether `rel` is "" or lies below a reserved first segment, compared the way
+ * a case-insensitive file system, or Windows (which also drops a trailing dot
+ * or space), would resolve it: "API/x", "_OS/x" and "api./x" are reserved too.
+ */
+function reserved(rel: string): boolean {
+  const first = rel.split("/")[0]!.toLowerCase().replace(/[. ]+$/, "");
+  return rel === "" || RESERVED.includes(first);
+}
+
+/**
  * Where one app:// URL is served from.
  * - app://research-os/api/... → the trunk's endpoints;
  * - app://research-os/state.json → the workspace's generated snapshot;
@@ -199,11 +214,11 @@ function siteRoute(site: PluginSite, pathname: string, workspace: string | null)
   const own = `/api/${site.id}`;
   if (pathname === own || pathname.startsWith(`${own}/`)) return { kind: "api", pathname, host: site.id };
   const rel = safeRelative(pathname);
-  if (rel === null || rel === "" || RESERVED.some((r) => rel === r || rel.startsWith(`${r}/`))) return { kind: "not-found" };
-  // Every site response carries its policy, not only HTML: an SVG a frame is
-  // sent to is a document too, and would otherwise run its scripts unfenced.
+  if (rel === null || reserved(rel)) return { kind: "not-found" };
+  // Every file the site serves carries its policy, not only HTML: an SVG a
+  // frame is sent to is a document too, and would otherwise run its scripts unfenced.
   if (site.files.kind === "plugin") {
-    return { kind: "file", root: site.files.dir, rel, fallback: null, csp: PLUGIN_CSP, confined: false };
+    return { kind: "file", root: site.files.dir, rel, fallback: null, csp: PLUGIN_CSP, confined: site.source !== "bundled" };
   }
   if (workspace === null) return { kind: "not-found" };
   return { kind: "file", root: path.join(workspace, site.files.rel), rel, fallback: null, csp: WORKSPACE_CSP, confined: true };
@@ -296,6 +311,29 @@ export async function serveApi(request: Request, mounts: readonly Mount[] | null
     return reply(response.status, response.body);
   } catch (error) {
     return reply(500, { error: String((error as Error).message ?? error) });
+  }
+}
+
+/**
+ * The endpoints for one open workspace: createRegistry's, or, when it throws
+ * (a bundled plugin's declared handlers and the compiled-in factories
+ * disagree, a bundling bug), the trunk's alone. The problem is reported once,
+ * and the drifted plugins lose their endpoints instead of the window.
+ */
+export function workspaceRegistry(
+  input: {
+    ctx: ApiContext;
+    trunk: readonly TrunkMount[];
+    plugins: readonly LoadedPlugin[];
+    factories: Readonly<Record<string, HandlerFactory>>;
+  },
+  report: (problem: string) => void,
+): Registry {
+  try {
+    return createRegistry(input);
+  } catch (error) {
+    report(`plugin endpoints not mounted, only the app's own: ${String((error as Error).message ?? error)}`);
+    return createRegistry({ ctx: input.ctx, trunk: input.trunk, plugins: [], factories: {} });
   }
 }
 
