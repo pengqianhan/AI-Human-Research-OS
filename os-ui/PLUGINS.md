@@ -28,8 +28,8 @@ Status on 2026-11-22:
   - A bundled plugin that fails to load is logged as `ERROR` and its compiled-in
     handlers are left out, so `createRegistry` does not throw on every folder opened.
   - The end-to-end suite runs through the new layout, not the dock. The Help menu item
-    keeps its label, "System and Prerequisites", because the suite clicks it by that
-    label.
+    keeps its label, "System and Prerequisites": it opens Settings, which holds that
+    check, and the suite and the client README name it by that label.
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.

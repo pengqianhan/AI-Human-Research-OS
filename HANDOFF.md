@@ -193,7 +193,7 @@ packaged app's smoke run.
 
 ### Next session
 
-- Focus (2026-11-22): step 1's next change, S3 in [os-ui/PLUGINS.md](os-ui/PLUGINS.md),
+- Focus (2026-11-22): step 1's next change, S4 in [os-ui/PLUGINS.md](os-ui/PLUGINS.md),
   under "Repositioning" above. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
