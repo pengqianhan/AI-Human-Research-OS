@@ -3,34 +3,89 @@
 @tailwind utilities;
 
 /*
- * Design tokens ported 1:1 from os-ui/mockup.html :root.
- * These are the single source of truth for color / font — do not
- * hard-code hex values elsewhere; reference the CSS variables (or the
- * Tailwind color/font aliases configured in tailwind.config.js) instead.
+ * Design tokens: the single place to change a colour, a font, or a shadow.
+ *
+ * Ported from mockup C, "document first" (os-ui/mockups/step1/c-document.html),
+ * which the Human Owner chose on 2026-11-21. Components never hard-code a
+ * colour: they use these variables, either directly (var(--accent)) or through
+ * the Tailwind names in tailwind.config.js (bg-card, text-muted, ...).
+ *
+ * The second block keeps the names the components used before the
+ * 2026-11-21 layout (paper, panel, ink-soft, grid, signal, verify, stale, ...)
+ * and points them at the new palette, so every existing component and the
+ * retired desktop shell (src/desktop/) restyle with no further change.
  */
 :root {
-  --paper: #F2F4F3;
-  --panel: #FFFFFF;
-  --ink: #17262E;
-  --ink-soft: #52646E;
-  --grid: #D9E0E2;
-  --signal: #E8590C;
-  --verify: #2F7D6D;
-  --warn: #B7791F;
-  --stale: #8A979E;
-  --danger: #C4564A;   /* window-close traffic light (desktop shell) */
-  /* translucent "glass" surfaces for menu bar & dock. Tailwind's /80 opacity
-     suffix can't split a raw var() color, so the alpha is baked in here. */
-  --paper-glass: rgba(242, 244, 243, .82);
-  --panel-glass: rgba(255, 255, 255, .85);
-  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --sans: 'IBM Plex Sans', 'PingFang SC', 'Noto Sans SC', -apple-system, sans-serif;
+  /* Surfaces, back to front */
+  --bg: #f3eee5;          /* page background behind the cards */
+  --side: #ece5d8;        /* left navigation */
+  --paper: #faf7f1;       /* inputs, the composer, code and quiet wells */
+  --card: #fffdf9;        /* cards and panels */
+
+  /* Text */
+  --ink: #1c1a17;         /* body text and headings */
+  --ink2: #4a453d;        /* secondary text */
+  --muted: #80786b;       /* labels, captions, timestamps */
+  --faint: #b0a796;       /* disabled items and source notes */
+
+  /* Lines and hover wash (warm, translucent) */
+  --line: rgba(70, 55, 30, .10);
+  --line2: rgba(70, 55, 30, .18);
+  --hover: rgba(60, 45, 20, .06);
+
+  /* Accent: the selected item, links, focus, "ok" and "enabled" */
+  --accent: #1e5a56;
+  --accent-ink: #164542;  /* text on the pale accent backgrounds */
+  --accent-soft: #dcebe8;
+  --accent-tint: #eef4f2;
+  --on-accent: #f8f4ec;   /* text on a solid accent background */
+
+  /* States */
+  --warn: #86581a;        /* needs a look; "step 2" badges */
+  --warn-soft: #f3e6cc;
+  --signal: #a4462c;      /* needs attention: P1, running, missing, needs decision */
+  --signal-soft: #f6e2d9;
+  --danger: #a33a2f;      /* failed, stop, error text */
+  --danger-soft: #f6e3df;
+  --mute-soft: rgba(60, 45, 20, .06);  /* neutral pill background */
+
+  /* Dark surfaces: command blocks and the toast */
+  --night: #22211e;
+  --on-night: #f5efe4;
+
+  /* Elevation */
+  --sh1: 0 1px 2px rgba(60, 44, 20, .07), 0 1px 1px rgba(60, 44, 20, .04);
+  --sh2: 0 1px 3px rgba(60, 44, 20, .06), 0 10px 26px rgba(60, 44, 20, .07);
+  --sh3: 0 4px 10px rgba(60, 44, 20, .08), 0 20px 44px rgba(60, 44, 20, .11);
+
+  /* Type: system fonts only, so the app makes no font request */
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Noto Sans SC", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Shape and layout */
+  --r: 14px;              /* card corner radius */
+  --sbw: 192px;           /* sidebar width, expanded */
+  --sbw-collapsed: 62px;  /* sidebar width, icons only */
+
+  /* ---- Older names, kept for existing components and src/desktop/ ---- */
+  --panel: var(--card);
+  --ink-soft: var(--ink2);
+  --grid: var(--line2);
+  --verify: var(--accent);
+  --stale: var(--muted);
+  --paper-glass: rgba(250, 247, 241, .86);
+  --panel-glass: rgba(255, 253, 249, .88);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 html, body, #root {
@@ -40,65 +95,258 @@ html, body, #root {
 body {
   font-family: var(--sans);
   color: var(--ink);
-  background: var(--paper);
-  /* dot-grid graph-paper background, per mockup */
-  background-image: radial-gradient(circle, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background: var(--bg);
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--mono);
+  font-size: .92em;
+}
+
+/* Paths, commands, and code. Chrome text is sans; this class is for mono only. */
 .font-mono-heading {
   font-family: var(--mono);
 }
 
-/* focus-visible ring, consistent across all interactive elements */
+/* One focus ring for every control */
 :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* section eyebrow heading, mono, uppercase, tracked out — mirrors mockup h2 */
-.section-heading {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  color: var(--ink-soft);
-  text-transform: uppercase;
-  margin: 30px 0 12px;
-}
-.section-heading:first-child {
-  margin-top: 0;
-}
+/* ---------------------------------------------------------------- pieces
+ * Reusable classes from mockup C. They sit in Tailwind's components layer,
+ * so a utility class on the same element (text-ink, px-4, ...) still wins. */
+@layer components {
 
-.section-src {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--stale);
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-  margin-left: 10px;
-}
+  /* Small uppercase label (mockup .sec-label / .eyebrow) */
+  .label {
+    font: 600 10.5px/1.4 var(--sans);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
 
-/* floating desktop window shadow (soft ambient + tight contact) */
-.window-shadow {
-  box-shadow: 0 18px 50px rgba(23, 38, 46, .16), 0 2px 8px rgba(23, 38, 46, .08);
-}
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: 600 11px var(--sans);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
 
-/* dock shadow — same ink tint, lighter than a window */
-.dock-shadow {
-  box-shadow: 0 10px 30px rgba(23, 38, 46, .14);
-}
+  .page-title {
+    font: 500 31px/1.15 var(--serif);
+    letter-spacing: -.01em;
+    margin: 6px 0;
+  }
 
-/* line-clamp fallback (Tailwind's line-clamp plugin isn't installed;
-   this is the plain-CSS equivalent used by the store cards) */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  .lede {
+    font: 15.5px/1.55 var(--serif);
+    color: var(--ink2);
+    max-width: 64ch;
+  }
+
+  /* A page's column: centred, with a readable measure */
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 30px 40px 64px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--r);
+    box-shadow: var(--sh2);
+  }
+
+  .card-flat {
+    background: var(--card);
+    border-radius: 11px;
+    box-shadow: var(--sh1), inset 0 0 0 1px var(--line);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--card);
+    box-shadow: var(--sh1), inset 0 0 0 1px var(--line);
+    color: var(--ink);
+    font: 500 13px var(--sans);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover {
+    box-shadow: var(--sh2), inset 0 0 0 1px var(--line2);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    color: var(--faint);
+    cursor: not-allowed;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .btn-sm {
+    padding: 4px 9px;
+    font-size: 12px;
+    border-radius: 7px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--sh1);
+  }
+  .btn-primary:hover {
+    background: var(--accent-ink);
+    box-shadow: var(--sh2);
+  }
+  .btn-primary:disabled {
+    background: var(--accent);
+    color: var(--on-accent);
+    opacity: .4;
+  }
+  .btn-ghost {
+    background: none;
+    box-shadow: none;
+    color: var(--accent);
+    padding: 6px 8px;
+  }
+  .btn-ghost:hover {
+    background: var(--accent-tint);
+    box-shadow: none;
+  }
+  .btn-danger {
+    color: var(--danger);
+  }
+
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex: none;
+  }
+  .icon-btn:hover {
+    background: rgba(60, 45, 20, .07);
+    color: var(--ink);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font: 600 11.5px/1 var(--sans);
+    padding: 5px 9px;
+    border-radius: 99px;
+    background: var(--accent-tint);
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+  .pill-neutral {
+    background: var(--mute-soft);
+    color: var(--ink2);
+  }
+  .pill-warn {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .pill-signal {
+    background: var(--signal-soft);
+    color: var(--signal);
+  }
+
+  /* "step 2" and similar: a small amber capsule */
+  .step-badge {
+    font: 700 9.5px/1 var(--sans);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 4px 6px;
+    border-radius: 99px;
+    background: var(--warn-soft);
+    color: var(--warn);
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .src-note {
+    font: 11.5px var(--sans);
+    color: var(--faint);
+  }
+
+  /* Section source label next to a heading; holds a path, so mono */
+  .section-heading {
+    font: 600 11px/1.4 var(--sans);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 26px 0 10px;
+  }
+  .section-heading:first-child {
+    margin-top: 0;
+  }
+  .section-src {
+    font: 400 11px var(--mono);
+    color: var(--faint);
+    letter-spacing: 0;
+    text-transform: none;
+    margin-left: 10px;
+  }
+
+  /* A dark command block */
+  .cmd-block {
+    background: var(--night);
+    color: var(--on-night);
+    font: 12px/1.6 var(--mono);
+    border-radius: 9px;
+  }
+
+  /* Serif reading text inside cards */
+  .prose-serif {
+    font: 15px/1.55 var(--serif);
+    color: var(--ink2);
+  }
+
+  /* Floating window shadow of the retired desktop shell (src/desktop/) and popovers */
+  .window-shadow {
+    box-shadow: var(--sh3);
+  }
+
+  /* Dock shadow of the retired desktop shell */
+  .dock-shadow {
+    box-shadow: var(--sh2);
+  }
+
+  .line-clamp-2,
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-2 {
+    -webkit-line-clamp: 2;
+  }
+  .line-clamp-3 {
+    -webkit-line-clamp: 3;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -38,8 +38,8 @@ interface PlotPoint {
 export function RoundTrack({ rounds, evaluation }: Props) {
   if (rounds.length === 0) {
     return (
-      <div className="track-wrap rounded border border-grid bg-panel p-[18px]">
-        <p className="text-[13px] text-stale">
+      <div className="track-wrap card-flat p-[18px]">
+        <p className="text-[13px] text-muted">
           No round data yet. Rounds appear once this project writes Code/runs/&lt;round-id&gt;/result.json.
         </p>
       </div>
@@ -116,7 +116,7 @@ export function RoundTrack({ rounds, evaluation }: Props) {
   const polylinePoints = mainPoints.map((p) => `${p.x},${p.y}`).join(" ");
 
   return (
-    <div className="track-wrap rounded border border-grid bg-panel p-[18px]">
+    <div className="track-wrap card-flat p-[18px]">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         role="img"

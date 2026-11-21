@@ -37,7 +37,7 @@ export function PortfolioCard({ entry }: Props) {
   return (
     <details
       className={
-        "strip group mb-2 overflow-hidden rounded border border-grid border-l-[6px] bg-panel transition hover:shadow-[0_3px_10px_rgba(23,38,46,.08)] " +
+        "strip group mb-2 overflow-hidden rounded border border-grid border-l-[6px] bg-panel transition hover:shadow-sh2 " +
         edge
       }
     >

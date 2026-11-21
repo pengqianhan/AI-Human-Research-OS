@@ -49,7 +49,7 @@ export function ChooseFolderButton({ label = "Choose folder…" }: { label?: str
             if (!r.ok && !r.canceled) setError(r.error);
           });
         }}
-        className="font-mono-heading rounded border border-ink bg-ink px-3 py-1 text-[12px] text-white"
+        className="btn btn-primary"
       >
         {label}
       </button>
@@ -63,7 +63,7 @@ export function PrerequisiteGrid({ report, checking, onRecheck }: { report: Doct
   return (
     <section>
       <div className="mb-2 flex items-center gap-2">
-        <h3 className="font-mono-heading text-[11px] uppercase tracking-[.08em] text-stale">Prerequisites</h3>
+        <h3 className="label">Prerequisites</h3>
         {report && (
           <Chip tone={report.ready ? "ok" : "warn"} dot>
             {report.ready ? "ready" : "not ready"}
@@ -73,24 +73,24 @@ export function PrerequisiteGrid({ report, checking, onRecheck }: { report: Doct
           type="button"
           onClick={onRecheck}
           disabled={checking}
-          className="font-mono-heading ml-auto rounded border border-grid px-2 py-[2px] text-[11px] text-ink-soft hover:bg-paper disabled:opacity-50"
+          className="btn btn-sm ml-auto"
         >
           {checking ? "checking…" : "re-check"}
         </button>
       </div>
       {report === null ? (
-        <p className="font-mono-heading text-[12px] text-stale">{checking ? "checking…" : "not checked"}</p>
+        <p className="text-[13px] text-muted">{checking ? "checking…" : "not checked"}</p>
       ) : (
         <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {report.checks.map((c) => (
-            <li key={c.id} data-check={c.id} data-state={c.state} className="rounded border border-grid bg-panel px-3 py-2">
+            <li key={c.id} data-check={c.id} data-state={c.state} className="card-flat px-3.5 py-2.5">
               <Disclosure
                 summary={
                   <span className="flex min-w-0 flex-1 items-center gap-2">
-                    <span className="font-mono-heading truncate text-[12.5px] text-ink">{c.label}</span>
-                    {!c.required && <span className="font-mono-heading text-[10px] text-stale">optional</span>}
+                    <span className="truncate text-[13.5px] font-medium text-ink">{c.label}</span>
+                    {!c.required && <span className="text-[11px] text-muted">optional</span>}
                     <span className="ml-auto flex items-center gap-2">
-                      {c.version && <span className="font-mono-heading text-[11px] text-ink-soft">{c.version}</span>}
+                      {c.version && <span className="font-mono-heading text-[11px] text-ink2">{c.version}</span>}
                       <Chip tone={TONE[c.state]} dot>
                         {WORD[c.state]}
                       </Chip>
@@ -98,9 +98,9 @@ export function PrerequisiteGrid({ report, checking, onRecheck }: { report: Doct
                   </span>
                 }
               >
-                <p className="break-words font-mono-heading text-[11.5px] text-ink-soft">{c.detail}</p>
+                <p className="break-words font-mono-heading text-[11.5px] text-ink2">{c.detail}</p>
                 {c.help && c.state !== "ok" && (
-                  <a href={c.help} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[12px] text-signal underline">
+                  <a href={c.help} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[12.5px] text-accent underline">
                     How to install
                   </a>
                 )}
@@ -127,7 +127,7 @@ export function SnapshotLine({ snapshot }: { snapshot: SnapshotEvent | null }) {
   }
   return (
     <Disclosure summary={<Chip tone="signal" dot>failed</Chip>}>
-      <pre className="font-mono-heading max-h-48 overflow-auto whitespace-pre-wrap rounded bg-ink px-3 py-2 text-[11px] text-[#E8EDEF]">
+      <pre className="cmd-block max-h-48 overflow-auto whitespace-pre-wrap px-3 py-2 text-[11px]">
         {snapshot.error}
       </pre>
     </Disclosure>

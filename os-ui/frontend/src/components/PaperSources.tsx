@@ -24,7 +24,7 @@ interface Status {
   keys: KeyRow[];
 }
 
-/** A monogram in each source's colour; the OS ships no third-party logos. */
+/** A monogram in each source's own brand colour (identity, not theme, so not a token); the OS ships no third-party logos. */
 const TILE: Record<string, { label: string; bg: string; fg: string }> = {
   alphaxiv: { label: "αX", bg: "#B31B1B", fg: "#FFFFFF" },
   openalex: { label: "OA", bg: "#4B4BA8", fg: "#FFFFFF" },
@@ -41,7 +41,7 @@ function Tile({ id, size, dim = false }: { id: string; size: number; dim?: boole
   return (
     <span
       aria-hidden="true"
-      className="font-mono-heading inline-flex shrink-0 items-center justify-center rounded-[3px] font-semibold leading-none ring-1 ring-panel"
+      className="inline-flex shrink-0 items-center justify-center rounded-[4px] font-semibold leading-none ring-1 ring-card"
       style={{
         width: size,
         height: size,
@@ -62,7 +62,7 @@ function Switch({ on, busy }: { on: boolean; busy: boolean }) {
       aria-hidden="true"
       className={
         "relative inline-block h-[14px] w-[24px] shrink-0 rounded-full transition-colors motion-reduce:transition-none " +
-        (on ? "bg-verify" : "bg-grid") +
+        (on ? "bg-accent" : "bg-line2") +
         (busy ? " opacity-50" : "")
       }
     >
@@ -101,14 +101,14 @@ function ReadOrder({
           const label = `${i + 1}. ${name}${off ? " (off, skipped)" : ""}${i > 0 ? ": read earlier" : ""}`;
           return (
             <span key={id} className="flex items-center gap-1.5">
-              {i > 0 && <span aria-hidden="true" className="text-[11px] text-stale">→</span>}
+              {i > 0 && <span aria-hidden="true" className="text-[11px] text-muted">→</span>}
               <button
                 type="button"
                 disabled={busy || i === 0}
                 onClick={() => onChange([...order.slice(0, i - 1), id, ...order.slice(i - 1, i), ...order.slice(i + 1)])}
                 title={label}
                 aria-label={label}
-                className="rounded-[3px] enabled:hover:ring-2 enabled:hover:ring-signal disabled:cursor-default"
+                className="rounded-[4px] enabled:hover:ring-2 enabled:hover:ring-accent disabled:cursor-default"
               >
                 <Tile id={id} size={20} dim={off} />
               </button>
@@ -116,7 +116,7 @@ function ReadOrder({
           );
         })}
       </div>
-      <p className="mt-1 text-[10.5px] text-stale">click a tile to read it earlier</p>
+      <p className="mt-1 text-[11px] text-muted">click a tile to read it earlier</p>
     </div>
   );
 }
@@ -141,11 +141,11 @@ function KeyItem({ row, busy, onSave }: { row: KeyRow; busy: boolean; onSave: (v
             <Tile key={source} id={source} size={16} />
           ))}
         </span>
-        <span className="flex-1 text-[12.5px] text-ink">{row.label}</span>
+        <span className="flex-1 text-[13px] text-ink">{row.label}</span>
         <span
           className={
-            "font-mono-heading rounded-[2px] px-1.5 py-px text-[10px] " +
-            (row.set ? "bg-[#E4F0ED] text-verify" : "bg-[#EDF0F1] text-stale")
+            "rounded-[5px] px-1.5 py-px text-[10.5px] font-semibold " +
+            (row.set ? "bg-accent-tint text-accent-ink" : "bg-mute-soft text-muted")
           }
         >
           {row.set ? (fromEnv ? "env" : "set") : "none"}
@@ -156,7 +156,7 @@ function KeyItem({ row, busy, onSave }: { row: KeyRow; busy: boolean; onSave: (v
             aria-expanded={editing}
             aria-label={`${row.set ? "Change" : "Add"} ${row.label} key`}
             onClick={() => setEditing((v) => !v)}
-            className="font-mono-heading rounded border border-grid px-1.5 text-[10.5px] text-ink hover:bg-paper"
+            className="btn btn-sm !px-1.5 !py-0"
           >
             {row.set ? "edit" : "add"}
           </button>
@@ -178,13 +178,13 @@ function KeyItem({ row, busy, onSave }: { row: KeyRow; busy: boolean; onSave: (v
             onChange={(e) => setValue(e.target.value)}
             placeholder={row.name}
             aria-label={`${row.label} key`}
-            className="font-mono-heading min-w-0 rounded border border-grid bg-paper px-2 py-1 text-[11.5px] text-ink"
+            className="font-mono-heading min-w-0 rounded-[7px] border border-line2 bg-paper px-2 py-1 text-[11.5px] text-ink"
           />
           <div className="flex items-center gap-2">
             <button
               type="submit"
               disabled={busy || value.trim() === ""}
-              className="font-mono-heading rounded border border-ink bg-ink px-2 py-[2px] text-[11px] text-white disabled:opacity-40"
+              className="btn btn-sm btn-primary"
             >
               Save
             </button>
@@ -193,7 +193,7 @@ function KeyItem({ row, busy, onSave }: { row: KeyRow; busy: boolean; onSave: (v
                 type="button"
                 disabled={busy}
                 onClick={() => void save("")}
-                className="font-mono-heading rounded border border-grid px-2 py-[2px] text-[11px] text-danger hover:bg-paper disabled:opacity-40"
+                className="btn btn-sm btn-danger"
               >
                 Clear
               </button>
@@ -202,7 +202,7 @@ function KeyItem({ row, busy, onSave }: { row: KeyRow; busy: boolean; onSave: (v
               href={row.get_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-auto text-[11px] text-signal hover:underline"
+              className="ml-auto text-[11.5px] text-accent hover:underline"
             >
               Get a key ↗
             </a>
@@ -297,7 +297,7 @@ export function PaperSources({ token }: { token: string }) {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
         title="Paper sources the agents may search"
-        className="font-mono-heading flex items-center gap-1.5 rounded border border-grid bg-panel px-1.5 py-[2px] text-[11.5px] text-ink hover:bg-paper"
+        className="btn btn-sm"
       >
         Papers
         {rows === null ? (
@@ -309,7 +309,7 @@ export function PaperSources({ token }: { token: string }) {
                 <Tile key={row.id} id={row.id} size={11} />
               ))}
             </span>
-            <span className="text-stale">
+            <span className="text-muted">
               {on.length}/{rows.length}
             </span>
           </>
@@ -317,8 +317,8 @@ export function PaperSources({ token }: { token: string }) {
       </button>
 
       {open && (
-        <div className="window-shadow absolute right-0 top-full z-20 mt-1 max-h-[70vh] w-64 overflow-y-auto rounded-lg border border-grid bg-panel py-1">
-          <div className="font-mono-heading px-3 pb-1 pt-1.5 text-[10px] uppercase tracking-[.05em] text-stale">
+        <div className="window-shadow absolute right-0 top-full z-20 mt-1 max-h-[70vh] w-64 overflow-y-auto rounded-[11px] bg-card py-1">
+          <div className="label px-3 pb-1 pt-1.5">
             Paper sources
           </div>
           {rows?.map((row) => (
@@ -330,16 +330,16 @@ export function PaperSources({ token }: { token: string }) {
               disabled={saving !== null}
               onClick={() => void write(row.id, "", { source: row.id, enabled: !row.enabled })}
               title={row.about}
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-paper disabled:cursor-wait"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-hover disabled:cursor-wait"
             >
               <Tile id={row.id} size={16} dim={!row.enabled} />
-              <span className={"flex-1 text-[12.5px] " + (row.enabled ? "text-ink" : "text-stale")}>{row.name}</span>
+              <span className={"flex-1 text-[13px] " + (row.enabled ? "text-ink" : "text-muted")}>{row.name}</span>
               <Switch on={row.enabled} busy={saving === row.id} />
             </button>
           ))}
           {status !== null && rows !== null && status.read_order.length > 0 && (
             <>
-              <div className="font-mono-heading mt-1 border-t border-grid px-3 pb-1 pt-2 text-[10px] uppercase tracking-[.05em] text-stale">
+              <div className="label mt-1 border-t border-line px-3 pb-1 pt-2">
                 Read order
               </div>
               <ReadOrder
@@ -352,7 +352,7 @@ export function PaperSources({ token }: { token: string }) {
           )}
           {status !== null && status.keys.length > 0 && (
             <>
-              <div className="font-mono-heading mt-1 border-t border-grid px-3 pb-1 pt-2 text-[10px] uppercase tracking-[.05em] text-stale">
+              <div className="label mt-1 border-t border-line px-3 pb-1 pt-2">
                 Keys
               </div>
               {status.keys.map((row) => (
@@ -365,7 +365,7 @@ export function PaperSources({ token }: { token: string }) {
               ))}
             </>
           )}
-          {error !== null && <p className="px-3 py-1 text-[11px] text-danger">{error}</p>}
+          {error !== null && <p className="px-3 py-1 text-[11.5px] text-danger">{error}</p>}
         </div>
       )}
     </div>
