@@ -127,9 +127,9 @@ research project, and no outside user.
   shell; the remaining views and local plugin loading; the product and workspace split with
   the Git binding; the agent layer. They are in HANDOFF.md's Active Work.
 - **Direction text.** [GOAL.md](../../os-build/GOAL.md), the README's design stance, and
-  the first lines of AGENTS.md describe the earlier direction until the Human Owner
-  confirms a revision item by item. GOAL.md's sentence that one root agent moves every
-  project forward stays.
+  the first lines of AGENTS.md were revised on 2026-11-21, after the Human Owner confirmed
+  twelve listed items. GOAL.md's sentence that one root agent moves every project forward
+  stays.
 - **Plugin trust.** A third-party plugin may add pages, skills, and ACP agent definitions.
   Pages run on their own origin and reach files only through a path-checked channel; an
   ACP definition shows its launch command for the user to confirm. Host-side handlers are

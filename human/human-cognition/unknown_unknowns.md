@@ -33,7 +33,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - freshness: current
 - responsibility_relevance:
   - Before building OS machinery justified by RSI or agent-led research, ask whether GOAL.md and `agent_led_research` should be revised first; GOAL.md changes only by the human's hand.
-- next_learning_edge: During the GOAL.md revision, ask whether RSI gets a sentence in the direction text or is left out, and what evaluator would judge it.
+- next_learning_edge: GOAL.md was revised on 2026-11-21 without any RSI sentence, and the agent told the human so in the closing report. When H3 or agent-led work next comes up, ask whether RSI gets a sentence in the direction text and what evaluator would judge it.
 - related:
   - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
   - [cog-20260716-006](known_unknowns.md#cog-20260716-006-autonomous-research-runtime-design)

@@ -5,6 +5,11 @@
 > [HANDOFF.md](../HANDOFF.md) Decisions)。2026-09-26 Human Owner 采用 agent 起草的
 > 修订稿:目标改为订阅驱动、单一入口,主线改为 H1–H3(见 HANDOFF "Agent-harness
 > decisions" 与 [ADR-0003](../docs/adr/0003-subscription-cli-harness.md))。
+> 2026-11-21 Human Owner 重新定位:面向本机已有 Claude Code、Codex 等 coding agent 的
+> 研究者,做成免费、开源、只在本地运行的桌面应用,结构为主干加插件;主线改为步骤 1–4
+> (见 HANDOFF "Positioning and architecture decisions (2026-11-21)" 与
+> [ADR-0006](../docs/adr/0006-desktop-workspace-trunk-and-plugins.md))。"服务用户自身研究
+> 实践"的前提由此被取代;修订前全文见 Git commit `afe0461`,下文各处修订均标注日期。
 >
 > **长期愿景层**:本文件描述 Long-term Research OS 的方向、长期设计原则与战略
 > 治理闸门,不充当当前 MVP 的逐步实施说明。两个旧 task 文件已删除,其仍有效原则已
@@ -22,26 +27,37 @@
 
 ## 1. 最终目的
 
-**目标**:人只和一个 root agent 对话,就能推进和跟进所有研究项目;各项目里的工作
-由 Claude Code / Codex 在用户自己的订阅下完成,全过程留下可复盘的 session trace。
+**目标**:人只和一个 root agent 对话,就能推进和跟进所有研究项目;在项目内,人也可以
+直接和该项目的 agent 对话(2026-11-21 补充)。各项目里的工作由用户本机已有的 coding
+agent(内置 Claude Code 与 Codex,其余经 ACP 接入)在用户自己的订阅下完成,全过程留下
+可复盘的 session trace。
 
 同时保持两条根约束:
 
-- **研究实践优先**:OS 演化始终服务于用户自己的长期研究。真实研究项目产生的摩擦证据
-  (项目 `PROJECT_MEMORY.md` 的 OS Feedback 条目)决定大多数缺口何时变成工作项;
-  无需先有 OS Feedback 的已授权例外只有文档层治理与契约工作(M0、M1)、只读
-  monitor UI,以及 2026-09-26 经 Human Owner 采用的 H1–H3 里程碑(§5)。
+- **面向其他研究者**(2026-11-21 取代"研究实践优先"):OS 面向本机已有 coding agent 的
+  其他研究者。定位是否成立的验收:另一个人在一台干净的机器上装好应用,不经协助,在
+  nanochat_cpu 上完成"派发 → 运行 → 汇报";在此之前不对外宣称可供他人使用。研究由人
+  主导(human-led)是每个 workspace 的默认值,沿用 `agent_led_research` 的取值;
+  agent-led 留待以后。已授权的构建工作是 §5 的步骤 1–4,更重的机制仍走 M4 闸门。
 - **领域 agent-agnostic**:Codex、Claude Code、pi 以及任何"能读文件、能执行 shell"的
   code agent 都能读取并构建本 OS;Research Project、Task、Claim、Evidence、Artifact
-  与 Audit Event 不依赖具体 agent。项目 agent 经 [`os-harness/`](../os-harness/README.md)
-  以官方 CLI 运行,Agent Session 与 session trace 都不是权威状态。
+  与 Audit Event 不依赖具体 agent。主干不自带模型与 agent loop(2026-11-21);项目 agent
+  经 agent 层以官方 CLI 运行(步骤 4 之前是 [`os-harness/`](../os-harness/README.md)),
+  Agent Session 与 session trace 都不是权威状态。
 
 "OS"的定义:Research Workspace 根目录为 Human Owner 与 root agent(CONTEXT.md 中的
 Manager Agent)提供共享 Skill Hub、Paper Wiki、Memory、Ideas、Inbox 与多个 Research
 Project。root agent 在根目录与人对话,把 Research Task 派发给各项目里的 agent,并依据
-项目文件汇报;权威研究状态仍是可读文件。无 Git 是默认模式,检测到 Git 时才增强 diff、
-历史、branch/worktree 与恢复。边界主要靠任务合同、验证与人类复核;确定性权限和恢复
-保证属于后续证据闸门。构建工作由 code agent 执行,人类定方向、授权与审查。
+项目文件汇报;权威研究状态仍是可读文件。Git 是前置条件(2026-11-21 取代"无 Git 是默认
+模式"):每个 Research Project 是独立的 Git 仓库,每次运行记录所在的 commit;按实验分
+branch、按对话分 worktree 等到确有并行运行的需要时再做。边界主要靠任务合同、验证与人类
+复核;确定性权限和恢复保证属于后续证据闸门。构建工作由 code agent 执行,人类定方向、
+授权与审查。
+
+产品与 workspace 分离(2026-11-21):产品是桌面应用,一个小主干加插件(Paper Wiki、
+Skills Hub 与 Idea、Code、Skeleton、Assets、Paper 五个项目视图都是插件);应用从空模板
+创建 workspace,本仓库是其中一个 workspace 实例。workspace 不开应用、只用 Claude Code
+或 Codex 也能完整使用,应用不提供只在 GUI 里才有的写操作。
 
 这个 OS 应让新进入的 agent 能快速定位:启动入口;当前 portfolio 与项目事实;idea、
 论文、代码、图表和写作材料的归属;经验向 memory/skill 的晋升边界;并行与 agent-led
@@ -58,7 +74,8 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
   优先,Windows best-effort,除非具体任务另有验证目标。
 - **证据与材料保护**:所有研究主张、引用、数据和实验结果可追溯;不编造;未经确认不
   删除或大幅改写用户提供的原始研究材料。
-- **开放演化**:通过 plain files、project templates、skills 和轻量约定扩展;项目经验
+- **开放演化**:通过 plain files、project templates、skills、插件(小型声明式 manifest,
+  2026-11-21 增加)和轻量约定扩展;项目经验
   先留在项目,跨项目验证后再晋升为全局规则或 skill。
 - **环境约束优先**:用 artifacts、permissions、budgets、human oversight 和 evaluator
   约束 agent,不把正确性只寄托在提示词上。
@@ -73,8 +90,10 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
 ## 3. OS 抽象对照表(词汇与现状,不是工作清单)
 
 > 本表是一次性类比与现状描述,不作为仓库规范术语(正文与验收一律使用
-> AGENTS.md 的既有词汇),也**不是工作来源**——除 M0/M1、只读 monitor UI 与
-> 2026-09-26 采用的 H1–H3 外,任何缺口转为工作项都需要 OS Feedback 证据或人类显式授权。
+> AGENTS.md 的既有词汇),也**不是工作来源**——除 M0、只读 monitor UI、2026-09-26
+> 采用的 H1–H3 与 2026-11-21 授权的步骤 1–4 外,任何缺口转为工作项都需要 OS Feedback
+> 证据或人类显式授权。下表是 2026-07-04 的历史快照,未随 2026-11-21 的重新定位更新;
+> 表中标为"M1 认领"的事项见 §5 M1 的退役说明。
 
 | OS 概念 | 本仓库对应物 | 现状(2026-07-04 核实)|
 |---|---|---|
@@ -94,12 +113,12 @@ research 的开闸条件;完整 artifact 的统一评估方式。具体操作契
 ## 4. Agent-Agnostic 三条铁律
 
 1. **内核不新增专属假设**:内核文件(AGENTS.md、memory/MEMORY.md、各入口指针
-   文件、目录语义)不得**新增**任何特定 agent 的假设;存量硬编码由 M1 一次性迁往
-   adapter 契约表。FILETREE.md 的例行刷新不计为内核改动。
+   文件、目录语义)不得**新增**任何特定 agent 的假设;存量硬编码原由 M1 认领,M1 已于 2026-11-21
+   退役,这项清理目前没有认领者。FILETREE.md 的例行刷新不计为内核改动。
 2. **统一引导契约**:所有 agent 走同一条引导链;每个 agent 的原生入口文件只允许是
-   一行指针(现状 `CLAUDE.md` / `AGENTS.md` 已满足)。M1 落地后,新增一个 agent =
-   新增 ≤2 个顶层路径(1 个入口指针文件 + 1 个可选适配目录,目录内文件数不限)+
-   在 adapter 契约表加一行;除此之外 0 处内核改动。
+   一行指针(现状 `AGENTS.md` 已满足)。新增一个 agent = 新增一个 ACP 插件,主干 0 处
+   改动;内置的 Claude Code 与 Codex 除外(2026-11-21 取代"≤2 个顶层路径 + adapter
+   契约表一行"的条款)。
 3. **降级优先于专属**:agent 缺少强制机制(hooks、deny 规则、sandbox)或外部工具
    (MCP)时,OS 必须仍能以"约定 + 事后检查"降级运行。机制增强安全,正确性不依赖机制。
 
@@ -110,14 +129,36 @@ portfolio 并保有 `PROJECT_MEMORY.md`;项目是否 agent 锁定由 owner 在
 
 ## 5. 里程碑
 
-OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 已满足、M1 仍
-有效、M3 已完成;M4 是条件闸门,不排期。M2(Pi Coding Agent 文件工作流 MVP,
+OS 构建主线顺序:步骤 1 → 2 → 3 → 4(2026-11-21 由 Human Owner 采用,取代 2026-09-26
+的 H1 → H2 → H3 主线)。H1 已完成;H2 保留,验收仍待 Human Owner;H3 排到步骤 4 之后。
+M0 已满足、M3 已完成、M1 已退役;M4 是条件闸门,不排期。M2(Pi Coding Agent 文件工作流 MVP,
 [ADR-0002](../docs/adr/0002-pi-coding-agent-workflow-mvp.md))与更早的 SDK 路线
 ([ADR-0001](../docs/adr/0001-pi-sdk-autonomous-mvp.md))都已被取代,只作历史保留;
 `os-runtime/`、SDK phase prompts 与旧 launcher 不得作为新主路径复活。
 跨会话进度记录在 [HANDOFF.md](../HANDOFF.md) Active Work(路线图 `map/` 已于 2026-09-23
 删除,最后版本见 Git commit `0f1805c`);当前理由见
-[ADR-0003](../docs/adr/0003-subscription-cli-harness.md)。
+[ADR-0003](../docs/adr/0003-subscription-cli-harness.md) 与
+[ADR-0006](../docs/adr/0006-desktop-workspace-trunk-and-plugins.md)。
+
+每个步骤的每个页面先出可点击的 mockup 由 Human Owner 选定再实现;TypeScript 由 agent
+编写和评审,验收一律是 Human Owner 不读代码就能执行的检查。
+
+- **步骤 1 — 主干外壳**
+  用注册表取代写死的窗口列表与端点挂载;新布局(首页是 root agent 对话加项目卡片,
+  项目内是左侧对话、右侧视图标签);Code 与 Paper 视图;Paper Wiki 作为第一个插件。
+  验收:Human Owner 在 macOS 上按桌面端检查清单走通新布局。
+- **步骤 2 — 其余视图**
+  Idea(DAG)、Skeleton、Assets 视图;Skills Hub 作为第二个插件;从本地文件夹加载插件。
+  验收:Human Owner 在 nanochat_cpu 上点开全部五个视图。
+- **步骤 3 — 产品与 workspace 分离、Git 绑定**
+  应用内"新建 workspace";每个项目是独立的 Git 仓库;每次运行记录 commit。
+  验收:另一个人在干净机器上装好应用,不经协助在 nanochat_cpu 上完成派发、运行、汇报。
+  测试者只在 Human Owner 明确同意后拿到 CI 构建产物。
+- **步骤 4 — agent 层**
+  harness 移植为 TypeScript 并提供命令行入口;Agents 设置页;每个对话一个常驻进程,
+  权限请求转给界面由人回答;ACP 适配器。
+  验收:在 Agents 页切换 Claude Code 与 Codex 各完成一轮对话;`project-dispatch` 经新
+  入口可用之后才删除 Python 版 harness。
 
 - **H1 — 适配层(已完成 2026-09-26)**
   `os-harness` 能在任意项目目录运行、续接 Claude Code 与 Codex 的对话,走订阅登录,
@@ -128,11 +169,11 @@ OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 �
   项目文件(`PROJECT_MEMORY.md`)汇报。
   验收:在 nanochat_cpu 跑通一次"派发 → 执行 → 汇报 → 人类验收"(2026-09-29 由
   Example_Project 改为 nanochat_cpu,见 HANDOFF "Example-project decision")。
-- **H3 — trace 反思**
+- **H3 — trace 反思(2026-11-21:排到步骤 4 之后)**
   agent 能检索过往 session trace,把经验提炼写回记忆层,并在后续任务中用上。
   验收:同类任务第二次执行时引用了第一次的经验。
-- **长期:Pi Agent 引擎**
-  Pi Agent 作为另一个引擎接入,上层不变。
+- **(已取代 2026-11-21)长期:Pi Agent 引擎**
+  Pi 不再是预定的长期引擎;它是经 ACP 接入的可选 agent 之一,与其他 agent 并列。
 
 - **M0 — 治理对齐(纯文档)**
   1) 原 task 构建指南归并进本文并删除旧入口后,修正 HANDOFF D4 中
@@ -142,19 +183,9 @@ OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 �
   `PROJECT_MEMORY.md`。不得在 M0 中恢复它或处理其他已删除项目。
   验收:`grep -ri OS_INTRO` 仅命中历史性说明；`test ! -e projects-folder/Paper_VAE`
   成功；HANDOFF Decisions 有恢复与重新登记边界。
-- **M1 — 适配器契约成文 + 内核去硬编码(纯文档)**
-  在 AGENTS.md 中新增一小节(建议 ≤30 行)「Agent
-  adapters」:人读的 adapter 对照表(agent、入口文件、技能目录、可用强制机制、
-  外部工具/凭据机制、降级方式),并明确声明**这是文档约定,不是机器可读
-  manifest**(与既有 no-manifest 决策一致)。skills 格式一并成文:`SKILL.md`
-  (frontmatter: name/description)+ `scripts/` 为跨 agent 格式;
-  `agents/<vendor>.yaml` 类 per-agent 附件允许存在,其他 agent 忽略。
-  同一批次:AGENTS.md Skills 节与 README 中的两 agent 硬编码改为引用该表;
-  HANDOFF D7 加注(拷贝数 = 已注册 adapter 数)。
-  验收:AGENTS.md 除 adapter 表外 grep 不到具体 agent 目录名;新增 agent 的
-  接入成本满足铁律 2。冷启动测试:**仅当真实第三 agent 可用时**执行(候选:pi,
-  或已留下 `.antigravitycli/` 痕迹的 agent)——仅凭其一行入口文件完成一个只读任务
-  (如"总结当前 portfolio 状态");不做人工模拟。
+- **M1 —(已退役 2026-11-21)适配器契约成文 + 内核去硬编码**
+  由步骤 4 的 agent 注册表与 Agents 设置页取代;skills 仍是普通的 `SKILL.md`。原条款
+  全文见 Git 历史(commit `afe0461` 及之前)。
 - **M2 —(已取代)Pi Coding Agent 单项目文件工作流 MVP**
   2026-09-26 由 ADR-0003 取代:Human Owner 改走订阅驱动的 CLI harness(H1–H3)。
   原条款全文见 Git 历史(commit `0e185da` 及之前)。
@@ -176,10 +207,12 @@ OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 �
   symlink 被各 agent 正确跟随一事有实测证据(该行为未见于任何 agent 的官方文档)。
 - **M4(闸门:H2 使用证据 + 人类逐项确认)— 自定义 runtime 与更重机制**
   Pi Agent SDK backend、自定义 TUI、确定性权限/预算执行、常驻 daemon、无人值守的自动
-  排队与并行调度、数据库、远程访问、账户系统、OS 级 secrets、完整通用版本控制、GUI
-  执行面及 desktop wrapper 都需真实使用证据与 Human Owner 新授权。root agent 按人类
+  排队与并行调度、数据库、远程访问、账户系统、OS 级 secrets、完整通用版本控制都需真实
+  使用证据与 Human Owner 新授权。2026-11-21:桌面应用的执行面、插件宿主与 TypeScript
+  harness 已由 Human Owner 授权(步骤 1–4),不再在本闸门内;随应用启停的每对话 agent
+  进程不算常驻 daemon。root agent 按人类
   请求经 os-harness 派发和跟进项目任务属于 H2,自 2026-09-26 起不在本闸门内。
-  H1–H3 的授权不自动扩展这些范围。
+  H1–H3 与步骤 1–4 的授权不自动扩展这些范围。
   2026-07-22 Human Owner 授权一条**最小细缝**,其余部分闸门不变:`os-ui` 可启用/停用
   单个安装位置。具体机制按安装形态而定——symlink 安装把链接移入该目标目录下的
   `.disabled/`,copy 安装重命名 `SKILL.md` ↔ `SKILL.md.disabled`。原条款只写了后者,
@@ -196,33 +229,46 @@ OS 构建主线顺序:H1 → H2 → H3(2026-09-26 由 Human Owner 采用)。M0 �
   `os-ui/DESIGN.md` §2 的 "no resident daemon is left behind" 不变式不受影响。
   本细缝**不**包含:GUI 内执行安装或删除、常驻服务、SSE、以及任何其他动作端点;
   安装与卸载仍走命令行,GUI 只提供命令复制。
+  2026-11-21:上面"不包含 GUI 内执行安装或删除"一条由 Skills Hub 插件取代——用户在应用内
+  发起的安装或删除可以写入 skill 目录;常驻服务等其余排除项不变。
 
 ## 6. 总验收(与里程碑一一对应)
 
 - M0:陈旧引用清零；Paper_VAE 临时删除及恢复/重新登记边界有人类决策记录。
-- M1:adapter 契约成文;AGENTS.md 内核文本(adapter 表除外)无具体 agent 假设;
-  (条件项)真实第三 agent 冷启动通过。
+- M1:已退役(2026-11-21),不再作为验收对象。
 - M2:已取代(ADR-0003),不再作为验收对象。
 - H1:os-harness 离线测试与 Claude Code、Codex 真实运行通过。
 - H2:nanochat_cpu 上"派发 → 执行 → 汇报 → 人类验收"跑通;汇报以项目文件和
   验证结果为依据,不夸大流程边界为确定性 runtime enforcement。
 - H3:同类任务第二次执行时引用了第一次的经验。
+- 步骤 1:Human Owner 在 macOS 上按桌面端检查清单走通新布局。
+- 步骤 2:Human Owner 在 nanochat_cpu 上点开全部五个视图。
+- 步骤 3:另一个人在干净机器上不经协助完成 nanochat_cpu 的派发、运行、汇报。
+- 步骤 4:Claude Code 与 Codex 各完成一轮对话;`project-dispatch` 经新入口可用。
 - 文档归并:长期方向与构建原则只在 GOAL.md 维护;原 task.md/task_en.md 已删除,
   历史原文可由记录的 Git commit 恢复。
 - 执行合同层:`build_phases/` 与路线图 `map/` 已于 2026-09-23 删除；历史 launcher/SDK
   prompts 已删除且不是当前验收对象，`os-runtime/` 不存在且不应重建。
-- 全程:权威研究状态仍为 plain files；Git 是可选增强而非前置条件；所有被推翻的既有
+- 全程:权威研究状态仍为 plain files；Git 是前置条件(2026-11-21 取代"可选增强")；所有被推翻的既有
   决策在 HANDOFF 与 ADR 有显式 supersession 记录。
 
 ## 7. 非目标
 
 - 不做 Web 平台、后端服务、数据库、守护进程、远程访问或账户系统(M4 闸门前);没有
-  真实需求就不做 GUI 执行面与并行调度。
-- 不用 API key 计费;不读取、刷新或复制 CLI 的 OAuth token,只启动用户已登录的官方 CLI。
-- 不实现完整通用版本控制；无 Git 只保证权威状态、Audit Event、Checkpoint 和 Agent
-  修改过的小型文本可恢复，Git adapter 才提供完整历史/branch/merge。
+  真实需求就不做并行调度。桌面应用的执行面已于 2026-11-21 授权(§5 步骤 1–4)。
+- 不做托管版或付费版;不捆绑、修改、代为安装或更新任何厂商 CLI;产品名不含厂商名称或
+  标识(2026-11-21)。
+- 应用不代付、不转售、不中转用量;使用 API key 的 agent 属于用户自己的配置(2026-11-21
+  取代"不用 API key 计费")。不读取、刷新或复制 CLI 的 OAuth token,只启动用户已登录的
+  官方 CLI;不改写 agent 的设置、凭据、hooks 或 MCP 配置。
+- 不实现完整通用版本控制:版本历史交给 Git,OS 只记录每次运行所在的 commit(2026-11-21
+  取代无 Git 模式下的恢复保证)。
+- 第一版不做 Canvas 视图、实验树、算力派发;在有权限模型之前,第三方插件不得携带宿主
+  侧代码(2026-11-21)。
 - 不让派发到项目的 agent 直接改写 Paper Wiki、Memory、Ideas、Skill Hub 或其他
   Project;当前通过任务合同与 Human Owner 复核约束,未来再决定是否机械强制。
 - 不复制 EurekAgent 运行时(AGPL;只吸收其环境工程思想)。
-- 不追求支持"所有" agent:"支持"的定义 = 通过 M1 冷启动测试。
-- 不为假想需求造机制:没有真实第三 agent 就不做 M3,没有摩擦证据就不做 M4。
+- 不追求支持"所有" agent:内置的是 Claude Code 与 Codex,其余以能经 ACP 接入为准
+  (2026-11-21 取代"通过 M1 冷启动测试")。
+- 不为假想需求造机制:没有使用证据和 Human Owner 新授权,就不做 M4 闸门内的事项
+  (2026-11-21 取代"没有真实第三 agent 就不做 M3,没有摩擦证据就不做 M4";M3 已完成)。

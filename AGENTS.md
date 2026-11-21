@@ -1,9 +1,12 @@
 # AI-Human Research OS Instructions
 
-A file-system-native environment serving the human's long-horizon research.
-Organize durable work by type. Prefer plain files, Git, and small reversible
-changes. Keep the OS core small; extend through skills and project templates,
-adding infrastructure only when an observed local need justifies it.
+A file-system-native research environment, being built into a local desktop app
+for researchers who run their own coding agents
+([ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md)). Organize
+durable work by type. Prefer plain files, Git, and small reversible changes.
+Keep the trunk small; extend through plugins, skills, and project templates,
+adding infrastructure only on the human's authorization recorded in
+[HANDOFF.md](HANDOFF.md) Decisions.
 
 ## Execution contract
 

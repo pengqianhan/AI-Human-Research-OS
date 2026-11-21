@@ -43,10 +43,13 @@ folders are organized by material type rather than by a fixed workflow.
 
 ## Current Design Stance
 
-This OS is best understood as a file-system-native environment for long-horizon
-human-agent research. The human user's research practice is the primary target;
-reusable open-source templates are a byproduct, and product/platform ideas stay
-future-compatible without driving current complexity.
+This OS is a file-system-native environment for long-horizon human-agent
+research. Since 2026-11-21 it is being built into a free, local desktop app for
+researchers who already have Claude Code, Codex, or a similar coding agent: a
+small trunk with plugins and no model of its own
+([ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md)). That app is
+not built yet. What works today is the folder layout, the skills, and the
+optional layers below, and no test by an outside user is on record.
 
 The default operating policy is **portfolio always on, intra-project parallelism
 on demand**. Multiple projects can be tracked at once, but multi-agent execution

@@ -29,15 +29,15 @@ a trunk with plugins. Rows are under "Positioning and architecture decisions
 changed documents only.
 
 [GOAL.md](os-build/GOAL.md), the README's "Current Design Stance", and the opening
-line of [AGENTS.md](AGENTS.md) still carry the earlier direction. Where they
-conflict with the 2026-11-21 rows, the rows are the Human Owner's later decision;
-the files change only through the first item below.
+line of [AGENTS.md](AGENTS.md) were revised the same day to match (first item
+below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
 
-- [ ] Direction-text revision. The agent lists each change to GOAL.md (§1 root
+- [x] ~~Direction-text revision. The agent lists each change to GOAL.md (§1 root
       constraints, §3 table, §5 milestones, §6 acceptance, §7 non-goals), the
       README stance, and the AGENTS.md opening line; the Human Owner confirms item
-      by item. Acceptance: no sentence in those three files contradicts a
-      2026-11-21 row, and each replaced GOAL.md clause has a dated supersession note.
+      by item.~~ Done 2026-11-21: twelve items were listed and the Human Owner
+      confirmed them together (「全部按提议改」). Each replaced GOAL.md clause carries
+      a dated note; the earlier text is at commit `afe0461`.
 - [ ] Step 1, trunk shell: a registry replaces the compiled-in window list
       (`os-ui/frontend/src/desktop/apps.tsx`) and the fixed endpoint mounts
       (`os-ui/frontend/server/api.ts`); the new layout (home with the root agent,
@@ -73,9 +73,9 @@ authorization to publish installers.
 
 2026-11-21: the milestone list below predates the repositioning above. H2 stays and
 its acceptance is still open; H3 moves after step 4; M1 is replaced by step 4's
-agent registry; the M4 gate now covers only a resident daemon, a database, remote
-access, accounts, and unattended scheduling. These take effect in GOAL.md with the
-direction-text revision.
+agent registry; the desktop execution surface, the plugin host, and the TypeScript
+harness leave the M4 gate, and everything else it lists stays gated. GOAL.md §5
+says the same since its 2026-11-21 revision.
 
 The route map `os-build/map/` and the execution-contract slot
 `os-build/build_phases/` were deleted by Human Owner decision on 2026-09-23
@@ -167,30 +167,27 @@ packaged app's smoke run.
       ([Check it on your machine](os-ui/client/README.md#check-it-on-your-machine)) on
       each OS with a real Claude Code or Codex login. Acceptance: every box ticked,
       or a failure reported with `main.log`.
-- [ ] GOAL.md M4 annotation, for the Human Owner to confirm as one item (agents may
-      not edit GOAL.md alone): after the 2026-07-22 slice paragraph, add
-      "2026-10-10 Human Owner 授权 desktop wrapper（os-ui/client，ADR-0005），并就此项
-      免除 H2 使用证据前提；它与 dev server 共用同一组端点，随应用退出而消失。"
+- [x] ~~GOAL.md M4 annotation, for the Human Owner to confirm as one item: record the
+      2026-10-10 desktop-wrapper authorization after the 2026-07-22 slice
+      paragraph.~~ Superseded 2026-11-21: the GOAL.md revision took the desktop
+      execution surface out of the M4 gate, so the annotation is no longer needed.
 
 ### Next session
 
-- Focus (2026-11-21): the direction-text revision, then the step 1 mockups; both
-  are the first two items under "Repositioning" above. The older items below are
-  still open.
+- Focus (2026-11-21): the step 1 mockups, the second item under "Repositioning"
+  above. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
-  No project is queued after it; the next OS milestone is H3. On acceptance, append
-  `(accepted <date>)` to that Progress Log bullet; then H3 (trace reflection) is
-  next per GOAL.md.
+  No project is queued after it. On acceptance, append `(accepted <date>)` to that
+  Progress Log bullet; H3 (trace reflection) now follows step 4 per GOAL.md.
 - Environment facts found on 2026-09-26 (Human Owner's machine, not repository
   state). The Human Owner updated the global `codex` from 0.142.4 to 0.157.1, which
   runs the configured model `gpt-5.6-luna`. Both Codex logins are ChatGPT `free`.
   Codex's Windows sandbox is `ready` in `~/.codex` but `updateRequired` in the
   `CODEX_HOME` that Orca sets for sessions it launches, so a harness started
   inside Orca needs `--mode full` for Codex.
-- Also pending: the desktop client's P6 checks and the GOAL.md M4
-  annotation (Active Work, "os-ui desktop client"). Its installers are CI
+- Also pending: the desktop client's P6 checks (Active Work, "os-ui desktop client"). Its installers are CI
   artifacts of `desktop.yml`; publishing them stays unauthorized.
 - Also pending: the Human Owner has not yet run the `research-project-manager`
   acceptance: `./verify.sh` shows `OK project contract`, and the skill's `status`
@@ -576,6 +573,7 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 | Agent configuration | The app never edits an agent's settings, credentials, hooks, or MCP configuration. Skill directories are outside that rule but are written only when the user asks for an install | Not advisable |
 | Existing milestones | H2 kept; H3 after step 4; M1 retired; M4 narrowed; the Pages site returns to publishing only the Paper Wiki viewer when the old shell goes; the cognition cache and `map-then-territory` stay the Human Owner's own workspace skills, not product features | Restore the GOAL.md milestone text |
 | Name | Unchanged: AI-Human Research OS | Rename after the first outside user's feedback |
+| GOAL.md | **Revised 2026-11-21** to these rows: twelve listed items (GOAL.md §1–§7, the README design stance, the AGENTS.md opening lines), confirmed together by the Human Owner (「全部按提议改」). The edit also wrote clauses the twelve-item table did not spell out, each taken from a row above unless marked: (a) §5 M4, the 2026-07-22 slice's "no install or removal from the GUI" is superseded by the Skills Hub plugin; (b) §5 M4, a per-conversation agent process that lives and dies with the app is not a resident daemon (**the agent's reading of the gate**); (c) §5 M4, the plugin host and the TypeScript harness leave the gate along with the desktop execution surface; (d) §5, the mockup-first rule and "agents write TypeScript, acceptance by checks"; (e) §7, no vendor names in the product name, no editing of agent configuration, no third-party host-side code, no Canvas, experiment tree, or compute dispatch in the first version; (f) §4, rule 1 now says the hard-coding cleanup M1 owned has no owner, and rule 2 no longer cites the deleted `CLAUDE.md`. These were reported to the Human Owner after the edit and await their word. RSI is not mentioned in the revised text, and CONTEXT.md was not checked against it | Restore GOAL.md, README.md, and AGENTS.md from commit `afe0461` by a new Human Owner decision |
 
 ## Deviations from the original plan
 
@@ -610,8 +608,8 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 
 ## Intentionally not done
 
-- **2026-11-21 repositioning: scope left out on purpose** — no code or GOAL.md edit in
-  the deciding session; no embedded agent or model; no download or update of vendor CLIs;
+- **2026-11-21 repositioning: scope left out on purpose** — no code in the deciding
+  session; no embedded agent or model; no download or update of vendor CLIs;
   no multi-account profiles; no Cursor adapter; no experiment tree, compute dispatch, or
   database; no Canvas view; no hosted or paid form; no published installers; no
   third-party host-side plugin code.
