@@ -86,15 +86,18 @@ export function contractAccepts(range: string, host: { readonly major: number; r
  * The root in `roots` that `rel` (a path safeRelative returned) lies in, as
  * the concrete path it matched, or null. Roots match whole segments only, so
  * "paper" does not match "paper-wiki/x"; a "*" segment matches exactly one
- * segment, so "projects-folder/*" turns "projects-folder/Alpha/x" into
- * "projects-folder/Alpha" and does not match "projects-folder" itself.
+ * segment that does not start with ".", so "projects-folder/*" turns
+ * "projects-folder/Alpha/x" into "projects-folder/Alpha" and matches neither
+ * "projects-folder" itself nor "projects-folder/.env". Segments below the
+ * matched root are not looked at.
  */
 export function matchRoot(rel: string, roots: readonly string[]): string | null {
   const parts = rel.split("/").filter((s) => s !== "");
   for (const root of roots) {
     const want = root.split("/");
     if (want.length > parts.length) continue;
-    if (want.every((segment, i) => segment === "*" || segment === parts[i])) return parts.slice(0, want.length).join("/");
+    const matches = want.every((segment, i) => (segment === "*" ? !parts[i]!.startsWith(".") : segment === parts[i]));
+    if (matches) return parts.slice(0, want.length).join("/");
   }
   return null;
 }
@@ -114,9 +117,13 @@ const HOST_CONTRACT = `${CONTRACT.major}.${CONTRACT.minor}`;
  *   contract, so a plugin written for a newer minor says why it does not load;
  * - the contract range must be `^M.m` with this host's major and no newer minor;
  * - `site`, `handlers`, and `placement: "nav"` are for bundled plugins only;
+ * - the id is a hostname label that stays itself: no "--" in its third and
+ *   fourth characters, which hostnames keep for encoded names ("xn--");
  * - every path (`site.workspace`, `reads[]`, `entry`) is written in the plain
- *   form safeRelative gives back unchanged, is not empty, and has no segment
- *   starting with "."; `entry` is not below `api/` or `_os/`;
+ *   form safeRelative gives back unchanged, is not empty, has no segment
+ *   starting with "." or ending in a space or ".", and has none of
+ *   ? # < > " |; `*` appears in `reads` only, as a whole segment and not the
+ *   first; `entry` is not below `api/` or `_os/`;
  * - page ids are unique across home panels and project views, and handler
  *   names follow the page-id pattern, each listed once.
  */
@@ -139,7 +146,7 @@ export function parseManifest(raw: unknown, source: PluginSource): Parsed {
     if (value.length > max) problems.push(`${where} must be at most ${max} characters`);
     return value;
   };
-  /** A workspace or site path; in `reads`, a "*" segment is a wildcard and must be a whole segment. */
+  /** A workspace or site path; in `reads` (`wildcard`), a whole "*" segment matches one segment. */
   const path = (value: unknown, where: string, wildcard = false): string => {
     if (typeof value !== "string" || value === "") {
       problems.push(`${where} must be a non-empty path`);
@@ -153,7 +160,13 @@ export function parseManifest(raw: unknown, source: PluginSource): Parsed {
     }
     const segments = value.split("/");
     if (segments.some((s) => s.startsWith("."))) problems.push(`${where} "${value}" has a segment starting with "."`);
+    // Windows drops a trailing space or dot, so "con " and "aux." name devices.
+    if (segments.some((s) => s.endsWith(" ") || s.endsWith("."))) problems.push(`${where} "${value}" has a segment ending in a space or "."`);
+    // A URL path ends at "?" or "#"; Windows refuses the others in a file name.
+    if (/[?#<>"|]/.test(value)) problems.push(`${where} "${value}" contains one of ? # < > " |`);
+    if (!wildcard && value.includes("*")) problems.push(`${where} "${value}": "*" is allowed in reads only`);
     if (wildcard && segments.some((s) => s !== "*" && s.includes("*"))) problems.push(`${where} "${value}": "*" must be a whole segment`);
+    if (wildcard && segments[0] === "*") problems.push(`${where} "${value}" starts with "*", which would admit every top-level folder`);
     return value;
   };
   const list = (value: unknown, where: string): unknown[] => {
@@ -175,6 +188,8 @@ export function parseManifest(raw: unknown, source: PluginSource): Parsed {
   let id = "";
   if (typeof raw.id !== "string" || !ID.test(raw.id)) problems.push(`id must match ${ID.source}`);
   else if (RESERVED_IDS.has(raw.id)) problems.push(`id "${raw.id}" is reserved`);
+  // "xn--abc" is an encoded hostname, which app://xn--abc would be read as.
+  else if (raw.id.slice(2, 4) === "--") problems.push(`id "${raw.id}" has "--" as its third and fourth characters, which hostnames reserve`);
   else id = raw.id;
 
   const manifest: PluginManifest = {

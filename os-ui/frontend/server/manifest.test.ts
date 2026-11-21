@@ -79,6 +79,8 @@ describe("parseManifest", () => {
     for (const id of ["abc", "paper-wiki", "a1-b2", "a".repeat(32)]) assert.deepEqual(problems(minimal({ id })), [], id);
     for (const id of ["ab", "Abc", "1abc", "abc-", "-abc", "a_b", "a.b", "a".repeat(33), 7]) refused(minimal({ id }), /^id must match/);
     refused(minimal({ id: "research-os" }), /^id "research-os" is reserved$/);
+    for (const id of ["xn--abc", "ab--c", "zz--9"]) refused(minimal({ id }), /has "--" as its third and fourth characters/);
+    for (const id of ["a--b", "abc--d"]) assert.deepEqual(problems(minimal({ id })), [], id);
     assert.deepEqual(problems(minimal({ name: "n".repeat(40) })), []);
     refused(minimal({ name: "" }), /^name must not be empty$/);
     refused(minimal({ name: "n".repeat(41) }), /^name must be at most 40 characters$/);
@@ -119,9 +121,25 @@ describe("parseManifest", () => {
     for (const entry of ["apis/x", "x/api/y", "_osx.html"]) assert.deepEqual(problems(withView({ entry })), [], entry);
   });
 
-  test('"*" in reads is a whole segment', () => {
-    assert.deepEqual(problems(minimal({ reads: ["projects-folder/*", "*/x"] })), []);
+  test("no character a URL or Windows reads differently, and no trailing space or dot", () => {
+    for (const p of ["a?b", "a#b", "viz.html?x=1", "a<b", "a>b", 'a"b', "a|b", "con ", "aux.", "x.", "x ", " ", "a /b", "a./b"]) {
+      refused(minimal({ site: { workspace: p } }), /^site\.workspace /);
+      refused(minimal({ reads: [p] }), /^reads\[0\] /);
+      refused(withView({ entry: p }), /^contributes\.projectViews\[0\]\.entry /);
+    }
+    refused(withView({ entry: "a#b" }), /contains one of \? # < > " \|$/);
+    refused(withView({ entry: "con " }), /has a segment ending in a space or "\."$/);
+    for (const p of ["a b/c d.html", "v1.2/x", "a-b_c~d"]) assert.deepEqual(problems(withView({ entry: p })), [], p);
+  });
+
+  test('"*" only in reads, as a whole segment, never the first', () => {
+    assert.deepEqual(problems(minimal({ reads: ["projects-folder/*", "projects-folder/*/Code"] })), []);
     refused(minimal({ reads: ["paper*"] }), /"\*" must be a whole segment$/);
+    for (const p of ["*", "*/x", "*/*"]) refused(minimal({ reads: [p] }), /starts with "\*", which would admit every top-level folder$/);
+    for (const p of ["*", "a/*", "a*b.html"]) {
+      refused(minimal({ site: { workspace: p } }), /"\*" is allowed in reads only$/);
+      refused(withView({ entry: p }), /"\*" is allowed in reads only$/);
+    }
   });
 
   test("page ids are unique across panels and views; handlers are names, listed once", () => {
@@ -183,6 +201,13 @@ describe("matchRoot", () => {
     assert.equal(matchRoot("projects-folder/a/b/Code", roots), null, "not two segments");
     assert.equal(matchRoot("projects-folder/Alpha", ["projects-folder/*"]), "projects-folder/Alpha");
     assert.equal(matchRoot("projects-folder", ["projects-folder/*"]), null);
+  });
+  test('"*" never matches a segment starting with "."', () => {
+    assert.equal(matchRoot(".env", ["*"]), null);
+    assert.equal(matchRoot(".git/config", ["*"]), null);
+    assert.equal(matchRoot("projects-folder/.env", ["projects-folder/*"]), null);
+    assert.equal(matchRoot("projects-folder/.git/x/Code", roots), null);
+    assert.equal(matchRoot("projects-folder/a.b/x", ["projects-folder/*"]), "projects-folder/a.b", "a dot inside a name is fine");
   });
   test("the first matching root wins; nothing matches nothing", () => {
     assert.equal(matchRoot("a/b/c", ["a/*", "a"]), "a/b");

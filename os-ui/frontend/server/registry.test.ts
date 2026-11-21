@@ -81,6 +81,13 @@ describe("loadPlugins", () => {
     assert.deepEqual(local.problems, ["demo: a local plugin cannot take the id of a bundled plugin"]);
   });
 
+  test("a byte-order mark before the JSON is ignored", () => {
+    const root = tempTree({ "bom/plugin.json": "\uFEFF" + JSON.stringify(manifest("bom")) });
+    const result = loadPlugins(root, ["bom"], "local", none);
+    assert.deepEqual(result.problems, []);
+    assert.deepEqual(result.plugins.map((p) => p.manifest.id), ["bom"]);
+  });
+
   test("unreadable, unparsable, or misnamed manifests are reported, never thrown", () => {
     const root = tempTree({ "broken/plugin.json": "{", "renamed/plugin.json": JSON.stringify(manifest("other")), "bad/plugin.json": "[]" });
     const result = loadPlugins(root, ["missing", "broken", "renamed", "bad", "../escape", ".."], "local", none);
@@ -144,15 +151,51 @@ describe("createRegistry", () => {
     );
   });
 
-  test("a local plugin never gets a mount, even when handed one with handlers (lock 3)", () => {
+  test("a repeated id throws, whatever the sources", () => {
+    const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins;
+    const local = loaded(manifest("paper-wiki"), "local");
+    for (const plugins of [[...bundled, local], [local, ...bundled], [...bundled, ...bundled]]) {
+      assert.throws(
+        () => createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins, factories: BUNDLED_HANDLERS }),
+        /^Error: plugin registry: the id "paper-wiki" is listed twice$/,
+      );
+    }
+  });
+
+  test("an /api/<id> overlapping a trunk prefix throws", () => {
+    const chat = loaded(manifest("chat", { contributes: { handlers: ["sessions"] } }));
+    assert.throws(
+      () => createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: [chat], factories: { "chat/sessions": fake("p") } }),
+      /^Error: plugin registry: \/api\/chat overlaps the app's endpoint \/api\/chat$/,
+    );
+    assert.throws(
+      () => createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: [loaded(manifest("skill"), "local")], factories: {} }),
+      /\/api\/skill overlaps the app's endpoint \/api\/skill\/toggle$/,
+    );
+    const paper = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: [loaded(manifest("paper"))], factories: {} });
+    assert.deepEqual(flags(paper.all), flags(paper.app), "/api/paper is not a segment of /api/paper-sources");
+  });
+
+  test("a local plugin never gets a mount, even when a factory key for its id exists (lock 3)", () => {
+    let built = 0;
+    const counting: HandlerFactory = (c) => (built++, fake("s")(c));
     const local = loaded(manifest("demo", { contributes: { handlers: ["status"] } }), "local");
     const registry = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: [local], factories: {} });
     assert.deepEqual(registry.byPlugin.get("demo"), []);
     assert.deepEqual(flags(registry.all), flags(registry.app));
     assert.throws(
-      () => createRegistry({ ctx, trunk: [], plugins: [local], factories: { "demo/status": fake("s") } }),
+      () => createRegistry({ ctx, trunk: [], plugins: [local], factories: { "demo/status": counting } }),
       /has a factory but no bundled plugin declares it/,
       "a local declaration does not claim a factory",
     );
+    const bundled = loaded(manifest("demo", { contributes: { handlers: ["status"] } }));
+    for (const plugins of [[bundled, local], [local, bundled]]) {
+      assert.throws(
+        () => createRegistry({ ctx, trunk: [], plugins, factories: { "demo/status": counting } }),
+        /the id "demo" is listed twice/,
+        "nor does a local plugin sharing a bundled plugin's id",
+      );
+    }
+    assert.equal(built, 0, "the factory never ran");
   });
 });

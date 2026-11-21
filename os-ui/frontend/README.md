@@ -117,14 +117,17 @@ npm test
   and posts to `/api/skill/toggle` (`server/skillToggle.ts`).
 - `state.json` shape: update `src/types.ts`, `os-ui/DESIGN.md`, and the
   generator together.
-- Endpoints: the app's own are listed once, in `TRUNK_MOUNTS` in
-  `server/api.ts`. A bundled plugin's endpoints are named in its
-  `plugins/<id>/plugin.json` (`contributes.handlers`, served at
-  `/api/<id>/<handler>`), and their code is listed in
-  `server/pluginHandlers.ts`; the tests fail if the two disagree. The registry
-  (`server/registry.ts`) joins both lists, and `api-plugin.ts` serves the
-  result on the dev server. The desktop client still uses `createMounts` in
-  `server/api.ts`, which the tests keep equal to the registry.
+- Endpoints: the app's own are listed in `TRUNK_MOUNTS` in `server/api.ts`.
+  A bundled plugin's endpoints are named in its `plugins/<id>/plugin.json`
+  (`contributes.handlers`, served at `/api/<id>/<handler>`), and their code is
+  listed in `server/pluginHandlers.ts`; the tests fail if the two disagree.
+  The registry (`server/registry.ts`) joins both lists, and `api-plugin.ts`
+  serves the result on the dev server. Until the desktop client moves to the
+  registry, it takes its endpoints from a second list, `createMounts` in
+  `server/api.ts`. So adding, removing, or changing any endpoint, the app's
+  own or a plugin's, means editing `createMounts` as well; the test "all has
+  exactly createMounts' endpoints and token flags" in
+  `server/registry.test.ts` fails until the two lists agree.
 - Fixed UI copy: edit the page or component that owns the text. Dynamic
   repository content from `state.json` should stay as source data, not be
   rewritten in the frontend.

@@ -62,7 +62,8 @@ export function loadPlugins(
     const dir = resolve(root, id);
     let raw: unknown;
     try {
-      raw = JSON.parse(readFileSync(resolve(dir, "plugin.json"), "utf8"));
+      // A byte-order mark, which some Windows editors write, is not JSON.
+      raw = JSON.parse(readFileSync(resolve(dir, "plugin.json"), "utf8").replace(/^\uFEFF/, ""));
     } catch (error) {
       problems.push(`${id}: cannot read plugin.json: ${(error as Error).message ?? error}`);
       continue;
@@ -109,9 +110,12 @@ export interface Registry {
 /**
  * The endpoints for one open workspace. Handlers are mounted for bundled
  * plugins only, at /api/<id>/<handler>, and never take the token: the token
- * never reaches a plugin's frame. Throws only on factory drift, a declared
- * handler without a factory or a factory nobody declares, which is a
- * bundling bug the tests catch.
+ * never reaches a plugin's frame. It does not trust its input to come from
+ * loadPlugins, and throws on a list the loader would never produce: a
+ * repeated plugin id, or an /api/<id> overlapping a trunk prefix (either
+ * could replace or shadow an endpoint). It also throws on factory drift, a
+ * declared handler without a factory or a factory nobody declares, which is
+ * a bundling bug the tests catch.
  */
 export function createRegistry(input: {
   ctx: ApiContext;
@@ -120,6 +124,14 @@ export function createRegistry(input: {
   factories: Readonly<Record<string, HandlerFactory>>;
 }): Registry {
   const { ctx, trunk, plugins, factories } = input;
+  const ids = new Set<string>();
+  for (const { manifest } of plugins) {
+    if (ids.has(manifest.id)) throw new Error(`plugin registry: the id "${manifest.id}" is listed twice`);
+    ids.add(manifest.id);
+    const clash = trunk.find((t) => overlaps(`/api/${manifest.id}`, t.prefix));
+    if (clash !== undefined) throw new Error(`plugin registry: /api/${manifest.id} overlaps the app's endpoint ${clash.prefix}`);
+  }
+
   const declared = plugins
     .filter((p) => p.source === "bundled")
     .flatMap((p) => (p.manifest.contributes.handlers ?? []).map((h) => `${p.manifest.id}/${h}`));
