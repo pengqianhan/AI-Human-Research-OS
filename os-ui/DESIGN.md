@@ -210,8 +210,10 @@ The old tab-shell concept is superseded.
    `state.json`) — re-run `./start.sh` after editing paper-wiki content or the
    viewer templates. Its window skips the padded content area every other app
    uses (`AppDef.fill`), so the viewer fills the window edge-to-edge and
-   manages its own scrolling. The viewer probes `GET /api/paper-wiki/status`
-   ([frontend/paper-status-plugin.ts](frontend/paper-status-plugin.ts)); when
+   manages its own scrolling. The viewer probes `GET /api/paper-wiki/status`,
+   the `status` handler that the bundled Paper Wiki plugin declares
+   ([frontend/plugins/paper-wiki/plugin.json](frontend/plugins/paper-wiki/plugin.json),
+   code in [frontend/server/paperStatus.ts](frontend/server/paperStatus.ts)); when
    it answers, a note's Status row becomes unread / skimmed / read buttons.
    `POST` runs paper-wiki-manager's `set_status.py`, regenerates `viz.html`,
    and copies the note and viewer into the cache copy, so a reload keeps the

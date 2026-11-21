@@ -11,7 +11,8 @@ let context: ApiContext | null = null;
 /**
  * The dev server's context: the checkout this file is in, the pinned Python
  * through uv on the inherited PATH, and the public/paper-wiki cache copy that
- * start.sh makes for the iframe. One context is shared by all four plugins.
+ * start.sh makes for the iframe. One context is shared by every endpoint
+ * (../api-plugin.ts).
  */
 export function devContext(): ApiContext {
   if (context !== null) return context;

@@ -16,7 +16,8 @@ os-ui/frontend/
 ├── index.html              # minimal HTML shell mounted by React
 ├── package.json            # npm scripts and dependencies
 ├── vite.config.ts          # Vite dev/build config
-├── *-plugin.ts             # dev-server adapters for the endpoints in server/
+├── api-plugin.ts           # serves every endpoint on the dev server, from the plugin registry
+├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each
 ├── server/                 # the endpoints, shared with the desktop client (os-ui/client)
 ├── tailwind.config.js      # Tailwind color/font aliases
 ├── postcss.config.js       # Tailwind/PostCSS config
@@ -116,6 +117,14 @@ npm test
   and posts to `/api/skill/toggle` (`server/skillToggle.ts`).
 - `state.json` shape: update `src/types.ts`, `os-ui/DESIGN.md`, and the
   generator together.
+- Endpoints: the app's own are listed once, in `TRUNK_MOUNTS` in
+  `server/api.ts`. A bundled plugin's endpoints are named in its
+  `plugins/<id>/plugin.json` (`contributes.handlers`, served at
+  `/api/<id>/<handler>`), and their code is listed in
+  `server/pluginHandlers.ts`; the tests fail if the two disagree. The registry
+  (`server/registry.ts`) joins both lists, and `api-plugin.ts` serves the
+  result on the dev server. The desktop client still uses `createMounts` in
+  `server/api.ts`, which the tests keep equal to the registry.
 - Fixed UI copy: edit the page or component that owns the text. Dynamic
   repository content from `state.json` should stay as source data, not be
   rewritten in the frontend.
