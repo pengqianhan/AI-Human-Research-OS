@@ -127,6 +127,13 @@ models improve.
   Science, Data Analytics, AI, and SDE roadmaps. This repository is continually
   updated based on the top job postings on LinkedIn and Indeed in the data
   science and AI domain.
+- [feynman](https://github.com/Companion-Inc/feynman): The open source AI
+  research agent.
+- [DeepScientist](https://github.com/ResearAI/DeepScientist): Now, Stronger AI
+  Pushes Frontiers, Stronger Our Shared Future.
+- [AutoSci](https://github.com/PKU-DAIR/AutoSci): Karpathy's LLM-Wiki vision,
+  fully realized — wiki-centric full-lifecycle AI research platform powered by
+  Claude Code.
 
 ## Agent runtimes and operating systems
 
@@ -150,6 +157,47 @@ models improve.
 - [Octopus-SI-OS](https://github.com/miuuyy/Octopus-SI-OS): A self-evolving
   agentic OS. A new architecture for agent execution, built on operating-system
   principles, with the harness as a path toward superintelligence.
+
+## Layers above coding agents
+
+Surveyed on 2026-11-21 for the repositioning recorded in
+[ADR-0006](../../docs/adr/0006-desktop-workspace-trunk-and-plugins.md). Each
+drives coding agents the user already has, or hosts them behind plugins; none
+is a research environment. OpenResearch, the closest reference, is in the
+README list.
+
+- [ohmygame](https://github.com/WhiteTowerAI/ohmygame): The open-source studio
+  for making games with AI. Your own one-person game studio. Everything you
+  need to make games with AI, in one app. Game canvas. Bring your own key.
+  Reference for the project workspace layout, the Agents settings page, and
+  the plugin manifest.
+- [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness): DeepSeek
+  Harness: Everything is a Plugin. Reference for the trunk-and-plugins idea;
+  its plugin format is not adopted.
+- [orca](https://github.com/stablyai/orca): Orca lets you run a fleet of bots
+  with your own subscription (e.g. Claude Code, Grok, Agy, Codex). Available on
+  desktop, mobile and remote runtime.
+- [paperclip](https://github.com/paperclipai/paperclip): The open-source app
+  everyone uses to manage agents at work.
+- [t3code](https://github.com/pingdotgg/t3code): The best way to control Claude
+  Code, Codex and more from any computer or phone.
+- [multica](https://github.com/multica-ai/multica): Make humans and AI agents
+  work as one team — open-source and self-hostable.
+- [herdr](https://github.com/herdrdev/herdr): the runtime your coding agents
+  live on.
+- [vibe-kanban](https://github.com/BloopAI/vibe-kanban): Get 10X more out of
+  Claude Code, Codex or any coding agent.
+- [happy](https://github.com/slopus/happy): Orchestrate Claude, Codex and Grok
+  in one app. Open-source (MIT), reuses the subscriptions you already pay for.
+- [claude-squad](https://github.com/smtg-ai/claude-squad): Manage multiple AI
+  terminal agents like Claude Code, Codex, OpenCode, and Amp.
+- [ClawTeam](https://github.com/HKUDS/ClawTeam): "ClawTeam: Agent Swarm
+  Intelligence" (One Command → Full Automation). Drives agents through tmux; no
+  commits since 2026-05-09 when surveyed.
+- [Alma](https://alma.now/): a closed-source desktop app the Human Owner named
+  as a reference. Only its release repository,
+  [alma-releases](https://github.com/yetone/alma-releases), is public; its
+  source was not inspected.
 
 ## Self-improving systems (RSI)
 
