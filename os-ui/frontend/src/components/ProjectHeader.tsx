@@ -58,7 +58,7 @@ export function ProjectHeader({ snapshot, counts }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2.5">
+      <div className="stat-grid grid grid-cols-4 gap-2.5">
         <StatTile value={counts.rounds} label="rounds" tone={counts.rounds > 0 ? "ok" : "mute"} hint="Code/runs/<round>/result.json" />
         <StatTile value={counts.evaluations} label="evaluations" tone={counts.evaluations > 0 ? "ok" : "mute"} hint="Evaluations/" />
         <StatTile value={counts.feedback} label="os feedback" tone={counts.feedback > 0 ? "warn" : "mute"} hint="PROJECT_MEMORY.md · OS Feedback" />

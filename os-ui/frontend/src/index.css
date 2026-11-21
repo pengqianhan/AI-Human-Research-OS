@@ -368,6 +368,10 @@ code, kbd, samp, pre {
   .views-pane .tab-lock {
     display: none;
   }
+  /* Four count tiles are too narrow for the "evaluations" label here. */
+  .views-pane .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
