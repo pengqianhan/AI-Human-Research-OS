@@ -186,13 +186,16 @@ rewritten in the frontend.
   A bundled plugin's endpoints are named in its `plugins/<id>/plugin.json`
   (`contributes.handlers`, served at `/api/<id>/<handler>`), and their code is
   listed in `server/pluginHandlers.ts`; the tests fail if the two disagree.
-  The registry (`server/registry.ts`) joins both lists, and `api-plugin.ts`
-  serves the result on the dev server. Until the desktop client moves to the
-  registry, it takes its endpoints from a second list, `createMounts` in
-  `server/api.ts`. So adding, removing, or changing any endpoint, the app's
-  own or a plugin's, means editing `createMounts` as well; the test "all has
-  exactly createMounts' endpoints and token flags" in
-  `server/registry.test.ts` fails until the two lists agree.
+  The registry (`server/registry.ts`) joins both lists. `api-plugin.ts`
+  serves the result on the dev server's one origin; the desktop client
+  serves the same registry split by origin, the trunk's endpoints on
+  `app://research-os` and each plugin's on `app://<id>`
+  (`os-ui/client/src/main/protocol.ts`), so there is no second list to keep
+  in step. `server/registry.test.ts` and `server/api.test.ts` pin the
+  resulting prefixes and token flags; update them with any endpoint change.
+  The client ships each `plugins/<id>/plugin.json` (and a `site/` folder
+  beside it, if any) in its package, so a new bundled plugin needs only its
+  folder, its id in `plugins/bundled.ts`, and its handlers.
 - What the layout remembers: `src/shell/layoutState.ts` (one `localStorage`
   key, `osui.layout.v1`; clearing it returns to Home with everything open).
 

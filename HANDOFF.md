@@ -52,13 +52,14 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       with the `mockups` preview in `.claude/launch.json`).
       State on 2026-11-22, with the design and its remaining order in
       [os-ui/PLUGINS.md](os-ui/PLUGINS.md):
-      - Done: the manifest parser and the server-side registry (S1, S2), and the
-        new layout as a shell that re-houses every existing page (S7). Overview is
-        the default project tab; Code and Paper are placeholder tabs.
-      - Next, in order: the client serves plugin origins from the registry (S3),
-        the frontend registry (S4), the path-checked read channel (S5), the Code
-        and Paper view plugins (S6), then deleting `os-ui/frontend/src/desktop/`
-        (S8) once the Human Owner has run the client checklist.
+      - Done: the manifest parser and the server-side registry (S1, S2), the
+        new layout as a shell that re-houses every existing page (S7), and the
+        client serving plugin origins from the registry (S3). Overview is the
+        default project tab; Code and Paper are placeholder tabs.
+      - Next, in order: the frontend registry (S4), the path-checked read
+        channel (S5), the Code and Paper view plugins (S6), then deleting
+        `os-ui/frontend/src/desktop/` (S8) once the Human Owner has run the
+        client checklist.
       - Waiting on the Human Owner: whether the Paper view may vendor Mozilla's
         PDF.js (Apache-2.0, about 1.8 MB) to render `main.pdf`; whether a
         third-party plugin may add its own left-navigation item, or only home

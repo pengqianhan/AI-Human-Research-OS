@@ -47,7 +47,7 @@ decision record is [ADR-0005](../../docs/adr/0005-desktop-client.md).
 | G2 | Plain files stay the only research state; the client keeps only its own settings | Code review; the generator writes inside the workspace even when it has no `.git` |
 | G3 | One frontend for browser and desktop | `os-ui/frontend` builds once; the client bundles that build |
 | G4 | Claude Code and Codex treated alike (cog-20260724-001) | All agent work goes through `os-harness`; no agent-specific code in the client |
-| G5 | Missing prerequisites are named, not discovered by failure | System window and welcome state; E2E with an unusable folder |
+| G5 | Missing prerequisites are named, not discovered by failure | Settings page and welcome state; E2E with an unusable folder |
 | G6 | Behaviour of the existing dev server is unchanged | `server/*.test.ts` on the shared core and a real Vite dev server (`devServer.test.ts`) |
 
 Non-goals: bundling Python, uv, or the agent CLIs; auto-update; a tray icon;
@@ -76,8 +76,8 @@ uses (TypeScript, plus the Python scripts it calls); Tauri would add Rust.
 │ python.ts     uv + pinned Python, else a probed system Python ≥ 3.11               │
 │ generator.ts  serialized runs of os-ui/generator/generate.py (120 s limit)         │
 │ inputs.ts     polls the files generate.py reads (4 s) → regenerate on change       │
-│ protocol.ts   app://research-os (app) and app://paper-wiki (viewer) → files | API │
-│ ../frontend/server  the os-ui endpoints, shared with the Vite dev server          │
+│ protocol.ts   app://research-os (app) and app://<plugin id> (sites) → files | API │
+│ ../frontend/server  the os-ui endpoints and plugin registry, shared with Vite     │
 │ notifier.ts   os-harness/sessions → native notification when a turn ends          │
 │ doctor.ts     uv, Python, Git, `harness.py check` (Claude Code, Codex)            │
 │ menu.ts, windowState.ts, log.ts                                                   │
@@ -85,7 +85,7 @@ uses (TypeScript, plus the Python scripts it calls); Tauri would add Rust.
         │ contextBridge (preload): window.osDesktop — six calls and this launch's token
 ┌──────────── app://research-os — os-ui/frontend production build ────────────┐
 │ LIVE = dev server OR window.osDesktop present                                │
-│ System window (desktop only); Paper Wiki iframe → app://paper-wiki/viz.html   │
+│ Settings page (desktop only); Paper wiki iframe → app://paper-wiki/viz.html   │
 └──────────────────────────────────────────────────────────────────────────────┘
         │ child processes: the login-shell environment, windowsHide, UTF-8
    uv / python → generate.py, os-harness/harness.py, paper_search.py,
@@ -124,9 +124,10 @@ interface ApiContext {
   is still 401), then the Connect request becomes an `ApiRequest`, and every
   reply carries `Content-Type: application/json`. (Until 2026-11-21 these were
   four plugin files, one per endpoint, with the same behaviour.) The client
-  still takes its endpoints from `createMounts` in
-  [server/api.ts](../frontend/server/api.ts), which the tests keep equal to
-  the registry.
+  serves the same registry, split by origin (§3.2): it loads the bundled
+  plugins once at startup and builds their endpoints with the trunk's each
+  time a workspace is opened. (Until S3 of
+  [os-ui/PLUGINS.md](../PLUGINS.md) it had its own list, `createMounts`.)
 - Kept route for route: validation rules, status codes, the per-endpoint
   serialization queues (a failed job never blocks the next), and the 409 Write
   Lease.
@@ -141,27 +142,41 @@ interface ApiContext {
   session list into a 500; in the client the skill toggle's snapshot refresh
   goes through the serialized generator.
 
-### 3.2 Two origins
+### 3.2 The app's origin and one origin per plugin
 
-The Paper Wiki viewer renders note bodies as HTML (`marked`), and notes are
-written from outside papers and web pages, so a note can carry script. It must
-not share an origin with the app's endpoints, storage, or bridge.
+Each loaded plugin is served on its own origin, `app://<plugin id>`, so no
+plugin page shares an origin with the app's endpoints, storage, or bridge, or
+with another plugin. The first plugin, Paper Wiki, shows why: its viewer
+renders note bodies as HTML (`marked`), and notes are written from outside
+papers and web pages, so a note can carry script.
+
+The bundled plugins (`BUNDLED_IDS` in
+[frontend/plugins/bundled.ts](../frontend/plugins/bundled.ts)) are loaded once
+at startup from `out/plugins/<id>/plugin.json`, which `scripts/build.mjs`
+copies there; every problem, and any bundled plugin that did not load, is
+logged as an `ERROR`. Their ids are the hosts below, the app policy's
+`frame-src`, and the subframe targets the navigation guard allows.
 
 | URL | Served from |
 |---|---|
-| `app://research-os/api/...` | shared API core, all endpoints except the wiki's status |
+| `app://research-os/api/...` | the trunk's endpoints (`TRUNK_MOUNTS`) |
 | `app://research-os/state.json` | `<workspace>/os-ui/frontend/public/state.json` |
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
-| `app://paper-wiki/api/paper-wiki/status` | the reading-status endpoint only |
-| `app://paper-wiki/...` | `<workspace>/paper-wiki/...` in place (no cache copy) |
+| `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`); other `api/` paths are 404 |
+| `app://<id>/_os/...` | 404: kept for the path-checked read channel (S5) |
+| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
   NUL, COM1, …) are refused before any file access. Workspace files must also
   have their real path (symlinks and junctions resolved) inside their root; the
-  renderer, possibly inside an asar archive, is confined lexically.
+  renderer and a plugin's `site/` folder, possibly inside an asar archive, are
+  confined lexically.
+- Endpoints answer 503 while no folder is open, then 404 (no such endpoint on
+  this origin), 415, and 401 in that order. A plugin's handlers never take the
+  token, which never reaches a plugin's frame.
 - The scheme is registered standard, secure, fetch-capable, and stream-capable,
-  and **not** CORS-enabled, so pages of one origin cannot read the other.
+  and **not** CORS-enabled, so pages of one origin cannot read another's.
 - The viewer probes its status endpoint whenever it is not opened from disk
   (`location.protocol !== "file:"` in paper-wiki-manager's `viz.js`; before,
   only http and https), so its Status buttons work in the client. A workspace
@@ -172,24 +187,28 @@ not share an origin with the app's endpoints, storage, or bridge.
 
 - `contextIsolation`, `sandbox`, no `nodeIntegration`, `webSecurity`; the
   preload exposes six calls and the token, no Node objects.
-- **Content-Security-Policy** as a response header. App pages (HTML and the
-  `index.html` fallback):
-  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki; object-src 'none'; base-uri 'none'; form-action 'none'`.
-  The viewer: `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
+- **Content-Security-Policy** as a response header, chosen by the host, never
+  by a manifest. App pages (HTML and the `index.html` fallback), with one
+  `frame-src` entry per loaded plugin, in load order (`appCsp` in
+  `protocol.ts`; `frame-src 'none'` if none loaded):
+  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki; object-src 'none'; base-uri 'none'; form-action 'none'`.
+  A site served from a workspace folder (the Paper Wiki viewer):
+  `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
-  It is sent with every wiki response, not only HTML: an SVG a frame is sent
-  to is a document too.
+  A site in its plugin folder gets the same policy with `'self'` added to
+  `script-src` and `style-src`. Either is sent with every response of the
+  site, not only HTML: an SVG a frame is sent to is a document too.
 - **Endpoints:** writes must be `Content-Type: application/json`, which a form
   or a no-cors request cannot send (415 otherwise); `/api/chat` and
   `/api/paper-sources` need a random per-launch token, which the preload hands
   to the top frame only (`--os-desktop-token` argument), as the dev server
   needs `OS_UI_TOKEN`.
 - **Navigation:** `will-frame-navigate` and `will-redirect` keep the top frame
-  on `app://research-os/` and subframes on `app://paper-wiki/` (or
-  `about:blank`); an http(s) or mailto link opens in the default browser only
-  after a dialog naming the URL is confirmed, one dialog at a time (Electron
-  cannot tell which frame asked, and the viewer runs note HTML); every
-  `window.open` is denied.
+  on `app://research-os/` and subframes on a loaded plugin's origin (or
+  `about:blank`, `about:srcdoc`); an http(s) or mailto link opens in the
+  default browser only after a dialog naming the URL is confirmed, one dialog
+  at a time (Electron cannot tell which frame asked, and the viewer runs note
+  HTML); every `window.open` is denied.
 - **IPC** answers only the top frame of `app://research-os/`; no channel takes
   a path.
 - **Permissions:** all denied except `clipboard-sanitized-write` (the copy
@@ -265,7 +284,7 @@ not share an origin with the app's endpoints, storage, or bridge.
 ## 6. Snapshot generation
 
 - `generate.py` runs at start, after a folder switch, on **View → Regenerate
-  Snapshot** and the dock button, after a skill toggle, when the window regains
+  Snapshot** and the sidebar's Regenerate button, after a skill toggle, when the window regains
   focus more than 30 s after the last run, every 5 minutes, and when its inputs
   change.
 - Inputs are polled every 4 s by `stat`: `HANDOFF.md`, `memory/`, `.git/HEAD`
@@ -283,7 +302,7 @@ not share an origin with the app's endpoints, storage, or bridge.
   into place, retried briefly while a Windows reader holds the file, and
   removed if the run fails), so a killed or failed run never leaves half a
   file; the window
-  keeps showing the last snapshot and the System window shows the error.
+  keeps showing the last snapshot and Settings shows the error.
 - The pollers, the timer, and the notifier stop with the app; the app quits
   when its last window closes, on macOS too.
 
@@ -298,7 +317,7 @@ Turns that ended before the app started never notify; a half-written last line
 is skipped. Clicking focuses the window. **View → Notify When Agent Turns End**
 turns it off (saved). Windows needs the app's AppUserModelID, set at start.
 
-## 8. Prerequisites (System window)
+## 8. Prerequisites (Settings page)
 
 | Check | Probe | Required |
 |---|---|---|
@@ -311,7 +330,8 @@ turns it off (saved). Windows needs the app's AppUserModelID, set at start.
 Each row is `ok`, `warn`, `missing`, or `error` with a version, one detail
 line, and an install link. Probes run in parallel with timeouts (Python 120 s,
 because uv may download the pinned interpreter on first use) and never fail
-the report as a whole. The window shows them glance-first
+the report as a whole. **Settings** (left navigation, or **Help → System and
+Prerequisites**) shows them glance-first
 (cog-20260927-001): chips and versions, details on click; it also shows the
 folder, the last snapshot run, and, under **About**, versions, the Python in
 use, and where the environment came from.
@@ -325,11 +345,13 @@ use, and where the environment came from.
 - `useOsState.ts`: reload on a snapshot event.
 - `StateMissing.tsx`: in the client, a welcome state (folder, problem, last
   run, prerequisites, **Choose folder…**, **Regenerate**).
-- `Dock.tsx`: in the client the right-hand button regenerates the snapshot.
+- `shell/SnapshotStatus.tsx`: in the client the sidebar footer says "Desktop
+  client" and its button regenerates the snapshot.
 - `PaperWikiPage.tsx`: the iframe loads `app://paper-wiki/viz.html` in the
   client.
-- `SnapshotHeader.tsx`: "Desktop client" label.
-- New desktop-only **System** app (`SystemPage.tsx`, `DesktopStatus.tsx`).
+- Desktop-only folder and prerequisite controls (`SystemPage.tsx`,
+  `DesktopStatus.tsx`), shown on the **Settings** page (`SettingsPage.tsx`);
+  the Help menu's `open-system` command opens it (`shell/Shell.tsx`).
 - **Hub skill:** paper-wiki-manager's `scripts/static/viz.js` status probe
   (§3.2), with `paper-wiki/viz.html` regenerated.
 
@@ -343,7 +365,7 @@ interface DesktopBridge {
   regenerate(): Promise<SnapshotEvent>;               // one generator run
   doctor(): Promise<DoctorReport>;                    // §8
   onSnapshot(cb: (e: SnapshotEvent) => void): () => void;
-  onCommand(cb: (command: "open-system") => void): () => void;  // Help menu → System window
+  onCommand(cb: (command: "open-system") => void): () => void;  // Help menu → Settings
 }
 ```
 
@@ -372,11 +394,14 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 - Icon: `docs/brand/app-icon.png` (1024 px), copied to `out/icon.png` at build;
   electron-builder derives `.icns` and `.ico` from it.
 - The package holds `out/main.cjs`, `out/preload.cjs`, `out/renderer/` (the
-  frontend build without `state.json` or a `paper-wiki/` copy), and the icon.
-  Python scripts and research files are always read from the chosen
+  frontend build without `state.json` or a `paper-wiki/` copy), `out/plugins/`
+  (each bundled plugin's `plugin.json`, and its `site/` folder if it has one;
+  the build fails if a `BUNDLED_IDS` entry is missing), and the icon. A
+  plugin's handler code is compiled into `main.cjs`, never read from its
+  folder. Python scripts and research files are always read from the chosen
   workspace, never bundled.
 - Version skew: renderer and endpoint code are the app's, scripts are the
-  workspace's. The System window shows the app version; rebuild the app after
+  workspace's. Settings shows the app version; rebuild the app after
   pulling os-ui changes.
 - Signing with a Developer ID or a Windows certificate is possible through
   electron-builder's `CSC_*` variables and `-c.mac.identity=…`; it is not set up
@@ -389,8 +414,8 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 | Shared API core | `node --test` with Node's type stripping (no new dependency) | validation, status codes, queues, Write Lease (also through a symlink), runner timeouts and errors |
 | API + real harness | `node --test` with `os-harness/tests/fake_claude.py` | `POST /send` → detached turn → trace; resume → turn 2 |
 | Dev-server adapters | `node --test` on a real Vite dev server | token before routing, mounts, context root |
-| Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, window bounds, menu |
-| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, System window, a Root Agent turn without a token prompt, endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, dock regenerate, settings, no CSP violations, unusable-folder welcome |
+| Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the navigation guard's targets, window bounds, menu |
+| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
 | Package smoke | the same E2E (`OS_CLIENT_E2E_EXECUTABLE=release`) on the unpacked app | the asar layout starts, generates, and isolates the viewer |
 | CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above, those tests included, on six OS/arch rows and uploads installers as artifacts | |
 
@@ -426,8 +451,8 @@ reject what Node's type stripping cannot run. The endpoint tests need Node
 
 | Risk | Mitigation |
 |---|---|
-| GUI launch misses tools or variables | login-shell environment (§5); System window names what is missing |
-| Hostile HTML in a paper note | separate wiki origin, strict CSP, JSON-only writes, token, frame-aware navigation guard (§3) |
+| GUI launch misses tools or variables | login-shell environment (§5); Settings names what is missing |
+| Hostile HTML in a paper note | the wiki on its own plugin origin, strict CSP, JSON-only writes, token, frame-aware navigation guard (§3) |
 | Ubuntu 24.04 sandbox and AppImage | prefer `.deb`; document `libfuse2`; the app never adds `--no-sandbox` (tests do, as root) |
 | Unsigned builds alarm users | ad-hoc macOS signature; documented first-open steps |
 | App and workspace drift apart | versions shown; scripts read from the workspace; additive schema rule (os-ui DESIGN.md §2) |

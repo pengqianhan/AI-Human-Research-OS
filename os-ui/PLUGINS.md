@@ -7,16 +7,35 @@ agent and line numbers refer to the code as it was that day.
 
 Status on 2026-11-22:
 
-- **S1 and S2 are merged** (manifest parser, server-side registry, the dev server built
-  from it). The code is the authority where it differs from Part 1: `createMounts` stays
-  hand-written for the client until S3, paths must be plain, a `reads` root may not start
-  with `*`, and `*` does not match a dot segment.
+- **S1 to S3 are done**: the manifest parser, the server-side registry with the dev
+  server built from it, and the client serving plugin origins from the registry (S3,
+  pending its pull request's merge). `createMounts`, `splitMounts`, and the client's
+  `WIKI_*` constants are gone. The code is the authority where it differs from Part 1:
+  - Manifests (S1): paths must be plain, a `reads` root may not start with `*`, and `*`
+    does not match a dot segment.
+  - On `app://<id>`, only `/api/<id>` and `/api/<id>/...` reach the plugin's mounts. Any
+    other `api/` path is a plain 404 file miss, as it was for the wiki, also when no
+    folder is open. Only Paper Wiki's own unknown paths changed: a JSON `no endpoint`
+    404, or 503 with no folder open, where they were a plain 404.
+  - `createHandler`'s state has no `csp`: `route` derives the app policy from `sites`,
+    so the framed origins and the served sites cannot disagree.
+  - The app policy no longer allows Google Fonts, which the frontend does not load, so
+    `appCsp(["paper-wiki"])` is not byte-identical to the old `CSP`; the test pins the
+    new literal. `appCsp([])` gives `frame-src 'none'`.
+  - `WIKI_CSP` is `WORKSPACE_CSP` (any workspace-folder site); `PLUGIN_CSP` is built for
+    plugin-folder sites, which are tested on a fixture only (no plugin has `site/` until
+    S6). They need no open folder and have no index fallback (`app://<id>/` is 404).
+  - A bundled plugin that fails to load is logged as `ERROR` and its compiled-in
+    handlers are left out, so `createRegistry` does not throw on every folder opened.
+  - The end-to-end suite runs through the new layout, not the dock. The Help menu item
+    keeps its label, "System and Prerequisites", because the suite clicks it by that
+    label.
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **Next: S3, S4, S5, then S6.** S3 and S5 move the client's security boundary and are
+- **Next: S4, S5, then S6.** S5 moves the client's security boundary again and is
   checked only by the advisory `desktop.yml` and the end-to-end suite, so run
-  `npm run test:e2e` in `os-ui/client` before each of them merges.
+  `npm run test:e2e` in `os-ui/client` before it merges.
 - **Waiting on the Human Owner:** whether the Paper view may vendor PDF.js (Part 2), and
   whether a third-party plugin may add a left-navigation item (Part 1, Q-PO1).
 
