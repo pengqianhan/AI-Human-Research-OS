@@ -1,0 +1,1290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-Human Research OS · Mockup A</title>
+<!--
+  Step 1 mockup, direction A: "quiet lab notebook".
+  Self-contained: inline CSS, JS and SVG; system fonts only; no network requests.
+  Project facts come from projects-folder/nanochat_cpu/, paper-wiki/ and git log.
+  Every invented chat message, run or status sits under a visible "sample" label.
+-->
+<style>
+:root {
+  --paper: #F2F4F3; --panel: #FFFFFF; --ink: #17262E; --ink-soft: #52646E;
+  --grid: #D9E0E2; --signal: #E8590C; --verify: #2F7D6D; --warn: #B7791F; --stale: #8A979E;
+  --rule: #E5EAEB; --wash: #F7F9F8; --hl: #FCF2DC; --hl-edge: #E7C77F;
+  --add: #E5F1ED; --add-ink: #24624F; --del: #FBEAE2; --del-ink: #9A3F12;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: "Latin Modern Roman", "CMU Serif", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--paper); color: var(--ink); font: 14px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
+.mono { font-family: var(--mono); }
+.soft { color: var(--ink-soft); }
+.faint { color: var(--stale); }
+.ic { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.scroll { overflow: auto; min-height: 0; min-width: 0; }
+
+/* ---------- app frame ---------- */
+.app { display: grid; grid-template-columns: 220px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: 100vh; }
+.nav { display: flex; flex-direction: column; min-height: 0; overflow: auto; padding: 18px 12px 14px; border-right: 1px solid var(--grid); background: var(--paper); }
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 20px; }
+.brand-name { font-size: 13.5px; font-weight: 600; line-height: 1.25; }
+.brand-sub { font-size: 11px; color: var(--ink-soft); }
+.nav-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; margin: 1px 0; border-radius: 6px; color: var(--ink-soft); font-size: 13.5px; }
+.nav-item:hover { background: rgba(23, 38, 46, .045); color: var(--ink); }
+.nav-item.active { background: var(--panel); color: var(--ink); box-shadow: inset 2px 0 0 var(--ink), 0 0 0 1px var(--rule); }
+.nav-item.disabled { color: var(--stale); cursor: default; }
+.nav-item.disabled:hover { background: none; color: var(--stale); }
+.nav-item .mono { font-size: 12.5px; }
+.nav-label { padding: 20px 10px 6px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--stale); }
+.nav-spacer { flex: 1; min-height: 16px; }
+.nav-foot { padding: 12px 10px 0; margin-top: 8px; border-top: 1px solid var(--grid); font: 10.5px/1.5 var(--mono); color: var(--stale); }
+.qa-dot { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--signal); flex: none; margin: 0 4px 0 4px; }
+.step { margin-left: auto; padding: 2px 7px; border: 1px solid var(--grid); border-radius: 999px; font: 10.5px/1.3 var(--mono); color: var(--stale); white-space: nowrap; background: var(--panel); }
+.main { position: relative; min-width: 0; min-height: 0; }
+.screen { position: absolute; inset: 0; display: none; flex-direction: column; min-height: 0; }
+.screen.on { display: flex; }
+.page-wrap { max-width: 1060px; margin: 0 auto; padding: 28px 40px 56px; }
+.eyebrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+h1 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+h2 { font-size: 15px; font-weight: 600; }
+.lead { margin-top: 6px; color: var(--ink-soft); max-width: 640px; }
+.tag-sample { display: inline-block; padding: 1px 7px; border: 1px dashed var(--stale); border-radius: 999px; font: 10.5px/1.5 var(--mono); color: var(--ink-soft); background: var(--panel); white-space: nowrap; }
+.pill { display: inline-block; padding: 1px 8px; border: 1px solid var(--grid); border-radius: 999px; font-size: 11.5px; color: var(--ink-soft); background: var(--panel); white-space: nowrap; }
+.attn { display: inline-flex; align-items: center; gap: 6px; color: var(--signal); font-size: 12.5px; font-weight: 500; }
+.attn::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--signal); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--grid); border-radius: 8px; background: var(--panel); font-size: 13px; color: var(--ink); }
+.btn:hover { border-color: #B9C4C8; }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.btn.disabled { color: var(--stale); background: transparent; cursor: default; border-style: dashed; }
+.toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; z-index: 50; max-width: 520px; padding: 9px 16px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 13px; box-shadow: 0 10px 28px rgba(23, 38, 46, .22); transition: opacity .18s, transform .18s; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- conversation ---------- */
+.convo { display: flex; flex-direction: column; min-height: 0; background: var(--panel); }
+.convo-head { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--rule); }
+.convo-title { font-size: 14px; font-weight: 600; }
+.convo-sub { font-size: 11.5px; color: var(--stale); }
+.agent-chip { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; padding: 3px 10px 3px 8px; border: 1px solid var(--grid); border-radius: 999px; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+.agent-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--ink-soft); }
+.msgs { flex: 1; }
+.msgs-inner { max-width: 760px; margin: 0 auto; padding: 18px 28px 12px; }
+.sample-label { display: flex; align-items: center; gap: 10px; margin: 2px 0 20px; font: 11px/1.3 var(--mono); color: var(--stale); text-align: center; }
+.sample-label::before, .sample-label::after { content: ""; flex: 1; min-width: 20px; border-top: 1px dashed var(--grid); }
+.msg { margin-bottom: 20px; }
+.msg-who { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 12px; color: var(--stale); }
+.msg-who b { color: var(--ink); font-weight: 600; }
+.msg-body { font-size: 14.5px; line-height: 1.65; }
+.msg-body p + p { margin-top: 8px; }
+.msg.you .msg-body { display: inline-block; max-width: 88%; padding: 9px 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--wash); }
+.msg-body code, .chip .mono { font-family: var(--mono); font-size: .88em; }
+.msg-body code { padding: 0 3px; border-radius: 3px; background: var(--wash); }
+.msg-src { margin-top: 7px; display: flex; align-items: center; gap: 6px; font: 11.5px/1.4 var(--mono); color: var(--stale); }
+.msg-src::before { content: "\21B3"; }
+.msg-act { margin-top: 10px; }
+.run { margin: 2px 0 20px; padding: 10px 14px; border: 1px solid var(--rule); border-left: 2px solid var(--verify); border-radius: 6px; background: var(--wash); font-size: 12.5px; }
+.run-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.run-meta { margin-top: 4px; font-size: 11.5px; color: var(--ink-soft); }
+.composer { padding: 12px 16px 14px; border-top: 1px solid var(--rule); }
+.composer-box { padding: 8px 10px 8px 12px; border: 1px solid var(--grid); border-radius: 10px; transition: border-color .2s, box-shadow .2s; }
+.composer-box:focus-within, .composer-box.flash { border-color: #A9B7BC; box-shadow: 0 0 0 3px rgba(23, 38, 46, .05); }
+.chips { display: none; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chips.on { display: flex; }
+.chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 3px 2px 7px; border: 1px solid var(--hl-edge); border-radius: 6px; background: var(--hl); font-size: 12px; }
+.chip .mono { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip .ic { width: 13px; height: 13px; color: var(--warn); }
+.chip-x { display: inline-flex; padding: 2px; border-radius: 4px; color: var(--ink-soft); }
+.chip-x:hover { background: rgba(23, 38, 46, .08); }
+.chip-x .ic { width: 12px; height: 12px; color: inherit; }
+.chip.new { animation: pop .7s ease; }
+@keyframes pop { 0% { transform: scale(.9); box-shadow: 0 0 0 4px rgba(231, 199, 127, .7); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 199, 127, 0); } }
+.composer textarea { display: block; width: 100%; min-height: 42px; border: 0; outline: none; resize: none; background: transparent; font: 14px/1.5 var(--sans); color: var(--ink); }
+.composer textarea::placeholder { color: var(--stale); }
+.composer-foot { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11.5px; color: var(--stale); }
+.composer-foot .btn { margin-left: auto; padding: 5px 12px; }
+
+/* ---------- home ---------- */
+.home-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 40px 48px; }
+.convo-home { height: clamp(440px, calc(100vh - 196px), 780px); border: 1px solid var(--grid); border-radius: 12px; overflow: hidden; }
+.band { margin-top: 34px; }
+.band-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.band-head .actions { margin-left: auto; display: flex; gap: 8px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.card { display: flex; flex-direction: column; gap: 9px; min-height: 200px; padding: 16px 18px 14px; border: 1px solid var(--grid); border-radius: 10px; background: var(--panel); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.card:hover { border-color: #B3C0C4; box-shadow: 0 6px 18px rgba(23, 38, 46, .06); }
+.card.sample { background: #FAFBFB; color: var(--ink-soft); }
+.card-top { display: flex; align-items: center; gap: 8px; }
+.card-name { font: 600 14.5px/1.3 var(--mono); color: var(--ink); }
+.card-top .right { margin-left: auto; display: flex; gap: 6px; }
+.card-goal { font-size: 13px; color: var(--ink-soft); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card-rule { border-top: 1px solid var(--rule); margin: 2px 0; }
+.card-next { font-size: 12.5px; }
+.card-next span { color: var(--stale); }
+.card-foot { margin-top: auto; display: flex; align-items: center; gap: 8px; font: 11px/1.4 var(--mono); color: var(--stale); }
+.card-foot .go { margin-left: auto; font-family: var(--sans); font-size: 12px; color: var(--ink-soft); }
+
+/* ---------- projects list ---------- */
+.plist { margin-top: 24px; border-top: 1px solid var(--grid); }
+.prow { display: grid; grid-template-columns: 190px 70px 52px minmax(0, 1.1fr) minmax(0, 1fr) 118px; gap: 18px; align-items: start; padding: 14px 6px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.prow.head { padding: 9px 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--stale); }
+.prow.link { cursor: pointer; }
+.prow.link:hover { background: var(--panel); }
+.prow.sample { color: var(--ink-soft); }
+.prow .name { font: 600 13px/1.4 var(--mono); color: var(--ink); }
+.list-note { margin-top: 12px; font-size: 12px; color: var(--stale); }
+
+/* ---------- workspace ---------- */
+.ws-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 12px 22px; border-bottom: 1px solid var(--grid); background: var(--paper); }
+.crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.crumb { color: var(--ink-soft); }
+.crumb:hover { color: var(--ink); text-decoration: underline; }
+.crumbs .mono { font-weight: 600; font-size: 13.5px; }
+.ws-meta { display: flex; align-items: center; gap: 8px; }
+.ws-right { margin-left: auto; font-size: 11.5px; }
+.ws-body { flex: 1; min-height: 0; display: grid; grid-template-columns: clamp(340px, 33%, 440px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.convo-proj { border-right: 1px solid var(--grid); }
+.convo-proj .msgs-inner { padding: 16px 20px 10px; }
+.convo-proj .msg-body { font-size: 14px; }
+.views { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.tabs { display: flex; align-items: flex-end; gap: 4px; padding: 0 18px; border-bottom: 1px solid var(--grid); }
+.tab { display: inline-flex; align-items: center; gap: 7px; padding: 11px 10px 10px; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: 13.5px; color: var(--ink-soft); }
+.tab:hover { color: var(--ink); }
+.tab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.tab.disabled { color: var(--stale); cursor: default; }
+.tab.disabled .step { margin-left: 0; }
+.view { display: none; flex: 1; flex-direction: column; min-height: 0; min-width: 0; }
+.view.on { display: flex; }
+.subbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 18px; border-bottom: 1px solid var(--rule); font-size: 12px; color: var(--ink-soft); }
+.seg { display: inline-flex; padding: 2px; border: 1px solid var(--grid); border-radius: 8px; background: var(--panel); }
+.seg button { padding: 3px 12px; border-radius: 6px; font-size: 12.5px; color: var(--ink-soft); }
+.seg button.active { background: var(--ink); color: #fff; }
+.ro { display: inline-flex; align-items: center; gap: 5px; color: var(--stale); }
+.ro .ic { width: 13px; height: 13px; }
+.subbar .hint { margin-left: auto; color: var(--stale); }
+.pane { display: none; flex: 1; min-height: 0; min-width: 0; }
+.pane.on { display: flex; }
+
+/* files */
+.files { grid-template-columns: 236px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.files.on { display: grid; }
+.tree { padding: 10px 6px 80px; border-right: 1px solid var(--rule); }
+.t-row { display: flex; align-items: center; gap: 5px; width: 100%; padding: 3px 8px; border-radius: 5px; font: 12.5px/1.5 var(--mono); color: var(--ink-soft); white-space: nowrap; }
+.t-row:hover { background: rgba(23, 38, 46, .05); color: var(--ink); }
+.t-row .ic { width: 14px; height: 14px; color: var(--stale); }
+.t-row.dir { color: var(--ink); }
+.t-row.cur { background: var(--panel); color: var(--ink); box-shadow: 0 0 0 1px var(--rule); }
+.t-row.is-picked { background: var(--hl); box-shadow: 0 0 0 1px var(--hl-edge); color: var(--ink); }
+.t-sp { width: 14px; flex: none; }
+.t-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.t-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--verify); flex: none; margin-left: 2px; }
+.viewer { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--panel); }
+.viewer-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 10px 18px; border-bottom: 1px solid var(--rule); }
+.viewer-head .path { font: 600 12.5px/1.4 var(--mono); }
+.viewer-head .meta { font-size: 11.5px; color: var(--stale); }
+.viewer-body { flex: 1; padding: 8px 0 90px; }
+.code { display: inline-block; min-width: 100%; font: 12.5px/1.62 var(--mono); }
+.ln { display: flex; cursor: pointer; }
+.ln:hover { background: var(--wash); }
+.ln .no { flex: none; width: 52px; padding-right: 14px; text-align: right; color: #B0BBBF; user-select: none; }
+.ln .tx { flex: 1; padding-right: 24px; white-space: pre; }
+.ln.is-picked { background: var(--hl); }
+.ln.is-picked .no { color: var(--warn); box-shadow: inset 2px 0 0 var(--hl-edge); }
+.c-com { color: var(--stale); font-style: italic; }
+.c-kw { color: var(--verify); }
+.c-h { font-weight: 700; }
+.excerpt-end { margin: 14px 18px 0 66px; padding-top: 10px; border-top: 1px dashed var(--grid); font: 11.5px/1.5 var(--sans); color: var(--stale); }
+.empty { max-width: 380px; margin: 60px auto; text-align: center; color: var(--ink-soft); font-size: 13px; }
+.empty .ic { width: 28px; height: 28px; color: var(--stale); margin-bottom: 10px; }
+.empty p + p { margin-top: 6px; }
+
+/* changes */
+.changes { flex-direction: column; background: var(--panel); }
+.commits { border-bottom: 1px solid var(--rule); }
+.commit { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; width: 100%; padding: 10px 18px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.commit:last-child { border-bottom: 0; }
+.commit:hover { background: var(--wash); }
+.commit .h { font: 600 12.5px/1.4 var(--mono); }
+.commit .d { font: 11.5px/1.4 var(--mono); color: var(--stale); }
+.commit.cur { box-shadow: inset 2px 0 0 var(--ink); background: var(--wash); }
+.commit.is-picked { background: var(--hl); box-shadow: inset 2px 0 0 var(--hl-edge); }
+.detail { flex: 1; padding: 14px 18px 90px; }
+.stat { width: 100%; border-collapse: collapse; font: 12px/1.5 var(--mono); margin-bottom: 18px; }
+.stat td { padding: 3px 0; border-bottom: 1px solid var(--rule); }
+.stat td.n { width: 90px; text-align: right; }
+.plus { color: var(--add-ink); }
+.minus { color: var(--del-ink); }
+.d-file { margin-bottom: 16px; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.d-file-head { display: flex; gap: 10px; padding: 7px 12px; border-bottom: 1px solid var(--rule); background: var(--wash); font: 600 12px/1.4 var(--mono); }
+.d-scroll { overflow-x: auto; }
+.d-lines { display: inline-block; min-width: 100%; font: 12px/1.6 var(--mono); }
+.d-line { display: flex; cursor: pointer; }
+.d-line .o, .d-line .n { flex: none; width: 40px; padding-right: 8px; text-align: right; color: #B0BBBF; user-select: none; }
+.d-line .t { flex: 1; padding: 0 16px 0 6px; white-space: pre; }
+.d-line.add { background: var(--add); }
+.d-line.add .t { color: var(--add-ink); }
+.d-line.del { background: var(--del); }
+.d-line.del .t { color: var(--del-ink); }
+.d-line.hunk { background: #F3F6F7; color: var(--stale); cursor: default; }
+.d-line.is-picked { background: var(--hl); box-shadow: inset 2px 0 0 var(--hl-edge); }
+.note { font-size: 12px; color: var(--stale); }
+
+/* selection bar */
+.selbar { position: absolute; left: 50%; bottom: 18px; z-index: 5; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 36px); padding: 8px 8px 8px 14px; border: 1px solid var(--grid); border-radius: 10px; background: var(--panel); box-shadow: 0 10px 30px rgba(23, 38, 46, .14); transform: translate(-50%, 10px); opacity: 0; pointer-events: none; transition: opacity .16s, transform .16s; font-size: 12.5px; }
+.selbar.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.selbar .what { color: var(--stale); white-space: nowrap; }
+.selbar .label { font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.selbar .btn { white-space: nowrap; }
+.selbar .x { padding: 6px 8px; color: var(--ink-soft); border-radius: 6px; }
+.selbar .x:hover { background: var(--wash); }
+
+/* paper */
+.pager, .zoom { display: inline-flex; align-items: center; gap: 4px; }
+.ibtn { display: inline-flex; padding: 4px; border: 1px solid var(--grid); border-radius: 6px; background: var(--panel); color: var(--ink); }
+.ibtn:disabled { color: #C2CBCE; cursor: default; }
+.pager span, .zoom span { min-width: 74px; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink); }
+.zoom span { min-width: 46px; }
+.paper-canvas { flex: 1; padding: 22px 18px 90px; background: #E9EDEC; --z: 1; }
+.pg { display: none; position: relative; width: 54em; min-height: 69.9em; margin: 0 auto; padding: 5.6em 6.3em 6.5em; font: calc(11.6px * var(--z)) / 1.42 var(--serif); color: #111; background: #fff; box-shadow: 0 1px 2px rgba(23, 38, 46, .1), 0 10px 30px rgba(23, 38, 46, .08); }
+.pg.on { display: block; }
+.pg-title { margin: 1.4em -2em 0; text-align: center; font-size: 1.5em; line-height: 1.3; }
+.pg-author { height: 1.2em; }
+.pg-date { text-align: center; font-size: 1.09em; margin: .5em 0 2em; }
+.pg-abs { margin: 0 2.6em 1.6em; font-size: .91em; }
+.pg-abs-h { text-align: center; font-weight: 700; margin-bottom: .4em; }
+.pg-sec { margin: 1.5em 0 .7em; font-size: 1.3em; font-weight: 700; }
+.pg-sec span { display: inline-block; width: 1.6em; }
+.pg p { text-align: justify; hyphens: auto; -webkit-hyphens: auto; text-indent: 1.5em; }
+.pg p.ni { text-indent: 0; }
+.pg p.rp { text-indent: 0; margin-top: .9em; }
+.pg tt { font-family: var(--mono); font-size: .9em; }
+.cite, .ref { color: #2440C8; }
+.pp { cursor: pointer; border-radius: 2px; transition: background .12s; }
+.pp:hover { background: #F6F8F7; box-shadow: -0.5em 0 0 #F6F8F7, 0.5em 0 0 #F6F8F7; }
+.pp.is-picked { background: var(--hl); box-shadow: -0.5em 0 0 var(--hl), 0.5em 0 0 var(--hl), -0.75em 0 0 var(--hl-edge); }
+.pg-table { margin: 0 auto 1.8em; }
+.pg-table table { margin: 0 auto; border-collapse: collapse; font-size: .91em; }
+.pg-table th, .pg-table td { padding: .14em .7em; text-align: left; font-weight: 400; }
+.pg-table thead tr { border-top: .1em solid #111; border-bottom: .06em solid #111; }
+.pg-table tbody tr:last-child { border-bottom: .1em solid #111; }
+.pg-table thead th { padding-top: .35em; padding-bottom: .3em; }
+.pg-cap { margin-top: .8em; text-align: center; font-size: 1em; }
+.pg-num { position: absolute; left: 0; right: 0; bottom: 3em; text-align: center; font-size: 1em; }
+.paper-note { max-width: 54em; margin: 0 auto 12px; font: 11.5px/1.4 var(--sans); color: var(--ink-soft); display: flex; gap: 8px; align-items: center; }
+
+/* ---------- wiki ---------- */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; border-top: 1px solid var(--grid); border-bottom: 1px solid var(--grid); }
+.stat-cell { padding: 14px 16px; border-left: 1px solid var(--rule); }
+.stat-cell:first-child { border-left: 0; padding-left: 0; }
+.stat-cell b { display: block; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat-cell span { font-size: 12px; color: var(--ink-soft); }
+.wiki-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 28px; margin-top: 26px; }
+.wiki-list { border-top: 1px solid var(--grid); }
+.w-row { display: block; width: 100%; padding: 12px 8px; border-bottom: 1px solid var(--rule); }
+.w-row:hover { background: var(--panel); }
+.w-row.cur { background: var(--panel); box-shadow: inset 2px 0 0 var(--ink); }
+.w-title { font-size: 13.5px; font-weight: 500; line-height: 1.4; }
+.w-meta { margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; font: 11.5px/1.4 var(--mono); color: var(--stale); }
+.w-detail { align-self: start; position: sticky; top: 0; padding: 18px 20px; border: 1px solid var(--grid); border-radius: 10px; background: var(--panel); }
+.w-detail h3 { font-size: 15px; line-height: 1.4; font-weight: 600; }
+.w-detail dl { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px 12px; margin-top: 14px; font-size: 12.5px; }
+.w-detail dt { color: var(--stale); }
+.w-detail dd { min-width: 0; overflow-wrap: anywhere; }
+.w-desc { margin-top: 12px; font-size: 13.5px; color: var(--ink-soft); }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.focus { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--grid); }
+.focus ul { margin: 8px 0 0 18px; color: var(--ink-soft); font-size: 13px; }
+
+/* ---------- plugins / settings ---------- */
+.head-row { display: flex; align-items: flex-end; gap: 16px; }
+.head-row .actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.group-h { margin: 28px 0 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--stale); }
+.plug { display: grid; grid-template-columns: 36px minmax(0, 1fr) 210px 110px; gap: 16px; align-items: center; padding: 14px 6px; border-top: 1px solid var(--rule); }
+.plug:last-child { border-bottom: 1px solid var(--rule); }
+.plug > .step, .plug > .state-on { justify-self: start; }
+.plug-ic { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--grid); border-radius: 8px; background: var(--panel); color: var(--ink-soft); }
+.plug.off .plug-ic, .plug.off .plug-name { color: var(--stale); }
+.plug-name { font-weight: 600; font-size: 13.5px; }
+.plug-desc { font-size: 12.5px; color: var(--ink-soft); }
+.plug.off .plug-desc { color: var(--stale); }
+.contrib { display: flex; flex-wrap: wrap; gap: 5px; }
+.state-on { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--verify); font-weight: 500; }
+.state-on .ic { width: 14px; height: 14px; }
+.set-sec { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; padding: 22px 0; border-top: 1px solid var(--grid); }
+.set-sec h2 { display: flex; align-items: center; gap: 8px; }
+.set-sec .sub { margin-top: 4px; font-size: 12.5px; color: var(--ink-soft); }
+.set-sec.off h2, .set-sec.off .sub { color: var(--stale); }
+.field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.field-box { flex: 1; min-width: 260px; padding: 7px 12px; border: 1px solid var(--grid); border-radius: 8px; background: var(--panel); font: 12.5px/1.5 var(--mono); }
+.agent-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); color: var(--stale); font-size: 13px; }
+.agent-row b { font-weight: 600; }
+.toggle { display: inline-block; width: 30px; height: 18px; border-radius: 999px; border: 1px solid var(--grid); background: #EEF1F2; position: relative; }
+.toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #C9D1D4; }
+.small { font-size: 12.5px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ======================= left navigation ======================= -->
+  <aside class="nav" aria-label="Main navigation">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="6" fill="#17262E"/><path d="M9 18.5V7.5h4.6a3.2 3.2 0 0 1 0 6.4H9m4.4 0 3.8 4.6" stroke="#F2F4F3" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><div class="brand-name">AI-Human<br>Research OS</div></div>
+    </div>
+    <button class="nav-item active" data-go="home"><i data-ic="home"></i>Home</button>
+    <button class="nav-item" data-go="projects"><i data-ic="grid"></i>Projects</button>
+    <button class="nav-item" data-go="wiki"><i data-ic="book"></i>Paper wiki</button>
+    <button class="nav-item disabled" aria-disabled="true" data-hint="Skills arrives in step 2 (Skills Hub plugin)." title="Arrives in step 2"><i data-ic="spark"></i>Skills<span class="step">step 2</span></button>
+    <button class="nav-item" data-go="plugins"><i data-ic="plug"></i>Plugins</button>
+    <div class="nav-label">Quick access</div>
+    <button class="nav-item" id="qa-nano" data-open="nanochat_cpu" title="Open the nanochat_cpu workspace"><span class="qa-dot" title="awaiting Human Owner review"></span><span class="mono">nanochat_cpu</span></button>
+    <div class="nav-spacer"></div>
+    <button class="nav-item" data-go="settings"><i data-ic="sliders"></i>Settings</button>
+    <div class="nav-foot">mockup A · quiet lab notebook<br>step 1 · read-only · nothing is sent</div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ======================= HOME ======================= -->
+    <section class="screen on" id="screen-home" aria-label="Home">
+      <div class="scroll" style="flex:1">
+        <div class="home-wrap">
+          <div class="convo convo-home">
+            <div class="convo-head">
+              <div>
+                <div class="convo-title">Root agent</div>
+                <div class="convo-sub mono">workspace root · moves every project forward</div>
+              </div>
+              <span class="agent-chip" title="The app launches your own CLI on your own plan; it has no model of its own.">Claude Code</span>
+            </div>
+            <div class="msgs scroll">
+              <div class="msgs-inner">
+                <div class="sample-label">sample conversation · invented for this mockup · project facts quoted from the files</div>
+                <div class="msg you"><div class="msg-who"><b>You</b></div><div class="msg-body">What needs me today?</div></div>
+                <div class="msg">
+                  <div class="msg-who"><b>Root agent</b> · via Claude Code</div>
+                  <div class="msg-body">
+                    <p>One project is waiting on you. <code>nanochat_cpu</code> (stage <b>probe</b>, P1) is a runnable example with a short paper, and it is awaiting Human Owner review.</p>
+                    <p>Its next action: you review the README, figures, and short paper, then accept or revise. Accepting the 2026-09-26 dispatch run also completes GOAL.md H2.</p>
+                  </div>
+                  <div class="msg-src">projects-folder/nanochat_cpu/PROJECT_MEMORY.md · Snapshot</div>
+                  <div class="msg-act"><button class="btn" data-open="nanochat_cpu"><i data-ic="grid"></i>Open nanochat_cpu</button></div>
+                </div>
+                <div class="msg you"><div class="msg-who"><b>You</b></div><div class="msg-body">Anything else still open on it?</div></div>
+                <div class="msg">
+                  <div class="msg-who"><b>Root agent</b> · via Claude Code</div>
+                  <div class="msg-body">
+                    <p>One optional TODO: run <code>bash runs/runcpu_small.sh all</code> on Linux or macOS, because only Windows is tested.</p>
+                    <p>The project's current question is whether the ~3-minute d1 example (0.84M params) is the right first-run example for Research OS users, and whether it should be verified on another machine or OS.</p>
+                  </div>
+                  <div class="msg-src">PROJECT_MEMORY.md · Open TODOs, Current question</div>
+                </div>
+              </div>
+            </div>
+            <div class="composer">
+              <div class="composer-box">
+                <textarea rows="2" placeholder="Ask the root agent about any project…" aria-label="Message the root agent"></textarea>
+                <div class="composer-foot"><span>Answers come from your own CLI session at the workspace root</span><button class="btn primary" data-toast="Mockup: nothing is sent. In the app this goes to your own Claude Code session."><i data-ic="send"></i>Send</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="band">
+            <div class="band-head">
+              <h2>Projects</h2><span class="small">1 project · 2 sample cards to judge the grid</span>
+              <div class="actions">
+                <button class="btn" data-go="projects">All projects</button>
+                <button class="btn" data-toast="New project is inert in this mockup."><i data-ic="plus"></i>New project</button>
+              </div>
+            </div>
+            <div class="cards">
+              <div class="card" role="button" tabindex="0" data-open="nanochat_cpu">
+                <div class="card-top"><span class="card-name">nanochat_cpu</span><span class="right"><span class="pill">probe</span><span class="pill">P1</span></span></div>
+                <div class="card-goal">Reproduce OpenResearch's default nanochat demo at a CPU-sized scale: an end-to-end tokenizer, pretraining, SFT, and chat baseline plus its learning-rate and vocabulary probes.</div>
+                <div class="card-rule"></div>
+                <div class="small">Runnable example with a short paper, 2026-09-29</div>
+                <div class="attn">awaiting Human Owner review</div>
+                <div class="card-next"><span>Next ·</span> Human Owner reviews the README, figures, and short paper, then accepts or revises</div>
+                <div class="card-foot"><span>63ead0b · 2026-09-29</span><span class="go">Open →</span></div>
+              </div>
+              <div class="card sample" role="button" tabindex="0" data-toast="Sample card: there is no workspace behind it in this mockup.">
+                <div class="card-top"><span class="card-name" style="color:var(--ink-soft)">kv_cache_probe</span><span class="right"><span class="tag-sample">sample</span></span></div>
+                <div class="card-goal">Sample project used only to show how several cards sit in the grid.</div>
+                <div class="card-rule"></div>
+                <div class="small">Stage idea · question written, no code yet</div>
+                <div class="card-next"><span>Next ·</span> Draft the first experiment</div>
+                <div class="card-foot"><span>sample</span></div>
+              </div>
+              <div class="card sample" role="button" tabindex="0" data-toast="Sample card: there is no workspace behind it in this mockup.">
+                <div class="card-top"><span class="card-name" style="color:var(--ink-soft)">agent_memory_survey</span><span class="right"><span class="tag-sample">sample</span></span></div>
+                <div class="card-goal">Sample project used only to show how several cards sit in the grid.</div>
+                <div class="card-rule"></div>
+                <div class="small">Stage writing · related work drafted</div>
+                <div class="card-next"><span>Next ·</span> Check every citation against its source</div>
+                <div class="card-foot"><span>sample</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= PROJECTS ======================= -->
+    <section class="screen" id="screen-projects" aria-label="Projects">
+      <div class="scroll" style="flex:1">
+        <div class="page-wrap">
+          <div class="head-row">
+            <div><h1>Projects</h1><p class="lead">Each project is a folder under <span class="mono">projects-folder/</span>. Its memory file holds stage, status, and next action.</p></div>
+            <div class="actions"><button class="btn" data-toast="New project is inert in this mockup."><i data-ic="plus"></i>New project</button></div>
+          </div>
+          <div class="plist">
+            <div class="prow head"><span>Project</span><span>Stage</span><span>Priority</span><span>Status</span><span>Next action</span><span>Last change</span></div>
+            <div class="prow link" role="button" tabindex="0" data-open="nanochat_cpu">
+              <span class="name">nanochat_cpu</span><span>probe</span><span>P1</span>
+              <span>Runnable example with a short paper, 2026-09-29<br><span class="attn">awaiting Human Owner review</span></span>
+              <span class="soft">Human Owner reviews the README, figures, and short paper, then accepts or revises; accepting the 2026-09-26 dispatch run also completes GOAL.md H2</span>
+              <span class="mono faint" style="font-size:11.5px">63ead0b<br>2026-09-29</span>
+            </div>
+            <div class="prow link sample" role="button" tabindex="0" data-toast="Sample row: there is no workspace behind it in this mockup.">
+              <span class="name" style="color:var(--ink-soft)">kv_cache_probe <span class="tag-sample">sample</span></span><span>idea</span><span>P2</span>
+              <span>Question written, no code yet</span><span>Draft the first experiment</span><span class="mono faint" style="font-size:11.5px">sample</span>
+            </div>
+            <div class="prow link sample" role="button" tabindex="0" data-toast="Sample row: there is no workspace behind it in this mockup.">
+              <span class="name" style="color:var(--ink-soft)">agent_memory_survey <span class="tag-sample">sample</span></span><span>writing</span><span>P3</span>
+              <span>Related work drafted</span><span>Check every citation against its source</span><span class="mono faint" style="font-size:11.5px">sample</span>
+            </div>
+          </div>
+          <p class="list-note">nanochat_cpu is real: its row comes from projects-folder/nanochat_cpu/PROJECT_MEMORY.md and git log. The other two rows are samples.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= PROJECT WORKSPACE ======================= -->
+    <section class="screen" id="screen-workspace" aria-label="nanochat_cpu workspace">
+      <header class="ws-head">
+        <div class="crumbs"><button class="crumb" data-go="projects">Projects</button><span class="faint">/</span><span class="mono">nanochat_cpu</span></div>
+        <div class="ws-meta"><span class="pill">probe</span><span class="pill">P1</span><span class="attn">awaiting Human Owner review</span></div>
+        <div class="ws-right mono faint">projects-folder/nanochat_cpu · last commit 63ead0b</div>
+      </header>
+      <div class="ws-body">
+        <div class="convo convo-proj">
+          <div class="convo-head">
+            <div><div class="convo-title">Project conversation</div><div class="convo-sub mono">runs inside projects-folder/nanochat_cpu</div></div>
+            <span class="agent-chip" title="The app launches your own CLI on your own plan; it has no model of its own.">Claude Code</span>
+          </div>
+          <div class="msgs scroll">
+            <div class="msgs-inner">
+              <div class="sample-label">sample conversation · facts from the project files</div>
+              <div class="msg you"><div class="msg-who"><b>You</b></div><div class="msg-body">Before I review: where do the paper's numbers come from?</div></div>
+              <div class="msg">
+                <div class="msg-who"><b>Project agent</b> · via Claude Code</div>
+                <div class="msg-body"><p>From the logged results. Every number in <code>paper/main.tex</code> comes from <code>Code/results/</code> or <code>Code/README.md</code>, and Figure 1 is drawn at build time from <code>Code/results/training_metrics.csv</code>.</p></div>
+                <div class="msg-src">paper/main.tex · lines 10–11</div>
+              </div>
+              <div class="msg you"><div class="msg-who"><b>You</b></div><div class="msg-body">Are the stage timings in summary.json from the first run?</div></div>
+              <div class="msg">
+                <div class="msg-who"><b>Project agent</b> · via Claude Code</div>
+                <div class="msg-body"><p>No. They come from the last run, a re-run with the data already cached (152.9 s in total). The timings quoted in the README are from the first run, which took 2 min 57 s.</p></div>
+                <div class="msg-src">Code/README.md · changed in 63ead0b</div>
+              </div>
+              <div class="run">
+                <div class="run-top"><span class="tag-sample">sample run</span><span class="mono">bash runs/runcpu_small.sh all</span></div>
+                <div class="run-meta mono">from Code/nanochat/ · records commit 63ead0b · finished</div>
+              </div>
+            </div>
+          </div>
+          <div class="composer">
+            <div class="composer-box" id="proj-box">
+              <div class="chips" id="proj-chips" aria-label="References attached to the next message"></div>
+              <textarea id="proj-input" rows="2" placeholder="Ask about nanochat_cpu…" aria-label="Message the project agent"></textarea>
+              <div class="composer-foot"><span>Select a line, file, or paragraph on the right to attach it</span><button class="btn primary" data-toast="Mockup: nothing is sent. In the app this goes to the project's own Claude Code session."><i data-ic="send"></i>Send</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="views">
+          <nav class="tabs" aria-label="Project views">
+            <button class="tab disabled" aria-disabled="true" data-hint="Idea view arrives in step 2." title="Arrives in step 2">Idea <span class="step">step 2</span></button>
+            <button class="tab active" data-tab="code">Code</button>
+            <button class="tab disabled" aria-disabled="true" data-hint="Skeleton view arrives in step 2." title="Arrives in step 2">Skeleton <span class="step">step 2</span></button>
+            <button class="tab disabled" aria-disabled="true" data-hint="Assets view arrives in step 2." title="Arrives in step 2">Assets <span class="step">step 2</span></button>
+            <button class="tab" data-tab="paper">Paper</button>
+          </nav>
+
+          <!-- Code view -->
+          <div class="view on" id="view-code">
+            <div class="subbar">
+              <div class="seg"><button class="active" data-sub="files">Files</button><button data-sub="changes">Changes</button></div>
+              <span class="ro"><i data-ic="lock"></i>read-only</span>
+              <span class="mono faint" id="code-scope">Code/ · 56 tracked files</span>
+              <span class="hint" id="code-hint">Click a line or file · Shift-click extends</span>
+            </div>
+            <div class="pane files on" id="pane-files">
+              <div class="tree scroll" id="tree" aria-label="Files in Code/"></div>
+              <div class="viewer">
+                <div class="viewer-head" id="viewer-head"></div>
+                <div class="viewer-body scroll" id="viewer-body"></div>
+              </div>
+            </div>
+            <div class="pane changes" id="pane-changes">
+              <div class="commits" id="commits"></div>
+              <div class="detail scroll" id="detail"></div>
+            </div>
+          </div>
+
+          <!-- Paper view -->
+          <div class="view" id="view-paper">
+            <div class="subbar">
+              <span class="mono">paper/main.tex</span><span class="ro"><i data-ic="lock"></i>read-only</span>
+              <div class="pager"><button class="ibtn" id="pg-prev" aria-label="Previous page"><i data-ic="chevLeft"></i></button><span id="pg-label">Page 1 of 2</span><button class="ibtn" id="pg-next" aria-label="Next page"><i data-ic="chevRight"></i></button></div>
+              <div class="zoom"><button class="ibtn" id="zm-out" aria-label="Zoom out"><i data-ic="minus"></i></button><span id="zm-label">100%</span><button class="ibtn" id="zm-in" aria-label="Zoom in"><i data-ic="plus"></i></button></div>
+              <span class="hint">Click a paragraph to select it</span>
+            </div>
+            <div class="paper-canvas scroll" id="paper-canvas">
+              <div class="paper-note"><i data-ic="file"></i>Page facsimile drawn from main.tex, not the PDF. This mockup shows pages 1–2 of 4.</div>
+
+              <article class="pg on" data-page="1" aria-label="Page 1">
+                <div class="pg-title">nanochat on a Laptop CPU: a Three-Minute End-to-End Example<br>for the AI-Human Research OS</div>
+                <div class="pg-author" aria-hidden="true"></div>
+                <div class="pg-date">September 2026</div>
+                <div class="pg-abs pp" data-ref="Abstract">
+                  <div class="pg-abs-h">Abstract</div>
+                  <p>We shrink OpenResearch’s default nanochat demo until every stage, from tokenizer training through pretraining, evaluation, supervised fine-tuning (SFT), and chat, runs on a laptop-class CPU. With a one-layer, 0.84M-parameter model, a 4,096-token vocabulary, and 300 pretraining steps, the full pipeline, including two probe runs, finishes in 2&nbsp;min&nbsp;57&nbsp;s on an Intel i7-12700, using at most 1.0&nbsp;GB of RAM per process. Validation bits per byte (bpb) falls from 3.456 to 2.288 during pretraining and from 2.289 to 2.146 during SFT. Doubling the Muon matrix learning rate lowers the final bpb by 0.012, and halving the vocabulary raises it by 0.096. The model produces no useful answers: the contribution is a runnable, deterministic first example for the Research OS, not a research result.</p>
+                </div>
+                <div class="pg-sec"><span>1</span>Introduction</div>
+                <p class="ni pp" data-ref="§1 Introduction ¶1">The AI-Human Research OS organizes research as plain files that a human and code agents share. Its users need one example project they can run end to end on their own machine, to see the idea, code, figures, results, and paper live together. OpenResearch&nbsp;<span class="cite">[2]</span> ships such a demo: it trains nanochat&nbsp;<span class="cite">[6]</span>, a compact pipeline for building a chat model, at depth&nbsp;6 with 73.5M parameters for 5,000 pretraining and 1,500 SFT steps on an Apple M3 Max. Its pretraining alone would take over nine hours on the CPU used here.</p>
+                <p class="pp" data-ref="§1 Introduction ¶2">This project ports that demo and scales it down until the whole pipeline takes about three minutes on a CPU. It contributes (i)&nbsp;a one-command, staged, CPU-only port whose code changes are documented; (ii)&nbsp;measurements of the time, memory, and learning curves of every stage; and (iii)&nbsp;the demo’s two probes, a larger matrix learning rate and a smaller vocabulary, run at this scale.</p>
+                <div class="pg-sec"><span>2</span>Setup</div>
+                <p class="ni pp" data-ref="§2 Setup · Code"><b>Code.</b> The port starts from OpenResearch commit <tt>27cb342</tt>, path <tt>demo/nanochat</tt>, with the demo’s overrides applied. The code changes are small: <tt>torch.compile</tt> becomes switchable and is off on CPU, because the Windows CPU backend needs a C++ compiler; SFT data can be downloaded as an evenly spaced subsample; and CORE prompts are cropped to the rotary cache length. A staged runner executes each stage in under a minute and logs its exit code, wall time, and peak memory.</p>
+                <div class="pg-num">1</div>
+              </article>
+
+              <article class="pg" data-page="2" aria-label="Page 2">
+                <div class="pg-table pp" data-ref="Table 1 · Recipe">
+                  <table>
+                    <thead><tr><th>Knob</th><th>Demo</th><th>This example</th></tr></thead>
+                    <tbody>
+                      <tr><td>Model</td><td>depth 6, width 384, 73.5M params</td><td>depth 1, width 64, 0.84M params</td></tr>
+                      <tr><td>Tokenizer</td><td>32,768 vocab, 2B chars</td><td>4,096 vocab, 50M chars</td></tr>
+                      <tr><td>Context / batch</td><td>512 / 16,384 tokens</td><td>256 / 4,096 tokens</td></tr>
+                      <tr><td>Pretraining data</td><td>8 shards (∼0.8&nbsp;GB)</td><td>1 train + 1 val shard (∼184&nbsp;MB)</td></tr>
+                      <tr><td>Pretraining steps</td><td>5,000 (81.9M tokens)</td><td>300 (1.23M tokens)</td></tr>
+                      <tr><td>SFT data</td><td>full splits (∼980&nbsp;MB)</td><td>∼1/128 of each split (∼14&nbsp;MB)</td></tr>
+                      <tr><td>SFT steps / LR fraction</td><td>1,500 / 0.8</td><td>40 / 0.1</td></tr>
+                      <tr><td>Base evaluation</td><td>CORE + bpb + samples</td><td>bpb + samples</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="pg-cap">Table 1: Recipe of the OpenResearch demo and of this example.</div>
+                </div>
+                <p class="rp pp" data-ref="§2 Setup · Recipe"><b>Recipe.</b> Table&nbsp;<span class="ref">1</span> compares the demo’s recipe with this example. The data-to-parameter ratio of pretraining stays close to the demo’s (3.95 versus 3.5 tokens per scaling parameter). Pretraining uses one training shard and the pinned validation shard of <tt>climbmix-400b-shuffle</tt>&nbsp;<span class="cite">[7]</span>. SFT uses the demo’s mixture of SmolTalk&nbsp;<span class="cite">[1]</span>, MMLU&nbsp;<span class="cite">[4]</span>, and GSM8K&nbsp;<span class="cite">[3]</span>, subsampled to about 1/128 of every split. Matrix parameters are trained with Muon&nbsp;<span class="cite">[5]</span>, as in nanochat. SFT starts at 0.1 of the inherited learning rate: at the demo’s 0.8, SFT validation bpb spiked from 2.29 to 2.63 and ended above its start.</p>
+                <p class="rp pp" data-ref="§2 Setup · Hardware and metric"><b>Hardware and metric.</b> All runs use Windows&nbsp;11 on an Intel i7-12700 (12 cores, 20 threads) with 32&nbsp;GB of RAM and no GPU, in eager mode. The metric is validation bits per byte (bpb), measured every 25 pretraining steps on 65,536 validation tokens and every 10 SFT steps on 32,768 tokens. Training is deterministic on this machine: two fresh runs gave identical validation bpb to six decimals.</p>
+                <div class="pg-sec"><span>3</span>Results</div>
+                <p class="ni pp" data-ref="§3 Results · Learning curves"><b>Learning curves.</b> Pretraining lowers validation bpb from 3.4564 to 2.2882 in 300 steps (Figure&nbsp;<span class="ref">1</span>). The base evaluation on 16,384 tokens per split gives 2.2947 bpb on training data and 2.3622 on validation data. SFT then lowers validation bpb from 2.2892 to 2.1456 in 40 steps. Asked “What is the capital of France?”, the SFT model replies with nonsense (<tt>ATedning the date that is - min B</tt>, whitespace collapsed), as expected at 0.84M parameters; the demo’s 73.5M model answered “Paris”.</p>
+                <p class="rp pp" data-ref="§3 Results · Probes"><b>Probes.</b> Both probes repeat the 300-step schedule with one change (Table&nbsp;<span class="ref">2</span>). Doubling the Muon matrix learning rate is neutral through step 100 and then slightly better, ending 0.012 bpb lower. The 2,048-token vocabulary is worse at every step; the gap narrows from 0.23 to 0.10 bpb but does not close. The demo’s own probe results are not part of the copied evidence, so whether these directions match the demo’s is not checked.</p>
+                <p class="rp pp" data-ref="§3 Results · Cost"><b>Cost.</b> On a first run with an empty data cache, the whole pipeline takes 2&nbsp;min&nbsp;57&nbsp;s, of which the baseline stages take 1&nbsp;min&nbsp;29&nbsp;s. Pretraining takes 42.3&nbsp;s, SFT 20.5&nbsp;s, and the two probes 47.1&nbsp;s and 38.4&nbsp;s. The largest process peaks at 1.0&nbsp;GB of RAM (the data download); training stays at or below 0.94&nbsp;GB. The run downloads about 0.20&nbsp;GB of data and uses about 0.9&nbsp;GB of disk inside the project, mostly for the Python environment.</p>
+                <div class="pg-num">2</div>
+              </article>
+            </div>
+          </div>
+
+          <div class="selbar" id="selbar" role="status">
+            <span class="what" id="selbar-what">Selected</span>
+            <span class="label" id="selbar-label"></span>
+            <button class="btn primary" id="ask"><i data-ic="ask"></i>Ask the agent about this</button>
+            <button class="x" id="sel-clear" aria-label="Clear selection"><i data-ic="x"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= PAPER WIKI ======================= -->
+    <section class="screen" id="screen-wiki" aria-label="Paper wiki">
+      <div class="scroll" style="flex:1">
+        <div class="page-wrap">
+          <div class="eyebrow"><i data-ic="plug"></i>Paper Wiki · bundled plugin</div>
+          <h1>Paper Wiki</h1>
+          <p class="lead">Shared paper notes, topic syntheses, concepts, sources, and graph navigation. Notes stay plain files under <span class="mono">paper-wiki/</span>.</p>
+          <div class="stats">
+            <div class="stat-cell"><b>89</b><span>Papers · all unread</span></div>
+            <div class="stat-cell"><b>26</b><span>Topics</span></div>
+            <div class="stat-cell"><b>23</b><span>Concepts</span></div>
+            <div class="stat-cell"><b>2</b><span>Sources</span></div>
+          </div>
+          <div class="wiki-grid">
+            <div>
+              <h2 style="margin-bottom:10px">A few paper notes</h2>
+              <div class="wiki-list" id="wiki-list"></div>
+              <div class="focus">
+                <h2>Current focus</h2>
+                <ul>
+                  <li>Agent coordination and shared context.</li>
+                  <li>Self-organizing AI research agents.</li>
+                  <li>Autonomous research and hypothesis-tree refinement.</li>
+                  <li>Research verifiability and claim-to-evidence provenance.</li>
+                  <li>Open-world skill acquisition for LLM agents.</li>
+                </ul>
+              </div>
+            </div>
+            <aside class="w-detail" id="wiki-detail" aria-live="polite"></aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= PLUGINS ======================= -->
+    <section class="screen" id="screen-plugins" aria-label="Plugins">
+      <div class="scroll" style="flex:1">
+        <div class="page-wrap">
+          <div class="head-row">
+            <div><h1>Plugins</h1><p class="lead">The trunk stays small. Bundled plugins add pages and project views; their data stay plain workspace files, so removing a plugin deletes no notes.</p></div>
+            <div class="actions"><button class="btn disabled" aria-disabled="true" data-hint="Loading a plugin from a local folder arrives in step 2."><i data-ic="folder"></i>Load from folder<span class="step" style="margin-left:6px">step 2</span></button></div>
+          </div>
+          <div class="group-h">Bundled · enabled</div>
+          <div>
+            <div class="plug"><div class="plug-ic"><i data-ic="book"></i></div><div><div class="plug-name">Paper Wiki</div><div class="plug-desc">Shared paper notes, topics, concepts, and sources from paper-wiki/.</div></div><div class="contrib"><span class="pill">Page</span></div><div class="state-on"><i data-ic="check"></i>Enabled</div></div>
+            <div class="plug"><div class="plug-ic"><i data-ic="code"></i></div><div><div class="plug-name">Code view</div><div class="plug-desc">Shows a project's files and Git changes, read-only.</div></div><div class="contrib"><span class="pill">Project view</span></div><div class="state-on"><i data-ic="check"></i>Enabled</div></div>
+            <div class="plug"><div class="plug-ic"><i data-ic="file"></i></div><div><div class="plug-name">Paper view</div><div class="plug-desc">Renders a project's paper from paper/main.tex, read-only.</div></div><div class="contrib"><span class="pill">Project view</span></div><div class="state-on"><i data-ic="check"></i>Enabled</div></div>
+          </div>
+          <div class="group-h">Bundled · not yet available</div>
+          <div>
+            <div class="plug off"><div class="plug-ic"><i data-ic="spark"></i></div><div><div class="plug-name">Idea view</div><div class="plug-desc">The project's questions, hypotheses, experiments, results, and claims as a graph stored in one Markdown file.</div></div><div class="contrib"><span class="pill">Project view</span></div><span class="step" style="margin-left:0">step 2</span></div>
+            <div class="plug off"><div class="plug-ic"><i data-ic="para"></i></div><div><div class="plug-name">Skeleton view</div><div class="plug-desc">The paper's claims, sources, and figures from paper_skeleton.md.</div></div><div class="contrib"><span class="pill">Project view</span></div><span class="step" style="margin-left:0">step 2</span></div>
+            <div class="plug off"><div class="plug-ic"><i data-ic="grid"></i></div><div><div class="plug-name">Assets view</div><div class="plug-desc">Figures and other project assets.</div></div><div class="contrib"><span class="pill">Project view</span></div><span class="step" style="margin-left:0">step 2</span></div>
+            <div class="plug off"><div class="plug-ic"><i data-ic="spark"></i></div><div><div class="plug-name">Skills Hub</div><div class="plug-desc">Browse reusable research skills and install them where your agents can use them.</div></div><div class="contrib"><span class="pill">Page</span><span class="pill">Skills</span></div><span class="step" style="margin-left:0">step 2</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= SETTINGS ======================= -->
+    <section class="screen" id="screen-settings" aria-label="Settings">
+      <div class="scroll" style="flex:1">
+        <div class="page-wrap">
+          <h1>Settings</h1>
+          <p class="lead">A stub for step 1. The app never edits an agent's settings, credentials, hooks, or MCP configuration.</p>
+          <div class="set-sec" style="margin-top:22px">
+            <div><h2>Workspace folder</h2><p class="sub">The folder the app reads. It is a Git repository of plain files.</p></div>
+            <div>
+              <div class="field"><span class="field-box">~/Documents/GitHub/Research_folder/AI-Human-Research-OS</span><span class="tag-sample">sample path</span></div>
+              <p class="small" style="margin-top:8px">Projects live under <span class="mono">projects-folder/</span>; the paper wiki under <span class="mono">paper-wiki/</span>.</p>
+            </div>
+          </div>
+          <div class="set-sec">
+            <div><h2>Git <span class="pill" style="color:var(--ink);border-color:var(--ink-soft)">Required</span></h2><p class="sub">Each run records its commit, and the Code view shows files and changes.</p></div>
+            <div><p class="small">There is no mode without Git. The workspace is a Git repository, and each project becomes its own repository.</p></div>
+          </div>
+          <div class="set-sec off">
+            <div><h2>Agents <span class="step" style="margin-left:0">step 4</span></h2><p class="sub">Not available yet. The app launches your own CLI on your own plan.</p></div>
+            <div aria-disabled="true">
+              <div class="agent-row"><b>Claude Code</b><span>Detected automatically with version, sign-in, and usage</span><span class="toggle" aria-hidden="true"></span></div>
+              <div class="agent-row"><b>Codex</b><span>Detected automatically with version, sign-in, and usage</span><span class="toggle" aria-hidden="true"></span></div>
+              <div class="agent-row"><b>Other agents</b><span>Added through ACP plugins; Antigravity is bundled but off until you enable it</span><span class="toggle" aria-hidden="true"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Real file excerpts, read verbatim from the repository. -->
+<script type="text/plain" id="src-summarize">
+"""Parse the stage logs in Code/results/logs/ into tables and SVG figures (standard library only).
+
+Run from Code/nanochat after the stages finish (the runner's "summary" stage does this):
+    .venv/Scripts/python ../tools/summarize_results.py
+
+Writes:
+    Code/results/training_metrics.csv   per-step train loss, val bpb, throughput for every training run
+    Code/results/summary.json           per-stage exit code, wall time, peak RAM; headline metrics; probe deltas
+    Figs/baseline_training_curves.svg   base train loss, base val bpb, SFT val bpb
+    Figs/probe_comparison.svg           val bpb of the baseline and both probes at matched steps
+"""
+import csv
+import json
+import math
+import re
+from html import escape
+from pathlib import Path
+
+CODE = Path(__file__).resolve().parents[1]
+LOGS = CODE / "results" / "logs"
+FIGS = CODE.parent / "Figs"
+
+# log name -> (run label, phase) for training runs
+RUNS = {
+    "base_train": ("baseline", "base"),
+    "chat_sft": ("baseline", "sft"),
+    "probe_lr2x": ("probe_lr2x", "base"),
+    "probe_vocab2048": ("probe_vocab2048", "base"),
+}
+BASELINE_STAGES = ["data", "tok_train", "tok_eval", "base_train", "base_eval", "chat_sft", "chat_cli"]
+PROBE_STAGES = ["probe_lr2x", "probe_vocab2048_tok", "probe_vocab2048"]
+LABELS = {
+    "baseline": "baseline (matrix lr 0.02, vocab 4096)",
+    "probe_lr2x": "probe 1: matrix lr 0.04",
+    "probe_vocab2048": "probe 2: vocab 2048",
+}
+SHORT = {"baseline": "baseline", "probe_lr2x": "lr x2", "probe_vocab2048": "vocab 2048"}
+# Reference default palette (dataviz skill): categorical slots 1-3 in fixed order, text inks, recessive grid
+COLORS = {"baseline": "#2a78d6", "probe_lr2x": "#eb6834", "probe_vocab2048": "#1baf7a"}
+INK, INK2, MUTED, GRID, SURFACE = "#0b0b0b", "#52514e", "#898781", "#e6e5e0", "#fcfcfb"
+
+TRAIN_RE = re.compile(r"^step (\d+)\S* .*?\| loss: ([\d.]+) .*?\| dt: ([\d.]+)ms \| tok/sec: ([\d,]+)")
+VAL_RE = re.compile(r"^Step (\d+) \| Validation bpb: ([\d.]+)")
+SUMMARY_RE = re.compile(r"^\[run_logged\] exit=(-?\d+) wall_s=([\d.]+) peak_rss_mb=(\d+)")
+
+def read(name):
+    path = LOGS / f"{name}.log"
+    return path.read_text(encoding="utf-8").splitlines() if path.exists() else None
+
+def parse_run(lines):
+    rows = {}
+    for line in lines:
+        if m := TRAIN_RE.match(line):
+            rows.setdefault(int(m[1]), {}).update(train_loss=float(m[2]), dt_ms=float(m[3]), tok_per_sec=int(m[4].replace(",", "")))
+        elif m := VAL_RE.match(line):
+            rows.setdefault(int(m[1]), {})["val_bpb"] = float(m[2])
+    return rows
+</script>
+<script type="text/plain" id="src-runlogged">
+"""Run one command, tee its output to a log, and record wall time and peak memory.
+
+Usage (from Code/nanochat, with the nanochat venv's python):
+    .venv/Scripts/python ../tools/run_logged.py LOG_PATH -- python -m scripts.base_train ...
+A leading "python" in the command is replaced by the interpreter running this script.
+
+Peak memory is the largest resident set size (sum over the process tree), sampled every 0.5 s.
+A summary line "[run_logged] exit=.. wall_s=.. peak_rss_mb=.." ends the log.
+"""
+import subprocess
+import sys
+import threading
+import time
+
+import psutil
+
+def main():
+    sep = sys.argv.index("--")
+    log_path, cmd = sys.argv[1], sys.argv[sep + 1:]
+    if cmd[0] == "python":
+        cmd[0] = sys.executable  # same interpreter (the venv), independent of PATH
+    peak = 0
+    t0 = time.time()
+    with open(log_path, "w", encoding="utf-8") as log:
+        log.write("[run_logged] cmd: " + " ".join(cmd) + "\n")
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, encoding="utf-8", errors="replace", bufsize=1)
+        ps = psutil.Process(proc.pid)
+        done = threading.Event()
+
+        def sample():
+            nonlocal peak
+            while not done.is_set():
+                try:
+                    rss = ps.memory_info().rss + sum(c.memory_info().rss for c in ps.children(recursive=True))
+                    peak = max(peak, rss)
+                except psutil.Error:
+                    pass
+                time.sleep(0.5)
+</script>
+<script type="text/plain" id="src-readme">
+# Code: nanochat CPU example
+
+The OpenResearch default demo, Andrej Karpathy's nanochat, shrunk until every
+stage runs on a laptop-class CPU in a few minutes. It is a first example that
+any Research OS user can run once, **not a research result**. The model has
+0.84M parameters and cannot answer questions; its chat reply is expected to be
+nonsense. Success means every stage completes and validation bits per byte
+(bpb) falls during pretraining.
+
+## What to expect
+
+Measured on 2026-09-26 on Windows 11 with an Intel i7-12700 (12 cores, 20
+threads), 32 GB RAM, CPU only. The run started with an empty data cache but an
+existing `uv` package cache.
+
+| | Whole example (`all`) | Baseline stages only |
+|---|---|---|
+| Wall-clock time | **2 min 57 s** | 1 min 29 s (+ `uv sync`) |
+| Peak RAM per process | 1.0 GB (data download); training ≤ 0.94 GB | same |
+| Data downloads | ~0.20 GB: 2 pretraining shards (~184 MB) + ~14 MB of SFT data | same |
+| Python packages (first setup only) | ~0.2 GB of wheels, mostly the 106 MB CPU `torch` wheel | same |
+| Disk inside the project | ~0.9 GB: `.venv` 0.68 GB, `.cache` ~0.21 GB | same |
+
+Slower machines should scale roughly with single-socket CPU speed; nothing
+needs a GPU.
+
+## Setup
+
+Prerequisites: [`uv`](https://docs.astral.sh/uv/) and `bash`. On Windows, use
+Git Bash's `bash`. Nothing is installed system-wide. `uv` creates
+`Code/nanochat/.venv`, and all data, checkpoints, and logs stay under
+`Code/nanochat/.cache/` and `Code/results/`.
+
+## Run it (one command)
+
+```bash
+cd Code/nanochat
+bash runs/runcpu_small.sh all
+```
+</script>
+<!-- Real diff from `git show 63ead0b`, limited to two files of the project. -->
+<script type="text/plain" id="src-diff">
+diff --git a/projects-folder/nanochat_cpu/Code/README.md b/projects-folder/nanochat_cpu/Code/README.md
+index fac490b..3cc1484 100644
+--- a/projects-folder/nanochat_cpu/Code/README.md
++++ b/projects-folder/nanochat_cpu/Code/README.md
+@@ -124,7 +124,9 @@ in [results/summary.json](results/summary.json),
+ [results/training_metrics.csv](results/training_metrics.csv), both tracked.
+ The raw stage logs in `results/logs/` are regenerated by each run and are not
+ tracked (the repository ignores `*.log`). Two fresh runs gave identical val bpb to 6
+-decimals: training is deterministic on this machine.
++decimals: training is deterministic on this machine. The per-stage timings in
++`summary.json` come from the last run, a re-run with the data already cached
++(152.9 s in total); the timings quoted in this README are from the first run.
+
+ ![Baseline training curves](../Figs/baseline_training_curves.svg)
+
+diff --git a/projects-folder/nanochat_cpu/index.md b/projects-folder/nanochat_cpu/index.md
+index 9dca8ff..019801e 100644
+--- a/projects-folder/nanochat_cpu/index.md
++++ b/projects-folder/nanochat_cpu/index.md
+@@ -6,6 +6,7 @@ Reproduce OpenResearch's default nanochat demo at a CPU-sized scale: an end-to-e
+
+ * [AGENTS.md](AGENTS.md) - Workflow, integrity, and project-specific rules for agents working here.
+ * [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - Durable project state, decisions, progress, and next action.
++* [paper_skeleton.md](paper_skeleton.md) - Claims, sources, and figures of the short paper, each traced to its evidence.
+ * [Code/README.md](Code/README.md) - One-command CPU run, expected results, changes from the demo, and limitations.
+ * [Code/README_zh.md](Code/README_zh.md) - Chinese version of the code README.
+
+@@ -13,11 +14,12 @@ Reproduce OpenResearch's default nanochat demo at a CPU-sized scale: an end-to-e
+
+ * [Code/](Code/) - Ported nanochat, the staged runner, logging and summary tools, and logged results.
+ * [Figs/](Figs/) - Training curves and probe comparison figures.
++* [paper/](paper/) - Short paper on the example: LaTeX source, bibliography, and compiled PDF.
+ * [Baselines/](Baselines/) - Unchanged reference-run evidence from OpenResearch's nanochat demo.
+-* [paper/](paper/) - Paper area inherited from the template; unused, since this project is an example, not a research result.
+ * [log.md](log.md) - Newest-first project update log.
+
+ ## Related
+
+ * [Source idea: nanochat CPU baseline](../../ideas/nanochat-cpu-baseline.md) - Promoted idea this project was created from.
++* [paper/main.pdf](paper/main.pdf) - Compiled short paper, generated from paper/main.tex.
+ * [Code/results/summary.json](Code/results/summary.json) - Validation bpb and stage timings from the logged runs.
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  /* ---------- icons ---------- */
+  var ICONS = {
+    home: '<path d="M2.5 7.2 8 2.8l5.5 4.4V13a.5.5 0 0 1-.5.5H9.6V10H6.4v3.5H3a.5.5 0 0 1-.5-.5z"/>',
+    grid: '<rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/>',
+    book: '<path d="M2.5 3.4c2-.7 3.8-.4 5.5.9 1.7-1.3 3.5-1.6 5.5-.9v9.4c-2-.7-3.8-.4-5.5.9-1.7-1.3-3.5-1.6-5.5-.9z"/><path d="M8 4.3v9.4"/>',
+    spark: '<path d="M8 2.5 9.3 6.7 13.5 8 9.3 9.3 8 13.5 6.7 9.3 2.5 8l4.2-1.3z"/>',
+    plug: '<path d="M6 2.5v3M10 2.5v3M4.5 5.5h7V8a3.5 3.5 0 0 1-7 0zM8 11.5v2"/>',
+    sliders: '<path d="M2.5 4.5h6.5M12.5 4.5h1M2.5 11.5h1M7 11.5h6.5"/><circle cx="10.7" cy="4.5" r="1.6"/><circle cx="5.3" cy="11.5" r="1.6"/>',
+    send: '<path d="M3 8h9.5M8.8 4.3 12.5 8l-3.7 3.7"/>',
+    file: '<path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/>',
+    folder: '<path d="M2.5 4.2h4l1.3 1.5h5.7v6.8h-11z"/>',
+    chevRight: '<path d="M6.2 4 10.2 8l-4 4"/>',
+    chevDown: '<path d="M4 6.2 8 10.2l4-4"/>',
+    chevLeft: '<path d="M9.8 4 5.8 8l4 4"/>',
+    lock: '<rect x="3.5" y="7" width="9" height="6.5" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/>',
+    x: '<path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/>',
+    plus: '<path d="M8 3.5v9M3.5 8h9"/>',
+    minus: '<path d="M3.5 8h9"/>',
+    commit: '<circle cx="8" cy="8" r="2.4"/><path d="M1.5 8h4.1M10.4 8h4.1"/>',
+    para: '<path d="M3 4h10M3 7h10M3 10h10M3 13h6"/>',
+    code: '<path d="M5.5 4.5 2 8l3.5 3.5M10.5 4.5 14 8l-3.5 3.5"/>',
+    diff: '<path d="M5 3v5M2.5 5.5h5M8.5 12.5h5"/>',
+    ask: '<path d="M2.5 3.5h11v7H7.8l-3 2.5v-2.5H2.5z"/>',
+    check: '<path d="M3.5 8.5 6.5 11.5 12.5 4.5"/>'
+  };
+  function ic(name) { return '<svg class="ic" viewBox="0 0 16 16" aria-hidden="true">' + (ICONS[name] || '') + '</svg>'; }
+  $$('i[data-ic]').forEach(function (el) { el.outerHTML = ic(el.getAttribute('data-ic')); });
+
+  /* ---------- state ---------- */
+  var state = {
+    screen: 'home', tab: 'code', sub: 'files',
+    file: 'Code/tools/summarize_results.py', anchor: null, range: null,
+    commit: '63ead0b', page: 1, zoom: 100, sel: null, chips: [], wiki: '2605.26340'
+  };
+
+  /* ---------- toast ---------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2600);
+  }
+
+  /* ---------- screens ---------- */
+  var NAV_OF = { home: 'home', projects: 'projects', workspace: 'projects', wiki: 'wiki', plugins: 'plugins', settings: 'settings' };
+  function go(screen) {
+    state.screen = screen;
+    $$('.screen').forEach(function (s) { s.classList.toggle('on', s.id === 'screen-' + screen); });
+    $$('.nav-item[data-go]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-go') === NAV_OF[screen]); });
+    $('#qa-nano').classList.toggle('active', screen === 'workspace');
+    clearSel();
+  }
+  function switchTab(tab) {
+    state.tab = tab;
+    $$('.tab[data-tab]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === tab); });
+    $('#view-code').classList.toggle('on', tab === 'code');
+    $('#view-paper').classList.toggle('on', tab === 'paper');
+    clearSel();
+  }
+  function switchSub(sub) {
+    state.sub = sub;
+    $$('.seg button').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-sub') === sub); });
+    $('#pane-files').classList.toggle('on', sub === 'files');
+    $('#pane-changes').classList.toggle('on', sub === 'changes');
+    $('#code-scope').textContent = sub === 'files' ? 'Code/ · 56 tracked files' : 'git log -- projects-folder/nanochat_cpu · 3 commits';
+    $('#code-hint').textContent = sub === 'files' ? 'Click a line or file · Shift-click extends' : 'Click a commit or a diff line';
+    clearSel();
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-hint],[data-toast],[data-go],[data-open],[data-tab],[data-sub]');
+    if (!el) return;
+    if (el.hasAttribute('data-hint')) { toast(el.getAttribute('data-hint')); return; }
+    if (el.hasAttribute('data-toast')) { toast(el.getAttribute('data-toast')); return; }
+    if (el.hasAttribute('data-go')) { go(el.getAttribute('data-go')); return; }
+    if (el.hasAttribute('data-open')) { go('workspace'); return; }
+    if (el.hasAttribute('data-tab')) { switchTab(el.getAttribute('data-tab')); return; }
+    if (el.hasAttribute('data-sub')) { switchSub(el.getAttribute('data-sub')); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { clearSel(); return; }
+    var t = e.target;
+    if ((e.key === 'Enter' || e.key === ' ') && t.getAttribute && t.getAttribute('role') === 'button') { e.preventDefault(); t.click(); }
+  });
+
+  /* ---------- selection and reference chips ---------- */
+  function clearMarks() { $$('.is-picked').forEach(function (x) { x.classList.remove('is-picked'); }); }
+  function clearSel() { clearMarks(); state.sel = null; state.range = null; state.anchor = null; renderSelbar(); }
+  function setSel(sel) { state.sel = sel; renderSelbar(); }
+  function renderSelbar() {
+    var s = state.sel;
+    $('#selbar').classList.toggle('on', !!s);
+    if (s) { $('#selbar-what').textContent = s.what; $('#selbar-label').textContent = s.label; }
+  }
+  var KIND_ICON = { file: 'file', lines: 'code', commit: 'commit', diff: 'diff', para: 'para' };
+  function renderChips(flash) {
+    var box = $('#proj-chips');
+    box.innerHTML = state.chips.map(function (c, i) {
+      return '<span class="chip' + (c.label === flash ? ' new' : '') + '" title="Attached to your next message">' + ic(KIND_ICON[c.kind]) +
+        '<span class="mono">' + esc(c.label) + '</span><button class="chip-x" data-i="' + i + '" aria-label="Remove reference">' + ic('x') + '</button></span>';
+    }).join('');
+    box.classList.toggle('on', state.chips.length > 0);
+  }
+  $('#ask').addEventListener('click', function () {
+    var s = state.sel;
+    if (!s) return;
+    if (!state.chips.some(function (c) { return c.label === s.label; })) state.chips.push({ label: s.label, kind: s.kind });
+    renderChips(s.label);
+    clearSel();
+    var boxEl = $('#proj-box');
+    boxEl.classList.add('flash');
+    setTimeout(function () { boxEl.classList.remove('flash'); }, 900);
+    $('#proj-input').focus({ preventScroll: true });
+  });
+  $('#sel-clear').addEventListener('click', clearSel);
+  $('#proj-chips').addEventListener('click', function (e) {
+    var x = e.target.closest('.chip-x');
+    if (!x) return;
+    state.chips.splice(+x.getAttribute('data-i'), 1);
+    renderChips();
+  });
+
+  /* ---------- Code view: tree (git ls-files projects-folder/nanochat_cpu/Code) ---------- */
+  var FILES = ['Code/.gitkeep', 'Code/Datasets/.gitkeep', 'Code/README.md', 'Code/README_zh.md',
+    'Code/nanochat/.gitignore', 'Code/nanochat/.python-version', 'Code/nanochat/LICENSE', 'Code/nanochat/README.md',
+    'Code/nanochat/dev/nanochat.png', 'Code/nanochat/dev/scaling_laws_jan26.png',
+    'Code/nanochat/nanochat/__init__.py', 'Code/nanochat/nanochat/checkpoint_manager.py', 'Code/nanochat/nanochat/common.py',
+    'Code/nanochat/nanochat/core_eval.py', 'Code/nanochat/nanochat/dataloader.py', 'Code/nanochat/nanochat/dataset.py',
+    'Code/nanochat/nanochat/engine.py', 'Code/nanochat/nanochat/execution.py', 'Code/nanochat/nanochat/flash_attention.py',
+    'Code/nanochat/nanochat/fp8.py', 'Code/nanochat/nanochat/gpt.py', 'Code/nanochat/nanochat/loss_eval.py',
+    'Code/nanochat/nanochat/optim.py', 'Code/nanochat/nanochat/tokenizer.py', 'Code/nanochat/pyproject.toml',
+    'Code/nanochat/runs/miniseries.sh', 'Code/nanochat/runs/runcpu.sh', 'Code/nanochat/runs/runcpu_small.sh',
+    'Code/nanochat/runs/scaling_laws.sh', 'Code/nanochat/runs/speedrun.sh',
+    'Code/nanochat/scripts/base_eval.py', 'Code/nanochat/scripts/base_train.py', 'Code/nanochat/scripts/chat_cli.py',
+    'Code/nanochat/scripts/chat_eval.py', 'Code/nanochat/scripts/chat_rl.py', 'Code/nanochat/scripts/chat_sft.py',
+    'Code/nanochat/scripts/infer_bench.py', 'Code/nanochat/scripts/tok_eval.py', 'Code/nanochat/scripts/tok_train.py',
+    'Code/nanochat/tasks/arc.py', 'Code/nanochat/tasks/common.py', 'Code/nanochat/tasks/gsm8k.py',
+    'Code/nanochat/tasks/humaneval.py', 'Code/nanochat/tasks/mmlu.py', 'Code/nanochat/tasks/smoltalk.py',
+    'Code/nanochat/tests/test_attention_fallback.py', 'Code/nanochat/tests/test_engine.py', 'Code/nanochat/tests/test_execution.py',
+    'Code/nanochat/tests/test_optim.py', 'Code/nanochat/tests/test_tasks.py', 'Code/nanochat/tests/test_tokenizer.py',
+    'Code/nanochat/uv.lock', 'Code/results/summary.json', 'Code/results/training_metrics.csv',
+    'Code/tools/run_logged.py', 'Code/tools/summarize_results.py'];
+  var EXCERPTS = {
+    'Code/tools/summarize_results.py': { id: 'src-summarize', total: 189, lang: 'py' },
+    'Code/tools/run_logged.py': { id: 'src-runlogged', total: 53, lang: 'py' },
+    'Code/README.md': { id: 'src-readme', total: 234, lang: 'md' }
+  };
+  function buildTree(paths) {
+    var root = { name: 'Code', path: 'Code', dirs: {}, files: [] };
+    paths.forEach(function (p) {
+      var parts = p.split('/').slice(1), node = root, acc = 'Code';
+      parts.forEach(function (part, i) {
+        acc += '/' + part;
+        if (i === parts.length - 1) node.files.push({ name: part, path: acc });
+        else node = node.dirs[part] || (node.dirs[part] = { name: part, path: acc, dirs: {}, files: [] });
+      });
+    });
+    return root;
+  }
+  var TREE = buildTree(FILES);
+  var openDirs = { 'Code': true, 'Code/tools': true, 'Code/results': true, 'Code/nanochat': true };
+  var byName = function (a, b) { var x = a.name.toLowerCase(), y = b.name.toLowerCase(); return x < y ? -1 : x > y ? 1 : 0; };
+  function treeRow(n, depth, isDir) {
+    var isOpen = isDir && openDirs[n.path];
+    var cls = 't-row' + (isDir ? ' dir' : '') + (!isDir && n.path === state.file ? ' cur' : '') +
+      (state.sel && state.sel.kind === 'file' && state.sel.path === n.path ? ' is-picked' : '');
+    return '<button class="' + cls + '" data-path="' + esc(n.path) + '" data-dir="' + (isDir ? 1 : 0) + '" style="padding-left:' + (4 + depth * 12) + 'px">' +
+      (isDir ? ic(isOpen ? 'chevDown' : 'chevRight') + ic('folder') : '<span class="t-sp"></span>' + ic('file')) +
+      '<span class="t-name">' + esc(n.name) + (isDir ? '/' : '') + '</span>' +
+      (EXCERPTS[n.path] ? '<span class="t-dot" title="Excerpt included in this mockup"></span>' : '') + '</button>';
+  }
+  function renderTree() {
+    var out = [];
+    (function walk(node, depth) {
+      out.push(treeRow(node, depth, true));
+      if (!openDirs[node.path]) return;
+      Object.keys(node.dirs).map(function (k) { return node.dirs[k]; }).sort(byName).forEach(function (d) { walk(d, depth + 1); });
+      node.files.slice().sort(byName).forEach(function (f) { out.push(treeRow(f, depth + 1, false)); });
+    })(TREE, 0);
+    $('#tree').innerHTML = out.join('');
+  }
+  $('#tree').addEventListener('click', function (e) {
+    var r = e.target.closest('.t-row');
+    if (!r) return;
+    var p = r.getAttribute('data-path');
+    if (r.getAttribute('data-dir') === '1') { openDirs[p] = !openDirs[p]; renderTree(); return; }
+    clearMarks();
+    state.file = p; state.range = null; state.anchor = null;
+    setSel({ kind: 'file', path: p, what: 'File', label: p });
+    renderTree();
+    renderViewer();
+  });
+
+  /* ---------- Code view: read-only viewer ---------- */
+  function srcLines(id) { return $('#' + id).textContent.replace(/^\n/, '').replace(/\s+$/, '').split('\n'); }
+  var KW = /\b(def|class|import|from|return|for|in|if|elif|else|with|as|while|try|except|lambda|not|and|or|None|True|False|nonlocal|pass)\b/g;
+  function highlight(lines, lang) {
+    var inDoc = false;
+    return lines.map(function (l) {
+      var e = esc(l);
+      if (lang === 'md') return /^#/.test(l) ? '<span class="c-h">' + e + '</span>' : e;
+      var tq = (l.match(/"""/g) || []).length;
+      if (inDoc || tq) { if (tq % 2 === 1) inDoc = !inDoc; return '<span class="c-com">' + e + '</span>'; }
+      if (/^\s*#/.test(l)) return '<span class="c-com">' + e + '</span>';
+      var hash = e.indexOf('  # ');
+      var codePart = hash > 0 ? e.slice(0, hash) : e, comment = hash > 0 ? '<span class="c-com">' + e.slice(hash) + '</span>' : '';
+      return codePart.replace(KW, '<span class="c-kw">$1</span>') + comment;
+    });
+  }
+  function renderViewer() {
+    var ex = EXCERPTS[state.file], name = state.file.split('/').pop();
+    if (!ex) {
+      $('#viewer-head').innerHTML = '<span class="path">' + esc(state.file) + '</span><span class="meta">read-only</span>';
+      $('#viewer-body').innerHTML = '<div class="empty">' + ic('file') + '<p class="mono">' + esc(name) + '</p><p>Preview not loaded in this mockup.</p>' +
+        '<p class="faint">Files marked with a green dot have a real excerpt: summarize_results.py, run_logged.py and Code/README.md.</p></div>';
+      return;
+    }
+    var lines = srcLines(ex.id), html = highlight(lines, ex.lang);
+    $('#viewer-head').innerHTML = '<span class="path">' + esc(state.file) + '</span><span class="meta">lines 1–' + lines.length + ' of ' + ex.total + ' · read-only</span>';
+    $('#viewer-body').innerHTML = '<div class="code">' + html.map(function (h, i) {
+      return '<div class="ln" data-n="' + (i + 1) + '"><span class="no">' + (i + 1) + '</span><span class="tx">' + (h || ' ') + '</span></div>';
+    }).join('') + '</div><div class="excerpt-end">Excerpt ends at line ' + lines.length + ' of ' + ex.total + '. The app renders the whole file from the workspace.</div>';
+    $('#viewer-body').scrollTop = 0;
+  }
+  $('#viewer-body').addEventListener('mousedown', function (e) { if (e.shiftKey && e.target.closest('.ln')) e.preventDefault(); });
+  $('#viewer-body').addEventListener('click', function (e) {
+    var ln = e.target.closest('.ln');
+    if (!ln) return;
+    var n = +ln.getAttribute('data-n'), a = n, b = n;
+    if (e.shiftKey && state.anchor) { a = Math.min(state.anchor, n); b = Math.max(state.anchor, n); }
+    else if (state.range && state.range[0] === n && state.range[1] === n) { clearSel(); return; }
+    var anchor = e.shiftKey && state.anchor ? state.anchor : n;
+    clearMarks();
+    state.anchor = anchor; state.range = [a, b];
+    $$('#viewer-body .ln').forEach(function (x) { var k = +x.getAttribute('data-n'); if (k >= a && k <= b) x.classList.add('is-picked'); });
+    var name = state.file.split('/').pop();
+    setSel({ kind: 'lines', what: b > a ? 'Lines' : 'Line', label: name + ':L' + a + (b > a ? '–' + b : '') });
+  });
+
+  /* ---------- Code view: changes (git log --oneline -- projects-folder/nanochat_cpu) ---------- */
+  var COMMITS = [
+    { h: '63ead0b', date: '2026-09-29', subject: 'Delete Example_Project; nanochat_cpu becomes the only example, with a paper',
+      files: [['AGENTS.md', 5, 2], ['Code/README.md', 3, 1], ['Code/README_zh.md', 2, 1], ['PROJECT_MEMORY.md', 5, 3], ['index.md', 3, 1],
+        ['paper/main.pdf', null, null], ['paper/main.tex', 195, 18], ['paper/references.bib', 69, 1], ['paper_skeleton.md', 68, 108]], diff: true },
+    { h: 'c3acde4', date: '2026-09-29', subject: "Sync README and make project templates the projects' common base",
+      files: [['AGENTS.md', 84, 0], ['index.md', 16, 46]] },
+    { h: 'c4d4a85', date: '2026-09-28', subject: 'Add initial project structure and documentation for nanochat_cpu',
+      summary: '70 files changed, 19,987 insertions(+)' }
+  ];
+  function findCommit(h) { return COMMITS.filter(function (c) { return c.h === h; })[0]; }
+  function renderCommits() {
+    $('#commits').innerHTML = COMMITS.map(function (c) {
+      var n = c.files ? c.files.length + ' files' : '70 files';
+      return '<button class="commit' + (c.h === state.commit ? ' cur' : '') + '" data-h="' + c.h + '"><span class="h">' + c.h + '</span><span>' + esc(c.subject) +
+        '</span><span class="d">' + c.date + ' · ' + n + '</span></button>';
+    }).join('');
+  }
+  function parseDiff(text) {
+    var files = [], cur = null, o = 0, n = 0;
+    text.split('\n').forEach(function (l) {
+      if (l.indexOf('diff --git') === 0) { cur = { path: l.split(' b/')[1].replace('projects-folder/nanochat_cpu/', ''), lines: [] }; files.push(cur); return; }
+      if (!cur || /^(index |--- |\+\+\+ )/.test(l)) return;
+      var m = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(l);
+      if (m) { o = +m[1]; n = +m[2]; cur.lines.push({ t: 'hunk', s: l }); return; }
+      var sign = l.charAt(0), body = l.slice(1);
+      if (sign === '+') cur.lines.push({ t: 'add', s: '+' + body, n: n++ });
+      else if (sign === '-') cur.lines.push({ t: 'del', s: '-' + body, o: o++ });
+      else cur.lines.push({ t: 'ctx', s: ' ' + body, o: o++, n: n++ });
+    });
+    return files;
+  }
+  var DIFF = parseDiff($('#src-diff').textContent.replace(/^\n/, '').replace(/\s+$/, ''));
+  function renderDetail() {
+    var c = findCommit(state.commit), h = '';
+    h += '<div style="margin-bottom:12px"><div class="mono" style="font-weight:600">' + c.h + ' · ' + c.date + '</div><div>' + esc(c.subject) + '</div></div>';
+    if (c.files) {
+      h += '<table class="stat">' + c.files.map(function (f) {
+        var nums = f[1] === null ? '<span class="faint">binary</span>' : '<span class="plus">+' + f[1] + '</span> <span class="minus">−' + f[2] + '</span>';
+        return '<tr><td>' + esc(f[0]) + '</td><td class="n">' + nums + '</td></tr>';
+      }).join('') + '</table>';
+    } else {
+      h += '<p class="mono small" style="margin-bottom:10px">' + c.summary + ' inside projects-folder/nanochat_cpu</p>';
+    }
+    if (c.diff) {
+      h += '<p class="note" style="margin-bottom:10px">Diff of two small files from this commit. Click a line to select it.</p>';
+      h += DIFF.map(function (f) {
+        var adds = f.lines.filter(function (x) { return x.t === 'add'; }).length, dels = f.lines.filter(function (x) { return x.t === 'del'; }).length;
+        return '<div class="d-file"><div class="d-file-head"><span>' + esc(f.path) + '</span><span class="plus">+' + adds + '</span><span class="minus">−' + dels + '</span></div><div class="d-scroll"><div class="d-lines">' +
+          f.lines.map(function (x) {
+            return '<div class="d-line ' + x.t + '" data-file="' + esc(f.path) + '" data-ln="' + (x.n || x.o || '') + '"><span class="o">' + (x.o || '') + '</span><span class="n">' + (x.n || '') + '</span><span class="t">' + esc(x.s) + '</span></div>';
+          }).join('') + '</div></div></div>';
+      }).join('');
+    } else {
+      h += '<p class="note">Diff not loaded in this mockup; the app shows it from Git.</p>';
+    }
+    $('#detail').innerHTML = h;
+    $('#detail').scrollTop = 0;
+  }
+  $('#commits').addEventListener('click', function (e) {
+    var r = e.target.closest('.commit');
+    if (!r) return;
+    var c = findCommit(r.getAttribute('data-h'));
+    state.commit = c.h;
+    renderCommits();
+    renderDetail();
+    clearMarks();
+    $('#commits .commit[data-h="' + c.h + '"]').classList.add('is-picked');
+    setSel({ kind: 'commit', what: 'Commit', label: c.h + ' · ' + (c.subject.length > 42 ? c.subject.slice(0, 40) + '…' : c.subject) });
+  });
+  $('#detail').addEventListener('click', function (e) {
+    var r = e.target.closest('.d-line');
+    if (!r || r.classList.contains('hunk')) return;
+    if (r.classList.contains('is-picked')) { clearSel(); return; }
+    clearMarks();
+    r.classList.add('is-picked');
+    setSel({ kind: 'diff', what: 'Change', label: state.commit + ' · ' + r.getAttribute('data-file') + ':L' + r.getAttribute('data-ln') });
+  });
+
+  /* ---------- Paper view ---------- */
+  var ZOOMS = [80, 90, 100, 110, 125, 150];
+  function renderPaper() {
+    $$('.pg').forEach(function (p) { p.classList.toggle('on', +p.getAttribute('data-page') === state.page); });
+    $('#pg-label').textContent = 'Page ' + state.page + ' of 2';
+    $('#pg-prev').disabled = state.page === 1;
+    $('#pg-next').disabled = state.page === 2;
+    $('#zm-label').textContent = state.zoom + '%';
+    $('#paper-canvas').style.setProperty('--z', state.zoom / 100);
+    $('#zm-out').disabled = state.zoom === ZOOMS[0];
+    $('#zm-in').disabled = state.zoom === ZOOMS[ZOOMS.length - 1];
+  }
+  $('#pg-prev').addEventListener('click', function () { if (state.page > 1) { state.page--; clearSel(); renderPaper(); $('#paper-canvas').scrollTop = 0; } });
+  $('#pg-next').addEventListener('click', function () { if (state.page < 2) { state.page++; clearSel(); renderPaper(); $('#paper-canvas').scrollTop = 0; } });
+  $('#zm-out').addEventListener('click', function () { var i = ZOOMS.indexOf(state.zoom); if (i > 0) { state.zoom = ZOOMS[i - 1]; renderPaper(); } });
+  $('#zm-in').addEventListener('click', function () { var i = ZOOMS.indexOf(state.zoom); if (i < ZOOMS.length - 1) { state.zoom = ZOOMS[i + 1]; renderPaper(); } });
+  $('#paper-canvas').addEventListener('click', function (e) {
+    var p = e.target.closest('.pp');
+    if (!p) return;
+    if (p.classList.contains('is-picked')) { clearSel(); return; }
+    clearMarks();
+    p.classList.add('is-picked');
+    setSel({ kind: 'para', what: 'Paragraph', label: 'main.tex · ' + p.getAttribute('data-ref') });
+  });
+
+  /* ---------- Paper wiki (paper-wiki/papers/*.md frontmatter) ---------- */
+  var WIKI = [
+    { id: '2605.26340', title: 'ScientistOne: Towards Human-Level Autonomous Research via Chain-of-Evidence', by: 'Rui Meng et al.', date: '2026-05-25', prio: 'normal',
+      tags: ['autonomous-research', 'research-verifiability', 'chain-of-evidence', 'agent-environments', 'scientific-integrity'],
+      desc: 'Introduces Chain-of-Evidence, ScientistOne, and a four-part integrity audit for tracing autonomous-research claims to literature, code, and evaluator outputs.' },
+    { id: '2607.13285', title: 'Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable', by: 'Ruhan Wang et al.', date: '2026-07-14', prio: 'high',
+      tags: ['agent-harness-engineering', 'behavior-localization', 'repository-understanding', 'coding-agents', 'progressive-disclosure', 'llm-agents'],
+      desc: 'A behavior-centric, source-linked handbook and progressive-disclosure workflow for localizing changes in evolving agent harnesses.' },
+    { id: '2605.03042', title: 'ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration', by: 'Ruofeng Yang, Yongcan Li, Shuai Li', date: '2026-05-03', prio: 'medium',
+      tags: ['autonomous-research', 'multi-agent-systems', 'research-verifiability', 'agent-harness-engineering', 'llm-agents'],
+      desc: 'An open-source research harness that pairs a cross-model executor and reviewer under a three-stage evidence-to-claim audit cascade, plus 65+ Markdown skills and a persistent research wiki, to reduce plausible-but-unsupported claims in autonomous ML research.' },
+    { id: '2606.11926', title: 'Toward Generalist Autonomous Research via Hypothesis-Tree Refinement', by: 'Jiajie Jin et al.', date: '2026-06-10', prio: 'high',
+      tags: ['autonomous-research', 'autonomous-optimization', 'hypothesis-tree-refinement', 'llm-agents', 'ai-for-science', 'long-horizon-agents'],
+      desc: 'A paper introducing Arbor, an autonomous research framework that uses persistent hypothesis-tree refinement to organize long-horizon artifact optimization.' },
+    { id: '2605.28655', title: 'AutoScientists: Self-Organizing Agent Teams for Long-Running Scientific Experimentation', by: 'Shanghua Gao, Ada Fang, Marinka Zitnik', date: '2026-05-27', prio: 'high',
+      tags: ['ai-for-science', 'multi-agent-systems', 'self-organizing-agents', 'scientific-discovery', 'long-running-experiments'],
+      desc: 'A paper about decentralized AI agent teams for long-running scientific experimentation.' },
+    { id: '2606.06741', title: 'OpenSkill: Open-World Self-Evolution for LLM Agents', by: 'Zhiling Yan et al.', date: '2026-06-04', prio: 'high',
+      tags: ['llm-agents', 'agent-skills', 'self-evolution', 'open-world-learning', 'verification'],
+      desc: 'A paper about agents that build skills and verification signals from open-world resources without target-task supervision.' }
+  ];
+  function renderWiki() {
+    $('#wiki-list').innerHTML = WIKI.map(function (w) {
+      return '<button class="w-row' + (w.id === state.wiki ? ' cur' : '') + '" data-w="' + w.id + '"><div class="w-title">' + esc(w.title) + '</div>' +
+        '<div class="w-meta"><span>' + w.id + '</span><span>' + w.date + '</span><span>unread</span><span>' + w.prio + ' priority</span></div></button>';
+    }).join('');
+    var w = WIKI.filter(function (x) { return x.id === state.wiki; })[0];
+    $('#wiki-detail').innerHTML = '<div class="eyebrow" style="margin-bottom:8px">Paper note</div><h3>' + esc(w.title) + '</h3>' +
+      '<p class="w-desc">' + esc(w.desc) + '</p><dl>' +
+      '<dt>Authors</dt><dd>' + esc(w.by) + '</dd><dt>arXiv</dt><dd class="mono">' + w.id + '</dd><dt>Submitted</dt><dd>' + w.date + '</dd>' +
+      '<dt>Status</dt><dd>unread</dd><dt>Priority</dt><dd>' + w.prio + '</dd>' +
+      '<dt>Tags</dt><dd class="tags">' + w.tags.map(function (t) { return '<span class="pill mono" style="font-size:11px">' + esc(t) + '</span>'; }).join('') + '</dd>' +
+      '<dt>File</dt><dd class="mono">paper-wiki/papers/' + w.id + '.md</dd></dl>';
+  }
+  $('#wiki-list').addEventListener('click', function (e) {
+    var r = e.target.closest('.w-row');
+    if (!r) return;
+    state.wiki = r.getAttribute('data-w');
+    renderWiki();
+  });
+
+  /* ---------- first render ---------- */
+  renderTree();
+  renderViewer();
+  renderCommits();
+  renderDetail();
+  renderPaper();
+  renderWiki();
+  renderChips();
+})();
+</script>
+</body>
+</html>

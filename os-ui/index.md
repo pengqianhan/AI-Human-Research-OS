@@ -7,3 +7,4 @@ Read-only browser interface for observing Research OS state.
 * [frontend/](frontend/README.md) - Vite, React, and TypeScript implementation.
 * [generator/](generator/README.md) - Read-only repository state generator.
 * [client/](client/README.md) - Electron desktop client for macOS, Windows, and Linux.
+* [mockups/step1/](mockups/step1/) - Three clickable layout mockups for step 1 of the desktop repositioning, awaiting the Human Owner's choice.

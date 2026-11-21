@@ -45,6 +45,16 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       Acceptance: the Human Owner runs the
       [client checklist](os-ui/client/README.md#check-it-on-your-machine) on macOS
       against the new layout (this also settles P6 below).
+      Started 2026-11-21. Three clickable mockups of the same screens are in
+      [`os-ui/mockups/step1/`](os-ui/mockups/step1/) (A lab notebook, B dense
+      workbench, C document first; open them with the `mockups` preview in
+      `.claude/launch.json`) and wait for the Human Owner's choice; no layout or
+      view code is written before it. The registry is designed as eight small
+      changes; the first two (manifest parser, server-side registry) do not
+      depend on the layout and are being implemented on branch
+      `step1-registry-server`. Open question for the Human Owner before step 2:
+      may a third-party plugin add its own left-navigation item, or only home
+      panels and project views?
 - [ ] Step 2, remaining views: Idea, Skeleton, Assets; Skills Hub as the second
       plugin; then loading a plugin from a local folder. Acceptance: the Human
       Owner opens all five views on `nanochat_cpu`.
