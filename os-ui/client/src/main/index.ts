@@ -339,7 +339,7 @@ function createWindow(): void {
     minHeight: MIN_SIZE.height,
     show: false,
     title: "Research OS",
-    backgroundColor: "#F2F4F3",
+    backgroundColor: "#f3eee5", // the layout's page background, --bg in os-ui/frontend/src/index.css
     ...(process.platform === "linux" && existsSync(icon) ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "preload.cjs"),
