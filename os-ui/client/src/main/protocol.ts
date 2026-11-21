@@ -3,7 +3,15 @@ import { extname, resolve } from "node:path";
 import * as path from "node:path";
 import { matchMount } from "../../../frontend/server/api.ts";
 import type { Mount } from "../../../frontend/server/api.ts";
+import { safeRelative } from "../../../frontend/server/manifest.ts";
 import type { ApiRequest } from "../../../frontend/server/types.ts";
+
+/**
+ * A URL path as a safe relative path, or null. It lives with the plugin
+ * manifest, whose paths follow the same rule, and is re-exported here for
+ * this module's callers.
+ */
+export { safeRelative };
 
 export const SCHEME = "app";
 /** The app itself: renderer, state.json, and the os-ui endpoints. */
@@ -82,27 +90,6 @@ export type Route =
   /** `confined`: resolve symlinks and refuse a real path outside `root` (workspace files). */
   | { kind: "file"; root: string; rel: string; fallback: string | null; csp: string | null; confined: boolean }
   | { kind: "not-found" };
-
-/** Windows device names, which name a device in any folder (CON, NUL, COM1.txt, ...). */
-const DEVICE = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
-
-/**
- * A URL path as a safe relative path, or null. Percent-decoding happens once,
- * after which "..", backslashes, colons (drive letters, NTFS streams), NUL
- * bytes, and Windows device names are refused outright.
- */
-export function safeRelative(pathname: string): string | null {
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(pathname);
-  } catch {
-    return null;
-  }
-  if (/[\\:\0]/.test(decoded)) return null;
-  const segments = decoded.split("/").filter((s) => s !== "");
-  if (segments.some((s) => s === "." || s === ".." || DEVICE.test(s))) return null;
-  return segments.join("/");
-}
 
 /**
  * Where one app:// URL is served from.
