@@ -53,7 +53,7 @@ import { tempTree } from "./helpers.ts";
 const PLUGINS = join(import.meta.dirname, "..", "..", "frontend", "plugins");
 const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
 const sites = pluginSites(bundled.plugins);
-const CSP = appCsp(["paper-wiki"]);
+const CSP = appCsp(["paper-wiki", "code-view"]);
 
 /** A registry as createRegistry builds it, from mounts the tests make. */
 function registryOf(app: Mount[], byPlugin: Record<string, Mount[]>): Registry {
@@ -148,7 +148,7 @@ describe("plugin sites", () => {
 
   test("any other plugin serves the site/ folder beside its plugin.json, in load order", () => {
     assert.deepEqual(demo.problems, []);
-    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "demo"]);
+    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "demo"]);
     assert.deepEqual(twoSites.get("demo"), { id: "demo", source: "bundled", reads: [], files: { kind: "plugin", dir: demoSite } });
   });
 
@@ -208,9 +208,11 @@ describe("workspaceRegistry", () => {
 
 describe("policies", () => {
   test("the app policy frames exactly the loaded plugins' origins", () => {
+    // The bundled plugins: Paper Wiki and the Code view, each framed on its own origin.
+    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view"]);
     assert.equal(
-      appCsp(["paper-wiki"]),
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki; object-src 'none'; base-uri 'none'; form-action 'none'",
+      appCsp([...sites.keys()]),
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view; object-src 'none'; base-uri 'none'; form-action 'none'",
     );
     assert.match(appCsp(["paper-wiki", "demo"]), /; frame-src app:\/\/paper-wiki app:\/\/demo; /);
     assert.match(appCsp(["demo", "paper-wiki"]), /; frame-src app:\/\/demo app:\/\/paper-wiki; /);
@@ -219,7 +221,7 @@ describe("policies", () => {
 
   test("app pages carry the policy for the sites the handler was given, in their order", () => {
     const index = route("app://research-os/", { renderer, workspace }, twoSites);
-    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "demo"]));
+    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "demo"]));
   });
 
   test("a workspace site's policy, and a plugin-folder site's, which adds its own files", () => {
@@ -547,7 +549,7 @@ describe("handler", () => {
     });
 
     test("a host that is not a loaded plugin is not found, files and endpoints alike", async () => {
-      for (const url of ["app://code-view/index.html", "app://code-view/api/code-view/x", "app://demo/index.html"]) {
+      for (const url of ["app://nope-view/index.html", "app://nope-view/api/nope-view/x", "app://demo/index.html"]) {
         assert.equal(route(url, { renderer, workspace }, sites).kind, "not-found", url);
         assert.equal((await fetchApp(url)).status, 404, url);
       }
@@ -899,6 +901,7 @@ describe("read channel", () => {
       [...readSites.values()].map((s) => [s.id, s.source, s.reads]),
       [
         ["paper-wiki", "bundled", []],
+        ["code-view", "bundled", ["projects-folder/*/Code"]],
         ["reads-code", "bundled", ["projects-folder/*/Code"]],
         ["reads-paper", "bundled", ["projects-folder/*/paper"]],
         ["reads-local", "local", ["projects-folder/Beta/Code"]],
@@ -973,7 +976,7 @@ describe("read channel", () => {
     const file = await fetchRead(`app://research-os/_os/files/${CODE}/run.py`);
     assert.equal(file.status, 404);
     assert.equal(await file.text(), "Not found");
-    for (const url of [files(`${CODE}/run.py`, "code-view"), list(CODE, "code-view")]) {
+    for (const url of [files(`${CODE}/run.py`, "nope-view"), list(CODE, "nope-view")]) {
       assert.equal(route(url, roots, readSites).kind, "not-found", url);
       assert.equal((await fetchRead(url)).status, 404, url);
     }

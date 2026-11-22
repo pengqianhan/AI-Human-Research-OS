@@ -5,7 +5,8 @@
 //   out/main.cjs    the main process, bundled with the shared os-ui endpoints;
 //   out/preload.cjs the window's bridge;
 //   out/plugins/    each bundled plugin's plugin.json, and its site/ folder if
-//                   it has one, which the main process loads at start;
+//                   it has one (its main.ts bundled as main.js), which the
+//                   main process loads at start;
 //   out/icon.png    the app icon, copied from docs/brand/app-icon.png.
 //
 // Usage: node scripts/build.mjs   (installs the frontend's packages on first run)
@@ -49,7 +50,12 @@ await build({ ...common, entryPoints: [join(CLIENT, "src/main/index.ts")], outfi
 await build({ ...common, entryPoints: [join(CLIENT, "src/preload/index.ts")], outfile: join(OUT, "preload.cjs") });
 
 // Only the manifest and site/ are shipped: a plugin's handler code is compiled
-// into main.cjs (server/pluginHandlers.ts), never loaded from its folder.
+// into main.cjs (server/pluginHandlers.ts), never loaded from its folder. A
+// site's TypeScript (its entry site/main.ts, the modules it imports, and their
+// tests) is not copied: the entry is bundled into site/main.js, one classic
+// script with no imports, which the page loads under PLUGIN_CSP's
+// `script-src 'self'` (A4 in os-ui/PLUGINS.md). The frontend's tsc checks it
+// and its npm test runs the tests.
 step("copying the bundled plugins (os-ui/frontend/plugins)");
 const PLUGINS = join(FRONTEND, "plugins");
 for (const entry of readdirSync(PLUGINS, { withFileTypes: true })) {
@@ -58,7 +64,20 @@ for (const entry of readdirSync(PLUGINS, { withFileTypes: true })) {
   const to = join(OUT, "plugins", entry.name);
   mkdirSync(to, { recursive: true });
   copyFileSync(join(from, "plugin.json"), join(to, "plugin.json"));
-  if (existsSync(join(from, "site"))) cpSync(join(from, "site"), join(to, "site"), { recursive: true });
+  const site = join(from, "site");
+  if (!existsSync(site)) continue;
+  cpSync(site, join(to, "site"), { recursive: true, filter: (src) => !src.endsWith(".ts") });
+  if (existsSync(join(site, "main.ts"))) {
+    await build({
+      entryPoints: [join(site, "main.ts")],
+      outfile: join(to, "site", "main.js"),
+      bundle: true,
+      format: "iife",
+      platform: "browser",
+      target: "chrome130",
+      logLevel: "warning",
+    });
+  }
 }
 const missing = BUNDLED_IDS.filter((id) => !existsSync(join(OUT, "plugins", id, "plugin.json")));
 if (missing.length > 0) {

@@ -130,17 +130,20 @@ function screen(page: Page, id: "home" | "projects" | "workspace" | "wiki" | "sk
   return page.locator(`[data-screen="${id}"]`);
 }
 
-async function wikiFrame(page: Page): Promise<Frame> {
+/** The frame of a plugin's page on its own origin ("app://paper-wiki/"), once it has loaded. */
+async function pluginFrame(page: Page, origin: string): Promise<Frame> {
   for (let i = 0; i < 100; i++) {
-    const frame = page.frames().find((f) => f.url().startsWith("app://paper-wiki/"));
+    const frame = page.frames().find((f) => f.url().startsWith(origin));
     if (frame) {
       await frame.waitForLoadState("load");
       return frame;
     }
     await page.waitForTimeout(100);
   }
-  throw new Error("the Paper Wiki frame never loaded");
+  throw new Error(`no frame on ${origin} ever loaded`);
 }
+
+const wikiFrame = (page: Page) => pluginFrame(page, "app://paper-wiki/");
 
 describe("desktop client on a Research OS folder", () => {
   let workspace: string;
@@ -252,9 +255,11 @@ describe("desktop client on a Research OS folder", () => {
     await list.click();
     await chat.locator('textarea[placeholder^="Message"]').waitFor();
     assert.equal(await page.locator('input[placeholder="token"]').count(), 0);
-    // Code and Paper are placeholders until their plugins; Idea, Skeleton, Assets are step 2.
+    // Code is the code-view plugin's page on its own origin; Paper is a placeholder until its plugin; Idea, Skeleton, Assets are step 2.
     await ws.getByRole("tab", { name: "Code" }).click();
-    await ws.getByText("This view arrives with the Code view plugin later in step 1", { exact: false }).waitFor();
+    const code = await pluginFrame(page, "app://code-view/");
+    assert.equal(code.url(), `app://code-view/index.html?project=${encodeURIComponent(name)}`);
+    await code.getByText(`${name}/Code/`, { exact: true }).waitFor();
     assert.equal(await ws.getByRole("tab", { name: "Idea, step 2" }).getAttribute("aria-disabled"), "true");
     await ws.getByRole("tab", { name: "Overview" }).click();
     // The conversation collapses to a strip and opens again.

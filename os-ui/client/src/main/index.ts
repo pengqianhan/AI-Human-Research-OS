@@ -21,6 +21,7 @@ import type { Registry } from "../../../frontend/server/registry.ts";
 import type { ApiContext } from "../../../frontend/server/types.ts";
 import type { DesktopInfo, SnapshotEvent, WorkspaceChoice } from "../../../frontend/src/lib/desktop.ts";
 import { CHANNELS } from "../shared/channels.ts";
+import { desktopHandlers, findGit, rememberGit } from "./codeView.ts";
 import { runDoctor } from "./doctor.ts";
 import { Generator, GENERATOR_TIMEOUT_MS } from "./generator.ts";
 import { InputPoller } from "./inputs.ts";
@@ -164,9 +165,17 @@ async function openWorkspace(dir: string): Promise<boolean> {
       return event.state === "ok" ? null : (event.error ?? "generator failed");
     },
   };
+  // The Code view's git, found as the client finds other programs, on its first request.
+  const git = rememberGit(() =>
+    findGit({ env: childEnv, dir, probe: probe(dir) }).then((found) => {
+      log(`code view git: ${found ?? "not found (or the Command Line Tools stub)"}`);
+      return found;
+    }),
+  );
+  const factories = desktopHandlers(pluginHandlers, { git, log });
   // Built before any poller or timer starts, and never throws: a bundling
   // drift costs the plugins' endpoints, not the workspace or the window.
-  const registry = workspaceRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: bundled.plugins, factories: pluginHandlers }, (problem) =>
+  const registry = workspaceRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: bundled.plugins, factories }, (problem) =>
     log(`ERROR ${problem}`),
   );
   const inputs = new InputPoller(dir, () => void generator.request());
