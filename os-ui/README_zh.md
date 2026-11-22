@@ -22,8 +22,9 @@ AI-Human Research OS 的应用界面:呈现仓库的真实状态,并承载与 ag
   收起的 **Workspace status**:进行中的工作、最近活动、治理记录、研究策略徽章。
 - **项目工作区**(点 Home 卡片或 Projects 列表的一行打开):左边是该项目的对话,可收成
   一条细竖条;右边是视图标签页:**Overview**(默认,即原来的项目总览:阶段条、四个计数、
-  Snapshot 字段、回合分数轨道、评审报告、OS Feedback、私有技能),**Code** 和 **Paper**
-  在第 1 步稍后随插件到来,**Idea**、**Skeleton**、**Assets** 标注"step 2"。
+  Snapshot 字段、回合分数轨道、评审报告、OS Feedback、私有技能);**Code**(仅桌面应用)
+  显示项目 `Code/` 下的文件与 Git 变更,"Ask the agent about this"把所选内容作为引用放进
+  对话输入框;**Paper** 在第 1 步稍后随插件到来;**Idea**、**Skeleton**、**Assets** 标注"step 2"。
 - **Paper wiki**:嵌入 `paper-wiki/viz.html` 图谱与时间线查看器;笔记的 Status 按钮
   会把 unread / skimmed / read 写回笔记文件。
 - **Skills**:技能商店,与之前相同。**Plugins**:哪些已内置、哪些即将到来(暂为写死的
