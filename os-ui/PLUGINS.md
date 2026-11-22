@@ -61,34 +61,56 @@ Status on 2026-11-22:
     field (A8): the renderer maps a bundled plugin's id to an icon. The Plugins card
     has one chip per page; handlers get none.
   - The read channel (S5) is `serveRead` in
-    [client/src/main/protocol.ts](client/src/main/protocol.ts), described in
-    [client/DESIGN.md](client/DESIGN.md) §3.2. No bundled plugin declares `reads`
-    until S6, so it is proven by fixture tests in `client/test/protocol.test.ts`
-    only. Where it differs from §3's "The read channel":
-    - The route is `{ kind: "read"; site; encoded; list }`. `encoded` is the URL
-      path after the prefix, still percent-encoded, and `serveRead` decodes it once,
-      so every answer under the two prefixes, refusals included, is the channel's.
-    - Only the exact, lower-case `_os/files/` and `_os/list/` are the channel,
-      compared before decoding. A bare `_os/files` and every other `_os` spelling
-      stay 404, and `_os/list/` with nothing after it is 404 (no root is the
-      workspace).
-    - The dot check also runs on resolved real paths: below the root's real path
-      (a link named `x` to the root's `.git` is 404) and on the root's own real
-      path below the workspace's (a root that is a link to `.git` is 404).
-    - A root whose real path leaves the workspace, or is the workspace itself, is
-      404. Paper Wiki's site folder follows such a link; the channel deliberately
-      does not. To reverse it, drop the one check `isInside(top, rootReal)` in
-      `serveRead`; the other checks stay scoped to paths already inside, so that
-      alone lets such a root be read (a test shows it).
-    - Caps: a file above 32 MiB (`READ_MAX_BYTES`) answers 413, from `stat`,
-      without being read; a listing returns at most 5,000 entries
-      (`LIST_MAX_ENTRIES`) and then adds `"truncated": true`.
+    [client/src/main/protocol.ts](client/src/main/protocol.ts), described with its
+    known limits in [client/DESIGN.md](client/DESIGN.md) §3.2. No bundled plugin
+    declares `reads` until S6, so it is proven by fixture tests in
+    `client/test/protocol.test.ts` only. Where it differs from §3's "The read
+    channel", after an independent security review:
+    - The URL shape is `app://<id>/_os/files?path=<rel>` and
+      `app://<id>/_os/list?path=<rel>`, not `_os/files/<rel>`. For an `app://`
+      URL, Chromium runs a `<script src>` whose path ends in `.js` or `.mjs`
+      whatever its Content-Type and `nosniff` (the review showed it in Electron
+      44), so a path naming the file let a plugin page run a workspace script.
+      With the path in the query the URL path names no type, and a probe under the
+      real `PLUGIN_CSP` saw classic, module, `import()` and worker loads all
+      blocked. The contract is not frozen until step 2 (A1).
+    - Only the exact, lower-case `/_os/files` and `/_os/list` are the channel,
+      with exactly one `path` parameter, which the URL parser decodes once (`+` is
+      a space) and `serveRead` checks as `safeRelative` would, without decoding
+      again (`safeDecodedRelative` in `frontend/server/manifest.ts`). A missing,
+      empty or repeated `path` is 404; other parameters are ignored. Every other
+      `_os` path, `/_os/files/<rel>` included, stays 404.
+    - The declared pattern is the boundary: a root's real path must itself be one
+      of the plugin's roots as written, so a link planted at or above a root (a
+      cloned project's `Code` pointing at `human/private`) is 404, while a root
+      linked to another declared root is followed. To follow links to any folder
+      of the workspace again, drop the one check `declaredRoot(...)` in
+      `serveRead`. On a case-insensitive file system a `*` segment in another case
+      reads the same root, and a folder spelled on disk otherwise than declared is
+      404 by either spelling ([client/DESIGN.md](client/DESIGN.md) §3.2).
+    - The root must also lie inside the workspace, not be it, and not be a dot
+      folder of it; the dot check also runs below the root's real path (a link
+      named `x` to the root's `.git` is 404). Paper Wiki's site folder follows a
+      link out of the workspace; the channel deliberately does not. To reverse
+      that, drop the one check `isInside(top, rootReal)` in `serveRead`; the
+      declared-root check applies inside the workspace only, so that alone lets
+      such a root be read (a test shows it).
+    - A file is checked by path, opened with `O_NOFOLLOW` and `O_NONBLOCK`,
+      checked again as opened, and streamed 64 KiB at a time, never past its
+      `stat` size, closing on end, error and cancel. A file above 32 MiB
+      (`READ_MAX_BYTES`) answers 413 before a byte is read, also when it is
+      unreadable.
+    - A listing reads at most 5,000 names (`LIST_MAX_ENTRIES`), kept or not, in
+      the file system's order, sorts them in UTF-16 code-unit order, and adds
+      `"truncated": true` when the folder has more; HEAD on a listing stops at
+      opening the folder. Listings also leave out dangling links and anything that
+      is neither a regular file nor a folder (a FIFO).
     - Every answer carries `nosniff`, `no-store`, and `READ_CSP`. `.html`, `.htm`,
       and `.xhtml` are sent as `text/plain` too, besides `.js`, `.mjs`, and `.cjs`;
       SVG keeps `image/svg+xml`, which an `<img>` needs. Anything but GET and HEAD
       is 405 (with `Allow: GET, HEAD`) before the no-folder 404.
-    - Listings are sorted in UTF-16 code-unit order and also leave out dangling
-      links and anything that is neither a regular file nor a folder (a FIFO).
+    - `safeRelative` also refuses `CONIN$`, `CONOUT$`, and `COM¹`-`COM³`,
+      `LPT¹`-`LPT³`.
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
