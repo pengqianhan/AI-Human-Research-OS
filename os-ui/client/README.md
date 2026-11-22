@@ -144,9 +144,9 @@ agent logins or a first open on a real desktop, so on each of your machines:
         the bottom names it, with **Ask the agent about this**.
       - Click **Ask the agent about this**: the conversation opens (if it was
         collapsed) with a small chip above the input naming what you chose,
-        and the cursor in the input. Hover the chip to see the exact lines
-        that will go before your message. Nothing is sent until you press
-        Send.
+        and the cursor in the input. Click the chip to see exactly what will
+        be sent before your message (it opens under the chips). Nothing is
+        sent until you press Send.
       - Click the chip's **×**: it goes away.
 - [ ] **Paper wiki**: a paper's Status buttons appear and change the note's
       `status:` line.

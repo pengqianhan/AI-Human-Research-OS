@@ -298,7 +298,11 @@ serves. A selection in the page is posted to `app://research-os` as
 active view's frame at that view's origin, shows "Ask the agent about this",
 and answers `{type: "os.select.clear"}` at the view's origin when the user
 clears it there. Asking adds a reference chip to the project's composer; only
-Send sends.
+Send sends. What Send passes is exactly what the user can read in the
+composer: a label with a line break, control, or format character is refused;
+a quote's line breaks are made line feeds (each line gets its `> `) and its
+invisible characters shown as markers, in the text shown and sent alike; a
+chip, clicked, shows that text under the chips (os-ui/PLUGINS.md, S6a-2).
 
 Known limits of the channel, not yet handled:
 
@@ -323,8 +327,10 @@ Known limits of the channel, not yet handled:
   A site served from a workspace folder (the Paper Wiki viewer):
   `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
-  A site in its plugin folder gets the same policy with `'self'` added to
-  `script-src` and `style-src`. Either is sent with every file the site
+  A site in its plugin folder (the Code view's) gets no inline code at all,
+  since it shows untrusted names and text:
+  `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
+  (`PLUGIN_CSP`; styles set through the DOM still apply). Either is sent with every file the site
   serves, not only HTML: an SVG a frame is sent to is a document too. Every
   read channel answer, refusals included, carries
   `sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'`

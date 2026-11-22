@@ -144,21 +144,44 @@ Status on 2026-11-23:
     it reads and shows (2 MiB and 5,000 lines of a file, 5,000 rows of a diff).
   - `os.select` replaces A6's `os.ask`, as Part 2 says: `{type: "os.select",
     label: string, quote?: string}` or `{label: null}`, accepted only from the
-    active view's frame at its own origin; a label is one line of 1 to 200
-    characters with no control or bidirectional-override character, a quote at
-    most 2,000 characters ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)).
+    active view's frame at its own origin, while the workspace is the screen
+    shown and that view's tab is selected, not while the Ask button is held
+    down, and at most 10 a second per frame (past that the bar is hidden, never
+    left stale). The rule is that what Send passes is exactly what the user can
+    read in the composer ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)):
+    a label is 1 to 200 characters with no line break (CR, LF, VT, FF, NEL,
+    U+2028, U+2029) and no control or format character (`\p{Cc}`, `\p{Cf}`:
+    zero-width characters, U+2060, U+FEFF, the soft hyphen, bidi controls,
+    U+FFF9-FFFB, tag characters), or the message is ignored; homoglyphs are
+    allowed, since a real file can be named so. A quote of at most 2,000
+    characters has every line break made LF, so every line gets its `> `, and
+    every control or format character but tab shown as a marker
+    (`⟨U+200B⟩`), in the text shown and sent alike; if the markers take
+    it past 2,000 characters it is cut there with `…[cut]`. The page applies
+    the same markers to names in its labels.
     Added: the host answers `{type: "os.select.clear"}`, posted to the page's
     origin only, when the user clears the selection or asks about it in the host,
     so the page drops its highlight. "Ask the agent about this" adds a reference
     chip (at most 8) to the project's composer and never sends; Send puts each
-    chip before the typed text as `About <label>` and the quote as a blockquote,
-    exactly what the chip's tooltip shows. The host cannot reach
+    chip before the typed text as `About <label>` and the quote as a blockquote.
+    Clicking a chip (or Enter or Space on it) shows exactly that text under the
+    chips, as plain text; a chip with a quote says how many lines it carries,
+    and the tooltip shows the text too. Ask adds the reference the bar showed
+    when the pointer went down on it. The host cannot reach
     `/api/code-view/git`, so the mockup's header pill (latest commit) is not shown.
   - `viewSrc(page, project)` appends `?project=<encoded name>`; the tab row takes
     project views from the registry, and a layout saved with tab `code` opens
     `code-view/code`. A view's frame stays loaded once opened.
   - The client cancels `will-download` on every session it creates, so a frame
     sent to a file it cannot show starts no download.
+  - `PLUGIN_CSP` (a site in its plugin folder, the Code view's) has no
+    `'unsafe-inline'`: `script-src 'self'; style-src 'self'`. Paper Wiki's
+    generated viewer keeps `WORKSPACE_CSP`, which needs inline script.
+  - Every git command runs with `-c diff.algorithm=myers`: the repository's
+    `diff.algorithm=patience` made two files just under 4 MiB of one-byte lines
+    need 320 MiB in one allocation, over `GIT_ALLOC_LIMIT=256m`, on every route.
+    Under myers the same files need about 96 MiB (measured by bisecting the
+    limit), so the limit stays.
 - **S6a-1** is [frontend/server/codeGit.ts](frontend/server/codeGit.ts) with
   `codeGit.test.ts` in the required CI job. S6a-2 declares and mounts it. The code is the
   authority where it differs from Part 2's Gap 1, after the S5 review and an
@@ -184,9 +207,11 @@ Status on 2026-11-23:
     128)`, `… took longer than 10 s`, `… printed more than its cap`), or
     `the Code view could not read this repository (<error code>)` when the file
     system refuses: nothing Git printed reaches the caller, it goes to the server's
-    log. 503 while the workspace has 20 requests in flight or the project 10. A
-    `hash` is looked up with `cat-file -t`, which reads only the object's header,
-    so a tag object's hash is 404 like any non-commit.
+    log. 503 while the workspace has 20 requests in flight or the project 8. A
+    `hash` is looked up with `cat-file --batch-check`, which reads only the
+    object's header, so a tag object's hash is 404 like any non-commit; a
+    repository Git cannot read at all (a bad `include.path`) is the fixed 500,
+    not a missing commit.
   - Git 2.45 or later, for `--no-lazy-fetch` (release notes 2.45.0), not 2.31. On
     2026-11-22 packages.ubuntu.com listed 2.43.0 for Ubuntu 24.04 and 2.34.1 for
     22.04, and packages.debian.org 2.39.5 for Debian 12, all below it;
@@ -266,8 +291,10 @@ Status on 2026-11-23:
     `fsmonitor--daemon.ipc` is fine. The check runs before git, so a file swapped in
     between is not caught.
   - Bounded work, per handler, that is per open workspace: at most 20 requests in
-    flight and 4 git processes running, each project at most half of both (10 and
-    2), so a project whose commands stall leaves the others their share; a request
+    flight and 5 git processes running, each project at most 8 and 2 of them, so
+    two projects whose commands stall still leave a third 4 requests and 1
+    process (S6a-2's review; it was 10 of 20 and 2 of 4, and two stalled
+    projects shut a third out for about 50 s); a request
     past either share is 503 before its `.git` is walked. Each command has 10 s,
     output caps (4 KiB for one line, 256 KiB for `/log`, 512 KiB for a file list,
     64 KiB for a message, 1 MiB for a patch, each cut back to whole records), and
