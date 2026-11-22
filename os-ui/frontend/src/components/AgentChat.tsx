@@ -7,6 +7,8 @@ import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
 import { desktop } from "../lib/desktop";
+import { MESSAGE_MAX, messageWithReferences, referenceText } from "../plugins/select";
+import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
 
 interface Props {
@@ -28,6 +30,17 @@ interface Props {
   collapsed?: boolean;
   /** Asks the parent to open the full conversation (after sending from the bar, or "Continue"). */
   onExpand?: () => void;
+  /**
+   * Reference chips above the input (a project view's "Ask the agent about
+   * this"). Send puts them before the typed text as messageWithReferences
+   * writes them, which each chip's tooltip shows; they never send by themselves.
+   */
+  references?: readonly Reference[];
+  onRemoveReference?: (index: number) => void;
+  /** Called once a message carrying the references was sent. */
+  onReferencesSent?: () => void;
+  /** Each new value puts the cursor in the input (the conversation list closes if it is open). */
+  focusRequest?: number;
 }
 
 interface SessionRow {
@@ -132,7 +145,20 @@ const COMPOSER_MAX_PX = 220;
  * stacked), so the draft, the selected conversation, and the polling of a
  * running turn survive opening and closing it.
  */
-export function AgentChat({ cwd, heading, headingVisible = true, intro, examples, layout = "split", collapsed = false, onExpand }: Props) {
+export function AgentChat({
+  cwd,
+  heading,
+  headingVisible = true,
+  intro,
+  examples,
+  layout = "split",
+  collapsed = false,
+  onExpand,
+  references = [],
+  onRemoveReference,
+  onReferencesSent,
+  focusRequest = 0,
+}: Props) {
   const ids = useId();
   const [token, setToken] = useState(readToken);
   const [needToken, setNeedToken] = useState(readToken() === "");
@@ -206,6 +232,13 @@ export function AgentChat({ cwd, heading, headingVisible = true, intro, examples
     if (el !== null) el.scrollTop = el.scrollHeight;
   }, [session?.events.length, collapsed, listOpen]);
 
+  // A reference was added: show the composer and put the cursor in it.
+  useEffect(() => {
+    if (focusRequest === 0) return;
+    setListOpen(false);
+    window.requestAnimationFrame(() => composerRef.current?.focus());
+  }, [focusRequest]);
+
   function saveToken(e: FormEvent) {
     e.preventDefault();
     try {
@@ -246,8 +279,13 @@ export function AgentChat({ cwd, heading, headingVisible = true, intro, examples
   }
 
   async function sendMessage() {
-    const text = draft.trim();
+    const text = messageWithReferences(references, draft);
     if (text === "" || busy) return;
+    if (text.length > MESSAGE_MAX) {
+      setError(`The message and its references are ${text.length.toLocaleString("en-US")} characters, more than the ${MESSAGE_MAX.toLocaleString("en-US")} an agent takes; remove a reference or shorten the text.`);
+      return;
+    }
+    const carried = references.length > 0;
     setBusy(true);
     setError(null);
     try {
@@ -259,6 +297,7 @@ export function AgentChat({ cwd, heading, headingVisible = true, intro, examples
         cwd,
       });
       setDraft("");
+      if (carried) onReferencesSent?.();
       window.requestAnimationFrame(fitComposer);
       setActiveId(data.session);
       setListOpen(false);
@@ -329,6 +368,34 @@ export function AgentChat({ cwd, heading, headingVisible = true, intro, examples
     >
       {error && <p className="mb-2 text-[12px] text-danger">{error}</p>}
       <div className="flex flex-col gap-1.5 rounded-[12px] bg-paper py-2 pl-[13px] pr-2 shadow-[inset_0_0_0_1px_var(--line2)] focus-within:shadow-[inset_0_0_0_1.5px_var(--accent)]">
+        {references.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <ul aria-label="References" className="m-0 flex list-none flex-wrap gap-1.5 p-0">
+              {references.map((ref, i) => (
+                <li
+                  key={`${ref.label}\u0000${ref.quote ?? ""}`}
+                  data-reference
+                  // Exactly the lines Send puts before the typed text.
+                  title={referenceText(ref)}
+                  className="inline-flex min-w-0 max-w-full items-center gap-[5px] rounded-[7px] bg-accent-soft py-[3px] pl-2 pr-[3px] font-mono text-[12px] leading-[1.3] text-accent-ink"
+                >
+                  <Icon name="quote" size={14} />
+                  <span className="min-w-0 truncate">{ref.label}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remove reference ${ref.label}`}
+                    title="Remove reference"
+                    onClick={() => onRemoveReference?.(i)}
+                    className="grid h-5 w-5 shrink-0 place-items-center rounded-[5px] hover:bg-[rgba(30,90,86,.14)]"
+                  >
+                    <Icon name="x" size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="m-0 text-[11.5px] text-muted">Sent before your message as “About …” lines; hover a reference to see its text.</p>
+          </div>
+        )}
         <div className="flex items-end gap-2">
           <textarea
             id={`${ids}-composer`}
@@ -351,7 +418,7 @@ export function AgentChat({ cwd, heading, headingVisible = true, intro, examples
           />
           <button
             type="submit"
-            disabled={running || busy || draft.trim() === ""}
+            disabled={running || busy || (draft.trim() === "" && references.length === 0)}
             aria-label={busy ? "Sending…" : "Send"}
             title="Send (Enter)"
             className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-accent text-on-accent hover:bg-accent-ink disabled:opacity-40"
