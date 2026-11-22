@@ -151,7 +151,9 @@ Status on 2026-11-22:
     128)`, `… took longer than 10 s`, `… printed more than its cap`), or
     `the Code view could not read this repository (<error code>)` when the file
     system refuses: nothing Git printed reaches the caller, it goes to the server's
-    log. 503 while four git processes run and sixteen wait.
+    log. 503 while the workspace has 20 requests in flight or the project 10. A
+    `hash` is looked up with `cat-file -t`, which reads only the object's header,
+    so a tag object's hash is 404 like any non-commit.
   - Git 2.45 or later, for `--no-lazy-fetch` (release notes 2.45.0), not 2.31. On
     2026-11-22 packages.ubuntu.com listed 2.43.0 for Ubuntu 24.04 and 2.34.1 for
     22.04, and packages.debian.org 2.39.5 for Debian 12, all below it;
@@ -165,7 +167,12 @@ Status on 2026-11-22:
     name looked up in the absolute entries of the runner's PATH only
     (`RunOptions.lookup`), never the working folder (spawn tries it on Windows
     before PATH, and on POSIX through an empty or relative entry); on Windows only
-    `git.com` or `git.exe`. Anything else is "git was not found".
+    `git.com` or `git.exe`. Never a program whose real path lies in the workspace
+    either (`RunOptions.lookupOutside`): a PATH entry there, such as the
+    `<workspace>/node_modules/.bin` that `npm run` puts first, is skipped, so is a
+    link elsewhere that points in, and an absolute `git` there is refused. Anything
+    else is "git was not found". The probe accepts only output starting
+    `git version `, so no other program passes the floor.
   - More guards than `--no-ext-diff` and `--no-textconv`: no `GIT_*` from the
     caller, the global and system config not read (`trace2.*Target` there writes
     files), no grafts (`GIT_GRAFT_FILE=/dev/null`), `--no-lazy-fetch` with
@@ -173,7 +180,10 @@ Status on 2026-11-22:
     starts still writes `remote.<name>.partialclonefilter` into `.git/config`, so
     `--no-lazy-fetch` is what keeps `.git` unchanged), `--no-replace-objects`,
     `--literal-pathspecs`, `core.fsmonitor=false`, `--no-show-signature`,
-    `--submodule=short`, `--no-follow`, `core.bigFileThreshold=4m`, and flags that
+    `--submodule=short`, `--no-follow`, `core.bigFileThreshold=4m`,
+    `core.warnAmbiguousRefs=false` (for a full hash Git otherwise looks for a ref of
+    that name, opening `.git/<hash>`: a FIFO there stalled every route),
+    `GIT_ALLOC_LIMIT=256m` (below), and flags that
     keep the output's shape (`--root`, `--no-renames`, `--diff-merges=first-parent`,
     `--encoding=UTF-8`, `--no-color`, prefixes, `core.quotePath=false`). The literal
     `/dev/null` is used on every platform, as Git documents it for
@@ -210,25 +220,44 @@ Status on 2026-11-22:
     16 MiB of short lines took 204 MB, 1 MiB takes 22 MB); anything under `refs/`
     or `reftable/` but folders and
     plain files (a loose ref under 4 KiB); a link or other non-plain file among
-    `objects/<xx>/`, `objects/pack/` or `objects/info/` (and `commit-graphs/`); more
-    than 100,000 entries to check, read entry by entry so a huge folder costs at
-    most that. Not looked at: the index, `logs/`, `hooks/`, `modules/`,
-    `FETCH_HEAD` and the like, which these commands do not read (a socket such as
-    `fsmonitor--daemon.ipc` is fine). The check runs before git, so a file swapped
-    in between is not caught.
-  - Bounded work: at most four git processes per workspace and sixteen requests
-    waiting, 10 s per command, output caps (4 KiB for one line, 256 KiB for `/log`,
-    512 KiB for a file list, 64 KiB for a message, 1 MiB for a patch, each cut back
-    to whole records), 16 KiB of stderr kept, and a blob over 4 MiB treated as
-    binary: such a text file shows as binary with its sizes. Measured with
-    `/usr/bin/time -l` on the reviewer's two 500 MB text blobs, `log --shortstat`
-    went from 3.37 GB in 2.9 s to 9.4 MB in 15 ms (these figures come from running
-    the handler's own arguments under `time -l`; a sampler around the handler saw
-    no git process live long enough to measure). Not bounded: memory inside one git
-    process below the threshold (a commit of many files just under 4 MiB, a diff of
-    very many lines), packed objects, which are not checked one by one, loose
-    objects, checked by type and not by size, and whatever an `include.path` file
-    holds.
+    `objects/<xx>/`, `objects/pack/` (and its `multi-pack-index.d/`) or
+    `objects/info/` (and `commit-graphs/`); more than 100,000 entries to check, read
+    entry by entry so a huge folder costs at most that. The walk is synchronous and
+    runs once per admitted request: about 15 ms on this repository's own `.git`,
+    90 to 150 ms at the 100,000-entry budget, so the 20 requests a workspace admits
+    at once can hold the server for about 3 s at worst; there is no cache. Not
+    looked at, because these commands do not read them (a FIFO at each was swept on
+    2.55 by the reviewer): the index, `logs/`, `hooks/`, `modules/`, `worktrees/`,
+    `ORIG_HEAD`, `FETCH_HEAD`, `MERGE_HEAD`, `description`, and `.git/<hash>`, which
+    `core.warnAmbiguousRefs=false` keeps Git from opening; a socket such as
+    `fsmonitor--daemon.ipc` is fine. The check runs before git, so a file swapped in
+    between is not caught.
+  - Bounded work, per handler, that is per open workspace: at most 20 requests in
+    flight and 4 git processes running, each project at most half of both (10 and
+    2), so a project whose commands stall leaves the others their share; a request
+    past either share is 503 before its `.git` is walked. Each command has 10 s,
+    output caps (4 KiB for one line, 256 KiB for `/log`, 512 KiB for a file list,
+    64 KiB for a message, 1 MiB for a patch, each cut back to whole records), and
+    16 KiB of stderr kept. A blob over 4 MiB is binary: such a text file shows as
+    binary with its sizes, and Git reads only its header. Measured with `/usr/bin/time
+    -l` on the reviewer's two 500 MB text blobs, `log --shortstat` went from 3.37 GB
+    in 2.9 s to 9.4 MB in 15 ms. Commit and tree objects are read whole whatever the
+    threshold says, so `GIT_ALLOC_LIMIT=256m` makes Git die rather than make one heap
+    allocation above 256 MiB (Git's `wrapper.c` checks it in `xmalloc`, `xrealloc`
+    and `xcalloc`, which xdiff uses too; it is undocumented, and `mmap` is not
+    covered). A 400 MB commit message took 392 MB in `log -1` and 773 MB in
+    `show -s`, and now stops at 9 MB with the fixed failure text. 256 MiB is about
+    twice the largest ordinary single allocation under the threshold, xdiff's array
+    for two 4 MiB files of one-byte lines (about 134 MB); this repository's history
+    as a project (all `/log` pages, 150 `/commit`, 834 `/diff`), a commit changing a
+    300 MB binary and a 3.9 MiB text file, and a commit touching 50,000 files all
+    answered 200 under it. (The figures come from running the handler's own
+    arguments under `time -l`; a sampler around the handler saw no git process live
+    long enough to measure.) Not bounded: the sum of many allocations each under
+    256 MiB, and time (the 50,000-file commit took 6.6 s in `/log` and 8.8 s in
+    `/commit`, near the 10 s limit); mapped files (packs, the commit-graph); packed
+    objects, which are not checked one by one; loose objects, checked by type and not
+    by size; and whatever an `include.path` file holds.
   - `/commit` and `/diff` serve only commits in HEAD's history (`merge-base
     --is-ancestor`); `/commit` of a commit that changes nothing under the filter is
     404, so other workspace commits' messages stay out. `/diff` opens exactly one
@@ -248,8 +277,10 @@ Status on 2026-11-22:
     `--ignore-submodules=none` makes a second layer: removing both starts the
     monitor), which no output of these commands can show; tests of the arguments
     and the environment pin them. The tests whose marker programs are shell scripts
-    or that need FIFOs skip on Windows, and a Windows-only test checks that a
-    `git.exe` planted in the workspace never runs.
+    or that need FIFOs skip on Windows. A Windows-only test plants a copy of
+    `where.exe` as `git.exe` in the workspace and in the project and checks that `/`
+    and `/log` answer from the real git; a probe that ran the copy would get no
+    `git version` line and answer that problem instead.
   - For S6a-2: `codeGitHandler(ctx, git, log)`. The client can pass the git path
     its Settings check found (on a Mac without the Command Line Tools,
     `/usr/bin/git` is the stub that offers to install them); `log` receives what
