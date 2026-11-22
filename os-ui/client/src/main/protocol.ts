@@ -1,9 +1,11 @@
-import { open, readdir, readFile, realpath, stat } from "node:fs/promises";
+import { constants } from "node:fs";
+import { open, opendir, readFile, realpath, stat } from "node:fs/promises";
+import type { FileHandle } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import * as path from "node:path";
 import { matchMount } from "../../../frontend/server/api.ts";
 import type { Mount } from "../../../frontend/server/api.ts";
-import { matchRoot, safeRelative } from "../../../frontend/server/manifest.ts";
+import { matchRoot, safeDecodedRelative, safeRelative } from "../../../frontend/server/manifest.ts";
 import type { PluginSource } from "../../../frontend/server/manifest.ts";
 import { createRegistry } from "../../../frontend/server/registry.ts";
 import type { HandlerFactory, LoadedPlugin, Registry, TrunkMount } from "../../../frontend/server/registry.ts";
@@ -115,13 +117,18 @@ export const PLUGIN_CSP = [
 export const READ_CSP = "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'";
 
 /**
- * The read channel's limits. Files are read whole into the main process, and a
- * project's Code/ may hold checkpoints and datasets: a file larger than this
- * answers 413 without being read. 32 MiB is well above a paper's PDF or a
- * source file, which are what the Code and Paper views show.
+ * The read channel's limits. A project's Code/ may hold checkpoints and
+ * datasets, which no view shows: a file larger than this answers 413 without
+ * being read. 32 MiB is well above a paper's PDF or a source file, which are
+ * what the Code and Paper views show.
  */
 export const READ_MAX_BYTES = 32 * 1024 * 1024;
-/** At most this many entries in one listing; a longer one says `"truncated": true`. */
+/**
+ * At most this many names are read from a folder for one listing, in the
+ * order the file system gives them, so one listing costs at most this many
+ * name lookups; a folder with more is listed from those and says
+ * `"truncated": true`.
+ */
 export const LIST_MAX_ENTRIES = 5000;
 
 /**
@@ -163,12 +170,14 @@ export function contentType(file: string): string {
 
 /**
  * Types the read channel sends as plain text. A plugin page's `script-src 'self'`
- * would run a workspace script it names in `<script src>` or a worker, and a
- * script ignores its response's CSP, so scripts go as text, which `nosniff`
- * keeps from running. HTML and XHTML have no use in a plugin page beside being
- * framed, which PLUGIN_CSP forbids, so they go as text too and stay inert even
- * if READ_CSP's sandbox is ever relaxed. SVG keeps its type: an `<img>` needs
- * it, an image never runs script, and as a document READ_CSP sandboxes it.
+ * admits a workspace script it names in `<script src>` or a worker, and a
+ * script ignores its response's CSP. What stops it is that the channel's URL
+ * path never carries the file's name (READ_PATHS) and that a script sent with
+ * `nosniff` and a non-script type is refused; scripts go as text for that.
+ * HTML and XHTML have no use in a plugin page beside being framed, which
+ * PLUGIN_CSP forbids, so they go as text too and stay inert even if
+ * READ_CSP's sandbox is ever relaxed. SVG keeps its type: an `<img>` needs it,
+ * an image never runs script, and as a document READ_CSP sandboxes it.
  */
 const READ_AS_TEXT = new Set([".js", ".mjs", ".cjs", ".html", ".htm", ".xhtml"]);
 
@@ -183,10 +192,11 @@ export type Route =
   /** `confined`: resolve symlinks and refuse a real path outside `root` (workspace files). */
   | { kind: "file"; root: string; rel: string; fallback: string | null; csp: string | null; confined: boolean }
   /**
-   * The read channel: `encoded` is the URL path after `/_os/files/` or
-   * `/_os/list/` (`list`), still percent-encoded; serveRead decodes it once.
+   * The read channel (`list`: `/_os/list`, else `/_os/files`): `paths` are the
+   * URL's `path` parameters, decoded once by the URL parser; serveRead takes
+   * exactly one.
    */
-  | { kind: "read"; site: PluginSite; encoded: string; list: boolean }
+  | { kind: "read"; site: PluginSite; paths: readonly string[]; list: boolean }
   | { kind: "not-found" };
 
 /** URL paths below a plugin's origin that the host keeps for itself: never files. */
@@ -209,8 +219,8 @@ function reserved(rel: string): boolean {
  * - app://research-os/... → the bundled renderer, `index.html` as the
  *   fallback for extension-less paths;
  * - app://<id>/api/<id>/... → that plugin's own endpoints, and no others;
- * - app://<id>/_os/files/... and app://<id>/_os/list/..., spelled exactly so
- *   → that plugin's read channel (serveRead);
+ * - app://<id>/_os/files?path=... and app://<id>/_os/list?path=..., spelled
+ *   exactly so → that plugin's read channel (serveRead);
  * - app://<id>/... → that plugin's site (PluginSite); "", api/ and _os/ are
  *   never files;
  * - any other host → not found.
@@ -231,7 +241,7 @@ export function route(
 
   if (parsed.host !== APP_HOST) {
     const site = sites.get(parsed.host);
-    return site === undefined ? { kind: "not-found" } : siteRoute(site, pathname, roots.workspace);
+    return site === undefined ? { kind: "not-found" } : siteRoute(site, pathname, parsed.searchParams, roots.workspace);
   }
 
   if (pathname === "/api" || pathname.startsWith("/api/")) return { kind: "api", pathname, host: APP_HOST };
@@ -250,22 +260,25 @@ export function route(
 }
 
 /**
- * The read channel's URL prefixes on a plugin's origin, compared with the URL
- * path as sent, before any decoding: `_OS/files/`, `_os/Files/`, `%5Fos/files/`
- * or `_os/files%2F` are not the channel, and stay reserved (404).
+ * The read channel's URL paths on a plugin's origin (true: a listing),
+ * compared whole with the URL path as sent, before any decoding. The file's
+ * path goes in the query, `?path=<rel>`, never in the URL path: for an app://
+ * URL, Chromium runs a `<script src>` whose path ends in `.js` or `.mjs`
+ * whatever its Content-Type, so a path that named the file would let a page
+ * run a workspace script. Every other spelling (`_OS/files`, `_os/Files`,
+ * `%5Fos/files`), and anything below them (`/_os/files/x`), stays reserved.
  */
-const READ_PREFIXES = [
-  { prefix: "/_os/files/", list: false },
-  { prefix: "/_os/list/", list: true },
-] as const;
+const READ_PATHS: ReadonlyMap<string, boolean> = new Map([
+  ["/_os/files", false],
+  ["/_os/list", true],
+]);
 
 /** One URL on a plugin's own origin. */
-function siteRoute(site: PluginSite, pathname: string, workspace: string | null): Route {
+function siteRoute(site: PluginSite, pathname: string, query: URLSearchParams, workspace: string | null): Route {
   const own = `/api/${site.id}`;
   if (pathname === own || pathname.startsWith(`${own}/`)) return { kind: "api", pathname, host: site.id };
-  for (const { prefix, list } of READ_PREFIXES) {
-    if (pathname.startsWith(prefix)) return { kind: "read", site, encoded: pathname.slice(prefix.length), list };
-  }
+  const list = READ_PATHS.get(pathname);
+  if (list !== undefined) return { kind: "read", site, paths: query.getAll("path"), list };
   const rel = safeRelative(pathname);
   if (rel === null || reserved(rel)) return { kind: "not-found" };
   // Every file the site serves carries its policy, not only HTML: an SVG a
@@ -332,6 +345,7 @@ const READ_HEADERS = {
 } as const;
 
 const TEXT = "text/plain; charset=utf-8";
+const JSON_TYPE = "application/json";
 
 /** One listing entry; `size` is 0 for a directory. */
 export interface ListEntry {
@@ -349,21 +363,81 @@ function hiddenBelow(parent: string, child: string): boolean {
   return isInside(parent, child) && path.relative(parent, child).split(path.sep).some((s) => s.startsWith("."));
 }
 
-/** Reads at most `size` bytes of `file`, the size stat gave: a file that grew since is not read past it. */
-async function readUpTo(file: string, size: number): Promise<Uint8Array<ArrayBuffer>> {
-  const handle = await open(file, "r");
+/**
+ * Whether a root's real path, if it lies inside the workspace's real path
+ * `top`, is itself one of `reads` as a root: a link planted at or above a
+ * root (a cloned project's `Code` pointing at `human/private`) may lead to
+ * another root the plugin may read, and nowhere else. A root outside the
+ * workspace is not this check's business (`isInside(top, rootReal)` is).
+ */
+function declaredRoot(top: string, rootReal: string, reads: readonly string[]): boolean {
+  if (!isInside(top, rootReal)) return true;
+  const rel = path.relative(top, rootReal).split(path.sep).join("/");
+  return matchRoot(rel, reads) === rel;
+}
+
+/**
+ * How the channel opens a file, a resolved real path: never following a link
+ * in its last segment (one swapped in since it was resolved) and never
+ * blocking on a FIFO. Windows has neither flag, nor FIFOs.
+ */
+const READ_FLAGS = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0);
+
+/**
+ * Opens `file` (a resolved real path) for the channel and checks the file
+ * actually opened: a regular file (404 otherwise) of at most READ_MAX_BYTES
+ * (413 otherwise). On success the caller owns the handle and must close it.
+ */
+export async function openRegular(file: string): Promise<{ handle: FileHandle; size: number } | 404 | 413> {
+  const handle = await open(file, READ_FLAGS);
   try {
-    const buffer = new Uint8Array(size);
-    let done = 0;
-    while (done < size) {
-      const { bytesRead } = await handle.read(buffer, done, size - done, done);
-      if (bytesRead === 0) break;
-      done += bytesRead;
+    const info = await handle.stat();
+    if (!info.isFile() || info.size > READ_MAX_BYTES) {
+      await handle.close();
+      return info.isFile() ? 413 : 404;
     }
-    return buffer.subarray(0, done);
-  } finally {
+    return { handle, size: info.size };
+  } catch (error) {
     await handle.close();
+    throw error;
   }
+}
+
+/** Bytes read per chunk of a streamed file. */
+const READ_CHUNK_BYTES = 64 * 1024;
+
+/**
+ * The first `size` bytes of the open `handle` as a stream, a chunk at a time
+ * as the consumer pulls, so concurrent reads hold a chunk each rather than a
+ * file each. It never reads past `size` (a file that grew since its stat) and
+ * ends at end of file (one that shrank). The handle is closed when the stream
+ * ends, fails, or is cancelled.
+ */
+export function fileStream(handle: FileHandle, size: number): ReadableStream<Uint8Array> {
+  let offset = 0;
+  let closing: Promise<void> | null = null;
+  const close = () => (closing ??= handle.close().catch(() => {}));
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const want = Math.min(READ_CHUNK_BYTES, size - offset);
+        const { bytesRead, buffer } = want > 0 ? await handle.read(new Uint8Array(want), 0, want, offset) : { bytesRead: 0, buffer: new Uint8Array(0) };
+        if (closing !== null) return; // cancelled while reading
+        if (bytesRead > 0) {
+          offset += bytesRead;
+          controller.enqueue(buffer.subarray(0, bytesRead));
+        }
+        if (bytesRead === 0 || offset >= size) {
+          await close();
+          controller.close();
+        }
+      } catch (error) {
+        await close();
+        controller.error(error);
+      }
+    },
+    cancel: close,
+  });
 }
 
 /**
@@ -388,19 +462,29 @@ async function listEntry(file: string, root: string, name: string): Promise<List
 
 /**
  * The folder `dir` (a real path inside the real path `root`) as the channel
- * lists it: sorted by name in UTF-16 code-unit order, without names starting
- * with "." or entries listEntry drops, at most LIST_MAX_ENTRIES of them.
+ * lists it. At most LIST_MAX_ENTRIES names are read, in the file system's
+ * order; they are sorted by UTF-16 code unit (JavaScript's default sort), and
+ * names starting with "." and the entries listEntry drops are left out. A
+ * folder with more names says `truncated: true`.
  */
 async function listing(dir: string, root: string): Promise<{ entries: ListEntry[]; truncated?: true }> {
+  const names: string[] = [];
+  let truncated = false;
+  // Leaving the loop early closes the folder.
+  for await (const entry of await opendir(dir)) {
+    if (names.length === LIST_MAX_ENTRIES) {
+      truncated = true;
+      break;
+    }
+    names.push(entry.name);
+  }
   const entries: ListEntry[] = [];
-  for (const name of (await readdir(dir)).sort()) {
+  for (const name of names.sort()) {
     if (name.startsWith(".")) continue;
     const entry = await listEntry(path.join(dir, name), root, name);
-    if (entry === null) continue;
-    if (entries.length === LIST_MAX_ENTRIES) return { entries, truncated: true };
-    entries.push(entry);
+    if (entry !== null) entries.push(entry);
   }
-  return { entries };
+  return truncated ? { entries, truncated: true } : { entries };
 }
 
 /**
@@ -408,30 +492,36 @@ async function listing(dir: string, root: string): Promise<{ entries: ListEntry[
  * Every answer carries READ_HEADERS, and a HEAD answer has no body. In order:
  * 1. GET and HEAD only, folder or not (405 otherwise);
  * 2. a folder is open;
- * 3. the path is decoded once (safeRelative), is not empty, and has no
- *    segment starting with "." (`.env`, `.git/config`, `a/.venv/x`);
+ * 3. exactly one `path` parameter, decoded once (by the URL parser) and
+ *    checked as safeRelative checks a URL path, not empty, with no segment
+ *    starting with "." (`.env`, `.git/config`, `a/.venv/x`);
  * 4. it lies in one of the plugin's `reads` roots (matchRoot), and so a
  *    plugin with no `reads` reads nothing;
- * 5. the matched root's real path lies inside the workspace's real path, and
- *    is not the workspace itself: a root that is a link leaving the workspace
- *    is refused (Paper Wiki's site folder follows one; to do the same here,
- *    drop that one check). Nor may the root resolve onto a dot folder of the
- *    workspace;
+ * 5. the matched root's real path lies inside the workspace's real path (a
+ *    root that is a link leaving the workspace is refused; Paper Wiki's site
+ *    folder follows one, and to do the same here, drop that one check), is not
+ *    the workspace itself nor a dot folder of it, and is itself one of the
+ *    plugin's roots (declaredRoot; to follow a link to any other folder of the
+ *    workspace, drop that one check);
  * 6. the target's real path lies inside the root's real path and has no
  *    segment below it starting with "." (a link named `x` to `.git`);
- * 7. a file is a regular file, sent with readContentType, or 413 above
- *    READ_MAX_BYTES without being read; a listing is a folder (listing).
+ * 7. a file is a regular file, by path and again once opened (openRegular),
+ *    sent with readContentType as a stream (fileStream), or 413 above
+ *    READ_MAX_BYTES before a byte is read; a listing is a folder (listing),
+ *    and HEAD on it stops at opening the folder.
  * Anything else, and any file system error, is 404.
  */
 export async function serveRead(route: Extract<Route, { kind: "read" }>, method: string, workspace: string | null): Promise<Response> {
   const head = method === "HEAD";
-  const answer = (status: number, type: string, body: Uint8Array<ArrayBuffer> | string, extra: Record<string, string> = {}): Response =>
+  const answer = (status: number, type: string, body: BodyInit | null, extra: Record<string, string> = {}): Response =>
     new Response(head ? null : body, { status, headers: { ...READ_HEADERS, "Content-Type": type, ...extra } });
   const missing = () => answer(404, TEXT, "Not found");
+  const tooLarge = () => answer(413, TEXT, "Too large for the read channel");
 
   if (method !== "GET" && !head) return answer(405, TEXT, "Method not allowed", { Allow: "GET, HEAD" });
   if (workspace === null) return missing();
-  const rel = safeRelative(`/${route.encoded}`);
+  if (route.paths.length !== 1) return missing();
+  const rel = safeDecodedRelative(route.paths[0]!);
   if (rel === null || rel === "") return missing();
   if (rel.split("/").some((s) => s.startsWith("."))) return missing();
   const root = matchRoot(rel, route.site.reads);
@@ -442,18 +532,31 @@ export async function serveRead(route: Extract<Route, { kind: "read" }>, method:
     if (!isInside(top, rootReal)) return missing();
     if (path.relative(top, rootReal) === "") return missing();
     if (hiddenBelow(top, rootReal)) return missing();
+    if (!declaredRoot(top, rootReal, route.site.reads)) return missing();
     const real = await realpath(path.join(top, rel));
     if (!isInside(rootReal, real)) return missing();
     if (hiddenBelow(rootReal, real)) return missing();
+    // By path first: a FIFO is never opened, and the cap needs no read access.
     const info = await stat(real);
     if (route.list) {
       if (!info.isDirectory()) return missing();
-      return answer(200, "application/json", JSON.stringify(await listing(real, rootReal)));
+      if (head) {
+        await (await opendir(real)).close();
+        return answer(200, JSON_TYPE, null);
+      }
+      return answer(200, JSON_TYPE, JSON.stringify(await listing(real, rootReal)));
     }
     if (!info.isFile()) return missing();
-    if (info.size > READ_MAX_BYTES) return answer(413, TEXT, "Too large for the read channel");
+    if (info.size > READ_MAX_BYTES) return tooLarge();
+    const opened = await openRegular(real);
+    if (opened === 404) return missing();
+    if (opened === 413) return tooLarge();
     const type = readContentType(rel);
-    return head ? answer(200, type, "") : answer(200, type, await readUpTo(real, info.size));
+    if (head) {
+      await opened.handle.close();
+      return answer(200, type, null);
+    }
+    return answer(200, type, fileStream(opened.handle, opened.size));
   } catch {
     return missing();
   }
