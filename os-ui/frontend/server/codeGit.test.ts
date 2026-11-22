@@ -1241,11 +1241,20 @@ describe("bounded work", () => {
     assert.match((await body<Diff>(get(api, "/diff", { project: P, hash: m[1]!, path: "big.txt" }))).diff, /\nBinary files \/dev\/null and b\/big\.txt differ\n/);
   });
 
-  test("each project gets half: 2 of 4 git processes and 10 of 20 requests; past that 503, before .git is walked", { timeout: 20_000 }, async () => {
-    // Three projects with their own .git: P busy, F the other project, R refused (a gitfile).
+  test("each project gets half: 2 of 4 git processes and 10 of 20 requests; past that 503, before .git is walked", { timeout: 20_000 }, async (t) => {
+    // Three projects with their own .git: P busy, F the other project, and R, whose
+    // walk would throw (objects/ unreadable) where chmod can show it, else a gitfile.
     const root = tempTree({ "projects-folder/P/PROJECT_MEMORY.md": "# P\n", "projects-folder/F/PROJECT_MEMORY.md": "# F\n", "projects-folder/R/PROJECT_MEMORY.md": "# R\n" });
     for (const name of ["P", "F"]) init(join(root, "projects-folder", name));
-    writeFileSync(join(root, "projects-folder", "R", ".git"), "gitdir: /elsewhere\n");
+    const unreadable = !WINDOWS && process.getuid?.() !== 0;
+    const rObjects = join(root, "projects-folder", "R", ".git", "objects");
+    if (unreadable) {
+      init(join(root, "projects-folder", "R"));
+      chmodSync(rObjects, 0o000);
+    } else {
+      writeFileSync(join(root, "projects-folder", "R", ".git"), "gitdir: /elsewhere\n");
+    }
+    t.after(() => (unreadable ? chmodSync(rObjects, 0o755) : undefined));
     let open = true;
     let release: () => void = () => {};
     const gate = new Promise<void>((go) => (release = go));
@@ -1298,7 +1307,11 @@ describe("bounded work", () => {
     assert.deepEqual(await statuses(p.answers), [10, 15]);
     assert.deepEqual(await statuses(f.answers), [10, 1]);
     assert.deepEqual([most.get("P"), most.get("F")], [2, 2]);
-    assert.match(((await get(api, "/", { project: "R" })).body as { problem: string }).problem, /is a file that points/, "and admitted again once the others are done");
+    // Admitted again once the others are done, R's .git is now walked: an unreadable
+    // objects/ throws there (500), which proves the 503 above came before any walk.
+    const later = await get(api, "/", { project: "R" });
+    if (unreadable) assert.deepEqual([later.status, later.body], [500, { error: "the Code view could not read this repository (EACCES)" }]);
+    else assert.match((later.body as { problem: string }).problem, /is a file that points/);
   });
 });
 

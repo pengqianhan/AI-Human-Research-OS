@@ -64,7 +64,7 @@ export function findProgram(
     .filter(absolute);
   const names = !windows ? [name] : /\.[^.]*$/.test(name) ? (/\.(?:com|exe)$/i.test(name) ? [name] : []) : [`${name}.com`, `${name}.exe`];
   for (const dir of dirs) {
-    if (within(dir)) continue;
+    // A program in an entry inside `outside` lies inside itself, so checking the program covers the entry.
     for (const candidate of names) {
       const file = path.join(dir, candidate);
       if (exists(file) && !within(file)) return file;

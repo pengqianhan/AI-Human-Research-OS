@@ -24,28 +24,35 @@ import type { ApiContext, ApiHandler, ApiResponse, RunOptions, RunResult } from 
  * the user's environment may be hostile or just unusual. What holds whatever
  * they say, each part pinned by codeGit.test.ts:
  *
- * 1. Only the git found in an absolute PATH entry runs (never one in the
- *    workspace), as an argument list with no shell, and with no network: the
- *    guards below, and the table at the end of this file, which accounts for
- *    every `git help config` key that names a command, program, helper,
- *    hook, filter, or driver.
+ * 1. Only the git found in an absolute PATH entry runs, never one whose real
+ *    path lies in the workspace (nor the working folder), as an argument
+ *    list with no shell, and with no network: the guards below, and the
+ *    table at the end of this file, which accounts for every `git help
+ *    config` key that names a command, program, helper, hook, filter, or
+ *    driver.
  * 2. Nothing Git writes reaches the caller: every failure is a fixed text
  *    naming the step, and Git's stderr goes to the server's log only.
  * 3. Read-only and confined. The repository is a plain .git folder inside
- *    the workspace (`refusal`): the files Git reads there by name are plain
- *    files of bounded size, nothing under refs/ or among the objects is a
- *    link, and it borrows no objects (no alternates, no commondir). Every
- *    diff compares two committed trees of HEAD's history; no .gitattributes
- *    is read (neither the working tree's nor a committed one), .mailmap and
- *    .gitmodules in the working tree are not opened, nor is info/grafts, nor
- *    any file the config names (diff.orderFile, core.attributesFile,
- *    mailmap.file) except through include.path, which reads another file as
- *    config under the same guards and with none of these checks; no command
- *    writes to .git. The check runs before git does, so a file swapped in
- *    between is not caught.
- * 4. Bounded work: at most four git processes per workspace at once, each
- *    with 10 s, an output cap, and blobs over 4 MiB treated as binary. What
- *    is not bounded is listed in PLUGINS.md and at the end of this file.
+ *    the workspace (`refusal`): HEAD, config, config.worktree, packed-refs,
+ *    shallow and every file in info/ are plain files under their caps, refs/
+ *    and reftable/ hold only folders and plain files (loose refs under
+ *    4 KiB), the object store holds no link and nothing but plain files
+ *    (whose sizes are not checked), and it borrows no objects (no alternates,
+ *    no commondir); .git/<hash> is never opened (core.warnAmbiguousRefs).
+ *    Every diff compares two committed trees of HEAD's history; no
+ *    .gitattributes is read (neither the working tree's nor a committed
+ *    one), .mailmap and .gitmodules in the working tree are not opened, nor
+ *    is info/grafts, nor any file the config names (diff.orderFile,
+ *    core.attributesFile, mailmap.file) except through include.path, which
+ *    reads another file as config under the same guards and with none of
+ *    these checks; no command writes to .git. The check runs before git
+ *    does, so a file swapped in between is not caught.
+ * 4. Bounded work, per handler (one open workspace): 20 requests in flight
+ *    and 4 git processes, each project at most half of both, a request past
+ *    its share 503 before its .git is walked; each command with 10 s, an
+ *    output cap, blobs over 4 MiB treated as binary, and no single heap
+ *    allocation over 256 MiB (GIT_ALLOC_LIMIT). What is not bounded is
+ *    listed in PLUGINS.md and at the end of this file.
  */
 
 export interface Source {
@@ -262,6 +269,7 @@ const HISTORY = [
  * GIT_CONFIG_PARAMETERS); every other key there the repository's own config
  * could set as well, so the guards above cover it. GIT_GRAFT_FILE replaces
  * info/grafts, which Git reads line by line and echoes back in its errors.
+ * GIT_ALLOC_LIMIT caps each single heap allocation (ALLOC_LIMIT).
  */
 export function gitEnv(inherited: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
@@ -376,6 +384,8 @@ const MAX_ENTRIES = 100_000;
  * not read by these commands and not looked at; a socket such as
  * fsmonitor--daemon.ipc is fine. Lifting a refusal later means resolving the
  * target and allowing it when its real path lies inside the workspace.
+ * It is synchronous and runs once per admitted request, uncached: about
+ * 15 ms on an ordinary .git, 90 to 150 ms at the entry budget.
  */
 export function refusal(gitDir: string, stat: Stats, label: string, maxEntries = MAX_ENTRIES): string | null {
   const why = (text: string) => `${label} ${text}; the Code view reads only a plain .git folder inside the workspace that keeps its objects to itself`;
@@ -941,7 +951,10 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *   mailmap.file, mailmap.blob, in-tree .mailmap     --no-use-mailmap (read even though %an is printed)
  *   diff.ignoreSubmodules, submodule.<name>.ignore
  *     in the working tree's .gitmodules              --ignore-submodules=none (which also stops the read)
- *   core.bigFileThreshold                            -c core.bigFileThreshold=4m
+ *   core.bigFileThreshold                            -c core.bigFileThreshold=4m (blobs only: commit and tree objects
+ *                                                    are read whole, which GIT_ALLOC_LIMIT=256m bounds instead)
+ *   core.warnAmbiguousRefs                           -c core.warnAmbiguousRefs=false (else a full hash makes Git
+ *                                                    look for a ref of that name, opening .git/<hash>)
  *   core.abbrev                                      not used: `short` is the hash's first 7 digits
  *
  * Cannot be reached by these commands
@@ -979,9 +992,11 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *                                                    a driver, which the flags above neutralise, or mark binary
  *
  * Not bounded
- *   memory inside one git process, below the blob threshold: a commit of
- *   many files just under 4 MiB, or a diff with very many lines, still takes
- *   what Git needs, for up to 10 s; packed objects are not checked one by one;
- *   loose object files are checked by type, not size (Git reads only their
- *   header for the threshold); and what an include.path file holds.
+ *   the sum of many heap allocations each under 256 MiB (a commit of many
+ *   files just under 4 MiB, a diff with very many lines), for up to 10 s;
+ *   mapped files (packs, the commit-graph), which GIT_ALLOC_LIMIT does not
+ *   cover; packed objects, which are not checked one by one; loose object
+ *   files, checked by type and not by size (for a blob over the threshold
+ *   Git reads only its header; a commit or tree is read whole, up to the
+ *   allocation limit); and what an include.path file holds.
  */
