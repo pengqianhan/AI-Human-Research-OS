@@ -36,10 +36,12 @@ import type { ApiContext, ApiHandler, ApiResponse, RunOptions, RunResult } from 
  *    files of bounded size, nothing under refs/ or among the objects is a
  *    link, and it borrows no objects (no alternates, no commondir). Every
  *    diff compares two committed trees of HEAD's history; .gitattributes,
- *    .mailmap and .gitmodules in the working tree are not opened, nor are
- *    files that the config names (diff.orderFile, core.attributesFile,
- *    mailmap.file, info/grafts), except include.path, which is more config
- *    under the same guards; no command writes to .git.
+ *    .mailmap and .gitmodules in the working tree are not opened, nor is
+ *    info/grafts, nor any file the config names (diff.orderFile,
+ *    core.attributesFile, mailmap.file) except through include.path, which
+ *    reads another file as config under the same guards; no command writes
+ *    to .git. The check runs before git does, so a file swapped in between
+ *    is not caught.
  * 4. Bounded work: at most four git processes per workspace at once, each
  *    with 10 s, an output cap, and blobs over 4 MiB treated as binary. What
  *    is not bounded is listed in PLUGINS.md and at the end of this file.

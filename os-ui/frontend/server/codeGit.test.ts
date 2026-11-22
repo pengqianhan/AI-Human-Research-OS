@@ -391,6 +391,8 @@ describe("repositories that are refused", () => {
     refused(t, (g) => (init(dirname(g)), symlinkSync("../../.env", join(g, "info", "grafts")), secret(g)), /has info\/grafts, which is not a plain file/));
   test("a linked info/attributes (to a file outside the workspace)", (t) =>
     refused(t, (g) => (init(dirname(g)), symlinkSync(join(elsewhere(), "config"), join(g, "info", "attributes"))), /has info\/attributes, which is not a plain file/));
+  test("a linked commit-graph", (t) =>
+    refused(t, (g) => (init(dirname(g)), mkdirSync(join(g, "objects", "info"), { recursive: true }), symlinkSync(secret(g), join(g, "objects", "info", "commit-graph"))), /has objects\/info\/commit-graph, which is not a plain file/));
   test("a linked commit-graph chain", (t) =>
     refused(t, (g) => {
       init(dirname(g));
@@ -874,6 +876,8 @@ describe("git itself", () => {
       assert.equal(options.env, gitEnv);
       assert.equal(options.timeoutMs, 10_000);
       assert.ok(options.maxOutputBytes !== undefined);
+      assert.equal(options.maxErrorBytes, 16 * 1024, "stderr, which nobody sees, is kept small");
+      assert.equal(options.lookup, "path");
       if (command[1] === "--version") continue;
       assert.equal(options.cwd, top);
       assert.ok(command.includes(`--git-dir=${join(top, ".git")}`) && command.includes(`--work-tree=${top}`), command.join(" "));
@@ -1228,6 +1232,15 @@ describe("which commit a hash names", () => {
     fx(root, ["tag", m[1]!, m[2]!]);
     const commit = await body<Commit>(get(handler(root), "/commit", { project: P, hash: m[1]! }));
     assert.deepEqual([commit.hash, commit.subject], [m[1], "first"]);
+  });
+
+  test("a hash naming something other than a commit is 404 with a fixed text, though Git says why", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [{ mark: 1, message: "first", files: [["projects-folder/P/a.txt", "1\n"]] }]);
+    const tree = fx(root, ["rev-parse", `${m[1]}^{tree}`]);
+    const r = await get(handler(root), "/commit", { project: P, hash: tree });
+    assert.deepEqual([r.status, r.body], [404, { error: `no commit ${tree}` }]);
   });
 
   test("only HEAD's history: a commit on another branch, or one reset away, is 404", async () => {
