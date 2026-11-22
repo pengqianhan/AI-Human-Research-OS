@@ -70,6 +70,39 @@ export function hostilePdf(): Buffer {
   ]);
 }
 
+/** Where imagePdf puts its pictures and its line of text, in PDF units (origin bottom left). */
+export const IMAGE_PAGE = {
+  jpeg: { x: 72, y: 450, size: 144 },
+  raw: { x: 324, y: 450, size: 144 },
+  text: { x: 72, y: 700, size: 24, line: "Helvetica, not embedded" },
+} as const;
+
+/**
+ * One page with a JPEG picture (`jpeg`, DCTDecode, `width` × `height` pixels),
+ * a raw 2 × 2 green RGB picture, and a line in Helvetica that the file does
+ * not embed: what an ordinary paper's figures and labels can be.
+ */
+export function imagePdf(jpeg: Buffer, width: number, height: number): Buffer {
+  const { jpeg: a, raw: b, text } = IMAGE_PAGE;
+  const green = Buffer.from([0, 255, 0, 0, 255, 0, 0, 255, 0, 0, 255, 0]);
+  return pdfFile([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> /XObject << /Im1 6 0 R /Im2 7 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    {
+      dict: "<< >>",
+      stream: [
+        `q ${a.size} 0 0 ${a.size} ${a.x} ${a.y} cm /Im1 Do Q`,
+        `q ${b.size} 0 0 ${b.size} ${b.x} ${b.y} cm /Im2 Do Q`,
+        `BT /F1 ${text.size} Tf ${text.x} ${text.y} Td (${text.line}) Tj ET`,
+      ].join("\n"),
+    },
+    { dict: `<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode >>`, stream: jpeg.toString("latin1") },
+    { dict: "<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 >>", stream: green.toString("latin1") },
+  ]);
+}
+
 /** A PDF whose page tree has no pages. */
 export function noPagesPdf(): Buffer {
   return pdfFile(["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [] /Count 0 >>"]);

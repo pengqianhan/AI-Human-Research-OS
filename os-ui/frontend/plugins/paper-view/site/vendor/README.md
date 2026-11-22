@@ -31,10 +31,12 @@ line endings. `client/scripts/build.mjs` copies the folder as it is into
 `out/plugins/paper-view/site/vendor/`; the page loads both files at run time
 (`../pdfjs.ts`), so neither is bundled or rewritten.
 
-Not vendored, so not available to the view: the package's `cmaps/`,
-`standard_fonts/`, `iccs/`, and `wasm/` folders (CJK fonts without embedded
-data, JPX and JBIG2 images, and ICC colour profiles do not render as in a full
-PDF reader), `pdf.renderer.min.mjs` (drawing in a worker), `pdf.sandbox.min.mjs`
+Not vendored, so not available to the view: the package's `cmaps/` and
+`standard_fonts/` (fonts a PDF does not embed are drawn with a fallback, and
+CJK text without embedded fonts may not render), `iccs/`, and `wasm/` (its
+`openjpeg`, `jbig2`, and `qcms` decoders: JPX and JBIG2 images and ICC colour
+profiles do not render as in a full PDF reader), `pdf.renderer.min.mjs`
+(drawing in a worker), `pdf.sandbox.min.mjs`
 (the PDF's own JavaScript, which the view never runs), and `web/` (the
 viewer). The text layer's style rules in `../style.css` are written for the
 markup PDF.js's `TextLayer` produces and follow `web/pdf_viewer.css`'s

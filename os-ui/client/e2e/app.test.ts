@@ -18,7 +18,7 @@ import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
 import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
-import { HOSTILE_TITLE, HOSTILE_URI, hostilePdf, noPagesPdf, notAPdf, passwordPdf } from "./pdfFixtures.ts";
+import { HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, noPagesPdf, notAPdf, passwordPdf } from "./pdfFixtures.ts";
 
 const CLIENT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = resolve(CLIENT, "../..");
@@ -812,6 +812,7 @@ describe("desktop client on a Research OS folder", () => {
     await page.waitForTimeout(1100);
     await dragAcross(paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "nanochat on a Laptop CPU" }).first());
     await label.waitFor();
+    await page.waitForTimeout(600); // past the page's 400 ms settle timer, so only Reload can clear the bar
     await paper.getByRole("button", { name: "Reload" }).press("Enter");
     await bar.waitFor({ state: "detached" });
     await paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "nanochat on a Laptop CPU" }).first().waitFor({ timeout: 60_000 });
@@ -925,6 +926,53 @@ describe("desktop client on a Research OS folder", () => {
       assert.equal(await paper.evaluate(() => document.querySelectorAll("img, script:not([src]), a, iframe, embed, object").length), 0, "nothing in the frame came from the PDF as markup");
       assert.equal(await page.locator('img[src="x"]').count(), 0);
       assert.deepEqual(await pwned(paper), [undefined, undefined], "the PDF's JavaScript did not run");
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await paper.getByRole("button", { name: "Reload" }).click();
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor({ timeout: 60_000 });
+  });
+
+  test("a PDF's pictures (JPEG and raw) and a font it does not embed are drawn, under the same policy", SLOW, async () => {
+    const { paper } = await openPaper();
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    // A magenta JPEG made by Electron itself, so the repository holds no binary fixture (magenta survives a BGRA/RGBA mix-up).
+    const made = await app.evaluate(({ nativeImage }) => {
+      const size = 32;
+      const pixels = Buffer.alloc(size * size * 4);
+      for (let i = 0; i < size * size; i++) pixels.set([255, 0, 255, 255], i * 4);
+      return nativeImage.createFromBitmap(pixels, { width: size, height: size }).toJPEG(95).toString("base64");
+    });
+    /** Page 1's canvas over a box in PDF units of a US-letter page: how many pixels are not white, and the colour at its centre. */
+    const sample = (box: { x: number; y: number; w: number; h: number }) =>
+      paper.evaluate(({ x, y, w, h }) => {
+        const canvas = document.querySelector('.sheet[data-page="1"] canvas.pg') as HTMLCanvasElement;
+        const context = canvas.getContext("2d")!;
+        const sx = canvas.width / 612;
+        const sy = canvas.height / 792;
+        const [left, top, width, height] = [Math.round(x * sx), Math.round((792 - y - h) * sy), Math.max(1, Math.round(w * sx)), Math.max(1, Math.round(h * sy))];
+        const data = context.getImageData(left, top, width, height).data;
+        let ink = 0;
+        for (let i = 0; i < data.length; i += 4) if (data[i]! < 200 || data[i + 1]! < 200 || data[i + 2]! < 200) ink++;
+        const centre = context.getImageData(left + (width >> 1), top + (height >> 1), 1, 1).data;
+        return { ink, centre: [centre[0]!, centre[1]!, centre[2]!] };
+      }, box);
+    renameSync(pdf, kept);
+    try {
+      writeFileSync(pdf, imagePdf(Buffer.from(made, "base64"), 32, 32));
+      await paper.getByRole("button", { name: "Reload" }).click();
+      await paper.getByText("Page 1 of 1", { exact: true }).waitFor({ timeout: 60_000 });
+      await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor();
+      const { jpeg, raw, text } = IMAGE_PAGE;
+      const magenta = await sample({ x: jpeg.x, y: jpeg.y, w: jpeg.size, h: jpeg.size });
+      assert.ok(magenta.centre[0]! > 200 && magenta.centre[1]! < 80 && magenta.centre[2]! > 200, `the JPEG: ${magenta.centre}`);
+      const green = await sample({ x: raw.x, y: raw.y, w: raw.size, h: raw.size });
+      assert.ok(green.centre[0]! < 80 && green.centre[1]! > 200 && green.centre[2]! < 80, `the raw picture: ${green.centre}`);
+      const line = await sample({ x: text.x, y: text.y, w: 220, h: text.size * 0.75 });
+      assert.ok(line.ink > 50, `the Helvetica line drew ${line.ink} dark pixels`);
+      await paper.locator(".textLayer span").filter({ hasText: text.line }).waitFor();
     } finally {
       rmSync(pdf, { force: true });
       renameSync(kept, pdf);

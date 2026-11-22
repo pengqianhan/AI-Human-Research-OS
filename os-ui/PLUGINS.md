@@ -163,8 +163,11 @@ Status on 2026-11-23:
     `disableWorkerRendering: true` (`pdf.renderer.min.mjs` is not vendored),
     `maxImageSize` 8192², and `verbosity: 1`. No URL is given for character
     maps, standard fonts, ICC profiles, or wasm, none of which is vendored:
-    JPX and JBIG2 images, ICC colour, and CJK fonts the PDF does not embed do
-    not render as in a full reader. pdfTeX output embeds its fonts.
+    JPX and JBIG2 images (the package decodes them with its `wasm/` files),
+    ICC colour, and CJK text in fonts the PDF does not embed do not render as
+    in a full reader. A line in a non-embedded Helvetica, a JPEG, and a raw
+    RGB picture do draw, under the unchanged policy (an e2e test reads the
+    canvas's pixels); pdfTeX output embeds its fonts.
   - Nothing the PDF carries is run or followed: no annotation layer (links
     are inert; the e2e clicks one and sees no navigation or dialog), no
     attachments, no scripting sandbox, no XFA; the text layer is PDF.js's own
