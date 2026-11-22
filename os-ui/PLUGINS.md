@@ -93,9 +93,11 @@ Status on 2026-11-22:
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
 - **Next: S6**, the Code and Paper view plugins. The Paper view waits on the Human
-  Owner's answer about PDF.js (below; A9). S5 moved the client's security boundary
-  and is checked only by the advisory `desktop.yml` and the end-to-end suite, so run
-  `npm run test:e2e` in `os-ui/client` before it merges.
+  Owner's answer about PDF.js (below; A9). S5 moved the client's security boundary;
+  its proof is the fixture tests that `npm test` in `os-ui/client` runs, which only
+  the advisory `desktop.yml` runs in CI. The end-to-end suite does not reach the
+  channel until S6, but run `npm run test:e2e` there before S5 merges, since it
+  guards the plugin origins the channel sits on.
 - **Waiting on the Human Owner:** whether the Paper view may vendor PDF.js (Part 2), and
   whether a third-party plugin may add a left-navigation item (Part 1, Q-PO1).
 
