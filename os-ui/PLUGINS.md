@@ -5,7 +5,7 @@ Work). It was written by a design agent on 2026-11-21 and reviewed before
 implementation; the two parts below are its reports, kept as written, so "I" is that
 agent and line numbers refer to the code as it was that day.
 
-Status on 2026-11-22:
+Status on 2026-11-23:
 
 - **S1 to S5 are done**: the manifest parser, the server-side registry with the dev
   server built from it, the client serving plugin origins from the registry (S3), the
@@ -117,17 +117,50 @@ Status on 2026-11-22:
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **S6 is split in three.** S6a-1, the Code view's Git handler, is done (pending its
-  pull request) and not mounted; S6a-2, the Code view plugin (its manifest,
-  the mount at `/api/code-view/git` on `app://code-view`, and the page), is next; S6b,
-  the Paper view, follows it and vendors PDF.js as Part 2 describes (the Human Owner
-  said yes on 2026-11-22; [HANDOFF.md](../HANDOFF.md) Decisions). S5's
-  proof stays the fixture tests that `npm test` in `os-ui/client` runs, which only the
-  advisory `desktop.yml` runs in CI; the end-to-end suite reaches the channel from
-  S6a-2 on.
+- **S6 is split in three.** S6a-1, the Code view's Git handler, and S6a-2, the Code
+  view plugin, are done (each pending its pull request; S6a-2 stacks on S6a-1);
+  S6b, the Paper view, is next and vendors PDF.js as Part 2 describes (the Human
+  Owner said yes on 2026-11-22; [HANDOFF.md](../HANDOFF.md) Decisions). The
+  end-to-end suite now reaches the read channel through the Code view.
+- **S6a-2** is the bundled plugin [frontend/plugins/code-view/](frontend/plugins/code-view/)
+  (manifest as Part 2's, `reads: ["projects-folder/*/Code"]`, handler `git`), the
+  workspace's Code tab, and the host side of the selection message. Where the code
+  differs from Parts 1 and 2:
+  - The mount: `BUNDLED_HANDLERS["code-view/git"]` is `codeGitApi`; the dev server
+    passes `DESKTOP_ONLY_HANDLERS` (`code-view/git`) as `skip`, so it never answers
+    `/api/code-view/git` (`devServer.test.ts`); the client skips none and replaces
+    the factory with `desktopHandlers` ([client/src/main/codeView.ts](client/src/main/codeView.ts)):
+    the git it runs is found in the children's environment (the login shell's
+    PATH laid over the inherited one), by the handler's own rules, never the
+    Command Line Tools stub at `/usr/bin/git` (which opens an install dialog when
+    run); none found is looked for again after 5 s. What Git prints on a failure
+    goes to the client's `main.log`. `codeGitHandler` takes `null` for "no git".
+  - The page is static files in the plugin's `site/` (A4): `main.ts` and its
+    modules are type-checked by the frontend's `tsc`, unit-tested by its
+    `npm test` (`plugins/**/*.test.ts`), and bundled by `client/scripts/build.mjs`
+    into `out/plugins/code-view/site/main.js`; no TypeScript ships. It uses the
+    real API (full hashes, `{repo: null, problem?}`, `openable`, `sizes`, `stat`,
+    `truncated`, `more`), shows every answer state in plain words, and caps what
+    it reads and shows (2 MiB and 5,000 lines of a file, 5,000 rows of a diff).
+  - `os.select` replaces A6's `os.ask`, as Part 2 says: `{type: "os.select",
+    label: string, quote?: string}` or `{label: null}`, accepted only from the
+    active view's frame at its own origin; a label is one line of 1 to 200
+    characters with no control or bidirectional-override character, a quote at
+    most 2,000 characters ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)).
+    Added: the host answers `{type: "os.select.clear"}`, posted to the page's
+    origin only, when the user clears the selection or asks about it in the host,
+    so the page drops its highlight. "Ask the agent about this" adds a reference
+    chip (at most 8) to the project's composer and never sends; Send puts each
+    chip before the typed text as `About <label>` and the quote as a blockquote,
+    exactly what the chip's tooltip shows. The host cannot reach
+    `/api/code-view/git`, so the mockup's header pill (latest commit) is not shown.
+  - `viewSrc(page, project)` appends `?project=<encoded name>`; the tab row takes
+    project views from the registry, and a layout saved with tab `code` opens
+    `code-view/code`. A view's frame stays loaded once opened.
+  - The client cancels `will-download` on every session it creates, so a frame
+    sent to a file it cannot show starts no download.
 - **S6a-1** is [frontend/server/codeGit.ts](frontend/server/codeGit.ts) with
-  `codeGit.test.ts` in the required CI job. Nothing declares or mounts it yet: no
-  `BUNDLED_HANDLERS` entry, no manifest, no `DESKTOP_ONLY_HANDLERS`. The code is the
+  `codeGit.test.ts` in the required CI job. S6a-2 declares and mounts it. The code is the
   authority where it differs from Part 2's Gap 1, after the S5 review and an
   independent review of S6a-1 itself:
   - Answers: every route answers `{ repo: null }`, or `{ repo: null, problem }`
@@ -281,10 +314,8 @@ Status on 2026-11-22:
     `where.exe` as `git.exe` in the workspace and in the project and checks that `/`
     and `/log` answer from the real git; a probe that ran the copy would get no
     `git version` line and answer that problem instead.
-  - For S6a-2: `codeGitHandler(ctx, git, log)`. The client can pass the git path
-    its Settings check found (on a Mac without the Command Line Tools,
-    `/usr/bin/git` is the stub that offers to install them); `log` receives what
-    Git printed on failures.
+  - `codeGitHandler(ctx, git, log)`: the client passes the git it found (see
+    S6a-2 above) and its own log.
 - **Waiting on the Human Owner:** whether a third-party plugin may add a
   left-navigation item (Part 1, Q-PO1).
 
