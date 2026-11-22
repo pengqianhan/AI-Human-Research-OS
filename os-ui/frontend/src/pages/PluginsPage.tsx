@@ -26,13 +26,6 @@ const SLOT_LABEL: Record<Slot, string> = { nav: "Page", home: "Home panel", proj
  */
 const PLANNED: Card[] = [
   {
-    name: "Code view",
-    icon: "file",
-    contributes: ["Project view · Code"],
-    about: "Shows a project's files and its Git changes, read-only.",
-    later: "later in step 1",
-  },
-  {
     name: "Paper view",
     icon: "projects",
     contributes: ["Project view · Paper"],

@@ -9,7 +9,7 @@
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, truncateSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -117,6 +117,15 @@ async function launch(env: Record<string, string>): Promise<{ app: ElectronAppli
   app.process().stderr?.on("data", (d: Buffer) => logs.push(d.toString()));
   const page = await app.firstWindow();
   page.on("console", (m) => logs.push(`console.${m.type()}: ${m.text()}`));
+  // Playwright's page console does not carry every message of a plugin's frame
+  // (another origin, so another process); the window's own console-message
+  // event does, CSP reports included. Collected in the main process, read by consoleLog().
+  await app.evaluate(({ BrowserWindow }) => {
+    const seen: string[] = [];
+    (globalThis as { __console?: string[] }).__console = seen;
+    const win = BrowserWindow.getAllWindows()[0]!;
+    win.webContents.on("console-message", (event) => seen.push(`frame ${event.frame?.url ?? "?"}: ${event.message}`));
+  });
   return { app, page, logs };
 }
 
@@ -145,6 +154,68 @@ async function pluginFrame(page: Page, origin: string): Promise<Frame> {
 
 const wikiFrame = (page: Page) => pluginFrame(page, "app://paper-wiki/");
 
+/** The project the Code view checks open, and the files the suite adds under its Code/. */
+const PROJECT = "nanochat_cpu";
+/** A file name and a commit subject that would run script if any of them reached the DOM as markup. */
+const MARKUP_NAME = "<img src=x onerror=window.top.__pwned=1>.txt";
+const MARKUP_TEXT = `<script>window.top.__pwned=2</script><img src=x onerror="window.top.__pwned=3">`;
+const MARKUP_SUBJECT = `e2e <img src=x onerror=window.top.__pwned=4> <script>window.__pwned=5</script>`;
+/** Names the channel must take through encodeURIComponent: "+" would read as a space, "#" end the URL, "%" start an escape. */
+const ODD_NAMES = ["a+b.txt", "has#hash.txt", "100%.txt", "with space.txt"];
+
+function codeFixtures(workspace: string): void {
+  const dir = join(workspace, "projects-folder", PROJECT, "Code", "e2e");
+  mkdirSync(dir, { recursive: true });
+  for (const name of ODD_NAMES) writeFileSync(join(dir, name), `content of ${name}\n`);
+  // Windows refuses < and > in a file name; the subject below still carries the markup there.
+  if (process.platform !== "win32") writeFileSync(join(dir, MARKUP_NAME), `${MARKUP_TEXT}\n`);
+  writeFileSync(join(dir, ".env"), "SECRET=1\n");
+  writeFileSync(join(dir, "binary.dat"), Buffer.from([0x89, 0x50, 0x00, 0x00, 0x01, 0x02]));
+  // Sparse, so it costs no disk: the channel refuses it (413) by its size alone.
+  writeFileSync(join(dir, "huge.txt"), "");
+  truncateSync(join(dir, "huge.txt"), 33 * 1024 * 1024);
+  writeFileSync(join(workspace, ".env"), "SECRET=1\n");
+}
+
+/** git, hermetic: no user or system config, a fixed author and committer, no signing. */
+function git(cwd: string, args: string[]): string {
+  const env: Record<string, string> = {};
+  for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !/^git_/i.test(k)) env[k] = v;
+  const home = tempDir("os-client-git-home-");
+  writeFileSync(join(home, "empty.gitconfig"), "");
+  Object.assign(env, {
+    HOME: home,
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_CONFIG_GLOBAL: join(home, "empty.gitconfig"),
+    GIT_AUTHOR_NAME: "E2E Author",
+    GIT_AUTHOR_EMAIL: "e2e@example.invalid",
+    GIT_COMMITTER_NAME: "E2E Author",
+    GIT_COMMITTER_EMAIL: "e2e@example.invalid",
+    GIT_AUTHOR_DATE: "2026-11-20T12:00:00Z",
+    GIT_COMMITTER_DATE: "2026-11-20T12:00:00Z",
+  });
+  const run = spawnSync("git", ["-c", "commit.gpgsign=false", "-c", "core.autocrlf=false", ...args], { cwd, env, encoding: "utf8" });
+  if (run.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${run.stderr}`);
+  return run.stdout;
+}
+
+/** The suite needs the Git the Code view's handler accepts; without it, it fails rather than pass with nothing checked. */
+function requireGit(): void {
+  const probe = spawnSync("git", ["--version"], { encoding: "utf8" });
+  const m = /^git version (\d+)\.(\d+)/.exec(probe.stdout ?? "");
+  if (m === null || Number(m[1]) < 2 || (Number(m[1]) === 2 && Number(m[2]) < 45)) {
+    throw new Error(`the Code view's end-to-end checks need Git 2.45 or later on PATH (the handler's floor); found: ${probe.stdout?.trim() || probe.error?.message || "no git"}`);
+  }
+}
+
+/** Saves a screenshot when OS_CLIENT_E2E_SHOTS names a folder (the reviewer compares them with mockup C). */
+async function shot(page: Page, name: string): Promise<void> {
+  const dir = process.env.OS_CLIENT_E2E_SHOTS;
+  if (!dir) return;
+  mkdirSync(dir, { recursive: true });
+  await page.screenshot({ path: join(dir, `${name}.png`) });
+}
+
 describe("desktop client on a Research OS folder", () => {
   let workspace: string;
   let userData: string;
@@ -155,6 +226,7 @@ describe("desktop client on a Research OS folder", () => {
 
   before(async () => {
     workspace = copyWorkspace();
+    codeFixtures(workspace);
     userData = tempDir("os-client-data-");
     sessions = tempDir("os-client-sessions-");
     ({ app, page, logs } = await launch({
@@ -171,6 +243,9 @@ describe("desktop client on a Research OS folder", () => {
       for (const dir of [workspace, userData, sessions]) if (dir) rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  /** Every console message of the window's frames, plugin frames included, as the main process saw them. */
+  const consoleLog = () => app.evaluate(() => [...((globalThis as { __console?: string[] }).__console ?? [])]);
 
   /** What the app knows about itself, for a failure message: its info() and the tail of its log. */
   async function diagnostics(): Promise<string> {
@@ -270,6 +345,219 @@ describe("desktop client on a Research OS folder", () => {
     await chat.waitFor();
   });
 
+  /** The project's workspace with its Code tab open, and the Code view's frame. */
+  async function openCode(): Promise<{ ws: Locator; code: Frame }> {
+    await nav(page, "Projects").click();
+    await screen(page, "projects").getByRole("button", { name: `Open workspace: ${PROJECT}` }).click();
+    const ws = screen(page, "workspace");
+    await ws.getByRole("heading", { name: PROJECT, exact: true }).waitFor();
+    await ws.getByRole("tab", { name: "Code" }).click();
+    const code = await pluginFrame(page, `app://code-view/index.html?project=${PROJECT}`);
+    return { ws, code };
+  }
+  const pwned = async (code: Frame) => [await page.evaluate(() => (window as { __pwned?: unknown }).__pwned), await code.evaluate(() => (window as { __pwned?: unknown }).__pwned)];
+
+  test("the Code view's Files: Code/ through the read channel, every name and line as text", SLOW, async () => {
+    const { code } = await openCode();
+    await code.locator(".tree-root").filter({ hasText: `${PROJECT}/Code/` }).waitFor();
+    // README.md opens first; its first line is a Markdown heading.
+    await code.locator(".vpath").filter({ hasText: /^Code\/README\.md$/ }).waitFor();
+    await code.locator(".row.hd .tx").filter({ hasText: "# Code: nanochat CPU example" }).waitFor();
+    await shot(page, "1-files-with-a-file-open");
+
+    // Chinese text arrives intact.
+    const zh = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README_zh.md"), "utf8").split("\n").find((l) => /[一-鿿]/.test(l))!;
+    await code.locator(".tnode").filter({ hasText: /^README_zh\.md$/ }).click();
+    await code.locator(".row .tx").filter({ hasText: zh }).first().waitFor();
+
+    // Names that only an encoded query reaches.
+    await code.locator(".tnode.dir").filter({ hasText: /^e2e$/ }).click();
+    for (const name of ODD_NAMES) {
+      await code.locator(".tnode").filter({ hasText: name }).click();
+      await code.locator(".row .tx").filter({ hasText: `content of ${name}` }).waitFor();
+    }
+    // A dot file is never listed; binary and oversized files get their own screen.
+    assert.equal(await code.locator(".tnode").filter({ hasText: ".env" }).count(), 0);
+    await code.locator(".tnode").filter({ hasText: "binary.dat" }).click();
+    await code.getByText("Not a text file").waitFor();
+    await code.locator(".tnode").filter({ hasText: "huge.txt" }).click();
+    await code.getByText("Too large to show").waitFor();
+
+    // Markup in a file's name and in its text stays text.
+    if (process.platform !== "win32") {
+      await code.locator(".tnode .tname").filter({ hasText: MARKUP_NAME }).click();
+      await code.locator(".row .tx").filter({ hasText: MARKUP_TEXT }).waitFor();
+      await page.locator("[data-selection-label]").filter({ hasText: `Code/e2e/${MARKUP_NAME}` }).waitFor();
+    }
+    assert.equal(await code.evaluate(() => document.querySelectorAll("img, script:not([src])").length), 0, "no element came from a name or a file");
+    assert.equal(await page.locator('img[src="x"]').count(), 0);
+    assert.deepEqual(await pwned(code), [undefined, undefined]);
+  });
+
+  test("the Code view's frame is sealed off: no bridge, its own read roots and endpoint only", SLOW, async () => {
+    const { code } = await openCode();
+    const status = (url: string) => code.evaluate(async (u) => (await fetch(u)).status, url);
+    const rel = (p: string) => `./_os/files?path=${encodeURIComponent(p)}`;
+    assert.deepEqual(
+      {
+        readme: await status(rel(`projects-folder/${PROJECT}/Code/README.md`)),
+        plus: await status(rel(`projects-folder/${PROJECT}/Code/e2e/a+b.txt`)),
+        outsideCode: await status(rel(`projects-folder/${PROJECT}/AGENTS.md`)),
+        dotEnvRoot: await status(rel(".env")),
+        dotEnvCode: await status(rel(`projects-folder/${PROJECT}/Code/e2e/.env`)),
+        listing: await status(`./_os/list?path=${encodeURIComponent(`projects-folder/${PROJECT}/Code`)}`),
+        badProject: await status("/api/code-view/git/log?project=..%2Fx"),
+        badHash: await status(`/api/code-view/git/diff?project=${PROJECT}&hash=--output%3Dx&path=index.md`),
+        chat: await status("/api/chat/sessions"),
+        wikiStatus: await status("/api/paper-wiki/status"),
+      },
+      { readme: 200, plus: 200, outsideCode: 404, dotEnvRoot: 404, dotEnvCode: 404, listing: 200, badProject: 400, badHash: 400, chat: 404, wikiStatus: 404 },
+    );
+    const probe = await code.evaluate(async () => {
+      const outcome = async (fn: () => Promise<unknown>) => {
+        try {
+          return String(await fn());
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        own: typeof (window as { osDesktop?: unknown }).osDesktop,
+        parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
+        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
+      };
+    });
+    assert.equal(probe.own, "undefined");
+    assert.match(probe.parent, /^blocked: SecurityError/);
+    assert.match(probe.appApi, /^blocked/);
+    assert.match(probe.wikiOrigin, /^blocked/);
+    // The frame's CSP reports reach the suite, so the final check sees this frame too.
+    await code.evaluate(() => {
+      const img = new Image();
+      img.src = "https://csp-canary.invalid/x.png";
+      document.body.append(img);
+      img.remove();
+    });
+    const canary = (lines: string[]) => lines.some((l) => /csp-canary\.invalid.*Content Security Policy/.test(l));
+    for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
+    assert.ok(canary(await consoleLog()), "a CSP violation inside the Code view's frame is seen");
+  });
+
+  test("the Code view's Changes: no repository, then a commit, its files and a diff", SLOW, async () => {
+    requireGit();
+    const { code } = await openCode();
+    await code.getByRole("button", { name: "Changes", exact: true }).click();
+    await code.getByText("No history to show").waitFor();
+    await shot(page, "4-no-history-to-show");
+
+    const dir = join(workspace, "projects-folder", PROJECT);
+    rmSync(join(dir, "Code", "e2e", "huge.txt"));
+    git(dir, ["init", "-q", "-b", "main"]);
+    git(dir, ["add", "-A"]);
+    git(dir, ["commit", "-q", "-m", "e2e: the project as copied"]);
+    writeFileSync(join(dir, "Code", "README.md"), `${readFileSync(join(dir, "Code", "README.md"), "utf8")}A line the e2e commit adds.\n`);
+    writeFileSync(join(dir, "Code", "e2e", "pic.bin"), Buffer.concat([Buffer.from([0, 1, 2, 3]), Buffer.alloc(1000, 7)]));
+    writeFileSync(join(dir, "Code", "e2e", ".hidden"), "a dot file\n");
+    git(dir, ["add", "-A"]);
+    git(dir, ["commit", "-q", "-m", MARKUP_SUBJECT]);
+    const hash = git(dir, ["rev-parse", "HEAD"]).trim();
+
+    await code.getByRole("button", { name: "Try again" }).click();
+    const problem = code.getByText("Git cannot be used here");
+    const commit = code.locator(".commit").filter({ hasText: MARKUP_SUBJECT });
+    await Promise.race([commit.waitFor(), problem.waitFor()]);
+    if (await problem.isVisible()) throw new Error(`the handler refused git: ${await code.locator(".placeholder p").textContent()}`);
+    assert.equal(await code.locator(".commit").count(), 2);
+    assert.equal(await code.locator(".cmd").textContent(), `git -C projects-folder/${PROJECT} log -- .`);
+    await commit.click();
+    // Its files: a text file, a binary one with its sizes, and a dot file that is listed but not opened.
+    const fstat = code.locator(".fstat");
+    await fstat.getByRole("button", { name: "Code/README.md", exact: true }).waitFor();
+    await fstat.getByText("Bin 0 → 1004 bytes").waitFor();
+    await fstat.locator(".fpath.closed").filter({ hasText: "Code/e2e/.hidden" }).waitFor();
+    assert.equal(await fstat.getByRole("button", { name: "Code/e2e/.hidden" }).count(), 0);
+    await fstat.getByText("3 files changed, 2 insertions(+)").waitFor();
+    // The first text file's diff opens.
+    await code.getByText("Diff · Code/README.md").waitFor();
+    await code.locator(".drow.add .tx").filter({ hasText: "+A line the e2e commit adds." }).waitFor();
+    assert.equal(await code.locator(".cmeta .mono").textContent(), hash);
+    await shot(page, "2-changes-with-a-commit-and-a-diff");
+    assert.equal(await code.evaluate(() => document.querySelectorAll("img, script:not([src])").length), 0);
+    assert.deepEqual(await pwned(code), [undefined, undefined]);
+  });
+
+  test("a selection becomes a reference chip in the composer, and nothing is sent", SLOW, async () => {
+    const sessionFiles = readdirSync(sessions).length;
+    const { ws, code } = await openCode();
+    const bar = ws.getByRole("region", { name: "Selection" });
+    const chat = ws.getByRole("region", { name: `${PROJECT} agent`, exact: true });
+    const chips = chat.getByRole("list", { name: "References" }).getByRole("listitem");
+
+    // A message from anything but the view's frame is ignored.
+    if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    assert.equal(await bar.count(), 0);
+    await page.evaluate(() => window.postMessage({ type: "os.select", label: "forged by the host page" }, "*"));
+    await page.waitForTimeout(300);
+    assert.equal(await bar.count(), 0);
+
+    await code.getByRole("button", { name: "Files", exact: true }).click();
+    await code.locator(".tnode").filter({ hasText: /^README\.md$/ }).first().click();
+    const line = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README.md"), "utf8").split("\n")[2]!;
+    await code.locator('.row[data-line="3"]').click();
+    await bar.getByText("Code/README.md:3", { exact: true }).waitFor();
+    await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+    await chips.filter({ hasText: "Code/README.md:3" }).waitFor();
+    assert.equal(await chips.first().getAttribute("title"), `About Code/README.md:3\n> ${line}`);
+    assert.equal(await bar.count(), 0, "asking clears the selection");
+    assert.equal(await chat.locator("textarea").evaluate((el) => el === document.activeElement), true, "the cursor is in the composer");
+
+    await code.getByRole("button", { name: "Changes", exact: true }).click();
+    const commit = code.locator(".commit.on");
+    await commit.click(); // the open commit: selects it
+    const short = (await commit.locator(".h").textContent())!;
+    await bar.getByText(short, { exact: true }).waitFor();
+    await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+    await chips.filter({ hasText: short }).waitFor();
+
+    await code.locator(".drow.add").first().click();
+    await bar.getByText(`${short} · Code/README.md · added line`, { exact: false }).waitFor();
+    await shot(page, "3-selection-ask-bar-and-chips");
+    await bar.getByRole("button", { name: "Clear selection" }).click();
+    assert.equal(await bar.count(), 0);
+    assert.equal(await code.locator(".picked").count(), 0, "clearing in the workspace clears the view's highlight");
+
+    assert.equal(await chips.count(), 2);
+    await chat.getByRole("button", { name: "Remove reference Code/README.md:3" }).click();
+    assert.deepEqual(await chips.allTextContents(), [short]);
+    assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
+  });
+
+  test("a frame sent to a file it cannot show starts no download", SLOW, async () => {
+    const { code } = await openCode();
+    const downloads = tempDir("os-client-downloads-");
+    await app.evaluate(({ app: electronApp, session }, dir) => {
+      electronApp.setPath("downloads", dir);
+      const seen: boolean[] = [];
+      (globalThis as { __downloads?: boolean[] }).__downloads = seen;
+      // Registered after the client's own listener: records whether it cancelled, then cancels anyway (no Save dialog).
+      session.defaultSession.on("will-download", (event, item) => {
+        seen.push(event.defaultPrevented);
+        if (!event.defaultPrevented) item.cancel();
+      });
+    }, downloads);
+    await code.evaluate((url) => {
+      location.href = url;
+    }, `./_os/files?path=${encodeURIComponent(`projects-folder/${PROJECT}/Code/e2e/binary.dat`)}`);
+    let seen: boolean[] = [];
+    for (let i = 0; i < 50 && seen.length === 0; i++) {
+      await page.waitForTimeout(100);
+      seen = await app.evaluate(() => (globalThis as { __downloads?: boolean[] }).__downloads ?? []);
+    }
+    assert.deepEqual(seen, [true], "the client cancelled the download");
+    assert.deepEqual(readdirSync(downloads), []);
+  });
+
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {
     const results = await page.evaluate(async () => {
       const status = async (url: string, init?: RequestInit) => (await fetch(url, init)).status;
@@ -355,8 +643,10 @@ describe("desktop client on a Research OS folder", () => {
     assert.equal(settings.recentWorkspaces[0], workspace);
   });
 
-  test("no Content-Security-Policy violations in the app", () => {
-    const violations = logs.filter((l) => /Refused to|Content Security Policy/.test(l) && !l.includes("example.com") && !l.includes("research-os/api"));
+  test("no Content-Security-Policy violations in the app or its plugins' frames", async () => {
+    const violations = [...logs, ...(await consoleLog())].filter(
+      (l) => /Refused to|Content Security Policy/.test(l) && !l.includes("example.com") && !l.includes("research-os/api") && !l.includes("paper-wiki/api") && !l.includes("csp-canary.invalid"),
+    );
     assert.deepEqual(violations, []);
   });
 

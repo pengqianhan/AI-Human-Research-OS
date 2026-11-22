@@ -464,6 +464,16 @@ async function start(): Promise<void> {
     callback(permission === "clipboard-sanitized-write"),
   );
   session.defaultSession.setPermissionCheckHandler((_contents, permission) => permission === "clipboard-sanitized-write");
+  // No download ever starts: a frame sent to a file it cannot show (the read
+  // channel's application/octet-stream) would otherwise save it, or ask where.
+  // Every session the app creates, now and later, cancels it.
+  const refuseDownloads = (s: Electron.Session) =>
+    s.on("will-download", (event, item) => {
+      event.preventDefault();
+      log(`download refused: ${item.getURL().slice(0, 300)}`);
+    });
+  refuseDownloads(session.defaultSession);
+  app.on("session-created", refuseDownloads);
   registerIpc();
 
   const initial = initialWorkspace({
