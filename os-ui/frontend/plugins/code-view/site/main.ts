@@ -260,7 +260,16 @@ async function loadListing(path: string): Promise<void> {
 
 function renderTree(): void {
   clear(tree);
-  tree.append(el("div", "tree-root", `${project}/Code/`));
+  const head = el("div", "tree-root");
+  const reload = button("link reload", "Reload");
+  reload.title = "List the folders again, as they are on disk now";
+  reload.addEventListener("click", () => {
+    unselect();
+    void loadListing("Code");
+    for (const path of files.open) void loadListing(path);
+  });
+  head.append(el("span", "", `${project}/Code/`), reload);
+  tree.append(head);
   const root = files.listings.get("Code");
   if (root === undefined || root.state === "loading") {
     tree.append(loading());
@@ -328,11 +337,10 @@ function toggleDir(path: string): void {
   unselect();
   if (files.open.has(path)) files.open.delete(path);
   else {
+    // Listed again on every opening, so a folder shows what is on disk now.
     files.open.add(path);
-    if (!files.listings.has(path) || files.listings.get(path)!.state === "error") {
-      void loadListing(path);
-      return;
-    }
+    void loadListing(path);
+    return;
   }
   renderTree();
 }
@@ -523,7 +531,15 @@ function renderChanges(): void {
     changesPane.append(screen(hist.problem.words, hist.problem.retry));
     return;
   }
-  changesPane.append(el("div", "cmd", logCommand(hist.source!, project!)));
+  const cmdRow = el("div", "cmdrow");
+  const reload = button("link reload", "Reload");
+  reload.title = "Ask Git for the history again, as it is now";
+  reload.addEventListener("click", () => {
+    unselect();
+    void loadLog(0);
+  });
+  cmdRow.append(el("div", "cmd", logCommand(hist.source!, project!)), reload);
+  changesPane.append(cmdRow);
   if (hist.commits.length === 0) {
     changesPane.append(el("div", "note-box", "No commit changes this project yet."));
     return;

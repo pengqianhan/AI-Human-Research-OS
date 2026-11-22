@@ -104,3 +104,7 @@ button { font: inherit; color: inherit; }
 .note-box { font: 14px/1.55 var(--serif); color: var(--muted); padding: 14px 16px; background: var(--paper); border-radius: 10px; margin: 10px 0; }
 .more { margin: 12px 14px; }
 .more .placeholder { padding: 0 0 4px; }
+.reload { font: 12px var(--sans); margin-left: 8px; text-decoration: none; }
+.reload:hover { text-decoration: underline; }
+.cmdrow { display: flex; align-items: baseline; gap: 2px; margin: 0 0 14px; min-width: 0; }
+.changes .cmdrow .cmd { margin: 0; }

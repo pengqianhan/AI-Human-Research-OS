@@ -177,12 +177,18 @@ function codeFixtures(workspace: string): void {
   writeFileSync(join(workspace, ".env"), "SECRET=1\n");
 }
 
+/** The home folder the suite's git commands share; removed with the workspace. */
+let gitHome: string | null = null;
+
 /** git, hermetic: no user or system config, a fixed author and committer, no signing. */
 function git(cwd: string, args: string[]): string {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !/^git_/i.test(k)) env[k] = v;
-  const home = tempDir("os-client-git-home-");
-  writeFileSync(join(home, "empty.gitconfig"), "");
+  if (gitHome === null) {
+    gitHome = tempDir("os-client-git-home-");
+    writeFileSync(join(gitHome, "empty.gitconfig"), "");
+  }
+  const home = gitHome;
   Object.assign(env, {
     HOME: home,
     GIT_CONFIG_NOSYSTEM: "1",
@@ -240,7 +246,7 @@ describe("desktop client on a Research OS folder", () => {
   after(async () => {
     await app?.close();
     if (process.env.OS_CLIENT_E2E_KEEP !== "1") {
-      for (const dir of [workspace, userData, sessions]) if (dir) rmSync(dir, { recursive: true, force: true });
+      for (const dir of [workspace, userData, sessions, gitHome]) if (dir) rmSync(dir, { recursive: true, force: true });
     }
   });
 
@@ -532,6 +538,78 @@ describe("desktop client on a Research OS folder", () => {
     await chat.getByRole("button", { name: "Remove reference Code/README.md:3" }).click();
     assert.deepEqual(await chips.allTextContents(), [short]);
     assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
+  });
+
+  test("every answer of the handler has its screen: busy, a refusal, a failure, more, and what was cut", SLOW, async () => {
+    const { code } = await openCode();
+    await code.getByRole("button", { name: "Changes", exact: true }).click();
+    // Canned answers for the next requests to the handler, in order; anything else goes through.
+    await code.evaluate(() => {
+      const real = window.fetch.bind(window);
+      const queue: Record<string, { status: number; body: unknown }[]> = {};
+      (window as { __answers?: typeof queue }).__answers = queue;
+      window.fetch = async (input, init) => {
+        const route = /\/api\/code-view\/git\/(\w*)\?/.exec(String(input))?.[1];
+        const next = route === undefined ? undefined : queue[route]?.shift();
+        if (next === undefined) return real(input, init);
+        return new Response(JSON.stringify(next.body), { status: next.status, headers: { "Content-Type": "application/json" } });
+      };
+    });
+    const answer = (route: string, status: number, body: unknown) =>
+      code.evaluate(
+        ([r, s, b]) => {
+          const queue = (window as { __answers?: Record<string, unknown[]> }).__answers!;
+          (queue[r as string] ??= []).push({ status: s, body: b });
+        },
+        [route, status, body] as const,
+      );
+    const source = { repo: "project", root: `projects-folder/${PROJECT}`, filter: "." };
+    const hash = "1".repeat(40);
+    const one = { hash, short: "1111111", date: "2026-11-21", subject: "a canned commit", files: 5, added: 9, deleted: 0 };
+    const reload = () => code.locator(".cmdrow").getByRole("button", { name: "Reload" }).click();
+
+    await answer("log", 503, { error: "the Code view is busy with other requests; try again" });
+    await answer("log", 200, { ...source, commits: [one], more: true });
+    await reload();
+    await code.getByText("Not available right now").waitFor();
+    await code.getByText("the Code view is busy with other requests; try again").waitFor();
+    await code.getByRole("button", { name: "Try again" }).click();
+    await code.locator(".commit").filter({ hasText: "a canned commit" }).waitFor();
+
+    await answer("log", 500, { error: "git log failed (exit 128)" });
+    await code.getByRole("button", { name: "Load more" }).click();
+    await code.getByText("Git could not read this project's history").waitFor();
+    await code.getByText("git log failed (exit 128)").waitFor();
+
+    await answer("commit", 200, {
+      ...source,
+      hash,
+      short: "1111111",
+      date: "2026-11-21",
+      author: "Canned",
+      subject: "a canned commit",
+      body: "",
+      files: [{ path: "Code/a.txt", status: "M", added: 9, deleted: 0, sizes: null, openable: true }],
+      stat: { files: 5, added: 9, deleted: 0 },
+      truncated: true,
+    });
+    await answer("diff", 200, { ...source, hash, path: "Code/a.txt", diff: "diff --git a/Code/a.txt b/Code/a.txt\n@@ -1 +1 @@\n-a\n+b\n", truncated: true });
+    await code.locator(".commit").filter({ hasText: "a canned commit" }).click();
+    await code.getByText("This commit changes 5 files; the list shows the first 1.").waitFor();
+    await code.getByText("This diff is longer than 1 MiB; only its beginning is shown.").waitFor();
+
+    await answer("diff", 404, { error: '"Code/a.txt" is not a file that commit 1111111 changes' });
+    await code.locator(".fstat").getByRole("button", { name: "Code/a.txt" }).click();
+    await code.getByText("This change is no longer in the history").waitFor();
+    await code.getByRole("button", { name: "Reload the list" }).waitFor();
+
+    await answer("log", 200, { repo: null, problem: "Git 2.39.5 is too old for the Code view, which needs Git 2.45.0 or later; see Settings" });
+    await reload();
+    await code.getByText("Git cannot be used here").waitFor();
+    await code.getByText("Git 2.39.5 is too old for the Code view, which needs Git 2.45.0 or later; see Settings").waitFor();
+    // Nothing canned is left: the real history comes back.
+    await code.getByRole("button", { name: "Try again" }).click();
+    await code.locator(".commit").filter({ hasText: MARKUP_SUBJECT }).waitFor();
   });
 
   test("a frame sent to a file it cannot show starts no download", SLOW, async () => {
