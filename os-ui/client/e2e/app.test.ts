@@ -372,7 +372,7 @@ describe("desktop client on a Research OS folder", () => {
     await shot(page, "1-files-with-a-file-open");
 
     // Chinese text arrives intact.
-    const zh = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README_zh.md"), "utf8").split("\n").find((l) => /[一-鿿]/.test(l))!;
+    const zh = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README_zh.md"), "utf8").split(/\r?\n/).find((l) => /[一-鿿]/.test(l))!;
     await code.locator(".tnode").filter({ hasText: /^README_zh\.md$/ }).click();
     await code.locator(".row .tx").filter({ hasText: zh }).first().waitFor();
 
@@ -527,7 +527,7 @@ describe("desktop client on a Research OS folder", () => {
 
     await code.getByRole("button", { name: "Files", exact: true }).click();
     await code.locator(".tnode").filter({ hasText: /^README\.md$/ }).first().click();
-    const line = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README.md"), "utf8").split("\n")[2]!;
+    const line = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README.md"), "utf8").split(/\r?\n/)[2]!;
     await code.locator('.row[data-line="3"]').click();
     await bar.getByText("Code/README.md:3", { exact: true }).waitFor();
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
