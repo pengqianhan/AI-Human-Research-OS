@@ -70,11 +70,14 @@ os-ui/frontend/
     │   ├── HomePage.tsx        # Home
     │   ├── ProjectsPage.tsx    # Projects list
     │   ├── WorkspacePage.tsx   # one project: conversation and view tabs
-    │   ├── PaperWikiScreen.tsx # Paper wiki band + PaperWikiPage.tsx (the viewer iframe)
+    │   ├── PluginScreen.tsx    # a plugin's page (Paper wiki): its band, then its framed page
     │   ├── StorePage.tsx       # Skills (the skill store)
-    │   ├── PluginsPage.tsx     # Plugins (a temporary fixed list)
+    │   ├── PluginsPage.tsx     # Plugins: the loaded plugins, then the plan
     │   ├── SettingsPage.tsx    # Settings; SystemPage.tsx holds the desktop-only part
-    │   └── DashboardPage.tsx, ProjectPage.tsx, RootAgentPage.tsx  # used only by src/desktop/
+    │   └── DashboardPage.tsx, ProjectPage.tsx, RootAgentPage.tsx, PaperWikiPage.tsx  # used only by src/desktop/
+    ├── plugins/
+    │   ├── pages.ts        # parses the bundled manifests; each page's slot and frame URL (pure, node-tested)
+    │   └── registry.ts     # compiles plugins/*/plugin.json in; usePlugins(), and each plugin's icon
     ├── components/
     │   ├── AgentChat.tsx       # one conversation with an agent (root or project)
     │   ├── RootAgentBar.tsx    # Home's root-agent card
@@ -124,9 +127,11 @@ npm run build
 
 The build output goes to `dist/`, which is gitignored.
 
-Endpoint tests (the shared `server/` core, a real os-harness turn with its fake
-Claude CLI, and a real Vite dev server; Node 22.18+ for its TypeScript
-support):
+Tests (the endpoints in `server/`, with a real os-harness turn with its fake
+Claude CLI and a real Vite dev server, and the renderer's pure modules in
+`src/`, such as the plugin pages and the saved layout; Node 22.18+ for its
+TypeScript support). `npm test` runs every `server/**/*.test.ts` and
+`src/**/*.test.ts`:
 
 ```bash
 cd os-ui/frontend
@@ -164,11 +169,14 @@ to edit. The most visited ones:
 
 - Page titles and the line under them: the `PageHeader` call at the top of
   each file in `src/pages/` (for example `title="Home"` and `lede="..."`).
-- The left navigation labels: `src/shell/Sidebar.tsx`.
+- The left navigation labels: `src/shell/Sidebar.tsx`, except a plugin's
+  page (Paper wiki), whose label is its panel's `title` in
+  `plugins/<id>/plugin.json`.
 - The root agent's and a project agent's opening text and example requests:
   `src/lib/agentCopy.ts`.
-- The Plugins page list: the `PLUGINS` list in `src/pages/PluginsPage.tsx`,
-  marked temporary until the plugin registry replaces it.
+- The Plugins page: an enabled plugin's card shows its manifest's `name` and
+  `description`; the plugins not yet available are the `PLANNED` list in
+  `src/pages/PluginsPage.tsx`.
 - The placeholder of the Code and Paper tabs and the "step 2" notes of the
   other tabs: `src/pages/WorkspacePage.tsx`.
 
@@ -196,12 +204,28 @@ rewritten in the frontend.
   The client ships each `plugins/<id>/plugin.json` (and a `site/` folder
   beside it, if any) in its package, so on the server and in the client a new
   bundled plugin needs only its folder, its id in `plugins/bundled.ts`, and
-  its handlers. The renderer does not read the registry yet: it still
-  hard-codes Paper Wiki's frame (`app://paper-wiki/viz.html` in
-  `src/pages/PaperWikiPage.tsx`) until the frontend registry, S4 in
-  [os-ui/PLUGINS.md](../PLUGINS.md), replaces it.
+  its handlers.
+- Plugin pages in the app: the renderer compiles every bundled
+  `plugins/<id>/plugin.json` in (`src/plugins/registry.ts`, in
+  `plugins/bundled.ts` order) and parses it with the same parser as the
+  server; a manifest that does not parse is left out with a console error.
+  `src/plugins/pages.ts` turns the manifests into pages: a home panel with
+  `"placement": "nav"` becomes a left-navigation item after Projects, which
+  opens `src/pages/PluginScreen.tsx` (the band with the plugin's name and
+  description, then the page in a frame), and every loaded plugin gets a
+  card on the Plugins page with one chip per page. The frame loads
+  `app://<id>/<entry>` in the desktop client and `./<site.workspace>/<entry>`
+  in a browser (Paper wiki: `./paper-wiki/viz.html`, the cache copy
+  `start.sh` makes); a plugin without `site.workspace` says it opens in the
+  desktop app. The manifest has no icon, so `pluginIcon` in `registry.ts`
+  holds one per bundled plugin (the puzzle piece otherwise).
+  `src/plugins/pages.test.ts` pins Paper wiki's label and both frame URLs
+  against the real `plugins/` folder.
 - What the layout remembers: `src/shell/layoutState.ts` (one `localStorage`
   key, `osui.layout.v1`; clearing it returns to Home with everything open).
+  A plugin's page is remembered by its key, `<plugin>/<page>`; a saved page
+  whose plugin is not loaded opens Home, and a layout saved as `wiki` before
+  2026-11-22 opens `paper-wiki/viewer`.
 
 ### Going back to the desktop-OS shell
 

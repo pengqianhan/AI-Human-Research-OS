@@ -7,10 +7,11 @@ agent and line numbers refer to the code as it was that day.
 
 Status on 2026-11-22:
 
-- **S1 to S3 are done**: the manifest parser, the server-side registry with the dev
-  server built from it, and the client serving plugin origins from the registry (S3,
-  pending its pull request's merge). `createMounts`, `splitMounts`, and the client's
-  `WIKI_*` constants are gone. The code is the authority where it differs from Part 1:
+- **S1 to S4 are done**: the manifest parser, the server-side registry with the dev
+  server built from it, the client serving plugin origins from the registry (S3), and
+  the frontend registry (S4, pending its pull request's merge). `createMounts`,
+  `splitMounts`, and the client's `WIKI_*` constants are gone. The code is the
+  authority where it differs from Part 1:
   - Manifests (S1): paths must be plain, a `reads` root may not start with `*`, and `*`
     does not match a dot segment.
   - On `app://<id>`, only `/api/<id>` and `/api/<id>/...` reach the plugin's mounts. Any
@@ -42,10 +43,27 @@ Status on 2026-11-22:
   - The end-to-end suite runs through the new layout, not the dock. The Help menu item
     keeps its label, "System and Prerequisites": it opens Settings, which holds that
     check, and the suite and the client README name it by that label.
+  - The frontend registry (S4) is `frontend/src/plugins/`. `pages.ts` exports
+    `pluginPages(plugins, { desktop })` with no `selfOrigin`: a page's `origin` is
+    `app://<id>` in the client and `null` in a browser. It has no `viewSrc`,
+    `AskMessage`, or `readAsk` yet; project views and the page-to-host message come
+    with S6. It adds `bundledManifests`, which parses each bundled manifest and skips
+    one that fails, or whose id is not its folder's, with a reason that `registry.ts`
+    logs as a console error.
+  - Paper Wiki's manifest differs from §2's example: its panel title is "Paper wiki"
+    (the left-navigation label the end-to-end suite clicks), and its description is
+    the Plugins page card's text. `src/plugins/pages.test.ts` pins that label and both
+    frame URLs against the real `plugins/` folder in the required CI, since
+    `npm test` now also runs `src/**/*.test.ts`.
+  - A plugin's left-navigation page is a `PluginScreen`, remembered in the saved
+    layout by its key, `paper-wiki/viewer`; a layout saved as `wiki` opens it.
+    `PaperWikiPage` stays, with no props, for the dock alone. There is no `icon`
+    field (A8): the renderer maps a bundled plugin's id to an icon. The Plugins card
+    has one chip per page; handlers get none.
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **Next: S4, S5, then S6.** S5 moves the client's security boundary again and is
+- **Next: S5, then S6.** S5 moves the client's security boundary again and is
   checked only by the advisory `desktop.yml` and the end-to-end suite, so run
   `npm run test:e2e` in `os-ui/client` before it merges.
 - **Waiting on the Human Owner:** whether the Paper view may vendor PDF.js (Part 2), and

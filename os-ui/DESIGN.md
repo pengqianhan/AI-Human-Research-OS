@@ -248,8 +248,9 @@ app shows the real snapshot or nothing (list below).
   enable/disable toggle; installing elsewhere stays a copied command. How this
   splits between the human and the agent is documented in
   [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
-- **Plugins**: a fixed list, marked temporary in the code until the plugin
-  registry being built in step 1 feeds this page: Paper Wiki enabled; the Code and Paper views later in
+- **Plugins**: the enabled plugins as the renderer's plugin registry loads
+  them from their manifests (`frontend/src/plugins/`; today Paper Wiki),
+  then the plan, written into the page: the Code and Paper views later in
   step 1; the Idea, Skeleton, and Assets views and the Skills Hub in step 2;
   "Load from folder" disabled until step 2.
 - **Settings**: in the desktop client, the workspace folder, the snapshot

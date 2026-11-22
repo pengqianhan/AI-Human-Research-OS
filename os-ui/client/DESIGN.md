@@ -358,8 +358,8 @@ use, and where the environment came from.
   run, prerequisites, **Choose folder…**, **Regenerate**).
 - `shell/SnapshotStatus.tsx`: in the client the sidebar footer says "Desktop
   client" and its button regenerates the snapshot.
-- `PaperWikiPage.tsx`: the iframe loads `app://paper-wiki/viz.html` in the
-  client.
+- `src/plugins/pages.ts`: a plugin page's frame loads `app://<id>/<entry>`
+  in the client (Paper wiki: `app://paper-wiki/viz.html`).
 - Desktop-only folder and prerequisite controls (`SystemPage.tsx`,
   `DesktopStatus.tsx`), shown on the **Settings** page (`SettingsPage.tsx`);
   the Help menu's `open-system` command opens it (`shell/Shell.tsx`).
