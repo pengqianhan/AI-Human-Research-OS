@@ -48,8 +48,9 @@ import type { ApiContext, ApiHandler, ApiResponse, RunOptions, RunResult } from 
  *    these checks; no command writes to .git. The check runs before git
  *    does, so a file swapped in between is not caught.
  * 4. Bounded work, per handler (one open workspace): 20 requests in flight
- *    and 4 git processes, each project at most half of both, a request past
- *    its share 503 before its .git is walked; each command with 10 s, an
+ *    and 5 git processes, each project at most 8 and 2 of them (so two
+ *    stalled projects leave a third 4 and 1), a request past its share 503
+ *    before its .git is walked; each command with 10 s, an
  *    output cap, blobs over 4 MiB treated as binary, and no single heap
  *    allocation over 256 MiB (GIT_ALLOC_LIMIT). What is not bounded is
  *    listed in PLUGINS.md and at the end of this file.
@@ -168,13 +169,15 @@ const KIB = 1024;
 const MIB = 1024 * KIB;
 const CAP = { line: 4 * KIB, log: 256 * KIB, list: 512 * KIB, message: 64 * KIB, diff: 1024 * KIB, stderr: 16 * KIB };
 /**
- * Per handler, that is per open workspace: requests in flight (each project
- * at most half), and git processes running (each project at most half).
- * A request past its share is 503 before anything is read.
+ * Per handler, that is per open workspace: requests in flight, and git
+ * processes running. Each project's share is under half, so two projects
+ * whose commands stall leave a third some of both: 8 of 20 requests (a third
+ * project still gets 4) and 2 of 5 processes (a third still gets 1). A
+ * request past its share is 503 before anything is read.
  */
 const MAX_REQUESTS = 20;
-const PROJECT_REQUESTS = 10;
-const MAX_GIT = 4;
+const PROJECT_REQUESTS = 8;
+const MAX_GIT = 5;
 const PROJECT_GIT = 2;
 /**
  * GIT_ALLOC_LIMIT: Git dies rather than make one heap allocation larger than
@@ -213,6 +216,10 @@ const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
  * - core.quotePath=false: names in diff headers stay readable.
  * - core.warnAmbiguousRefs=false: for a full hash Git otherwise looks for a
  *   ref of that name, opening .git/<hash> (a FIFO there stalled every route).
+ * - diff.algorithm=myers: the output does not depend on the repository's
+ *   config, and the allocation limit holds. Two files just under 4 MiB of one-
+ *   or two-byte lines need about 96 MiB in one allocation under myers, 160 to
+ *   320 MiB under patience, which then died at GIT_ALLOC_LIMIT on every route.
  * Per command that diffs, --attr-source=<the empty tree> (EMPTY_TREE): no
  * .gitattributes from the working tree or the commit.
  */
@@ -236,6 +243,8 @@ export function guardArgs(gitDir: string, top: string): string[] {
     "core.quotePath=false",
     "-c",
     "core.warnAmbiguousRefs=false",
+    "-c",
+    "diff.algorithm=myers",
   ];
 }
 
@@ -803,15 +812,17 @@ export function codeGitHandler(ctx: ApiContext, git: string | null = "git", log:
       }
 
       // /commit and /diff: a full hash naming a commit in HEAD's history.
-      // cat-file -t reads only the object's header (rev-parse <hash>^{commit}
-      // loads it whole, so a huge commit would die there and read as missing);
-      // it exits 128 for no such object. A timeout or cut output is a failure.
-      const resolved = await run(["cat-file", "-t", hash!], CAP.line);
-      if (resolved.timedOut === true || resolved.truncated === true) {
-        log(`code-view git ${req.path} cat-file -t: ${failureText(resolved, 2000)}`);
-        refuse(500, failed("cat-file -t", resolved));
+      // cat-file --batch-check reads only the object's header (rev-parse
+      // <hash>^{commit} loads it whole, so a huge commit would die there). It
+      // prints "<hash> missing" and exits 0 for no such object, and exits 128
+      // when Git cannot read the repository at all (a bad include.path), which
+      // is a failure (500), not a missing commit. So are a timeout and cut output.
+      const resolved = await run(["cat-file", "--batch-check"], CAP.line, undefined, `${hash!}\n`);
+      if (resolved.timedOut === true || resolved.truncated === true || resolved.code !== 0) {
+        log(`code-view git ${req.path} cat-file --batch-check: ${failureText(resolved, 2000)}`);
+        refuse(500, failed("cat-file --batch-check", resolved));
       }
-      if (resolved.code !== 0 || resolved.stdout.trim() !== "commit") refuse(404, `no commit ${hash!}`);
+      if (/^\S+ (\S+)/.exec(resolved.stdout)?.[1] !== "commit") refuse(404, `no commit ${hash!}`);
       const full = hash!;
       const tip = await head();
       const ancestor = tip === null ? null : await run(["merge-base", "--is-ancestor", full, tip], CAP.line);
@@ -1000,5 +1011,8 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *   cover; packed objects, which are not checked one by one; loose object
  *   files, checked by type and not by size (for a blob over the threshold
  *   Git reads only its header; a commit or tree is read whole, up to the
- *   allocation limit); and what an include.path file holds.
+ *   allocation limit); what an include.path file holds; and how long a request
+ *   waits for a git process when others hold them all (each holds one for at
+ *   most 10 s). Time is bounded per command only: a request runs several
+ *   commands, so one can take tens of seconds.
  */

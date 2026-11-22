@@ -1243,11 +1243,16 @@ describe("bounded work", () => {
     assert.match((await body<Diff>(get(api, "/diff", { project: P, hash: m[1]!, path: "big.txt" }))).diff, /\nBinary files \/dev\/null and b\/big\.txt differ\n/);
   });
 
-  test("each project gets half: 2 of 4 git processes and 10 of 20 requests; past that 503, before .git is walked", { timeout: 20_000 }, async (t) => {
-    // Three projects with their own .git: P busy, F the other project, and R, whose
-    // walk would throw (objects/ unreadable) where chmod can show it, else a gitfile.
-    const root = tempTree({ "projects-folder/P/PROJECT_MEMORY.md": "# P\n", "projects-folder/F/PROJECT_MEMORY.md": "# F\n", "projects-folder/R/PROJECT_MEMORY.md": "# R\n" });
-    for (const name of ["P", "F"]) init(join(root, "projects-folder", name));
+  test("each project gets 2 of 5 git processes and 8 of 20 requests, so two stalled projects leave a third 1 and 4; past that 503, before .git is walked", { timeout: 20_000 }, async (t) => {
+    // Four projects with their own .git: P and F busy, G the third project, and R,
+    // whose walk would throw (objects/ unreadable) where chmod can show it, else a gitfile.
+    const root = tempTree({
+      "projects-folder/P/PROJECT_MEMORY.md": "# P\n",
+      "projects-folder/F/PROJECT_MEMORY.md": "# F\n",
+      "projects-folder/G/PROJECT_MEMORY.md": "# G\n",
+      "projects-folder/R/PROJECT_MEMORY.md": "# R\n",
+    });
+    for (const name of ["P", "F", "G"]) init(join(root, "projects-folder", name));
     const unreadable = !WINDOWS && process.getuid?.() !== 0;
     const rObjects = join(root, "projects-folder", "R", ".git", "objects");
     if (unreadable) {
@@ -1266,7 +1271,7 @@ describe("bounded work", () => {
     let onRun: () => void = () => {};
     const { run } = fakeRunner(async (call) => {
       if (call.command[1] === "--version") return ok("git version 2.55.0\n");
-      const key = call.cwd.endsWith(`${join("projects-folder", "F")}`) ? "F" : "P";
+      const key = ["F", "G"].find((k) => call.cwd.endsWith(join("projects-folder", k))) ?? "P";
       running.set(key, (running.get(key) ?? 0) + 1);
       most.set(key, Math.max(most.get(key) ?? 0, running.get(key)!));
       onRun();
@@ -1292,13 +1297,17 @@ describe("bounded work", () => {
       );
       return { answers, away };
     };
-    const p = send(P, 25, 15);
+    const p = send(P, 25, 17);
     await p.away;
-    assert.deepEqual([running.get("P"), total()], [2, 2], "P runs 2 while 8 more of its 10 wait");
+    assert.deepEqual([running.get("P"), total()], [2, 2], "P runs 2 while 6 more of its 8 wait");
     const fourRunning = new Promise<void>((go) => (onRun = () => total() === 4 && go()));
-    const f = send("F", 11, 1);
+    const f = send("F", 11, 3);
     await Promise.all([fourRunning, f.away]);
     assert.deepEqual([running.get("P"), running.get("F")], [2, 2], "F runs at once beside the busy P");
+    const fiveRunning = new Promise<void>((go) => (onRun = () => total() === 5 && go()));
+    const g = send("G", 6, 2);
+    await Promise.all([fiveRunning, g.away]);
+    assert.deepEqual([running.get("P"), running.get("F"), running.get("G")], [2, 2, 1], "a third project still runs beside two busy ones");
     const refused = await get(api, "/", { project: "R" });
     assert.deepEqual([refused.status, refused.body], [503, { error: "the Code view is busy with other requests; try again" }], "20 in flight: turned away before its .git is looked at");
     release();
@@ -1306,14 +1315,33 @@ describe("bounded work", () => {
       const s = (await Promise.all(answers)).map((r) => r.status);
       return [s.filter((x) => x === 200).length, s.filter((x) => x === 503).length];
     };
-    assert.deepEqual(await statuses(p.answers), [10, 15]);
-    assert.deepEqual(await statuses(f.answers), [10, 1]);
-    assert.deepEqual([most.get("P"), most.get("F")], [2, 2]);
+    assert.deepEqual(await statuses(p.answers), [8, 17]);
+    assert.deepEqual(await statuses(f.answers), [8, 3]);
+    assert.deepEqual(await statuses(g.answers), [4, 2]);
+    assert.deepEqual([most.get("P"), most.get("F"), most.get("G")], [2, 2, 1]);
     // Admitted again once the others are done, R's .git is now walked: an unreadable
     // objects/ throws there (500), which proves the 503 above came before any walk.
     const later = await get(api, "/", { project: "R" });
     if (unreadable) assert.deepEqual([later.status, later.body], [500, { error: "the Code view could not read this repository (EACCES)" }]);
     else assert.match((later.body as { problem: string }).problem, /is a file that points/);
+  });
+});
+
+describe("the diff algorithm", () => {
+  test("diff.algorithm=patience in the repository's config no longer breaks the allocation limit: myers is pinned", { timeout: 120_000 }, async () => {
+    const root = workspace();
+    init(root);
+    // Two files just under 4 MiB of one- and two-byte lines: about 96 MiB in one allocation under myers, 320 MiB under patience.
+    const size = 4 * 1024 * 1024 - 64;
+    const m = fastImport(root, [
+      { mark: 1, message: "one", files: [["projects-folder/P/data.txt", "\n".repeat(size)]] },
+      { mark: 2, message: "rewrite", files: [["projects-folder/P/data.txt", "a\nb\n".repeat(Math.floor(size / 4))]] },
+    ]);
+    fx(root, ["config", "diff.algorithm", "patience"]);
+    const api = handler(root);
+    assert.equal((await get(api, "/log", { project: P })).status, 200);
+    assert.equal((await get(api, "/commit", { project: P, hash: m[2]! })).status, 200);
+    assert.equal((await get(api, "/diff", { project: P, hash: m[2]!, path: "data.txt" })).status, 200);
   });
 });
 
@@ -1330,6 +1358,21 @@ describe("which commit a hash names", () => {
     assert.deepEqual([commit.hash, commit.subject], [m[1], "first"]);
   });
 
+  test("a repository Git cannot read is a failure (500) on /commit, not a missing commit; an unknown hash stays 404", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a.txt", "a\n"]] }]);
+    const api = handler(root);
+    assert.deepEqual((await get(api, "/commit", { project: P, hash: NO_SUCH })).status, 404);
+    const bad = join(tempTree(), "inc");
+    writeFileSync(bad, "not config\n");
+    fx(root, ["config", "include.path", bad]);
+    const r = await get(api, "/commit", { project: P, hash: m[1]! });
+    assert.deepEqual([r.status, r.body], [500, { error: "git cat-file --batch-check failed (exit 128)" }]);
+    const d = await get(api, "/diff", { project: P, hash: m[1]!, path: "a.txt" });
+    assert.deepEqual([d.status, d.body], [500, { error: "git cat-file --batch-check failed (exit 128)" }]);
+  });
+
   test("a commit lookup that times out is a failure (500), not a missing commit", async () => {
     const root = workspace();
     init(root);
@@ -1337,7 +1380,7 @@ describe("which commit a hash names", () => {
       call.command[1] === "--version" ? ok("git version 2.55.0\n") : { code: -1, stdout: "", stderr: "\n[timed out after 10 s]", timedOut: true },
     );
     const r = await get(codeGitHandler(context(root, { run }), "git", logged), "/commit", { project: P, hash: NO_SUCH });
-    assert.deepEqual([r.status, r.body], [500, { error: "git cat-file -t took longer than 10 s" }]);
+    assert.deepEqual([r.status, r.body], [500, { error: "git cat-file --batch-check took longer than 10 s" }]);
   });
 
   test("a hash naming something other than a commit is 404 with a fixed text, though Git says why", async () => {
@@ -1500,7 +1543,7 @@ describe("what Git looks up by name, which git it starts, and what it loads whol
     assert.deepEqual([r.status, r.body], [500, { error: "git rev-parse HEAD failed (exit 128)" }]);
     assert.match(LOGGED.slice(from).join("\n"), /over limit/, "Git stopped at the allocation limit");
     const c = await get(api, "/commit", { project: P, hash: huge });
-    assert.deepEqual([c.status, c.body], [500, { error: "git rev-parse HEAD failed (exit 128)" }], "a failure, not a missing commit: the hash is looked up by its header (cat-file -t)");
+    assert.deepEqual([c.status, c.body], [500, { error: "git rev-parse HEAD failed (exit 128)" }], "a failure, not a missing commit: the hash is looked up by its header (cat-file --batch-check)");
   });
 
   test("a git in an absolute PATH entry inside the workspace, or linked into it from outside, never runs", { skip: NO_SCRIPTS }, async () => {
