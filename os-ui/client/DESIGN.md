@@ -167,7 +167,7 @@ with the trunk's endpoints only.
 | `app://research-os/state.json` | `<workspace>/os-ui/frontend/public/state.json` |
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
 | `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`); other `api/` paths are 404 |
-| `app://<id>/_os/...` | 404: kept for the path-checked read channel (S5) |
+| `app://<id>/_os/files/<rel>`, `app://<id>/_os/list/<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
 | `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` |
 | any other host | 404 |
 
@@ -193,6 +193,53 @@ with the trunk's endpoints only.
   whose committed `paper-wiki/viz.html` predates this shows read-only status
   until `generate_viz.py` runs.
 
+**The read channel** (S5 of [os-ui/PLUGINS.md](../PLUGINS.md); `serveRead` in
+[src/main/protocol.ts](src/main/protocol.ts)). A plugin page reads workspace
+files, read-only, inside the roots its manifest declares in `reads` (a `*`
+segment is one folder whose name does not start with `.`, as in
+`projects-folder/*/Code`), whether the plugin is bundled or local:
+
+- `GET app://<id>/_os/files/<rel>` returns the file's bytes;
+  `GET app://<id>/_os/list/<rel>` returns
+  `{"entries": [{"name": string, "dir": boolean, "size": number}]}`, sorted by
+  name in UTF-16 code-unit order (JavaScript's default sort), `size` 0 for a
+  folder, with `"truncated": true` added when it stops at the cap. `<rel>` is
+  relative to the workspace.
+- Only those exact, lower-case prefixes are the channel, compared before the
+  path is decoded; every other path under `_os` (`_OS/files/`, `_os/Files/`,
+  `%5Fos/files/`, a bare `_os/files`) is 404, and nothing under `_os` is ever
+  a site file. The app's origin has no channel (`_os/...` there is a renderer
+  path like any other), nor has the dev server (A3 in
+  [os-ui/PLUGINS.md](../PLUGINS.md)).
+- GET and HEAD only: anything else is 405, folder open or not. HEAD answers
+  with the headers and no body. With no folder open, 404.
+- The path is decoded once. A segment starting with `.` (`.env`,
+  `.git/config`, `a/.venv/x`) or an empty path is 404, as is a path below none
+  of the plugin's roots, so a plugin without `reads` reads nothing.
+- Real paths, symlinks and junctions resolved: the matched root must lie
+  inside the workspace, not be the workspace itself, and not resolve onto a
+  dot folder of it; the target must lie inside the root, with no segment
+  below the root starting with `.`, so a link inside the root to its `.git`
+  is 404 too. A root that is itself a link leaving the workspace is refused,
+  although Paper Wiki's site folder follows such a link; to follow it here as
+  well, drop that one check (`isInside(top, rootReal)` in `serveRead`).
+- A listing leaves out names starting with `.`, entries that resolve outside
+  the root or onto a dot path, dangling links, and anything that is neither a
+  regular file nor a folder once resolved (a FIFO, a socket). A listing of a
+  file, or of nothing, is 404, and so is a file request for a folder.
+- Caps (files are read whole into the main process, and a project's `Code/`
+  may hold checkpoints and datasets): a file above 32 MiB (`READ_MAX_BYTES`)
+  answers 413 without being read; a listing stops at 5,000 entries
+  (`LIST_MAX_ENTRIES`).
+- Every answer, refusals included, carries `X-Content-Type-Options: nosniff`,
+  `Cache-Control: no-store`, and the read policy (§3.3). `.js`, `.mjs`,
+  `.cjs`, `.html`, `.htm`, and `.xhtml` files are sent as
+  `text/plain; charset=utf-8`, listings as `application/json`, and other files
+  by extension (SVG as `image/svg+xml`, which an `<img>` needs).
+- No bundled plugin declares `reads` until the Code and Paper views (S6), so
+  the channel is proven by the fixture tests in
+  [test/protocol.test.ts](test/protocol.test.ts) only.
+
 ### 3.3 Security baseline
 
 - `contextIsolation`, `sandbox`, no `nodeIntegration`, `webSecurity`; the
@@ -207,8 +254,14 @@ with the trunk's endpoints only.
   — its own inline code runs; remote fetches, images, frames, and forms do not.
   A site in its plugin folder gets the same policy with `'self'` added to
   `script-src` and `style-src`. Either is sent with every file the site
-  serves, not only HTML: an SVG a frame is sent to is a document too. A 404,
-  a 405, or an endpoint's JSON reply carries no policy.
+  serves, not only HTML: an SVG a frame is sent to is a document too. Every
+  read channel answer, refusals included, carries
+  `sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'`
+  (`READ_CSP`): a workspace file a frame is sent to is an inert document on an
+  origin of its own. Scripts and HTML go as plain text, which `nosniff` keeps
+  from running as a script that a plugin page's `script-src 'self'` would
+  otherwise admit. Elsewhere, a 404, a 405, or an endpoint's JSON reply
+  carries no policy.
 - **Endpoints:** writes must be `Content-Type: application/json`, which a form
   or a no-cors request cannot send (415 otherwise); `/api/chat` and
   `/api/paper-sources` need a random per-launch token, which the preload hands
@@ -425,7 +478,7 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 | Shared API core | `node --test` with Node's type stripping (no new dependency) | validation, status codes, queues, Write Lease (also through a symlink), runner timeouts and errors |
 | API + real harness | `node --test` with `os-harness/tests/fake_claude.py` | `POST /send` → detached turn → trace; resume → turn 2 |
 | Dev-server adapters | `node --test` on a real Vite dev server | token before routing, mounts, context root |
-| Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the navigation guard's targets, window bounds, menu |
+| Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the read channel on fixture plugins (routing, methods, dot paths, roots, link and junction escapes, listings, caps, headers), the navigation guard's targets, window bounds, menu |
 | E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
 | Package smoke | the same E2E (`OS_CLIENT_E2E_EXECUTABLE=release`) on the unpacked app | the asar layout starts, generates, and isolates the viewer |
 | CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above, those tests included, on six OS/arch rows and uploads installers as artifacts | |
