@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
+import { clipLabel, LABEL_MAX, QUOTE_MAX } from "../../site-kit.ts";
 import {
   answerWords,
   imageWords,
-  isHostClear,
   notOpenable,
   projectWords,
   readText,
@@ -11,23 +11,17 @@ import {
   ROW_MAX,
   rowText,
   changeCount,
-  clipLabel,
   commitSelection,
   commitStat,
   decodeText,
   diffSelection,
   fileSelection,
   fileWords,
-  filesUrl,
   gitUrl,
-  LABEL_MAX,
   lineSelection,
   linesNote,
-  listUrl,
   logCommand,
   parsePatch,
-  projectFrom,
-  QUOTE_MAX,
   rangeSelection,
   splitLines,
   statLine,
@@ -37,30 +31,13 @@ import {
 
 const MARKUP = `<img src=x onerror="window.top.__pwned=1"><script>window.__pwned=2</script>`;
 
-describe("URLs: every project and path is encoded", () => {
-  test("the read channel's path survives +, #, %, a space, and Chinese as the URL parser reads it", () => {
-    for (const rel of ["projects-folder/P/Code/a+b.txt", "projects-folder/P/Code/has#hash.md", "projects-folder/P/Code/50%.txt", "projects-folder/P/Code/with space.txt", "projects-folder/P/Code/README_zh.md", "projects-folder/P/Code/说明.md", `projects-folder/P/Code/${MARKUP}`]) {
-      for (const url of [filesUrl(rel), listUrl(rel)]) {
-        const parsed = new URL(url, "app://code-view/index.html");
-        assert.equal(parsed.searchParams.getAll("path").length, 1, url);
-        assert.equal(parsed.searchParams.get("path"), rel, url);
-        assert.equal(parsed.hash, "", url);
-      }
-    }
-    assert.equal(filesUrl("projects-folder/P/Code/a+b.txt"), "./_os/files?path=projects-folder%2FP%2FCode%2Fa%2Bb.txt");
-    assert.equal(listUrl("projects-folder/P/Code"), "./_os/list?path=projects-folder%2FP%2FCode");
-  });
-
-  test("the Git handler's query values too", () => {
+// The read channel's URLs and the project in ?project= are site-kit's, tested in ../../site-kit.test.ts.
+describe("URLs: every value is encoded", () => {
+  test("the Git handler's query values", () => {
     const url = gitUrl("diff", { project: "P", hash: "a".repeat(40), path: "Code/a+b #1%.txt" });
     assert.equal(url, `/api/code-view/git/diff?project=P&hash=${"a".repeat(40)}&path=Code%2Fa%2Bb%20%231%25.txt`);
     assert.equal(new URL(url, "app://code-view/").searchParams.get("path"), "Code/a+b #1%.txt");
     assert.equal(gitUrl("log", { project: "P", skip: "50" }), "/api/code-view/git/log?project=P&skip=50");
-  });
-
-  test("the project comes from ?project= and must be a folder name", () => {
-    assert.equal(projectFrom("?project=nanochat_cpu"), "nanochat_cpu");
-    for (const bad of ["", "?project=", "?project=..%2Fx", "?project=a%2Bb", "?project=%3Cimg%3E", "?project=1abc", "?other=x"]) assert.equal(projectFrom(bad), null, bad);
   });
 });
 
@@ -222,16 +199,5 @@ describe("the page's other notes", () => {
     assert.equal(notOpenable("Code/.hidden"), "Not shown here: hidden files (names starting with a dot) cannot be opened in the Code view.");
     assert.equal(notOpenable(".github/x.yml"), "Not shown here: hidden files (names starting with a dot) cannot be opened in the Code view.");
     assert.equal(notOpenable("Code/odd\uFFFDname"), "Not shown here: the Code view cannot open a file with this name.");
-  });
-
-  test("only the parent window, at the app's origin, clears the selection", () => {
-    const parent = { name: "the workspace" };
-    const clear = { type: "os.select.clear" };
-    const HOST = "app://research-os";
-    assert.equal(isHostClear({ source: parent, origin: HOST, data: clear }, parent, HOST), true);
-    assert.equal(isHostClear({ source: {}, origin: HOST, data: clear }, parent, HOST), false, "another window");
-    assert.equal(isHostClear({ source: parent, origin: "app://paper-wiki", data: clear }, parent, HOST), false, "another origin");
-    assert.equal(isHostClear({ source: parent, origin: HOST, data: { type: "os.select" } }, parent, HOST), false);
-    assert.equal(isHostClear({ source: parent, origin: HOST, data: null }, parent, HOST), false);
   });
 });
