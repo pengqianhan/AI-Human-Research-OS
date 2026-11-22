@@ -9,9 +9,9 @@ Status on 2026-11-22:
 
 - **S1 to S5 are done**: the manifest parser, the server-side registry with the dev
   server built from it, the client serving plugin origins from the registry (S3), the
-  frontend registry (S4), and the read channel (S5, pending its pull request's
-  merge). `createMounts`, `splitMounts`, and the client's `WIKI_*` constants are
-  gone. The code is the authority where it differs from Part 1:
+  frontend registry (S4), and the read channel (S5, merged as PR #42).
+  `createMounts`, `splitMounts`, and the client's `WIKI_*` constants are gone. The
+  code is the authority where it differs from Part 1:
   - Manifests (S1): paths must be plain, a `reads` root may not start with `*`, and `*`
     does not match a dot segment.
   - On `app://<id>`, only `/api/<id>` and `/api/<id>/...` reach the plugin's mounts. Any
@@ -117,12 +117,66 @@ Status on 2026-11-22:
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **Next: S6**, the Code and Paper view plugins. The Paper view waits on the Human
-  Owner's answer about PDF.js (below; A9). S5 moved the client's security boundary;
-  its proof is the fixture tests that `npm test` in `os-ui/client` runs, which only
-  the advisory `desktop.yml` runs in CI. The end-to-end suite does not reach the
-  channel until S6, but run `npm run test:e2e` there before S5 merges, since it
-  guards the plugin origins the channel sits on.
+- **S6 is split in three.** S6a-1, the Code view's Git handler, is done (pending its
+  pull request's merge) and not mounted; S6a-2, the Code view plugin (its manifest,
+  the mount at `/api/code-view/git` on `app://code-view`, and the page), is next; S6b,
+  the Paper view, waits on the Human Owner's answer about PDF.js (below; A9). S5's
+  proof stays the fixture tests that `npm test` in `os-ui/client` runs, which only the
+  advisory `desktop.yml` runs in CI; the end-to-end suite reaches the channel from
+  S6a-2 on.
+- **S6a-1** is [frontend/server/codeGit.ts](frontend/server/codeGit.ts) with
+  `codeGit.test.ts` in the required CI job. Nothing declares or mounts it yet: no
+  `BUNDLED_HANDLERS` entry, no manifest, no `DESKTOP_ONLY_HANDLERS`. The code is the
+  authority where it differs from Part 2's Gap 1, after the S5 review:
+  - Answers: every route answers `{ repo: null }`, or `{ repo: null, problem }`
+    when git is missing, too old, or the repository is refused, with status 200.
+    Otherwise each answer carries `repo` ("project" or "workspace"), `root` (the
+    repository's top, relative to the workspace) and `filter` (the path filter,
+    relative to `root`: `.` or `projects-folder/<name>`), so the view can name the
+    command it reflects; file paths are always relative to the project. `/` gives
+    `head` (merges left out, as in `/log`). `/log` gives commits with `files`,
+    `added`, `deleted` under the filter. `/commit` gives `files` (each with
+    `status`, null counts for a binary file, the blobs' `sizes` for a binary file
+    from `cat-file --batch-check`, and `openable`), plus `stat`, the exact totals
+    even when the list is cut. `/diff` gives the patch.
+  - Git 2.45 or later, for `--no-lazy-fetch` (release notes 2.45.0), not 2.31.
+    Stock Ubuntu 24.04 (2.43.0), Ubuntu 22.04 (2.34.1) and Debian 12 (2.39.5) are
+    below it; Debian 13 (2.47.3) and Fedora (2.56.1) are not.
+  - More guards than `--no-ext-diff` and `--no-textconv`: no `GIT_*` from the
+    caller, the global and system config not read (`trace2.*Target` there writes
+    files), `--no-lazy-fetch`, `--no-replace-objects`, `--literal-pathspecs`,
+    `core.fsmonitor=false`, `--no-show-signature`, `--submodule=short`,
+    `--no-follow`, `--attr-source=<commit>`, and flags that keep the output's shape
+    (`--root`, `--no-renames`, `--diff-merges=first-parent`, `--encoding=UTF-8`,
+    `--no-color`, prefixes, `core.quotePath=false`). The table at the end of the
+    file accounts for every `git help config` key that names a program, and
+    `RunOptions.env` (an edit of the runner's environment) carries the environment.
+    An explicit `--git-dir` skips Git's `safe.directory` check (tried with
+    `GIT_TEST_ASSUME_DIFFERENT_OWNER=1`), so these guards are the only ones.
+  - Refused with a `problem`, never falling back to the workspace's repository: a
+    `.git` that is a link or a gitfile (a linked worktree, as an agent's worktree
+    is, or a submodule checkout), a link directly inside `.git`, a `commondir`,
+    `objects/info/alternates`, or a link among `objects/<xx>`, `objects/pack` or
+    `objects/info`. Loose object files are not checked one by one.
+  - `/commit` of a commit that changes nothing under the filter is 404, so other
+    workspace commits' messages stay out. `/diff` opens exactly one file the commit
+    changes, never a folder; a path with a segment starting with "." is 400, and
+    `/commit` lists such files with their counts and `openable: false`.
+  - Caps: 4 KiB for one line, 256 KiB for `/log`, 512 KiB for a file list, 64 KiB
+    for a message, 1 MiB for a patch, cut back to whole records; 10 s per command.
+    `processRunner` now decodes output once (a split character survives) and gains
+    `maxOutputBytes` and `truncated`.
+  - `createRegistry` takes `skip`: declared handler keys that need no factory and are
+    not mounted; a factory for a skipped key is no orphan.
+  - Each guard has a test that fails without it (checked by removing each in turn),
+    except `--work-tree`, `--no-optional-locks`, `--no-ext-diff` and
+    `GIT_CONFIG_NOSYSTEM`, which no output of these commands can show; tests of the
+    arguments and the environment pin them. The tests whose marker programs are
+    shell scripts skip on Windows. `info/grafts` is honoured, as
+    `--no-replace-objects` does not cover it.
+  - For S6a-2: `codeGitHandler(ctx, git)` takes the git program, so the client can
+    pass the path its Settings check found instead of `git` from `PATH`, which on a
+    Mac without the Command Line Tools is the stub that offers to install them.
 - **Waiting on the Human Owner:** whether the Paper view may vendor PDF.js (Part 2), and
   whether a third-party plugin may add a left-navigation item (Part 1, Q-PO1).
 
