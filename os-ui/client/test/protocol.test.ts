@@ -1,5 +1,22 @@
 import assert from "node:assert/strict";
-import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import fs, {
+  appendFileSync,
+  chmodSync,
+  closeSync,
+  constants,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readdirSync,
+  symlinkSync,
+  truncateSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { open } from "node:fs/promises";
+import type { FileHandle } from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
 import * as path from "node:path";
 import { basename, join } from "node:path";
 import { describe, test } from "node:test";
@@ -15,11 +32,18 @@ import {
   allowedNavigation,
   appCsp,
   createHandler,
+  fileStream,
   isInside,
+  LIST_MAX_ENTRIES,
+  openRegular,
   PLUGIN_CSP,
   pluginSites,
+  READ_CSP,
+  READ_MAX_BYTES,
+  READ_MAX_STREAMS,
   route,
   safeRelative,
+  streamLimit,
   workspaceRegistry,
   WORKSPACE_CSP,
 } from "../src/main/protocol.ts";
@@ -660,5 +684,807 @@ describe("the real bundled plugins, registry, and handler together", () => {
     assert.deepEqual(await here.json(), { error: "no endpoint /api/paper-wiki/status" });
     const sessions = await fetchReal("app://research-os/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": "t0k" } });
     assert.equal(sessions.status, 200);
+  });
+});
+
+describe("read channel", () => {
+  const posix = process.platform !== "win32";
+  /** A link at `at` to the folder `to`: a junction on Windows, which needs no privilege. */
+  const dirLink = (to: string, at: string) => symlinkSync(to, at, posix ? "dir" : "junction");
+  /** The same as a relative link, as a cloned repository holds one (a junction, which is absolute, on Windows). */
+  const relLink = (to: string, at: string) => (posix ? symlinkSync(path.relative(path.dirname(at), to), at, "dir") : dirLink(to, at));
+  /** A link at `at` to the file `to`; false on Windows without the symlink privilege. */
+  const fileLink = (to: string, at: string): boolean => {
+    try {
+      symlinkSync(to, at, "file");
+      return true;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EPERM") throw error;
+      return false;
+    }
+  };
+  /**
+   * Counts, while `run` runs, the channel's path lookups (realpath), the folders it opens, the
+   * names it reads from them, and the folders it closes by hand. protocol.ts imported these from
+   * node:fs/promises before the patch; syncBuiltinESMExports carries the patch into that import.
+   */
+  const counting = async (run: () => Promise<void>) => {
+    const promises = fs.promises as unknown as Record<"realpath" | "opendir", unknown>;
+    const realpath = fs.promises.realpath;
+    const opendir = fs.promises.opendir;
+    const counts = { lookups: 0, names: 0, opened: 0, closed: 0 };
+    promises.realpath = (...args: Parameters<typeof realpath>) => {
+      counts.lookups++;
+      return realpath(...args);
+    };
+    promises.opendir = async (...args: Parameters<typeof opendir>) => {
+      const dir = await opendir(...args);
+      counts.opened++;
+      const entries = dir[Symbol.asyncIterator].bind(dir);
+      dir[Symbol.asyncIterator] = async function* () {
+        for await (const entry of entries()) {
+          counts.names++;
+          yield entry;
+        }
+      } as typeof dir[typeof Symbol.asyncIterator];
+      const close = dir.close.bind(dir);
+      dir.close = (() => {
+        counts.closed++;
+        return close();
+      }) as typeof dir.close;
+      return dir;
+    };
+    syncBuiltinESMExports();
+    try {
+      await run();
+    } finally {
+      promises.realpath = realpath;
+      promises.opendir = opendir;
+      syncBuiltinESMExports();
+    }
+    return counts;
+  };
+  /** `promise`, or "timeout" after `ms`: what a regression that blocks would otherwise hang the run on. */
+  const within = <T,>(ms: number, promise: Promise<T>): Promise<T | "timeout"> => {
+    let timer: NodeJS.Timeout | undefined;
+    const late = new Promise<"timeout">((done) => (timer = setTimeout(() => done("timeout"), ms)));
+    return Promise.race([promise, late]).finally(() => clearTimeout(timer));
+  };
+
+  const CODE = "projects-folder/Alpha/Code";
+  /** The files of CODE that the listing shows, with their contents. */
+  const codeFiles: Record<string, string> = {
+    "Zed.txt": "zed",
+    "a b.txt": "space",
+    "app.js": "alert(1)",
+    "data.json": "{}",
+    "doc.xhtml": "<html xmlns='http://www.w3.org/1999/xhtml'><script>alert(1)</script></html>",
+    "fig.svg": "<svg xmlns='http://www.w3.org/2000/svg'/>",
+    "lib.cjs": "module.exports = 1",
+    "mod.mjs": "export {}",
+    "notes.md": "# notes",
+    "page.htm": "<script>alert(1)</script>",
+    "page.html": "<script>alert(2)</script>",
+    "run.py": "print(1)",
+    // U+1F600 and U+FF5E: code-unit order puts the first first; code-point and UTF-8 order (APFS's) the second.
+    "\u{1F600}.txt": "smile",
+    "～.txt": "tilde",
+  };
+  const ws = tempTree({
+    "AGENTS.md": "agents",
+    ".env": "SECRET=top",
+    ".git/config": "SECRET top git",
+    "human/private/secret.md": "SECRET private",
+    "human/private/stash/Code/secret.md": "SECRET stash",
+    "projects-folder/Alpha/PROJECT_MEMORY.md": "SECRET memory",
+    ...Object.fromEntries(Object.entries(codeFiles).map(([name, text]) => [`${CODE}/${name}`, text])),
+    [`${CODE}/sub/deep.txt`]: "deep",
+    [`${CODE}/.env`]: "SECRET code env",
+    [`${CODE}/.git/config`]: "SECRET code git",
+    [`${CODE}/.venv/lib/x.py`]: "SECRET venv",
+    "projects-folder/Alpha/paper/main.tex": "\\documentclass{article}",
+    "projects-folder/Beta/Code/b.py": "b",
+    "projects-folder/Beta/Code/lib/l.py": "l",
+    // Spelled "code" on disk, where the plugin declares "Code".
+    "projects-folder/Low/code/x.py": "SECRET low",
+  });
+  const outside = tempTree({ "x.txt": "SECRET outside", "proj/y.txt": "SECRET outside root" });
+  const code = join(ws, CODE);
+  const project = (name: string) => join(ws, "projects-folder", name);
+
+  // Links inside the root: out of it, out of the workspace, onto dot paths, and to places inside it.
+  dirLink(outside, join(code, "out-dir"));
+  dirLink(join(ws, "human", "private"), join(code, "to-private"));
+  dirLink(join(code, ".git"), join(code, "git-link"));
+  dirLink(join(code, "sub"), join(code, ".alias"));
+  dirLink(join(code, "sub"), join(code, "sub-link"));
+  const fileLinks = {
+    outFile: fileLink(join(outside, "x.txt"), join(code, "out-file.txt")),
+    env: fileLink(join(code, ".env"), join(code, "env-link")),
+    inside: fileLink(join(code, "sub", "deep.txt"), join(code, "in-link.txt")),
+    dangling: fileLink(join(ws, "nowhere.txt"), join(code, "dangling.txt")),
+  };
+  // A FIFO, which blocks whoever opens it to read without O_NONBLOCK: neither a file nor a folder.
+  const fifo = join(code, "fifo");
+  if (posix) execFileSync("mkfifo", [fifo]);
+  /** Lets a read blocked on the FIFO go on, so a regression fails its test instead of hanging the run. */
+  const unblockFifo = () => {
+    try {
+      closeSync(openSync(fifo, constants.O_WRONLY | constants.O_NONBLOCK));
+    } catch {
+      // No reader is waiting on it.
+    }
+  };
+  // Roots that are themselves links: out of the workspace, onto a dot folder, onto the workspace.
+  for (const [name, to] of [
+    ["Gamma", join(outside, "proj")],
+    ["Eps", join(ws, ".git")],
+    ["Zeta", ws],
+  ] as const) {
+    mkdirSync(project(name));
+    dirLink(to, join(project(name), "Code"));
+  }
+  // Cloned projects whose links lead elsewhere in the workspace, as Git keeps them (relative):
+  // Code to human/private, to a project folder, or below another root; a project folder into human/private.
+  for (const [name, to] of [
+    ["Evil", join(ws, "human", "private")],
+    ["Evil2", project("Alpha")],
+    ["Below", join(project("Beta"), "Code", "lib")],
+    // A root linked to another root the plugin may read.
+    ["Delta", join(project("Beta"), "Code")],
+  ] as const) {
+    mkdirSync(project(name));
+    relLink(to, join(project(name), "Code"));
+  }
+  relLink(join(ws, "human", "private", "stash"), project("Evil3"));
+  // A project folder linked to another project: its Code is that project's, a root too.
+  relLink(project("Beta"), project("Mirror"));
+  // A path in no root that is a link to one: still no root's path.
+  relLink(join(project("Beta"), "Code"), join(ws, "human", "alias"));
+
+  const manifest = (id: string, reads: string[]) =>
+    JSON.stringify({ contract: "^1.0", id, name: id, version: "1", reads, contributes: { projectViews: [{ id: "main", title: id, entry: "index.html" }] } });
+  const pluginRoot = tempTree({
+    "reads-code/plugin.json": manifest("reads-code", ["projects-folder/*/Code"]),
+    "reads-code/site/index.html": "<html>code</html>",
+    // Site files under _os/, which a site route would serve: the channel's paths never do.
+    "reads-code/site/_os/x": "SITE FILE",
+    "reads-code/site/_os/files/x": "SITE FILE",
+    "reads-code/site/_os/list/x": "SITE FILE",
+    "reads-code/site/_os/other/x": "SITE FILE",
+    "reads-paper/plugin.json": manifest("reads-paper", ["projects-folder/*/paper"]),
+    "reads-local/plugin.json": manifest("reads-local", ["projects-folder/Beta/Code"]),
+  });
+  const withReads = loadPlugins(pluginRoot, ["reads-code", "reads-paper"], "bundled", { trunk: TRUNK_MOUNTS, plugins: bundled.plugins });
+  const local = loadPlugins(pluginRoot, ["reads-local"], "local", { trunk: TRUNK_MOUNTS, plugins: [...bundled.plugins, ...withReads.plugins] });
+  const readSites = pluginSites([...bundled.plugins, ...withReads.plugins, ...local.plugins]);
+  const roots = { renderer, workspace: ws };
+  const handler = createHandler(() => ({ renderer, workspace: ws, sites: readSites, registry: registryOf([], {}), token: "t" }));
+  const fetchRead = (url: string, init?: RequestInit) => handler(new Request(url, init));
+  /** A channel URL; `raw` is the `path` value as written in the URL, %-escapes and all. */
+  const files = (raw: string, host = "reads-code") => `app://${host}/_os/files?path=${raw}`;
+  const list = (raw: string, host = "reads-code") => `app://${host}/_os/list?path=${raw}`;
+
+  /** The headers every channel response carries, refusals included. */
+  const assertReadHeaders = (res: Response, url: string) => {
+    assert.equal(res.headers.get("x-content-type-options"), "nosniff", url);
+    assert.equal(res.headers.get("cache-control"), "no-store", url);
+    assert.equal(res.headers.get("content-security-policy"), READ_CSP, url);
+  };
+  /** A 404 from the channel, which gives away nothing of the file. */
+  const assertRefused = async (url: string, init?: RequestInit) => {
+    const res = await fetchRead(url, init);
+    assert.equal(res.status, 404, url);
+    assertReadHeaders(res, url);
+    const text = await res.text();
+    assert.equal(text, init?.method === "HEAD" ? "" : "Not found", url);
+  };
+  const okText = async (url: string) => {
+    const res = await fetchRead(url);
+    assert.equal(res.status, 200, url);
+    assertReadHeaders(res, url);
+    return res.text();
+  };
+  const okList = async (url: string) => {
+    const res = await fetchRead(url);
+    assert.equal(res.status, 200, url);
+    assertReadHeaders(res, url);
+    assert.equal(res.headers.get("content-type"), "application/json", url);
+    return (await res.json()) as { entries: { name: string; dir: boolean; size: number }[]; truncated?: boolean };
+  };
+
+  test("the fixture plugins load, each with its own reads, a local one included", () => {
+    assert.deepEqual([...withReads.problems, ...local.problems], []);
+    assert.deepEqual(
+      [...readSites.values()].map((s) => [s.id, s.source, s.reads]),
+      [
+        ["paper-wiki", "bundled", []],
+        ["reads-code", "bundled", ["projects-folder/*/Code"]],
+        ["reads-paper", "bundled", ["projects-folder/*/paper"]],
+        ["reads-local", "local", ["projects-folder/Beta/Code"]],
+      ],
+    );
+  });
+
+  test("rule 1: only the exact, lower-case /_os/files and /_os/list are the channel, the path in the query; nothing under _os is a site file", async () => {
+    const site = readSites.get("reads-code");
+    assert.deepEqual(route(files(`${CODE}/run.py`), roots, readSites), { kind: "read", site, paths: [`${CODE}/run.py`], list: false });
+    assert.deepEqual(route(list(CODE), roots, readSites), { kind: "read", site, paths: [CODE], list: true });
+    assert.deepEqual(route(files("a%2Fb+c%2Bd"), roots, readSites), { kind: "read", site, paths: ["a/b c+d"], list: false }, "decoded once by the URL parser");
+    assert.deepEqual(route("app://reads-code/_os/files", roots, readSites), { kind: "read", site, paths: [], list: false });
+    assert.deepEqual(route("app://reads-code/_os/list?path=a&path=b", roots, readSites), { kind: "read", site, paths: ["a", "b"], list: true });
+    for (const rel of [
+      "_OS/files?path=x",
+      "_Os/list?path=x",
+      "_os./files?path=x",
+      "_os%20/files?path=x",
+      "_os/Files?path=x",
+      "_os/FILES?path=x",
+      "_os/List?path=x",
+      "_os/files.?path=x",
+      "_os/files%20?path=x",
+      "_os/files/?path=x",
+      "_os/list/?path=x",
+      // The path in the URL path, as the channel once took it.
+      "_os/files/x",
+      "_os/list/x",
+      `_os/files/${CODE}/run.py`,
+      `_os/list/${CODE}`,
+      "_os/other?path=x",
+      "_os/x",
+      "_os",
+      "_os/",
+      "%5Fos/files?path=x",
+      "%5fos/list?path=x",
+      "_os%2Ffiles?path=x",
+      "_os/%66iles?path=x",
+      "_os//files?path=x",
+    ]) {
+      const url = `app://reads-code/${rel}`;
+      assert.equal(route(url, roots, readSites).kind, "not-found", url);
+      const res = await fetchRead(url);
+      assert.equal(res.status, 404, url);
+      const text = await res.text();
+      assert.ok(!text.includes("SITE FILE") && !text.includes("print(1)"), url);
+    }
+    // The channel's own answer for the site files' names: no root holds "x".
+    for (const url of [files("x"), list("x")]) await assertRefused(url);
+    assert.equal(await (await fetchRead("app://reads-code/index.html")).text(), "<html>code</html>", "the site itself is unchanged");
+  });
+
+  test("rule 2: the app's origin and hosts that are no loaded plugin have no channel", async () => {
+    // As before the channel: renderer paths, with index.html for extension-less ones.
+    for (const url of [`app://research-os/_os/files?path=${CODE}/run.py`, `app://research-os/_os/list?path=${CODE}`]) {
+      const r = route(url, roots, readSites);
+      assert.ok(r.kind === "file" && r.root === renderer && r.fallback === "index.html", url);
+      const page = await fetchRead(url);
+      assert.equal(page.status, 200, url);
+      assert.equal(await page.text(), "<html>app</html>", `${url}: the app's page, not the file`);
+      assert.equal(page.headers.get("content-security-policy"), appCsp([...readSites.keys()]), url);
+    }
+    assert.deepEqual(route(`app://research-os/_os/files/${CODE}/run.py`, roots, readSites), {
+      kind: "file",
+      root: renderer,
+      rel: `_os/files/${CODE}/run.py`,
+      fallback: null,
+      csp: null,
+      confined: false,
+    });
+    const file = await fetchRead(`app://research-os/_os/files/${CODE}/run.py`);
+    assert.equal(file.status, 404);
+    assert.equal(await file.text(), "Not found");
+    for (const url of [files(`${CODE}/run.py`, "code-view"), list(CODE, "code-view")]) {
+      assert.equal(route(url, roots, readSites).kind, "not-found", url);
+      assert.equal((await fetchRead(url)).status, 404, url);
+    }
+  });
+
+  test("rule 3: GET and HEAD only; HEAD has the headers and no body", async () => {
+    for (const method of ["POST", "PUT", "DELETE", "PATCH", "OPTIONS"]) {
+      for (const url of [files(`${CODE}/run.py`), list(CODE), files(".env"), "app://reads-code/_os/files"]) {
+        const res = await fetchRead(url, { method, ...(method === "OPTIONS" ? {} : { body: "{}", headers: { "Content-Type": "application/json" } }) });
+        assert.equal(res.status, 405, `${method} ${url}`);
+        assert.equal(res.headers.get("allow"), "GET, HEAD", `${method} ${url}`);
+        assertReadHeaders(res, url);
+        assert.equal(await res.text(), "Method not allowed", `${method} ${url}`);
+      }
+    }
+    const head = await fetchRead(files(`${CODE}/run.py`), { method: "HEAD" });
+    assert.equal(head.status, 200);
+    assert.equal(head.headers.get("content-type"), "application/octet-stream");
+    assertReadHeaders(head, "HEAD file");
+    assert.equal(await head.text(), "");
+    const headList = await fetchRead(list(CODE), { method: "HEAD" });
+    assert.equal(headList.status, 200);
+    assert.equal(headList.headers.get("content-type"), "application/json");
+    assert.equal(await headList.text(), "");
+    await assertRefused(files(`${CODE}/missing.txt`), { method: "HEAD" });
+    await assertRefused(list(`${CODE}/run.py`), { method: "HEAD" });
+  });
+
+  test("rule 4: no folder open is a 404 (after the method check)", async () => {
+    const closed = createHandler(() => ({ renderer, workspace: null, sites: readSites, registry: null, token: "t" }));
+    for (const url of [files(`${CODE}/run.py`), list(CODE)]) {
+      const res = await closed(new Request(url));
+      assert.equal(res.status, 404, url);
+      assertReadHeaders(res, url);
+    }
+    assert.equal((await closed(new Request(files(`${CODE}/run.py`), { method: "POST", body: "{}" }))).status, 405);
+  });
+
+  test("rule 5: exactly one path, decoded once, with no segment starting with '.'", async () => {
+    assert.equal(await okText(files(`${CODE}/sub/deep.txt`)), "deep");
+    assert.equal(await okText(files(`${CODE}/a%20b.txt`)), "space");
+    assert.equal(await okText(files(`${CODE}/a+b.txt`)), "space", "a + is a space, as in any query");
+    assert.equal(await okText(files(`${CODE}/sub%2Fdeep.txt`)), "deep", "%2F decodes to a separator, once");
+    assert.equal(await okText(`${files(`${CODE}/run.py`)}&v=2`), "print(1)", "other parameters are ignored");
+    for (const raw of [
+      ".env",
+      ".git/config",
+      `${CODE}/.env`,
+      `${CODE}/%2Eenv`,
+      `${CODE}/.git/config`,
+      `${CODE}/.venv/lib/x.py`,
+      // A dot-named link to a folder that is not: only the request path shows the dot.
+      `${CODE}/.alias/deep.txt`,
+      // A query is not a URL path: nothing removes ".." from it but this check.
+      `${CODE}/../PROJECT_MEMORY.md`,
+      `${CODE}/%2e%2e/PROJECT_MEMORY.md`,
+      `${CODE}/sub/..%2f..%2fPROJECT_MEMORY.md`,
+      `${CODE}/..%5c..%5c..%5c.env`,
+      // Decoded twice, these would name deep.txt and ../run.py.
+      `${CODE}/sub/%2564eep.txt`,
+      `${CODE}/sub/%252e%252e/run.py`,
+      `${CODE}/sub%252Fdeep.txt`,
+      `${CODE}/run.py%00`,
+      `${CODE}/run.py:stream`,
+      "%E0%A4%A",
+      "",
+    ]) {
+      await assertRefused(files(raw));
+    }
+    for (const url of [
+      "app://reads-code/_os/files",
+      "app://reads-code/_os/files?",
+      `app://reads-code/_os/files?Path=${CODE}/run.py`,
+      `${files(`${CODE}/run.py`)}&path=${CODE}/run.py`,
+      `${files(`${CODE}/run.py`)}&path=`,
+      "app://reads-code/_os/list",
+      `${list(CODE)}&path=${CODE}`,
+    ]) {
+      await assertRefused(url);
+    }
+    for (const raw of ["", ".git", `${CODE}/.git`, `${CODE}/.alias`, `${CODE}/.venv`]) await assertRefused(list(raw));
+  });
+
+  test("rule 6: only paths in one of the plugin's reads roots, which a plugin without reads has none of", async () => {
+    assert.equal(await okText(files(`${CODE}/run.py`)), "print(1)");
+    assert.equal(await okText(files("projects-folder/Beta/Code/b.py")), "b", "'*' matches any project");
+    for (const raw of [
+      "AGENTS.md",
+      "human/private/secret.md",
+      "projects-folder/Alpha/PROJECT_MEMORY.md",
+      "projects-folder/Alpha/paper/main.tex",
+      "projects-folder/Alpha/Code-old/x",
+      "projects-folder/Code/run.py",
+    ]) {
+      await assertRefused(files(raw));
+    }
+    for (const raw of ["projects-folder", "projects-folder/Alpha", "human", "human/alias"]) await assertRefused(list(raw));
+    await assertRefused(files("human/alias/b.py"));
+    for (const url of [files(`${CODE}/run.py`, "paper-wiki"), list(CODE, "paper-wiki"), files("paper-wiki/viz.html", "paper-wiki")]) {
+      await assertRefused(url);
+    }
+  });
+
+  test("rule 7: the target's real path stays inside the root's: links out of it are not followed", async () => {
+    const refused = [files(`${CODE}/out-dir/x.txt`), files(`${CODE}/to-private/secret.md`), list(`${CODE}/out-dir`), list(`${CODE}/to-private`)];
+    if (fileLinks.outFile) refused.push(files(`${CODE}/out-file.txt`));
+    for (const url of refused) await assertRefused(url);
+    // Links that stay inside the root are followed.
+    assert.equal(await okText(files(`${CODE}/sub-link/deep.txt`)), "deep");
+    assert.deepEqual((await okList(list(`${CODE}/sub-link`))).entries, [{ name: "deep.txt", dir: false, size: 4 }]);
+    if (fileLinks.inside) assert.equal(await okText(files(`${CODE}/in-link.txt`)), "deep");
+  });
+
+  test("rule 8: a link inside the root onto one of its dot paths is refused, as a file and as a listing", async () => {
+    const refused = [files(`${CODE}/git-link/config`), list(`${CODE}/git-link`)];
+    if (fileLinks.env) refused.push(files(`${CODE}/env-link`));
+    for (const url of refused) await assertRefused(url);
+  });
+
+  test("rule 9: a root whose real path leaves the workspace, is the workspace, or is a dot folder of it, is refused", async () => {
+    for (const url of [
+      files("projects-folder/Gamma/Code/y.txt"),
+      list("projects-folder/Gamma/Code"),
+      files("projects-folder/Eps/Code/config"),
+      list("projects-folder/Eps/Code"),
+      files("projects-folder/Zeta/Code/AGENTS.md"),
+      list("projects-folder/Zeta/Code"),
+    ]) {
+      await assertRefused(url);
+    }
+  });
+
+  test("a root that is a link, or below one, must resolve to one of the plugin's own roots: a planted link cannot move it", async () => {
+    // Refused: a cloned project's Code linked to human/private, to a project folder, or below
+    // another root, and a project folder linked into human/private (an earlier segment).
+    for (const raw of [
+      "projects-folder/Evil/Code/secret.md",
+      "projects-folder/Evil/Code/stash/Code/secret.md",
+      "projects-folder/Evil2/Code/PROJECT_MEMORY.md",
+      "projects-folder/Evil2/Code/Code/run.py",
+      "projects-folder/Below/Code/l.py",
+      "projects-folder/Evil3/Code/secret.md",
+    ]) {
+      await assertRefused(files(raw));
+    }
+    for (const raw of ["projects-folder/Evil/Code", "projects-folder/Evil2/Code", "projects-folder/Below/Code", "projects-folder/Evil3/Code"]) {
+      await assertRefused(list(raw));
+    }
+    // Followed: a root linked to another root, itself or through its project folder.
+    const beta = [
+      { name: "b.py", dir: false, size: 1 },
+      { name: "lib", dir: true, size: 0 },
+    ];
+    for (const name of ["Delta", "Mirror"]) {
+      assert.equal(await okText(files(`projects-folder/${name}/Code/b.py`)), "b", name);
+      assert.equal(await okText(files(`projects-folder/${name}/Code/lib/l.py`)), "l", name);
+      assert.deepEqual((await okList(list(`projects-folder/${name}/Code`))).entries, beta, name);
+    }
+  });
+
+  test("a request spelled in another case than the disk: refused or the same file, never a way around the declared root", async () => {
+    const caseless = existsSync(join(ws, "PROJECTS-FOLDER"));
+    // The "*" segment matches any spelling, and the root's real path is the disk's: Beta/Code, a root.
+    if (caseless) {
+      assert.equal(await okText(files("projects-folder/beta/Code/b.py")), "b");
+      assert.deepEqual((await okList(list("projects-folder/BETA/Code"))).entries.map((e) => e.name), ["b.py", "lib"]);
+    } else {
+      await assertRefused(files("projects-folder/beta/Code/b.py"));
+    }
+    // A literal segment in another case is no root, before the disk is asked.
+    await assertRefused(files("projects-folder/Beta/code/b.py"));
+    await assertRefused(files("Projects-Folder/Beta/Code/b.py"));
+    // A folder spelled on disk otherwise than declared is readable by neither spelling.
+    for (const url of [files("projects-folder/Low/Code/x.py"), files("projects-folder/Low/code/x.py"), list("projects-folder/Low/Code")]) {
+      await assertRefused(url);
+    }
+  });
+
+  test("rule 10: a listing shows names, folders, and sizes, sorted, without dot names, links leaving the root or onto dot paths, or anything else", async () => {
+    const expected = [
+      ...Object.entries(codeFiles).map(([name, text]) => ({ name, dir: false, size: Buffer.byteLength(text) })),
+      ...(fileLinks.inside ? [{ name: "in-link.txt", dir: false, size: 4 }] : []),
+      { name: "sub", dir: true, size: 0 },
+      { name: "sub-link", dir: true, size: 0 },
+    ];
+    // Sorted by UTF-16 code unit, as JavaScript's default sort: "Zed.txt" comes first,
+    // "page.htm" before "page.html", and U+1F600 before U+FF5E, whatever order the file system keeps.
+    expected.sort((a, b) => (a.name < b.name ? -1 : 1));
+    assert.deepEqual(expected.slice(0, 3).map((e) => e.name), ["Zed.txt", "a b.txt", "app.js"]);
+    assert.deepEqual(expected.slice(-2).map((e) => e.name), ["\u{1F600}.txt", "～.txt"]);
+    assert.deepEqual(await okList(list(CODE)), { entries: expected });
+    assert.deepEqual(await okList(list(`${CODE}/sub`)), { entries: [{ name: "deep.txt", dir: false, size: 4 }] });
+    // A listing of a file or of nothing, and a file that is a folder or nothing, are 404.
+    const refused = [list(`${CODE}/run.py`), list(`${CODE}/missing`), files(`${CODE}/sub`), files(`${CODE}/missing.txt`), files(CODE)];
+    if (posix) refused.push(list(`${CODE}/fifo`));
+    if (fileLinks.dangling) refused.push(files(`${CODE}/dangling.txt`));
+    for (const url of refused) await assertRefused(url);
+  });
+
+  test("rule 11: a file above the cap is 413 before a byte is read, readable or not", async () => {
+    assert.equal(READ_MAX_BYTES, 32 * 1024 * 1024);
+    const caps = join(ws, "projects-folder", "Caps", "Code");
+    mkdirSync(caps, { recursive: true });
+    // Sparse where the file system allows: a size, no 32 MiB written.
+    for (const [name, size] of [
+      ["big.bin", READ_MAX_BYTES + 1],
+      ["edge.bin", READ_MAX_BYTES],
+      ["locked.bin", READ_MAX_BYTES + 1],
+      ["locked.txt", 5],
+    ] as const) {
+      writeFileSync(join(caps, name), "");
+      truncateSync(join(caps, name), size);
+    }
+    for (const method of ["GET", "HEAD"]) {
+      const big = await fetchRead(files("projects-folder/Caps/Code/big.bin"), { method });
+      assert.equal(big.status, 413, method);
+      assertReadHeaders(big, `${method} big.bin`);
+      assert.equal(big.headers.get("content-type"), "text/plain; charset=utf-8");
+      assert.equal(await big.text(), method === "HEAD" ? "" : "Too large for the read channel");
+    }
+    assert.equal((await fetchRead(files("projects-folder/Caps/Code/edge.bin"), { method: "HEAD" })).status, 200, "the cap itself is allowed");
+    // Without read permission, the cap still answers from the size: nothing is opened for it.
+    if (posix && process.getuid?.() !== 0) {
+      chmodSync(join(caps, "locked.bin"), 0o000);
+      chmodSync(join(caps, "locked.txt"), 0o000);
+      try {
+        for (const method of ["GET", "HEAD"]) {
+          assert.equal((await fetchRead(files("projects-folder/Caps/Code/locked.bin"), { method })).status, 413, method);
+          await assertRefused(files("projects-folder/Caps/Code/locked.txt"), { method });
+        }
+      } finally {
+        chmodSync(join(caps, "locked.bin"), 0o644);
+        chmodSync(join(caps, "locked.txt"), 0o644);
+      }
+    }
+  });
+
+  test("rule 11: a listing reads at most LIST_MAX_ENTRIES names and says so; HEAD does not list", async () => {
+    assert.equal(LIST_MAX_ENTRIES, 5000);
+    const caps = join(ws, "projects-folder", "Caps", "Code");
+    const many = join(caps, "many");
+    mkdirSync(many, { recursive: true });
+    const name = (i: number) => `f${String(i).padStart(4, "0")}.txt`;
+    for (let i = 0; i <= LIST_MAX_ENTRIES; i++) writeFileSync(join(many, name(i)), "");
+    const full = await okList(list("projects-folder/Caps/Code/many"));
+    assert.equal(full.entries.length, LIST_MAX_ENTRIES);
+    assert.equal(full.truncated, true);
+    unlinkSync(join(many, name(LIST_MAX_ENTRIES)));
+    const exact = await okList(list("projects-folder/Caps/Code/many"));
+    assert.equal(exact.entries.length, LIST_MAX_ENTRIES);
+    assert.deepEqual([exact.entries[0]!.name, exact.entries.at(-1)!.name], [name(0), name(LIST_MAX_ENTRIES - 1)]);
+    assert.ok(!("truncated" in exact), "exactly the cap is the whole folder");
+
+    // Names count whether or not the listing keeps them: a folder of dangling links, more than the
+    // cap, has LIST_MAX_ENTRIES + 1 names read (the last says there are more) and each kept one
+    // looked up once; HEAD reads no names and closes the folder it opened.
+    const dangling = join(caps, "dangling");
+    mkdirSync(dangling);
+    if (!fileLink(join(ws, "nowhere"), join(dangling, "l0"))) return; // Windows without the symlink privilege
+    for (let i = 1; i < LIST_MAX_ENTRIES + 100; i++) symlinkSync(join(ws, "nowhere"), join(dangling, `l${i}`), "file");
+    const get = await counting(async () => {
+      assert.deepEqual(await okList(list("projects-folder/Caps/Code/dangling")), { entries: [], truncated: true });
+    });
+    // Three lookups resolve the workspace, the root, and the folder; one per name kept after that.
+    assert.deepEqual([get.names, get.lookups], [LIST_MAX_ENTRIES + 1, 3 + LIST_MAX_ENTRIES]);
+    const head = await counting(async () => {
+      const res = await fetchRead(list("projects-folder/Caps/Code/dangling"), { method: "HEAD" });
+      assert.equal(res.status, 200);
+    });
+    assert.deepEqual(head, { lookups: 3, names: 0, opened: 1, closed: 1 });
+  });
+
+  test("a file is opened without blocking and checked as opened: a FIFO is a fast 404", { skip: !posix }, async () => {
+    try {
+      assert.equal(await within(10_000, fetchRead(files(`${CODE}/fifo`)).then((r) => r.status)), 404, "through the handler");
+      assert.equal(await within(10_000, openRegular(fifo)), 404, "openRegular alone, with no stat before it");
+    } finally {
+      unblockFifo();
+    }
+    // The checks apply to the file actually opened, a link in the last segment is never followed.
+    assert.equal(await openRegular(code), 404, "a folder");
+    const big = join(tempTree({ "big.bin": "" }), "big.bin");
+    truncateSync(big, READ_MAX_BYTES + 1);
+    assert.equal(await openRegular(big), 413);
+    await assert.rejects(openRegular(join(code, "sub-link")), /ELOOP/, "a link is not followed");
+    const opened = await openRegular(join(code, "run.py"));
+    assert.ok(typeof opened === "object" && opened.size === 8);
+    await opened.handle.close();
+  });
+
+  test("openRegular closes what it opened when it refuses it or cannot stat it", async () => {
+    // Every handle protocol.ts opens is kept, to see that each is closed (fd -1).
+    const promises = fs.promises as unknown as Record<"open", unknown>;
+    const original = fs.promises.open;
+    const handles: FileHandle[] = [];
+    let failStat = false;
+    promises.open = async (...args: Parameters<typeof original>) => {
+      const handle = await original(...args);
+      if (failStat) Object.defineProperty(handle, "stat", { value: () => Promise.reject(new Error("stat failed")) });
+      handles.push(handle);
+      return handle;
+    };
+    syncBuiltinESMExports();
+    try {
+      const big = join(tempTree({ "big.bin": "" }), "big.bin");
+      truncateSync(big, READ_MAX_BYTES + 1);
+      assert.equal(await openRegular(code), 404, "a folder");
+      assert.equal(await openRegular(big), 413, "a file above the cap");
+      failStat = true;
+      await assert.rejects(openRegular(join(code, "run.py")), /stat failed/);
+    } finally {
+      promises.open = original;
+      syncBuiltinESMExports();
+    }
+    assert.equal(handles.length, 3);
+    assert.deepEqual(
+      handles.map((h) => h.fd),
+      [-1, -1, -1],
+      "each closed",
+    );
+  });
+
+  test("a body streams at most the size stat gave, ends at end of file, and closes its handle", async () => {
+    const dir = tempTree();
+    const text = (stream: ReadableStream<Uint8Array>) => within(10_000, new Response(stream).text());
+    // Grown since its stat: only the stat'ed bytes.
+    writeFileSync(join(dir, "grow"), "0123456789");
+    let handle = await open(join(dir, "grow"), "r");
+    appendFileSync(join(dir, "grow"), "MORE");
+    assert.equal(await text(fileStream(handle, 10)), "0123456789");
+    assert.equal(handle.fd, -1, "closed at the end");
+    // Shrunk since its stat, across chunks: what is left, and no spinning at end of file.
+    writeFileSync(join(dir, "shrink"), "x".repeat(200_000));
+    handle = await open(join(dir, "shrink"), "r");
+    truncateSync(join(dir, "shrink"), 70_000);
+    const shrunk = await text(fileStream(handle, 200_000));
+    assert.ok(typeof shrunk === "string" && shrunk.length === 70_000, `got ${typeof shrunk === "string" ? shrunk.length : shrunk}`);
+    assert.equal(handle.fd, -1);
+    // Empty.
+    writeFileSync(join(dir, "empty"), "");
+    handle = await open(join(dir, "empty"), "r");
+    assert.equal(await text(fileStream(handle, 0)), "");
+    assert.equal(handle.fd, -1);
+    // Cancelled after one chunk.
+    handle = await open(join(dir, "shrink"), "r");
+    const reader = fileStream(handle, 70_000).getReader();
+    assert.ok(((await reader.read()).value?.length ?? 0) > 0);
+    await reader.cancel();
+    assert.equal(handle.fd, -1, "closed on cancel");
+    // A read that fails ends the stream with the error, and closes the handle.
+    handle = await open(join(dir, "grow"), "r");
+    await handle.close();
+    await assert.rejects(new Response(fileStream(handle, 10)).text());
+    handle = await open(join(dir, "grow"), "r");
+    Object.defineProperty(handle, "read", { value: () => Promise.reject(new Error("read failed")) });
+    let closed = 0;
+    await assert.rejects(new Response(fileStream(handle, 10, () => closed++)).text(), /read failed/);
+    assert.equal(handle.fd, -1, "closed on a failed read");
+    assert.equal(closed, 1, "and its slot given back once");
+    // The slot is given back once at the end and once on cancel, too.
+    closed = 0;
+    handle = await open(join(dir, "grow"), "r");
+    assert.equal(await text(fileStream(handle, 10, () => closed++)), "0123456789");
+    handle = await open(join(dir, "shrink"), "r");
+    const cancelled = fileStream(handle, 70_000, () => closed++).getReader();
+    await cancelled.read();
+    await cancelled.cancel();
+    await cancelled.cancel();
+    assert.equal(closed, 2);
+    // Through the handler, a file comes in chunks, not as one buffer of the whole file.
+    const mib = join(ws, "projects-folder", "Beta", "Code", "mib.bin");
+    writeFileSync(mib, "m".repeat(1024 * 1024));
+    try {
+      const reader = (await fetchRead(files("projects-folder/Beta/Code/mib.bin"))).body!.getReader();
+      let total = 0;
+      let largest = 0;
+      for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+        total += chunk.value.byteLength;
+        largest = Math.max(largest, chunk.value.byteLength);
+      }
+      assert.equal(total, 1024 * 1024);
+      assert.ok(largest <= 64 * 1024, `a chunk of ${largest} bytes`);
+    } finally {
+      unlinkSync(mib);
+    }
+  });
+
+  test("no handle is left open by full, cancelled, or HEAD reads", { skip: !posix }, async () => {
+    const openFds = () => readdirSync("/dev/fd").length;
+    const before = openFds();
+    for (let i = 0; i < 100; i++) assert.equal(await okText(files(`${CODE}/run.py`)), "print(1)");
+    for (let i = 0; i < 100; i++) await (await fetchRead(files(`${CODE}/run.py`))).body!.cancel();
+    for (let i = 0; i < 50; i++) await (await fetchRead(files(`${CODE}/run.py`), { method: "HEAD" })).text();
+    for (let i = 0; i < 50; i++) await (await fetchRead(list(CODE), { method: "HEAD" })).text();
+    assert.ok(openFds() <= before + 2, `${openFds()} descriptors open, ${before} before`);
+  });
+
+  test("streamLimit: at most `max` slots per id, each given back once, ids apart", () => {
+    const limit = streamLimit(2);
+    const a1 = limit.acquire("a");
+    const a2 = limit.acquire("a");
+    assert.ok(a1 && a2);
+    assert.equal(limit.acquire("a"), null);
+    assert.ok(limit.acquire("b"), "another id has its own slots");
+    a1();
+    a1();
+    const a3 = limit.acquire("a");
+    assert.ok(a3, "a slot given back");
+    assert.equal(limit.acquire("a"), null, "a second release of the same slot gives nothing back");
+  });
+
+  test("each origin holds at most READ_MAX_STREAMS files open; 503 above it, without opening the file", async () => {
+    assert.equal(READ_MAX_STREAMS, 16);
+    // Larger than one chunk, so a held response keeps its file open.
+    const streams = project("Streams");
+    mkdirSync(join(streams, "Code"), { recursive: true });
+    mkdirSync(join(streams, "paper"), { recursive: true });
+    writeFileSync(join(streams, "Code", "big.txt"), "s".repeat(200_000));
+    writeFileSync(join(streams, "Code", "small.txt"), "small");
+    writeFileSync(join(streams, "paper", "big.txt"), "p".repeat(200_000));
+    writeFileSync(join(streams, "Code", "locked.txt"), "locked");
+    const fresh = createHandler(() => ({ renderer, workspace: ws, sites: readSites, registry: registryOf([], {}), token: "t" }));
+    const get = (url: string, init?: RequestInit) => fresh(new Request(url, init));
+    const big = files("projects-folder/Streams/Code/big.txt");
+    const hold = async () => {
+      const res = await get(big);
+      assert.equal(res.status, 200);
+      return res;
+    };
+    const assertBusy = async () => {
+      for (const method of ["GET", "HEAD"]) {
+        const res = await get(big, { method });
+        assert.equal(res.status, 503, method);
+        assertReadHeaders(res, `${method} at the cap`);
+        assert.equal(await res.text(), method === "HEAD" ? "" : "Too many files open for reading; try again");
+      }
+    };
+    // Refused, failed, HEAD, and small reads give their slot back at once.
+    if (posix && process.getuid?.() !== 0) {
+      chmodSync(join(streams, "Code", "locked.txt"), 0o000);
+      try {
+        for (let i = 0; i < 2 * READ_MAX_STREAMS; i++) assert.equal((await get(files("projects-folder/Streams/Code/locked.txt"))).status, 404);
+      } finally {
+        chmodSync(join(streams, "Code", "locked.txt"), 0o644);
+      }
+    }
+    for (let i = 0; i < 2 * READ_MAX_STREAMS; i++) assert.equal((await get(big, { method: "HEAD" })).status, 200);
+    const small = [];
+    for (let i = 0; i < 2 * READ_MAX_STREAMS; i++) small.push(await get(files("projects-folder/Streams/Code/small.txt")));
+    assert.deepEqual([...new Set(small.map((r) => r.status))], [200], "a file read in one chunk is closed at once, held or not");
+
+    const held = [];
+    for (let i = 0; i < READ_MAX_STREAMS; i++) held.push(await hold());
+    await assertBusy();
+    // What opens no file is not held back: listings, refusals, another origin's files.
+    assert.equal((await get(list("projects-folder/Streams/Code"))).status, 200);
+    assert.equal((await get(files("projects-folder/Streams/Code/missing.txt"))).status, 404);
+    const other = await get(files("projects-folder/Streams/paper/big.txt", "reads-paper"));
+    assert.equal(other.status, 200);
+    assert.equal((await other.text()).length, 200_000);
+    // A body read to its end gives its slot back, and so does a cancelled one.
+    assert.equal((await held.pop()!.text()).length, 200_000);
+    held.push(await hold());
+    await assertBusy();
+    await held.pop()!.body!.cancel();
+    held.push(await hold());
+    await assertBusy();
+    // All given back: the whole cap again.
+    for (const res of held.splice(0)) await res.body!.cancel();
+    for (let i = 0; i < READ_MAX_STREAMS; i++) held.push(await hold());
+    await assertBusy();
+    for (const res of held) await res.body!.cancel();
+  });
+
+  test("rule 12: every response carries nosniff, no-store and the sandbox policy; scripts and HTML go as plain text", async () => {
+    assert.equal(READ_CSP, "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'");
+    for (const [file, type] of [
+      ["app.js", "text/plain; charset=utf-8"],
+      ["mod.mjs", "text/plain; charset=utf-8"],
+      ["lib.cjs", "text/plain; charset=utf-8"],
+      ["page.html", "text/plain; charset=utf-8"],
+      ["page.htm", "text/plain; charset=utf-8"],
+      ["doc.xhtml", "text/plain; charset=utf-8"],
+      ["notes.md", "text/plain; charset=utf-8"],
+      ["fig.svg", "image/svg+xml"],
+      ["data.json", "application/json; charset=utf-8"],
+      ["run.py", "application/octet-stream"],
+    ] as const) {
+      const url = files(`${CODE}/${file}`);
+      const res = await fetchRead(url);
+      assert.equal(res.status, 200, url);
+      assert.equal(res.headers.get("content-type"), type, url);
+      assertReadHeaders(res, url);
+      assert.equal(await res.text(), codeFiles[file], `${url}: the bytes as they are`);
+    }
+    // Refusals carry them too (asserted in assertRefused for 404; 405 and 413 above).
+    await assertRefused(files(`${CODE}/missing.txt`));
+  });
+
+  test("rule 13: each origin reads only inside its own roots", async () => {
+    assert.equal(await okText(files("projects-folder/Alpha/paper/main.tex", "reads-paper")), "\\documentclass{article}");
+    await assertRefused(files("projects-folder/Alpha/paper/main.tex", "reads-code"));
+    await assertRefused(files(`${CODE}/run.py`, "reads-paper"));
+    await assertRefused(list(CODE, "reads-paper"));
+    assert.deepEqual((await okList(list("projects-folder/Alpha/paper", "reads-paper"))).entries, [
+      { name: "main.tex", dir: false, size: Buffer.byteLength("\\documentclass{article}") },
+    ]);
+  });
+
+  test("rule 14: a local plugin reads its manifest's roots like a bundled one", async () => {
+    assert.equal(await okText(files("projects-folder/Beta/Code/b.py", "reads-local")), "b");
+    await assertRefused(files(`${CODE}/run.py`, "reads-local"));
   });
 });

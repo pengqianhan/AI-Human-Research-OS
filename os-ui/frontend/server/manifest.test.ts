@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { contractAccepts, matchRoot, parseManifest } from "./manifest.ts";
+import { contractAccepts, matchRoot, parseManifest, safeDecodedRelative, safeRelative } from "./manifest.ts";
 import type { PluginSource } from "./manifest.ts";
 
 /** The smallest manifest contract 1.0 accepts, with `extra` merged over it. */
@@ -178,6 +178,28 @@ describe("contractAccepts", () => {
     for (const range of ["^1.0", "^1.1", "^1.2"]) assert.equal(contractAccepts(range, host), true, range);
     for (const range of ["^1.3", "^0.2", "^2.0", "^1.10", "1.2"]) assert.equal(contractAccepts(range, host), false, range);
     assert.equal(contractAccepts("^1.10", { major: 1, minor: 10 }), true, "minors compare as numbers");
+  });
+});
+
+describe("safeRelative and safeDecodedRelative", () => {
+  test("every Windows device name is refused, CONIN$, CONOUT$ and the superscript COM and LPT forms included", () => {
+    for (const name of ["con", "PRN", "aux.txt", "nul", "com0", "COM9.log", "lpt1", "CONIN$", "conin$.txt", "CONOUT$", "conout$", "COM¹", "com².txt", "COM³", "LPT¹", "lpt²", "Lpt³.x"]) {
+      assert.equal(safeRelative(`/papers/${name}`), null, name);
+      assert.equal(safeDecodedRelative(`papers/${name}`), null, name);
+      refused(minimal({ reads: [`papers/${name}`] }), /^reads\[0\] /);
+    }
+    for (const name of ["console.md", "conin", "conin$x", "conout", "com", "com10", "com⁴", "lpt", "lpt¹x", "auxiliary"]) {
+      assert.equal(safeRelative(`/papers/${name}`), `papers/${name}`, name);
+      assert.equal(safeDecodedRelative(`papers/${name}`), `papers/${name}`, name);
+    }
+  });
+
+  test("safeDecodedRelative applies the same checks without decoding again", () => {
+    assert.equal(safeDecodedRelative("a//b/"), "a/b");
+    assert.equal(safeDecodedRelative("a%2e%2e/x"), "a%2e%2e/x", "a % is a character, not an escape");
+    assert.equal(safeDecodedRelative("100%.txt"), "100%.txt");
+    for (const bad of ["../x", "a/./b", "a\\b", "C:/x", "a\0b", "x:stream"]) assert.equal(safeDecodedRelative(bad), null, bad);
+    assert.equal(safeRelative("/100%25.txt"), "100%.txt");
   });
 });
 

@@ -167,16 +167,20 @@ with the trunk's endpoints only.
 | `app://research-os/state.json` | `<workspace>/os-ui/frontend/public/state.json` |
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
 | `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`); other `api/` paths are 404 |
-| `app://<id>/_os/...` | 404: kept for the path-checked read channel (S5) |
+| `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
 | `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
-  NUL, COM1, …) are refused before any file access. Workspace files must also
-  have their real path (symlinks and junctions resolved) inside their root; the
-  renderer and a bundled plugin's `site/` folder, possibly inside an asar
-  archive, are confined lexically; any other plugin's `site/` folder by real
-  path.
+  NUL, COM1, CONIN$, …, alone or with an extension, `nul.txt`) are refused
+  before any file access. A device name followed by spaces or dots, which
+  Windows also opens as the device (`nul `, `con .txt`), is not refused there
+  (the manifest parser refuses such paths in a manifest); whether the real-path
+  checks below stop it on Windows is not verified. Workspace files
+  must also have their real path (symlinks and junctions resolved) inside
+  their root; the renderer and a bundled plugin's `site/` folder, possibly
+  inside an asar archive, are confined lexically; any other plugin's `site/`
+  folder by real path.
 - On a plugin's origin, `api` and `_os` are never files, in any case and
   without a trailing dot or space (`API/`, `_OS/`, `api./`), and neither is
   the bare `/`.
@@ -193,6 +197,106 @@ with the trunk's endpoints only.
   whose committed `paper-wiki/viz.html` predates this shows read-only status
   until `generate_viz.py` runs.
 
+**The read channel** (S5 of [os-ui/PLUGINS.md](../PLUGINS.md); `serveRead` in
+[src/main/protocol.ts](src/main/protocol.ts)). A plugin page reads workspace
+files, read-only, inside the roots its manifest declares in `reads`, whether
+the plugin is bundled or local. A `*` segment matches any one segment whose
+name does not start with `.`, a file's name included:
+`projects-folder/*/Code` matches `projects-folder/Alpha/Code`, and
+`projects-folder/*` matches `projects-folder/notes.md` as well as a project.
+
+- `GET app://<id>/_os/files?path=<rel>` returns the file's bytes;
+  `GET app://<id>/_os/list?path=<rel>` returns
+  `{"entries": [{"name": string, "dir": boolean, "size": number}]}`, sorted by
+  name in UTF-16 code-unit order (JavaScript's default sort), `size` 0 for a
+  folder, with `"truncated": true` added when the folder has more names than
+  the cap. `<rel>` is relative to the workspace and is a query value: decoded
+  once by the URL parser, so `+` is a space and `%2B` a plus.
+- The file's path is in the query, never in the URL path: for an `app://` URL,
+  Electron 44's Chromium runs a `<script src>` whose path ends in `.js` or
+  `.mjs` whatever its Content-Type and `nosniff`. With the path in the query,
+  the URL path is always `/_os/files`, which names no type, and a
+  `text/plain` script sent with `nosniff` is refused. Verified in Electron
+  44.4.5 under the real `PLUGIN_CSP`: classic scripts, module scripts,
+  `import()`, and workers from the channel were all blocked, while a control
+  path ending in `.js` with the same headers ran.
+- Only the exact, lower-case paths `/_os/files` and `/_os/list` are the
+  channel, compared before decoding, with exactly one `path` parameter (a
+  missing, empty, or repeated one is 404; other parameters are ignored). Every
+  other path under `_os` (`_OS/files`, `_os/Files`, `%5Fos/files`,
+  `/_os/files/<rel>`) is 404, and nothing under `_os` is ever a site file. The
+  app's origin has no channel (`_os/...` there is a renderer path like any
+  other), nor has the dev server (A3 in [os-ui/PLUGINS.md](../PLUGINS.md)).
+- GET and HEAD only: anything else is 405, folder open or not. HEAD answers
+  with the headers and no body. With no folder open, 404.
+- The path is checked as a URL path is (no `..`, `\`, `:`, NUL, or device
+  names), without being decoded again. A segment starting with `.` (`.env`,
+  `.git/config`, `a/.venv/x`) or an empty path is 404, as is a path below none
+  of the plugin's roots, so a plugin without `reads` reads nothing.
+- Where a root may resolve, symlinks and junctions resolved: the matched
+  root's real path must lie inside the workspace's, must not be the workspace
+  or a dot folder of it, and must itself be one of the plugin's roots as
+  written. The declared pattern is the boundary, and a link planted in a
+  cloned project cannot move it: `projects-folder/Evil/Code` linked to
+  `human/private`, or a project folder linked into it, is 404, while a root
+  linked to another root the plugin may read (`projects-folder/Mirror` linked
+  to `projects-folder/Beta`) is followed. Each check can be reversed alone: to
+  follow a root that links out of the workspace, as Paper Wiki's site folder
+  does, drop `isInside(top, rootReal)`; to follow one that links to any other
+  folder of the workspace, drop `declaredRoot(...)`. Both are in `serveRead`.
+- On a case-insensitive file system (macOS, Windows), the root's real path is
+  spelled as on disk. A `*` segment in another case reads the same root
+  (`projects-folder/alpha/Code` is `Alpha/Code`); a literal segment in another
+  case (`.../code`) is 404 before the disk is asked; and a folder spelled on
+  disk otherwise than declared (`Alpha/code` where `reads` says `Code`) is 404
+  by either spelling.
+- The target's real path must lie inside the root's, with no segment below
+  the root starting with `.`, so a link inside the root to its `.git` is 404
+  too.
+- A listing leaves out names starting with `.`, entries that resolve outside
+  the root or onto a dot path, dangling links, and anything that is neither a
+  regular file nor a folder once resolved (a FIFO, a socket). A listing of a
+  file, or of nothing, is 404, and so is a file request for a folder.
+- A file is checked by path first, so a FIFO is never opened and the cap needs
+  no read access; it is then opened without following a link in its last
+  segment and without blocking (`O_NOFOLLOW`, `O_NONBLOCK`, where the platform
+  has them), and checked again as opened. Its body streams 64 KiB at a time as
+  it is read, never past the size `stat` gave; the file is closed at the end,
+  on an error, or when the reader cancels.
+- Caps: a file above 32 MiB (`READ_MAX_BYTES`) answers 413 before a byte is
+  read. A listing reads at most 5,000 names (`LIST_MAX_ENTRIES`), kept or not,
+  in the file system's order, so a larger folder is listed from those names
+  and says `"truncated": true`; HEAD on a listing stops at opening the folder.
+  At most 16 files (`READ_MAX_STREAMS`) are open for reading at once per
+  plugin origin, since every held response keeps a descriptor and a pipe
+  buffer; above that, a file read answers 503 without opening the file. A
+  slot is given back when its body ends, fails, or is cancelled, at once for
+  HEAD and for a file that is refused or cannot be opened, and as soon as a
+  file of one chunk (64 KiB or less) has been read. Other origins, listings,
+  and refusals are not held back.
+- Every answer, refusals included, carries `X-Content-Type-Options: nosniff`,
+  `Cache-Control: no-store`, and the read policy (§3.3). `.js`, `.mjs`,
+  `.cjs`, `.html`, `.htm`, and `.xhtml` files are sent as
+  `text/plain; charset=utf-8`, listings as `application/json`, and other files
+  by extension (SVG as `image/svg+xml`, which an `<img>` needs).
+- No bundled plugin declares `reads` until the Code and Paper views (S6), so
+  the channel is proven by the fixture tests in
+  [test/protocol.test.ts](test/protocol.test.ts) only.
+
+Known limits of the channel, not yet handled:
+
+- A concurrent writer could swap a folder on the path for a link between the
+  check and the open. `O_NOFOLLOW` covers the last segment only.
+- A hard link inside a root to a file elsewhere is indistinguishable from a
+  regular file and is served.
+- A frame sent to a file of a type it cannot show (`application/octet-stream`)
+  starts a download, which the client does not yet cancel. To be settled in
+  S6 with the views' end-to-end tests.
+- The manifest parser accepts any plain root, `human/private` included. Before
+  third-party manifests load in step 2, the host needs a deny-list or an
+  explicit enable step that shows `reads`.
+
+
 ### 3.3 Security baseline
 
 - `contextIsolation`, `sandbox`, no `nodeIntegration`, `webSecurity`; the
@@ -207,8 +311,15 @@ with the trunk's endpoints only.
   — its own inline code runs; remote fetches, images, frames, and forms do not.
   A site in its plugin folder gets the same policy with `'self'` added to
   `script-src` and `style-src`. Either is sent with every file the site
-  serves, not only HTML: an SVG a frame is sent to is a document too. A 404,
-  a 405, or an endpoint's JSON reply carries no policy.
+  serves, not only HTML: an SVG a frame is sent to is a document too. Every
+  read channel answer, refusals included, carries
+  `sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'`
+  (`READ_CSP`): a workspace file a frame is sent to is an inert document on an
+  origin of its own. A plugin page's `script-src 'self'` would admit a
+  workspace script named in `<script src>`; it is refused because the
+  channel's URL path never names the file and scripts go as plain text with
+  `nosniff` (§3.2). Elsewhere, a 404, a 405, or an endpoint's JSON reply
+  carries no policy.
 - **Endpoints:** writes must be `Content-Type: application/json`, which a form
   or a no-cors request cannot send (415 otherwise); `/api/chat` and
   `/api/paper-sources` need a random per-launch token, which the preload hands
@@ -425,7 +536,7 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 | Shared API core | `node --test` with Node's type stripping (no new dependency) | validation, status codes, queues, Write Lease (also through a symlink), runner timeouts and errors |
 | API + real harness | `node --test` with `os-harness/tests/fake_claude.py` | `POST /send` → detached turn → trace; resume → turn 2 |
 | Dev-server adapters | `node --test` on a real Vite dev server | token before routing, mounts, context root |
-| Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the navigation guard's targets, window bounds, menu |
+| Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the read channel on fixture plugins (routing, methods, dot paths, roots, link and junction escapes, listings, caps, headers), the navigation guard's targets, window bounds, menu |
 | E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
 | Package smoke | the same E2E (`OS_CLIENT_E2E_EXECUTABLE=release`) on the unpacked app | the asar layout starts, generates, and isolates the viewer |
 | CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above, those tests included, on six OS/arch rows and uploads installers as artifacts | |

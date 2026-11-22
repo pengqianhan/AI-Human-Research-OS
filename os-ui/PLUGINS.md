@@ -7,11 +7,11 @@ agent and line numbers refer to the code as it was that day.
 
 Status on 2026-11-22:
 
-- **S1 to S4 are done**: the manifest parser, the server-side registry with the dev
-  server built from it, the client serving plugin origins from the registry (S3), and
-  the frontend registry (S4, pending its pull request's merge). `createMounts`,
-  `splitMounts`, and the client's `WIKI_*` constants are gone. The code is the
-  authority where it differs from Part 1:
+- **S1 to S5 are done**: the manifest parser, the server-side registry with the dev
+  server built from it, the client serving plugin origins from the registry (S3), the
+  frontend registry (S4), and the read channel (S5, pending its pull request's
+  merge). `createMounts`, `splitMounts`, and the client's `WIKI_*` constants are
+  gone. The code is the authority where it differs from Part 1:
   - Manifests (S1): paths must be plain, a `reads` root may not start with `*`, and `*`
     does not match a dot segment.
   - On `app://<id>`, only `/api/<id>` and `/api/<id>/...` reach the plugin's mounts. Any
@@ -60,12 +60,69 @@ Status on 2026-11-22:
     `PaperWikiPage` stays, with no props, for the dock alone. There is no `icon`
     field (A8): the renderer maps a bundled plugin's id to an icon. The Plugins card
     has one chip per page; handlers get none.
+  - The read channel (S5) is `serveRead` in
+    [client/src/main/protocol.ts](client/src/main/protocol.ts), described with its
+    known limits in [client/DESIGN.md](client/DESIGN.md) §3.2. No bundled plugin
+    declares `reads` until S6, so it is proven by fixture tests in
+    `client/test/protocol.test.ts` only. Where it differs from §3's "The read
+    channel", after an independent security review:
+    - The URL shape is `app://<id>/_os/files?path=<rel>` and
+      `app://<id>/_os/list?path=<rel>`, not `_os/files/<rel>`. For an `app://`
+      URL, Chromium runs a `<script src>` whose path ends in `.js` or `.mjs`
+      whatever its Content-Type and `nosniff` (the review showed it in Electron
+      44), so a path naming the file let a plugin page run a workspace script.
+      With the path in the query the URL path names no type, and a probe under the
+      real `PLUGIN_CSP` saw classic, module, `import()` and worker loads all
+      blocked. The contract is not frozen until step 2 (A1).
+    - Only the exact, lower-case `/_os/files` and `/_os/list` are the channel,
+      with exactly one `path` parameter, which the URL parser decodes once (`+` is
+      a space) and `serveRead` checks as `safeRelative` would, without decoding
+      again (`safeDecodedRelative` in `frontend/server/manifest.ts`). A missing,
+      empty or repeated `path` is 404; other parameters are ignored. Every other
+      `_os` path, `/_os/files/<rel>` included, stays 404.
+    - The declared pattern is the boundary: a root's real path must itself be one
+      of the plugin's roots as written, so a link planted at or above a root (a
+      cloned project's `Code` pointing at `human/private`) is 404, while a root
+      linked to another declared root is followed. To follow links to any folder
+      of the workspace again, drop the one check `declaredRoot(...)` in
+      `serveRead`. On a case-insensitive file system a `*` segment in another case
+      reads the same root, and a folder spelled on disk otherwise than declared is
+      404 by either spelling ([client/DESIGN.md](client/DESIGN.md) §3.2).
+    - The root must also lie inside the workspace, not be it, and not be a dot
+      folder of it; the dot check also runs below the root's real path (a link
+      named `x` to the root's `.git` is 404). Paper Wiki's site folder follows a
+      link out of the workspace; the channel deliberately does not. To reverse
+      that, drop the one check `isInside(top, rootReal)` in `serveRead`; the
+      declared-root check applies inside the workspace only, so that alone lets
+      such a root be read (a test shows it).
+    - A file is checked by path, opened with `O_NOFOLLOW` and `O_NONBLOCK`,
+      checked again as opened, and streamed 64 KiB at a time, never past its
+      `stat` size, closing on end, error and cancel. A file above 32 MiB
+      (`READ_MAX_BYTES`) answers 413 before a byte is read, also when it is
+      unreadable. At most 16 files (`READ_MAX_STREAMS`) are open for reading at
+      once per plugin origin; above that a file read answers 503 without opening
+      the file, and the slot comes back on end, error, cancel, HEAD, or refusal.
+      Part 1 had no such cap.
+    - A listing reads at most 5,000 names (`LIST_MAX_ENTRIES`), kept or not, in
+      the file system's order, sorts them in UTF-16 code-unit order, and adds
+      `"truncated": true` when the folder has more; HEAD on a listing stops at
+      opening the folder. Listings also leave out dangling links and anything that
+      is neither a regular file nor a folder (a FIFO).
+    - Every answer carries `nosniff`, `no-store`, and `READ_CSP`. `.html`, `.htm`,
+      and `.xhtml` are sent as `text/plain` too, besides `.js`, `.mjs`, and `.cjs`;
+      SVG keeps `image/svg+xml`, which an `<img>` needs. Anything but GET and HEAD
+      is 405 (with `Allow: GET, HEAD`) before the no-folder 404.
+    - `safeRelative` also refuses `CONIN$`, `CONOUT$`, and `COM¹`-`COM³`,
+      `LPT¹`-`LPT³`.
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **Next: S5, then S6.** S5 moves the client's security boundary again and is
-  checked only by the advisory `desktop.yml` and the end-to-end suite, so run
-  `npm run test:e2e` in `os-ui/client` before it merges.
+- **Next: S6**, the Code and Paper view plugins. The Paper view waits on the Human
+  Owner's answer about PDF.js (below; A9). S5 moved the client's security boundary;
+  its proof is the fixture tests that `npm test` in `os-ui/client` runs, which only
+  the advisory `desktop.yml` runs in CI. The end-to-end suite does not reach the
+  channel until S6, but run `npm run test:e2e` there before S5 merges, since it
+  guards the plugin origins the channel sits on.
 - **Waiting on the Human Owner:** whether the Paper view may vendor PDF.js (Part 2), and
   whether a third-party plugin may add a left-navigation item (Part 1, Q-PO1).
 
