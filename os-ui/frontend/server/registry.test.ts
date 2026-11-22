@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { BUNDLED_IDS } from "../plugins/bundled.ts";
-import { createMounts, TRUNK_MOUNTS } from "./api.ts";
+import { TRUNK_MOUNTS } from "./api.ts";
 import type { Mount } from "./api.ts";
 import type { PluginManifest } from "./manifest.ts";
 import { BUNDLED_HANDLERS } from "./pluginHandlers.ts";
@@ -107,9 +107,13 @@ describe("createRegistry", () => {
   const real = () =>
     createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins, factories: BUNDLED_HANDLERS });
 
-  test("all has exactly createMounts' endpoints and token flags", () => {
-    const sorted = (mounts: readonly Mount[]) => flags(mounts).sort(([a], [b]) => a.localeCompare(b));
-    assert.deepEqual(sorted(real().all), sorted(createMounts(ctx)));
+  test("all has the app's three endpoints, then Paper Wiki's status, with their token flags", () => {
+    assert.deepEqual(flags(real().all), [
+      ["/api/skill/toggle", false],
+      ["/api/paper-sources", true],
+      ["/api/chat", true],
+      ["/api/paper-wiki/status", false],
+    ]);
   });
 
   test("the trunk on the app origin, each plugin's handlers on its own, never with the token", () => {

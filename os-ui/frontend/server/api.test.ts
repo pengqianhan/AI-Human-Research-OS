@@ -2,21 +2,29 @@ import assert from "node:assert/strict";
 import { Readable } from "node:stream";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { describe, test } from "node:test";
-import { createMounts, matchMount } from "./api.ts";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { BUNDLED_IDS } from "../plugins/bundled.ts";
+import { matchMount, TRUNK_MOUNTS } from "./api.ts";
 import { fromNodeRequest, serveNode } from "./node.ts";
+import { BUNDLED_HANDLERS } from "./pluginHandlers.ts";
+import { createRegistry, loadPlugins } from "./registry.ts";
 import { context, tempTree } from "./testkit.ts";
 
+const PLUGINS = resolve(dirname(fileURLToPath(import.meta.url)), "../plugins");
+
 describe("mounts", () => {
-  const mounts = createMounts(context(tempTree()));
+  const { plugins } = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
+  const mounts = createRegistry({ ctx: context(tempTree()), trunk: TRUNK_MOUNTS, plugins, factories: BUNDLED_HANDLERS }).all;
 
   test("the four endpoints and which need the dev-server token", () => {
     assert.deepEqual(
       mounts.map((m) => [m.prefix, m.token]),
       [
         ["/api/skill/toggle", false],
-        ["/api/paper-wiki/status", false],
         ["/api/paper-sources", true],
         ["/api/chat", true],
+        ["/api/paper-wiki/status", false],
       ],
     );
   });

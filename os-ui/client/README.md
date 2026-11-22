@@ -90,8 +90,11 @@ installers can only be built on their own OS.
 
 `npm run build` writes `out/`: the os-ui frontend build (`out/renderer/`), the
 main process (`out/main.cjs`, bundled with the shared endpoints in
-[../frontend/server](../frontend/server/)), the preload, and the icon from
-[docs/brand](../../docs/brand/README.md).
+[../frontend/server](../frontend/server/)), the preload, each bundled plugin's
+manifest from [../frontend/plugins](../frontend/plugins/) (`out/plugins/`;
+the build fails if one is missing), and the icon from
+[docs/brand](../../docs/brand/README.md). At start the app logs the plugins
+it loaded (`plugins: paper-wiki`) and any it could not, as `ERROR` lines.
 
 Useful variables:
 

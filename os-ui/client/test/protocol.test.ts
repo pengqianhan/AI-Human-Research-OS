@@ -3,9 +3,39 @@ import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 import { basename, join } from "node:path";
 import { describe, test } from "node:test";
+import { BUNDLED_IDS } from "../../frontend/plugins/bundled.ts";
+import { TRUNK_MOUNTS } from "../../frontend/server/api.ts";
 import type { Mount } from "../../frontend/server/api.ts";
-import { createHandler, CSP, isInside, route, safeRelative, splitMounts, WIKI_CSP } from "../src/main/protocol.ts";
+import type { PluginManifest } from "../../frontend/server/manifest.ts";
+import { BUNDLED_HANDLERS } from "../../frontend/server/pluginHandlers.ts";
+import { createRegistry, loadPlugins } from "../../frontend/server/registry.ts";
+import type { HandlerFactory, LoadedPlugin, Registry } from "../../frontend/server/registry.ts";
+import { context, fakeRunner } from "../../frontend/server/testkit.ts";
+import {
+  allowedNavigation,
+  appCsp,
+  createHandler,
+  isInside,
+  PLUGIN_CSP,
+  pluginSites,
+  route,
+  safeRelative,
+  workspaceRegistry,
+  WORKSPACE_CSP,
+} from "../src/main/protocol.ts";
 import { tempTree } from "./helpers.ts";
+
+/** The bundled plugins, from the real os-ui/frontend/plugins folder, as the client loads them at startup. */
+const PLUGINS = join(import.meta.dirname, "..", "..", "frontend", "plugins");
+const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
+const sites = pluginSites(bundled.plugins);
+const CSP = appCsp(["paper-wiki"]);
+
+/** A registry as createRegistry builds it, from mounts the tests make. */
+function registryOf(app: Mount[], byPlugin: Record<string, Mount[]>): Registry {
+  const map = new Map(Object.entries(byPlugin));
+  return { plugins: [], app, byPlugin: map, all: [...app, ...[...map.values()].flat()] };
+}
 
 const renderer = tempTree({ "index.html": "<html>app</html>", "assets/app.js": "console.log(1)", "favicon.svg": "<svg/>" });
 const workspace = tempTree({
@@ -62,41 +92,202 @@ describe("isInside", () => {
   });
 });
 
+/**
+ * A second bundled plugin, fake, whose site is the site/ folder beside its
+ * plugin.json. The api/ and _os/ files exist so that refusing them is shown.
+ */
+const demoRoot = tempTree({
+  "demo/plugin.json": JSON.stringify({
+    contract: "^1.0",
+    id: "demo",
+    name: "Demo",
+    version: "1",
+    contributes: { projectViews: [{ id: "main", title: "Demo", entry: "index.html" }], handlers: ["echo"] },
+  }),
+  "demo/site/index.html": "<html>demo</html>",
+  "demo/site/app.js": "console.log('demo')",
+  "demo/site/img/logo.svg": "<svg xmlns='http://www.w3.org/2000/svg'><script>parent.postMessage(1, '*')</script></svg>",
+  "demo/site/api/x.txt": "api",
+  "demo/site/_os/x.txt": "os",
+  "demo/secret.txt": "SECRET",
+});
+const demo = loadPlugins(demoRoot, ["demo"], "bundled", { trunk: TRUNK_MOUNTS, plugins: bundled.plugins });
+const twoSites = pluginSites([...bundled.plugins, ...demo.plugins]);
+const demoSite = join(demoRoot, "demo", "site");
+
+describe("plugin sites", () => {
+  test("the bundled plugins load, and Paper Wiki serves its workspace folder", () => {
+    assert.deepEqual(bundled.problems, []);
+    assert.deepEqual([...sites.keys()], [...BUNDLED_IDS]);
+    assert.deepEqual(sites.get("paper-wiki"), { id: "paper-wiki", source: "bundled", reads: [], files: { kind: "workspace", rel: "paper-wiki" } });
+  });
+
+  test("any other plugin serves the site/ folder beside its plugin.json, in load order", () => {
+    assert.deepEqual(demo.problems, []);
+    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "demo"]);
+    assert.deepEqual(twoSites.get("demo"), { id: "demo", source: "bundled", reads: [], files: { kind: "plugin", dir: demoSite } });
+  });
+
+  test("reads are carried over; a workspace folder is for a bundled plugin only", () => {
+    const manifest: PluginManifest = {
+      contract: "^1.0",
+      id: "viewer",
+      name: "Viewer",
+      version: "1",
+      site: { workspace: "projects-folder" },
+      reads: ["projects-folder/*/Code"],
+      contributes: {},
+    };
+    const plugin = (source: LoadedPlugin["source"]): LoadedPlugin => ({ manifest, source, dir: join(demoRoot, "viewer") });
+    assert.deepEqual(pluginSites([plugin("bundled")]).get("viewer"), {
+      id: "viewer",
+      source: "bundled",
+      reads: ["projects-folder/*/Code"],
+      files: { kind: "workspace", rel: "projects-folder" },
+    });
+    // The parser refuses `site` from a local plugin; a list built some other way still gets no workspace folder.
+    const local = pluginSites([plugin("local")]).get("viewer");
+    assert.deepEqual([local?.source, local?.files], ["local", { kind: "plugin", dir: join(demoRoot, "viewer", "site") }]);
+  });
+});
+
+describe("workspaceRegistry", () => {
+  const ctx = context(tempTree());
+  const trunk = TRUNK_MOUNTS.map((t) => [t.prefix, t.token]);
+  const flags = (mounts: readonly Mount[]) => mounts.map((m) => [m.prefix, m.token]);
+  const build = (plugins: readonly LoadedPlugin[], factories: Record<string, HandlerFactory>) => {
+    const problems: string[] = [];
+    return { registry: workspaceRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins, factories }, (p) => problems.push(p)), problems };
+  };
+
+  test("no drift: every endpoint, nothing reported", () => {
+    const { registry, problems } = build(bundled.plugins, BUNDLED_HANDLERS);
+    assert.deepEqual(problems, []);
+    assert.deepEqual(flags(registry.app), trunk);
+    assert.deepEqual(flags(registry.byPlugin.get("paper-wiki")!), [["/api/paper-wiki/status", false]]);
+  });
+
+  test("drift either way is reported once and leaves the trunk's endpoints alone", () => {
+    for (const [plugins, factories, message] of [
+      [bundled.plugins, {}, /paper-wiki\/status is declared but has no factory/],
+      [[], BUNDLED_HANDLERS, /paper-wiki\/status has a factory but no bundled plugin declares it/],
+    ] as const) {
+      const { registry, problems } = build(plugins, factories);
+      assert.equal(problems.length, 1, problems.join("\n"));
+      assert.match(problems[0]!, message);
+      assert.deepEqual(flags(registry.app), trunk);
+      assert.deepEqual(flags(registry.all), trunk);
+      assert.equal(registry.byPlugin.size, 0);
+    }
+  });
+});
+
+describe("policies", () => {
+  test("the app policy frames exactly the loaded plugins' origins", () => {
+    assert.equal(
+      appCsp(["paper-wiki"]),
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki; object-src 'none'; base-uri 'none'; form-action 'none'",
+    );
+    assert.match(appCsp(["paper-wiki", "demo"]), /; frame-src app:\/\/paper-wiki app:\/\/demo; /);
+    assert.match(appCsp(["demo", "paper-wiki"]), /; frame-src app:\/\/demo app:\/\/paper-wiki; /);
+    assert.match(appCsp([]), /; frame-src 'none'; /, "no plugin loaded: no frame at all");
+  });
+
+  test("app pages carry the policy for the sites the handler was given, in their order", () => {
+    const index = route("app://research-os/", { renderer, workspace }, twoSites);
+    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "demo"]));
+  });
+
+  test("a workspace site's policy, and a plugin-folder site's, which adds its own files", () => {
+    assert.equal(
+      WORKSPACE_CSP,
+      "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'",
+    );
+    assert.equal(
+      PLUGIN_CSP,
+      "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'",
+    );
+  });
+});
+
+describe("allowedNavigation", () => {
+  const hosts = ["paper-wiki"];
+  test("the top frame stays on the app's origin", () => {
+    assert.equal(allowedNavigation("app://research-os/", true, hosts), true);
+    assert.equal(allowedNavigation("app://research-os/projects/x", true, hosts), true);
+    for (const url of ["app://paper-wiki/viz.html", "app://research-os.evil/", "app://research-osx/", "about:blank", "https://example.com/"]) {
+      assert.equal(allowedNavigation(url, true, hosts), false, url);
+    }
+  });
+
+  test("a subframe loads a loaded plugin's origin or a blank document, nothing else", () => {
+    for (const url of ["app://paper-wiki/viz.html", "app://paper-wiki/", "about:blank", "about:srcdoc"]) {
+      assert.equal(allowedNavigation(url, false, hosts), true, url);
+    }
+    for (const url of [
+      "app://research-os/",
+      "app://demo/index.html",
+      "app://evil/",
+      "app://paper-wiki.evil/",
+      "app://paper-wikix/",
+      "app://paper-wiki",
+      "https://example.com/",
+      "about:blankx",
+    ]) {
+      assert.equal(allowedNavigation(url, false, hosts), false, url);
+    }
+    assert.equal(allowedNavigation("app://demo/index.html", false, ["paper-wiki", "demo"]), true, "once loaded");
+    assert.equal(allowedNavigation("app://paper-wiki/viz.html", false, []), false, "no plugin loaded");
+  });
+});
+
 describe("route", () => {
   const roots = { renderer, workspace };
   test("app origin", () => {
-    assert.deepEqual(route("app://research-os/api/chat/sessions?cwd=", roots), { kind: "api", pathname: "/api/chat/sessions", mounts: "app" });
-    assert.equal(route("app://research-os/state.json", roots).kind, "file");
-    const index = route("app://research-os/", roots);
+    assert.deepEqual(route("app://research-os/api/chat/sessions?cwd=", roots, sites), { kind: "api", pathname: "/api/chat/sessions", host: "research-os" });
+    assert.equal(route("app://research-os/state.json", roots, sites).kind, "file");
+    const index = route("app://research-os/", roots, sites);
     assert.ok(index.kind === "file" && index.rel === "index.html" && index.csp === CSP && !index.confined);
-    const deep = route("app://research-os/projects/nanochat", roots);
+    const deep = route("app://research-os/projects/nanochat", roots, sites);
     assert.ok(deep.kind === "file" && deep.fallback === "index.html");
-    const asset = route("app://research-os/assets/app.js", roots);
+    const asset = route("app://research-os/assets/app.js", roots, sites);
     assert.ok(asset.kind === "file" && asset.fallback === null);
   });
   test("the app origin does not serve the wiki or workspace files", () => {
-    const r = route("app://research-os/paper-wiki/viz.html", roots);
+    const r = route("app://research-os/paper-wiki/viz.html", roots, sites);
     assert.ok(r.kind === "file" && r.root === renderer, "falls to the renderer, which has no such file");
-    assert.equal(route("app://research-os/..%2f.env", roots).kind, "not-found");
+    assert.equal(route("app://research-os/..%2f.env", roots, sites).kind, "not-found");
   });
   test("wiki origin", () => {
-    const viz = route("app://paper-wiki/viz.html", roots);
-    assert.ok(viz.kind === "file" && viz.csp === WIKI_CSP && viz.confined && viz.root === join(workspace, "paper-wiki"));
-    const fig = route("app://paper-wiki/figures/fig.svg", roots);
-    assert.ok(fig.kind === "file" && fig.csp === WIKI_CSP);
-    assert.deepEqual(route("app://paper-wiki/api/paper-wiki/status", roots), { kind: "api", pathname: "/api/paper-wiki/status", mounts: "wiki" });
-    assert.equal(route("app://paper-wiki/api/chat/send", roots).kind, "not-found");
-    assert.equal(route("app://paper-wiki/", roots).kind, "not-found");
+    const viz = route("app://paper-wiki/viz.html", roots, sites);
+    assert.ok(viz.kind === "file" && viz.csp === WORKSPACE_CSP && viz.confined && viz.root === join(workspace, "paper-wiki"));
+    const fig = route("app://paper-wiki/figures/fig.svg", roots, sites);
+    assert.ok(fig.kind === "file" && fig.csp === WORKSPACE_CSP);
+    assert.deepEqual(route("app://paper-wiki/api/paper-wiki/status", roots, sites), { kind: "api", pathname: "/api/paper-wiki/status", host: "paper-wiki" });
+    assert.equal(route("app://paper-wiki/api/chat/send", roots, sites).kind, "not-found");
+    assert.equal(route("app://paper-wiki/", roots, sites).kind, "not-found");
   });
   test("no workspace: no state, no wiki", () => {
     const none = { renderer, workspace: null };
-    assert.equal(route("app://research-os/state.json", none).kind, "not-found");
-    assert.equal(route("app://paper-wiki/viz.html", none).kind, "not-found");
+    assert.equal(route("app://research-os/state.json", none, sites).kind, "not-found");
+    assert.equal(route("app://paper-wiki/viz.html", none, sites).kind, "not-found");
   });
   test("other hosts and schemes", () => {
-    assert.equal(route("app://evil/state.json", roots).kind, "not-found");
-    assert.equal(route("https://research-os/state.json", roots).kind, "not-found");
-    assert.equal(route("not a url", roots).kind, "not-found");
+    assert.equal(route("app://evil/state.json", roots, sites).kind, "not-found");
+    assert.equal(route("https://research-os/state.json", roots, sites).kind, "not-found");
+    assert.equal(route("not a url", roots, sites).kind, "not-found");
+  });
+  test("a host with a port or in upper case is no loaded plugin's", () => {
+    for (const url of [
+      "app://paper-wiki:80/viz.html",
+      "app://paper-wiki:80/api/paper-wiki/status",
+      "app://PAPER-WIKI/viz.html",
+      "app://Paper-Wiki/api/paper-wiki/status",
+      "app://RESEARCH-OS/state.json",
+      "app://research-os:443/state.json",
+    ]) {
+      assert.equal(route(url, roots, sites).kind, "not-found", url);
+    }
   });
 });
 
@@ -111,13 +302,10 @@ describe("handler", () => {
       return { status: 200, body: { prefix, path: req.path, q: req.query.get("q") } };
     },
   });
-  const mounts = splitMounts([
-    mount("/api/skill/toggle", false),
-    mount("/api/paper-wiki/status", false),
-    mount("/api/paper-sources", true),
-    mount("/api/chat", true),
-  ]);
-  const handler = createHandler(() => ({ renderer, workspace, mounts, token: "t0k" }));
+  const registry = registryOf([mount("/api/skill/toggle", false), mount("/api/paper-sources", true), mount("/api/chat", true)], {
+    "paper-wiki": [mount("/api/paper-wiki/status", false)],
+  });
+  const handler = createHandler(() => ({ renderer, workspace, sites, registry, token: "t0k" }));
   const fetchApp = (url: string, init?: RequestInit) => handler(new Request(url, init));
   const json = (body: unknown, token?: string): RequestInit => ({
     method: "POST",
@@ -142,12 +330,12 @@ describe("handler", () => {
     assert.equal(await (await fetchApp("app://research-os/state.json")).text(), '{"meta":{}}');
     const viz = await fetchApp("app://paper-wiki/viz.html");
     assert.equal(await viz.text(), "<html>viz</html>");
-    assert.equal(viz.headers.get("content-security-policy"), WIKI_CSP);
+    assert.equal(viz.headers.get("content-security-policy"), WORKSPACE_CSP);
     const note = await fetchApp("app://paper-wiki/papers/a.md");
     assert.equal(note.headers.get("content-type"), "text/plain; charset=utf-8");
     const svg = await fetchApp("app://paper-wiki/figures/fig.svg");
     assert.equal(svg.headers.get("content-type"), "image/svg+xml");
-    assert.equal(svg.headers.get("content-security-policy"), WIKI_CSP, "an SVG is a document too");
+    assert.equal(svg.headers.get("content-security-policy"), WORKSPACE_CSP, "an SVG is a document too");
   });
 
   test("nothing outside the served folders, through traversal or symlinks", async () => {
@@ -207,16 +395,270 @@ describe("handler", () => {
   });
 
   test("API: no workspace is a 503; a throwing handler is a 500", async () => {
-    const empty = createHandler(() => ({ renderer, workspace: null, mounts: null, token: "t" }));
+    const empty = createHandler(() => ({ renderer, workspace: null, sites, registry: null, token: "t" }));
     assert.equal((await empty(new Request("app://research-os/api/chat/sessions"))).status, 503);
     const throwing = createHandler(() => ({
       renderer,
       workspace,
+      sites,
       token: "t",
-      mounts: splitMounts([{ prefix: "/api/skill/toggle", token: false, handler: async () => { throw new Error("boom"); } }]),
+      registry: registryOf([{ prefix: "/api/skill/toggle", token: false, handler: async () => { throw new Error("boom"); } }], {}),
     }));
     const res = await throwing(new Request("app://research-os/api/skill/toggle", json({})));
     assert.equal(res.status, 500);
     assert.deepEqual(await res.json(), { error: "boom" });
+  });
+
+  describe("plugin origins", () => {
+    const both = registryOf([mount("/api/skill/toggle", false), mount("/api/paper-sources", true), mount("/api/chat", true)], {
+      "paper-wiki": [mount("/api/paper-wiki/status", false)],
+      demo: [mount("/api/demo/echo", false)],
+    });
+    const two = createHandler(() => ({ renderer, workspace, sites: twoSites, registry: both, token: "t0k" }));
+    const fetchTwo = (url: string, init?: RequestInit) => two(new Request(url, init));
+
+    test("a second plugin reaches its own endpoints, not the first plugin's or the app's", async () => {
+      calls.length = 0;
+      const echo = await fetchTwo("app://demo/api/demo/echo?q=2");
+      assert.deepEqual(await echo.json(), { prefix: "/api/demo/echo", path: "/", q: "2" });
+      for (const [url, init] of [
+        ["app://demo/api/paper-wiki/status", undefined],
+        ["app://demo/api/chat/sessions", { headers: { "X-OS-UI-Token": "t0k" } }],
+        ["app://demo/api/skill/toggle", json({ skill: "s" })],
+        ["app://paper-wiki/api/demo/echo", undefined],
+        ["app://research-os/api/demo/echo", undefined],
+      ] as const) {
+        assert.equal((await fetchTwo(url, init)).status, 404, url);
+      }
+      assert.deepEqual(calls.map((c) => c.mount), ["/api/demo/echo"], "only the plugin's own handler ran");
+    });
+
+    test("a plugin origin is given its own entry only, never the app's list or the whole registry", async () => {
+      calls.length = 0;
+      // A mount below /api/demo/ that the app's list, and so `all`, holds but demo's own entry does not.
+      const stray = registryOf([mount("/api/demo/secret", false)], { demo: [mount("/api/demo/echo", false)] });
+      const handler = createHandler(() => ({ renderer, workspace, sites: twoSites, registry: stray, token: "t0k" }));
+      assert.equal((await handler(new Request("app://demo/api/demo/secret"))).status, 404);
+      assert.equal((await handler(new Request("app://demo/api/demo/echo"))).status, 200);
+      assert.deepEqual(calls.map((c) => c.mount), ["/api/demo/echo"]);
+    });
+
+    test("a plugin with no entry in the registry has no endpoints, not the app's", async () => {
+      calls.length = 0;
+      const none = registryOf([mount("/api/demo/secret", false), mount("/api/chat", false)], {});
+      const handler = createHandler(() => ({ renderer, workspace, sites: twoSites, registry: none, token: "t0k" }));
+      for (const url of ["app://demo/api/demo/secret", "app://demo/api/demo/echo"]) {
+        assert.equal((await handler(new Request(url))).status, 404, url);
+      }
+      assert.equal(calls.length, 0);
+    });
+
+    test("/api/<id> is matched at a segment boundary, so demo and demo-x stay apart", () => {
+      const demoX: LoadedPlugin = {
+        manifest: { contract: "^1.0", id: "demo-x", name: "Demo X", version: "1", contributes: { handlers: ["h"] } },
+        source: "bundled",
+        dir: join(demoRoot, "demo-x"),
+      };
+      const three = pluginSites([...bundled.plugins, ...demo.plugins, demoX]);
+      const roots = { renderer, workspace };
+      assert.equal(route("app://demo/api/demo-x/h", roots, three).kind, "not-found");
+      assert.equal(route("app://demo-x/api/demo/h", roots, three).kind, "not-found");
+      assert.equal(route("app://demo/api/demox", roots, three).kind, "not-found");
+      assert.deepEqual(route("app://demo-x/api/demo-x/h", roots, three), { kind: "api", pathname: "/api/demo-x/h", host: "demo-x" });
+      assert.deepEqual(route("app://demo/api/demo/h", roots, three), { kind: "api", pathname: "/api/demo/h", host: "demo" });
+    });
+
+    test("a plugin's own /api/<id>/ is the API; any other api/ path is no file and no endpoint", async () => {
+      // Under its own prefix, a path no handler serves gets the API's answer.
+      const other = await fetchTwo("app://paper-wiki/api/paper-wiki/other");
+      assert.equal(other.status, 404);
+      assert.deepEqual(await other.json(), { error: "no endpoint /api/paper-wiki/other" });
+      assert.equal(route("app://paper-wiki/api/paper-wiki", { renderer, workspace }, sites).kind, "api");
+      // Anywhere else below api/, the plain not-found of a missing file, whatever the workspace holds.
+      mkdirSync(join(workspace, "paper-wiki", "api"), { recursive: true });
+      writeFileSync(join(workspace, "paper-wiki", "api", "x.txt"), "api");
+      for (const url of ["app://paper-wiki/api", "app://paper-wiki/api/", "app://paper-wiki/api/x.txt", "app://demo/api/x.txt", "app://demo/api//demo/echo"]) {
+        const res = await fetchTwo(url);
+        assert.equal(res.status, 404, url);
+        assert.equal(await res.text(), "Not found", url);
+      }
+    });
+
+    test("_os/ is kept for the read channel: 404 on every plugin origin, even where such a file exists", async () => {
+      mkdirSync(join(workspace, "paper-wiki", "_os", "files"), { recursive: true });
+      writeFileSync(join(workspace, "paper-wiki", "_os", "x.txt"), "os");
+      writeFileSync(join(workspace, "paper-wiki", "_os", "files", "a.md"), "os");
+      for (const url of [
+        "app://paper-wiki/_os",
+        "app://paper-wiki/_os/",
+        "app://paper-wiki/_os/x.txt",
+        "app://paper-wiki/_os/files/a.md",
+        "app://paper-wiki/_os/files/papers/a.md",
+        "app://paper-wiki/_os/list/papers",
+        "app://demo/_os/x.txt",
+        "app://demo/_os/files/index.html",
+      ]) {
+        assert.equal((await fetchTwo(url)).status, 404, url);
+      }
+      assert.equal(route("app://paper-wiki/_os/files/papers/a.md", { renderer, workspace }, sites).kind, "not-found");
+    });
+
+    test("reserved paths are reserved in any case, and with a trailing dot or space, on both kinds of site", async () => {
+      // Real files under api/ and _os/, which a case-insensitive file system would find by any spelling.
+      for (const dir of [join(workspace, "paper-wiki"), demoSite]) {
+        for (const sub of ["api", "_os"]) {
+          mkdirSync(join(dir, sub), { recursive: true });
+          writeFileSync(join(dir, sub, "x.txt"), sub);
+        }
+      }
+      writeFileSync(join(workspace, "paper-wiki", "apiary.md"), "a note");
+      for (const host of ["paper-wiki", "demo"]) {
+        for (const rel of ["API/x.txt", "Api", "Api/x.txt", "_OS/x.txt", "_Os", "_oS/x.txt", "api./x.txt", "api%20/x.txt", "_os./x.txt", "API%2E/x.txt"]) {
+          const url = `app://${host}/${rel}`;
+          assert.equal(route(url, { renderer, workspace }, twoSites).kind, "not-found", url);
+          assert.equal((await fetchTwo(url)).status, 404, url);
+        }
+      }
+      assert.equal((await fetchTwo("app://paper-wiki/apiary.md")).status, 200, "a name that merely starts with api is a file");
+    });
+
+    test("a host that is not a loaded plugin is not found, files and endpoints alike", async () => {
+      for (const url of ["app://code-view/index.html", "app://code-view/api/code-view/x", "app://demo/index.html"]) {
+        assert.equal(route(url, { renderer, workspace }, sites).kind, "not-found", url);
+        assert.equal((await fetchApp(url)).status, 404, url);
+      }
+    });
+
+    test("no workspace: a plugin's endpoints are a 503, other api/ paths stay not found", async () => {
+      const closed = createHandler(() => ({ renderer, workspace: null, sites: twoSites, registry: null, token: "t" }));
+      const statusOf = async (url: string) => (await closed(new Request(url))).status;
+      assert.equal(await statusOf("app://paper-wiki/api/paper-wiki/status"), 503);
+      assert.equal(await statusOf("app://paper-wiki/api/paper-wiki/other"), 503);
+      assert.equal(await statusOf("app://demo/api/demo/echo"), 503);
+      assert.equal(await statusOf("app://paper-wiki/api/chat/sessions"), 404);
+      assert.equal(await statusOf("app://paper-wiki/viz.html"), 404);
+    });
+
+    describe("a site in its plugin folder", () => {
+      test("a bundled plugin's is confined lexically to site/ (it may sit in the asar), with the plugin policy", () => {
+        const page = route("app://demo/index.html", { renderer, workspace }, twoSites);
+        assert.deepEqual(page, { kind: "file", root: demoSite, rel: "index.html", fallback: null, csp: PLUGIN_CSP, confined: false });
+        assert.equal(route("app://demo/", { renderer, workspace }, twoSites).kind, "not-found", "no index fallback");
+      });
+
+      test("carries the policy on every response, not only HTML", async () => {
+        for (const [url, type] of [
+          ["app://demo/index.html", "text/html; charset=utf-8"],
+          ["app://demo/app.js", "text/javascript; charset=utf-8"],
+          ["app://demo/img/logo.svg", "image/svg+xml"],
+        ] as const) {
+          const res = await fetchTwo(url);
+          assert.equal(res.status, 200, url);
+          assert.equal(res.headers.get("content-type"), type, url);
+          assert.equal(res.headers.get("content-security-policy"), PLUGIN_CSP, url);
+          assert.equal(res.headers.get("x-content-type-options"), "nosniff", url);
+        }
+        assert.equal(await (await fetchTwo("app://demo/index.html")).text(), "<html>demo</html>");
+      });
+
+      test("refuses traversal out of site/ and serves no folder", async () => {
+        for (const url of [
+          "app://demo/..%2fplugin.json",
+          "app://demo/..%2fsecret.txt",
+          "app://demo/%2e%2e/secret.txt",
+          "app://demo/%2e%2e%2fsecret.txt",
+          "app://demo/..%5csecret.txt",
+          "app://demo/img/..%2f..%2fsecret.txt",
+          "app://demo/../secret.txt",
+          "app://demo/secret.txt",
+          "app://demo/plugin.json",
+          "app://demo/img",
+        ]) {
+          const res = await fetchTwo(url);
+          assert.equal(res.status, 404, url);
+          assert.ok(!(await res.text()).includes("SECRET"), url);
+        }
+      });
+
+      test("is the app's own files, so it needs no workspace; files are read-only", async () => {
+        const closed = createHandler(() => ({ renderer, workspace: null, sites: twoSites, registry: null, token: "t" }));
+        const res = await closed(new Request("app://demo/index.html"));
+        assert.equal(res.status, 200);
+        assert.equal(res.headers.get("content-security-policy"), PLUGIN_CSP);
+        assert.equal((await fetchTwo("app://demo/index.html", { method: "POST", body: "{}", headers: { "Content-Type": "application/json" } })).status, 405);
+      });
+
+      test("any other plugin's is confined by real path: a link out of site/ is not followed", async () => {
+        const root = tempTree({
+          "loc/plugin.json": JSON.stringify({
+            contract: "^1.0",
+            id: "loc",
+            name: "Local",
+            version: "1",
+            contributes: { projectViews: [{ id: "main", title: "Local", entry: "index.html" }] },
+          }),
+          "loc/site/index.html": "<html>local</html>",
+          "outside/secret.txt": "SECRET",
+        });
+        const site = join(root, "loc", "site");
+        symlinkSync(join(root, "outside"), join(site, "dirlink"), process.platform === "win32" ? "junction" : "dir");
+        const links = ["app://loc/dirlink/secret.txt"];
+        try {
+          symlinkSync(join(root, "outside", "secret.txt"), join(site, "leak.txt"));
+          links.push("app://loc/leak.txt");
+        } catch (error) {
+          // Windows without the symlink privilege: the junction above still covers escapes.
+          if ((error as NodeJS.ErrnoException).code !== "EPERM") throw error;
+        }
+        const local = loadPlugins(root, ["loc"], "local", { trunk: TRUNK_MOUNTS, plugins: bundled.plugins });
+        assert.deepEqual(local.problems, []);
+        const withLocal = pluginSites([...bundled.plugins, ...local.plugins]);
+        const page = route("app://loc/index.html", { renderer, workspace }, withLocal);
+        assert.deepEqual(page, { kind: "file", root: site, rel: "index.html", fallback: null, csp: PLUGIN_CSP, confined: true });
+
+        const handler = createHandler(() => ({ renderer, workspace, sites: withLocal, registry: null, token: "t" }));
+        const ok = await handler(new Request("app://loc/index.html"));
+        assert.equal(ok.status, 200);
+        assert.equal(await ok.text(), "<html>local</html>");
+        assert.equal(ok.headers.get("content-security-policy"), PLUGIN_CSP);
+        for (const url of links) {
+          const res = await handler(new Request(url));
+          assert.equal(res.status, 404, url);
+          assert.ok(!(await res.text()).includes("SECRET"), url);
+        }
+      });
+    });
+  });
+});
+
+describe("the real bundled plugins, registry, and handler together", () => {
+  // The same join the client makes: loadPlugins at start, createRegistry per workspace, one handler.
+  const ws = tempTree({ "AGENTS.md": "agents", "paper-wiki/viz.html": "<html>viz</html>" });
+  const runner = fakeRunner();
+  const registry = createRegistry({ ctx: context(ws, { run: runner.run }), trunk: TRUNK_MOUNTS, plugins: bundled.plugins, factories: BUNDLED_HANDLERS });
+  const handler = createHandler(() => ({ renderer, workspace: ws, sites, registry, token: "t0k" }));
+  const fetchReal = (url: string, init?: RequestInit) => handler(new Request(url, init));
+
+  test("Paper Wiki's origin reaches its status endpoint and nothing of the trunk's", async () => {
+    const status = await fetchReal("app://paper-wiki/api/paper-wiki/status");
+    assert.equal(status.status, 200);
+    assert.deepEqual(await status.json(), { writable: true, values: ["unread", "skimmed", "read"] });
+    for (const [url, init] of [
+      ["app://paper-wiki/api/chat/sessions", { headers: { "X-OS-UI-Token": "t0k" } }],
+      ["app://paper-wiki/api/skill/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"skill":"s"}' }],
+    ] as const) {
+      const res = await fetchReal(url, init);
+      assert.equal(res.status, 404, url);
+      assert.equal(await res.text(), "Not found", `${url} reached no handler`);
+    }
+    assert.equal(runner.calls.length, 0, "no handler ran a command");
+  });
+
+  test("the app's origin reaches the trunk, and not Paper Wiki's status", async () => {
+    const here = await fetchReal("app://research-os/api/paper-wiki/status");
+    assert.equal(here.status, 404);
+    assert.deepEqual(await here.json(), { error: "no endpoint /api/paper-wiki/status" });
+    const sessions = await fetchReal("app://research-os/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": "t0k" } });
+    assert.equal(sessions.status, 200);
   });
 });

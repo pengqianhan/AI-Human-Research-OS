@@ -1,6 +1,6 @@
 # Research OS UI
 
-Read-only browser interface for observing Research OS state.
+Research OS interface: the read-only browser view, the desktop client, and its plugins.
 
 * [README.md](README.md) - Purpose, launch commands, architecture, and follow-up queue.
 * [DESIGN.md](DESIGN.md) - Settled interaction and visual design decisions.
