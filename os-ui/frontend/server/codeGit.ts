@@ -1,13 +1,12 @@
-import { lstatSync, readdirSync, realpathSync } from "node:fs";
-import type { Stats } from "node:fs";
-import { devNull } from "node:os";
-import { join, sep } from "node:path";
+import { lstatSync, opendirSync, realpathSync } from "node:fs";
+import type { Dirent, Stats } from "node:fs";
+import { isAbsolute, join, sep } from "node:path";
 import { resolveCwd } from "./chat.ts";
 import { safeDecodedRelative } from "./manifest.ts";
 import { errorText, failureText } from "./process.ts";
 import type { HandlerFactory } from "./registry.ts";
 import { json } from "./types.ts";
-import type { ApiContext, ApiHandler, ApiResponse, RunResult } from "./types.ts";
+import type { ApiContext, ApiHandler, ApiResponse, RunOptions, RunResult } from "./types.ts";
 
 /**
  * The Code view's Git data (os-ui/PLUGINS.md, Part 2, Gap 1): one project's
@@ -22,18 +21,28 @@ import type { ApiContext, ApiHandler, ApiResponse, RunResult } from "./types.ts"
  *
  * The query string is untrusted, and so is the repository: a workspace can be
  * a copied folder or written by an agent, so its .git (layout and config) and
- * the user's environment may be hostile or just unusual. Two properties hold
- * whatever they say, each pinned by codeGit.test.ts:
+ * the user's environment may be hostile or just unusual. What holds whatever
+ * they say, each part pinned by codeGit.test.ts:
  *
- * 1. Only git runs, with no network. Git is run as an argument list (no
- *    shell) with the guards below; the table at the end of this file accounts
- *    for every `git help config` key that names a command, program, helper,
+ * 1. Only the git found in an absolute PATH entry runs (never one in the
+ *    workspace), as an argument list with no shell, and with no network: the
+ *    guards below, and the table at the end of this file, which accounts for
+ *    every `git help config` key that names a command, program, helper,
  *    hook, filter, or driver.
- * 2. Read-only and confined. The repository is a plain .git folder inside the
- *    workspace that keeps its objects to itself (`refusal`), every diff
- *    compares two committed trees, nothing in the working tree is read
- *    (attributes come from the commit; .mailmap and .gitmodules are not
- *    opened), and no command writes to .git.
+ * 2. Nothing Git writes reaches the caller: every failure is a fixed text
+ *    naming the step, and Git's stderr goes to the server's log only.
+ * 3. Read-only and confined. The repository is a plain .git folder inside
+ *    the workspace (`refusal`): the files Git reads there by name are plain
+ *    files of bounded size, nothing under refs/ or among the objects is a
+ *    link, and it borrows no objects (no alternates, no commondir). Every
+ *    diff compares two committed trees of HEAD's history; .gitattributes,
+ *    .mailmap and .gitmodules in the working tree are not opened, nor are
+ *    files that the config names (diff.orderFile, core.attributesFile,
+ *    mailmap.file, info/grafts), except include.path, which is more config
+ *    under the same guards; no command writes to .git.
+ * 4. Bounded work: at most four git processes per workspace at once, each
+ *    with 10 s, an output cap, and blobs over 4 MiB treated as binary. What
+ *    is not bounded is listed in PLUGINS.md and at the end of this file.
  */
 
 export interface Source {
@@ -58,6 +67,7 @@ export interface Summary extends Source {
 
 export interface LogCommit {
   hash: string;
+  /** The first 7 hex digits of `hash`, for display; not necessarily unique. */
   short: string;
   /** Committer date, YYYY-MM-DD. */
   date: string;
@@ -70,7 +80,7 @@ export interface LogCommit {
 
 export interface Log extends Source {
   commits: LogCommit[];
-  /** Whether a request with `skip` + commits.length may find more. */
+  /** Whether a request with `skip` + commits.length may find more (false once that skip would pass 10000). */
   more: boolean;
 }
 
@@ -79,7 +89,7 @@ export interface FileChange {
   path: string;
   /** A added, D deleted, M modified, T type changed. Renames are never detected: a moved file is a D and an A. */
   status: string;
-  /** null for a binary file. */
+  /** null for a binary file, which includes any file over 4 MiB. */
   added: number | null;
   deleted: number | null;
   /** A binary file's blob sizes in bytes, 0 for the side that does not exist ("Bin 0 → 140601 bytes"); null for a text file, or when a blob is missing. */
@@ -114,8 +124,14 @@ export interface Diff extends Source {
 /** Git 2.45.0 added --no-lazy-fetch (Documentation/RelNotes/2.45.0); every other option used here is older. */
 export const MIN_GIT = [2, 45] as const;
 
+/**
+ * The null device as Git documents it for GIT_CONFIG_GLOBAL. Git for Windows
+ * maps this literal name in its open() and fopen(), and Node's os.devNull
+ * ("\\.\nul" there) it does not, so the literal is used on every platform.
+ */
+const DEV_NULL = "/dev/null";
+
 const NAME = /^[A-Za-z][A-Za-z0-9_-]*$/; // a project folder name, as chat.ts's PROJECT_DIR
-const HASH = /^[0-9a-f]{7,64}$/;
 const FULL = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 const SKIP = /^(?:0|[1-9][0-9]{0,4})$/;
 const MAX_SKIP = 10_000;
@@ -123,7 +139,11 @@ const MAX_PATH = 1000;
 const PAGE = 50;
 const TIMEOUT_MS = 10_000;
 const KIB = 1024;
-const CAP = { line: 4 * KIB, log: 256 * KIB, list: 512 * KIB, message: 64 * KIB, diff: 1024 * KIB };
+const MIB = 1024 * KIB;
+const CAP = { line: 4 * KIB, log: 256 * KIB, list: 512 * KIB, message: 64 * KIB, diff: 1024 * KIB, stderr: 16 * KIB };
+/** Git processes one handler runs at once, and requests that may wait for one; past both, a request is 503. */
+const MAX_GIT = 4;
+const MAX_WAITING = 16;
 const SHORTSTAT = /^ (\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?$/;
 const RAW = /^:(\d{6}) (\d{6}) ([0-9a-f]+) ([0-9a-f]+) ([A-Z])\d*$/;
 const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
@@ -135,21 +155,23 @@ const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
  *   overridden.
  * - --no-lazy-fetch: a partial clone's missing object fails instead of
  *   starting a fetch, which is where every transport setting (ssh commands,
- *   remote helpers, credential helpers, proxies) and the fetch's own hooks
- *   would run.
+ *   remote helpers, credential helpers, proxies) would run;
+ *   protocol.allow=never refuses every transport should a fetch start anyway.
  * - --no-replace-objects: a commit shows its own content, not a replacement's.
  * - --no-optional-locks: the documented switch for readers in the background.
  * - --literal-pathspecs: a path is a path; no globs, no magic.
  * - core.fsmonitor=false: a gitlink made show read the index, which started
  *   the configured monitor; --ignore-submodules=none (below) stops that read,
  *   so this one is kept for a Git that reads the index some other way.
- * - core.attributesFile=<null device>: no attributes from a file the
+ * - core.attributesFile=/dev/null: no attributes from a file the
  *   repository's config names anywhere (a FIFO there stalls every command).
+ * - core.bigFileThreshold=4m: a blob over 4 MiB is binary, so Git neither
+ *   loads nor diffs it (two 500 MB text blobs took 3.4 GB in log --shortstat).
  * - core.quotePath=false: names in diff headers stay readable.
  * Per command, --attr-source=<commit> reads .gitattributes from the commit
  * instead of the working tree.
  */
-function guardArgs(gitDir: string, top: string): string[] {
+export function guardArgs(gitDir: string, top: string): string[] {
   return [
     `--git-dir=${gitDir}`,
     `--work-tree=${top}`,
@@ -158,9 +180,13 @@ function guardArgs(gitDir: string, top: string): string[] {
     "--no-optional-locks",
     "--literal-pathspecs",
     "-c",
+    "protocol.allow=never",
+    "-c",
     "core.fsmonitor=false",
     "-c",
-    `core.attributesFile=${devNull}`,
+    `core.attributesFile=${DEV_NULL}`,
+    "-c",
+    "core.bigFileThreshold=4m",
     "-c",
     "core.quotePath=false",
   ];
@@ -174,7 +200,7 @@ const HISTORY = [
   "--submodule=short", // diff.submodule=log|diff would read the submodule's repository in the working tree
   "--ignore-submodules=none", // else the working tree's .gitmodules is read, and its `ignore` (or diff.ignoreSubmodules) hides gitlink changes
   "--no-use-mailmap", // %an is printed, but log.mailmap still reads .mailmap and mailmap.file (a FIFO there stalls every command)
-  `-O${devNull}`, // diff.orderFile names a file anywhere; a missing one fails every diff, a FIFO stalls it
+  `-O${DEV_NULL}`, // diff.orderFile names a file anywhere; a missing one fails every diff, a FIFO stalls it
   "--no-follow", // log.follow would follow a path out of the project (a file once renamed to the project's name)
   "--no-renames", // a moved file is a deletion and an addition, so -z output has one path per entry
   "--diff-merges=first-parent", // a merge is compared with its first parent, in the plain raw format
@@ -189,12 +215,13 @@ const HISTORY = [
  * The child's environment: the runner's own (PATH, HOME, ...) without any
  * GIT_* variable (GIT_DIR, GIT_EXTERNAL_DIFF, GIT_CONFIG_*, GIT_TRACE*,
  * GIT_ALTERNATE_OBJECT_DIRECTORIES, ...), case-insensitively as Windows
- * names them, and with the user's global and the system configuration not
- * read. trace2.*Target there writes trace files (Git 2.55 honoured it from
- * ~/.gitconfig and $XDG_CONFIG_HOME/git/config, not from the repository's
- * config, GIT_CONFIG_COUNT or GIT_CONFIG_PARAMETERS); every other key there
- * the repository's own config could set as well, so the guards above cover
- * it. The null device is the documented way to skip GIT_CONFIG_GLOBAL.
+ * names them, with the user's global and the system configuration not read,
+ * and with no grafts. trace2.*Target in global config writes trace files
+ * (Git 2.55 honoured it from ~/.gitconfig and $XDG_CONFIG_HOME/git/config,
+ * not from the repository's config, GIT_CONFIG_COUNT or
+ * GIT_CONFIG_PARAMETERS); every other key there the repository's own config
+ * could set as well, so the guards above cover it. GIT_GRAFT_FILE replaces
+ * info/grafts, which Git reads line by line and echoes back in its errors.
  */
 export function gitEnv(inherited: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
@@ -202,7 +229,8 @@ export function gitEnv(inherited: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     if (!/^git_/i.test(key)) env[key] = value;
   }
   env.GIT_CONFIG_NOSYSTEM = "1";
-  env.GIT_CONFIG_GLOBAL = devNull;
+  env.GIT_CONFIG_GLOBAL = DEV_NULL;
+  env.GIT_GRAFT_FILE = DEV_NULL;
   return env;
 }
 
@@ -219,7 +247,7 @@ export function openable(path: string): boolean {
     path.length <= MAX_PATH &&
     safeDecodedRelative(path) === path &&
     !path.split("/").some((s) => s.startsWith(".")) &&
-    !path.includes("�")
+    !path.includes("\uFFFD")
   );
 }
 
@@ -248,6 +276,19 @@ function one(query: URLSearchParams, name: string, required = true): string | nu
 
 const quoted = (text: string) => JSON.stringify(text.length > 100 ? `${text.slice(0, 100)}…` : text);
 
+/** Whether `dir` holds an entry spelled exactly `name`, among its first 10,000. */
+function hasEntry(dir: string, name: string): boolean {
+  const handle = opendirSync(dir);
+  try {
+    for (let i = 0, entry = handle.readSync(); entry !== null && i < 10_000; i++, entry = handle.readSync()) {
+      if (entry.name === name) return true;
+    }
+    return false;
+  } finally {
+    handle.closeSync();
+  }
+}
+
 function lstatOrNull(path: string): Stats | null {
   try {
     return lstatSync(path);
@@ -258,35 +299,153 @@ function lstatOrNull(path: string): Stats | null {
   }
 }
 
+/** Files Git reads by name in a .git folder, with the most each may hold. */
+const READ_FILES: readonly (readonly [string, number])[] = [
+  ["HEAD", 4 * KIB], // "ref: refs/heads/<name>" or a hash
+  ["config", MIB],
+  ["config.worktree", MIB],
+  ["packed-refs", 64 * MIB], // one line per ref; Git maps it
+  ["shallow", 16 * MIB], // one hash per line
+];
+/** A loose ref is a hash (41 or 65 bytes with its newline) or "ref: <name>". */
+const LOOSE_REF = 4 * KIB;
+/** Text lists: info/*, objects/info/packs, commit-graphs/commit-graph-chain. */
+const LIST_FILE = 16 * MIB;
+/** commit-graph files and reftable tables, which Git maps or reads in blocks. */
+const INDEX_FILE = 512 * MIB;
+/** Entries under refs/, reftable/ and objects/ that one check walks; past this it refuses rather than stall the server. */
+const MAX_ENTRIES = 100_000;
+
 /**
  * Why the repository at `gitDir` is not read, or null. It must be a plain
  * folder (not a link, and not a gitfile, which a linked worktree or a
- * submodule checkout uses to point elsewhere), with no link directly inside
- * it (objects, refs, config, HEAD, ...), no commondir (a linked worktree's
- * shared repository), and an object store of its own: no link among
- * objects/<xx>, objects/pack, or objects/info entries, and no
- * objects/info/alternates. Loose object files are not looked at one by one.
- * Lifting a refusal later means resolving the target and allowing it when
- * its real path lies inside the workspace.
+ * submodule checkout uses to point elsewhere) with:
+ * - no link directly inside it, and no commondir (a linked worktree's shared
+ *   repository);
+ * - HEAD, config, config.worktree, packed-refs and shallow, where present,
+ *   plain files under their caps (no link, FIFO or device);
+ * - every entry of info/ a plain file under 16 MiB;
+ * - under refs/ and reftable/ only folders and plain files, loose refs under
+ *   4 KiB;
+ * - an object store of its own: no link anywhere among objects/<xx>/,
+ *   objects/pack/ or objects/info/ (and commit-graphs/), only plain files
+ *   there, and no objects/info/alternates.
+ * The index and other names (logs/, hooks/, modules/, FETCH_HEAD, ...) are
+ * not read by these commands and not looked at; a socket such as
+ * fsmonitor--daemon.ipc is fine. Lifting a refusal later means resolving the
+ * target and allowing it when its real path lies inside the workspace.
  */
-function refusal(gitDir: string, stat: Stats, label: string): string | null {
-  const why = (text: string) => `${label} ${text}; the Code view reads only a .git folder inside the workspace that keeps its objects to itself`;
+export function refusal(gitDir: string, stat: Stats, label: string, maxEntries = MAX_ENTRIES): string | null {
+  const why = (text: string) => `${label} ${text}; the Code view reads only a plain .git folder inside the workspace that keeps its objects to itself`;
   if (stat.isSymbolicLink()) return why("is a link");
   if (stat.isFile()) return why('is a file that points to a repository elsewhere ("gitdir:", as a linked worktree or a submodule checkout has)');
   if (!stat.isDirectory()) return why("is not a folder");
-  for (const entry of readdirSync(gitDir, { withFileTypes: true })) {
+
+  // Folders are read entry by entry and given up past the budget, so even a
+  // folder of millions of names costs at most `maxEntries` reads.
+  let budget = maxEntries;
+  const tooMany = () => why(`has more than ${maxEntries} entries to check (git gc packs objects and refs)`);
+  const list = (dir: string): Dirent[] | null => {
+    const handle = opendirSync(dir);
+    try {
+      const entries: Dirent[] = [];
+      for (let entry = handle.readSync(); entry !== null; entry = handle.readSync()) {
+        if (--budget < 0) return null;
+        entries.push(entry);
+      }
+      return entries;
+    } finally {
+      handle.closeSync();
+    }
+  };
+
+  const top = list(gitDir);
+  if (top === null) return tooMany();
+  for (const entry of top) {
     if (entry.isSymbolicLink()) return why(`has a link, ${entry.name}`);
   }
   if (lstatOrNull(join(gitDir, "commondir")) !== null) return why("shares another repository's objects and refs (commondir, as a linked worktree has)");
+
+  const rel = (path: string) => path.slice(gitDir.length + 1).replace(/\\/g, "/");
+  /** null when `path` is absent or a plain file of at most `cap` bytes. */
+  const plain = (path: string, cap: number): string | null => {
+    const st = lstatOrNull(path);
+    if (st === null) return null;
+    if (!st.isFile()) return why(`has ${rel(path)}, which is not a plain file`);
+    if (st.size > cap) return why(`has ${rel(path)}, larger than ${cap / KIB} KiB`);
+    return null;
+  };
+  for (const [name, cap] of READ_FILES) {
+    const problem = plain(join(gitDir, name), cap);
+    if (problem !== null) return problem;
+  }
+  if (lstatOrNull(join(gitDir, "HEAD")) === null) return why("has no HEAD");
+
+  /** Every entry below `dir`: folders when `folders`, else plain files under `cap` (no size check when cap is Infinity). */
+  const walk = (dir: string, cap: number, folders: boolean): string | null => {
+    const st = lstatOrNull(dir);
+    if (st === null) return null;
+    if (!st.isDirectory()) return why(`has ${rel(dir)}, which is not a folder`);
+    const entries = list(dir);
+    if (entries === null) return tooMany();
+    for (const entry of entries) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory() && folders) {
+        const problem = walk(path, cap, folders);
+        if (problem !== null) return problem;
+      } else if (!entry.isFile()) {
+        return why(`has ${rel(path)}, which is not a plain file`);
+      } else if (cap !== Infinity) {
+        const problem = plain(path, cap);
+        if (problem !== null) return problem;
+      }
+    }
+    return null;
+  };
+  const checks: [string, number, boolean][] = [
+    [join(gitDir, "info"), LIST_FILE, false],
+    [join(gitDir, "refs"), LOOSE_REF, true],
+    [join(gitDir, "reftable"), INDEX_FILE, false],
+    [join(gitDir, "objects", "pack"), Infinity, false],
+  ];
+  for (const [dir, cap, folders] of checks) {
+    const problem = walk(dir, cap, folders);
+    if (problem !== null) return problem;
+  }
+
   const objects = join(gitDir, "objects");
   if (lstatOrNull(objects)?.isDirectory() !== true) return why("has no objects folder");
-  for (const dir of [objects, join(objects, "pack"), join(objects, "info")]) {
-    if (lstatOrNull(dir) === null) continue;
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isSymbolicLink()) return why(`has a link, ${join(dir, entry.name).slice(gitDir.length + 1).replace(/\\/g, "/")}`);
+  const stores = list(objects);
+  if (stores === null) return tooMany();
+  for (const entry of stores) {
+    if (entry.isSymbolicLink()) return why(`has a link, objects/${entry.name}`);
+    if (/^[0-9a-f]{2}$/.test(entry.name)) {
+      if (!entry.isDirectory()) return why(`has objects/${entry.name}, which is not a folder`);
+      const problem = walk(join(objects, entry.name), Infinity, false);
+      if (problem !== null) return problem;
     }
   }
-  if (lstatOrNull(join(objects, "info", "alternates")) !== null) return why("borrows objects from another repository (objects/info/alternates)");
+  const info = join(objects, "info");
+  const infoStat = lstatOrNull(info);
+  if (infoStat !== null && !infoStat.isDirectory()) return why("has objects/info, which is not a folder");
+  if (lstatOrNull(join(info, "alternates")) !== null) return why("borrows objects from another repository (objects/info/alternates)");
+  if (infoStat === null) return null;
+  const infoEntries = list(info);
+  if (infoEntries === null) return tooMany();
+  for (const entry of infoEntries) {
+    const path = join(info, entry.name);
+    if (entry.name === "commit-graphs" && entry.isDirectory()) {
+      const graphs = list(path);
+      if (graphs === null) return tooMany();
+      for (const graph of graphs) {
+        const problem = plain(join(path, graph.name), graph.name.endsWith(".graph") ? INDEX_FILE : LIST_FILE);
+        if (problem !== null) return problem;
+      }
+      continue;
+    }
+    const problem = plain(path, entry.name === "commit-graph" ? INDEX_FILE : LIST_FILE);
+    if (problem !== null) return problem;
+  }
   return null;
 }
 
@@ -321,26 +480,22 @@ function parseShortstat(line: string): { files: number; added: number; deleted: 
   return m === null ? null : { files: Number(m[1]), added: Number(m[2] ?? 0), deleted: Number(m[3] ?? 0) };
 }
 
+/** The display form of a hash: its first 7 digits, whatever core.abbrev says. */
+const shortOf = (hash: string) => hash.slice(0, 7);
+
 /**
- * `log --format=%x1e%H%x1f%h%x1f%cs%x1f%s --shortstat`: a record is a line
+ * `log --format=%x1e%H%x1f%cs%x1f%s --shortstat`: a record is a line
  * starting with 0x1e, then its stat line. %s never holds a newline, so a
  * subject holding 0x1e or 0x1f stays inside its own line, and the subject is
- * the rest of that line after the third 0x1f.
+ * the rest of that line after the second 0x1f.
  */
 function parseLog(text: string): LogCommit[] {
   const commits: LogCommit[] = [];
   for (const line of text.split("\n")) {
     if (line.startsWith("\x1e")) {
       const fields = line.slice(1).split("\x1f");
-      commits.push({
-        hash: fields[0] ?? "",
-        short: fields[1] ?? "",
-        date: fields[2] ?? "",
-        subject: fields.slice(3).join("\x1f"),
-        files: 0,
-        added: 0,
-        deleted: 0,
-      });
+      const hash = fields[0] ?? "";
+      commits.push({ hash, short: shortOf(hash), date: fields[1] ?? "", subject: fields.slice(2).join("\x1f"), files: 0, added: 0, deleted: 0 });
       continue;
     }
     const stat = parseShortstat(line);
@@ -350,11 +505,15 @@ function parseLog(text: string): LogCommit[] {
   return commits;
 }
 
-/** NUL-terminated tokens; whatever follows the last NUL is a token the cap cut, and is dropped. */
+/**
+ * NUL-terminated tokens; whatever follows the last NUL is a token the cap
+ * cut, and is dropped. Only a newline before the first token is not part of
+ * one (a name may itself start with a newline).
+ */
 function tokens(text: string): string[] {
-  const all = text.split("\0");
+  const all = text.replace(/^\n+/, "").split("\0");
   all.pop();
-  return all.map((t) => t.replace(/^\n+/, ""));
+  return all;
 }
 
 function unexpected(what: string): never {
@@ -381,21 +540,68 @@ function parseNumstat(text: string): { path: string; added: number | null; delet
   });
 }
 
-/** The handler, with the git program to run (S6a-2 may pass the path Settings found). */
-export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
+/** A failed git step as the caller sees it: the step and how it ended, never what Git printed. */
+function failed(step: string, result: RunResult): string {
+  if (result.timedOut === true) return `git ${step} took longer than ${TIMEOUT_MS / 1000} s`;
+  if (result.truncated === true) return `git ${step} printed more than its cap`;
+  return `git ${step} failed (exit ${result.code})`;
+}
+
+/**
+ * The handler. `git` is an absolute path (S6a-2 may pass the one Settings
+ * found) or a bare name, looked up in the absolute PATH entries of the
+ * runner's environment; anything else is "git was not found". `log` takes
+ * what Git printed on failures, for the server's own log.
+ */
+export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string) => void = (line) => console.error(line)): ApiHandler {
+  const lookup: RunOptions["lookup"] = isAbsolute(git) ? undefined : "path";
+  const usable = isAbsolute(git) || !/[\\/]/.test(git);
   let ready: Promise<string | null> | null = null;
+  let active = 0;
+  const waiting: (() => void)[] = [];
+
+  /** Runs `work` in one of MAX_GIT slots, after up to MAX_WAITING others; past that, 503. */
+  async function limited<T>(work: () => Promise<T>): Promise<T> {
+    if (active < MAX_GIT) active++;
+    else if (waiting.length < MAX_WAITING) await new Promise<void>((go) => waiting.push(go));
+    else refuse(503, "the Code view is busy with other requests; try again");
+    try {
+      return await work();
+    } finally {
+      const next = waiting.shift();
+      if (next !== undefined) next();
+      else active--;
+    }
+  }
+
+  const options = (cwd: string, cap: number, input?: string): RunOptions => ({
+    cwd,
+    env: gitEnv,
+    timeoutMs: TIMEOUT_MS,
+    maxOutputBytes: cap,
+    maxErrorBytes: CAP.stderr,
+    lookup,
+    input,
+  });
 
   /** null when git can run with every guard, else the problem to show. */
   async function probe(): Promise<string | null> {
+    if (!usable) return "git was not found; see Settings";
     let result: RunResult;
     try {
-      result = await ctx.run([git, "--version"], { cwd: ctx.repoRoot, env: gitEnv, timeoutMs: TIMEOUT_MS, maxOutputBytes: CAP.line });
+      result = await limited(() => ctx.run([git, "--version"], options(ctx.repoRoot, CAP.line)));
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return "git was not found; see Settings";
-      return `git could not start (${errorText(error, 200)}); see Settings`;
+      if (error instanceof Answer) throw error;
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code === "ENOENT") return "git was not found; see Settings";
+      log(`code-view git --version: ${errorText(error, 300)}`);
+      return `git could not start (${code ?? "unknown error"}); see Settings`;
     }
     const version = result.code === 0 ? parseGitVersion(result.stdout) : null;
-    if (version === null) return `git --version gave no version (${failureText(result, 200)}); see Settings`;
+    if (version === null) {
+      log(`code-view git --version: ${failureText(result, 300)}`);
+      return `git --version printed no version (${failed("--version", result)}); see Settings`;
+    }
     const [major, minor] = version;
     if (major < MIN_GIT[0] || (major === MIN_GIT[0] && minor < MIN_GIT[1])) {
       return `Git ${version.join(".")} is too old for the Code view, which needs Git ${MIN_GIT.join(".")} or later; see Settings`;
@@ -406,14 +612,17 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
   /** A failed probe is not kept, so installing git and asking again works. */
   async function gitProblem(): Promise<string | null> {
     ready ??= probe();
-    const problem = await ready;
-    if (problem !== null) ready = null;
-    return problem;
+    try {
+      const problem = await ready;
+      if (problem !== null) ready = null;
+      return problem;
+    } catch (error) {
+      ready = null;
+      throw error;
+    }
   }
 
-  return async (req) => withoutWorkspace(await answer(req), ctx.repoRoot);
-
-  async function answer(req: Parameters<ApiHandler>[0]): Promise<ApiResponse> {
+  return async (req) => {
     try {
       if (req.method !== "GET") return json(405, { error: "GET only" });
       if (!["/", "/log", "/commit", "/diff"].includes(req.path)) return json(404, { error: `no endpoint ${req.path}` });
@@ -424,14 +633,16 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
       if (skipText !== null && (!SKIP.test(skipText) || Number(skipText) > MAX_SKIP)) refuse(400, "skip must be a whole number from 0 to 10000");
       const skip = Number(skipText ?? 0);
       const hash = req.path === "/commit" || req.path === "/diff" ? one(req.query, "hash")! : null;
-      if (hash !== null && !HASH.test(hash)) refuse(400, "hash must be 7 to 64 lower-case hexadecimal digits");
+      if (hash !== null && !FULL.test(hash)) refuse(400, "hash must be a full commit hash: 40 or 64 lower-case hexadecimal digits");
       const path = req.path === "/diff" ? one(req.query, "path")! : null;
       if (path !== null && path.split("/").some((s) => s.startsWith("."))) refuse(400, 'a path with a segment starting with "." cannot be opened');
       if (path !== null && !openable(path)) refuse(400, `bad path ${quoted(path)}`);
 
-      // A registered project whose real folder lies inside the workspace's projects-folder.
+      // A registered project, named as its folder is (not merely matching it
+      // on a case-insensitive disk), whose real folder lies inside the
+      // workspace's projects-folder.
       const cwd = resolveCwd(ctx.repoRoot, `projects-folder/${name}`);
-      if (cwd === null) refuse(404, `no registered project ${name}`);
+      if (cwd === null || !hasEntry(join(ctx.repoRoot, "projects-folder"), name)) refuse(404, `no registered project ${name}`);
       const workspace = realpathSync.native(ctx.repoRoot);
       const project = realpathSync.native(cwd);
       if (!project.startsWith(join(workspace, "projects-folder") + sep)) refuse(404, `projects-folder/${name} lies outside projects-folder`);
@@ -445,48 +656,39 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
 
       const guards = guardArgs(repo.gitDir, repo.top);
       const run = (args: string[], cap: number, attrSource?: string, input?: string): Promise<RunResult> =>
-        ctx.run([git, ...guards, ...(attrSource === undefined ? [] : [`--attr-source=${attrSource}`]), ...args], {
-          cwd: repo.top,
-          env: gitEnv,
-          timeoutMs: TIMEOUT_MS,
-          maxOutputBytes: cap,
-          input,
-        });
-      const must = (result: RunResult): RunResult => {
-        if (!result.truncated && result.code !== 0) refuse(500, failureText(result));
+        limited(() => ctx.run([git, ...guards, ...(attrSource === undefined ? [] : [`--attr-source=${attrSource}`]), ...args], options(repo.top, cap, input)));
+      const must = (result: RunResult, step: string): RunResult => {
+        if (result.timedOut === true || (!result.truncated && result.code !== 0)) {
+          log(`code-view git ${req.path} ${step}: ${failureText(result, 2000)}`);
+          refuse(500, failed(step, result));
+        }
         return result;
       };
-      const fullHash = (result: RunResult): string => {
+      const fullHash = (result: RunResult, step: string): string => {
         const full = result.stdout.trim();
-        return FULL.test(full) ? full : unexpected("rev-parse");
+        return FULL.test(full) ? full : unexpected(step);
       };
       /** HEAD's commit, or null on an unborn branch (a repository with no commits yet). */
       const head = async (): Promise<string | null> => {
         const result = await run(["rev-parse", "--verify", "--quiet", "HEAD^{commit}"], CAP.line);
         if (result.code === 1 && result.stdout.trim() === "") return null;
-        return fullHash(must(result));
-      };
-      /** The full hash of a commit named by `hash`, else 404. */
-      const resolve = async (short: string): Promise<string> => {
-        const result = await run(["rev-parse", "--verify", "--quiet", `${short}^{commit}`], CAP.line);
-        if (result.code !== 0 || result.truncated) refuse(404, `no commit ${short}${result.stderr.trim() ? ` (${result.stderr.trim().slice(0, 200)})` : ""}`);
-        return fullHash(result);
+        return fullHash(must(result, "rev-parse HEAD"), "rev-parse HEAD");
       };
       const relative = repo.relative === null ? [] : [`--relative=${repo.relative}`];
 
       if (req.path === "/") {
         const tip = await head();
         if (tip === null) return json(200, { ...source, head: null } satisfies Summary);
-        const result = must(await run(["log", "--no-merges", "--max-count=1", "--format=%H%x1f%h%x1f%cs", ...HISTORY, tip, "--", repo.filter], CAP.line));
-        const [full = "", short = "", date = ""] = (result.stdout.split("\n")[0] ?? "").split("\x1f");
-        return json(200, { ...source, head: full === "" ? null : { hash: full, short, date } } satisfies Summary);
+        const result = must(await run(["log", "--no-merges", "--max-count=1", "--format=%H%x1f%cs", ...HISTORY, tip, "--", repo.filter], CAP.line), "log");
+        const [full = "", date = ""] = (result.stdout.split("\n")[0] ?? "").split("\x1f");
+        return json(200, { ...source, head: full === "" ? null : { hash: full, short: shortOf(full), date } } satisfies Summary);
       }
 
       if (req.path === "/log") {
         const tip = await head();
         if (tip === null) return json(200, { ...source, commits: [], more: false } satisfies Log);
-        const args = ["log", "--no-merges", `--max-count=${PAGE + 1}`, `--skip=${skip}`, "--format=%x1e%H%x1f%h%x1f%cs%x1f%s", "--shortstat"];
-        const result = must(await run([...args, ...HISTORY, tip, "--", repo.filter], CAP.log, tip));
+        const args = ["log", "--no-merges", `--max-count=${PAGE + 1}`, `--skip=${skip}`, "--format=%x1e%H%x1f%cs%x1f%s", "--shortstat"];
+        const result = must(await run([...args, ...HISTORY, tip, "--", repo.filter], CAP.log, tip), "log");
         const commits = parseLog(result.stdout);
         let more = commits.length > PAGE;
         if (result.truncated) {
@@ -499,7 +701,14 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
         return json(200, { ...source, commits: page, more: more && skip + page.length <= MAX_SKIP } satisfies Log);
       }
 
-      const full = await resolve(hash!);
+      // /commit and /diff: a full hash naming a commit in HEAD's history.
+      const resolved = await run(["rev-parse", "--verify", "--quiet", `${hash!}^{commit}`], CAP.line);
+      if (resolved.code !== 0 || resolved.truncated === true) refuse(404, `no commit ${hash!}`);
+      const full = fullHash(resolved, "rev-parse");
+      const tip = await head();
+      const ancestor = tip === null ? null : await run(["merge-base", "--is-ancestor", full, tip], CAP.line);
+      if (ancestor === null || ancestor.code === 1) refuse(404, `commit ${full} is not in this repository's history from HEAD`);
+      must(ancestor, "merge-base");
 
       if (req.path === "/commit") {
         const tail = [...HISTORY, ...relative, full, "--", repo.filter];
@@ -507,8 +716,8 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
           run(["show", "--format=", "--raw", "--no-abbrev", "-z", ...tail], CAP.list, full),
           run(["show", "--format=", "--numstat", "-z", ...tail], CAP.list, full),
         ]);
-        const entries = parseRaw(must(raw).stdout);
-        const counts = parseNumstat(must(num).stdout);
+        const entries = parseRaw(must(raw, "show --raw").stdout);
+        const counts = parseNumstat(must(num, "show --numstat").stdout);
         const cut = raw.truncated === true || num.truncated === true;
         if (!cut && entries.length !== counts.length) unexpected("show (raw and numstat disagree)");
         const files: FileChange[] = [];
@@ -518,14 +727,14 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
           if (entry.path !== count.path) unexpected("show (raw and numstat disagree)");
           files.push({ path: entry.path, status: entry.status, added: count.added, deleted: count.deleted, sizes: null, openable: openable(entry.path) });
         }
-        if (files.length === 0 && !cut) refuse(404, `commit ${full.slice(0, 12)} changes nothing in ${repo.filter}`);
+        if (files.length === 0 && !cut) refuse(404, `commit ${shortOf(full)} changes nothing in ${repo.filter}`);
 
         // "Bin 0 → 140601 bytes": numstat has no sizes, so ask for the blobs' sizes.
         const binary = files.map((f, i) => (f.added === null ? i : -1)).filter((i) => i >= 0);
         const ids = [...new Set(binary.flatMap((i) => [entries[i]!.oldId, entries[i]!.newId]).filter((id) => !/^0+$/.test(id)))];
         if (ids.length > 0) {
           const sizes = new Map<string, number>();
-          const check = must(await run(["cat-file", "--batch-check"], CAP.list, undefined, ids.map((id) => `${id}\n`).join("")));
+          const check = must(await run(["cat-file", "--batch-check"], CAP.list, undefined, ids.map((id) => `${id}\n`).join("")), "cat-file");
           for (const line of check.stdout.split("\n")) {
             const m = /^([0-9a-f]+) blob (\d+)$/.exec(line);
             if (m !== null) sizes.set(m[1]!, Number(m[2]));
@@ -543,16 +752,16 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
           stat.deleted += f.deleted ?? 0;
         }
         if (cut) {
-          const short = must(await run(["show", "--format=", "--shortstat", ...tail], CAP.line, full));
+          const short = must(await run(["show", "--format=", "--shortstat", ...tail], CAP.line, full), "show --shortstat");
           stat = short.stdout.split("\n").map(parseShortstat).find((s) => s !== null) ?? unexpected("show --shortstat");
         }
 
-        const meta = must(await run(["show", "-s", "--format=%H%x00%h%x00%cs%x00%an%x00%s%x00%b", ...HISTORY, full], CAP.message, full));
-        const [, short = "", date = "", author = "", subject = "", ...body] = meta.stdout.split("\0");
+        const meta = must(await run(["show", "-s", "--format=%H%x00%cs%x00%an%x00%s%x00%b", ...HISTORY, full], CAP.message, full), "show -s");
+        const [, date = "", author = "", subject = "", ...body] = meta.stdout.split("\0");
         return json(200, {
           ...source,
           hash: full,
-          short,
+          short: shortOf(full),
           date,
           author,
           subject,
@@ -567,41 +776,20 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
       // folder (whose patch would include its dot files) is never diffed.
       const spec = repo.relative === null ? path! : `${repo.filter}/${path!}`;
       const tail = [...HISTORY, ...relative, full, "--", spec];
-      const listed = must(await run(["show", "--format=", "--raw", "--no-abbrev", "-z", ...tail], CAP.list, full));
+      const listed = must(await run(["show", "--format=", "--raw", "--no-abbrev", "-z", ...tail], CAP.list, full), "show --raw");
       const entries = parseRaw(listed.stdout);
       if (listed.truncated || entries.length !== 1 || entries[0]!.path !== path) {
-        refuse(404, `${quoted(path!)} is not a file that commit ${full.slice(0, 12)} changes`);
+        refuse(404, `${quoted(path!)} is not a file that commit ${shortOf(full)} changes`);
       }
-      const patch = must(await run(["show", "--format=", "--patch", ...tail], CAP.diff, full));
+      const patch = must(await run(["show", "--format=", "--patch", ...tail], CAP.diff, full), "show --patch");
       const diff = patch.truncated ? patch.stdout.slice(0, patch.stdout.lastIndexOf("\n") + 1) : patch.stdout;
       return json(200, { ...source, hash: full, path: path!, diff, truncated: patch.truncated === true } satisfies Diff);
     } catch (error) {
       if (error instanceof Answer) return error.response;
-      return json(500, { error: errorText(error) });
+      log(`code-view git ${req.path}: ${errorText(error, 300)}`);
+      return json(500, { error: `the Code view could not read this repository (${(error as NodeJS.ErrnoException).code ?? "internal error"})` });
     }
-  }
-}
-
-/**
- * An error answer with the workspace's absolute path (Git names it in
- * "fatal: ..." lines, as given or real, with either slash on Windows)
- * written as <workspace>, so a plugin page never learns where it lives.
- */
-function withoutWorkspace(response: ApiResponse, repoRoot: string): ApiResponse {
-  const body = response.body as { error?: unknown };
-  if (response.status < 400 || typeof body.error !== "string") return response;
-  let real = repoRoot;
-  try {
-    real = realpathSync.native(repoRoot);
-  } catch {
-    // a workspace that is gone has only the name it was given
-  }
-  const roots = [...new Set([real, repoRoot].flatMap((r) => [r, r.replace(/\\/g, "/")]))]
-    .filter((r) => r.length > 1)
-    .sort((a, b) => b.length - a.length);
-  let error = body.error;
-  for (const root of roots) error = error.split(root).join("<workspace>");
-  return { status: response.status, body: { ...body, error } };
+  };
 }
 
 export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
@@ -609,9 +797,10 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
 /*
  * Every `git help config` (2.55) key whose name or text mentions a command,
  * program, helper, hook, filter, or driver, and the git(1) environment, for
- * the commands this file runs (log, show, rev-parse, cat-file --batch-check,
- * --version), with stdout and stderr pipes and stdin closed after `input`.
- * Leaving out keys where those words only mean "on the command line".
+ * the commands this file runs (log, show, rev-parse, merge-base --is-ancestor,
+ * cat-file --batch-check, --version), with stdout and stderr pipes and stdin
+ * closed after `input`. Leaving out keys where those words only mean "on the
+ * command line".
  *
  * Neutralised
  *   diff.<driver>.textconv, .cachetextconv          --no-textconv (the cache writes refs/notes/textconv/<driver>,
@@ -632,10 +821,12 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *     url.<base>.insteadOf, remote.<name>.vcs
  *     (git-remote-<vcs>), .uploadpack, .proxy,
  *     bundle.*, transfer.*, fetch.*, promisor.*,
- *     and the hooks of the fetch's ref updates       --no-lazy-fetch
+ *     and the hooks of the fetch's ref updates       --no-lazy-fetch, and -c protocol.allow=never under it
  *   core.useReplaceRefs                              --no-replace-objects
+ *   info/grafts                                      GIT_GRAFT_FILE=/dev/null (Git printed each line of it, which
+ *                                                    a linked grafts file turned into a way to read any file)
  *   trace2.*Target and every other key in the
- *     user's global or the system config             GIT_CONFIG_GLOBAL=<null device>, GIT_CONFIG_NOSYSTEM=1
+ *     user's global or the system config             GIT_CONFIG_GLOBAL=/dev/null, GIT_CONFIG_NOSYSTEM=1
  *   every GIT_* variable (GIT_EXTERNAL_DIFF,
  *     GIT_SSH*, GIT_ASKPASS, GIT_PAGER, GIT_EDITOR,
  *     GIT_CONFIG_COUNT/_KEY_/_VALUE_, GIT_CONFIG_PARAMETERS,
@@ -644,20 +835,22 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *     GIT_ATTR_SOURCE, ...)                          removed by gitEnv
  *   core.worktree                                    --work-tree
  *   in-tree .gitattributes                           --attr-source=<commit>
- *   core.attributesFile                              -c core.attributesFile=<null device>
- *   diff.orderFile                                   -O<null device> (a missing file failed every diff)
+ *   core.attributesFile                              -c core.attributesFile=/dev/null
+ *   diff.orderFile                                   -O/dev/null (a missing file failed every diff)
  *   mailmap.file, mailmap.blob, in-tree .mailmap     --no-use-mailmap (read even though %an is printed)
  *   diff.ignoreSubmodules, submodule.<name>.ignore
  *     in the working tree's .gitmodules              --ignore-submodules=none (which also stops the read)
+ *   core.bigFileThreshold                            -c core.bigFileThreshold=4m
+ *   core.abbrev                                      not used: `short` is the hash's first 7 digits
  *
  * Cannot be reached by these commands
  *   core.pager, pager.<cmd>, PAGER                   a pager starts only when stdout is a terminal; it is a pipe
  *   core.editor, sequence.editor, EDITOR             nothing here edits a message
  *   alias.*                                          built-in commands cannot be aliased
- *   hooks (core.hooksPath, hook.<name>.*)            log, show, rev-parse and cat-file run none themselves; only a ref
- *                                                    update would: textconv's cache (seen in a test without
- *                                                    --no-textconv) or a lazy fetch that got objects, both
- *                                                    neutralised above
+ *   hooks (core.hooksPath, hook.<name>.*)            log, show, rev-parse, merge-base and cat-file run none
+ *                                                    themselves; only a ref update would: textconv's cache (seen in
+ *                                                    a test without --no-textconv) or a lazy fetch that got
+ *                                                    objects, both neutralised above
  *   interactive.diffFilter                           add -p and friends only
  *   difftool.*, mergetool.*, merge.<driver>.driver   difftool, mergetool, merge only
  *   core.alternateRefsCommand                        receive-pack and fetch negotiation only; alternates are refused
@@ -674,10 +867,16 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *                                                    refuse, --git-dir reads), so these guards are the only ones
  *
  * Read, and left as they are
- *   include.path, includeIf.*                        more config, under the same guards
- *   info/attributes                                  inside the checked .git; it can only pick a driver
- *   info/grafts                                      honoured (deprecated; --no-replace-objects does not cover it);
- *                                                    it lies inside the checked .git and changes parents only
- *   a FIFO among the files Git opens in .git         stalls each command until the 10 s limit, then a 500
- *                                                    (seen with info/attributes); no option skips those reads
+ *   include.path, includeIf.*                        another file read as config, from anywhere: its keys fall under
+ *                                                    the same guards, but whether it exists or parses can show (a
+ *                                                    bad one makes every command fail), and what it sets shapes
+ *                                                    the output (an outside include changed diff.context)
+ *   info/attributes                                  a plain file inside the checked .git; it can only pick a driver
+ *
+ * Not bounded
+ *   memory inside one git process, below the blob threshold: a commit of
+ *   many files just under 4 MiB, or a diff with very many lines, still takes
+ *   what Git needs, for up to 10 s; packed objects are not checked one by one;
+ *   loose object files are checked by type, not size (Git reads only their
+ *   header for the threshold).
  */

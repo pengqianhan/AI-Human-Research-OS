@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { devNull, tmpdir } from "node:os";
+import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { before, describe, test } from "node:test";
-import { codeGitHandler, gitEnv, MIN_GIT, openable, parseGitVersion } from "./codeGit.ts";
+import { codeGitHandler, gitEnv, guardArgs, MIN_GIT, openable, parseGitVersion, refusal } from "./codeGit.ts";
 import type { Commit, Diff, Log, Summary } from "./codeGit.ts";
 import { processRunner } from "./process.ts";
 import { context, fakeRunner, ok, request, tempTree } from "./testkit.ts";
@@ -41,7 +41,7 @@ const FIXTURE_ENV: NodeJS.ProcessEnv = {
   HOME: FIXTURE_HOME,
   XDG_CONFIG_HOME: join(FIXTURE_HOME, ".config"),
   GIT_CONFIG_NOSYSTEM: "1",
-  GIT_CONFIG_GLOBAL: devNull,
+  GIT_CONFIG_GLOBAL: "/dev/null",
   GIT_AUTHOR_NAME: "A U Thor",
   GIT_AUTHOR_EMAIL: "author@example.com",
   GIT_COMMITTER_NAME: "C O Mitter",
@@ -129,18 +129,32 @@ function init(dir: string): string {
   return dir;
 }
 
+/** What the handlers in this file wrote to their server log, newest last. */
+const LOGGED: string[] = [];
+const logged = (line: string) => LOGGED.push(line);
+
 /** The handler with a real runner whose environment is `env` (a clean one by default). */
-function handler(root: string, env: NodeJS.ProcessEnv = cleanEnv()): ApiHandler {
-  return codeGitHandler(context(root, { run: processRunner(env) }));
+function handler(root: string, env: NodeJS.ProcessEnv = cleanEnv(), git = "git"): ApiHandler {
+  return codeGitHandler(context(root, { run: processRunner(env) }), git, logged);
 }
 
 function cleanEnv(dir = home()): NodeJS.ProcessEnv {
   return { ...scrubbed(process.env), HOME: dir, XDG_CONFIG_HOME: join(dir, ".config") };
 }
 
-function get(api: ApiHandler, path: string, params: Record<string, string>): Promise<ApiResponse> {
-  return api(request("GET", path, undefined, new URLSearchParams(params).toString()));
+/** Every fixture lies below these; no answer may name them. */
+const TEMP = [...new Set([tmpdir(), realpathSync.native(tmpdir())])].flatMap((t) => [t, t.replace(/\\/g, "/")]);
+
+/** A request; every answer, refusal and failure included, is checked to carry no absolute fixture path. */
+async function get(api: ApiHandler, path: string, params: Record<string, string>): Promise<ApiResponse> {
+  const response = await api(request("GET", path, undefined, new URLSearchParams(params).toString()));
+  const text = JSON.stringify(response.body);
+  for (const t of TEMP) assert.ok(!text.includes(t) && !text.includes(JSON.stringify(t).slice(1, -1)), `${path} answered an absolute path: ${text.slice(0, 300)}`);
+  return response;
 }
+
+/** A full hash no fixture holds. */
+const NO_SUCH = "e".repeat(40);
 
 async function body<T>(response: Promise<ApiResponse> | ApiResponse, status = 200): Promise<T> {
   const r = await response;
@@ -196,15 +210,15 @@ describe("requests that never reach git", () => {
     assert.equal((await get(api, "/", { project: "Missing" })).status, 404);
   });
 
-  test("a hash that is not 7 to 64 lower-case hex digits is 400", async () => {
-    for (const hash of ["--output=x", "HEAD", "ABCDEF0", "abcdef", "a".repeat(65), "abcdefg", "abcdef0^", ""]) {
+  test("a hash that is not a full 40- or 64-digit lower-case hex object id is 400 (a short one could name a ref first)", async () => {
+    for (const hash of ["--output=x", "HEAD", "ABCDEF0", "abcdef0", "a".repeat(39), "a".repeat(41), "a".repeat(63), "a".repeat(65), "A".repeat(40), `${"a".repeat(39)}^`, ""]) {
       assert.equal((await get(api, "/commit", { project: P, hash })).status, 400, hash);
       assert.equal((await get(api, "/diff", { project: P, hash, path: "a.txt" })).status, 400, hash);
     }
   });
 
   test("a path that is not plain and relative, or has a dot segment, is 400", async () => {
-    const hash = "abcdef0";
+    const hash = NO_SUCH;
     for (const path of ["", "../AGENTS.md", "/etc/passwd", "a//b", "a/", "a\\b", ":x", ":(top)x", "a/./b", "con", "x".repeat(1001)]) {
       assert.equal((await get(api, "/diff", { project: P, hash, path })).status, 400, path);
     }
@@ -252,7 +266,7 @@ describe("which repository is read", () => {
       ],
     );
     assert.equal(log.more, false);
-    const commit = await body<Commit>(get(api, "/commit", { project: P, hash: m[2]!.slice(0, 7) }));
+    const commit = await body<Commit>(get(api, "/commit", { project: P, hash: m[2]! }));
     assert.equal(commit.hash, m[2]);
     assert.deepEqual(commit.files.map((f) => [f.path, f.status, f.added, f.deleted]), [
       ["Code/README.md", "M", 1, 0],
@@ -293,7 +307,7 @@ describe("which repository is read", () => {
     for (const path of ["/", "/log"]) {
       assert.deepEqual(await body(codeGitHandler(context(root, { run }))(request("GET", path, undefined, "project=P"))), { repo: null });
     }
-    assert.deepEqual(await body(handler(root)(request("GET", "/commit", undefined, "project=P&hash=abcdef0"))), { repo: null });
+    assert.deepEqual(await body(handler(root)(request("GET", "/commit", undefined, `project=P&hash=${NO_SUCH}`))), { repo: null });
     assert.deepEqual(calls, [], "git is not even probed");
   });
 
@@ -303,7 +317,7 @@ describe("which repository is read", () => {
     const api = handler(empty);
     assert.equal((await body<Summary>(get(api, "/", { project: P }))).head, null);
     assert.deepEqual(await body<Log>(get(api, "/log", { project: P })), { repo: "workspace", root: "", filter: "projects-folder/P", commits: [], more: false });
-    assert.equal((await get(api, "/commit", { project: P, hash: "abcdef0" })).status, 404);
+    assert.equal((await get(api, "/commit", { project: P, hash: NO_SUCH })).status, 404);
 
     const untouched = workspace();
     init(untouched);
@@ -346,7 +360,7 @@ describe("repositories that are refused", () => {
     const { run, calls } = fakeRunner();
     const api = codeGitHandler(context(root, { run }));
     for (const path of ["/", "/log", "/commit", "/diff"]) {
-      const answer = await body<{ repo: null; problem: string }>(api(request("GET", path, undefined, "project=P&hash=abcdef0&path=x")));
+      const answer = await body<{ repo: null; problem: string }>(api(request("GET", path, undefined, `project=P&hash=${NO_SUCH}&path=x`)));
       assert.equal(answer.repo, null, "never the workspace's repository instead");
       assert.match(answer.problem, why);
     }
@@ -369,6 +383,48 @@ describe("repositories that are refused", () => {
   test("a linked loose-object folder", (t) =>
     refused(t, (g) => (init(dirname(g)), symlinkSync(join(elsewhere(), "objects", "info"), join(g, "objects", "ab"), "junction")), /has a link, objects\/ab/));
   test("a linked config", (t) => refused(t, (g) => (init(dirname(g)), rmSync(join(g, "config")), symlinkSync(join(elsewhere(), "config"), join(g, "config"))), /has a link, config/));
+
+  // Links and odd files below the top of .git, which Git would read and echo.
+  const env = (g: string) => join(dirname(g), ".env");
+  const secret = (g: string) => (writeFileSync(env(g), "API_KEY=sk-live-0123456789abcdef\n"), env(g));
+  test("a linked info/grafts (to the project's own .env)", (t) =>
+    refused(t, (g) => (init(dirname(g)), symlinkSync("../../.env", join(g, "info", "grafts")), secret(g)), /has info\/grafts, which is not a plain file/));
+  test("a linked info/attributes (to a file outside the workspace)", (t) =>
+    refused(t, (g) => (init(dirname(g)), symlinkSync(join(elsewhere(), "config"), join(g, "info", "attributes"))), /has info\/attributes, which is not a plain file/));
+  test("a linked commit-graph chain", (t) =>
+    refused(t, (g) => {
+      init(dirname(g));
+      mkdirSync(join(g, "objects", "info", "commit-graphs"), { recursive: true });
+      symlinkSync(secret(g), join(g, "objects", "info", "commit-graphs", "commit-graph-chain"));
+    }, /has objects\/info\/commit-graphs\/commit-graph-chain, which is not a plain file/));
+  test("a loose object linked into another repository", (t) =>
+    refused(t, (g) => {
+      init(dirname(g));
+      const other = elsewhere();
+      const id = fx(dirname(other), ["hash-object", "-w", "--stdin"], "TOP SECRET\n");
+      mkdirSync(join(g, "objects", id.slice(0, 2)));
+      symlinkSync(join(other, "objects", id.slice(0, 2), id.slice(2)), join(g, "objects", id.slice(0, 2), id.slice(2)));
+    }, /has objects\/[0-9a-f]{2}\/[0-9a-f]{38}, which is not a plain file/));
+  test("a ref linked to another repository's ref", (t) =>
+    refused(t, (g) => (init(dirname(g)), mkdirSync(join(g, "refs", "tags"), { recursive: true }), symlinkSync(join(elsewhere(), "HEAD"), join(g, "refs", "tags", "x"))), /has refs\/tags\/x, which is not a plain file/));
+  test("a loose ref larger than 4 KiB", (t) =>
+    refused(t, (g) => (init(dirname(g)), mkdirSync(join(g, "refs", "heads"), { recursive: true }), writeFileSync(join(g, "refs", "heads", "main"), "0".repeat(5000))), /has refs\/heads\/main, larger than 4 KiB/));
+  test("a config larger than 1 MiB", (t) => refused(t, (g) => (init(dirname(g)), writeFileSync(join(g, "config"), `[core]\n${"#".repeat(1024 * 1024)}\n`)), /has config, larger than 1024 KiB/));
+  test("FIFOs as HEAD, config, or in info/", { skip: WINDOWS ? "Windows has no FIFOs in the file system" : false }, async (t) => {
+    for (const name of ["HEAD", "config", join("info", "attributes")]) {
+      await refused(t, (g) => (init(dirname(g)), rmSync(join(g, name), { force: true }), assert.equal(spawnSync("mkfifo", [join(g, name)]).status, 0)), new RegExp(`has ${name.replace(/\\/g, "/")}, which is not a plain file`));
+    }
+  });
+  test("more entries than one check walks", () => {
+    const repo = init(mkdtempSync(join(tmpdir(), "os-ui-git-many-")));
+    for (let i = 0; i < 30; i++) {
+      mkdirSync(join(repo, ".git", "refs", "tags"), { recursive: true });
+      writeFileSync(join(repo, ".git", "refs", "tags", `t${i}`), `${"1".repeat(40)}\n`);
+    }
+    const gitDir = join(repo, ".git");
+    assert.match(refusal(gitDir, lstatSync(gitDir), ".git", 20) ?? "", /has more than 20 entries to check/);
+    assert.equal(refusal(gitDir, lstatSync(gitDir), ".git"), null, "the real limit is 100,000");
+  });
 
   test("a workspace that is a linked worktree", async () => {
     const main = init(mkdtempSync(join(tmpdir(), "os-ui-git-main-")));
@@ -693,16 +749,15 @@ describe("output the repository's config cannot reshape", () => {
     const root = workspace();
     init(root);
     fastImport(root, [{ mark: 1, message: "workspace commit", files: [["projects-folder/P/w.txt", "w\n"]] }]);
+    // A plain HEAD Git does not accept, so Git's discovery would skip this .git and climb.
     const gitDir = join(root, "projects-folder", P, ".git");
     mkdirSync(join(gitDir, "objects"), { recursive: true });
     mkdirSync(join(gitDir, "refs"));
+    writeFileSync(join(gitDir, "HEAD"), "not a ref\n");
     const api = handler(root);
     for (const path of ["/", "/log"]) {
       const r = await get(api, path, { project: P });
-      assert.equal(r.status, 500, JSON.stringify(r.body));
-      assert.doesNotMatch(JSON.stringify(r.body), /workspace commit/);
-      const error = (r.body as { error: string }).error;
-      assert.ok(error.includes("<workspace>") && !error.includes(realpathSync.native(root)) && !error.includes(root), `no absolute path: ${error}`);
+      assert.deepEqual([r.status, r.body], [500, { error: "git rev-parse HEAD failed (exit 128)" }], "a fixed text, and not the workspace's history");
     }
   });
 
@@ -799,7 +854,7 @@ describe("git itself", () => {
 
   test("the environment git gets: no GIT_* in any case, no global or system config, the rest kept", () => {
     const env = gitEnv({ PATH: "/bin", HOME: "/h", GIT_DIR: "/x", git_external_diff: "/y", Git_Config_Count: "1", GITX: "kept", PYTHONIOENCODING: "utf-8" });
-    assert.deepEqual(env, { PATH: "/bin", HOME: "/h", GITX: "kept", PYTHONIOENCODING: "utf-8", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: devNull });
+    assert.deepEqual(env, { PATH: "/bin", HOME: "/h", GITX: "kept", PYTHONIOENCODING: "utf-8", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_GRAFT_FILE: "/dev/null" });
   });
 
   test("every call runs in the repository's top with the guards no output can show (--work-tree, --no-optional-locks, core.fsmonitor=false, --no-ext-diff)", async () => {
@@ -850,12 +905,12 @@ describe("no program runs and nothing reaches the network, whatever the reposito
     const object = fx(root, ["cat-file", "commit", m[4]!]).replace(/\ncommitter [^\n]*/, (line) => `${line}\ngpgsig -----BEGIN PGP SIGNATURE-----\n \n iQEzBAABCAAdFiEE\n -----END PGP SIGNATURE-----`);
     const signed = fx(root, ["hash-object", "-t", "commit", "-w", "--stdin"], `${object}\n`);
     fx(root, ["update-ref", "refs/heads/main", signed]);
-    // A commit on another branch whose blob is missing, as in a partial clone.
+    // HEAD: a commit whose blob is missing, as in a partial clone (only HEAD's history is served).
     const missing = fx(root, ["hash-object", "--stdin"], "lazy\n");
     const tree = (entries: string) => fx(root, ["mktree", "--missing"], entries);
     const lazyTree = tree(`040000 tree ${tree(`040000 tree ${tree(`100644 blob ${missing}\tlazy.txt\n`)}\tP\n`)}\tprojects-folder\n`);
-    const lazy = fx(root, ["commit-tree", lazyTree, "-p", m[2]!, "-m", "lazy"]);
-    fx(root, ["update-ref", "refs/heads/lazy", lazy]);
+    const lazy = fx(root, ["commit-tree", lazyTree, "-p", signed, "-m", "lazy"]);
+    fx(root, ["update-ref", "refs/heads/main", lazy]);
     fx(root, ["read-tree", "main"]); // an index, which a gitlink makes show read
     mkdirSync(join(markers, "..", "hooks"));
     for (const hook of ["reference-transaction", "post-index-change", "pre-auto-gc", "post-checkout", "fsmonitor-watchman"]) {
@@ -924,9 +979,14 @@ describe("no program runs and nothing reaches the network, whatever the reposito
   };
 
   test("the routes answered", () => {
-    assert.deepEqual(answers.slice(0, 2).map((a) => a.status), [200, 200]);
+    assert.deepEqual(answers.slice(0, 2).map((a) => a.status), [200, 500], "the log's stat needs the missing blob");
     assert.deepEqual(answers.slice(2, 10).map((a) => a.status), [200, 200, 200, 200, 200, 200, 200, 200]);
     assert.deepEqual(answers.slice(10).map((a) => a.status), [500, 500], "the missing blob fails; nothing fetches it");
+    assert.deepEqual([...new Set(answers.filter((a) => a.status === 500).map((a) => (a.body as { error: string }).error))].sort(), [
+      "git log failed (exit 128)",
+      "git show --numstat failed (exit 128)",
+      "git show --patch failed (exit 128)",
+    ]);
   });
   test("textconv, and the filters its temporary files go through (--no-textconv)", () => none("textconv", "filter-clean", "filter-smudge", "filter-process"));
   test("signature verification (--no-show-signature)", () => none("gpg", "gpg-openpgp", "gpg-ssh", "gpg-x509"));
@@ -1021,5 +1081,250 @@ describe("the user's environment cannot change that either", () => {
     assert.deepEqual(await allRoutes(api, m[2]!), [200, 200, 200, 200]);
     assert.equal((await get(api, "/commit", { project: P, hash: o[1]! })).status, 404, "the other repository's commit is not found");
     assert.deepEqual(readdirSync(dir), []);
+  });
+});
+
+/** HEAD becomes a commit adding projects-folder/P/lazy.txt, whose blob is missing (as in a partial clone). */
+function missingBlobOnTop(root: string, parent: string): string {
+  const missing = fx(root, ["hash-object", "--stdin"], "never written\n");
+  const tree = (entries: string) => fx(root, ["mktree", "--missing"], entries);
+  const top = tree(`040000 tree ${tree(`040000 tree ${tree(`100644 blob ${missing}\tlazy.txt\n`)}\tP\n`)}\tprojects-folder\n`);
+  const commit = fx(root, ["commit-tree", top, "-p", parent, "-m", "lazy"]);
+  fx(root, ["update-ref", "refs/heads/main", commit]);
+  return commit;
+}
+
+describe("what Git reads and prints stays on the server", () => {
+  test("a failure answers a fixed text; what Git printed goes to the server's log only", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a.txt", "a\n"]] }]);
+    missingBlobOnTop(root, m[1]!);
+    // Tokens Git echoes in its warnings, from a plain file Git reads.
+    writeFileSync(join(root, ".git", "info", "attributes"), "a.txt SECRET-TOKEN-0123!\n!negated-secret-xyz\n");
+    const from = LOGGED.length;
+    const r = await get(handler(root), "/log", { project: P });
+    assert.deepEqual([r.status, r.body], [500, { error: "git log failed (exit 128)" }]);
+    const log = LOGGED.slice(from).join("\n");
+    assert.match(log, /SECRET-TOKEN-0123|negated-secret-xyz/, `the log has what Git printed: ${log}`);
+    assert.match(log, /^code-view git \/log log: /);
+  });
+
+  test("a plain info/grafts is not read (GIT_GRAFT_FILE): a commit keeps its parent, and no line of it is echoed", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [
+      { mark: 1, message: "one", files: [["projects-folder/P/a.txt", "1\n"]] },
+      { mark: 2, message: "two", files: [["projects-folder/P/a.txt", "1\n2\n"]] },
+    ]);
+    writeFileSync(join(root, ".git", "info", "grafts"), `${m[2]}\nAPI_KEY=sk-live-0123456789abcdef\n`);
+    const api = handler(root);
+    const commit = await body<Commit>(get(api, "/commit", { project: P, hash: m[2]! }));
+    assert.deepEqual(commit.files.map((f) => [f.path, f.status, f.added]), [["a.txt", "M", 1]], "with the graft, two would be a root that adds a.txt");
+    const from = LOGGED.length;
+    missingBlobOnTop(root, m[2]!);
+    assert.equal((await get(api, "/log", { project: P })).status, 500);
+    assert.doesNotMatch(LOGGED.slice(from).join("\n"), /sk-live/, "Git never read the grafts file");
+  });
+});
+
+describe("which git runs", () => {
+  test("a git planted in the workspace or the project never runs, even through an empty PATH entry", { skip: NO_SCRIPTS }, async () => {
+    const root = workspace();
+    const own = init(join(root, "projects-folder", P));
+    const m = fastImport(own, [{ mark: 1, message: "one", files: [["a.txt", "a\n"]] }]);
+    const marker = join(mkdtempSync(join(tmpdir(), "os-ui-git-planted-")), "ran");
+    for (const dir of [root, own]) {
+      writeFileSync(join(dir, "git"), `#!/bin/sh\necho "$0 $*" >> '${marker}'\nexit 0\n`);
+      chmodSync(join(dir, "git"), 0o755);
+    }
+    const api = handler(root, { ...cleanEnv(), PATH: `:.:${process.env.PATH}` });
+    for (const [path, extra] of [["/", {}], ["/log", {}], ["/commit", { hash: m[1]! }], ["/diff", { hash: m[1]!, path: "a.txt" }]] as const) {
+      assert.equal((await get(api, path, { project: P, ...extra })).status, 200, path);
+    }
+    assert.ok(!existsSync(marker), existsSync(marker) ? readFileSync(marker, "utf8") : "");
+  });
+
+  test("Windows: a git.exe planted in the workspace or the project never runs", { skip: WINDOWS ? false : "spawn() tries the working folder before PATH on Windows only" }, async () => {
+    const root = workspace();
+    const own = init(join(root, "projects-folder", P));
+    fastImport(own, [{ mark: 1, message: "one", files: [["a.txt", "a\n"]] }]);
+    // A copy of node as git.exe, which would write the marker through NODE_OPTIONS if it ran.
+    const dir = mkdtempSync(join(tmpdir(), "os-ui-git-planted-"));
+    const marker = join(dir, "ran");
+    writeFileSync(join(dir, "mark.cjs"), `require("fs").appendFileSync(${JSON.stringify(marker)}, process.argv.join(" ") + "\\n");\n`);
+    for (const target of [root, own]) copyFileSync(process.execPath, join(target, "git.exe"));
+    const api = handler(root, { ...cleanEnv(), NODE_OPTIONS: `--require ${JSON.stringify(join(dir, "mark.cjs"))}` });
+    assert.equal((await get(api, "/log", { project: P })).status, 200);
+    assert.ok(!existsSync(marker), existsSync(marker) ? readFileSync(marker, "utf8") : "");
+  });
+
+  test("a git that is neither absolute nor a bare name is not run", async () => {
+    const root = workspace();
+    init(root);
+    fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a.txt", "a\n"]] }]);
+    for (const git of ["./git", "bin/git", "..\\git"]) {
+      const { run, calls } = fakeRunner();
+      const answer = await body(get(codeGitHandler(context(root, { run }), git, logged), "/", { project: P }));
+      assert.deepEqual(answer, { repo: null, problem: "git was not found; see Settings" }, git);
+      assert.deepEqual(calls, [], git);
+    }
+  });
+});
+
+describe("bounded work", () => {
+  test("a blob over 4 MiB is binary, with its sizes (core.bigFileThreshold=4m)", async () => {
+    const root = workspace();
+    init(root);
+    const big = "a line of text\n".repeat(350_000); // 5.25 MB
+    const m = fastImport(root, [{ mark: 1, message: "big", files: [["projects-folder/P/big.txt", big], ["projects-folder/P/small.txt", "s\n"]] }]);
+    const api = handler(root);
+    const commit = await body<Commit>(get(api, "/commit", { project: P, hash: m[1]! }));
+    assert.deepEqual(commit.files.map((f) => [f.path, f.added, f.sizes]), [["big.txt", null, { old: 0, new: big.length }], ["small.txt", 1, null]]);
+    assert.deepEqual(commit.stat, { files: 2, added: 1, deleted: 0 });
+    assert.deepEqual((await body<Log>(get(api, "/log", { project: P }))).commits.map((c) => [c.files, c.added]), [[2, 1]]);
+    assert.match((await body<Diff>(get(api, "/diff", { project: P, hash: m[1]!, path: "big.txt" }))).diff, /\nBinary files \/dev\/null and b\/big\.txt differ\n/);
+  });
+
+  test("at most four git processes at once and sixteen waiting; past that a request is 503", async () => {
+    const root = workspace();
+    init(root);
+    let open = true;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((go) => (release = go));
+    let running = 0;
+    let most = 0;
+    const { run } = fakeRunner(async (call) => {
+      if (call.command[1] === "--version") return ok("git version 2.55.0\n");
+      running++;
+      most = Math.max(most, running);
+      if (!open) await gate;
+      running--;
+      return ok(call.command.includes("rev-parse") ? `${"a".repeat(40)}\n` : "");
+    });
+    const api = codeGitHandler(context(root, { run }), "git", logged);
+    assert.equal((await get(api, "/", { project: P })).status, 200, "the probe is kept from here on");
+    open = false;
+    most = 0;
+    const pending = Array.from({ length: 25 }, () => get(api, "/", { project: P }));
+    await new Promise((done) => setTimeout(done, 50));
+    assert.equal(running, 4, "four run");
+    release();
+    const statuses = (await Promise.all(pending)).map((r) => r.status);
+    assert.equal(most, 4);
+    assert.deepEqual([statuses.filter((s) => s === 200).length, statuses.filter((s) => s === 503).length], [20, 5]);
+    assert.equal((await get(api, "/", { project: P })).status, 200, "and the slots come back");
+  });
+});
+
+describe("which commit a hash names", () => {
+  test("a tag named like a commit's full hash does not change which commit answers", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [
+      { mark: 1, message: "first", files: [["projects-folder/P/a.txt", "1\n"]] },
+      { mark: 2, message: "second", files: [["projects-folder/P/a.txt", "1\n2\n"]] },
+    ]);
+    fx(root, ["tag", m[1]!, m[2]!]);
+    const commit = await body<Commit>(get(handler(root), "/commit", { project: P, hash: m[1]! }));
+    assert.deepEqual([commit.hash, commit.subject], [m[1], "first"]);
+  });
+
+  test("only HEAD's history: a commit on another branch, or one reset away, is 404", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [
+      { mark: 1, message: "first", files: [["projects-folder/P/a.txt", "1\n"]] },
+      { mark: 2, message: "on a side branch", ref: "refs/heads/side", from: 1, files: [["projects-folder/P/b.txt", "b\n"]] },
+      { mark: 3, message: "reset away", ref: "refs/heads/gone", from: 1, files: [["projects-folder/P/c.txt", "c\n"]] },
+    ]);
+    fx(root, ["update-ref", "-d", "refs/heads/gone"]);
+    const api = handler(root);
+    for (const [mark, path] of [[2, "b.txt"], [3, "c.txt"]] as const) {
+      assert.equal((await get(api, "/commit", { project: P, hash: m[mark]! })).status, 404, `commit ${mark}`);
+      assert.equal((await get(api, "/diff", { project: P, hash: m[mark]!, path })).status, 404, `diff ${mark}`);
+    }
+    assert.equal((await get(api, "/commit", { project: P, hash: m[1]! })).status, 200);
+  });
+});
+
+describe("odd but legal repositories", () => {
+  test("warnings that overflow stderr's cap are not cut output (info/attributes of 20,000 bad lines)", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [
+      { mark: 1, message: "one", files: [["projects-folder/P/a.txt", "1\n"]] },
+      { mark: 2, message: "two", files: [["projects-folder/P/a.txt", "1\n2\n"]] },
+    ]);
+    writeFileSync(join(root, ".git", "info", "attributes"), Array.from({ length: 20_000 }, (_, i) => `a.txt bad-${i}! !x\n`).join(""));
+    const api = handler(root);
+    assert.equal((await body<Summary>(get(api, "/", { project: P }))).head?.hash, m[2]);
+    assert.deepEqual((await body<Log>(get(api, "/log", { project: P }))).commits.map((c) => c.subject), ["two", "one"]);
+    assert.deepEqual((await body<Commit>(get(api, "/commit", { project: P, hash: m[2]! }))).files.map((f) => f.path), ["a.txt"]);
+    assert.match((await body<Diff>(get(api, "/diff", { project: P, hash: m[2]!, path: "a.txt" }))).diff, /\n\+2\n/);
+  });
+
+  test("file names that start with a newline", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [{ mark: 1, message: "odd", files: [["projects-folder/P/\nlead.txt", "n\n"], ["projects-folder/P/x", "plain x\n"], ["projects-folder/P/\nx", "newline x\n"]] }]);
+    const api = handler(root);
+    const commit = await body<Commit>(get(api, "/commit", { project: P, hash: m[1]! }));
+    assert.deepEqual(commit.files.map((f) => f.path), ["\nlead.txt", "\nx", "x"]);
+    const diff = await body<Diff>(get(api, "/diff", { project: P, hash: m[1]!, path: "x" }));
+    assert.match(diff.diff, /\n\+plain x\n/);
+    assert.doesNotMatch(diff.diff, /newline x/);
+  });
+
+  test("core.abbrev does not change `short`, which is the first 7 digits", async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a.txt", "1\n"]] }]);
+    for (const abbrev of ["4", "40"]) {
+      fx(root, ["config", "core.abbrev", abbrev]);
+      const api = handler(root);
+      const short = m[1]!.slice(0, 7);
+      assert.equal((await body<Summary>(get(api, "/", { project: P }))).head?.short, short, abbrev);
+      assert.equal((await body<Log>(get(api, "/log", { project: P }))).commits[0]!.short, short, abbrev);
+      assert.equal((await body<Commit>(get(api, "/commit", { project: P, hash: m[1]! }))).short, short, abbrev);
+    }
+  });
+
+  test("a project named in another case than its folder is 404, not another Git path", async () => {
+    const root = workspace();
+    init(root);
+    fastImport(root, [
+      { mark: 1, message: "inside P", files: [["projects-folder/P/a.txt", "a\n"]] },
+      { mark: 2, message: "lower-case p in Git only", files: [["projects-folder/p/secret.txt", "s\n"]] },
+    ]);
+    assert.equal((await get(handler(root), "/log", { project: "p" })).status, 404);
+  });
+});
+
+describe("protocol.allow=never under --no-lazy-fetch", { skip: NO_SCRIPTS }, () => {
+  test("a fetch that starts anyway runs no transport (the guards with --no-lazy-fetch taken out)", () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a.txt", "a\n"]] }]);
+    const lazy = missingBlobOnTop(root, m[1]!);
+    const markers = join(mkdtempSync(join(tmpdir(), "os-ui-git-proto-")), "markers");
+    mkdirSync(markers);
+    const config: [string, string][] = [
+      ["core.repositoryformatversion", "1"],
+      ["extensions.partialClone", "origin"],
+      ["remote.origin.url", "ssh://example.invalid/repo"],
+      ["remote.origin.promisor", "true"],
+      ["core.sshCommand", markerScript(markers, "ssh")],
+    ];
+    for (const [key, value] of config) fx(root, ["config", key, value]);
+    const gitDir = join(root, ".git");
+    const blob = fx(root, ["rev-parse", `${lazy}:projects-folder/P/lazy.txt`]);
+    const catFile = (drop: string[]) => {
+      const args = guardArgs(gitDir, root).filter((a, i, all) => !drop.includes(a) && !(a === "-c" && drop.includes(all[i + 1]!)));
+      spawnSync("git", [...args, "cat-file", "-p", blob], { cwd: root, env: gitEnv(cleanEnv()), encoding: "utf8" });
+      return readdirSync(markers);
+    };
+    assert.deepEqual(catFile(["--no-lazy-fetch"]), [], "protocol.allow=never alone stops the ssh command");
+    assert.deepEqual(catFile(["--no-lazy-fetch", "protocol.allow=never"]), ["ssh"], "without both, the fetch runs it (the hazard is real)");
   });
 });
