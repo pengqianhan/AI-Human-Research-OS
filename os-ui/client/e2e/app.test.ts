@@ -510,7 +510,8 @@ describe("desktop client on a Research OS folder", () => {
     await chips.filter({ hasText: "Code/README.md:3" }).waitFor();
     assert.equal(await chips.first().getAttribute("title"), `About Code/README.md:3\n> ${line}`);
     assert.equal(await bar.count(), 0, "asking clears the selection");
-    assert.equal(await chat.locator("textarea").evaluate((el) => el === document.activeElement), true, "the cursor is in the composer");
+    // The cursor moves to the composer on the next frame.
+    await page.waitForFunction((label) => document.activeElement?.getAttribute("aria-label") === label, `Message ${PROJECT} agent`, { timeout: 5000 });
 
     await code.getByRole("button", { name: "Changes", exact: true }).click();
     const commit = code.locator(".commit.on");
