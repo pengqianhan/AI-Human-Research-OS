@@ -146,13 +146,21 @@ Status on 2026-11-22:
     caller, the global and system config not read (`trace2.*Target` there writes
     files), `--no-lazy-fetch`, `--no-replace-objects`, `--literal-pathspecs`,
     `core.fsmonitor=false`, `--no-show-signature`, `--submodule=short`,
-    `--no-follow`, `--attr-source=<commit>`, and flags that keep the output's shape
-    (`--root`, `--no-renames`, `--diff-merges=first-parent`, `--encoding=UTF-8`,
-    `--no-color`, prefixes, `core.quotePath=false`). The table at the end of the
-    file accounts for every `git help config` key that names a program, and
-    `RunOptions.env` (an edit of the runner's environment) carries the environment.
-    An explicit `--git-dir` skips Git's `safe.directory` check (tried with
-    `GIT_TEST_ASSUME_DIFFERENT_OWNER=1`), so these guards are the only ones.
+    `--no-follow`, and flags that keep the output's shape (`--root`,
+    `--no-renames`, `--diff-merges=first-parent`, `--encoding=UTF-8`, `--no-color`,
+    prefixes, `core.quotePath=false`). Nothing in the working tree is read:
+    `--attr-source=<commit>` for `.gitattributes`, `--no-use-mailmap` for
+    `.mailmap`, and `--ignore-submodules=none` for `.gitmodules`, whose
+    `ignore = all` would otherwise hide gitlink changes. Files the repository's
+    config names anywhere are not read either (`-O<null device>` for
+    `diff.orderFile`, which failed every diff when missing,
+    `core.attributesFile=<null device>`, and `mailmap.file` through
+    `--no-use-mailmap`). A FIFO among the files Git opens inside `.git` (such as
+    `info/attributes`) still stalls each command until the 10 s limit. The table at
+    the end of the file accounts for every `git help config` key that names a
+    program, and `RunOptions.env` (an edit of the runner's environment) carries the
+    environment. An explicit `--git-dir` skips Git's `safe.directory` check (tried
+    with `GIT_TEST_ASSUME_DIFFERENT_OWNER=1`), so these guards are the only ones.
   - Refused with a `problem`, never falling back to the workspace's repository: a
     `.git` that is a link or a gitfile (a linked worktree, as an agent's worktree
     is, or a submodule checkout), a link directly inside `.git`, a `commondir`,
@@ -164,14 +172,19 @@ Status on 2026-11-22:
     `/commit` lists such files with their counts and `openable: false`.
   - Caps: 4 KiB for one line, 256 KiB for `/log`, 512 KiB for a file list, 64 KiB
     for a message, 1 MiB for a patch, cut back to whole records; 10 s per command.
+    `/log` answers `more: false` once the next `skip` would pass 10,000, so the list
+    ends at about 10,050 commits. An error's text names the workspace as
+    `<workspace>`, never by its absolute path.
     `processRunner` now decodes output once (a split character survives) and gains
     `maxOutputBytes` and `truncated`.
   - `createRegistry` takes `skip`: declared handler keys that need no factory and are
     not mounted; a factory for a skipped key is no orphan.
   - Each guard has a test that fails without it (checked by removing each in turn),
-    except `--work-tree`, `--no-optional-locks`, `--no-ext-diff` and
-    `GIT_CONFIG_NOSYSTEM`, which no output of these commands can show; tests of the
-    arguments and the environment pin them. The tests whose marker programs are
+    except `--work-tree`, `--no-optional-locks`, `--no-ext-diff`,
+    `GIT_CONFIG_NOSYSTEM`, and `core.fsmonitor=false` (which
+    `--ignore-submodules=none` now makes a second layer: removing both starts the
+    monitor), which no output of these commands can show; tests of the arguments
+    and the environment pin them. The tests whose marker programs are
     shell scripts skip on Windows. `info/grafts` is honoured, as
     `--no-replace-objects` does not cover it.
   - For S6a-2: `codeGitHandler(ctx, git)` takes the git program, so the client can
