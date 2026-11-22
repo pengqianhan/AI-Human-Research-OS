@@ -17,7 +17,8 @@ export function PluginScreen({ page, plugin }: { page: PluginPage; plugin: Plugi
         </h1>
         <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[10px] bg-accent-tint px-3 py-2 text-[12.5px] text-accent-ink">
           <Icon name="puzzle" size={14} />
-          <span className="min-w-0">
+          {/* One line at any width, so a long description never takes height from the page; the full text is the tooltip. */}
+          <span className="min-w-0 truncate" title={plugin.description === "" ? undefined : plugin.description}>
             <b className="font-semibold">
               {plugin.name} · {plugin.source} plugin
             </b>
