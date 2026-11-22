@@ -22,6 +22,8 @@ import type { ApiHandler, ApiResponse, RunOptions, Runner } from "./types.ts";
  */
 
 const WINDOWS = process.platform === "win32";
+/** Names Windows forbids in a path. The handler's handling of them is tested on POSIX only. */
+const NO_ODD_NAMES = WINDOWS ? "Git for Windows refuses to create a file named * or starting with a newline (fast-import: invalid path), so this history cannot be built there" : false;
 const NO_SCRIPTS = WINDOWS
   ? "marker programs here are POSIX shell scripts (#!/bin/sh, chmod +x); how Git for Windows starts configured programs is not modelled, so these tests would prove nothing there"
   : false;
@@ -618,7 +620,7 @@ describe("what the answers hold", () => {
     assert.equal(new Set(seen).size, 62);
   });
 
-  test("a path is literal: a glob matches only its own name, and a leading - is no option", async () => {
+  test("a path is literal: a glob matches only its own name, and a leading - is no option", { skip: NO_ODD_NAMES }, async () => {
     const root = workspace();
     init(root);
     const m = fastImport(root, [{ mark: 1, message: "odd names", files: [["projects-folder/P/*", "star\n"], ["projects-folder/P/a", "a\n"], ["projects-folder/P/-n", "dash\n"]] }]);
@@ -1381,7 +1383,7 @@ describe("odd but legal repositories", () => {
     assert.match((await body<Diff>(get(api, "/diff", { project: P, hash: m[2]!, path: "a.txt" }))).diff, /\n\+2\n/);
   });
 
-  test("file names that start with a newline", async () => {
+  test("file names that start with a newline", { skip: NO_ODD_NAMES }, async () => {
     const root = workspace();
     init(root);
     const m = fastImport(root, [{ mark: 1, message: "odd", files: [["projects-folder/P/\nlead.txt", "n\n"], ["projects-folder/P/x", "plain x\n"], ["projects-folder/P/\nx", "newline x\n"]] }]);
