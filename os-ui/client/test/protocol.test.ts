@@ -794,6 +794,8 @@ describe("read channel", () => {
   relLink(join(ws, "human", "private", "stash"), project("Evil3"));
   // A project folder linked to another project: its Code is that project's, a root too.
   relLink(project("Beta"), project("Mirror"));
+  // A path in no root that is a link to one: still no root's path.
+  relLink(join(project("Beta"), "Code"), join(ws, "human", "alias"));
 
   const manifest = (id: string, reads: string[]) =>
     JSON.stringify({ contract: "^1.0", id, name: id, version: "1", reads, contributes: { projectViews: [{ id: "main", title: id, entry: "index.html" }] } });
@@ -1023,7 +1025,8 @@ describe("read channel", () => {
     ]) {
       await assertRefused(files(raw));
     }
-    for (const raw of ["projects-folder", "projects-folder/Alpha", "human"]) await assertRefused(list(raw));
+    for (const raw of ["projects-folder", "projects-folder/Alpha", "human", "human/alias"]) await assertRefused(list(raw));
+    await assertRefused(files("human/alias/b.py"));
     for (const url of [files(`${CODE}/run.py`, "paper-wiki"), list(CODE, "paper-wiki"), files("paper-wiki/viz.html", "paper-wiki")]) {
       await assertRefused(url);
     }
@@ -1244,6 +1247,22 @@ describe("read channel", () => {
     handle = await open(join(dir, "grow"), "r");
     await handle.close();
     await assert.rejects(new Response(fileStream(handle, 10)).text());
+    // Through the handler, a file comes in chunks, not as one buffer of the whole file.
+    const mib = join(ws, "projects-folder", "Beta", "Code", "mib.bin");
+    writeFileSync(mib, "m".repeat(1024 * 1024));
+    try {
+      const reader = (await fetchRead(files("projects-folder/Beta/Code/mib.bin"))).body!.getReader();
+      let total = 0;
+      let largest = 0;
+      for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+        total += chunk.value.byteLength;
+        largest = Math.max(largest, chunk.value.byteLength);
+      }
+      assert.equal(total, 1024 * 1024);
+      assert.ok(largest <= 64 * 1024, `a chunk of ${largest} bytes`);
+    } finally {
+      unlinkSync(mib);
+    }
   });
 
   test("no handle is left open by full, cancelled, or HEAD reads", { skip: !posix }, async () => {
