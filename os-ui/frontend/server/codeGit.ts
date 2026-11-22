@@ -35,13 +35,14 @@ import type { ApiContext, ApiHandler, ApiResponse, RunOptions, RunResult } from 
  *    the workspace (`refusal`): the files Git reads there by name are plain
  *    files of bounded size, nothing under refs/ or among the objects is a
  *    link, and it borrows no objects (no alternates, no commondir). Every
- *    diff compares two committed trees of HEAD's history; .gitattributes,
- *    .mailmap and .gitmodules in the working tree are not opened, nor is
- *    info/grafts, nor any file the config names (diff.orderFile,
- *    core.attributesFile, mailmap.file) except through include.path, which
- *    reads another file as config under the same guards; no command writes
- *    to .git. The check runs before git does, so a file swapped in between
- *    is not caught.
+ *    diff compares two committed trees of HEAD's history; no .gitattributes
+ *    is read (neither the working tree's nor a committed one), .mailmap and
+ *    .gitmodules in the working tree are not opened, nor is info/grafts, nor
+ *    any file the config names (diff.orderFile, core.attributesFile,
+ *    mailmap.file) except through include.path, which reads another file as
+ *    config under the same guards and with none of these checks; no command
+ *    writes to .git. The check runs before git does, so a file swapped in
+ *    between is not caught.
  * 4. Bounded work: at most four git processes per workspace at once, each
  *    with 10 s, an output cap, and blobs over 4 MiB treated as binary. What
  *    is not bounded is listed in PLUGINS.md and at the end of this file.
@@ -91,7 +92,7 @@ export interface FileChange {
   path: string;
   /** A added, D deleted, M modified, T type changed. Renames are never detected: a moved file is a D and an A. */
   status: string;
-  /** null for a binary file, which includes any file over 4 MiB. */
+  /** null for a binary file: one with a NUL byte near its start, one over 4 MiB, or one info/attributes marks; no .gitattributes counts. */
   added: number | null;
   deleted: number | null;
   /** A binary file's blob sizes in bytes, 0 for the side that does not exist ("Bin 0 → 140601 bytes"); null for a text file, or when a blob is missing. */
@@ -127,11 +128,27 @@ export interface Diff extends Source {
 export const MIN_GIT = [2, 45] as const;
 
 /**
- * The null device as Git documents it for GIT_CONFIG_GLOBAL. Git for Windows
- * maps this literal name in its open() and fopen(), and Node's os.devNull
- * ("\\.\nul" there) it does not, so the literal is used on every platform.
+ * The null device as Git documents it for GIT_CONFIG_GLOBAL, used literally
+ * on every platform rather than Node's os.devNull ("\\.\nul" on Windows). That
+ * Git for Windows maps only this literal name, in compat/mingw.c's open() and
+ * fopen(), is a reviewer's reading of its source, not run on Windows here.
+ * Where it is not mapped it names a missing file, which is as neutral for
+ * GIT_CONFIG_GLOBAL, GIT_GRAFT_FILE and core.attributesFile; -O would fail
+ * every diff instead, which the diff.orderFile test would show.
  */
 const DEV_NULL = "/dev/null";
+
+/**
+ * The empty tree in a SHA-1 and a SHA-256 repository, which Git knows without
+ * storing it. Every command that diffs takes its attributes from it, so no
+ * .gitattributes is read, neither the working tree's nor a committed one: a
+ * committed 90 MB .gitattributes that compressed to almost nothing took 1.1 GB
+ * and 3 s per command when read from the commit.
+ */
+const EMPTY_TREE: Readonly<Record<number, string>> = {
+  40: "4b825dc642cb6eb9a060e54bf8d69288fbee4904",
+  64: "6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321",
+};
 
 const NAME = /^[A-Za-z][A-Za-z0-9_-]*$/; // a project folder name, as chat.ts's PROJECT_DIR
 const FULL = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
@@ -170,8 +187,8 @@ const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
  * - core.bigFileThreshold=4m: a blob over 4 MiB is binary, so Git neither
  *   loads nor diffs it (two 500 MB text blobs took 3.4 GB in log --shortstat).
  * - core.quotePath=false: names in diff headers stay readable.
- * Per command, --attr-source=<commit> reads .gitattributes from the commit
- * instead of the working tree.
+ * Per command that diffs, --attr-source=<the empty tree> (EMPTY_TREE): no
+ * .gitattributes from the working tree or the commit.
  */
 export function guardArgs(gitDir: string, top: string): string[] {
   return [
@@ -308,6 +325,7 @@ const READ_FILES: readonly (readonly [string, number])[] = [
   ["config.worktree", MIB],
   ["packed-refs", 64 * MIB], // one line per ref; Git maps it
   ["shallow", 16 * MIB], // one hash per line
+  [join("info", "attributes"), MIB], // parsed whole into memory: 16 MiB of short lines took 204 MB
 ];
 /** A loose ref is a hash (41 or 65 bytes with its newline) or "ref: <name>". */
 const LOOSE_REF = 4 * KIB;
@@ -657,8 +675,9 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
       const source: Source = { repo: repo.repo, root: repo.root, filter: repo.filter };
 
       const guards = guardArgs(repo.gitDir, repo.top);
-      const run = (args: string[], cap: number, attrSource?: string, input?: string): Promise<RunResult> =>
-        limited(() => ctx.run([git, ...guards, ...(attrSource === undefined ? [] : [`--attr-source=${attrSource}`]), ...args], options(repo.top, cap, input)));
+      /** `diffs`, a full hash of this repository, marks a command that diffs: it gets no in-tree attributes. */
+      const run = (args: string[], cap: number, diffs?: string, input?: string): Promise<RunResult> =>
+        limited(() => ctx.run([git, ...guards, ...(diffs === undefined ? [] : [`--attr-source=${EMPTY_TREE[diffs.length]}`]), ...args], options(repo.top, cap, input)));
       const must = (result: RunResult, step: string): RunResult => {
         if (result.timedOut === true || (!result.truncated && result.code !== 0)) {
           log(`code-view git ${req.path} ${step}: ${failureText(result, 2000)}`);
@@ -704,8 +723,14 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
       }
 
       // /commit and /diff: a full hash naming a commit in HEAD's history.
+      // rev-parse exits 1 for no such object and 128 for one that is not a
+      // commit; a timeout or cut output is a failure, not an answer.
       const resolved = await run(["rev-parse", "--verify", "--quiet", `${hash!}^{commit}`], CAP.line);
-      if (resolved.code !== 0 || resolved.truncated === true) refuse(404, `no commit ${hash!}`);
+      if (resolved.timedOut === true || resolved.truncated === true) {
+        log(`code-view git ${req.path} rev-parse: ${failureText(resolved, 2000)}`);
+        refuse(500, failed("rev-parse", resolved));
+      }
+      if (resolved.code !== 0) refuse(404, `no commit ${hash!}`);
       const full = fullHash(resolved, "rev-parse");
       const tip = await head();
       const ancestor = tip === null ? null : await run(["merge-base", "--is-ancestor", full, tip], CAP.line);
@@ -823,7 +848,10 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *     url.<base>.insteadOf, remote.<name>.vcs
  *     (git-remote-<vcs>), .uploadpack, .proxy,
  *     bundle.*, transfer.*, fetch.*, promisor.*,
- *     and the hooks of the fetch's ref updates       --no-lazy-fetch, and -c protocol.allow=never under it
+ *     and the hooks of the fetch's ref updates       --no-lazy-fetch, and -c protocol.allow=never under it, which
+ *                                                    stops the transport only: a fetch that starts still writes
+ *                                                    remote.<name>.partialclonefilter into .git/config (seen on
+ *                                                    2.55), so --no-lazy-fetch is what keeps .git unchanged
  *   core.useReplaceRefs                              --no-replace-objects
  *   info/grafts                                      GIT_GRAFT_FILE=/dev/null (Git printed each line of it, which
  *                                                    a linked grafts file turned into a way to read any file)
@@ -836,7 +864,7 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *     GIT_ALTERNATE_OBJECT_DIRECTORIES, GIT_EXEC_PATH,
  *     GIT_ATTR_SOURCE, ...)                          removed by gitEnv
  *   core.worktree                                    --work-tree
- *   in-tree .gitattributes                           --attr-source=<commit>
+ *   in-tree .gitattributes (working tree and commit) --attr-source=<the empty tree>
  *   core.attributesFile                              -c core.attributesFile=/dev/null
  *   diff.orderFile                                   -O/dev/null (a missing file failed every diff)
  *   mailmap.file, mailmap.blob, in-tree .mailmap     --no-use-mailmap (read even though %an is printed)
@@ -869,16 +897,20 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *                                                    refuse, --git-dir reads), so these guards are the only ones
  *
  * Read, and left as they are
- *   include.path, includeIf.*                        another file read as config, from anywhere: its keys fall under
- *                                                    the same guards, but whether it exists or parses can show (a
- *                                                    bad one makes every command fail), and what it sets shapes
- *                                                    the output (an outside include changed diff.context)
- *   info/attributes                                  a plain file inside the checked .git; it can only pick a driver
+ *   include.path, includeIf.*                        another file read as config, from anywhere and unchecked (not
+ *                                                    its type, size or links, so neither the 1 MiB config cap nor
+ *                                                    the FIFO checks apply): its keys fall under the same guards,
+ *                                                    but whether it exists or parses can show (a bad one makes
+ *                                                    every command fail), what it sets shapes the output (an
+ *                                                    outside include changed diff.context), and a FIFO or a huge
+ *                                                    file there stalls or loads until the 10 s limit
+ *   info/attributes                                  a plain file under 1 MiB inside the checked .git; it can pick
+ *                                                    a driver, which the flags above neutralise, or mark binary
  *
  * Not bounded
  *   memory inside one git process, below the blob threshold: a commit of
  *   many files just under 4 MiB, or a diff with very many lines, still takes
  *   what Git needs, for up to 10 s; packed objects are not checked one by one;
  *   loose object files are checked by type, not size (Git reads only their
- *   header for the threshold).
+ *   header for the threshold); and what an include.path file holds.
  */
