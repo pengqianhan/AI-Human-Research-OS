@@ -1,7 +1,11 @@
 import { useCallback, useState } from "react";
 
-/** The pages the left navigation switches between. "workspace" is one project's page. */
-export type Screen = "home" | "projects" | "wiki" | "skills" | "plugins" | "settings" | "workspace";
+/** The app's own pages. "workspace" is one project's page. */
+export type TrunkScreen = "home" | "projects" | "skills" | "plugins" | "settings" | "workspace";
+/** A plugin's left-navigation page, by its key "<plugin>/<page>" (src/plugins/pages.ts). */
+export type PluginScreen = `${string}/${string}`;
+/** The pages the left navigation switches between. */
+export type Screen = TrunkScreen | PluginScreen;
 
 /** The tabs of a project workspace. Only Overview, Code, and Paper can be selected in step 1. */
 export type ViewTab = "overview" | "code" | "paper";
@@ -20,7 +24,9 @@ export interface LayoutState {
 }
 
 const KEY = "osui.layout.v1";
-const SCREENS: Screen[] = ["home", "projects", "wiki", "skills", "plugins", "settings", "workspace"];
+const TRUNK_SCREENS: TrunkScreen[] = ["home", "projects", "skills", "plugins", "settings", "workspace"];
+/** Screens saved before a plugin's page replaced them: the Paper wiki page was "wiki" until S4. */
+const RENAMED: ReadonlyMap<string, PluginScreen> = new Map([["wiki", "paper-wiki/viewer"]]);
 const TABS: ViewTab[] = ["overview", "code", "paper"];
 
 export const DEFAULT_LAYOUT: LayoutState = {
@@ -32,18 +38,31 @@ export const DEFAULT_LAYOUT: LayoutState = {
   tab: "overview",
 };
 
-/** Read the saved layout, keeping only values that are still valid. */
-function load(): LayoutState {
+/**
+ * A saved layout, keeping only values that are still valid. `pluginScreens`
+ * are the keys of the loaded plugins' left-navigation pages: a saved plugin
+ * page whose plugin is not loaded opens Home, and an old screen name opens
+ * the plugin page that replaced it.
+ */
+export function readLayout(raw: unknown, pluginScreens: readonly string[]): LayoutState {
+  const saved = (typeof raw === "object" && raw !== null ? raw : {}) as Partial<Record<keyof LayoutState, unknown>>;
+  const name = typeof saved.screen === "string" ? (RENAMED.get(saved.screen) ?? saved.screen) : null;
+  const screen: Screen | null =
+    name !== null && (TRUNK_SCREENS.includes(name as TrunkScreen) || pluginScreens.includes(name)) ? (name as Screen) : null;
+  return {
+    screen: screen ?? DEFAULT_LAYOUT.screen,
+    project: typeof saved.project === "string" ? saved.project : null,
+    sidebarCollapsed: saved.sidebarCollapsed === true,
+    homeConversationOpen: saved.homeConversationOpen === true,
+    conversationCollapsed: saved.conversationCollapsed === true,
+    tab: TABS.includes(saved.tab as ViewTab) ? (saved.tab as ViewTab) : DEFAULT_LAYOUT.tab,
+  };
+}
+
+/** Read the saved layout from localStorage. */
+function load(pluginScreens: readonly string[]): LayoutState {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? "{}") as Partial<Record<keyof LayoutState, unknown>>;
-    return {
-      screen: SCREENS.includes(raw.screen as Screen) ? (raw.screen as Screen) : DEFAULT_LAYOUT.screen,
-      project: typeof raw.project === "string" ? raw.project : null,
-      sidebarCollapsed: raw.sidebarCollapsed === true,
-      homeConversationOpen: raw.homeConversationOpen === true,
-      conversationCollapsed: raw.conversationCollapsed === true,
-      tab: TABS.includes(raw.tab as ViewTab) ? (raw.tab as ViewTab) : DEFAULT_LAYOUT.tab,
-    };
+    return readLayout(JSON.parse(localStorage.getItem(KEY) ?? "{}"), pluginScreens);
   } catch {
     // storage unavailable or unreadable: start from the defaults
     return DEFAULT_LAYOUT;
@@ -58,9 +77,9 @@ function save(state: LayoutState): void {
   }
 }
 
-/** The layout state with a setter that also saves it. */
-export function useLayoutState(): [LayoutState, (patch: Partial<LayoutState>) => void] {
-  const [state, setState] = useState<LayoutState>(load);
+/** The layout state with a setter that also saves it. `pluginScreens` as for readLayout; read once. */
+export function useLayoutState(pluginScreens: readonly string[]): [LayoutState, (patch: Partial<LayoutState>) => void] {
+  const [state, setState] = useState<LayoutState>(() => load(pluginScreens));
   const update = useCallback((patch: Partial<LayoutState>) => {
     setState((prev) => {
       const next = { ...prev, ...patch };

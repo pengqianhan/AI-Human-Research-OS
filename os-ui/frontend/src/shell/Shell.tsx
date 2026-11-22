@@ -6,10 +6,11 @@ import { PageHeader } from "../components/PageHeader";
 import { HomePage } from "../pages/HomePage";
 import { ProjectsPage } from "../pages/ProjectsPage";
 import { WorkspacePage } from "../pages/WorkspacePage";
-import { PaperWikiScreen } from "../pages/PaperWikiScreen";
+import { PluginScreen } from "../pages/PluginScreen";
 import { StorePage } from "../pages/StorePage";
 import { PluginsPage } from "../pages/PluginsPage";
 import { SettingsPage } from "../pages/SettingsPage";
+import { pluginIcon, usePlugins } from "../plugins/registry";
 import { useLayoutState } from "./layoutState";
 import type { Screen } from "./layoutState";
 import { Sidebar } from "./Sidebar";
@@ -21,13 +22,18 @@ import { ToastProvider } from "./Toast";
  * on the right. It replaces the desktop-OS shell in src/desktop/, which is
  * still in the repository but no longer used.
  *
+ * A plugin's left-navigation pages (Paper wiki) come from the plugin
+ * registry (src/plugins/registry.ts), each a PluginScreen.
+ *
  * A page stays mounted (hidden) once it has been opened, so leaving and
  * coming back keeps a conversation's draft and selected session, a running
  * turn's polling, and the Paper Wiki viewer where it was — as the old
  * windows did when they stood side by side.
  */
 export function Shell({ state }: { state: OsState }) {
-  const [layout, setLayout] = useLayoutState();
+  const { plugins, pages } = usePlugins();
+  const navPages = pages.filter((p) => p.slot === "nav");
+  const [layout, setLayout] = useLayoutState(navPages.map((p) => p.key));
   const [visited, setVisited] = useState<Set<Screen>>(() => new Set([layout.screen]));
   const mainRef = useRef<HTMLElement | null>(null);
   const focusTitle = useRef(false);
@@ -79,6 +85,7 @@ export function Shell({ state }: { state: OsState }) {
           screen={screen}
           openProject={openProject?.name ?? null}
           projects={state.projects.map((p) => p.name)}
+          pluginItems={navPages.map((p) => ({ screen: p.key, label: p.title, icon: pluginIcon(p.plugin) }))}
           collapsed={layout.sidebarCollapsed}
           onNavigate={(next, project) => navigate(next, project)}
           onToggleCollapsed={() => setLayout({ sidebarCollapsed: !layout.sidebarCollapsed })}
@@ -114,11 +121,17 @@ export function Shell({ state }: { state: OsState }) {
               />
             </Page>
           )}
-          {mounted("wiki") && (
-            <Page id="wiki" label="Paper wiki" screen={screen} fill>
-              <PaperWikiScreen />
-            </Page>
-          )}
+          {navPages.map((page) => {
+            const plugin = plugins.find((p) => p.id === page.plugin);
+            return (
+              mounted(page.key) &&
+              plugin !== undefined && (
+                <Page key={page.key} id={page.key} label={page.title} screen={screen} fill>
+                  <PluginScreen page={page} plugin={plugin} />
+                </Page>
+              )
+            );
+          })}
           {mounted("skills") && (
             <Page id="skills" label="Skills" screen={screen}>
               <SkillsScreen state={state} />

@@ -1,9 +1,12 @@
 import { PageHeader } from "../components/PageHeader";
+import type { Slot } from "../plugins/pages";
+import { pluginIcon, usePlugins } from "../plugins/registry";
 import { Icon } from "../shell/icons";
 import type { IconName } from "../shell/icons";
 import { useToast } from "../shell/Toast";
 
-interface PluginInfo {
+/** One plugin's card. */
+interface Card {
   name: string;
   icon: IconName;
   contributes: string[];
@@ -12,20 +15,16 @@ interface PluginInfo {
   later: string | null;
 }
 
+/** How a card names a page a plugin contributes, by where the page shows. */
+const SLOT_LABEL: Record<Slot, string> = { nav: "Page", home: "Home panel", project: "Project view" };
+
 /**
- * TEMPORARY: a fixed list written into the app. The plugin registry being
- * built in step 1 (ADR-0006; server side in server/registry.ts) is to feed
- * this page with the plugins actually loaded; until then it only describes
- * what is built in and what is coming.
+ * The plan: the bundled plugins not built yet, written into the app. The
+ * enabled ones are not listed here; they are read from the plugin registry
+ * (src/plugins/registry.ts). Remove a plugin from this list when its
+ * manifest is bundled.
  */
-const PLUGINS: PluginInfo[] = [
-  {
-    name: "Paper Wiki",
-    icon: "book",
-    contributes: ["Page · Paper wiki"],
-    about: "Shared paper notes, topics, concepts, and sources from paper-wiki/, in the graph and timeline viewer, on its own origin.",
-    later: null,
-  },
+const PLANNED: Card[] = [
   {
     name: "Code view",
     icon: "file",
@@ -70,11 +69,19 @@ const PLUGINS: PluginInfo[] = [
   },
 ];
 
-/** Plugins (mockup C): what is enabled, and what is not available yet. */
+/** Plugins (mockup C): the bundled plugins that are loaded, and what is not available yet. */
 export function PluginsPage() {
   const toast = useToast();
-  const enabled = PLUGINS.filter((p) => p.later === null);
-  const coming = PLUGINS.filter((p) => p.later !== null);
+  const { plugins, pages } = usePlugins();
+  const enabled: Card[] = plugins
+    .filter((p) => p.source === "bundled")
+    .map((p) => ({
+      name: p.name,
+      icon: pluginIcon(p.id),
+      contributes: pages.filter((page) => page.plugin === p.id).map((page) => `${SLOT_LABEL[page.slot]} · ${page.title}`),
+      about: p.description,
+      later: null,
+    }));
   return (
     <div className="page">
       <PageHeader
@@ -105,16 +112,16 @@ export function PluginsPage() {
 
       <h2 className="mb-3 mt-[30px] flex items-center gap-2.5 font-serif text-[19px] font-medium">Bundled · not yet available</h2>
       <div className="grid grid-cols-2 gap-4">
-        {coming.map((p) => (
+        {PLANNED.map((p) => (
           <PluginCard key={p.name} plugin={p} />
         ))}
       </div>
-      <p className="src-note mt-4">This list is written into the app until the plugin registry, being built in step 1, feeds this page.</p>
+      <p className="src-note mt-4">The enabled list is read from the plugins themselves; the rest is the plan, written into the app.</p>
     </div>
   );
 }
 
-function PluginCard({ plugin }: { plugin: PluginInfo }) {
+function PluginCard({ plugin }: { plugin: Card }) {
   const later = plugin.later !== null;
   return (
     <article className={"flex gap-3.5 rounded-card px-5 py-[18px] " + (later ? "bg-paper shadow-sh1" : "card")}>

@@ -3,10 +3,10 @@
   "id": "paper-wiki",
   "name": "Paper Wiki",
   "version": "1.0.0",
-  "description": "The paper-wiki/ graph viewer and its reading-status buttons.",
+  "description": "Shared paper notes, topics, concepts, and sources from paper-wiki/, in the graph and timeline viewer, on its own origin.",
   "site": { "workspace": "paper-wiki" },
   "contributes": {
-    "homePanels": [{ "id": "viewer", "title": "Paper Wiki", "entry": "viz.html", "placement": "nav" }],
+    "homePanels": [{ "id": "viewer", "title": "Paper wiki", "entry": "viz.html", "placement": "nav" }],
     "handlers": ["status"]
   }
 }
