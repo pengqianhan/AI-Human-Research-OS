@@ -116,14 +116,22 @@ export interface Registry {
  * could replace or shadow an endpoint). It also throws on factory drift, a
  * declared handler without a factory or a factory nobody declares, which is
  * a bundling bug the tests catch.
+ *
+ * `skip` holds handler keys (`<plugin id>/<handler>`) that a bundled manifest
+ * may declare without a factory being required or mounted, such as a
+ * desktop-only handler on the dev server. A skipped key's factory, when
+ * there is one, is never built; it still counts as declared, so it is no
+ * orphan, while a factory nobody declares stays drift whether skipped or not.
  */
 export function createRegistry(input: {
   ctx: ApiContext;
   trunk: readonly TrunkMount[];
   plugins: readonly LoadedPlugin[];
   factories: Readonly<Record<string, HandlerFactory>>;
+  skip?: ReadonlySet<string>;
 }): Registry {
   const { ctx, trunk, plugins, factories } = input;
+  const skip = input.skip ?? new Set<string>();
   const ids = new Set<string>();
   for (const { manifest } of plugins) {
     if (ids.has(manifest.id)) throw new Error(`plugin registry: the id "${manifest.id}" is listed twice`);
@@ -135,7 +143,7 @@ export function createRegistry(input: {
   const declared = plugins
     .filter((p) => p.source === "bundled")
     .flatMap((p) => (p.manifest.contributes.handlers ?? []).map((h) => `${p.manifest.id}/${h}`));
-  const missing = declared.filter((key) => !Object.prototype.hasOwnProperty.call(factories, key));
+  const missing = declared.filter((key) => !skip.has(key) && !Object.prototype.hasOwnProperty.call(factories, key));
   const orphans = Object.keys(factories).filter((key) => !declared.includes(key));
   if (missing.length > 0 || orphans.length > 0) {
     const parts = [
@@ -149,7 +157,8 @@ export function createRegistry(input: {
   const byPlugin = new Map<string, readonly Mount[]>();
   for (const plugin of plugins) {
     const id = plugin.manifest.id;
-    const handlers = plugin.source === "bundled" ? (plugin.manifest.contributes.handlers ?? []) : [];
+    const handlers =
+      plugin.source === "bundled" ? (plugin.manifest.contributes.handlers ?? []).filter((h) => !skip.has(`${id}/${h}`)) : [];
     byPlugin.set(
       id,
       handlers.map((h) => ({ prefix: `/api/${id}/${h}`, handler: factories[`${id}/${h}`]!(ctx), token: false })),

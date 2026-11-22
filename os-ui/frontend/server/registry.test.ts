@@ -155,6 +155,33 @@ describe("createRegistry", () => {
     );
   });
 
+  test("a skipped handler is neither required nor mounted, and its factory is never built", () => {
+    let built = 0;
+    const counting: HandlerFactory = (c) => (built++, fake("git")(c));
+    const demo = loaded(manifest("demo", { contributes: { handlers: ["git", "status"] } }));
+    const skip = new Set(["demo/git"]);
+    const without = createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/status": fake("s") }, skip });
+    assert.deepEqual(flags(without.all), [["/api/demo/status", false]], "no factory for the skipped key: no drift error");
+    const withFactory = createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/git": counting, "demo/status": fake("s") }, skip });
+    assert.deepEqual(flags(withFactory.all), [["/api/demo/status", false]], "a factory for a skipped key is no orphan");
+    assert.equal(built, 0);
+  });
+
+  test("skip excuses only the keys it lists", () => {
+    const demo = loaded(manifest("demo", { contributes: { handlers: ["git", "status"] } }));
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [demo], factories: {}, skip: new Set(["demo/git"]) }),
+      /^Error: plugin handler drift: demo\/status is declared but has no factory$/,
+    );
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [], factories: { "demo/git": fake("g") }, skip: new Set(["demo/git"]) }),
+      /demo\/git has a factory but no bundled plugin declares it/,
+      "a factory nobody declares is drift even when its key is skipped",
+    );
+    const other = createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/git": fake("g"), "demo/status": fake("s") }, skip: new Set(["else/git"]) });
+    assert.deepEqual(flags(other.all), [["/api/demo/git", false], ["/api/demo/status", false]], "a skipped key nobody declares changes nothing");
+  });
+
   test("a repeated id throws, whatever the sources", () => {
     const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins;
     const local = loaded(manifest("paper-wiki"), "local");
