@@ -9,7 +9,8 @@
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, truncateSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, truncateSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -17,6 +18,7 @@ import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
 import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
+import { HOSTILE_TITLE, HOSTILE_URI, hostilePdf, noPagesPdf, notAPdf, passwordPdf } from "./pdfFixtures.ts";
 
 const CLIENT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = resolve(CLIENT, "../..");
@@ -662,6 +664,344 @@ describe("desktop client on a Research OS folder", () => {
     assert.deepEqual(readdirSync(downloads), []);
   });
 
+  /** The project's workspace with its Paper tab open, and the Paper view's frame once the paper is drawn. */
+  async function openPaper(): Promise<{ ws: Locator; paper: Frame }> {
+    await nav(page, "Projects").click();
+    await screen(page, "projects").getByRole("button", { name: `Open workspace: ${PROJECT}` }).click();
+    const ws = screen(page, "workspace");
+    await ws.getByRole("heading", { name: PROJECT, exact: true }).waitFor();
+    await ws.getByRole("tab", { name: "Paper" }).click();
+    const paper = await pluginFrame(page, `app://paper-view/index.html?project=${PROJECT}`);
+    return { ws, paper };
+  }
+  const paperDir = () => join(workspace, "projects-folder", PROJECT, "paper");
+  /** Drags across an element's text, as a reader selects it; Playwright's boxes are in the window's coordinates, frames included. */
+  async function dragAcross(target: Locator): Promise<void> {
+    await target.scrollIntoViewIfNeeded();
+    const box = (await target.boundingBox())!;
+    await page.mouse.move(box.x + 1, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
+    await page.mouse.move(box.x + box.width - 1, box.y + box.height / 2, { steps: 4 });
+    await page.mouse.up();
+  }
+  /** The README's SHA-256 for each vendored file. */
+  const vendorHashes = () =>
+    new Map(
+      [...readFileSync(join(REPO, "os-ui/frontend/plugins/paper-view/site/vendor/README.md"), "utf8").matchAll(/^\| `([^`]+)` \| `[^`]+` \| `([0-9a-f]{64})` \|$/gm)].map((m) => [m[1]!, m[2]!]),
+    );
+
+  test("the Paper view draws paper/main.pdf on app://paper-view: canvases near the view, its text, pages, and zoom", SLOW, async () => {
+    const { ws, paper } = await openPaper();
+    assert.equal(paper.url(), `app://paper-view/index.html?project=${PROJECT}`);
+    // The tab row as mockup C has it.
+    assert.deepEqual(
+      (await ws.getByRole("tablist", { name: "Project views" }).getByRole("tab").allTextContents()).map((t) => t.replace(/step 2$/, "").trim()),
+      ["Overview", "Idea", "Code", "Skeleton", "Assets", "Paper"],
+    );
+    await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 60_000 });
+    // PDF.js's text layer holds the paper's own words, selectable.
+    await paper.locator('.sheet[data-page="1"] .textLayer').getByText("nanochat on a Laptop CPU", { exact: false }).first().waitFor();
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor();
+    assert.match((await paper.locator(".paperbar .grp").nth(1).locator(".lbl2").textContent())!, /^Fit · \d+%$/);
+    assert.equal(await paper.getByRole("button", { name: "Fit width" }).getAttribute("aria-pressed"), "true");
+    // Only pages near the view are drawn.
+    assert.equal(await paper.locator('.sheet[data-page="4"] canvas.pg').count(), 0, "page 4 is not drawn while page 1 shows");
+    await shot(page, "5-paper-page-1-fit-width");
+
+    await paper.getByRole("button", { name: "Next page" }).click();
+    await paper.getByText("Page 2 of 4", { exact: true }).waitFor();
+    await paper.locator('.sheet[data-page="2"] canvas.pg').waitFor();
+    const before = await paper.locator('.sheet[data-page="2"]').evaluate((s) => s.getBoundingClientRect().width);
+    await paper.getByRole("button", { name: "Zoom in" }).click();
+    await paper.getByRole("button", { name: "Zoom in" }).click();
+    const label = (await paper.locator(".paperbar .grp").nth(1).locator(".lbl2").textContent())!;
+    assert.match(label, /^\d+%$/, "a zoom step leaves Fit");
+    assert.equal(await paper.getByRole("button", { name: "Fit width" }).getAttribute("aria-pressed"), "false");
+    const after = await paper.locator('.sheet[data-page="2"]').evaluate((s) => s.getBoundingClientRect().width);
+    assert.ok(Math.abs(after / before - Number(label.replace("%", "")) / 100 / (before / 640)) < 0.02, `${before} → ${after} at ${label}`);
+    // The canvas is drawn again for the new size, not stretched: as many pixels as the sheet's CSS pixels times the display's ratio.
+    await paper.waitForFunction(() => {
+      const sheet = document.querySelector('.sheet[data-page="2"]') as HTMLElement;
+      const canvas = sheet.querySelector("canvas.pg") as HTMLCanvasElement | null;
+      return canvas !== null && Math.abs(canvas.width - Math.floor(sheet.offsetWidth * devicePixelRatio)) <= 2;
+    });
+    await paper.getByText("Page 2 of 4", { exact: true }).waitFor();
+    await shot(page, "6-paper-page-2-zoomed");
+    // Another tab hides the frame; coming back, the reader is where they were.
+    await ws.getByRole("tab", { name: "Overview" }).click();
+    await ws.getByText("Round score track").waitFor();
+    await ws.getByRole("tab", { name: "Paper" }).click();
+    await page.waitForTimeout(300);
+    await paper.getByText("Page 2 of 4", { exact: true }).waitFor();
+    assert.equal(await paper.locator(".paperbar .grp").nth(1).locator(".lbl2").textContent(), label);
+
+    // At the highest zoom the canvas stays under its pixel cap, and far pages' canvases are released.
+    for (let i = 0; i < 12; i++) await paper.getByRole("button", { name: "Zoom in" }).click();
+    await paper.getByText("300%", { exact: true }).waitFor();
+    const nextPage = paper.getByRole("button", { name: "Next page" });
+    for (let i = 0; i < 4 && !(await nextPage.isDisabled()); i++) await nextPage.click();
+    await paper.getByText("Page 4 of 4", { exact: true }).waitFor();
+    await paper.locator('.sheet[data-page="4"] canvas.pg').waitFor();
+    const pixels = await paper.locator('.sheet[data-page="4"] canvas.pg').evaluate((c: HTMLCanvasElement) => c.width * c.height);
+    assert.ok(pixels <= 4096 * 4096, `page 4's canvas holds ${pixels} pixels`);
+    assert.equal(await paper.locator('.sheet[data-page="1"] canvas.pg').count(), 0, "page 1's canvas was released");
+    assert.equal(await paper.getByRole("button", { name: "Next page" }).isDisabled(), true);
+
+    await paper.getByRole("button", { name: "Fit width" }).click();
+    await paper.getByRole("button", { name: "Previous page" }).click();
+    await paper.getByRole("button", { name: "Previous page" }).click();
+    await paper.getByRole("button", { name: "Previous page" }).click();
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor();
+    assert.equal(await paper.getByRole("button", { name: "Previous page" }).isDisabled(), true);
+    await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor();
+  });
+
+  test("selected paper text becomes the ask bar and a reference chip, cut to the host's limits; nothing is sent", SLOW, async () => {
+    const sessionFiles = readdirSync(sessions).length;
+    const { ws, paper } = await openPaper();
+    const bar = ws.getByRole("region", { name: "Selection" });
+    const chat = ws.getByRole("region", { name: `${PROJECT} agent`, exact: true });
+    const chips = chat.getByRole("list", { name: "References" }).getByRole("listitem");
+    await paper.locator('.sheet[data-page="1"] .textLayer span').first().waitFor({ timeout: 60_000 });
+    if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    for (let i = (await chips.count()) - 1; i >= 0; i--) await chips.nth(i).getByRole("button", { name: /^Remove reference / }).click();
+
+    // A run of text under the "Setup" heading of page 1.
+    const index = await paper.evaluate(() => {
+      const spans = [...document.querySelectorAll('.sheet[data-page="1"] .textLayer span')];
+      const heading = spans.findIndex((s) => s.textContent?.trim() === "Setup");
+      return spans.findIndex((s, i) => i > heading && (s.textContent ?? "").trim().length > 25);
+    });
+    assert.ok(index > 0, "page 1 has text under its Setup heading");
+    const run = paper.locator('.sheet[data-page="1"] .textLayer span').nth(index);
+    await page.waitForTimeout(1100); // the workspace takes at most 10 selections a second from a view
+    await dragAcross(run);
+    const selected = (await paper.evaluate(() => window.getSelection()?.toString() ?? "")).trim();
+    assert.ok(selected.length > 10, `the drag selected ${JSON.stringify(selected)}`);
+    const label = bar.locator("[data-selection-label]");
+    await label.filter({ hasText: "paper/main.pdf p. 1 · Setup" }).waitFor();
+    assert.equal(await label.textContent(), "paper/main.pdf p. 1 · Setup");
+    assert.equal(await label.getAttribute("title"), selected, "the bar's tooltip is the quote");
+
+    await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+    await chips.filter({ hasText: "paper/main.pdf p. 1 · Setup" }).waitFor();
+    assert.equal(await bar.count(), 0, "asking clears the selection");
+    assert.equal(await paper.evaluate(() => window.getSelection()?.isCollapsed), true, "and the page's own");
+    await chat.getByRole("button", { name: "Show what will be sent for paper/main.pdf p. 1 · Setup" }).click();
+    const preview = chat.locator("[data-reference-preview]");
+    assert.equal(await preview.textContent(), `About paper/main.pdf p. 1 · Setup\n${selected.split(/\r?\n/).map((l) => (l === "" ? ">" : `> ${l}`)).join("\n")}`);
+
+    // Select again: the bar, the chip, and what it will send, together.
+    await page.waitForTimeout(1100);
+    await dragAcross(paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "nanochat on a Laptop CPU" }).first());
+    await label.waitFor();
+    assert.equal(await label.textContent(), "paper/main.pdf p. 1", "the title comes before the first heading");
+    await shot(page, "7-paper-selection-ask-bar-and-chip");
+
+    // Clearing in the frame hides the bar; clearing in the workspace clears the frame.
+    await paper.locator(".paper-scroll").click({ position: { x: 6, y: 6 } });
+    await bar.waitFor({ state: "detached" });
+    await page.waitForTimeout(1100);
+    await dragAcross(paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "nanochat on a Laptop CPU" }).first());
+    await label.waitFor();
+    await bar.getByRole("button", { name: "Clear selection" }).click();
+    await paper.waitForFunction(() => window.getSelection()?.isCollapsed === true);
+
+    // A selection of the whole paper is cut on the page, before the host's 2,000 characters, with a visible mark.
+    await page.waitForTimeout(1100);
+    await paper.locator('.sheet[data-page="1"] .textLayer span').first().click();
+    await paper.evaluate(() => {
+      const range = document.createRange();
+      range.selectNodeContents(document.querySelector(".pages")!);
+      window.getSelection()!.removeAllRanges();
+      window.getSelection()!.addRange(range);
+      document.dispatchEvent(new MouseEvent("mouseup"));
+    });
+    await label.filter({ hasText: /^paper\/main\.pdf pp\. 1–4$/ }).waitFor();
+    const quote = (await label.getAttribute("title"))!;
+    assert.ok(quote.length <= 2000 && quote.endsWith("…[cut]"), `${quote.length} characters, ending ${JSON.stringify(quote.slice(-12))}`);
+    await bar.getByRole("button", { name: "Clear selection" }).click();
+
+    assert.equal(await chips.count(), 1);
+    await chat.getByRole("button", { name: "Remove reference paper/main.pdf p. 1 · Setup" }).click();
+    assert.equal(await chips.count(), 0);
+    assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
+  });
+
+  test("every state of paper/ has its screen; Reload reads the file again", SLOW, async () => {
+    const { ws, paper } = await openPaper();
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    const reload = () => paper.getByRole("button", { name: "Reload" }).click();
+    const again = () => paper.getByRole("button", { name: "Try again" }).click();
+    await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 60_000 });
+    renameSync(pdf, kept);
+    try {
+      await reload();
+      await paper.getByText("The paper has not been built yet: paper/main.tex exists, paper/main.pdf does not.", { exact: true }).waitFor();
+      await shot(page, "8-paper-not-built-yet");
+      // paper/main.tex can still be asked about.
+      await page.waitForTimeout(1100);
+      await paper.getByRole("button", { name: "paper/main.tex" }).click();
+      const bar = ws.getByRole("region", { name: "Selection" });
+      await bar.locator("[data-selection-label]").filter({ hasText: /^paper\/main\.tex$/ }).waitFor();
+      await bar.getByRole("button", { name: "Clear selection" }).click();
+      await paper.locator(".fileref.picked").waitFor({ state: "detached" });
+
+      for (const [bytes, words] of [
+        [notAPdf(), "paper/main.pdf could not be opened (it is not a valid PDF file)."],
+        [passwordPdf(), "paper/main.pdf is protected by a password, and the Paper view does not open protected files."],
+        [noPagesPdf(), "paper/main.pdf opened, but it has no pages to show."],
+      ] as const) {
+        writeFileSync(pdf, bytes);
+        await again();
+        await paper.getByText(words, { exact: true }).waitFor();
+      }
+      // Sparse, so it costs no disk: the channel refuses it (413) by its size alone.
+      writeFileSync(pdf, "");
+      truncateSync(pdf, 33 * 1024 * 1024);
+      await again();
+      await paper.getByText("paper/main.pdf is larger than 32 MiB, the most the Paper view reads.", { exact: true }).waitFor();
+      rmSync(pdf);
+      renameSync(paperDir(), `${paperDir()}.e2e-kept`);
+      try {
+        await again();
+        await paper.getByText("This project has no paper/ folder.", { exact: true }).waitFor();
+      } finally {
+        renameSync(`${paperDir()}.e2e-kept`, paperDir());
+      }
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await again();
+    await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 60_000 });
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor();
+  });
+
+  test("a hostile PDF runs nothing, follows no link, and its outline title shows as text", SLOW, async () => {
+    const { ws, paper } = await openPaper();
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    // Every navigation any frame asks for, and every "open in your browser?" dialog, recorded in the main process.
+    await app.evaluate(({ BrowserWindow, dialog }) => {
+      const seen: string[] = [];
+      (globalThis as { __navigations?: string[] }).__navigations = seen;
+      BrowserWindow.getAllWindows()[0]!.webContents.on("will-frame-navigate", (event) => seen.push(event.url));
+      dialog.showMessageBox = (async (...args: unknown[]) => {
+        seen.push(`dialog: ${JSON.stringify(args.at(-1))}`);
+        return { response: 1, checkboxChecked: false };
+      }) as typeof dialog.showMessageBox;
+    });
+    renameSync(pdf, kept);
+    try {
+      writeFileSync(pdf, hostilePdf());
+      await paper.getByRole("button", { name: "Reload" }).click();
+      await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 60_000 });
+      await paper.getByText("Page 1 of 1", { exact: true }).waitFor();
+      const link = paper.locator(".textLayer span").filter({ hasText: "Click this line" });
+      await link.click();
+      await link.dblclick();
+      await page.waitForTimeout(800);
+      const navigations = await app.evaluate(() => (globalThis as { __navigations?: string[] }).__navigations ?? []);
+      assert.deepEqual(navigations.filter((u) => u.includes(HOSTILE_URI) || u.includes("example.invalid")), [], "the link annotation is inert");
+      assert.equal(paper.url(), `app://paper-view/index.html?project=${PROJECT}`);
+      // The outline title is the heading the title text falls under: in the label, as text.
+      await page.waitForTimeout(1100);
+      await dragAcross(paper.locator(".textLayer span").filter({ hasText: "Hostile fixture title" }));
+      const label = ws.getByRole("region", { name: "Selection" }).locator("[data-selection-label]");
+      await label.filter({ hasText: "paper/main.pdf p. 1 · " }).waitFor();
+      assert.equal(await label.textContent(), `paper/main.pdf p. 1 · ${HOSTILE_TITLE}`);
+      await ws.getByRole("region", { name: "Selection" }).getByRole("button", { name: "Clear selection" }).click();
+      assert.equal(await paper.evaluate(() => document.querySelectorAll("img, script:not([src]), a, iframe, embed, object").length), 0, "nothing in the frame came from the PDF as markup");
+      assert.equal(await page.locator('img[src="x"]').count(), 0);
+      assert.deepEqual(await pwned(paper), [undefined, undefined], "the PDF's JavaScript did not run");
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await paper.getByRole("button", { name: "Reload" }).click();
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor({ timeout: 60_000 });
+  });
+
+  test("the Paper view's frame is sealed off: no bridge, paper/ only, no other origin's endpoints, PDF.js as vendored", SLOW, async () => {
+    const { paper } = await openPaper();
+    const status = (url: string) => paper.evaluate(async (u) => (await fetch(u)).status, url);
+    const rel = (p: string) => `./_os/files?path=${encodeURIComponent(p)}`;
+    assert.deepEqual(
+      {
+        pdf: await status(rel(`projects-folder/${PROJECT}/paper/main.pdf`)),
+        tex: await status(rel(`projects-folder/${PROJECT}/paper/main.tex`)),
+        listing: await status(`./_os/list?path=${encodeURIComponent(`projects-folder/${PROJECT}/paper`)}`),
+        outsidePaper: await status(rel(`projects-folder/${PROJECT}/AGENTS.md`)),
+        code: await status(rel(`projects-folder/${PROJECT}/Code/README.md`)),
+        dotEnvRoot: await status(rel(".env")),
+        codeViewGit: await status(`/api/code-view/git/log?project=${PROJECT}`),
+        chat: await status("/api/chat/sessions"),
+        wikiStatus: await status("/api/paper-wiki/status"),
+      },
+      { pdf: 200, tex: 200, listing: 200, outsidePaper: 404, code: 404, dotEnvRoot: 404, codeViewGit: 404, chat: 404, wikiStatus: 404 },
+    );
+    const probe = await paper.evaluate(async (project) => {
+      const outcome = async (fn: () => Promise<unknown>) => {
+        try {
+          return String(await fn());
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        own: typeof (window as { osDesktop?: unknown }).osDesktop,
+        parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
+        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        codeViewGit: await outcome(async () => (await fetch(`app://code-view/api/code-view/git/log?project=${project}`)).status),
+      };
+    }, PROJECT);
+    assert.equal(probe.own, "undefined");
+    assert.match(probe.parent, /^blocked: SecurityError/);
+    assert.match(probe.appApi, /^blocked/);
+    assert.match(probe.codeViewGit, /^blocked/);
+    // What the page loads is the vendored PDF.js byte for byte, as vendor/README.md records it.
+    const served = await paper.evaluate(async () => {
+      const hex = async (url: string) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", await (await fetch(url)).arrayBuffer()))].map((b) => b.toString(16).padStart(2, "0")).join("");
+      return { "pdf.min.mjs": await hex("./vendor/pdf.min.mjs"), "pdf.worker.min.mjs": await hex("./vendor/pdf.worker.min.mjs"), LICENSE: await hex("./vendor/LICENSE") };
+    });
+    assert.deepEqual(served, Object.fromEntries(vendorHashes()));
+    for (const [file, hash] of vendorHashes()) {
+      assert.equal(createHash("sha256").update(readFileSync(join(CLIENT, "out/plugins/paper-view/site/vendor", file))).digest("hex"), hash, `out/ ${file}`);
+    }
+    assert.doesNotMatch(readFileSync(join(CLIENT, "out/plugins/paper-view/site/main.js"), "utf8"), /pdfjsVersion/, "PDF.js is not bundled into the page's script");
+    // No inline script runs in the page, whatever reaches its DOM.
+    const before = logs.length;
+    const inline = await paper.evaluate(() => {
+      const script = document.createElement("script");
+      script.textContent = "window.__inline = 1";
+      document.body.append(script);
+      script.remove();
+      return (window as { __inline?: unknown }).__inline;
+    });
+    assert.equal(inline, undefined, "an inline script ran in the Paper view's page");
+    await page.waitForTimeout(300);
+    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
+    await app.evaluate(() => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/paper-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
+    });
+    // The frame's CSP reports reach the suite, so the final check sees this frame too.
+    await paper.evaluate(() => {
+      const img = new Image();
+      img.src = "https://csp-canary.invalid/paper.png";
+      document.body.append(img);
+      img.remove();
+    });
+    const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/paper-view\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
+    for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
+    assert.ok(canary(await consoleLog()), "a CSP violation inside the Paper view's frame is seen");
+    // PDF.js ran in its own worker, never on the page's thread.
+    assert.deepEqual([...logs, ...(await consoleLog())].filter((l) => /fake worker|could not start/i.test(l)), []);
+  });
+
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {
     const results = await page.evaluate(async () => {
       const status = async (url: string, init?: RequestInit) => (await fetch(url, init)).status;
@@ -749,7 +1089,14 @@ describe("desktop client on a Research OS folder", () => {
 
   test("no Content-Security-Policy violations in the app or its plugins' frames", async () => {
     const violations = [...logs, ...(await consoleLog())].filter(
-      (l) => /Refused to|Content Security Policy/.test(l) && !l.includes("example.com") && !l.includes("research-os/api") && !l.includes("paper-wiki/api") && !l.includes("csp-canary.invalid"),
+      (l) =>
+        /Refused to|Content Security Policy/.test(l) &&
+        // The isolation probes above, which the policies are meant to refuse.
+        !l.includes("example.com") &&
+        !l.includes("research-os/api") &&
+        !l.includes("paper-wiki/api") &&
+        !l.includes("code-view/api") &&
+        !l.includes("csp-canary.invalid"),
     );
     assert.deepEqual(violations, []);
   });
@@ -758,8 +1105,14 @@ describe("desktop client on a Research OS folder", () => {
   // app cancelled, and the refused frame navigation logs a CSP message.
   test("navigation never leaves the app; new windows are refused", async () => {
     // Targets Chromium itself allows, so only the app's guard (and the frame-src
-    // policy) can stop them: the wiki frame must not become the app origin,
-    // nor the top frame the wiki origin.
+    // policy) can stop them: neither the Paper view's frame nor the wiki frame
+    // may become the app origin, nor the top frame the wiki origin.
+    const { paper } = await openPaper();
+    await paper.evaluate(() => {
+      location.href = "app://research-os/";
+    });
+    await page.waitForTimeout(800);
+    assert.ok(!paper.url().startsWith("app://research-os"), paper.url());
     await nav(page, "Paper wiki").click();
     const frame = await wikiFrame(page);
     await frame.evaluate(() => {
