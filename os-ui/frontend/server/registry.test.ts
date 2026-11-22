@@ -178,8 +178,20 @@ describe("createRegistry", () => {
       /demo\/git has a factory but no bundled plugin declares it/,
       "a factory nobody declares is drift even when its key is skipped",
     );
-    const other = createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/git": fake("g"), "demo/status": fake("s") }, skip: new Set(["else/git"]) });
-    assert.deepEqual(flags(other.all), [["/api/demo/git", false], ["/api/demo/status", false]], "a skipped key nobody declares changes nothing");
+  });
+
+  test("a skipped key no bundled plugin declares is drift, as after a rename", () => {
+    const demo = loaded(manifest("demo", { contributes: { handlers: ["git"] } }));
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/git": fake("g") }, skip: new Set(["demo/old-git"]) }),
+      /^Error: plugin handler drift: demo\/old-git is skipped but no bundled plugin declares it$/,
+    );
+    const local = loaded(manifest("demo", { contributes: { handlers: ["git"] } }), "local");
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [local], factories: {}, skip: new Set(["demo/git"]) }),
+      /demo\/git is skipped but no bundled plugin declares it/,
+      "a local plugin's declaration does not count",
+    );
   });
 
   test("a repeated id throws, whatever the sources", () => {

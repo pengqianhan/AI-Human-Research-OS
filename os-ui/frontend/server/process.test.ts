@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, test } from "node:test";
-import { failureText, processRunner, uvPython } from "./process.ts";
+import { failureText, findProgram, processRunner, uvPython } from "./process.ts";
 import { tempTree } from "./testkit.ts";
 
 const node = process.execPath;
@@ -53,15 +55,16 @@ describe("processRunner", () => {
     const forever = "const b=Buffer.alloc(65536,120);(function f(){process.stdout.write(b,f)})()";
     const result = await run([node, "-e", forever], { cwd: process.cwd(), maxOutputBytes: 100_000, timeoutMs: 30_000 });
     assert.equal(result.truncated, true);
+    assert.equal(result.timedOut, false);
     assert.equal(result.stdout, "x".repeat(100_000));
     assert.doesNotMatch(result.stderr, /timed out/);
     assert.ok(Date.now() - started < 10_000);
   });
 
-  test("the cap applies to stderr too", async () => {
-    const result = await run([node, "-e", "process.stderr.write('e'.repeat(5000))"], { cwd: process.cwd(), maxOutputBytes: 1000 });
-    assert.equal(result.truncated, true);
-    assert.equal(result.stderr, "e".repeat(1000));
+  test("stderr past maxErrorBytes is dropped: the child runs on, its exit code counts, stdout is not truncated", async () => {
+    const script = "process.stderr.write('e'.repeat(200000));process.stdout.write('done');process.exitCode=7";
+    const result = await run([node, "-e", script], { cwd: process.cwd(), maxOutputBytes: 1000, maxErrorBytes: 100 });
+    assert.deepEqual([result.code, result.stdout, result.stderr, result.truncated], [7, "done", "e".repeat(100), false]);
   });
 
   test("output of exactly the cap is complete, not truncated", async () => {
@@ -75,7 +78,27 @@ describe("processRunner", () => {
     const result = await run([node, "-e", "setTimeout(()=>{}, 60000)"], { cwd: process.cwd(), timeoutMs: 300, maxOutputBytes: 10 });
     assert.equal(result.code, -1);
     assert.equal(result.truncated, false);
+    assert.equal(result.timedOut, true);
     assert.match(result.stderr, /timed out/);
+  });
+
+  test("lookup: path runs the program from an absolute PATH entry, never from the working folder", { skip: process.platform === "win32" ? "the planted program is a shell script; findProgram's Windows rules are tested below" : false }, async () => {
+    const cwd = tempTree();
+    const elsewhere = tempTree();
+    const marker = join(cwd, "ran");
+    for (const dir of [cwd, join(cwd, "rel")]) {
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, "os-ui-prog"), `#!/bin/sh\necho "$0" >> '${marker}'\n`);
+      chmodSync(join(dir, "os-ui-prog"), 0o755);
+    }
+    // An empty entry and a relative one would both name the working folder's copies.
+    const planted = processRunner({ ...process.env, PATH: `:rel:${elsewhere}` });
+    await assert.rejects(planted(["os-ui-prog"], { cwd, lookup: "path" }), (e: NodeJS.ErrnoException) => e.code === "ENOENT");
+    assert.ok(!existsSync(marker), "nothing ran from the working folder");
+    writeFileSync(join(elsewhere, "os-ui-prog"), `#!/bin/sh\necho "$0" >> '${marker}'\n`);
+    chmodSync(join(elsewhere, "os-ui-prog"), 0o755);
+    assert.equal((await planted(["os-ui-prog"], { cwd, lookup: "path" })).code, 0);
+    assert.equal(readFileSync(marker, "utf8").trim(), join(elsewhere, "os-ui-prog"));
   });
 
   test("options.env edits the runner's environment rather than replacing it", async () => {
@@ -89,6 +112,31 @@ describe("processRunner", () => {
     const result = await run([node, "-e", script], { cwd: process.cwd(), env });
     assert.equal(seen.EXTRA, "from-env");
     assert.equal(result.stdout.trim(), "|set|string");
+  });
+});
+
+describe("findProgram", () => {
+  const files = (...present: string[]) => (file: string) => present.includes(file);
+
+  test("POSIX: absolute entries only, in order; a name with a folder is refused", () => {
+    const env = { PATH: ":.:bin:/usr/local/bin:/usr/bin" };
+    assert.equal(findProgram("git", env, "linux", files("/usr/bin/git", "git", "./git", "bin/git")), "/usr/bin/git");
+    assert.equal(findProgram("git", env, "linux", files("/usr/local/bin/git", "/usr/bin/git")), "/usr/local/bin/git");
+    assert.equal(findProgram("git", env, "linux", files("git", "bin/git")), null);
+    assert.equal(findProgram("./git", env, "linux", files("./git")), null);
+    assert.equal(findProgram("/opt/git", env, "linux", files()), "/opt/git", "an absolute name is taken as it is");
+    assert.equal(findProgram("git", {}, "linux", files("/usr/bin/git")), null, "no PATH, nothing found");
+  });
+
+  test("Windows: Path in any case, drive or UNC entries only, .com and .exe only, quotes stripped", () => {
+    const env = { Path: ';.;bin;"C:\\Program Files\\Git\\cmd";\\\\server\\tools;D:\\x' };
+    const exists = files("C:\\Program Files\\Git\\cmd\\git.exe", "git.exe", ".\\git.exe", "bin\\git.exe");
+    assert.equal(findProgram("git", env, "win32", exists), "C:\\Program Files\\Git\\cmd\\git.exe");
+    assert.equal(findProgram("git", env, "win32", files("\\\\server\\tools\\git.com", "D:\\x\\git.exe")), "\\\\server\\tools\\git.com");
+    assert.equal(findProgram("git", env, "win32", files("D:\\x\\git.cmd", "D:\\x\\git.bat")), null, "never a .cmd or .bat");
+    assert.equal(findProgram("git.cmd", env, "win32", files("D:\\x\\git.cmd")), null);
+    assert.equal(findProgram("git.exe", env, "win32", files("D:\\x\\git.exe")), "D:\\x\\git.exe");
+    assert.equal(findProgram("git", { Path: "C:relative;\\rootless" }, "win32", files("C:relative\\git.exe")), null);
   });
 });
 

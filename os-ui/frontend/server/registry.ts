@@ -122,6 +122,8 @@ export interface Registry {
  * desktop-only handler on the dev server. A skipped key's factory, when
  * there is one, is never built; it still counts as declared, so it is no
  * orphan, while a factory nobody declares stays drift whether skipped or not.
+ * A skipped key no bundled plugin declares is drift too (a stale key after a
+ * rename).
  */
 export function createRegistry(input: {
   ctx: ApiContext;
@@ -145,10 +147,12 @@ export function createRegistry(input: {
     .flatMap((p) => (p.manifest.contributes.handlers ?? []).map((h) => `${p.manifest.id}/${h}`));
   const missing = declared.filter((key) => !skip.has(key) && !Object.prototype.hasOwnProperty.call(factories, key));
   const orphans = Object.keys(factories).filter((key) => !declared.includes(key));
-  if (missing.length > 0 || orphans.length > 0) {
+  const stale = [...skip].filter((key) => !declared.includes(key));
+  if (missing.length > 0 || orphans.length > 0 || stale.length > 0) {
     const parts = [
       ...missing.map((key) => `${key} is declared but has no factory`),
       ...orphans.map((key) => `${key} has a factory but no bundled plugin declares it`),
+      ...stale.map((key) => `${key} is skipped but no bundled plugin declares it`),
     ];
     throw new Error(`plugin handler drift: ${parts.join("; ")}`);
   }
