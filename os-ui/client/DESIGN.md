@@ -172,7 +172,11 @@ with the trunk's endpoints only.
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
-  NUL, COM1, CONIN$, …) are refused before any file access. Workspace files
+  NUL, COM1, CONIN$, …, alone or with an extension, `nul.txt`) are refused
+  before any file access. A device name followed by spaces or dots, which
+  Windows also opens as the device (`nul `, `con .txt`), is not refused there
+  (the manifest parser refuses such paths in a manifest); whether the real-path
+  checks below stop it on Windows is not verified. Workspace files
   must also have their real path (symlinks and junctions resolved) inside
   their root; the renderer and a bundled plugin's `site/` folder, possibly
   inside an asar archive, are confined lexically; any other plugin's `site/`
@@ -263,8 +267,13 @@ name does not start with `.`, a file's name included:
   read. A listing reads at most 5,000 names (`LIST_MAX_ENTRIES`), kept or not,
   in the file system's order, so a larger folder is listed from those names
   and says `"truncated": true`; HEAD on a listing stops at opening the folder.
-  In a Node measurement, 64 concurrent reads of a 32 MiB file held about
-  3 MiB of buffers.
+  At most 16 files (`READ_MAX_STREAMS`) are open for reading at once per
+  plugin origin, since every held response keeps a descriptor and a pipe
+  buffer; above that, a file read answers 503 without opening the file. A
+  slot is given back when its body ends, fails, or is cancelled, at once for
+  HEAD and for a file that is refused or cannot be opened, and as soon as a
+  file of one chunk (64 KiB or less) has been read. Other origins, listings,
+  and refusals are not held back.
 - Every answer, refusals included, carries `X-Content-Type-Options: nosniff`,
   `Cache-Control: no-store`, and the read policy (§3.3). `.js`, `.mjs`,
   `.cjs`, `.html`, `.htm`, and `.xhtml` files are sent as

@@ -99,7 +99,10 @@ Status on 2026-11-22:
       checked again as opened, and streamed 64 KiB at a time, never past its
       `stat` size, closing on end, error and cancel. A file above 32 MiB
       (`READ_MAX_BYTES`) answers 413 before a byte is read, also when it is
-      unreadable.
+      unreadable. At most 16 files (`READ_MAX_STREAMS`) are open for reading at
+      once per plugin origin; above that a file read answers 503 without opening
+      the file, and the slot comes back on end, error, cancel, HEAD, or refusal.
+      Part 1 had no such cap.
     - A listing reads at most 5,000 names (`LIST_MAX_ENTRIES`), kept or not, in
       the file system's order, sorts them in UTF-16 code-unit order, and adds
       `"truncated": true` when the folder has more; HEAD on a listing stops at
