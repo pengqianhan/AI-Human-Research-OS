@@ -1,6 +1,7 @@
+import { Fragment } from "react";
 import type { ReactNode } from "react";
 import type { Meta, Policy } from "../types";
-import type { Screen } from "./layoutState";
+import type { PluginScreen, Screen } from "./layoutState";
 import { Icon } from "./icons";
 import type { IconName } from "./icons";
 import { SnapshotStatus } from "./SnapshotStatus";
@@ -13,19 +14,21 @@ interface Props {
   openProject: string | null;
   /** Registered projects (folder names), for Quick access. */
   projects: string[];
+  /** The plugins' left-navigation pages, in menu order. */
+  pluginItems: readonly { screen: PluginScreen; label: string; icon: IconName }[];
   collapsed: boolean;
   onNavigate: (screen: Screen, project?: string) => void;
   onToggleCollapsed: () => void;
 }
 
 /**
- * The left navigation of mockup C: the main pages, Quick access to each
- * registered project, then the snapshot status, Settings, and the collapse
- * control at the bottom. Collapsed, it keeps only the icons; every button
- * keeps its name through aria-label, and the current page is marked with
- * aria-current.
+ * The left navigation of mockup C: the main pages, with the plugins' pages
+ * (Paper wiki) between Projects and Skills, Quick access to each registered
+ * project, then the snapshot status, Settings, and the collapse control at
+ * the bottom. Collapsed, it keeps only the icons; every button keeps its
+ * name through aria-label, and the current page is marked with aria-current.
  */
-export function Sidebar({ meta, policy, screen, openProject, projects, collapsed, onNavigate, onToggleCollapsed }: Props) {
+export function Sidebar({ meta, policy, screen, openProject, projects, pluginItems, collapsed, onNavigate, onToggleCollapsed }: Props) {
   const item = (target: Screen, label: string, icon: IconName) => (
     <NavButton label={label} icon={<Icon name={icon} />} current={screen === target} collapsed={collapsed} onClick={() => onNavigate(target)} />
   );
@@ -53,7 +56,9 @@ export function Sidebar({ meta, policy, screen, openProject, projects, collapsed
 
       {item("home", "Home", "home")}
       {item("projects", "Projects", "projects")}
-      {item("wiki", "Paper wiki", "book")}
+      {pluginItems.map((p) => (
+        <Fragment key={p.screen}>{item(p.screen, p.label, p.icon)}</Fragment>
+      ))}
       {item("skills", "Skills", "spark")}
       {item("plugins", "Plugins", "puzzle")}
 
