@@ -120,7 +120,8 @@ Status on 2026-11-22:
 - **S6 is split in three.** S6a-1, the Code view's Git handler, is done (pending its
   pull request) and not mounted; S6a-2, the Code view plugin (its manifest,
   the mount at `/api/code-view/git` on `app://code-view`, and the page), is next; S6b,
-  the Paper view, waits on the Human Owner's answer about PDF.js (below; A9). S5's
+  the Paper view, follows it and vendors PDF.js as Part 2 describes (the Human Owner
+  said yes on 2026-11-22; [HANDOFF.md](../HANDOFF.md) Decisions). S5's
   proof stays the fixture tests that `npm test` in `os-ui/client` runs, which only the
   advisory `desktop.yml` runs in CI; the end-to-end suite reaches the channel from
   S6a-2 on.
@@ -253,8 +254,8 @@ Status on 2026-11-22:
     its Settings check found (on a Mac without the Command Line Tools,
     `/usr/bin/git` is the stub that offers to install them); `log` receives what
     Git printed on failures.
-- **Waiting on the Human Owner:** whether the Paper view may vendor PDF.js (Part 2), and
-  whether a third-party plugin may add a left-navigation item (Part 1, Q-PO1).
+- **Waiting on the Human Owner:** whether a third-party plugin may add a
+  left-navigation item (Part 1, Q-PO1).
 
 ---
 

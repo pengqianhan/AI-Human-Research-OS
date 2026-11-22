@@ -64,15 +64,14 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
         done pending its pull request, not mounted), S6a-2 (the Code view
         plugin), and S6b (the Paper view).
       - Next, in order: S6a-2, the Code view plugin on S6a-1's handler (its
-        manifest, the mount, and the page); S6b, the Paper view, which waits on
-        the PDF.js answer below; then deleting `os-ui/frontend/src/desktop/`
+        manifest, the mount, and the page); S6b, the Paper view, with a
+        vendored PDF.js (authorized 2026-11-22, see Decisions); then deleting `os-ui/frontend/src/desktop/`
         (S8) once the Human Owner has run the client checklist. The handler
         needs Git 2.45 or later, which stock Ubuntu 24.04 and Debian 12 do not
         ship ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), S6a-1).
-      - Waiting on the Human Owner: whether the Paper view may vendor Mozilla's
-        PDF.js (Apache-2.0, about 1.8 MB) to render `main.pdf`; whether a
-        third-party plugin may add its own left-navigation item, or only home
-        panels and project views (needed before step 2).
+      - Waiting on the Human Owner: whether a third-party plugin may add its
+        own left-navigation item, or only home panels and project views
+        (needed before step 2).
 - [ ] Step 2, remaining views: Idea, Skeleton, Assets; Skills Hub as the second
       plugin; then loading a plugin from a local folder. Acceptance: the Human
       Owner opens all five views on `nanochat_cpu`.
@@ -204,8 +203,8 @@ packaged app's smoke run.
 
 - Focus (2026-11-22): step 1's next change, S6a-2 (the Code view plugin) in
   [os-ui/PLUGINS.md](os-ui/PLUGINS.md), under "Repositioning" above; S6a-1, its Git
-  handler, is done pending its pull request, and S6b (the Paper view) waits
-  on the Human Owner's PDF.js answer. The older items below are still open.
+  handler, is done pending its pull request, and S6b (the Paper view) follows
+  S6a-2, with PDF.js vendored as authorized. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
@@ -605,6 +604,8 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 | Existing milestones | H2 kept; H3 after step 4; M1 retired; M4 narrowed; the Pages site returns to publishing only the Paper Wiki viewer when the old shell goes; the cognition cache and `map-then-territory` stay the Human Owner's own workspace skills, not product features | Restore the GOAL.md milestone text |
 | Name | Unchanged: AI-Human Research OS | Rename after the first outside user's feedback |
 | GOAL.md | **Revised 2026-11-21** to these rows: twelve listed items (GOAL.md §1–§7, the README design stance, the AGENTS.md opening lines), confirmed together by the Human Owner (「全部按提议改」). The edit also wrote clauses the twelve-item table did not spell out, each taken from a row above unless marked: (a) §5 M4, the 2026-07-22 slice's "no install or removal from the GUI" is superseded by the Skills Hub plugin; (b) §5 M4, a per-conversation agent process that lives and dies with the app is not a resident daemon (**the agent's reading of the gate**); (c) §5 M4, the plugin host and the TypeScript harness leave the gate along with the desktop execution surface; (d) §5, the mockup-first rule and "agents write TypeScript, acceptance by checks"; (e) §7, no vendor names in the product name, no editing of agent configuration, no third-party host-side code, no Canvas, experiment tree, or compute dispatch in the first version; (f) §4, rule 1 now says the hard-coding cleanup M1 owned has no owner, and rule 2 no longer cites the deleted `CLAUDE.md`. These were reported to the Human Owner after the edit, who kept all six (「全部保留」, 2026-11-21). RSI is not mentioned in the revised text, and CONTEXT.md was not checked against it | Restore GOAL.md, README.md, and AGENTS.md from commit `afe0461` by a new Human Owner decision |
+| Paper view renderer | The Paper view may vendor Mozilla's PDF.js to render `paper/main.pdf` (Human Owner, 2026-11-22: 「可以内置 PDF.js」). As [os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 2 specifies: only `pdf.min.mjs`, `pdf.worker.min.mjs`, and the Apache-2.0 licence, copied into the plugin's `site/vendor/` with a README giving version, source URL, and SHA-256; not installed through npm | Remove the vendored files; the view then says the paper opens in a PDF reader |
+| Git version for the Code view | The Code view's Git handler needs Git 2.45 or later (for `--no-lazy-fetch`) and says so below that, rather than running with fewer guards; stock Ubuntu 24.04 (2.43) and Debian 12 (2.39) fall short. Default taken by the agent on 2026-11-22 after an independent security review, reported to the Human Owner, not yet confirmed by them | Serve Git 2.41 to 2.44 by refusing repositories with a promisor remote, as recorded under S6a-1 in [os-ui/PLUGINS.md](os-ui/PLUGINS.md); it needs its own CI job on stock Ubuntu 24.04 Git |
 
 ## Deviations from the original plan
 
