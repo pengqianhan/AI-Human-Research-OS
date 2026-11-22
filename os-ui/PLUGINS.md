@@ -147,9 +147,10 @@ Status on 2026-11-22:
     commit outside HEAD's history or changing nothing under the filter, or a path
     that is not exactly one file the commit changes. 405 for anything but GET. 500
     when a git step fails, with a fixed text naming the step (`git log failed (exit
-    128)`, `… took longer than 10 s`, `… printed more than its cap`): nothing Git
-    printed reaches the caller, it goes to the server's log. 503 while four git
-    processes run and sixteen wait.
+    128)`, `… took longer than 10 s`, `… printed more than its cap`), or
+    `the Code view could not read this repository (<error code>)` when the file
+    system refuses: nothing Git printed reaches the caller, it goes to the server's
+    log. 503 while four git processes run and sixteen wait.
   - Git 2.45 or later, for `--no-lazy-fetch` (release notes 2.45.0), not 2.31. On
     2026-11-22 packages.ubuntu.com listed 2.43.0 for Ubuntu 24.04 and 2.34.1 for
     22.04, and packages.debian.org 2.39.5 for Debian 12, all below it;
@@ -167,34 +168,46 @@ Status on 2026-11-22:
   - More guards than `--no-ext-diff` and `--no-textconv`: no `GIT_*` from the
     caller, the global and system config not read (`trace2.*Target` there writes
     files), no grafts (`GIT_GRAFT_FILE=/dev/null`), `--no-lazy-fetch` with
-    `protocol.allow=never` beneath it, `--no-replace-objects`,
+    `protocol.allow=never` beneath it (which stops the transport only: a fetch that
+    starts still writes `remote.<name>.partialclonefilter` into `.git/config`, so
+    `--no-lazy-fetch` is what keeps `.git` unchanged), `--no-replace-objects`,
     `--literal-pathspecs`, `core.fsmonitor=false`, `--no-show-signature`,
     `--submodule=short`, `--no-follow`, `core.bigFileThreshold=4m`, and flags that
     keep the output's shape (`--root`, `--no-renames`, `--diff-merges=first-parent`,
     `--encoding=UTF-8`, `--no-color`, prefixes, `core.quotePath=false`). The literal
     `/dev/null` is used on every platform, as Git documents it for
-    `GIT_CONFIG_GLOBAL` and Git for Windows maps it in its `open()`; not run on
-    Windows here, but the `diff.orderFile` test fails there if `-O/dev/null` is not
-    honoured. The table at the end of the file accounts for every `git help config`
+    `GIT_CONFIG_GLOBAL`. That Git for Windows maps that literal in `compat/mingw.c`
+    is the reviewer's reading of its source, not run on Windows here. Where it is
+    not mapped it names a missing file, as neutral for `GIT_CONFIG_GLOBAL`,
+    `GIT_GRAFT_FILE` and `core.attributesFile`, while `-O/dev/null` would fail every
+    diff, which the `diff.orderFile` test shows. The table at the end of the file
+    accounts for every `git help config`
     key that names a program. An explicit `--git-dir` skips Git's `safe.directory`
     check (tried with `GIT_TEST_ASSUME_DIFFERENT_OWNER=1`), so these guards are the
     only ones.
-  - Not read: the working tree's `.gitattributes` (`--attr-source=<commit>`),
-    `.mailmap` (`--no-use-mailmap`) and `.gitmodules` (`--ignore-submodules=none`;
-    its `ignore = all` would hide gitlink changes), and files the config names:
-    `diff.orderFile` (`-O/dev/null`; a missing one failed every diff),
-    `core.attributesFile` (`/dev/null`), `mailmap.file`, `info/grafts`. Read
-    still: `include.path` and `includeIf` name another file, from anywhere, read
-    as config under the same guards, but whether it parses shows (every command
-    fails) and what it sets shapes the output (an outside include changed
-    `diff.context`).
+  - Not read: any `.gitattributes`, the working tree's or a committed one
+    (`--attr-source=<the empty tree>`: a committed 90 MB one that compressed to
+    almost nothing took 1.1 GB and 3 s per command when read from the commit), so a
+    file is binary by its content, its size over 4 MiB, or `info/attributes`; the
+    working tree's `.mailmap` (`--no-use-mailmap`) and `.gitmodules`
+    (`--ignore-submodules=none`; its `ignore = all` would hide gitlink changes); and
+    files the config names: `diff.orderFile` (`-O/dev/null`; a missing one failed
+    every diff), `core.attributesFile` (`/dev/null`), `mailmap.file`,
+    `info/grafts`. Read still: `include.path` and `includeIf` name another file,
+    from anywhere and unchecked (not its type, size or links, so the 1 MiB config
+    cap and the FIFO checks do not apply to it), read as config under the same
+    guards; whether it parses shows (every command fails), what it sets shapes the
+    output (an outside include changed `diff.context`), and a FIFO or a huge file
+    there stalls or loads until the 10 s limit.
   - Refused with a `problem`, never falling back to the workspace's repository: a
     `.git` that is a link or a gitfile (a linked worktree, as an agent's worktree
     is, or a submodule checkout); a link directly inside `.git`; a `commondir` or
     `objects/info/alternates`; `HEAD`, `config`, `config.worktree`, `packed-refs`
     or `shallow` that is not a plain file (a link, FIFO or device) or is over its
     cap (4 KiB, 1 MiB, 1 MiB, 64 MiB, 16 MiB); anything in `info/` that is not a
-    plain file under 16 MiB; anything under `refs/` or `reftable/` but folders and
+    plain file under 16 MiB, and `info/attributes` over 1 MiB (Git parses it whole:
+    16 MiB of short lines took 204 MB, 1 MiB takes 22 MB); anything under `refs/`
+    or `reftable/` but folders and
     plain files (a loose ref under 4 KiB); a link or other non-plain file among
     `objects/<xx>/`, `objects/pack/` or `objects/info/` (and `commit-graphs/`); more
     than 100,000 entries to check, read entry by entry so a huge folder costs at
@@ -208,10 +221,13 @@ Status on 2026-11-22:
     to whole records), 16 KiB of stderr kept, and a blob over 4 MiB treated as
     binary: such a text file shows as binary with its sizes. Measured with
     `/usr/bin/time -l` on the reviewer's two 500 MB text blobs, `log --shortstat`
-    went from 3.37 GB in 2.9 s to 9.4 MB in 15 ms. Not bounded: memory inside one
-    git process below the threshold (a commit of many files just under 4 MiB, a
-    diff of very many lines), packed objects, which are not checked one by one,
-    and loose objects, checked by type and not by size.
+    went from 3.37 GB in 2.9 s to 9.4 MB in 15 ms (these figures come from running
+    the handler's own arguments under `time -l`; a sampler around the handler saw
+    no git process live long enough to measure). Not bounded: memory inside one git
+    process below the threshold (a commit of many files just under 4 MiB, a diff of
+    very many lines), packed objects, which are not checked one by one, loose
+    objects, checked by type and not by size, and whatever an `include.path` file
+    holds.
   - `/commit` and `/diff` serve only commits in HEAD's history (`merge-base
     --is-ancestor`); `/commit` of a commit that changes nothing under the filter is
     404, so other workspace commits' messages stay out. `/diff` opens exactly one
