@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, symlinkSync, truncateSync, unlinkSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 import { basename, join } from "node:path";
 import { describe, test } from "node:test";
@@ -16,8 +17,11 @@ import {
   appCsp,
   createHandler,
   isInside,
+  LIST_MAX_ENTRIES,
   PLUGIN_CSP,
   pluginSites,
+  READ_CSP,
+  READ_MAX_BYTES,
   route,
   safeRelative,
   workspaceRegistry,
@@ -484,7 +488,7 @@ describe("handler", () => {
       }
     });
 
-    test("_os/ is kept for the read channel: 404 on every plugin origin, even where such a file exists", async () => {
+    test("_os/ is never a site file: 404 on every plugin origin, even where such a file exists, for plugins with no reads", async () => {
       mkdirSync(join(workspace, "paper-wiki", "_os", "files"), { recursive: true });
       writeFileSync(join(workspace, "paper-wiki", "_os", "x.txt"), "os");
       writeFileSync(join(workspace, "paper-wiki", "_os", "files", "a.md"), "os");
@@ -500,7 +504,8 @@ describe("handler", () => {
       ]) {
         assert.equal((await fetchTwo(url)).status, 404, url);
       }
-      assert.equal(route("app://paper-wiki/_os/files/papers/a.md", { renderer, workspace }, sites).kind, "not-found");
+      // The read channel's, not a file: it serves Paper Wiki, which has no reads, nothing.
+      assert.equal(route("app://paper-wiki/_os/files/papers/a.md", { renderer, workspace }, sites).kind, "read");
     });
 
     test("reserved paths are reserved in any case, and with a trailing dot or space, on both kinds of site", async () => {
@@ -660,5 +665,412 @@ describe("the real bundled plugins, registry, and handler together", () => {
     assert.deepEqual(await here.json(), { error: "no endpoint /api/paper-wiki/status" });
     const sessions = await fetchReal("app://research-os/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": "t0k" } });
     assert.equal(sessions.status, 200);
+  });
+});
+
+describe("read channel", () => {
+  /** A link at `at` to the folder `to`: a junction on Windows, which needs no privilege. */
+  const dirLink = (to: string, at: string) => symlinkSync(to, at, process.platform === "win32" ? "junction" : "dir");
+  /** A link at `at` to the file `to`; false on Windows without the symlink privilege. */
+  const fileLink = (to: string, at: string): boolean => {
+    try {
+      symlinkSync(to, at, "file");
+      return true;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EPERM") throw error;
+      return false;
+    }
+  };
+
+  const CODE = "projects-folder/Alpha/Code";
+  /** The files of CODE that the listing shows, with their contents. */
+  const codeFiles: Record<string, string> = {
+    "Zed.txt": "zed",
+    "a b.txt": "space",
+    "app.js": "alert(1)",
+    "data.json": "{}",
+    "doc.xhtml": "<html xmlns='http://www.w3.org/1999/xhtml'><script>alert(1)</script></html>",
+    "fig.svg": "<svg xmlns='http://www.w3.org/2000/svg'/>",
+    "lib.cjs": "module.exports = 1",
+    "mod.mjs": "export {}",
+    "notes.md": "# notes",
+    "page.htm": "<script>alert(1)</script>",
+    "page.html": "<script>alert(2)</script>",
+    "run.py": "print(1)",
+  };
+  const ws = tempTree({
+    "AGENTS.md": "agents",
+    ".env": "SECRET=top",
+    ".git/config": "SECRET top git",
+    "human/private/secret.md": "SECRET private",
+    "projects-folder/Alpha/PROJECT_MEMORY.md": "SECRET memory",
+    ...Object.fromEntries(Object.entries(codeFiles).map(([name, text]) => [`${CODE}/${name}`, text])),
+    [`${CODE}/sub/deep.txt`]: "deep",
+    [`${CODE}/.env`]: "SECRET code env",
+    [`${CODE}/.git/config`]: "SECRET code git",
+    [`${CODE}/.venv/lib/x.py`]: "SECRET venv",
+    "projects-folder/Alpha/paper/main.tex": "\\documentclass{article}",
+    "projects-folder/Beta/Code/b.py": "b",
+    "projects-folder/Caps/Code/many/.hidden": "",
+  });
+  const outside = tempTree({ "x.txt": "SECRET outside", "proj/y.txt": "SECRET outside root" });
+  const code = join(ws, CODE);
+
+  // Links inside the root: out of it, out of the workspace, onto dot paths, and to places inside it.
+  dirLink(outside, join(code, "out-dir"));
+  dirLink(join(ws, "human", "private"), join(code, "to-private"));
+  dirLink(join(code, ".git"), join(code, "git-link"));
+  dirLink(join(code, "sub"), join(code, ".alias"));
+  dirLink(join(code, "sub"), join(code, "sub-link"));
+  const fileLinks = {
+    outFile: fileLink(join(outside, "x.txt"), join(code, "out-file.txt")),
+    env: fileLink(join(code, ".env"), join(code, "env-link")),
+    inside: fileLink(join(code, "sub", "deep.txt"), join(code, "in-link.txt")),
+    dangling: fileLink(join(ws, "nowhere.txt"), join(code, "dangling.txt")),
+  };
+  // A FIFO, which blocks whoever opens it to read: neither a file nor a folder.
+  const fifo = process.platform !== "win32";
+  if (fifo) execFileSync("mkfifo", [join(code, "fifo")]);
+  // Roots that are themselves links: out of the workspace, inside it, onto a dot folder, onto the workspace.
+  for (const [project, to] of [
+    ["Gamma", join(outside, "proj")],
+    ["Delta", join(ws, "projects-folder", "Beta", "Code")],
+    ["Eps", join(ws, ".git")],
+    ["Zeta", ws],
+  ] as const) {
+    mkdirSync(join(ws, "projects-folder", project));
+    dirLink(to, join(ws, "projects-folder", project, "Code"));
+  }
+
+  const manifest = (id: string, reads: string[]) =>
+    JSON.stringify({ contract: "^1.0", id, name: id, version: "1", reads, contributes: { projectViews: [{ id: "main", title: id, entry: "index.html" }] } });
+  const pluginRoot = tempTree({
+    "reads-code/plugin.json": manifest("reads-code", ["projects-folder/*/Code"]),
+    "reads-code/site/index.html": "<html>code</html>",
+    // Site files under _os/, which a site route would serve: the channel's prefixes never do.
+    "reads-code/site/_os/x": "SITE FILE",
+    "reads-code/site/_os/files/x": "SITE FILE",
+    "reads-code/site/_os/list/x": "SITE FILE",
+    "reads-code/site/_os/other/x": "SITE FILE",
+    "reads-paper/plugin.json": manifest("reads-paper", ["projects-folder/*/paper"]),
+    "reads-local/plugin.json": manifest("reads-local", ["projects-folder/Beta/Code"]),
+  });
+  const withReads = loadPlugins(pluginRoot, ["reads-code", "reads-paper"], "bundled", { trunk: TRUNK_MOUNTS, plugins: bundled.plugins });
+  const local = loadPlugins(pluginRoot, ["reads-local"], "local", { trunk: TRUNK_MOUNTS, plugins: [...bundled.plugins, ...withReads.plugins] });
+  const readSites = pluginSites([...bundled.plugins, ...withReads.plugins, ...local.plugins]);
+  const roots = { renderer, workspace: ws };
+  const handler = createHandler(() => ({ renderer, workspace: ws, sites: readSites, registry: registryOf([], {}), token: "t" }));
+  const fetchRead = (url: string, init?: RequestInit) => handler(new Request(url, init));
+  const files = (rel: string, host = "reads-code") => `app://${host}/_os/files/${rel}`;
+  const list = (rel: string, host = "reads-code") => `app://${host}/_os/list/${rel}`;
+
+  /** The headers every channel response carries, refusals included. */
+  const assertReadHeaders = (res: Response, url: string) => {
+    assert.equal(res.headers.get("x-content-type-options"), "nosniff", url);
+    assert.equal(res.headers.get("cache-control"), "no-store", url);
+    assert.equal(res.headers.get("content-security-policy"), READ_CSP, url);
+  };
+  /** A 404 from the channel, which gives away nothing of the file. */
+  const assertRefused = async (url: string, init?: RequestInit) => {
+    const res = await fetchRead(url, init);
+    assert.equal(res.status, 404, url);
+    assertReadHeaders(res, url);
+    const text = await res.text();
+    assert.equal(text, init?.method === "HEAD" ? "" : "Not found", url);
+  };
+  const okText = async (url: string) => {
+    const res = await fetchRead(url);
+    assert.equal(res.status, 200, url);
+    assertReadHeaders(res, url);
+    return res.text();
+  };
+  const okList = async (url: string) => {
+    const res = await fetchRead(url);
+    assert.equal(res.status, 200, url);
+    assertReadHeaders(res, url);
+    assert.equal(res.headers.get("content-type"), "application/json", url);
+    return (await res.json()) as { entries: { name: string; dir: boolean; size: number }[]; truncated?: boolean };
+  };
+
+  test("the fixture plugins load, each with its own reads, a local one included", () => {
+    assert.deepEqual([...withReads.problems, ...local.problems], []);
+    assert.deepEqual(
+      [...readSites.values()].map((s) => [s.id, s.source, s.reads]),
+      [
+        ["paper-wiki", "bundled", []],
+        ["reads-code", "bundled", ["projects-folder/*/Code"]],
+        ["reads-paper", "bundled", ["projects-folder/*/paper"]],
+        ["reads-local", "local", ["projects-folder/Beta/Code"]],
+      ],
+    );
+  });
+
+  test("rule 1: only the exact, lower-case _os/files/ and _os/list/ are the channel; nothing under _os is ever a site file", async () => {
+    assert.deepEqual(route(files(`${CODE}/run.py`), roots, readSites), {
+      kind: "read",
+      site: readSites.get("reads-code"),
+      encoded: `${CODE}/run.py`,
+      list: false,
+    });
+    assert.deepEqual(route(list(CODE), roots, readSites), { kind: "read", site: readSites.get("reads-code"), encoded: CODE, list: true });
+    assert.deepEqual(route(files("a%2Fb"), roots, readSites), { kind: "read", site: readSites.get("reads-code"), encoded: "a%2Fb", list: false }, "not decoded yet");
+    for (const rel of [
+      "_OS/files/x",
+      "_Os/list/x",
+      "_os./files/x",
+      "_os%20/files/x",
+      "_os/Files/x",
+      "_os/FILES/x",
+      "_os/List/x",
+      "_os/files./x",
+      "_os/other/x",
+      "_os/x",
+      "_os",
+      "_os/",
+      "_os/files",
+      "_os/list",
+      "%5Fos/files/x",
+      "%5fos/list/x",
+      "_os%2Ffiles/x",
+      "_os/files%2Fx",
+      "_os/%66iles/x",
+      "_os//files/x",
+    ]) {
+      const url = `app://reads-code/${rel}`;
+      assert.equal(route(url, roots, readSites).kind, "not-found", url);
+      const res = await fetchRead(url);
+      assert.equal(res.status, 404, url);
+      assert.ok(!(await res.text()).includes("SITE FILE"), url);
+    }
+    // The channel's own answer for the site files' paths: no root holds "x".
+    for (const url of [files("x"), list("x")]) await assertRefused(url);
+    assert.equal(await (await fetchRead("app://reads-code/index.html")).text(), "<html>code</html>", "the site itself is unchanged");
+  });
+
+  test("rule 2: the app's origin and hosts that are no loaded plugin have no channel", async () => {
+    // As before the channel: the renderer's files, with index.html for extension-less paths.
+    assert.deepEqual(route(`app://research-os/_os/files/${CODE}/run.py`, roots, readSites), {
+      kind: "file",
+      root: renderer,
+      rel: `_os/files/${CODE}/run.py`,
+      fallback: null,
+      csp: null,
+      confined: false,
+    });
+    const deep = route(`app://research-os/_os/list/${CODE}`, roots, readSites);
+    assert.ok(deep.kind === "file" && deep.root === renderer && deep.fallback === "index.html");
+    const file = await fetchRead(`app://research-os/_os/files/${CODE}/run.py`);
+    assert.equal(file.status, 404);
+    assert.equal(await file.text(), "Not found");
+    const page = await fetchRead(`app://research-os/_os/list/${CODE}`);
+    assert.equal(page.status, 200);
+    assert.equal(await page.text(), "<html>app</html>", "the app's page, not a listing");
+    assert.equal(page.headers.get("content-security-policy"), appCsp([...readSites.keys()]));
+    for (const url of [files(`${CODE}/run.py`, "code-view"), list(CODE, "code-view")]) {
+      assert.equal(route(url, roots, readSites).kind, "not-found", url);
+      assert.equal((await fetchRead(url)).status, 404, url);
+    }
+  });
+
+  test("rule 3: GET and HEAD only; HEAD has the headers and no body", async () => {
+    for (const method of ["POST", "PUT", "DELETE", "PATCH", "OPTIONS"]) {
+      for (const url of [files(`${CODE}/run.py`), list(CODE), files(".env")]) {
+        const res = await fetchRead(url, { method, ...(method === "OPTIONS" ? {} : { body: "{}", headers: { "Content-Type": "application/json" } }) });
+        assert.equal(res.status, 405, `${method} ${url}`);
+        assert.equal(res.headers.get("allow"), "GET, HEAD", `${method} ${url}`);
+        assertReadHeaders(res, url);
+        assert.equal(await res.text(), "Method not allowed", `${method} ${url}`);
+      }
+    }
+    const head = await fetchRead(files(`${CODE}/run.py`), { method: "HEAD" });
+    assert.equal(head.status, 200);
+    assert.equal(head.headers.get("content-type"), "application/octet-stream");
+    assertReadHeaders(head, "HEAD file");
+    assert.equal(await head.text(), "");
+    const headList = await fetchRead(list(CODE), { method: "HEAD" });
+    assert.equal(headList.status, 200);
+    assert.equal(headList.headers.get("content-type"), "application/json");
+    assert.equal(await headList.text(), "");
+    await assertRefused(files(`${CODE}/missing.txt`), { method: "HEAD" });
+  });
+
+  test("rule 4: no folder open is a 404 (after the method check)", async () => {
+    const closed = createHandler(() => ({ renderer, workspace: null, sites: readSites, registry: null, token: "t" }));
+    for (const url of [files(`${CODE}/run.py`), list(CODE)]) {
+      const res = await closed(new Request(url));
+      assert.equal(res.status, 404, url);
+      assertReadHeaders(res, url);
+    }
+    assert.equal((await closed(new Request(files(`${CODE}/run.py`), { method: "POST", body: "{}" }))).status, 405);
+  });
+
+  test("rule 5: the path is decoded once, and no segment of it may start with '.'", async () => {
+    assert.equal(await okText(files(`${CODE}/sub/deep.txt`)), "deep");
+    assert.equal(await okText(files(`${CODE}/a%20b.txt`)), "space");
+    assert.equal(await okText(files(`${CODE}/sub%2Fdeep.txt`)), "deep", "%2F decodes to a separator, once");
+    for (const rel of [
+      ".env",
+      ".git/config",
+      `${CODE}/.env`,
+      `${CODE}/%2Eenv`,
+      `${CODE}/.git/config`,
+      `${CODE}/.venv/lib/x.py`,
+      // A dot-named link to a folder that is not: only the request path shows the dot.
+      `${CODE}/.alias/deep.txt`,
+      `${CODE}/..%2f..%2f..%2f.env`,
+      `${CODE}/..%5c..%5c..%5c.env`,
+      `${CODE}/%2e%2e/PROJECT_MEMORY.md`,
+      `${CODE}/sub/..%2f..%2fPROJECT_MEMORY.md`,
+      // Decoded twice, these would name deep.txt and ../run.py.
+      `${CODE}/sub/%2564eep.txt`,
+      `${CODE}/sub/%252e%252e/run.py`,
+      `${CODE}/sub%252Fdeep.txt`,
+      `${CODE}/run.py%00`,
+      `${CODE}/run.py:stream`,
+      "",
+    ]) {
+      await assertRefused(files(rel));
+    }
+    for (const rel of ["", ".git", `${CODE}/.git`, `${CODE}/.alias`, `${CODE}/.venv`]) await assertRefused(list(rel));
+  });
+
+  test("rule 6: only paths in one of the plugin's reads roots, which a plugin without reads has none of", async () => {
+    assert.equal(await okText(files(`${CODE}/run.py`)), "print(1)");
+    assert.equal(await okText(files("projects-folder/Beta/Code/b.py")), "b", "'*' matches any project");
+    for (const rel of [
+      "AGENTS.md",
+      "human/private/secret.md",
+      "projects-folder/Alpha/PROJECT_MEMORY.md",
+      "projects-folder/Alpha/paper/main.tex",
+      "projects-folder/Alpha/Code-old/x",
+      "projects-folder/Code/run.py",
+    ]) {
+      await assertRefused(files(rel));
+    }
+    for (const rel of ["projects-folder", "projects-folder/Alpha", "human"]) await assertRefused(list(rel));
+    for (const url of [files(`${CODE}/run.py`, "paper-wiki"), list(CODE, "paper-wiki"), files("paper-wiki/viz.html", "paper-wiki")]) {
+      await assertRefused(url);
+    }
+  });
+
+  test("rule 7: the target's real path stays inside the root's: links out of it are not followed", async () => {
+    const refused = [files(`${CODE}/out-dir/x.txt`), files(`${CODE}/to-private/secret.md`), list(`${CODE}/out-dir`), list(`${CODE}/to-private`)];
+    if (fileLinks.outFile) refused.push(files(`${CODE}/out-file.txt`));
+    for (const url of refused) await assertRefused(url);
+    // Links that stay inside the root are followed.
+    assert.equal(await okText(files(`${CODE}/sub-link/deep.txt`)), "deep");
+    assert.deepEqual((await okList(list(`${CODE}/sub-link`))).entries, [{ name: "deep.txt", dir: false, size: 4 }]);
+    if (fileLinks.inside) assert.equal(await okText(files(`${CODE}/in-link.txt`)), "deep");
+  });
+
+  test("rule 8: a link inside the root onto one of its dot paths is refused, as a file and as a listing", async () => {
+    const refused = [files(`${CODE}/git-link/config`), list(`${CODE}/git-link`)];
+    if (fileLinks.env) refused.push(files(`${CODE}/env-link`));
+    for (const url of refused) await assertRefused(url);
+  });
+
+  test("rule 9: a root that resolves out of the workspace, onto a dot folder of it, or onto the workspace itself is refused", async () => {
+    for (const url of [
+      files("projects-folder/Gamma/Code/y.txt"),
+      list("projects-folder/Gamma/Code"),
+      files("projects-folder/Eps/Code/config"),
+      list("projects-folder/Eps/Code"),
+      files("projects-folder/Zeta/Code/AGENTS.md"),
+      list("projects-folder/Zeta/Code"),
+    ]) {
+      await assertRefused(url);
+    }
+    // A root that is a link to another folder inside the workspace is followed.
+    assert.equal(await okText(files("projects-folder/Delta/Code/b.py")), "b");
+    assert.deepEqual((await okList(list("projects-folder/Delta/Code"))).entries, [{ name: "b.py", dir: false, size: 1 }]);
+  });
+
+  test("rule 10: a listing shows names, folders, and sizes, sorted, without dot names, links leaving the root or onto dot paths, or anything else", { timeout: 10_000 }, async () => {
+    const expected = [
+      ...Object.entries(codeFiles).map(([name, text]) => ({ name, dir: false, size: Buffer.byteLength(text) })),
+      ...(fileLinks.inside ? [{ name: "in-link.txt", dir: false, size: 4 }] : []),
+      { name: "sub", dir: true, size: 0 },
+      { name: "sub-link", dir: true, size: 0 },
+    ];
+    // Sorted by UTF-16 code unit, so "Zed.txt" comes first and "page.htm" before "page.html".
+    expected.sort((a, b) => (a.name < b.name ? -1 : 1));
+    assert.deepEqual(expected.slice(0, 3).map((e) => e.name), ["Zed.txt", "a b.txt", "app.js"]);
+    assert.deepEqual(await okList(list(CODE)), { entries: expected });
+    assert.deepEqual(await okList(list(`${CODE}/sub`)), { entries: [{ name: "deep.txt", dir: false, size: 4 }] });
+    // A listing of a file or of nothing, and a file that is a folder, nothing, or a FIFO, are 404.
+    const refused = [list(`${CODE}/run.py`), list(`${CODE}/missing`), files(`${CODE}/sub`), files(`${CODE}/missing.txt`), files(CODE)];
+    if (fifo) refused.push(files(`${CODE}/fifo`), list(`${CODE}/fifo`));
+    if (fileLinks.dangling) refused.push(files(`${CODE}/dangling.txt`));
+    for (const url of refused) await assertRefused(url);
+  });
+
+  test("rule 11: a file above the cap is 413 without being read; a listing stops at its cap and says so", async () => {
+    assert.equal(READ_MAX_BYTES, 32 * 1024 * 1024);
+    assert.equal(LIST_MAX_ENTRIES, 5000);
+    const caps = join(ws, "projects-folder", "Caps", "Code");
+    // Sparse where the file system allows: a size, no 32 MiB written.
+    writeFileSync(join(caps, "big.bin"), "");
+    truncateSync(join(caps, "big.bin"), READ_MAX_BYTES + 1);
+    writeFileSync(join(caps, "edge.bin"), "");
+    truncateSync(join(caps, "edge.bin"), READ_MAX_BYTES);
+    const big = await fetchRead(files("projects-folder/Caps/Code/big.bin"));
+    assert.equal(big.status, 413);
+    assertReadHeaders(big, "big.bin");
+    assert.equal(big.headers.get("content-type"), "text/plain; charset=utf-8");
+    assert.equal(await big.text(), "Too large for the read channel");
+    const bigHead = await fetchRead(files("projects-folder/Caps/Code/big.bin"), { method: "HEAD" });
+    assert.equal(bigHead.status, 413);
+    assert.equal(await bigHead.text(), "");
+    assert.equal((await fetchRead(files("projects-folder/Caps/Code/edge.bin"), { method: "HEAD" })).status, 200, "the cap itself is allowed");
+
+    const many = join(caps, "many");
+    const name = (i: number) => `f${String(i).padStart(4, "0")}.txt`;
+    for (let i = 0; i <= LIST_MAX_ENTRIES; i++) writeFileSync(join(many, name(i)), "");
+    const full = await okList(list("projects-folder/Caps/Code/many"));
+    assert.equal(full.entries.length, LIST_MAX_ENTRIES);
+    assert.equal(full.truncated, true);
+    assert.deepEqual([full.entries[0]!.name, full.entries.at(-1)!.name], [name(0), name(LIST_MAX_ENTRIES - 1)]);
+    unlinkSync(join(many, name(LIST_MAX_ENTRIES)));
+    const exact = await okList(list("projects-folder/Caps/Code/many"));
+    assert.equal(exact.entries.length, LIST_MAX_ENTRIES);
+    assert.ok(!("truncated" in exact), "exactly the cap is the whole folder");
+  });
+
+  test("rule 12: every response carries nosniff, no-store and the sandbox policy; scripts and HTML go as plain text", async () => {
+    assert.equal(READ_CSP, "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'");
+    for (const [file, type] of [
+      ["app.js", "text/plain; charset=utf-8"],
+      ["mod.mjs", "text/plain; charset=utf-8"],
+      ["lib.cjs", "text/plain; charset=utf-8"],
+      ["page.html", "text/plain; charset=utf-8"],
+      ["page.htm", "text/plain; charset=utf-8"],
+      ["doc.xhtml", "text/plain; charset=utf-8"],
+      ["notes.md", "text/plain; charset=utf-8"],
+      ["fig.svg", "image/svg+xml"],
+      ["data.json", "application/json; charset=utf-8"],
+      ["run.py", "application/octet-stream"],
+    ] as const) {
+      const url = files(`${CODE}/${file}`);
+      const res = await fetchRead(url);
+      assert.equal(res.status, 200, url);
+      assert.equal(res.headers.get("content-type"), type, url);
+      assertReadHeaders(res, url);
+      assert.equal(await res.text(), codeFiles[file], `${url}: the bytes as they are`);
+    }
+    // Refusals carry them too (asserted in assertRefused for 404; 405 and 413 above).
+    await assertRefused(files(`${CODE}/missing.txt`));
+  });
+
+  test("rule 13: each origin reads only inside its own roots", async () => {
+    assert.equal(await okText(files("projects-folder/Alpha/paper/main.tex", "reads-paper")), "\\documentclass{article}");
+    await assertRefused(files("projects-folder/Alpha/paper/main.tex", "reads-code"));
+    await assertRefused(files(`${CODE}/run.py`, "reads-paper"));
+    await assertRefused(list(CODE, "reads-paper"));
+    assert.deepEqual((await okList(list("projects-folder/Alpha/paper", "reads-paper"))).entries, [{ name: "main.tex", dir: false, size: 23 }]);
+  });
+
+  test("rule 14: a local plugin reads its manifest's roots like a bundled one", async () => {
+    assert.equal(await okText(files("projects-folder/Beta/Code/b.py", "reads-local")), "b");
+    await assertRefused(files(`${CODE}/run.py`, "reads-local"));
   });
 });
