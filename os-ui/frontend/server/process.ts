@@ -4,8 +4,10 @@ import { resolve } from "node:path";
 import type { RunResult, Runner } from "./types.ts";
 
 /**
- * A Runner that spawns real processes with `env`. Output is decoded as UTF-8
- * and `input` goes to stdin (how a prompt or a key value travels).
+ * A Runner that spawns real processes with `env`, or with what `options.env`
+ * makes of it. Output is collected as bytes and decoded as UTF-8 once, so a
+ * character split across two chunks survives, and `input` goes to stdin (how
+ * a prompt or a key value travels).
  *
  * windowsHide gives each child its own hidden console. Without it the child
  * inherits the server's console, and once the terminal that started a
@@ -20,14 +22,16 @@ export function processRunner(env: NodeJS.ProcessEnv = process.env): Runner {
         fail(new Error("empty command"));
         return;
       }
+      const base = { ...env, PYTHONIOENCODING: "utf-8" };
       const child = spawn(bin, args, {
         cwd: options.cwd,
-        env: { ...env, PYTHONIOENCODING: "utf-8" },
+        env: options.env ? options.env(base) : base,
         windowsHide: true,
       });
-      let stdout = "";
-      let stderr = "";
+      const out = { chunks: [] as Buffer[], bytes: 0 };
+      const err = { chunks: [] as Buffer[], bytes: 0 };
       let timedOut = false;
+      let truncated = false;
       const timer =
         options.timeoutMs === undefined
           ? undefined
@@ -35,16 +39,33 @@ export function processRunner(env: NodeJS.ProcessEnv = process.env): Runner {
               timedOut = true;
               child.kill();
             }, options.timeoutMs);
-      child.stdout.on("data", (d: Buffer) => (stdout += d.toString("utf8")));
-      child.stderr.on("data", (d: Buffer) => (stderr += d.toString("utf8")));
+      const collect = (into: typeof out) => (d: Buffer) => {
+        if (truncated) return;
+        const cap = options.maxOutputBytes;
+        if (cap !== undefined && into.bytes + d.length > cap) {
+          into.chunks.push(d.subarray(0, cap - into.bytes));
+          into.bytes = cap;
+          truncated = true;
+          child.stdout.destroy();
+          child.stderr.destroy();
+          child.kill();
+          return;
+        }
+        into.chunks.push(d);
+        into.bytes += d.length;
+      };
+      child.stdout.on("data", collect(out));
+      child.stderr.on("data", collect(err));
       child.on("error", (error) => {
         clearTimeout(timer);
         fail(error);
       });
       child.on("close", (code) => {
         clearTimeout(timer);
+        const stdout = Buffer.concat(out.chunks).toString("utf8");
+        let stderr = Buffer.concat(err.chunks).toString("utf8");
         if (timedOut) stderr += `\n[timed out after ${Math.round(options.timeoutMs! / 1000)} s]`;
-        done({ code: timedOut ? -1 : (code ?? -1), stdout, stderr });
+        done({ code: timedOut ? -1 : (code ?? -1), stdout, stderr, truncated });
       });
       child.stdin.on("error", () => {}); // a child that exits without reading stdin is not an error
       child.stdin.end(options.input ?? "", "utf8");

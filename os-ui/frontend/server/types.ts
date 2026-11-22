@@ -25,6 +25,8 @@ export interface RunResult {
   code: number;
   stdout: string;
   stderr: string;
+  /** The output passed maxOutputBytes: the child was killed and stdout and stderr hold what came before the cap. */
+  truncated?: boolean;
 }
 
 export interface RunOptions {
@@ -32,6 +34,10 @@ export interface RunOptions {
   input?: string;
   /** Kill the child after this long; the result then has code -1 and says so in stderr. */
   timeoutMs?: number;
+  /** Stop collecting at this many bytes of stdout (or of stderr) and kill the child; the result is then `truncated`. */
+  maxOutputBytes?: number;
+  /** The child's environment, made from the runner's own (which keeps the PATH that finds the program). */
+  env?: (inherited: NodeJS.ProcessEnv) => NodeJS.ProcessEnv;
 }
 
 /** Runs one child process to completion; rejects only when it cannot start. */
