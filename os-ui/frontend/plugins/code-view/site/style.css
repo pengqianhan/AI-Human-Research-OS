@@ -1,0 +1,11 @@
+/* The Code view's page, in mockup C's visual language (os-ui/mockups/step1/c-document.html). */
+:root {
+  --paper: #faf7f1; --card: #fffdf9; --ink: #1c1a17; --ink2: #4a453d; --muted: #80786b; --faint: #b0a796;
+  --line: rgba(70, 55, 30, .10); --accent: #1e5a56; --accent-ink: #164542;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--card); color: var(--ink); font: 14px/1.5 var(--sans); }
+.tree-root { font: 600 11px var(--mono); color: var(--muted); padding: 12px 14px; }

@@ -7,8 +7,10 @@ export type PluginScreen = `${string}/${string}`;
 /** The pages the left navigation switches between. */
 export type Screen = TrunkScreen | PluginScreen;
 
-/** The tabs of a project workspace. Only Overview, Code, and Paper can be selected in step 1. */
-export type ViewTab = "overview" | "code" | "paper";
+/** A plugin's project view, by its key "<plugin>/<page>" (src/plugins/pages.ts): the Code tab is "code-view/code". */
+export type PluginTab = `${string}/${string}`;
+/** The tabs of a project workspace: the app's Overview and Paper (a placeholder until its plugin), and the plugins' project views. */
+export type ViewTab = "overview" | "paper" | PluginTab;
 
 /** What the layout remembers across reloads, per browser profile. */
 export interface LayoutState {
@@ -27,7 +29,9 @@ const KEY = "osui.layout.v1";
 const TRUNK_SCREENS: TrunkScreen[] = ["home", "projects", "skills", "plugins", "settings", "workspace"];
 /** Screens saved before a plugin's page replaced them: the Paper wiki page was "wiki" until S4. */
 const RENAMED: ReadonlyMap<string, PluginScreen> = new Map([["wiki", "paper-wiki/viewer"]]);
-const TABS: ViewTab[] = ["overview", "code", "paper"];
+const TRUNK_TABS: ViewTab[] = ["overview", "paper"];
+/** Tabs saved before a plugin's project view replaced them: Code was the trunk's placeholder tab "code" until S6a-2. */
+const RENAMED_TABS: ReadonlyMap<string, PluginTab> = new Map([["code", "code-view/code"]]);
 
 export const DEFAULT_LAYOUT: LayoutState = {
   screen: "home",
@@ -42,11 +46,15 @@ export const DEFAULT_LAYOUT: LayoutState = {
  * A saved layout, keeping only values that are still valid. `pluginScreens`
  * are the keys of the loaded plugins' left-navigation pages: a saved plugin
  * page whose plugin is not loaded opens Home, and an old screen name opens
- * the plugin page that replaced it.
+ * the plugin page that replaced it. `pluginTabs`, the keys of their project
+ * views, do the same for the workspace's tab, which falls back to Overview.
  */
-export function readLayout(raw: unknown, pluginScreens: readonly string[]): LayoutState {
+export function readLayout(raw: unknown, pluginScreens: readonly string[], pluginTabs: readonly string[] = []): LayoutState {
   const saved = (typeof raw === "object" && raw !== null ? raw : {}) as Partial<Record<keyof LayoutState, unknown>>;
   const name = typeof saved.screen === "string" ? (RENAMED.get(saved.screen) ?? saved.screen) : null;
+  const tabName = typeof saved.tab === "string" ? (RENAMED_TABS.get(saved.tab) ?? saved.tab) : null;
+  const tab: ViewTab | null =
+    tabName !== null && (TRUNK_TABS.includes(tabName as ViewTab) || pluginTabs.includes(tabName)) ? (tabName as ViewTab) : null;
   const screen: Screen | null =
     name !== null && (TRUNK_SCREENS.includes(name as TrunkScreen) || pluginScreens.includes(name)) ? (name as Screen) : null;
   return {
@@ -55,14 +63,14 @@ export function readLayout(raw: unknown, pluginScreens: readonly string[]): Layo
     sidebarCollapsed: saved.sidebarCollapsed === true,
     homeConversationOpen: saved.homeConversationOpen === true,
     conversationCollapsed: saved.conversationCollapsed === true,
-    tab: TABS.includes(saved.tab as ViewTab) ? (saved.tab as ViewTab) : DEFAULT_LAYOUT.tab,
+    tab: tab ?? DEFAULT_LAYOUT.tab,
   };
 }
 
 /** Read the saved layout from localStorage. */
-function load(pluginScreens: readonly string[]): LayoutState {
+function load(pluginScreens: readonly string[], pluginTabs: readonly string[]): LayoutState {
   try {
-    return readLayout(JSON.parse(localStorage.getItem(KEY) ?? "{}"), pluginScreens);
+    return readLayout(JSON.parse(localStorage.getItem(KEY) ?? "{}"), pluginScreens, pluginTabs);
   } catch {
     // storage unavailable or unreadable: start from the defaults
     return DEFAULT_LAYOUT;
@@ -77,9 +85,9 @@ function save(state: LayoutState): void {
   }
 }
 
-/** The layout state with a setter that also saves it. `pluginScreens` as for readLayout; read once. */
-export function useLayoutState(pluginScreens: readonly string[]): [LayoutState, (patch: Partial<LayoutState>) => void] {
-  const [state, setState] = useState<LayoutState>(() => load(pluginScreens));
+/** The layout state with a setter that also saves it. `pluginScreens` and `pluginTabs` as for readLayout; read once. */
+export function useLayoutState(pluginScreens: readonly string[], pluginTabs: readonly string[]): [LayoutState, (patch: Partial<LayoutState>) => void] {
+  const [state, setState] = useState<LayoutState>(() => load(pluginScreens, pluginTabs));
   const update = useCallback((patch: Partial<LayoutState>) => {
     setState((prev) => {
       const next = { ...prev, ...patch };
@@ -88,4 +96,33 @@ export function useLayoutState(pluginScreens: readonly string[]): [LayoutState, 
     });
   }, []);
   return [state, update];
+}
+
+/** One tab of the workspace's tab row: selectable (`id`), or a later view's badge (`later`). */
+export interface WorkspaceTab {
+  id: ViewTab | null;
+  label: string;
+  later?: string;
+}
+
+/** Where a bundled plugin's project view sits in mockup C's tab row. */
+const PLACED_VIEWS: readonly string[] = ["code-view/code"];
+
+/**
+ * The workspace's tab row, in mockup C's order: Overview, Idea (step 2), the
+ * Code view, Skeleton and Assets (step 2), any other plugin project view, then
+ * Paper. `views` are the loaded plugins' project views (key and title); a
+ * placed view whose plugin is not loaded leaves no tab.
+ */
+export function workspaceTabs(views: readonly { key: PluginTab; title: string }[]): WorkspaceTab[] {
+  const tab = (key: string): WorkspaceTab[] => views.filter((v) => v.key === key).map((v) => ({ id: v.key, label: v.title }));
+  return [
+    { id: "overview", label: "Overview" },
+    { id: null, label: "Idea", later: "The Idea view arrives in step 2." },
+    ...tab("code-view/code"),
+    { id: null, label: "Skeleton", later: "The Skeleton view arrives in step 2." },
+    { id: null, label: "Assets", later: "The Assets view arrives in step 2." },
+    ...views.filter((v) => !PLACED_VIEWS.includes(v.key)).map((v) => ({ id: v.key, label: v.title })),
+    { id: "paper", label: "Paper" },
+  ];
 }

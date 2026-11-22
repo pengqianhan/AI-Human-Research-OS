@@ -6,7 +6,7 @@ import { BUNDLED_IDS } from "./plugins/bundled.ts";
 import { TRUNK_MOUNTS } from "./server/api.ts";
 import { devContext } from "./server/dev.ts";
 import { sendNode, serveNode } from "./server/node.ts";
-import { BUNDLED_HANDLERS } from "./server/pluginHandlers.ts";
+import { BUNDLED_HANDLERS, DESKTOP_ONLY_HANDLERS } from "./server/pluginHandlers.ts";
 import { createRegistry, loadPlugins } from "./server/registry.ts";
 
 /** The bundled plugins' folders, one `<id>/plugin.json` each. */
@@ -50,7 +50,8 @@ export function apiPlugin(): Plugin {
       });
       const loaded = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
       for (const problem of loaded.problems) server.config.logger.warn(`  os-ui plugin not loaded: ${problem}`);
-      const registry = createRegistry({ ctx: devContext(), trunk: TRUNK_MOUNTS, plugins: loaded.plugins, factories: BUNDLED_HANDLERS });
+      // Desktop-only handlers (the Code view's Git history) are declared but not mounted here.
+      const registry = createRegistry({ ctx: devContext(), trunk: TRUNK_MOUNTS, plugins: loaded.plugins, factories: BUNDLED_HANDLERS, skip: DESKTOP_ONLY_HANDLERS });
       for (const mount of registry.all) {
         server.middlewares.use(mount.prefix, (req, res) => {
           if (mount.token && !hasToken(req)) return sendNode(res, { status: 401, body: { error: "token required" } });

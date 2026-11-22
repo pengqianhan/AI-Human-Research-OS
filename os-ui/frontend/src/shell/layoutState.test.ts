@@ -5,17 +5,22 @@ import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { BUNDLED_IDS } from "../../plugins/bundled.ts";
 import { bundledManifests, pluginPages } from "../plugins/pages.ts";
-import { DEFAULT_LAYOUT, readLayout } from "./layoutState.ts";
+import { DEFAULT_LAYOUT, readLayout, workspaceTabs } from "./layoutState.ts";
 
 const PLUGINS = resolve(dirname(fileURLToPath(import.meta.url)), "../../plugins");
 
-/** The keys of the real bundled plugins' left-navigation pages, as the Shell passes them. */
-function navKeys(): string[] {
-  const raw = Object.fromEntries(BUNDLED_IDS.map((id) => [id, JSON.parse(readFileSync(resolve(PLUGINS, id, "plugin.json"), "utf8")) as unknown]));
-  return pluginPages(bundledManifests(raw, BUNDLED_IDS).plugins, { desktop: true })
-    .filter((p) => p.slot === "nav")
+function rawManifests(): Record<string, unknown> {
+  return Object.fromEntries(BUNDLED_IDS.map((id) => [id, JSON.parse(readFileSync(resolve(PLUGINS, id, "plugin.json"), "utf8")) as unknown]));
+}
+
+/** The keys of the real bundled plugins' pages in one slot, as the Shell passes them. */
+function keys(slot: "nav" | "project"): string[] {
+  return pluginPages(bundledManifests(rawManifests(), BUNDLED_IDS).plugins, { desktop: true })
+    .filter((p) => p.slot === slot)
     .map((p) => p.key);
 }
+const navKeys = () => keys("nav");
+const projectKeys = () => keys("project");
 
 describe("the saved layout (localStorage osui.layout.v1)", () => {
   test('a screen saved as "wiki", before S4, opens the Paper wiki page', () => {
@@ -42,10 +47,44 @@ describe("the saved layout (localStorage osui.layout.v1)", () => {
 
   test("the other fields keep their valid values and drop the rest", () => {
     assert.deepEqual(
-      readLayout({ screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "code" }, []),
-      { screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "code" },
+      readLayout({ screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "paper" }, []),
+      { screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "paper" },
     );
     assert.deepEqual(readLayout({ project: 3, sidebarCollapsed: "yes", tab: "idea" }, []), DEFAULT_LAYOUT);
     for (const raw of [null, [], "x", 1]) assert.deepEqual(readLayout(raw, []), DEFAULT_LAYOUT);
+  });
+
+  test('a tab saved as "code", before S6a-2, opens the Code view; without its plugin, Overview', () => {
+    const tabs = projectKeys();
+    assert.ok(tabs.includes("code-view/code"), JSON.stringify(tabs));
+    assert.equal(readLayout({ tab: "code" }, [], tabs).tab, "code-view/code");
+    assert.equal(readLayout({ tab: "code-view/code" }, [], tabs).tab, "code-view/code");
+    assert.equal(readLayout({ tab: "code" }, [], []).tab, "overview");
+    assert.equal(readLayout({ tab: "gone/view" }, [], tabs).tab, "overview");
+    assert.equal(readLayout({ tab: "paper-wiki/viewer" }, [], tabs).tab, "overview", "a left-navigation page is no tab");
+  });
+});
+
+describe("the workspace's tab row", () => {
+  test("mockup C's order, with the Code view's tab from the plugin registry", () => {
+    const views = pluginPages(bundledManifests(rawManifests(), BUNDLED_IDS).plugins, { desktop: true }).filter((p) => p.slot === "project");
+    assert.deepEqual(
+      workspaceTabs(views).map((t) => [t.id, t.label, t.later !== undefined]),
+      [
+        ["overview", "Overview", false],
+        [null, "Idea", true],
+        ["code-view/code", "Code", false],
+        [null, "Skeleton", true],
+        [null, "Assets", true],
+        ["paper", "Paper", false],
+      ],
+    );
+  });
+
+  test("no Code tab without its plugin; another project view goes before Paper", () => {
+    assert.deepEqual(
+      workspaceTabs([{ key: "other/view", title: "Other" }]).map((t) => t.label),
+      ["Overview", "Idea", "Skeleton", "Assets", "Other", "Paper"],
+    );
   });
 });

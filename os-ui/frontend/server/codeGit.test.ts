@@ -1214,15 +1214,15 @@ describe("which git runs", () => {
     assert.deepEqual((await body<Log>(get(api, "/log", { project: P }))).commits.map((c) => c.hash), [m[1]]);
   });
 
-  test("a git that is neither absolute nor a bare name is not run", async () => {
+  test("a git that is null, or neither absolute nor a bare name, is not run", async () => {
     const root = workspace();
     init(root);
     fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a.txt", "a\n"]] }]);
-    for (const git of ["./git", "bin/git", "..\\git"]) {
+    for (const git of ["./git", "bin/git", "..\\git", null]) {
       const { run, calls } = fakeRunner();
       const answer = await body(get(codeGitHandler(context(root, { run }), git, logged), "/", { project: P }));
-      assert.deepEqual(answer, { repo: null, problem: "git was not found; see Settings" }, git);
-      assert.deepEqual(calls, [], git);
+      assert.deepEqual(answer, { repo: null, problem: "git was not found; see Settings" }, String(git));
+      assert.deepEqual(calls, [], String(git));
     }
   });
 });

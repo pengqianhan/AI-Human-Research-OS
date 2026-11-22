@@ -1,11 +1,15 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import type { OsState, Project } from "../types";
 import { AgentChat } from "../components/AgentChat";
 import { ProjectOverview } from "../components/ProjectOverview";
 import { PROJECT_EXAMPLES, projectIntro } from "../lib/agentCopy";
 import { LIVE } from "../lib/mode";
+import { viewSrc } from "../plugins/pages";
+import type { PluginPage } from "../plugins/pages";
+import { usePlugins } from "../plugins/registry";
 import { Icon } from "../shell/icons";
+import { workspaceTabs } from "../shell/layoutState";
 import type { ViewTab } from "../shell/layoutState";
 import { useToast } from "../shell/Toast";
 
@@ -19,21 +23,13 @@ interface Props {
   onBack: () => void;
 }
 
-/** The tab row, in mockup C's order. Idea, Skeleton, and Assets arrive in step 2. */
-const TABS: { id: ViewTab | null; label: string; later?: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: null, label: "Idea", later: "The Idea view arrives in step 2." },
-  { id: "code", label: "Code" },
-  { id: null, label: "Skeleton", later: "The Skeleton view arrives in step 2." },
-  { id: null, label: "Assets", later: "The Assets view arrives in step 2." },
-  { id: "paper", label: "Paper" },
-];
-
 /**
  * One project's workspace (mockup C): its conversation on the left, which
  * collapses to a thin strip, and its views on the right. Overview is today's
- * project overview; Code and Paper hold a placeholder until their view
- * plugins arrive later in step 1.
+ * project overview; Code is the code-view plugin's page, framed on its own
+ * origin (each plugin project view gets a tab, src/shell/layoutState.ts);
+ * Paper holds a placeholder until its plugin arrives. A view's frame, once
+ * opened, stays loaded while another tab is shown, so its place is kept.
  */
 export function WorkspacePage({ state, project, tab, onTab, conversationCollapsed, onConversationCollapsed, onBack }: Props) {
   const ids = useId();
@@ -47,6 +43,15 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
   const collapseRef = useRef<HTMLButtonElement | null>(null);
   const stripRef = useRef<HTMLButtonElement | null>(null);
   const moveFocus = useRef(false);
+  const { pages } = usePlugins();
+  const views = pages.filter((p) => p.slot === "project");
+  const TABS = workspaceTabs(views);
+  const activeView = views.find((v) => v.key === tab) ?? null;
+  // The plugin views opened so far; each frame stays mounted, hidden while another tab is shown.
+  const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set(activeView === null ? [] : [activeView.key]));
+  useEffect(() => {
+    if (activeView !== null && !opened.has(activeView.key)) setOpened(new Set([...opened, activeView.key]));
+  }, [activeView, opened]);
 
   // Collapsing hides the focused button and opening removes the strip; hand
   // the keyboard focus to the control that takes their place.
@@ -190,22 +195,20 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
           </div>
 
           <div role="tabpanel" id={`${ids}-panel`} aria-labelledby={`${ids}-tab-${TABS[selectedIndex]?.label ?? "Overview"}`}
-            // focusable, so the arrow keys scroll it even when it holds no control (Code, Paper)
-            tabIndex={0}
-            className="min-h-0 flex-1 overflow-y-auto focus-visible:outline-offset-[-2px]"
+            // focusable, so the arrow keys scroll it even when it holds no control (Paper); a view's frame takes the focus itself
+            tabIndex={activeView === null ? 0 : -1}
+            className={"relative min-h-0 flex-1 focus-visible:outline-offset-[-2px] " + (activeView === null ? "overflow-y-auto" : "overflow-hidden")}
           >
             {tab === "overview" && (
               <div className="mx-auto max-w-[880px] px-6 pb-12 pt-5">
                 <ProjectOverview project={project} />
               </div>
             )}
-            {tab === "code" && (
-              <Placeholder
-                title="Code"
-                text="This view arrives with the Code view plugin later in step 1. It will show this project's files and its Git changes, read-only."
-                path={`projects-folder/${project.name}/`}
-              />
-            )}
+            {views
+              .filter((v) => opened.has(v.key) || v.key === activeView?.key)
+              .map((v) => (
+                <ViewFrame key={v.key} page={v} project={project.name} hidden={v.key !== activeView?.key} />
+              ))}
             {tab === "paper" && (
               <Placeholder
                 title="Paper"
@@ -218,6 +221,23 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
       </div>
     </div>
   );
+}
+
+/** A plugin's project view for this project, on the plugin's own origin; where this build cannot serve it, a note that it opens in the desktop app. */
+function ViewFrame({ page, project, hidden }: { page: PluginPage; project: string; hidden: boolean }) {
+  const src = viewSrc(page, project);
+  if (src === null) {
+    return (
+      <div hidden={hidden} className="max-w-[520px] px-8 py-10">
+        <h2 className="mb-2 font-serif text-[20px] font-medium text-ink">{page.title}</h2>
+        <p className="prose-serif">The {page.title} view opens in the desktop app; this copy cannot serve it.</p>
+        <p className="src-note mt-3">
+          <code>projects-folder/{project}/</code>
+        </p>
+      </div>
+    );
+  }
+  return <iframe src={src} title={`${page.title} view`} hidden={hidden} className="absolute inset-0 h-full w-full border-0" />;
 }
 
 function Placeholder({ title, text, path }: { title: string; text: string; path: string }) {

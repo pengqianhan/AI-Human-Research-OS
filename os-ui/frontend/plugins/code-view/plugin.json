@@ -1,0 +1,12 @@
+{
+  "contract": "^1.0",
+  "id": "code-view",
+  "name": "Code view",
+  "version": "0.1.0",
+  "description": "A project's files and its Git changes, read-only.",
+  "reads": ["projects-folder/*/Code"],
+  "contributes": {
+    "projectViews": [{ "id": "code", "title": "Code", "entry": "index.html" }],
+    "handlers": ["git"]
+  }
+}

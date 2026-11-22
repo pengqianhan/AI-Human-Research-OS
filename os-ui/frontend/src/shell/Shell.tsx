@@ -33,7 +33,10 @@ import { ToastProvider } from "./Toast";
 export function Shell({ state }: { state: OsState }) {
   const { plugins, pages } = usePlugins();
   const navPages = pages.filter((p) => p.slot === "nav");
-  const [layout, setLayout] = useLayoutState(navPages.map((p) => p.key));
+  const [layout, setLayout] = useLayoutState(
+    navPages.map((p) => p.key),
+    pages.filter((p) => p.slot === "project").map((p) => p.key),
+  );
   const [visited, setVisited] = useState<Set<Screen>>(() => new Set([layout.screen]));
   const mainRef = useRef<HTMLElement | null>(null);
   const focusTitle = useRef(false);

@@ -10,9 +10,9 @@ import type { ApiContext, ApiHandler, ApiResponse, RunOptions, RunResult } from 
 
 /**
  * The Code view's Git data (os-ui/PLUGINS.md, Part 2, Gap 1): one project's
- * history, read-only, for the "Changes" pane. Not mounted yet: S6a-2 adds the
- * code-view plugin that declares it and mounts it at /api/code-view/git on
- * app://code-view.
+ * history, read-only, for the "Changes" pane. The code-view plugin declares
+ * it; the desktop client mounts it at /api/code-view/git on app://code-view
+ * only, and the dev server not at all (DESKTOP_ONLY_HANDLERS).
  *
  * GET /        ?project              Summary: which repository, and the last commit touching the project
  * GET /log     ?project&skip         Log: 50 commits from `skip`, newest first, merges left out
@@ -602,14 +602,16 @@ function failed(step: string, result: RunResult): string {
 }
 
 /**
- * The handler. `git` is an absolute path (S6a-2 may pass the one Settings
- * found) or a bare name, looked up in the absolute PATH entries of the
- * runner's environment; either way never a program whose real path lies in
- * the workspace, and anything else is "git was not found". `log` takes what
+ * The handler. `git` is an absolute path (the desktop client passes the one
+ * it found, client/src/main/codeView.ts) or a bare name, looked up in the
+ * absolute PATH entries of the runner's environment; either way never a
+ * program whose real path lies in the workspace. null (the caller found no
+ * usable git), or anything else, is "git was not found". `log` takes what
  * Git printed on failures, for the server's own log.
  */
-export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string) => void = (line) => console.error(line)): ApiHandler {
-  const usable = isAbsolute(git) || !/[\\/]/.test(git);
+export function codeGitHandler(ctx: ApiContext, git: string | null = "git", log: (line: string) => void = (line) => console.error(line)): ApiHandler {
+  const usable = git !== null && (isAbsolute(git) || !/[\\/]/.test(git));
+  const program = git ?? "";
   let ready: Promise<string | null> | null = null;
 
   // Requests in flight, and git processes running, each per handler and per project.
@@ -683,7 +685,7 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
     if (!usable) return "git was not found; see Settings";
     let result: RunResult;
     try {
-      result = await limited("", () => ctx.run([git, "--version"], options(ctx.repoRoot, CAP.line)));
+      result = await limited("", () => ctx.run([program, "--version"], options(ctx.repoRoot, CAP.line)));
     } catch (error) {
       if (error instanceof Answer) throw error;
       const code = (error as NodeJS.ErrnoException).code;
@@ -755,7 +757,7 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
       const guards = guardArgs(repo.gitDir, repo.top);
       /** `diffs`, a full hash of this repository, marks a command that diffs: it gets no in-tree attributes. */
       const run = (args: string[], cap: number, diffs?: string, input?: string): Promise<RunResult> =>
-        limited(name, () => ctx.run([git, ...guards, ...(diffs === undefined ? [] : [`--attr-source=${EMPTY_TREE[diffs.length]}`]), ...args], options(repo.top, cap, input)));
+        limited(name, () => ctx.run([program, ...guards, ...(diffs === undefined ? [] : [`--attr-source=${EMPTY_TREE[diffs.length]}`]), ...args], options(repo.top, cap, input)));
       const must = (result: RunResult, step: string): RunResult => {
         if (result.timedOut === true || (!result.truncated && result.code !== 0)) {
           log(`code-view git ${req.path} ${step}: ${failureText(result, 2000)}`);
