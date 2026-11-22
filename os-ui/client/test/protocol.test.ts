@@ -697,6 +697,9 @@ describe("read channel", () => {
     "page.htm": "<script>alert(1)</script>",
     "page.html": "<script>alert(2)</script>",
     "run.py": "print(1)",
+    // U+1F600 and U+FF5E: code-unit order puts the first first; code-point and UTF-8 order (APFS's) the second.
+    "\u{1F600}.txt": "smile",
+    "～.txt": "tilde",
   };
   const ws = tempTree({
     "AGENTS.md": "agents",
@@ -992,9 +995,11 @@ describe("read channel", () => {
       { name: "sub", dir: true, size: 0 },
       { name: "sub-link", dir: true, size: 0 },
     ];
-    // Sorted by UTF-16 code unit, so "Zed.txt" comes first and "page.htm" before "page.html".
+    // Sorted by UTF-16 code unit, as JavaScript's default sort: "Zed.txt" comes first,
+    // "page.htm" before "page.html", and U+1F600 before U+FF5E, whatever order the file system keeps.
     expected.sort((a, b) => (a.name < b.name ? -1 : 1));
     assert.deepEqual(expected.slice(0, 3).map((e) => e.name), ["Zed.txt", "a b.txt", "app.js"]);
+    assert.deepEqual(expected.slice(-2).map((e) => e.name), ["\u{1F600}.txt", "～.txt"]);
     assert.deepEqual(await okList(list(CODE)), { entries: expected });
     assert.deepEqual(await okList(list(`${CODE}/sub`)), { entries: [{ name: "deep.txt", dir: false, size: 4 }] });
     // A listing of a file or of nothing, and a file that is a folder, nothing, or a FIFO, are 404.
