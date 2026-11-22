@@ -578,7 +578,8 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  * Leaving out keys where those words only mean "on the command line".
  *
  * Neutralised
- *   diff.<driver>.textconv, .cachetextconv          --no-textconv
+ *   diff.<driver>.textconv, .cachetextconv          --no-textconv (the cache writes refs/notes/textconv/<driver>,
+ *                                                    a ref update that changes .git and fires reference-transaction)
  *   filter.<driver>.clean/.smudge/.process          reached only through textconv's temporary files: --no-textconv
  *   diff.external, diff.<driver>.command            --no-ext-diff (log and show never use them without --ext-diff)
  *   gpg.program, gpg.<format>.program,
@@ -594,8 +595,7 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *     url.<base>.insteadOf, remote.<name>.vcs
  *     (git-remote-<vcs>), .uploadpack, .proxy,
  *     bundle.*, transfer.*, fetch.*, promisor.*,
- *     and the fetch's hooks (reference-transaction,
- *     hook.<name>.command)                           --no-lazy-fetch
+ *     and the hooks of the fetch's ref updates       --no-lazy-fetch
  *   core.useReplaceRefs                              --no-replace-objects
  *   trace2.*Target and every other key in the
  *     user's global or the system config             GIT_CONFIG_GLOBAL=<null device>, GIT_CONFIG_NOSYSTEM=1
@@ -614,7 +614,10 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *   core.pager, pager.<cmd>, PAGER                   a pager starts only when stdout is a terminal; it is a pipe
  *   core.editor, sequence.editor, EDITOR             nothing here edits a message
  *   alias.*                                          built-in commands cannot be aliased
- *   hooks (core.hooksPath, hook.<name>.*)            log, show, rev-parse and cat-file run none (the fetch's are above)
+ *   hooks (core.hooksPath, hook.<name>.*)            log, show, rev-parse and cat-file run none themselves; only a ref
+ *                                                    update would: textconv's cache (seen in a test without
+ *                                                    --no-textconv) or a lazy fetch that got objects, both
+ *                                                    neutralised above
  *   interactive.diffFilter                           add -p and friends only
  *   difftool.*, mergetool.*, merge.<driver>.driver   difftool, mergetool, merge only
  *   core.alternateRefsCommand                        receive-pack and fetch negotiation only; alternates are refused

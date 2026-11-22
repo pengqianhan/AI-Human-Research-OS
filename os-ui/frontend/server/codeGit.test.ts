@@ -873,8 +873,9 @@ describe("no program runs and nothing reaches the network, whatever the reposito
   test("textconv, and the filters its temporary files go through (--no-textconv)", () => none("textconv", "filter-clean", "filter-smudge", "filter-process"));
   test("signature verification (--no-show-signature)", () => none("gpg", "gpg-openpgp", "gpg-ssh", "gpg-x509"));
   test("the file system monitor (core.fsmonitor=false)", () => none("fsmonitor", "hook-fsmonitor-watchman"));
-  test("lazy fetch, its transport, and its hooks (--no-lazy-fetch)", () =>
-    none("ssh", "uploadpack", "git-proxy", "askpass", "credential", "config-hook", "hook-reference-transaction"));
+  test("lazy fetch and its transport (--no-lazy-fetch)", () => none("ssh", "uploadpack", "git-proxy", "askpass", "credential"));
+  test("hooks, which only a ref update starts, as textconv's notes cache would make (--no-textconv)", () =>
+    none("config-hook", "hook-reference-transaction"));
   test("external diff drivers, which log and show leave off by themselves", () => none("diff-external", "diff-command"));
   test("keys these commands never reach", () =>
     none("pager", "pager-log", "pager-show", "editor", "sequence-editor", "alias-log", "alias-show", "alternate-refs", "gc-hook", "diff-filter", "trailer", "pack-objects-hook", "merge-driver", "hook-post-index-change", "hook-pre-auto-gc", "hook-post-checkout"));
