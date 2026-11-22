@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { chmodSync } from "node:fs";
 import { join } from "node:path";
 import { describe, test } from "node:test";
 import { BUNDLED_IDS } from "../../frontend/plugins/bundled.ts";
@@ -102,6 +103,14 @@ describe("findGit", () => {
     assert.deepEqual(asked, [["/usr/bin/xcode-select", "-p"]], "only xcode-select is asked, not the stub");
     assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(0), platform: "darwin", exists: exists(["/usr/bin/git"]) }), "/usr/bin/git");
     assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(2), platform: "darwin", exists: exists(["/opt/homebrew/bin/git"]) }), "/opt/homebrew/bin/git");
+  });
+
+  test("a git in a PATH entry inside the workspace is passed over for the next one", { skip: process.platform === "win32" ? "POSIX file modes" : false }, async () => {
+    const root = tempTree({ "ws/bin/git": "#!/bin/sh\n", "other/bin/git": "#!/bin/sh\n" });
+    for (const dir of ["ws", "other"]) chmodSync(join(root, dir, "bin", "git"), 0o755);
+    const env = { PATH: `${join(root, "ws", "bin")}:${join(root, "other", "bin")}` };
+    assert.equal(await findGit({ env, dir: join(root, "ws"), probe: tools(0) }), join(root, "other", "bin", "git"));
+    assert.equal(await findGit({ env, dir: join(root, "elsewhere"), probe: tools(0) }), join(root, "ws", "bin", "git"), "outside the workspace it is the first");
   });
 
   test("none on PATH", async () => {

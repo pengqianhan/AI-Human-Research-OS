@@ -72,7 +72,7 @@ describe("what the page reads", () => {
 
   test("only its own read channel and its own Git handler, on its own origin", () => {
     const fetches = [...main.matchAll(/fetch\(([^,)]+)/g)].map((m) => m[1]!.trim());
-    assert.deepEqual(fetches.sort(), ["filesUrl(workspacePath(path", "listUrl(workspacePath(path", "url"].sort());
+    assert.deepEqual(fetches.sort(), ["filesUrl(workspacePath(path", "filesUrl(workspacePath(path", "listUrl(workspacePath(path", "url"].sort());
     const json = [...main.matchAll(/getJson<[^>]+>\(([a-zA-Z]+)\(/g)].map((m) => m[1]);
     assert.ok(json.length >= 3 && json.every((f) => f === "gitUrl"), JSON.stringify(json));
     assert.deepEqual([...main.matchAll(/\.src = ([a-zA-Z]+)\(/g)].map((m) => m[1]), ["filesUrl"]);

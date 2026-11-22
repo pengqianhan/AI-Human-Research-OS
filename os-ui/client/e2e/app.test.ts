@@ -390,6 +390,8 @@ describe("desktop client on a Research OS folder", () => {
     await code.getByText("Too large to show").waitFor();
 
     // Markup in a file's name and in its text stays text.
+    // The workspace takes at most 10 selections a second from a view; the clicks above came quickly.
+    await page.waitForTimeout(1100);
     if (process.platform !== "win32") {
       await code.locator(".tnode .tname").filter({ hasText: MARKUP_NAME }).click();
       await code.locator(".row .tx").filter({ hasText: MARKUP_TEXT }).waitFor();
@@ -438,6 +440,22 @@ describe("desktop client on a Research OS folder", () => {
     assert.match(probe.parent, /^blocked: SecurityError/);
     assert.match(probe.appApi, /^blocked/);
     assert.match(probe.wikiOrigin, /^blocked/);
+    // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline'), whatever reaches its DOM.
+    const before = logs.length;
+    const inline = await code.evaluate(() => {
+      const script = document.createElement("script");
+      script.textContent = "window.__inline = 1";
+      document.body.append(script);
+      script.remove();
+      return (window as { __inline?: unknown }).__inline;
+    });
+    assert.equal(inline, undefined, "an inline script ran in the Code view's page");
+    await page.waitForTimeout(300);
+    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
+    await app.evaluate(() => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/code-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
+    });
     // The frame's CSP reports reach the suite, so the final check sees this frame too.
     await code.evaluate(() => {
       const img = new Image();
@@ -527,6 +545,11 @@ describe("desktop client on a Research OS folder", () => {
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
     await chips.filter({ hasText: short }).waitFor();
 
+    // A chip opens what it will send, as plain text in the composer: exactly the reference's text.
+    await chat.getByRole("button", { name: "Show what will be sent for Code/README.md:3" }).click();
+    const preview = chat.locator("[data-reference-preview]");
+    assert.equal(await preview.textContent(), `About Code/README.md:3\n> ${line}`);
+
     await code.locator(".drow.add").first().click();
     await bar.getByText(`${short} · Code/README.md · added line`, { exact: false }).waitFor();
     await shot(page, "3-selection-ask-bar-and-chips");
@@ -536,7 +559,9 @@ describe("desktop client on a Research OS folder", () => {
 
     assert.equal(await chips.count(), 2);
     await chat.getByRole("button", { name: "Remove reference Code/README.md:3" }).click();
-    assert.deepEqual(await chips.allTextContents(), [short]);
+    const left = await chips.allTextContents();
+    assert.equal(left.length, 1);
+    assert.ok(left[0]!.startsWith(short), left[0]);
     assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
   });
 

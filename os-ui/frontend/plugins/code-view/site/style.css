@@ -108,3 +108,4 @@ button { font: inherit; color: inherit; }
 .reload:hover { text-decoration: underline; }
 .cmdrow { display: flex; align-items: baseline; gap: 2px; margin: 0 0 14px; min-width: 0; }
 .changes .cmdrow .cmd { margin: 0; }
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }

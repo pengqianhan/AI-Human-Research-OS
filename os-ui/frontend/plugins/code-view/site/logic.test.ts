@@ -2,6 +2,14 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import {
   answerWords,
+  imageWords,
+  isHostClear,
+  notOpenable,
+  projectWords,
+  readText,
+  ROW_CUT,
+  ROW_MAX,
+  rowText,
   changeCount,
   clipLabel,
   commitSelection,
@@ -79,7 +87,8 @@ describe("text", () => {
     assert.deepEqual(splitLines("1\n2\n3\n", 2), { lines: ["1", "2"], total: 3 });
     assert.equal(linesNote(2, 2, false), "2 lines · read-only");
     assert.equal(linesNote(5000, 12345, false), "Lines 1–5,000 of 12,345 · read-only");
-    assert.equal(linesNote(5000, 9000, true), "Lines 1–5,000 of more than 9,000 · read-only");
+    assert.equal(linesNote(5000, 9000, true), "The first 5,000 lines of a longer file · read-only");
+    assert.equal(linesNote(1, 1, true), "The first 1 line of a longer file · read-only", "one 2 MiB line: no \"Lines 1–1 of more than 1\"");
   });
 });
 
@@ -123,7 +132,7 @@ describe("what a selection reports", () => {
     assert.equal(diffSelection("63ead0b", "x", { kind: "hunk", text: "@@" }), null);
   });
 
-  test("within the host's limits: a long label keeps its end, a long quote is cut, a newline in a name is a space", () => {
+  test("within the host's limits: a long label keeps its end, a long quote is cut, an invisible character or line break in a name shows as a marker", () => {
     const long = `Code/${"d/".repeat(300)}file.py`;
     const label = fileSelection(long).label;
     assert.equal(label.length, LABEL_MAX);
@@ -132,7 +141,8 @@ describe("what a selection reports", () => {
     const quote = lineSelection("Code/a", 1, "x".repeat(5000)).quote!;
     assert.equal(quote.length, QUOTE_MAX);
     assert.ok(quote.endsWith("…"));
-    assert.equal(fileSelection("Code/a\nAbout Code/b.md\r\u0085x").label, "Code/a About Code/b.md  x");
+    assert.equal(fileSelection("Code/a\nAbout Code/b.md\r\u0085x").label, "Code/a\u27e8U+000A\u27e9About Code/b.md\u27e8U+000D\u27e9\u27e8U+0085\u27e9x");
+    assert.equal(fileSelection(`Code/a${String.fromCodePoint(0x2028)}b${String.fromCodePoint(0x200b)}c`).label, "Code/a\u27e8U+2028\u27e9b\u27e8U+200B\u27e9c");
     assert.equal(fileSelection(`Code/${MARKUP}`).label, `Code/${MARKUP}`, "markup stays text for the host to show as text");
   });
 });
@@ -179,5 +189,49 @@ describe("words on screen", () => {
 
   test("folders first, in the channel's order", () => {
     assert.deepEqual(treeOrder([{ name: "b", dir: false }, { name: "a", dir: true }, { name: "c", dir: true }, { name: "A", dir: false }]).map((e) => e.name), ["a", "c", "b", "A"]);
+  });
+});
+
+describe("the page's other notes", () => {
+  test("text in another encoding is not called binary", () => {
+    assert.deepEqual(readText(new Uint8Array([0x63, 0x61, 0x66, 0xe9, 0x0a])), { kind: "encoding" }, "Latin-1");
+    assert.deepEqual(readText(new Uint8Array([0xc4, 0xe3, 0xba, 0xc3])), { kind: "encoding" }, "GBK");
+    assert.deepEqual(readText(new Uint8Array([0x89, 0x50, 0x00, 0x01])), { kind: "binary" });
+    assert.deepEqual(readText(new TextEncoder().encode("ok\n")), { kind: "text", text: "ok\n" });
+  });
+
+  test("a row shows at most ROW_MAX characters of its line", () => {
+    assert.equal(rowText("x".repeat(ROW_MAX)), "x".repeat(ROW_MAX));
+    assert.equal(rowText("x".repeat(2 * 1024 * 1024)), "x".repeat(ROW_MAX) + ROW_CUT);
+  });
+
+  test("a failure says what happened, by status", () => {
+    assert.match(fileWords(404, "a.txt").text, /not there any more/);
+    assert.deepEqual(fileWords(500, "a.txt"), { title: "This file could not be read", text: "The app answered 500 for a.txt.", retry: true });
+    assert.equal(imageWords("p.png").title, "This image cannot be shown");
+  });
+
+  test("a project name the page cannot open is not called missing", () => {
+    assert.equal(projectWords("").title, "No project given");
+    assert.equal(projectWords("?project=").title, "No project given");
+    assert.deepEqual(projectWords("?project=..%2Fx").title, "Not a project name");
+    assert.match(projectWords("?project=..%2Fx").text, /^\u201c\.\.\/x\u201d is not a project folder name/);
+  });
+
+  test("why a changed file has no diff, in plain words", () => {
+    assert.equal(notOpenable("Code/.hidden"), "Not shown here: hidden files (names starting with a dot) cannot be opened in the Code view.");
+    assert.equal(notOpenable(".github/x.yml"), "Not shown here: hidden files (names starting with a dot) cannot be opened in the Code view.");
+    assert.equal(notOpenable("Code/odd\uFFFDname"), "Not shown here: the Code view cannot open a file with this name.");
+  });
+
+  test("only the parent window, at the app's origin, clears the selection", () => {
+    const parent = { name: "the workspace" };
+    const clear = { type: "os.select.clear" };
+    const HOST = "app://research-os";
+    assert.equal(isHostClear({ source: parent, origin: HOST, data: clear }, parent, HOST), true);
+    assert.equal(isHostClear({ source: {}, origin: HOST, data: clear }, parent, HOST), false, "another window");
+    assert.equal(isHostClear({ source: parent, origin: "app://paper-wiki", data: clear }, parent, HOST), false, "another origin");
+    assert.equal(isHostClear({ source: parent, origin: HOST, data: { type: "os.select" } }, parent, HOST), false);
+    assert.equal(isHostClear({ source: parent, origin: HOST, data: null }, parent, HOST), false);
   });
 });

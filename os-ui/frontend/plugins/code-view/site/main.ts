@@ -23,7 +23,6 @@ import {
   changeCount,
   commitSelection,
   commitStat,
-  decodeText,
   diffSelection,
   diffTextSelection,
   fileSelection,
@@ -36,7 +35,13 @@ import {
   listUrl,
   logCommand,
   n,
-  NOT_OPENABLE,
+  notOpenable,
+  imageWords,
+  isHostClear,
+  projectWords,
+  readText,
+  ROW_MAX,
+  rowText,
   parsePatch,
   projectFrom,
   rangeSelection,
@@ -99,9 +104,7 @@ function hasRange(): boolean {
 }
 
 window.addEventListener("message", (event) => {
-  if (event.source !== window.parent || event.origin !== HOST) return;
-  const data = event.data as { type?: unknown } | null;
-  if (typeof data === "object" && data !== null && data.type === "os.select.clear") unselect(false);
+  if (isHostClear(event, window.parent, HOST)) unselect(false);
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") unselect();
@@ -391,8 +394,14 @@ async function openFile(path: string, pick: boolean): Promise<void> {
     });
     img.addEventListener("error", () => {
       if (gen !== files.gen) return;
-      clear(code);
-      code.append(screen(fileWords(404, name), () => void openFile(path, false)));
+      // The image does not say why; ask the channel for the status alone.
+      void fetch(filesUrl(workspacePath(path)), { method: "HEAD", cache: "no-store" })
+        .then((r) => r.status, () => 0)
+        .then((status) => {
+          if (gen !== files.gen) return;
+          clear(code);
+          code.append(status === 200 ? screen(imageWords(name)) : screen(fileWords(status, name), () => void openFile(path, false)));
+        });
     });
     img.src = filesUrl(workspacePath(path));
     return;
@@ -415,20 +424,29 @@ async function openFile(path: string, pick: boolean): Promise<void> {
   }
   const { bytes, cut } = await readStart(res);
   if (gen !== files.gen) return;
-  const text = decodeText(bytes, cut);
+  const read = readText(bytes, cut);
   clear(code);
-  if (text === null) {
+  if (read.kind !== "text") {
     const size = Number(res.headers.get("content-length") ?? NaN);
-    code.append(screen({ title: "Not a text file", text: `${name} holds binary data${Number.isFinite(size) ? ` (${n(size)} bytes)` : ""}, so it is not shown here.`, retry: false }));
+    const bytesText = Number.isFinite(size) ? ` (${n(size)} bytes)` : "";
+    code.append(
+      screen(
+        read.kind === "binary"
+          ? { title: "Not a text file", text: `${name} holds binary data${bytesText}, so it is not shown here.`, retry: false }
+          : { title: "Text in another encoding", text: `${name} seems to be text in an encoding other than UTF-8${bytesText}, which the Code view cannot show.`, retry: false },
+      ),
+    );
     vnote.textContent = "read-only";
     return;
   }
-  const { lines, total } = splitLines(text);
+  const { lines, total } = splitLines(read.text);
   vnote.textContent = linesNote(lines.length, total, cut);
   code.append(codeRows(path, lines));
-  if (lines.length < total || cut) {
-    code.append(el("div", "cut-note", `The view stops here: it shows at most ${n(VIEW.lines)} lines and the first ${VIEW.bytes / 1024 / 1024} MiB of a file.`));
-  }
+  const notes = [
+    ...(lines.length < total || cut ? [`it shows at most ${n(VIEW.lines)} lines and the first ${VIEW.bytes / 1024 / 1024} MiB of a file`] : []),
+    ...(lines.some((l) => l.length > ROW_MAX) ? [`lines longer than ${n(ROW_MAX)} characters are cut`] : []),
+  ];
+  if (notes.length > 0) code.append(el("div", "cut-note", `The view stops short: ${notes.join("; ")}.`));
 }
 
 function showFileProblem(status: number, name: string, path: string): void {
@@ -447,7 +465,7 @@ function codeRows(path: string, lines: readonly string[]): HTMLElement {
     row.dataset.line = String(i + 1);
     if (markdown && /^#{1,6} /.test(line)) row.classList.add("hd");
     else if (hashComments && line.trim().startsWith("#")) row.classList.add("cm");
-    row.append(el("span", "no", String(i + 1)), el("span", "tx", line === "" ? " " : line));
+    row.append(el("span", "no", String(i + 1)), el("span", "tx", line === "" ? " " : rowText(line)));
     inner.append(row);
   });
   inner.addEventListener("click", (event) => {
@@ -628,9 +646,9 @@ function renderCommit(commit: Commit): void {
       fstat.append(open, count);
     } else {
       const name = el("span", "fpath closed", f.path);
-      name.title = NOT_OPENABLE;
+      name.title = notOpenable(f.path);
       fstat.append(name, count);
-      fstat.append(el("span", "why", NOT_OPENABLE));
+      fstat.append(el("span", "why", notOpenable(f.path)));
     }
   }
   fstat.append(el("span", "tot", statLine(commit.stat)));
@@ -710,7 +728,7 @@ function diffRows(short: string, path: string, rows: readonly DiffRow[]): HTMLEl
 // ---- start ----------------------------------------------------------------------------
 
 if (project === null) {
-  app.append(screen({ title: "No project given", text: "The Code view opens from a project's workspace, which names the project it shows.", retry: false }));
+  app.append(screen(projectWords(location.search)));
 } else {
   app.append(subbar, filesPane, changesPane);
   renderTree();

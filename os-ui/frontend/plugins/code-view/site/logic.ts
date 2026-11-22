@@ -48,7 +48,22 @@ export const QUOTE_MAX = 2000;
  * end are dropped rather than taken as binary.
  */
 export function decodeText(bytes: Uint8Array, cut = false): string | null {
-  if (bytes.subarray(0, 8000).includes(0)) return null;
+  const read = readText(bytes, cut);
+  return read.kind === "text" ? read.text : null;
+}
+
+/**
+ * What the viewer makes of a file's bytes: UTF-8 text, binary data (a NUL
+ * byte in the first 8,000, as Git decides), or text in another encoding
+ * (Latin-1, GBK, ...), which the view does not guess at and says so.
+ */
+export function readText(bytes: Uint8Array, cut = false): { kind: "text"; text: string } | { kind: "binary" } | { kind: "encoding" } {
+  if (bytes.subarray(0, 8000).includes(0)) return { kind: "binary" };
+  const text = utf8(bytes, cut);
+  return text === null ? { kind: "encoding" } : { kind: "text", text };
+}
+
+function utf8(bytes: Uint8Array, cut: boolean): string | null {
   const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
   for (let drop = 0; drop <= (cut ? 3 : 0) && drop <= bytes.length; drop++) {
     try {
@@ -67,10 +82,22 @@ export function splitLines(text: string, max: number = VIEW.lines): { lines: str
   return { lines: all.slice(0, max), total: all.length };
 }
 
-/** The viewer's note: "12 lines · read-only", or "Lines 1–5,000 of 12,345 · read-only" when cut. */
+/** Characters of one line put on screen at most; the rest is cut with ROW_CUT. */
+export const ROW_MAX = 2000;
+export const ROW_CUT = " …[line cut]";
+
+/** A line as a row shows it: at most ROW_MAX characters, then ROW_CUT. */
+export const rowText = (line: string) => (line.length <= ROW_MAX ? line : line.slice(0, ROW_MAX) + ROW_CUT);
+
+/**
+ * The viewer's note: "12 lines · read-only"; "Lines 1–5,000 of 12,345 ·
+ * read-only" when the line cap cut it; and when the read cap did (the file
+ * goes on past what was read), "The first 3 lines of a longer file · read-only".
+ */
 export function linesNote(shown: number, total: number, more: boolean): string {
-  if (!more && shown === total) return `${n(total)} line${total === 1 ? "" : "s"} · read-only`;
-  return `Lines 1–${n(shown)} of ${more ? "more than " : ""}${n(total)} · read-only`;
+  if (more) return `The first ${n(shown)} line${shown === 1 ? "" : "s"} of a longer file · read-only`;
+  if (shown === total) return `${n(total)} line${total === 1 ? "" : "s"} · read-only`;
+  return `Lines 1–${n(shown)} of ${n(total)} · read-only`;
 }
 
 /** A number with thousands separators, as the mockup writes them ("19,987"). */
@@ -140,7 +167,13 @@ export interface Selection {
 }
 
 /** Labels are one line: any control character in a name (a newline is legal in a file name) becomes a space. */
-const oneLine = (text: string) => text.replace(/[\u0000-\u001f\u007f-\u009f]/g, " ");
+/**
+ * Labels are one line of visible text (the host refuses anything else): a
+ * line break, control or format character in a name (all legal in a file
+ * name) shows as a marker naming it, "⟨U+200B⟩".
+ */
+const oneLine = (text: string) =>
+  text.replace(/[\p{Cc}\p{Cf}\u2028\u2029]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
 
 /** A file of the project, by its path relative to the project ("Code/README.md"). */
 export const fileSelection = (path: string): Selection => ({ label: clipLabel(oneLine(path)) });
@@ -198,7 +231,11 @@ export function statLine(stat: Commit["stat"]): string {
 }
 
 /** Why a changed file has no diff to open (FileChange.openable is false). */
-export const NOT_OPENABLE = "not opened here: a hidden file (its name or a folder's starts with a dot) or a name the Code view cannot pass on";
+export function notOpenable(path: string): string {
+  return path.split("/").some((s) => s.startsWith("."))
+    ? "Not shown here: hidden files (names starting with a dot) cannot be opened in the Code view."
+    : "Not shown here: the Code view cannot open a file with this name.";
+}
 
 /** The command a Changes list reflects, so a reader can run it: the project's own repository or the workspace's. */
 export function logCommand(source: Source, project: string): string {
@@ -248,7 +285,25 @@ export function fileWords(status: number, name: string): Words {
   if (status === 413) return { title: "Too large to show", text: `${name} is larger than 32 MiB, the most the Code view reads.`, retry: false };
   if (status === 503) return { title: "Too many files are being read at once", text: "Try again in a moment.", retry: true };
   if (status === 0) return { title: "The Code view could not reach the app", text: "Try again; if it keeps failing, restart the app.", retry: true };
-  return { title: "This file cannot be opened", text: `${name} may have been moved or deleted, or it lies outside Code/.`, retry: false };
+  if (status === 404) return { title: "This file cannot be opened", text: `${name} is not there any more, or it lies outside Code/.`, retry: false };
+  return { title: "This file could not be read", text: `The app answered ${status} for ${name}.`, retry: true };
+}
+
+/** An image the channel sent (status 200) but the view could not show. */
+export const imageWords = (name: string): Words => ({ title: "This image cannot be shown", text: `${name} is not an image the Code view can draw (it may be damaged).`, retry: false });
+
+/** The words for a page whose ?project= is missing, or not a project folder name. */
+export function projectWords(search: string): Words {
+  const given = new URLSearchParams(search).get("project");
+  if (given === null || given === "") return { title: "No project given", text: "The Code view opens from a project's workspace, which names the project it shows.", retry: false };
+  return { title: "Not a project name", text: `“${clip(given, 80)}” is not a project folder name the Code view can open (a letter, then letters, digits, _ or -).`, retry: false };
+}
+
+/** Whether a message is the workspace clearing the selection: from the parent window, at the app's origin, and nothing else. */
+export function isHostClear(event: { source: unknown; origin: string; data: unknown }, parent: unknown, host: string): boolean {
+  if (event.source !== parent || event.origin !== host) return false;
+  const data = event.data as { type?: unknown } | null;
+  return typeof data === "object" && data !== null && data.type === "os.select.clear";
 }
 
 /** Folders first, then files, each in the channel's order. */
