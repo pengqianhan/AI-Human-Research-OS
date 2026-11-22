@@ -87,9 +87,11 @@ describe("findGit", () => {
   const env = { PATH: ["relative/bin", "/ws/node_modules/.bin", "/usr/bin", "/opt/homebrew/bin"].join(":") };
   const exists = (have: string[]) => (file: string) => have.includes(file);
   const tools = (code: number) => async () => ({ code, output: "" });
+  /** These paths are made up, so nothing is resolved on the machine running the tests (which has no /opt/homebrew, or no /usr/bin). */
+  const real = (file: string) => file;
 
   test("the first git in an absolute PATH entry, as the handler would find it", async () => {
-    const found = await findGit({ env, dir: "/elsewhere", probe: tools(0), platform: "linux", exists: exists(["relative/bin/git", "/usr/bin/git", "/opt/homebrew/bin/git"]) });
+    const found = await findGit({ env, dir: "/elsewhere", probe: tools(0), platform: "linux", real, exists: exists(["relative/bin/git", "/usr/bin/git", "/opt/homebrew/bin/git"]) });
     assert.equal(found, "/usr/bin/git");
   });
 
@@ -99,10 +101,10 @@ describe("findGit", () => {
       asked.push(command);
       return { code: 2, output: "" };
     };
-    assert.equal(await findGit({ env, dir: "/elsewhere", probe, platform: "darwin", exists: exists(["/usr/bin/git"]) }), null);
+    assert.equal(await findGit({ env, dir: "/elsewhere", probe, platform: "darwin", real, exists: exists(["/usr/bin/git"]) }), null);
     assert.deepEqual(asked, [["/usr/bin/xcode-select", "-p"]], "only xcode-select is asked, not the stub");
-    assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(0), platform: "darwin", exists: exists(["/usr/bin/git"]) }), "/usr/bin/git");
-    assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(2), platform: "darwin", exists: exists(["/opt/homebrew/bin/git"]) }), "/opt/homebrew/bin/git");
+    assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(0), platform: "darwin", real, exists: exists(["/usr/bin/git"]) }), "/usr/bin/git");
+    assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(2), platform: "darwin", real, exists: exists(["/opt/homebrew/bin/git"]) }), "/opt/homebrew/bin/git");
   });
 
   test("a git in a PATH entry inside the workspace is passed over for the next one", { skip: process.platform === "win32" ? "POSIX file modes" : false }, async () => {
@@ -114,7 +116,7 @@ describe("findGit", () => {
   });
 
   test("none on PATH", async () => {
-    assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(0), platform: "linux", exists: exists([]) }), null);
+    assert.equal(await findGit({ env, dir: "/elsewhere", probe: tools(0), platform: "linux", real, exists: exists([]) }), null);
   });
 });
 

@@ -16,6 +16,17 @@ export const isExecutableFile: Exists = (file) => {
   }
 };
 
+/** A path with its links followed, or null when it cannot be resolved. */
+export type RealPath = (file: string) => string | null;
+
+export const realPath: RealPath = (file) => {
+  try {
+    return realpathSync.native(file);
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Where `name` runs from, looked up only in the absolute entries of `env`'s
  * PATH, or null. spawn() would also try the working folder: on Windows
@@ -27,7 +38,8 @@ export const isExecutableFile: Exists = (file) => {
  * or a program whose real path lies inside that folder is skipped too (a
  * workspace's node_modules/.bin, which `npm run` puts first on PATH, or a
  * link elsewhere that points into it), and an absolute name there is
- * refused. The client's which() (client/src/main/python.ts) is the older copy
+ * refused; `exists` and `real` are the two looks at the disk, which tests
+ * replace together. The client's which() (client/src/main/python.ts) is the older copy
  * of these rules, which still accepts relative entries.
  */
 export function findProgram(
@@ -36,16 +48,10 @@ export function findProgram(
   platform: NodeJS.Platform = process.platform,
   exists: Exists = isExecutableFile,
   outside?: string,
+  real: RealPath = realPath,
 ): string | null {
   const windows = platform === "win32";
   const path = windows ? win32 : posix;
-  const real = (p: string): string | null => {
-    try {
-      return realpathSync.native(p);
-    } catch {
-      return null;
-    }
-  };
   const root = outside === undefined ? null : (real(outside) ?? outside);
   const fold = (p: string) => (windows ? p.toLowerCase() : p);
   /** Whether `p` (resolved) lies in `outside`; a path that cannot be resolved counts as inside, so it is not used. */
