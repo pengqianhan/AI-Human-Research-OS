@@ -1190,12 +1190,16 @@ describe("read channel", () => {
     const t0 = performance.now();
     assert.deepEqual(await okList(list("projects-folder/Caps/Code/dangling")), { entries: [], truncated: true });
     const getMs = performance.now() - t0;
-    // HEAD answers from the folder check alone: far less than the listing's 5,000 lookups.
-    const t1 = performance.now();
-    const head = await fetchRead(list("projects-folder/Caps/Code/dangling"), { method: "HEAD" });
-    const headMs = performance.now() - t1;
-    assert.equal(head.status, 200);
-    assert.ok(headMs * 10 < getMs, `HEAD took ${headMs.toFixed(1)} ms, GET ${getMs.toFixed(1)} ms`);
+    // HEAD answers from the folder check alone: far less than the listing's 5,000 lookups
+    // (about 500 times less on a laptop). The fastest of five HEADs, so one pause does not count.
+    let headMs = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < 5; i++) {
+      const t1 = performance.now();
+      const head = await fetchRead(list("projects-folder/Caps/Code/dangling"), { method: "HEAD" });
+      headMs = Math.min(headMs, performance.now() - t1);
+      assert.equal(head.status, 200);
+    }
+    assert.ok(headMs * 10 < getMs, `HEAD took ${headMs.toFixed(2)} ms at best, GET ${getMs.toFixed(1)} ms`);
   });
 
   test("a file is opened without blocking and checked as opened: a FIFO is a fast 404", { skip: !posix }, async () => {
