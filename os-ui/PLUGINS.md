@@ -115,13 +115,91 @@ Status on 2026-11-23:
     - `safeRelative` also refuses `CONIN$`, `CONOUT$`, and `COM¹`-`COM³`,
       `LPT¹`-`LPT³`.
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
-  placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
+  placeholder tabs until S6a-2 and S6b replaced them. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **S6 is split in three.** S6a-1, the Code view's Git handler, and S6a-2, the Code
-  view plugin, are done (each pending its pull request; S6a-2 stacks on S6a-1);
-  S6b, the Paper view, is next and vendors PDF.js as Part 2 describes (the Human
-  Owner said yes on 2026-11-22; [HANDOFF.md](../HANDOFF.md) Decisions). The
-  end-to-end suite now reaches the read channel through the Code view.
+- **S6 is split in three**, all done, each pending its pull request: S6a-1, the
+  Code view's Git handler; S6a-2, the Code view plugin (stacks on S6a-1); S6b,
+  the Paper view plugin (stacks on S6a-2), with PDF.js vendored as the Human
+  Owner allowed on 2026-11-22 ([HANDOFF.md](../HANDOFF.md) Decisions). The
+  end-to-end suite reaches the read channel through both views. What is left
+  of step 1 is S8 (deleting the dock shell), after the Human Owner's run of
+  the [client checklist](client/README.md#check-it-on-your-machine).
+- **S6b** is the bundled plugin [frontend/plugins/paper-view/](frontend/plugins/paper-view/)
+  (manifest as Part 2's, `reads: ["projects-folder/*/paper"]`, one project
+  view `paper`, no handlers) and the workspace's Paper tab, last in the row as
+  in the mockup. Where the code differs from Part 2:
+  - PDF.js is `pdfjs-dist` 6.5.438 from the npm registry (its tarball checked
+    against the registry's published integrity before anything was copied):
+    `pdf.min.mjs`, `pdf.worker.min.mjs`, and the package's `LICENSE`,
+    unmodified, in `site/vendor/` with a README giving the version, the
+    source URL, the integrity, and each file's SHA-256. `vendor.test.ts`
+    recomputes the hashes, checks the folder holds nothing else, and that no
+    `package.json` or lockfile in `os-ui/` names `pdfjs-dist` or
+    `@napi-rs/canvas`; `.gitattributes` marks the three files `binary`, so a
+    Windows checkout keeps their bytes. The README and `LICENSE` are the
+    third-party notice: the repository has no notices file of its own, and
+    the package has no `NOTICE`.
+  - The two files are not bundled: the page `import()`s `pdf.min.mjs` from its
+    own origin at run time and starts `pdf.worker.min.mjs` itself as a module
+    worker, which it hands PDF.js as its port. So what ships is the hashed
+    bytes (the end-to-end suite checks `out/` and what the frame fetches),
+    PDF.js never wraps its worker in a `blob:` URL, and it cannot fall back to
+    parsing on the page's thread: a worker that does not start shows "The PDF
+    reader could not start".
+  - **`PLUGIN_CSP` is unchanged.** Part 2 expected it to gain
+    `worker-src 'self'`; with no `worker-src`, Chromium takes a worker's
+    source from `script-src 'self'`, so the worker loads from the site's own
+    origin as it is (a `worker-src 'none'` mutation stops it, so the policy
+    does govern it). Nothing changes for the Code view's page either: it
+    could already start a same-origin worker, and still can. No
+    `'wasm-unsafe-eval'`, `blob:`, or font source was needed.
+  - `isEvalSupported` no longer exists in PDF.js 6, which evaluates no code
+    (`vendor.test.ts` checks both files for `eval(` and `new Function`). The
+    options the page sets, each pinned by `site.test.ts` and checked to be
+    read by this PDF.js: `enableXfa: false`, `useWasm: false` (PostScript
+    functions run as JavaScript, not compiled wasm), `disableFontFace: true`
+    (glyphs drawn as paths, so no font from the PDF reaches Chromium's font
+    engine), `useSystemFonts: false`, `useWorkerFetch: false`,
+    `disableWorkerRendering: true` (`pdf.renderer.min.mjs` is not vendored),
+    `maxImageSize` 8192², and `verbosity: 1`. No URL is given for character
+    maps, standard fonts, ICC profiles, or wasm, none of which is vendored:
+    JPX and JBIG2 images, ICC colour, and CJK fonts the PDF does not embed do
+    not render as in a full reader. pdfTeX output embeds its fonts.
+  - Nothing the PDF carries is run or followed: no annotation layer (links
+    are inert; the e2e clicks one and sees no navigation or dialog), no
+    attachments, no scripting sandbox, no XFA; the text layer is PDF.js's own
+    `TextLayer` (text nodes, positioned through CSSOM), without marked-content
+    ids. Its style rules, which are in `web/pdf_viewer.css` and not vendored,
+    are written into the site's `style.css` after that file.
+  - Every state has a screen with "Try again": the paper; not built yet
+    (Part 2's sentence, with `paper/main.tex` selectable); no `paper/`
+    folder; neither `main.pdf` nor `main.tex`; not a PDF ("it is not a valid
+    PDF file", or PDF.js's message); password-protected; no pages; larger than
+    32 MiB (413); busy (503); the app unreachable; PDF.js not starting.
+  - The label is `paper/main.pdf p. 2 · Setup`, or `pp. 2–3` across pages,
+    the heading being the last outline entry at or above where the selection
+    starts (by page and by the destination's top). The paper's outline titles
+    carry no section numbers, so there is no "§2". A title's invisible
+    characters show as markers, and the title, not the page, is what is cut to
+    keep the label within 200 characters. The quote is the selected text
+    trimmed, cut on the page to 2,000 characters ending `…[cut]` (the host's
+    own mark). Shared with the Code view through
+    [frontend/plugins/site-kit.ts](frontend/plugins/site-kit.ts), which
+    replaces its `dom.ts`; each site's bundle includes it.
+  - Against the mockup: the pages scroll continuously, one sheet under
+    another, so that only pages near the view are drawn (far canvases are
+    released, each canvas at most 4096 × 4096 pixels); previous and next
+    scroll to a page, and the label names the page a quarter down the view.
+    100% is the mockup's 640px-wide sheet; the steps are the mockup's 80% to
+    150% and then 200%, 250%, 300% for reading a figure; Fit width is the
+    mockup's (80% to 150%). The note reads "paper/main.pdf · 4 pages · select
+    text to ask the agent about it", followed by **Reload**. Selection is of
+    text, not of a paragraph; next and previous clear it as in the mockup,
+    and zoom keeps it. The place is kept across zoom, a resize, Reload, and
+    another tab.
+  - A layout saved on the trunk's old tab `paper` opens `paper-view/paper`;
+    the Plugins page lists the Paper view as enabled. In a browser the tab
+    says the view opens in the desktop app (no frame URL there).
 - **S6a-2** is the bundled plugin [frontend/plugins/code-view/](frontend/plugins/code-view/)
   (manifest as Part 2's, `reads: ["projects-folder/*/Code"]`, handler `git`), the
   workspace's Code tab, and the host side of the selection message. Where the code

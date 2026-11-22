@@ -338,7 +338,7 @@ describe("desktop client on a Research OS folder", () => {
     await list.click();
     await chat.locator('textarea[placeholder^="Message"]').waitFor();
     assert.equal(await page.locator('input[placeholder="token"]').count(), 0);
-    // Code is the code-view plugin's page on its own origin; Paper is a placeholder until its plugin; Idea, Skeleton, Assets are step 2.
+    // Code is the code-view plugin's page on its own origin (Paper, the paper-view plugin's, has its own tests below); Idea, Skeleton, Assets are step 2.
     await ws.getByRole("tab", { name: "Code" }).click();
     const code = await pluginFrame(page, "app://code-view/");
     assert.equal(code.url(), `app://code-view/index.html?project=${encodeURIComponent(name)}`);

@@ -128,8 +128,9 @@ agent logins or a first open on a real desktop, so on each of your machines:
 - [ ] A project card (or **Projects**, or the project under **Quick access**)
       opens its workspace. **Overview** shows the project; the conversation on
       the left lists that project's sessions under **Conversations**, and
-      collapses to a thin strip and back. **Paper** says it arrives later in
-      step 1; **Idea**, **Skeleton**, and **Assets** are marked "step 2".
+      collapses to a thin strip and back. The tabs are **Overview**, **Idea**,
+      **Code**, **Skeleton**, **Assets**, **Paper**; **Idea**, **Skeleton**,
+      and **Assets** are marked "step 2".
 - [ ] **The Code view.** In a project's workspace, click the **Code** tab:
       - **Files** lists the project's `Code/` folder on the left; click a
         folder to open it and a file to read it on the right (it says
@@ -148,6 +149,28 @@ agent logins or a first open on a real desktop, so on each of your machines:
         be sent before your message (it opens under the chips). Nothing is
         sent until you press Send.
       - Click the chip's **×**: it goes away.
+- [ ] **The Paper view.** In the `nanochat_cpu` workspace, click the **Paper**
+      tab:
+      - The paper appears as pages, like a PDF reader, read-only. The bar
+        above it says **Page 1 of 4** and **Fit · …%**.
+      - Click **›** (next page) and **‹** (previous page): the page number
+        changes and the view moves to that page. Scroll with the mouse or
+        trackpad: the page number follows.
+      - Click **+** and **−**: the pages get bigger and smaller (the label
+        shows a percentage); **Fit width** makes a page as wide as the view
+        again. Make the window narrower or wider: in Fit width the pages
+        follow.
+      - Drag across some text of the paper, as you would to copy it: the text
+        is highlighted and the dark bar at the bottom names it, for example
+        `paper/main.pdf p. 1 · Setup` (the page, and the section it is in).
+        Click **Ask the agent about this**: a chip appears above the
+        conversation's input; click it to see exactly the text that will be
+        sent. Nothing is sent until you press Send.
+      - Switch to **Overview** and back to **Paper**: you are on the same page.
+      - With the agent (or by hand), rename `paper/main.pdf`, then click
+        **Reload**: the view says the paper has not been built yet and offers
+        `paper/main.tex` to ask about. Rename it back and click **Try again**:
+        the paper is back.
 - [ ] **Paper wiki**: a paper's Status buttons appear and change the note's
       `status:` line.
 - [ ] **Skills**: a disable/enable toggle works and the store updates.

@@ -27,9 +27,9 @@ Decisions):
 - **A project's workspace**: its conversation on the left (collapsible to a
   thin strip) and its views on the right: Overview, then Idea, Code, Skeleton,
   Assets, Paper. Code is the bundled `code-view` plugin's page (the project's
-  `Code/` files and Git changes; desktop client only), Paper holds a
-  placeholder until its plugin arrives later in step 1; Idea, Skeleton, and
-  Assets are marked "step 2".
+  `Code/` files and Git changes) and Paper the bundled `paper-view` plugin's
+  (the project's `paper/main.pdf`, drawn with a vendored PDF.js), both in the
+  desktop client only; Idea, Skeleton, and Assets are marked "step 2".
 - **Paper wiki**, **Skills**, **Plugins**, and **Settings** pages.
 
 The app remembers, in the browser's local storage, whether the sidebar and the
@@ -46,7 +46,7 @@ os-ui/frontend/
 ├── package.json            # npm scripts and dependencies
 ├── vite.config.ts          # Vite dev/build config
 ├── api-plugin.ts           # serves every endpoint on the dev server, from the plugin registry
-├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each
+├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each (paper-wiki, code-view, paper-view); site-kit.ts is what their sites share
 ├── server/                 # the endpoints, shared with the desktop client (os-ui/client)
 ├── tailwind.config.js      # Tailwind names for the colours in src/index.css
 ├── postcss.config.js       # Tailwind/PostCSS config
@@ -179,12 +179,17 @@ to edit. The most visited ones:
 - The Plugins page: an enabled plugin's card shows its manifest's `name` and
   `description`; the plugins not yet available are the `PLANNED` list in
   `src/pages/PluginsPage.tsx`.
-- The workspace's tab row (`workspaceTabs` in `src/shell/layoutState.ts`), the
-  Paper placeholder and the ask bar: `src/pages/WorkspacePage.tsx`; the
-  selection message and the reference text: `src/plugins/select.ts`.
-- The Code view's page: `plugins/code-view/site/` (static files and a
-  TypeScript entry, checked by `npm run typecheck`, tested by `npm test`, and
-  bundled by the desktop client's `scripts/build.mjs`).
+- The workspace's tab row (`workspaceTabs` in `src/shell/layoutState.ts`) and
+  the ask bar: `src/pages/WorkspacePage.tsx`; the selection message and the
+  reference text: `src/plugins/select.ts`.
+- The Code view's page: `plugins/code-view/site/`; the Paper view's:
+  `plugins/paper-view/site/` (its words in `logic.ts`). Each is static files
+  and a TypeScript entry, checked by `npm run typecheck`, tested by
+  `npm test`, and bundled by the desktop client's `scripts/build.mjs`; what
+  both share (text-only DOM helpers, the read channel's URLs, the selection
+  limits) is `plugins/site-kit.ts`. The Paper view's PDF.js is vendored in
+  `plugins/paper-view/site/vendor/`, never an npm package: its README says
+  how to update it, and `npm test` checks the files against it.
 
 Dynamic repository content from `state.json` stays as source data, not
 rewritten in the frontend.

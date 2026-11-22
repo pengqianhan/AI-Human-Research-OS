@@ -50,26 +50,28 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       [`os-ui/mockups/step1/c-document.html`](os-ui/mockups/step1/c-document.html)
       is the reference for the layout, the Code view, and the Paper view (open it
       with the `mockups` preview in `.claude/launch.json`).
-      State on 2026-11-22, with the design and its remaining order in
+      State on 2026-11-23, with the design and its remaining order in
       [os-ui/PLUGINS.md](os-ui/PLUGINS.md):
       - Done: the manifest parser and the server-side registry (S1, S2), the
         new layout as a shell that re-houses every existing page (S7), the
         client serving plugin origins from the registry (S3), the frontend
         registry (S4), and the path-checked read channel on plugin origins
-        (S5, merged as PR #42; proven by fixture tests, as no bundled plugin
-        declares `reads` yet). The Paper wiki navigation item, its page, and
+        (S5, merged as PR #42). The Paper wiki navigation item, its page, and
         the Plugins page's enabled list come from the bundled manifests.
-        Overview is the default project tab; Paper is a placeholder tab. S6 is
-        split into S6a-1 (the Code view's read-only Git handler) and S6a-2
+        Overview is the default project tab. S6 is split into S6a-1 (the Code view's read-only Git handler) and S6a-2
         (the Code view plugin: the Code tab's page on `app://code-view`, its
         Files and Changes, and "Ask the agent about this" adding a reference
-        chip to the project's composer), both done pending their pull requests
-        (S6a-2 stacks on S6a-1), and S6b (the Paper view).
-      - Next, in order: S6b, the Paper view, with a
-        vendored PDF.js (authorized 2026-11-22, see Decisions); then deleting `os-ui/frontend/src/desktop/`
-        (S8) once the Human Owner has run the client checklist. The handler
-        needs Git 2.45 or later, which stock Ubuntu 24.04 and Debian 12 do not
-        ship ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), S6a-1).
+        chip to the project's composer), and S6b (the Paper view plugin: the
+        Paper tab draws `paper/main.pdf` on `app://paper-view` with PDF.js
+        6.5.438 vendored as authorized on 2026-11-22, see Decisions), all done
+        pending their pull requests (S6a-2 stacks on S6a-1, S6b on S6a-2). The
+        plugins' policy needed no change for PDF.js's worker.
+      - Next, in order: the Human Owner runs the
+        [client checklist](os-ui/client/README.md#check-it-on-your-machine),
+        which now covers the Code and Paper views; then deleting
+        `os-ui/frontend/src/desktop/` (S8). The Code view's handler needs Git
+        2.45 or later, which stock Ubuntu 24.04 and Debian 12 do not ship
+        ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), S6a-1).
       - Waiting on the Human Owner: whether a third-party plugin may add its
         own left-navigation item, or only home panels and project views
         (needed before step 2).
@@ -202,11 +204,12 @@ packaged app's smoke run.
 
 ### Next session
 
-- Focus (2026-11-23): step 1's next change, S6b (the Paper view, with PDF.js
-  vendored as authorized) in [os-ui/PLUGINS.md](os-ui/PLUGINS.md), under
-  "Repositioning" above; S6a-1 (the Git handler) and S6a-2 (the Code view
-  plugin) are done pending their pull requests, and the client checklist in
-  [os-ui/client/README.md](os-ui/client/README.md) now covers the Code view. The older items below are still open.
+- Focus (2026-11-23): S6a-1 (the Git handler), S6a-2 (the Code view plugin),
+  and S6b (the Paper view plugin, PDF.js vendored as authorized) are done
+  pending their pull requests ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), under
+  "Repositioning" above). Next is the Human Owner's run of the client
+  checklist in [os-ui/client/README.md](os-ui/client/README.md), which now
+  covers the Code and Paper views, then S8. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
