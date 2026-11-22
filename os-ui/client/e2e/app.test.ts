@@ -807,6 +807,14 @@ describe("desktop client on a Research OS folder", () => {
     await label.waitFor();
     await bar.getByRole("button", { name: "Clear selection" }).click();
     await paper.waitForFunction(() => window.getSelection()?.isCollapsed === true);
+    // Reload drops the text the selection was in, and the bar with it. From the
+    // keyboard, so no pointer press clears the selection before Reload does.
+    await page.waitForTimeout(1100);
+    await dragAcross(paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "nanochat on a Laptop CPU" }).first());
+    await label.waitFor();
+    await paper.getByRole("button", { name: "Reload" }).press("Enter");
+    await bar.waitFor({ state: "detached" });
+    await paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "nanochat on a Laptop CPU" }).first().waitFor({ timeout: 60_000 });
 
     // A selection of the whole paper is cut on the page, before the host's 2,000 characters, with a visible mark.
     await page.waitForTimeout(1100);

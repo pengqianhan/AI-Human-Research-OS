@@ -42,9 +42,23 @@ describe("the page's DOM", () => {
 });
 
 describe("what the page asks of PDF.js", () => {
-  test("one getDocument call, with the pinned options and the bytes read over the channel", () => {
+  test("one getDocument call, with the pinned options and the bytes read over the channel", async () => {
     const main = source("main.ts");
     assert.deepEqual([...main.matchAll(/getDocument\(([^)]*)\)/g)].map((m) => m[1]), ["{ ...DOCUMENT_OPTIONS, data }"]);
+    // Each one keeps something the PDF carries from running, fetching, or reaching a native parser (pdfjs.ts says which).
+    const { DOCUMENT_OPTIONS } = await import("./pdfjs.ts");
+    assert.deepEqual(DOCUMENT_OPTIONS, {
+      enableXfa: false,
+      useWasm: false,
+      disableFontFace: true,
+      useSystemFonts: false,
+      useWorkerFetch: false,
+      disableWorkerRendering: true,
+      maxImageSize: 8192 * 8192,
+      verbosity: 1,
+    });
+    // No URL for anything PDF.js could fetch (character maps, standard fonts, ICC profiles, wasm); the document comes as `data`.
+    assert.doesNotMatch(main + source("pdfjs.ts"), /cMapUrl|standardFontDataUrl|iccUrl|wasmUrl|docBaseUrl/);
   });
 
   test("nothing that would run, open, or follow what the PDF carries", () => {
