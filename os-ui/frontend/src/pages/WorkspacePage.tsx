@@ -8,7 +8,7 @@ import { LIVE } from "../lib/mode";
 import { viewSrc } from "../plugins/pages";
 import type { PluginPage } from "../plugins/pages";
 import { usePlugins } from "../plugins/registry";
-import { addReference, MAX_REFERENCES, readSelect } from "../plugins/select";
+import { addReference, MAX_REFERENCES, readSelect, selectGate } from "../plugins/select";
 import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
 import { workspaceTabs } from "../shell/layoutState";
@@ -23,6 +23,8 @@ interface Props {
   conversationCollapsed: boolean;
   onConversationCollapsed: (collapsed: boolean) => void;
   onBack: () => void;
+  /** Whether the workspace is the screen shown; the Shell keeps it mounted, hidden, once visited. */
+  visible: boolean;
 }
 
 /**
@@ -33,7 +35,7 @@ interface Props {
  * Paper holds a placeholder until its plugin arrives. A view's frame, once
  * opened, stays loaded while another tab is shown, so its place is kept.
  */
-export function WorkspacePage({ state, project, tab, onTab, conversationCollapsed, onConversationCollapsed, onBack }: Props) {
+export function WorkspacePage({ state, project, tab, onTab, conversationCollapsed, onConversationCollapsed, onBack, visible }: Props) {
   const ids = useId();
   const toast = useToast();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -62,6 +64,13 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
   const [selection, setSelection] = useState<Reference | null>(null);
   const [references, setReferences] = useState<Reference[]>([]);
   const [focusRequest, setFocusRequest] = useState(0);
+  // A selection counts only while this page is shown, its view's tab selected,
+  // the Ask button not held down, and at most a few a second (selectGate).
+  const gate = useRef(selectGate()).current;
+  const now = useRef({ visible, tab });
+  now.current = { visible, tab };
+  /** The reference the bar showed when the pointer went down on Ask; what Ask adds. */
+  const held = useRef<Reference | null>(null);
 
   /** Hides the ask bar; `tellView` also clears the highlight in the view that reported it. */
   function clearSelection(tellView: boolean) {
@@ -76,8 +85,12 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
     setSelection(null);
     if (activeView === null) return;
     const onMessage = (event: MessageEvent) => {
-      const message = readSelect(event, activeView, frames.current.get(activeView.key)?.contentWindow ?? null);
-      if (message === null) return;
+      const frameWindow = frames.current.get(activeView.key)?.contentWindow ?? null;
+      const message = readSelect(event, activeView, frameWindow);
+      if (message === null || frameWindow === null) return;
+      const verdict = gate(frameWindow, { visible: now.current.visible, tabSelected: now.current.tab === activeView.key, held: held.current !== null });
+      if (verdict === "over") setSelection(null);
+      if (verdict !== "accept") return;
       setSelection(message.kind === "select" ? message.reference : null);
     };
     window.addEventListener("message", onMessage);
@@ -98,9 +111,9 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
   });
 
   /** "Ask the agent about this": a reference chip in the composer, the conversation open, the cursor in its input. Nothing is sent. */
-  function ask() {
-    if (selection === null) return;
-    const next = addReference(references, selection);
+  function ask(reference: Reference | null) {
+    if (reference === null) return;
+    const next = addReference(references, reference);
     if (next === null) {
       toast(`A message carries at most ${MAX_REFERENCES} references; remove one first.`);
       return;
@@ -307,7 +320,14 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
               </span>
               <button
                 type="button"
-                onClick={ask}
+                onPointerDown={() => (held.current = selection)}
+                onPointerCancel={() => (held.current = null)}
+                onPointerLeave={() => (held.current = null)}
+                onClick={() => {
+                  const reference = held.current ?? selection;
+                  held.current = null;
+                  ask(reference);
+                }}
                 className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f5efe4] px-[13px] py-1.5 text-[12.5px] font-semibold text-accent-ink hover:bg-white"
               >
                 <Icon name="chat" size={14} />

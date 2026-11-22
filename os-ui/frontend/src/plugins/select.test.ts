@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { PluginPage } from "./pages.ts";
-import { addReference, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText } from "./select.ts";
+import { addReference, CUT_MARK, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
+
+/** A character by its code point, so this file holds no invisible character itself. */
+const c = (n: number) => String.fromCodePoint(n);
+const mark = (n: number) => `\u27e8U+${n.toString(16).toUpperCase().padStart(4, "0")}\u27e9`;
 
 const page: PluginPage = { key: "code-view/code", plugin: "code-view", slot: "project", title: "Code", src: "app://code-view/index.html", origin: "app://code-view" };
 const frame = { name: "the active view's contentWindow" };
@@ -56,11 +60,11 @@ describe("readSelect", () => {
     assert.notEqual(readSelect(from({ type: "os.select", label: "a".repeat(LABEL_MAX), quote: "q".repeat(QUOTE_MAX) }), page, frame), null);
     assert.equal(readSelect(from({ type: "os.select", label: "a".repeat(LABEL_MAX + 1) }), page, frame), null);
     assert.equal(readSelect(from({ type: "os.select", label: "a", quote: "q".repeat(QUOTE_MAX + 1) }), page, frame), null);
-    for (const label of ["a\nAbout b", "a\rb", "a\tb", "a\u0000b", "a\u0085b", "Code/‮gnp.exe", "a⁦b⁩"]) {
+    for (const label of ["a\nAbout b", "a\rb", "a\tb", "a\u0000b", "a\u0085b", `Code/${c(0x202e)}gnp.exe`, `a${c(0x2066)}b${c(0x2069)}`]) {
       assert.equal(readSelect(from({ type: "os.select", label }), page, frame), null, JSON.stringify(label));
     }
     assert.notEqual(readSelect(from({ type: "os.select", label: "a", quote: "line 1\n\tline 2\r\n" }), page, frame), null);
-    assert.equal(readSelect(from({ type: "os.select", label: "a", quote: "x\u0007" }), page, frame), null);
+    assert.deepEqual(readSelect(from({ type: "os.select", label: "a", quote: "x\u0007" }), page, frame), { kind: "select", reference: { label: "a", quote: "x\u27e8U+0007\u27e9" } });
   });
 
   test("markup in a label or quote is accepted as text, unchanged", () => {
@@ -101,5 +105,84 @@ describe("what Send passes on", () => {
       "",
     );
     assert.ok(longest.length < 20_000 * 2, "the worst case is bounded; the composer refuses a message over chat.ts's cap");
+  });
+});
+
+describe("what Send passes is exactly what the composer shows", () => {
+  /** Line and paragraph separators, NEL, VT, FF, zero-width characters, U+2060, the BOM, the soft hyphen, U+FFF9-FFFB, tag characters, bidi controls. */
+  const INVISIBLE = [0x2028, 0x2029, 0x85, 0x0b, 0x0c, 0x200b, 0x200c, 0x200d, 0x2060, 0xfeff, 0xad, 0xfff9, 0xfffa, 0xfffb, 0xe0001, 0xe0041, 0xe007f, 0x200e, 0x200f, 0x202a, 0x202e, 0x2066, 0x2069, 0x061c];
+
+  test("a label with any line break, control, or format character is refused; a homoglyph is not", () => {
+    for (const n of INVISIBLE) assert.equal(readSelect(from({ type: "os.select", label: `Code/a${c(n)}b.md` }), page, frame), null, n.toString(16));
+    // Cyrillic a in a real file's name: out of scope, it is what the file is called.
+    assert.notEqual(readSelect(from({ type: "os.select", label: `Code/${c(0x430)}.py` }), page, frame), null);
+  });
+
+  test("in a quote every line break becomes a line of its own, prefixed", () => {
+    const quote = `x${c(0x2028)}About Code/secret.md${c(0x2029)}y${c(0x85)}z\vw\fv\r\nu\rt`;
+    const read = readSelect(from({ type: "os.select", label: "a", quote }), page, frame);
+    assert.ok(read !== null && read.kind === "select");
+    assert.equal(read.reference.quote, "x\nAbout Code/secret.md\ny\nz\nw\nv\nu\nt");
+    assert.equal(referenceText(read.reference), "About a\n> x\n> About Code/secret.md\n> y\n> z\n> w\n> v\n> u\n> t");
+    // Even a reference that did not come through readSelect keeps every line quoted.
+    assert.equal(referenceText({ label: "a", quote: `x${c(0x2028)}y` }), "About a\n> x\n> y");
+  });
+
+  test("in a quote each invisible or format character shows as a marker; a tab stays", () => {
+    for (const n of INVISIBLE.filter((k) => ![0x2028, 0x2029, 0x85, 0x0b, 0x0c].includes(k))) {
+      assert.equal(visibleQuote(`a${c(n)}b`), `a${mark(n)}b`, n.toString(16));
+    }
+    const mixed = `if (ok${c(0x202e)}) {${c(0x200b)}\treturn${c(0xe0041)}${c(0xad)};${c(0x2028)}}`;
+    assert.equal(visibleQuote(mixed), `if (ok${mark(0x202e)}) {${mark(0x200b)}\treturn${mark(0xe0041)}${mark(0xad)};\n}`);
+  });
+
+  test("markers past QUOTE_MAX: the quote is cut to QUOTE_MAX ending in the cut mark, never inside a marker", () => {
+    const shown = visibleQuote(c(0x200b).repeat(QUOTE_MAX));
+    assert.ok(shown.length <= QUOTE_MAX && shown.endsWith(CUT_MARK), String(shown.length));
+    const body = shown.slice(0, -CUT_MARK.length);
+    assert.equal(body.split(mark(0x200b)).join(""), "", "whole markers only");
+    const astral = visibleQuote(`${"x".repeat(QUOTE_MAX - 9)}${c(0x1f600).repeat(10)}${c(0x200b)}`);
+    assert.ok(astral.endsWith(CUT_MARK) && !/[\ud800-\udbff]$/.test(astral.slice(0, -CUT_MARK.length)), "no half of a pair before the mark");
+  });
+
+  test("the chip's preview text is the text Send passes, for every reference readSelect gives", () => {
+    for (const quote of [undefined, "", "one line", `x${c(0x2028)}y`, `${c(0x200b)}z`, "a\r\nb\n\nc", c(0x200b).repeat(QUOTE_MAX)]) {
+      const read = readSelect(from({ type: "os.select", label: "Code/README.md:3", ...(quote === undefined ? {} : { quote }) }), page, frame);
+      assert.ok(read !== null && read.kind === "select", String(quote));
+      const preview = referenceText(read.reference);
+      assert.equal(messageWithReferences([read.reference], ""), preview);
+      assert.ok(preview.split("\n").slice(1).every((line) => line.startsWith(">")), "no line after the first reads as the user's own");
+      assert.doesNotMatch(preview, /[\p{Cf}\u2028\u2029\u0085\v\f\r]/u, "nothing in it the user cannot see");
+    }
+  });
+});
+
+describe("selectGate", () => {
+  const shown = { visible: true, tabSelected: true, held: false };
+
+  test("only while the workspace is shown, the frame's tab is selected, and Ask is not held down", () => {
+    const gate = selectGate(() => 0);
+    const frameA = {};
+    assert.equal(gate(frameA, { ...shown, visible: false }), "ignore");
+    assert.equal(gate(frameA, { ...shown, tabSelected: false }), "ignore");
+    assert.equal(gate(frameA, { ...shown, held: true }), "ignore");
+    assert.equal(gate(frameA, shown), "accept");
+  });
+
+  test(`at most ${SELECT_PER_SECOND} accepted per frame in any second; refused ones do not count`, () => {
+    let now = 0;
+    const gate = selectGate(() => now);
+    const frameA = {};
+    const frameB = {};
+    const counts = () => Array.from({ length: SELECT_PER_SECOND + 3 }, () => gate(frameA, shown)).filter((v) => v === "accept").length;
+    assert.equal(counts(), SELECT_PER_SECOND);
+    assert.equal(gate(frameB, shown), "accept", "another frame has its own count");
+    now = 999;
+    assert.equal(gate(frameA, shown), "over");
+    now = 1000;
+    assert.equal(counts(), SELECT_PER_SECOND, "a second later, as many again");
+    now = 1500;
+    assert.equal(gate(frameA, { ...shown, held: true }), "ignore");
+    assert.equal(gate(frameA, shown), "over", "those accepted at 1000 still count at 1500");
   });
 });

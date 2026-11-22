@@ -171,6 +171,11 @@ export function AgentChat({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(false);
+  /** Which reference chip shows its text under the chips. */
+  const [preview, setPreview] = useState<number | null>(null);
+  useEffect(() => {
+    if (preview !== null && preview >= references.length) setPreview(null);
+  }, [preview, references.length]);
   const logRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -379,8 +384,22 @@ export function AgentChat({
                   title={referenceText(ref)}
                   className="inline-flex min-w-0 max-w-full items-center gap-[5px] rounded-[7px] bg-accent-soft py-[3px] pl-2 pr-[3px] font-mono text-[12px] leading-[1.3] text-accent-ink"
                 >
-                  <Icon name="quote" size={14} />
-                  <span className="min-w-0 truncate">{ref.label}</span>
+                  <button
+                    type="button"
+                    aria-expanded={preview === i}
+                    aria-controls={`${ids}-preview`}
+                    aria-label={`Show what will be sent for ${ref.label}`}
+                    onClick={() => setPreview(preview === i ? null : i)}
+                    className="inline-flex min-w-0 items-center gap-[5px] rounded-[5px] hover:underline"
+                  >
+                    <Icon name="quote" size={14} />
+                    <span className="min-w-0 truncate">{ref.label}</span>
+                    {ref.quote !== undefined && (
+                      <span className="shrink-0 font-sans text-[11px] opacity-75">
+                        · {ref.quote.split("\n").length} line{ref.quote.split("\n").length === 1 ? "" : "s"}
+                      </span>
+                    )}
+                  </button>
                   <button
                     type="button"
                     aria-label={`Remove reference ${ref.label}`}
@@ -393,7 +412,17 @@ export function AgentChat({
                 </li>
               ))}
             </ul>
-            <p className="m-0 text-[11.5px] text-muted">Sent before your message as “About …” lines; hover a reference to see its text.</p>
+            {preview !== null && references[preview] !== undefined ? (
+              <div id={`${ids}-preview`} role="region" aria-label="What will be sent" className="rounded-[8px] bg-card px-2.5 py-2 shadow-[inset_0_0_0_1px_var(--line)]">
+                <p className="m-0 mb-1 text-[11.5px] text-muted">Sent before your message, exactly:</p>
+                {/* Plain text, the same string Send passes (referenceText). */}
+                <pre data-reference-preview className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.45] text-ink">
+                  {referenceText(references[preview]!)}
+                </pre>
+              </div>
+            ) : (
+              <p className="m-0 text-[11.5px] text-muted">Sent before your message as “About …” lines; click a reference to see exactly what is sent.</p>
+            )}
           </div>
         )}
         <div className="flex items-end gap-2">

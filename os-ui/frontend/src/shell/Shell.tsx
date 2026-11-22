@@ -121,6 +121,7 @@ export function Shell({ state }: { state: OsState }) {
                 conversationCollapsed={layout.conversationCollapsed}
                 onConversationCollapsed={(collapsed) => setLayout({ conversationCollapsed: collapsed })}
                 onBack={() => navigate("projects", undefined, true)}
+                visible={screen === "workspace"}
               />
             </Page>
           )}
