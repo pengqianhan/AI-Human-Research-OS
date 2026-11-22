@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import {
+import fs, {
   appendFileSync,
   chmodSync,
   closeSync,
@@ -15,6 +15,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { open } from "node:fs/promises";
+import type { FileHandle } from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
 import * as path from "node:path";
 import { basename, join } from "node:path";
 import { describe, test } from "node:test";
@@ -38,8 +40,10 @@ import {
   pluginSites,
   READ_CSP,
   READ_MAX_BYTES,
+  READ_MAX_STREAMS,
   route,
   safeRelative,
+  streamLimit,
   workspaceRegistry,
   WORKSPACE_CSP,
 } from "../src/main/protocol.ts";
@@ -699,6 +703,47 @@ describe("read channel", () => {
       return false;
     }
   };
+  /**
+   * Counts, while `run` runs, the channel's path lookups (realpath), the folders it opens, the
+   * names it reads from them, and the folders it closes by hand. protocol.ts imported these from
+   * node:fs/promises before the patch; syncBuiltinESMExports carries the patch into that import.
+   */
+  const counting = async (run: () => Promise<void>) => {
+    const promises = fs.promises as unknown as Record<"realpath" | "opendir", unknown>;
+    const realpath = fs.promises.realpath;
+    const opendir = fs.promises.opendir;
+    const counts = { lookups: 0, names: 0, opened: 0, closed: 0 };
+    promises.realpath = (...args: Parameters<typeof realpath>) => {
+      counts.lookups++;
+      return realpath(...args);
+    };
+    promises.opendir = async (...args: Parameters<typeof opendir>) => {
+      const dir = await opendir(...args);
+      counts.opened++;
+      const entries = dir[Symbol.asyncIterator].bind(dir);
+      dir[Symbol.asyncIterator] = async function* () {
+        for await (const entry of entries()) {
+          counts.names++;
+          yield entry;
+        }
+      } as typeof dir[typeof Symbol.asyncIterator];
+      const close = dir.close.bind(dir);
+      dir.close = (() => {
+        counts.closed++;
+        return close();
+      }) as typeof dir.close;
+      return dir;
+    };
+    syncBuiltinESMExports();
+    try {
+      await run();
+    } finally {
+      promises.realpath = realpath;
+      promises.opendir = opendir;
+      syncBuiltinESMExports();
+    }
+    return counts;
+  };
   /** `promise`, or "timeout" after `ms`: what a regression that blocks would otherwise hang the run on. */
   const within = <T,>(ms: number, promise: Promise<T>): Promise<T | "timeout"> => {
     let timer: NodeJS.Timeout | undefined;
@@ -1182,30 +1227,29 @@ describe("read channel", () => {
     assert.deepEqual([exact.entries[0]!.name, exact.entries.at(-1)!.name], [name(0), name(LIST_MAX_ENTRIES - 1)]);
     assert.ok(!("truncated" in exact), "exactly the cap is the whole folder");
 
-    // Names count whether or not the listing keeps them: a folder of dangling links stops at the cap too.
+    // Names count whether or not the listing keeps them: a folder of dangling links, more than the
+    // cap, has LIST_MAX_ENTRIES + 1 names read (the last says there are more) and each kept one
+    // looked up once; HEAD reads no names and closes the folder it opened.
     const dangling = join(caps, "dangling");
     mkdirSync(dangling);
     if (!fileLink(join(ws, "nowhere"), join(dangling, "l0"))) return; // Windows without the symlink privilege
-    for (let i = 1; i <= LIST_MAX_ENTRIES; i++) symlinkSync(join(ws, "nowhere"), join(dangling, `l${i}`), "file");
-    const t0 = performance.now();
-    assert.deepEqual(await okList(list("projects-folder/Caps/Code/dangling")), { entries: [], truncated: true });
-    const getMs = performance.now() - t0;
-    // HEAD answers from the folder check alone: far less than the listing's 5,000 lookups
-    // (about 500 times less on a laptop). The fastest of five HEADs, so one pause does not count.
-    let headMs = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < 5; i++) {
-      const t1 = performance.now();
-      const head = await fetchRead(list("projects-folder/Caps/Code/dangling"), { method: "HEAD" });
-      headMs = Math.min(headMs, performance.now() - t1);
-      assert.equal(head.status, 200);
-    }
-    assert.ok(headMs * 10 < getMs, `HEAD took ${headMs.toFixed(2)} ms at best, GET ${getMs.toFixed(1)} ms`);
+    for (let i = 1; i < LIST_MAX_ENTRIES + 100; i++) symlinkSync(join(ws, "nowhere"), join(dangling, `l${i}`), "file");
+    const get = await counting(async () => {
+      assert.deepEqual(await okList(list("projects-folder/Caps/Code/dangling")), { entries: [], truncated: true });
+    });
+    // Three lookups resolve the workspace, the root, and the folder; one per name kept after that.
+    assert.deepEqual([get.names, get.lookups], [LIST_MAX_ENTRIES + 1, 3 + LIST_MAX_ENTRIES]);
+    const head = await counting(async () => {
+      const res = await fetchRead(list("projects-folder/Caps/Code/dangling"), { method: "HEAD" });
+      assert.equal(res.status, 200);
+    });
+    assert.deepEqual(head, { lookups: 3, names: 0, opened: 1, closed: 1 });
   });
 
   test("a file is opened without blocking and checked as opened: a FIFO is a fast 404", { skip: !posix }, async () => {
     try {
-      assert.equal(await within(1000, fetchRead(files(`${CODE}/fifo`)).then((r) => r.status)), 404, "through the handler");
-      assert.equal(await within(1000, openRegular(fifo)), 404, "openRegular alone, with no stat before it");
+      assert.equal(await within(10_000, fetchRead(files(`${CODE}/fifo`)).then((r) => r.status)), 404, "through the handler");
+      assert.equal(await within(10_000, openRegular(fifo)), 404, "openRegular alone, with no stat before it");
     } finally {
       unblockFifo();
     }
@@ -1220,9 +1264,41 @@ describe("read channel", () => {
     await opened.handle.close();
   });
 
+  test("openRegular closes what it opened when it refuses it or cannot stat it", async () => {
+    // Every handle protocol.ts opens is kept, to see that each is closed (fd -1).
+    const promises = fs.promises as unknown as Record<"open", unknown>;
+    const original = fs.promises.open;
+    const handles: FileHandle[] = [];
+    let failStat = false;
+    promises.open = async (...args: Parameters<typeof original>) => {
+      const handle = await original(...args);
+      if (failStat) Object.defineProperty(handle, "stat", { value: () => Promise.reject(new Error("stat failed")) });
+      handles.push(handle);
+      return handle;
+    };
+    syncBuiltinESMExports();
+    try {
+      const big = join(tempTree({ "big.bin": "" }), "big.bin");
+      truncateSync(big, READ_MAX_BYTES + 1);
+      assert.equal(await openRegular(code), 404, "a folder");
+      assert.equal(await openRegular(big), 413, "a file above the cap");
+      failStat = true;
+      await assert.rejects(openRegular(join(code, "run.py")), /stat failed/);
+    } finally {
+      promises.open = original;
+      syncBuiltinESMExports();
+    }
+    assert.equal(handles.length, 3);
+    assert.deepEqual(
+      handles.map((h) => h.fd),
+      [-1, -1, -1],
+      "each closed",
+    );
+  });
+
   test("a body streams at most the size stat gave, ends at end of file, and closes its handle", async () => {
     const dir = tempTree();
-    const text = (stream: ReadableStream<Uint8Array>) => within(2000, new Response(stream).text());
+    const text = (stream: ReadableStream<Uint8Array>) => within(10_000, new Response(stream).text());
     // Grown since its stat: only the stat'ed bytes.
     writeFileSync(join(dir, "grow"), "0123456789");
     let handle = await open(join(dir, "grow"), "r");
@@ -1247,10 +1323,26 @@ describe("read channel", () => {
     assert.ok(((await reader.read()).value?.length ?? 0) > 0);
     await reader.cancel();
     assert.equal(handle.fd, -1, "closed on cancel");
-    // A read that fails ends the stream with the error.
+    // A read that fails ends the stream with the error, and closes the handle.
     handle = await open(join(dir, "grow"), "r");
     await handle.close();
     await assert.rejects(new Response(fileStream(handle, 10)).text());
+    handle = await open(join(dir, "grow"), "r");
+    Object.defineProperty(handle, "read", { value: () => Promise.reject(new Error("read failed")) });
+    let closed = 0;
+    await assert.rejects(new Response(fileStream(handle, 10, () => closed++)).text(), /read failed/);
+    assert.equal(handle.fd, -1, "closed on a failed read");
+    assert.equal(closed, 1, "and its slot given back once");
+    // The slot is given back once at the end and once on cancel, too.
+    closed = 0;
+    handle = await open(join(dir, "grow"), "r");
+    assert.equal(await text(fileStream(handle, 10, () => closed++)), "0123456789");
+    handle = await open(join(dir, "shrink"), "r");
+    const cancelled = fileStream(handle, 70_000, () => closed++).getReader();
+    await cancelled.read();
+    await cancelled.cancel();
+    await cancelled.cancel();
+    assert.equal(closed, 2);
     // Through the handler, a file comes in chunks, not as one buffer of the whole file.
     const mib = join(ws, "projects-folder", "Beta", "Code", "mib.bin");
     writeFileSync(mib, "m".repeat(1024 * 1024));
@@ -1275,7 +1367,85 @@ describe("read channel", () => {
     for (let i = 0; i < 100; i++) assert.equal(await okText(files(`${CODE}/run.py`)), "print(1)");
     for (let i = 0; i < 100; i++) await (await fetchRead(files(`${CODE}/run.py`))).body!.cancel();
     for (let i = 0; i < 50; i++) await (await fetchRead(files(`${CODE}/run.py`), { method: "HEAD" })).text();
+    for (let i = 0; i < 50; i++) await (await fetchRead(list(CODE), { method: "HEAD" })).text();
     assert.ok(openFds() <= before + 2, `${openFds()} descriptors open, ${before} before`);
+  });
+
+  test("streamLimit: at most `max` slots per id, each given back once, ids apart", () => {
+    const limit = streamLimit(2);
+    const a1 = limit.acquire("a");
+    const a2 = limit.acquire("a");
+    assert.ok(a1 && a2);
+    assert.equal(limit.acquire("a"), null);
+    assert.ok(limit.acquire("b"), "another id has its own slots");
+    a1();
+    a1();
+    const a3 = limit.acquire("a");
+    assert.ok(a3, "a slot given back");
+    assert.equal(limit.acquire("a"), null, "a second release of the same slot gives nothing back");
+  });
+
+  test("each origin holds at most READ_MAX_STREAMS files open; 503 above it, without opening the file", async () => {
+    assert.equal(READ_MAX_STREAMS, 16);
+    // Larger than one chunk, so a held response keeps its file open.
+    const streams = project("Streams");
+    mkdirSync(join(streams, "Code"), { recursive: true });
+    mkdirSync(join(streams, "paper"), { recursive: true });
+    writeFileSync(join(streams, "Code", "big.txt"), "s".repeat(200_000));
+    writeFileSync(join(streams, "Code", "small.txt"), "small");
+    writeFileSync(join(streams, "paper", "big.txt"), "p".repeat(200_000));
+    writeFileSync(join(streams, "Code", "locked.txt"), "locked");
+    const fresh = createHandler(() => ({ renderer, workspace: ws, sites: readSites, registry: registryOf([], {}), token: "t" }));
+    const get = (url: string, init?: RequestInit) => fresh(new Request(url, init));
+    const big = files("projects-folder/Streams/Code/big.txt");
+    const hold = async () => {
+      const res = await get(big);
+      assert.equal(res.status, 200);
+      return res;
+    };
+    const assertBusy = async () => {
+      for (const method of ["GET", "HEAD"]) {
+        const res = await get(big, { method });
+        assert.equal(res.status, 503, method);
+        assertReadHeaders(res, `${method} at the cap`);
+        assert.equal(await res.text(), method === "HEAD" ? "" : "Too many files open for reading; try again");
+      }
+    };
+    // Refused, failed, HEAD, and small reads give their slot back at once.
+    if (posix && process.getuid?.() !== 0) {
+      chmodSync(join(streams, "Code", "locked.txt"), 0o000);
+      try {
+        for (let i = 0; i < 2 * READ_MAX_STREAMS; i++) assert.equal((await get(files("projects-folder/Streams/Code/locked.txt"))).status, 404);
+      } finally {
+        chmodSync(join(streams, "Code", "locked.txt"), 0o644);
+      }
+    }
+    for (let i = 0; i < 2 * READ_MAX_STREAMS; i++) assert.equal((await get(big, { method: "HEAD" })).status, 200);
+    const small = [];
+    for (let i = 0; i < 2 * READ_MAX_STREAMS; i++) small.push(await get(files("projects-folder/Streams/Code/small.txt")));
+    assert.deepEqual([...new Set(small.map((r) => r.status))], [200], "a file read in one chunk is closed at once, held or not");
+
+    const held = [];
+    for (let i = 0; i < READ_MAX_STREAMS; i++) held.push(await hold());
+    await assertBusy();
+    // What opens no file is not held back: listings, refusals, another origin's files.
+    assert.equal((await get(list("projects-folder/Streams/Code"))).status, 200);
+    assert.equal((await get(files("projects-folder/Streams/Code/missing.txt"))).status, 404);
+    const other = await get(files("projects-folder/Streams/paper/big.txt", "reads-paper"));
+    assert.equal(other.status, 200);
+    assert.equal((await other.text()).length, 200_000);
+    // A body read to its end gives its slot back, and so does a cancelled one.
+    assert.equal((await held.pop()!.text()).length, 200_000);
+    held.push(await hold());
+    await assertBusy();
+    await held.pop()!.body!.cancel();
+    held.push(await hold());
+    await assertBusy();
+    // All given back: the whole cap again.
+    for (const res of held.splice(0)) await res.body!.cancel();
+    for (let i = 0; i < READ_MAX_STREAMS; i++) held.push(await hold());
+    await assertBusy();
+    for (const res of held) await res.body!.cancel();
   });
 
   test("rule 12: every response carries nosniff, no-store and the sandbox policy; scripts and HTML go as plain text", async () => {

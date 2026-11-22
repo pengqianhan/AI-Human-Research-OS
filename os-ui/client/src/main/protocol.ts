@@ -130,6 +130,37 @@ export const READ_MAX_BYTES = 32 * 1024 * 1024;
  * `"truncated": true`.
  */
 export const LIST_MAX_ENTRIES = 5000;
+/**
+ * At most this many files open for reading at once per plugin origin: every
+ * held response keeps a file descriptor and a pipe buffer, so a page that
+ * holds responses unread could otherwise exhaust them. Above it, a file read
+ * answers 503 without opening the file.
+ */
+export const READ_MAX_STREAMS = 16;
+
+/**
+ * Open-file counts per plugin id (one per handler). `acquire` takes a slot
+ * and returns its release, which is safe to call more than once, or null at
+ * the cap.
+ */
+export function streamLimit(max = READ_MAX_STREAMS): { acquire(id: string): (() => void) | null } {
+  const counts = new Map<string, number>();
+  return {
+    acquire(id) {
+      const now = counts.get(id) ?? 0;
+      if (now >= max) return null;
+      counts.set(id, now + 1);
+      let released = false;
+      return () => {
+        if (released) return;
+        released = true;
+        const left = (counts.get(id) ?? 1) - 1;
+        if (left === 0) counts.delete(id);
+        else counts.set(id, left);
+      };
+    },
+  };
+}
 
 /**
  * Whether a frame may navigate to `url`: the top frame stays on the app's
@@ -410,13 +441,13 @@ const READ_CHUNK_BYTES = 64 * 1024;
  * The first `size` bytes of the open `handle` as a stream, a chunk at a time
  * as the consumer pulls, so concurrent reads hold a chunk each rather than a
  * file each. It never reads past `size` (a file that grew since its stat) and
- * ends at end of file (one that shrank). The handle is closed when the stream
- * ends, fails, or is cancelled.
+ * ends at end of file (one that shrank). The handle is closed, and `onClose`
+ * called once, when the stream ends, fails, or is cancelled.
  */
-export function fileStream(handle: FileHandle, size: number): ReadableStream<Uint8Array> {
+export function fileStream(handle: FileHandle, size: number, onClose: () => void = () => {}): ReadableStream<Uint8Array> {
   let offset = 0;
   let closing: Promise<void> | null = null;
-  const close = () => (closing ??= handle.close().catch(() => {}));
+  const close = () => (closing ??= handle.close().catch(() => {}).finally(onClose));
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
@@ -508,10 +539,18 @@ async function listing(dir: string, root: string): Promise<{ entries: ListEntry[
  * 7. a file is a regular file, by path and again once opened (openRegular),
  *    sent with readContentType as a stream (fileStream), or 413 above
  *    READ_MAX_BYTES before a byte is read; a listing is a folder (listing),
- *    and HEAD on it stops at opening the folder.
+ *    and HEAD on it stops at opening the folder;
+ * 8. a file is opened only while its origin has fewer than READ_MAX_STREAMS
+ *    open (`streams`); 503 otherwise. The slot is released when the stream
+ *    ends, fails or is cancelled, and at once if the file is not served.
  * Anything else, and any file system error, is 404.
  */
-export async function serveRead(route: Extract<Route, { kind: "read" }>, method: string, workspace: string | null): Promise<Response> {
+export async function serveRead(
+  route: Extract<Route, { kind: "read" }>,
+  method: string,
+  workspace: string | null,
+  streams: ReturnType<typeof streamLimit>,
+): Promise<Response> {
   const head = method === "HEAD";
   const answer = (status: number, type: string, body: BodyInit | null, extra: Record<string, string> = {}): Response =>
     new Response(head ? null : body, { status, headers: { ...READ_HEADERS, "Content-Type": type, ...extra } });
@@ -548,15 +587,27 @@ export async function serveRead(route: Extract<Route, { kind: "read" }>, method:
     }
     if (!info.isFile()) return missing();
     if (info.size > READ_MAX_BYTES) return tooLarge();
-    const opened = await openRegular(real);
+    const release = streams.acquire(route.site.id);
+    if (release === null) return answer(503, TEXT, "Too many files open for reading; try again");
+    let opened: Awaited<ReturnType<typeof openRegular>> | undefined;
+    try {
+      opened = await openRegular(real);
+    } finally {
+      // Refused or failed: nothing holds the slot.
+      if (typeof opened !== "object") release();
+    }
     if (opened === 404) return missing();
     if (opened === 413) return tooLarge();
     const type = readContentType(rel);
     if (head) {
-      await opened.handle.close();
+      try {
+        await opened.handle.close();
+      } finally {
+        release();
+      }
       return answer(200, type, null);
     }
-    return answer(200, type, fileStream(opened.handle, opened.size));
+    return answer(200, type, fileStream(opened.handle, opened.size, release));
   } catch {
     return missing();
   }
@@ -653,11 +704,12 @@ export function createHandler(
     token: string;
   },
 ) {
+  const streams = streamLimit();
   return async (request: Request): Promise<Response> => {
     const current = state();
     const r = route(request.url, current, current.sites);
     if (r.kind === "api") return serveApi(request, mountsFor(current.registry, r.host), current.token);
-    if (r.kind === "read") return serveRead(r, request.method, current.workspace);
+    if (r.kind === "read") return serveRead(r, request.method, current.workspace, streams);
     if (r.kind === "file") {
       if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
       return serveFile(r);
