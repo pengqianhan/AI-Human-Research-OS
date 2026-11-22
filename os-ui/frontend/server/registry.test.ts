@@ -155,6 +155,45 @@ describe("createRegistry", () => {
     );
   });
 
+  test("a skipped handler is neither required nor mounted, and its factory is never built", () => {
+    let built = 0;
+    const counting: HandlerFactory = (c) => (built++, fake("git")(c));
+    const demo = loaded(manifest("demo", { contributes: { handlers: ["git", "status"] } }));
+    const skip = new Set(["demo/git"]);
+    const without = createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/status": fake("s") }, skip });
+    assert.deepEqual(flags(without.all), [["/api/demo/status", false]], "no factory for the skipped key: no drift error");
+    const withFactory = createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/git": counting, "demo/status": fake("s") }, skip });
+    assert.deepEqual(flags(withFactory.all), [["/api/demo/status", false]], "a factory for a skipped key is no orphan");
+    assert.equal(built, 0);
+  });
+
+  test("skip excuses only the keys it lists", () => {
+    const demo = loaded(manifest("demo", { contributes: { handlers: ["git", "status"] } }));
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [demo], factories: {}, skip: new Set(["demo/git"]) }),
+      /^Error: plugin handler drift: demo\/status is declared but has no factory$/,
+    );
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [], factories: { "demo/git": fake("g") }, skip: new Set(["demo/git"]) }),
+      /demo\/git has a factory but no bundled plugin declares it/,
+      "a factory nobody declares is drift even when its key is skipped",
+    );
+  });
+
+  test("a skipped key no bundled plugin declares is drift, as after a rename", () => {
+    const demo = loaded(manifest("demo", { contributes: { handlers: ["git"] } }));
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [demo], factories: { "demo/git": fake("g") }, skip: new Set(["demo/old-git"]) }),
+      /^Error: plugin handler drift: demo\/old-git is skipped but no bundled plugin declares it$/,
+    );
+    const local = loaded(manifest("demo", { contributes: { handlers: ["git"] } }), "local");
+    assert.throws(
+      () => createRegistry({ ctx, trunk: [], plugins: [local], factories: {}, skip: new Set(["demo/git"]) }),
+      /demo\/git is skipped but no bundled plugin declares it/,
+      "a local plugin's declaration does not count",
+    );
+  });
+
   test("a repeated id throws, whatever the sources", () => {
     const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins;
     const local = loaded(manifest("paper-wiki"), "local");

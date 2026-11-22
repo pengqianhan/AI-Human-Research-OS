@@ -25,13 +25,31 @@ export interface RunResult {
   code: number;
   stdout: string;
   stderr: string;
+  /** Stdout passed maxOutputBytes: the child was killed and stdout holds what came before the cap. */
+  truncated?: boolean;
+  /** The child outlived timeoutMs and was killed (code -1). */
+  timedOut?: boolean;
 }
 
 export interface RunOptions {
   cwd: string;
   input?: string;
-  /** Kill the child after this long; the result then has code -1 and says so in stderr. */
+  /** Kill the child after this long; the result then has code -1, `timedOut`, and says so in stderr. */
   timeoutMs?: number;
+  /** Stop collecting stdout at this many bytes and kill the child; the result is then `truncated`. */
+  maxOutputBytes?: number;
+  /** Keep at most this many bytes of stderr and drop the rest; the child runs on and its exit code counts. */
+  maxErrorBytes?: number;
+  /** The child's environment, made from the runner's own (which keeps the PATH that finds the program). */
+  env?: (inherited: NodeJS.ProcessEnv) => NodeJS.ProcessEnv;
+  /**
+   * "path": find a bare program name in the absolute entries of the child's
+   * PATH only (never the working folder, an empty entry, or a relative one,
+   * which spawn would search), and fail with ENOENT when none holds it.
+   */
+  lookup?: "path";
+  /** With lookup: also skip a PATH entry, or a program found, whose real path lies inside this folder (and refuse an absolute program there). */
+  lookupOutside?: string;
 }
 
 /** Runs one child process to completion; rejects only when it cannot start. */
