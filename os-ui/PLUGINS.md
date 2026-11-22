@@ -118,7 +118,7 @@ Status on 2026-11-22:
   placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
 - **S6 is split in three.** S6a-1, the Code view's Git handler, is done (pending its
-  pull request's merge) and not mounted; S6a-2, the Code view plugin (its manifest,
+  pull request) and not mounted; S6a-2, the Code view plugin (its manifest,
   the mount at `/api/code-view/git` on `app://code-view`, and the page), is next; S6b,
   the Paper view, waits on the Human Owner's answer about PDF.js (below; A9). S5's
   proof stays the fixture tests that `npm test` in `os-ui/client` runs, which only the
@@ -127,69 +127,116 @@ Status on 2026-11-22:
 - **S6a-1** is [frontend/server/codeGit.ts](frontend/server/codeGit.ts) with
   `codeGit.test.ts` in the required CI job. Nothing declares or mounts it yet: no
   `BUNDLED_HANDLERS` entry, no manifest, no `DESKTOP_ONLY_HANDLERS`. The code is the
-  authority where it differs from Part 2's Gap 1, after the S5 review:
+  authority where it differs from Part 2's Gap 1, after the S5 review and an
+  independent review of S6a-1 itself:
   - Answers: every route answers `{ repo: null }`, or `{ repo: null, problem }`
     when git is missing, too old, or the repository is refused, with status 200.
     Otherwise each answer carries `repo` ("project" or "workspace"), `root` (the
     repository's top, relative to the workspace) and `filter` (the path filter,
     relative to `root`: `.` or `projects-folder/<name>`), so the view can name the
-    command it reflects; file paths are always relative to the project. `/` gives
-    `head` (merges left out, as in `/log`). `/log` gives commits with `files`,
-    `added`, `deleted` under the filter. `/commit` gives `files` (each with
-    `status`, null counts for a binary file, the blobs' `sizes` for a binary file
-    from `cat-file --batch-check`, and `openable`), plus `stat`, the exact totals
-    even when the list is cut. `/diff` gives the patch.
-  - Git 2.45 or later, for `--no-lazy-fetch` (release notes 2.45.0), not 2.31.
-    Stock Ubuntu 24.04 (2.43.0), Ubuntu 22.04 (2.34.1) and Debian 12 (2.39.5) are
-    below it; Debian 13 (2.47.3) and Fedora (2.56.1) are not.
+    command it reflects; file paths are always relative to the project, and
+    `short` is a hash's first 7 digits whatever `core.abbrev` says. `/` gives `head`
+    (merges left out, as in `/log`). `/log` gives commits with `files`, `added`,
+    `deleted` under the filter. `/commit` gives `files` (each with `status`, null
+    counts for a binary file, the blobs' `sizes` for a binary file from
+    `cat-file --batch-check`, and `openable`), plus `stat`, the exact totals even
+    when the list is cut. `/diff` gives the patch.
+  - Status codes: 400 for a bad query, including a `hash` that is not a full 40- or
+    64-digit object id (a short one could name a ref first). 404 for an unknown
+    project or one named in another case than its folder, an unknown commit, a
+    commit outside HEAD's history or changing nothing under the filter, or a path
+    that is not exactly one file the commit changes. 405 for anything but GET. 500
+    when a git step fails, with a fixed text naming the step (`git log failed (exit
+    128)`, `… took longer than 10 s`, `… printed more than its cap`): nothing Git
+    printed reaches the caller, it goes to the server's log. 503 while four git
+    processes run and sixteen wait.
+  - Git 2.45 or later, for `--no-lazy-fetch` (release notes 2.45.0), not 2.31. On
+    2026-11-22 packages.ubuntu.com listed 2.43.0 for Ubuntu 24.04 and 2.34.1 for
+    22.04, and packages.debian.org 2.39.5 for Debian 12, all below it;
+    packages.debian.org listed 2.47.3 for Debian 13 and packages.fedoraproject.org
+    2.56.1 for Fedora 43 to 45. Known limit, with its reversal path: Git 2.41 to
+    2.44 could be served by refusing a repository whose config (asked through Git
+    under the same guards) has `extensions.partialclone` or `remote.*.promisor`,
+    with `protocol.allow=never` beneath. It is not done because it is a second code
+    path that would need its own CI job on stock Ubuntu 24.04 Git.
+  - Which git runs: an absolute path given to `codeGitHandler(ctx, git)`, or a bare
+    name looked up in the absolute entries of the runner's PATH only
+    (`RunOptions.lookup`), never the working folder (spawn tries it on Windows
+    before PATH, and on POSIX through an empty or relative entry); on Windows only
+    `git.com` or `git.exe`. Anything else is "git was not found".
   - More guards than `--no-ext-diff` and `--no-textconv`: no `GIT_*` from the
     caller, the global and system config not read (`trace2.*Target` there writes
-    files), `--no-lazy-fetch`, `--no-replace-objects`, `--literal-pathspecs`,
-    `core.fsmonitor=false`, `--no-show-signature`, `--submodule=short`,
-    `--no-follow`, and flags that keep the output's shape (`--root`,
-    `--no-renames`, `--diff-merges=first-parent`, `--encoding=UTF-8`, `--no-color`,
-    prefixes, `core.quotePath=false`). Nothing in the working tree is read:
-    `--attr-source=<commit>` for `.gitattributes`, `--no-use-mailmap` for
-    `.mailmap`, and `--ignore-submodules=none` for `.gitmodules`, whose
-    `ignore = all` would otherwise hide gitlink changes. Files the repository's
-    config names anywhere are not read either (`-O<null device>` for
-    `diff.orderFile`, which failed every diff when missing,
-    `core.attributesFile=<null device>`, and `mailmap.file` through
-    `--no-use-mailmap`). A FIFO among the files Git opens inside `.git` (such as
-    `info/attributes`) still stalls each command until the 10 s limit. The table at
-    the end of the file accounts for every `git help config` key that names a
-    program, and `RunOptions.env` (an edit of the runner's environment) carries the
-    environment. An explicit `--git-dir` skips Git's `safe.directory` check (tried
-    with `GIT_TEST_ASSUME_DIFFERENT_OWNER=1`), so these guards are the only ones.
+    files), no grafts (`GIT_GRAFT_FILE=/dev/null`), `--no-lazy-fetch` with
+    `protocol.allow=never` beneath it, `--no-replace-objects`,
+    `--literal-pathspecs`, `core.fsmonitor=false`, `--no-show-signature`,
+    `--submodule=short`, `--no-follow`, `core.bigFileThreshold=4m`, and flags that
+    keep the output's shape (`--root`, `--no-renames`, `--diff-merges=first-parent`,
+    `--encoding=UTF-8`, `--no-color`, prefixes, `core.quotePath=false`). The literal
+    `/dev/null` is used on every platform, as Git documents it for
+    `GIT_CONFIG_GLOBAL` and Git for Windows maps it in its `open()`; not run on
+    Windows here, but the `diff.orderFile` test fails there if `-O/dev/null` is not
+    honoured. The table at the end of the file accounts for every `git help config`
+    key that names a program. An explicit `--git-dir` skips Git's `safe.directory`
+    check (tried with `GIT_TEST_ASSUME_DIFFERENT_OWNER=1`), so these guards are the
+    only ones.
+  - Not read: the working tree's `.gitattributes` (`--attr-source=<commit>`),
+    `.mailmap` (`--no-use-mailmap`) and `.gitmodules` (`--ignore-submodules=none`;
+    its `ignore = all` would hide gitlink changes), and files the config names:
+    `diff.orderFile` (`-O/dev/null`; a missing one failed every diff),
+    `core.attributesFile` (`/dev/null`), `mailmap.file`, `info/grafts`. Read
+    still: `include.path` and `includeIf` name another file, from anywhere, read
+    as config under the same guards, but whether it parses shows (every command
+    fails) and what it sets shapes the output (an outside include changed
+    `diff.context`).
   - Refused with a `problem`, never falling back to the workspace's repository: a
     `.git` that is a link or a gitfile (a linked worktree, as an agent's worktree
-    is, or a submodule checkout), a link directly inside `.git`, a `commondir`,
-    `objects/info/alternates`, or a link among `objects/<xx>`, `objects/pack` or
-    `objects/info`. Loose object files are not checked one by one.
-  - `/commit` of a commit that changes nothing under the filter is 404, so other
-    workspace commits' messages stay out. `/diff` opens exactly one file the commit
-    changes, never a folder; a path with a segment starting with "." is 400, and
-    `/commit` lists such files with their counts and `openable: false`.
-  - Caps: 4 KiB for one line, 256 KiB for `/log`, 512 KiB for a file list, 64 KiB
-    for a message, 1 MiB for a patch, cut back to whole records; 10 s per command.
-    `/log` answers `more: false` once the next `skip` would pass 10,000, so the list
-    ends at about 10,050 commits. An error's text names the workspace as
-    `<workspace>`, never by its absolute path.
-    `processRunner` now decodes output once (a split character survives) and gains
-    `maxOutputBytes` and `truncated`.
-  - `createRegistry` takes `skip`: declared handler keys that need no factory and are
-    not mounted; a factory for a skipped key is no orphan.
+    is, or a submodule checkout); a link directly inside `.git`; a `commondir` or
+    `objects/info/alternates`; `HEAD`, `config`, `config.worktree`, `packed-refs`
+    or `shallow` that is not a plain file (a link, FIFO or device) or is over its
+    cap (4 KiB, 1 MiB, 1 MiB, 64 MiB, 16 MiB); anything in `info/` that is not a
+    plain file under 16 MiB; anything under `refs/` or `reftable/` but folders and
+    plain files (a loose ref under 4 KiB); a link or other non-plain file among
+    `objects/<xx>/`, `objects/pack/` or `objects/info/` (and `commit-graphs/`); more
+    than 100,000 entries to check, read entry by entry so a huge folder costs at
+    most that. Not looked at: the index, `logs/`, `hooks/`, `modules/`,
+    `FETCH_HEAD` and the like, which these commands do not read (a socket such as
+    `fsmonitor--daemon.ipc` is fine). The check runs before git, so a file swapped
+    in between is not caught.
+  - Bounded work: at most four git processes per workspace and sixteen requests
+    waiting, 10 s per command, output caps (4 KiB for one line, 256 KiB for `/log`,
+    512 KiB for a file list, 64 KiB for a message, 1 MiB for a patch, each cut back
+    to whole records), 16 KiB of stderr kept, and a blob over 4 MiB treated as
+    binary: such a text file shows as binary with its sizes. Measured with
+    `/usr/bin/time -l` on the reviewer's two 500 MB text blobs, `log --shortstat`
+    went from 3.37 GB in 2.9 s to 9.4 MB in 15 ms. Not bounded: memory inside one
+    git process below the threshold (a commit of many files just under 4 MiB, a
+    diff of very many lines), packed objects, which are not checked one by one,
+    and loose objects, checked by type and not by size.
+  - `/commit` and `/diff` serve only commits in HEAD's history (`merge-base
+    --is-ancestor`); `/commit` of a commit that changes nothing under the filter is
+    404, so other workspace commits' messages stay out. `/diff` opens exactly one
+    file the commit changes, never a folder; a path with a segment starting with
+    "." is 400, and `/commit` lists such files with their counts and
+    `openable: false`. `/log` answers `more: false` once the next `skip` would pass
+    10,000, so the list ends at about 10,050 commits.
+  - `processRunner` decodes output once (a split character survives) and gains
+    `maxOutputBytes` (stdout, `truncated`), `maxErrorBytes` (stderr past it is
+    dropped, the child runs on), `timedOut`, and `lookup`. `createRegistry` takes
+    `skip`: declared handler keys that need no factory and are not mounted; a
+    factory for a skipped key is no orphan, and a skipped key no bundled manifest
+    declares throws.
   - Each guard has a test that fails without it (checked by removing each in turn),
     except `--work-tree`, `--no-optional-locks`, `--no-ext-diff`,
-    `GIT_CONFIG_NOSYSTEM`, and `core.fsmonitor=false` (which
-    `--ignore-submodules=none` now makes a second layer: removing both starts the
+    `GIT_CONFIG_NOSYSTEM`, the 16 KiB stderr cap, and `core.fsmonitor=false` (which
+    `--ignore-submodules=none` makes a second layer: removing both starts the
     monitor), which no output of these commands can show; tests of the arguments
-    and the environment pin them. The tests whose marker programs are
-    shell scripts skip on Windows. `info/grafts` is honoured, as
-    `--no-replace-objects` does not cover it.
-  - For S6a-2: `codeGitHandler(ctx, git)` takes the git program, so the client can
-    pass the path its Settings check found instead of `git` from `PATH`, which on a
-    Mac without the Command Line Tools is the stub that offers to install them.
+    and the environment pin them. The tests whose marker programs are shell scripts
+    or that need FIFOs skip on Windows, and a Windows-only test checks that a
+    `git.exe` planted in the workspace never runs.
+  - For S6a-2: `codeGitHandler(ctx, git, log)`. The client can pass the git path
+    its Settings check found (on a Mac without the Command Line Tools,
+    `/usr/bin/git` is the stub that offers to install them); `log` receives what
+    Git printed on failures.
 - **Waiting on the Human Owner:** whether the Paper view may vendor PDF.js (Part 2), and
   whether a third-party plugin may add a left-navigation item (Part 1, Q-PO1).
 

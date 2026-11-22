@@ -61,8 +61,8 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
         the Plugins page's enabled list come from the bundled manifests.
         Overview is the default project tab; Code and Paper are placeholder
         tabs. S6 is split into S6a-1 (the Code view's read-only Git handler,
-        done pending its pull request's merge, not mounted), S6a-2 (the Code
-        view plugin), and S6b (the Paper view).
+        done pending its pull request, not mounted), S6a-2 (the Code view
+        plugin), and S6b (the Paper view).
       - Next, in order: S6a-2, the Code view plugin on S6a-1's handler (its
         manifest, the mount, and the page); S6b, the Paper view, which waits on
         the PDF.js answer below; then deleting `os-ui/frontend/src/desktop/`
@@ -204,7 +204,7 @@ packaged app's smoke run.
 
 - Focus (2026-11-22): step 1's next change, S6a-2 (the Code view plugin) in
   [os-ui/PLUGINS.md](os-ui/PLUGINS.md), under "Repositioning" above; S6a-1, its Git
-  handler, is done pending its pull request's merge, and S6b (the Paper view) waits
+  handler, is done pending its pull request, and S6b (the Paper view) waits
   on the Human Owner's PDF.js answer. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
