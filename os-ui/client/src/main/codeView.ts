@@ -1,5 +1,6 @@
 import { codeGitHandler } from "../../../frontend/server/codeGit.ts";
-import { findProgram, isExecutableFile } from "../../../frontend/server/process.ts";
+import { findProgram, isExecutableFile, realPath } from "../../../frontend/server/process.ts";
+import type { RealPath } from "../../../frontend/server/process.ts";
 import type { HandlerFactory } from "../../../frontend/server/registry.ts";
 import type { ApiHandler } from "../../../frontend/server/types.ts";
 import { isXcodeStub } from "./python.ts";
@@ -23,9 +24,10 @@ export async function findGit(options: {
   probe: Probe;
   platform?: NodeJS.Platform;
   exists?: (file: string) => boolean;
+  real?: RealPath;
 }): Promise<string | null> {
   const platform = options.platform ?? process.platform;
-  const git = findProgram("git", options.env, platform, options.exists ?? isExecutableFile, options.dir);
+  const git = findProgram("git", options.env, platform, options.exists ?? isExecutableFile, options.dir, options.real ?? realPath);
   if (git === null) return null;
   return (await isXcodeStub(git, platform, options.probe)) ? null : git;
 }
