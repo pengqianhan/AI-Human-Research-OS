@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { devNull, tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { before, describe, test } from "node:test";
@@ -397,6 +397,17 @@ describe("what the answers hold", () => {
     assert.equal(second.commits[4]!.hash, m[1]);
   });
 
+  test("more stops where the next skip would pass 10000", async () => {
+    const root = workspace();
+    init(root);
+    fastImport(root, Array.from({ length: 10_040 }, (_, i) => ({ mark: i + 1, message: `c${i + 1}`, files: [["projects-folder/P/n.txt", `${i}\n`]] as [string, Content][] })));
+    const api = handler(root);
+    const below = await body<Log>(get(api, "/log", { project: P, skip: "9950" }));
+    assert.deepEqual([below.commits.length, below.more], [50, true], "skip 10000 is still allowed");
+    const last = await body<Log>(get(api, "/log", { project: P, skip: "9980" }));
+    assert.deepEqual([last.commits.length, last.more], [50, false], "60 commits are left, but skip 10030 would be refused");
+  });
+
   test("0x1e and 0x1f in a message spoil nothing, not even their own record; a message ends at a NUL", async () => {
     const root = workspace();
     init(root);
@@ -690,7 +701,53 @@ describe("output the repository's config cannot reshape", () => {
       const r = await get(api, path, { project: P });
       assert.equal(r.status, 500, JSON.stringify(r.body));
       assert.doesNotMatch(JSON.stringify(r.body), /workspace commit/);
+      const error = (r.body as { error: string }).error;
+      assert.ok(error.includes("<workspace>") && !error.includes(realpathSync.native(root)) && !error.includes(root), `no absolute path: ${error}`);
     }
+  });
+
+  test("diff.orderFile naming a missing file (-O<null device>)", async () => {
+    const { api, m } = configured({ "diff.orderFile": join(tmpdir(), "os-ui-no-such-order-file") }, simple);
+    assert.equal((await get(api, "/log", { project: P })).status, 200);
+    assert.equal((await get(api, "/commit", { project: P, hash: m[2]! })).status, 200);
+    assert.equal((await get(api, "/diff", { project: P, hash: m[2]!, path: "t.txt" })).status, 200);
+  });
+
+  test("core.attributesFile naming a file outside the workspace (-c core.attributesFile=<null device>)", async () => {
+    const outside = tempTree({ attributes: "*.txt -diff\n" });
+    const { api, m } = configured({ "core.attributesFile": join(outside, "attributes") }, simple);
+    const commit = await body<Commit>(get(api, "/commit", { project: P, hash: m[2]! }));
+    assert.deepEqual(commit.files.map((f) => [f.path, f.added]), [["t.txt", 1], ["中文.md", 1]]);
+  });
+
+  test("diff.ignoreSubmodules, and a working tree .gitmodules saying ignore = all (--ignore-submodules=none)", async () => {
+    const gitmodules = (extra: string) => `[submodule "s"]\n\tpath = projects-folder/P/sub\n\turl = ./s\n${extra}`;
+    for (const [config, working] of [[{ "diff.ignoreSubmodules": "all" }, null], [{}, gitmodules("\tignore = all\n")]] as const) {
+      const { api, m, root } = configured(config, [
+        { mark: 1, message: "add sub", files: [[".gitmodules", gitmodules("")], ["projects-folder/P/sub", { gitlink: "1".repeat(40) }]] },
+        { mark: 2, message: "bump sub", files: [["projects-folder/P/sub", { gitlink: "2".repeat(40) }]] },
+      ]);
+      if (working !== null) writeFileSync(join(root, ".gitmodules"), working);
+      const commit = await body<Commit>(get(api, "/commit", { project: P, hash: m[2]! }), 200);
+      assert.deepEqual(commit.files.map((f) => [f.path, f.status]), [["sub", "M"]], JSON.stringify(config));
+      assert.deepEqual((await body<Log>(get(api, "/log", { project: P }))).commits.map((c) => c.files), [1, 1]);
+    }
+  });
+
+  test("files the config or the working tree name that are FIFOs: mailmap.file, .mailmap, .gitmodules (--no-use-mailmap, --ignore-submodules=none)", { skip: WINDOWS ? "Windows has no FIFOs in the file system" : false }, async () => {
+    const outside = mkdtempSync(join(tmpdir(), "os-ui-git-fifo-"));
+    const fifo = (path: string) => assert.equal(spawnSync("mkfifo", [path]).status, 0, `mkfifo ${path}`);
+    fifo(join(outside, "mailmap"));
+    const { api, m, root } = configured({ "mailmap.file": join(outside, "mailmap") }, [
+      { mark: 1, message: "add sub", files: [["projects-folder/P/a.txt", "a\n"], ["projects-folder/P/sub", { gitlink: "1".repeat(40) }]] },
+    ]);
+    fifo(join(root, ".mailmap"));
+    fifo(join(root, ".gitmodules"));
+    const started = Date.now();
+    for (const [path, extra] of [["/log", {}], ["/commit", { hash: m[1]! }], ["/diff", { hash: m[1]!, path: "sub" }]] as const) {
+      assert.equal((await get(api, path, { project: P, ...extra })).status, 200, path);
+    }
+    assert.ok(Date.now() - started < 9_000, "no command waited on a FIFO");
   });
 });
 
@@ -745,7 +802,7 @@ describe("git itself", () => {
     assert.deepEqual(env, { PATH: "/bin", HOME: "/h", GITX: "kept", PYTHONIOENCODING: "utf-8", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: devNull });
   });
 
-  test("every call runs in the repository's top with the guards no output can show (--work-tree, --no-optional-locks, --no-ext-diff)", async () => {
+  test("every call runs in the repository's top with the guards no output can show (--work-tree, --no-optional-locks, core.fsmonitor=false, --no-ext-diff)", async () => {
     const root = workspace();
     init(root);
     const m = fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a", "a\n"]] }]);
@@ -766,6 +823,7 @@ describe("git itself", () => {
       assert.equal(options.cwd, top);
       assert.ok(command.includes(`--git-dir=${join(top, ".git")}`) && command.includes(`--work-tree=${top}`), command.join(" "));
       assert.ok(command.includes("--no-optional-locks"), command.join(" "));
+      assert.ok(command.join("\n").includes("\n-c\ncore.fsmonitor=false\n"), command.join(" "));
       if (command.includes("log") || command.includes("show")) assert.ok(command.includes("--no-ext-diff"), command.join(" "));
     }
   });
@@ -872,7 +930,8 @@ describe("no program runs and nothing reaches the network, whatever the reposito
   });
   test("textconv, and the filters its temporary files go through (--no-textconv)", () => none("textconv", "filter-clean", "filter-smudge", "filter-process"));
   test("signature verification (--no-show-signature)", () => none("gpg", "gpg-openpgp", "gpg-ssh", "gpg-x509"));
-  test("the file system monitor (core.fsmonitor=false)", () => none("fsmonitor", "hook-fsmonitor-watchman"));
+  test("the file system monitor (--ignore-submodules=none stops the index read that would start it; core.fsmonitor=false too)", () =>
+    none("fsmonitor", "hook-fsmonitor-watchman"));
   test("lazy fetch and its transport (--no-lazy-fetch)", () => none("ssh", "uploadpack", "git-proxy", "askpass", "credential"));
   test("hooks, which only a ref update starts, as textconv's notes cache would make (--no-textconv)", () =>
     none("config-hook", "hook-reference-transaction"));
@@ -932,6 +991,15 @@ describe("the user's environment cannot change that either", () => {
       assert.deepEqual(h.written(), [], channel);
     }
     assert.equal(hashTree(join(root, ".git")), before);
+  });
+
+  test("trace2 in the repository's own config writes nothing (Git reads it from protected config only)", async () => {
+    const { root, m } = repo();
+    const dir = mkdtempSync(join(tmpdir(), "os-ui-git-trace-"));
+    fx(root, ["config", "trace2.eventTarget", join(dir, "event.json")]);
+    fx(root, ["config", "trace2.normalTarget", join(dir, "normal.txt")]);
+    assert.deepEqual(await allRoutes(handler(root), m[2]!), [200, 200, 200, 200]);
+    assert.deepEqual(readdirSync(dir), []);
   });
 
   test("inherited GIT_* variables are dropped: no trace files, no borrowed objects, no other repository", async () => {

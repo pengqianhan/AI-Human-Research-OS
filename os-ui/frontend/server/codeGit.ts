@@ -31,8 +31,9 @@ import type { ApiContext, ApiHandler, ApiResponse, RunResult } from "./types.ts"
  *    hook, filter, or driver.
  * 2. Read-only and confined. The repository is a plain .git folder inside the
  *    workspace that keeps its objects to itself (`refusal`), every diff
- *    compares two committed trees, attributes come from the commit, and no
- *    command writes to .git.
+ *    compares two committed trees, nothing in the working tree is read
+ *    (attributes come from the commit; .mailmap and .gitmodules are not
+ *    opened), and no command writes to .git.
  */
 
 export interface Source {
@@ -139,8 +140,11 @@ const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
  * - --no-replace-objects: a commit shows its own content, not a replacement's.
  * - --no-optional-locks: the documented switch for readers in the background.
  * - --literal-pathspecs: a path is a path; no globs, no magic.
- * - core.fsmonitor=false: a gitlink makes show read the index, which would
- *   start the configured monitor.
+ * - core.fsmonitor=false: a gitlink made show read the index, which started
+ *   the configured monitor; --ignore-submodules=none (below) stops that read,
+ *   so this one is kept for a Git that reads the index some other way.
+ * - core.attributesFile=<null device>: no attributes from a file the
+ *   repository's config names anywhere (a FIFO there stalls every command).
  * - core.quotePath=false: names in diff headers stay readable.
  * Per command, --attr-source=<commit> reads .gitattributes from the commit
  * instead of the working tree.
@@ -156,6 +160,8 @@ function guardArgs(gitDir: string, top: string): string[] {
     "-c",
     "core.fsmonitor=false",
     "-c",
+    `core.attributesFile=${devNull}`,
+    "-c",
     "core.quotePath=false",
   ];
 }
@@ -166,6 +172,9 @@ const HISTORY = [
   "--no-ext-diff", // log and show leave external diff off unless --ext-diff; kept as stated intent
   "--no-textconv", // diff.<driver>.textconv, and the filters its temporary files go through
   "--submodule=short", // diff.submodule=log|diff would read the submodule's repository in the working tree
+  "--ignore-submodules=none", // else the working tree's .gitmodules is read, and its `ignore` (or diff.ignoreSubmodules) hides gitlink changes
+  "--no-use-mailmap", // %an is printed, but log.mailmap still reads .mailmap and mailmap.file (a FIFO there stalls every command)
+  `-O${devNull}`, // diff.orderFile names a file anywhere; a missing one fails every diff, a FIFO stalls it
   "--no-follow", // log.follow would follow a path out of the project (a file once renamed to the project's name)
   "--no-renames", // a moved file is a deletion and an addition, so -z output has one path per entry
   "--diff-merges=first-parent", // a merge is compared with its first parent, in the plain raw format
@@ -181,10 +190,11 @@ const HISTORY = [
  * GIT_* variable (GIT_DIR, GIT_EXTERNAL_DIFF, GIT_CONFIG_*, GIT_TRACE*,
  * GIT_ALTERNATE_OBJECT_DIRECTORIES, ...), case-insensitively as Windows
  * names them, and with the user's global and the system configuration not
- * read: only protected configuration can set trace2.*Target, which writes
- * trace files, and every other key there the repository's own config could
- * set as well, so the guards above cover it. The null device is the
- * documented way to skip GIT_CONFIG_GLOBAL.
+ * read. trace2.*Target there writes trace files (Git 2.55 honoured it from
+ * ~/.gitconfig and $XDG_CONFIG_HOME/git/config, not from the repository's
+ * config, GIT_CONFIG_COUNT or GIT_CONFIG_PARAMETERS); every other key there
+ * the repository's own config could set as well, so the guards above cover
+ * it. The null device is the documented way to skip GIT_CONFIG_GLOBAL.
  */
 export function gitEnv(inherited: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
@@ -401,7 +411,9 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
     return problem;
   }
 
-  return async (req) => {
+  return async (req) => withoutWorkspace(await answer(req), ctx.repoRoot);
+
+  async function answer(req: Parameters<ApiHandler>[0]): Promise<ApiResponse> {
     try {
       if (req.method !== "GET") return json(405, { error: "GET only" });
       if (!["/", "/log", "/commit", "/diff"].includes(req.path)) return json(404, { error: `no endpoint ${req.path}` });
@@ -482,7 +494,9 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
           more = true;
           if (commits.length === 0) refuse(500, `the commit after the first ${skip} is larger than the ${CAP.log / KIB} KiB cap`);
         }
-        return json(200, { ...source, commits: commits.slice(0, PAGE), more } satisfies Log);
+        const page = commits.slice(0, PAGE);
+        // The next skip would be refused past 10000, so the list ends there.
+        return json(200, { ...source, commits: page, more: more && skip + page.length <= MAX_SKIP } satisfies Log);
       }
 
       const full = await resolve(hash!);
@@ -565,7 +579,29 @@ export function codeGitHandler(ctx: ApiContext, git = "git"): ApiHandler {
       if (error instanceof Answer) return error.response;
       return json(500, { error: errorText(error) });
     }
-  };
+  }
+}
+
+/**
+ * An error answer with the workspace's absolute path (Git names it in
+ * "fatal: ..." lines, as given or real, with either slash on Windows)
+ * written as <workspace>, so a plugin page never learns where it lives.
+ */
+function withoutWorkspace(response: ApiResponse, repoRoot: string): ApiResponse {
+  const body = response.body as { error?: unknown };
+  if (response.status < 400 || typeof body.error !== "string") return response;
+  let real = repoRoot;
+  try {
+    real = realpathSync.native(repoRoot);
+  } catch {
+    // a workspace that is gone has only the name it was given
+  }
+  const roots = [...new Set([real, repoRoot].flatMap((r) => [r, r.replace(/\\/g, "/")]))]
+    .filter((r) => r.length > 1)
+    .sort((a, b) => b.length - a.length);
+  let error = body.error;
+  for (const root of roots) error = error.split(root).join("<workspace>");
+  return { status: response.status, body: { ...body, error } };
 }
 
 export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
@@ -585,7 +621,8 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *   gpg.program, gpg.<format>.program,
  *     gpg.ssh.allowedSignersFile, log.showSignature --no-show-signature (no %G placeholder is used)
  *   core.fsmonitor, core.fsmonitorHookVersion,
- *     fsmonitor.*                                    -c core.fsmonitor=false
+ *     fsmonitor.*                                    --ignore-submodules=none, which stops the index read a gitlink
+ *                                                    caused, and -c core.fsmonitor=false for any other read
  *   diff.submodule, status.submoduleSummary          --submodule=short (status.* is not read by show)
  *   log.follow                                       --no-follow
  *   extensions.partialClone, remote.<name>.promisor,
@@ -606,9 +643,12 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *     GIT_ALTERNATE_OBJECT_DIRECTORIES, GIT_EXEC_PATH,
  *     GIT_ATTR_SOURCE, ...)                          removed by gitEnv
  *   core.worktree                                    --work-tree
- *   core.attributesFile and in-tree .gitattributes   --attr-source=<commit> (in-tree ones); the repository's
- *                                                    core.attributesFile and info/attributes still apply, and can
- *                                                    only pick a driver, which the flags above neutralise
+ *   in-tree .gitattributes                           --attr-source=<commit>
+ *   core.attributesFile                              -c core.attributesFile=<null device>
+ *   diff.orderFile                                   -O<null device> (a missing file failed every diff)
+ *   mailmap.file, mailmap.blob, in-tree .mailmap     --no-use-mailmap (read even though %an is printed)
+ *   diff.ignoreSubmodules, submodule.<name>.ignore
+ *     in the working tree's .gitmodules              --ignore-submodules=none (which also stops the read)
  *
  * Cannot be reached by these commands
  *   core.pager, pager.<cmd>, PAGER                   a pager starts only when stdout is a terminal; it is a pipe
@@ -633,10 +673,11 @@ export const codeGitApi: HandlerFactory = (ctx) => codeGitHandler(ctx);
  *                                                    GIT_TEST_ASSUME_DIFFERENT_OWNER=1 on 2.55: discovery and -C
  *                                                    refuse, --git-dir reads), so these guards are the only ones
  *
- * Read, and harmless here
+ * Read, and left as they are
  *   include.path, includeIf.*                        more config, under the same guards
- *   diff.orderFile, mailmap.file, mailmap.blob       a file Git reads to order paths or map names; %an is
- *                                                    printed, never %aN, and nothing of the file is returned
+ *   info/attributes                                  inside the checked .git; it can only pick a driver
  *   info/grafts                                      honoured (deprecated; --no-replace-objects does not cover it);
  *                                                    it lies inside the checked .git and changes parents only
+ *   a FIFO among the files Git opens in .git         stalls each command until the 10 s limit, then a 500
+ *                                                    (seen with info/attributes); no option skips those reads
  */
