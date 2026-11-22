@@ -55,8 +55,11 @@ const RESERVED_IDS = new Set(["research-os"]);
 /** URL paths below a plugin's origin that the host keeps for itself. */
 const RESERVED_ENTRIES = ["api", "_os"];
 
-/** Windows device names, which name a device in any folder (CON, NUL, COM1.txt, ...). */
-const DEVICE = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
+/**
+ * Windows device names, which name a device in any folder (CON, NUL, COM1.txt,
+ * CONIN$, ...); COM and LPT also take a superscript 1, 2 or 3.
+ */
+const DEVICE = /^(con|prn|aux|nul|conin\$|conout\$|com[0-9¹²³]|lpt[0-9¹²³])(\..*)?$/i;
 
 /**
  * A URL path as a safe relative path, or null. Percent-decoding happens once,
@@ -70,6 +73,15 @@ export function safeRelative(pathname: string): string | null {
   } catch {
     return null;
   }
+  return safeDecodedRelative(decoded);
+}
+
+/**
+ * A path that is decoded already (a query value the URL parser has decoded)
+ * as a safe relative path, or null: safeRelative's checks, without decoding
+ * it again.
+ */
+export function safeDecodedRelative(decoded: string): string | null {
   if (/[\\:\0]/.test(decoded)) return null;
   const segments = decoded.split("/").filter((s) => s !== "");
   if (segments.some((s) => s === "." || s === ".." || DEVICE.test(s))) return null;
