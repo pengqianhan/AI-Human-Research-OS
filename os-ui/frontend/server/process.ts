@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { accessSync, constants, readFileSync, statSync } from "node:fs";
+import { accessSync, constants, readFileSync, realpathSync, statSync } from "node:fs";
 import { posix, resolve, win32 } from "node:path";
 import type { RunResult, Runner } from "./types.ts";
 
@@ -23,14 +23,38 @@ export const isExecutableFile: Exists = (file) => {
  * means it, so a program planted in a workspace could run in place of the
  * one meant. An absolute name is taken as it is; a name with a folder in it
  * is refused. On Windows only <name>.com and <name>.exe count, which spawn
- * runs without a shell; a .bat or .cmd never does. The client's which()
- * (client/src/main/python.ts) is the older copy of these rules, which still
- * accepts relative entries.
+ * runs without a shell; a .bat or .cmd never does. With `outside`, an entry
+ * or a program whose real path lies inside that folder is skipped too (a
+ * workspace's node_modules/.bin, which `npm run` puts first on PATH, or a
+ * link elsewhere that points into it), and an absolute name there is
+ * refused. The client's which() (client/src/main/python.ts) is the older copy
+ * of these rules, which still accepts relative entries.
  */
-export function findProgram(name: string, env: NodeJS.ProcessEnv, platform: NodeJS.Platform = process.platform, exists: Exists = isExecutableFile): string | null {
+export function findProgram(
+  name: string,
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform = process.platform,
+  exists: Exists = isExecutableFile,
+  outside?: string,
+): string | null {
   const windows = platform === "win32";
   const path = windows ? win32 : posix;
-  if (path.isAbsolute(name)) return name;
+  const real = (p: string): string | null => {
+    try {
+      return realpathSync.native(p);
+    } catch {
+      return null;
+    }
+  };
+  const root = outside === undefined ? null : (real(outside) ?? outside);
+  const fold = (p: string) => (windows ? p.toLowerCase() : p);
+  /** Whether `p` (resolved) lies in `outside`; a path that cannot be resolved counts as inside, so it is not used. */
+  const within = (p: string): boolean => {
+    if (root === null) return false;
+    const r = real(p);
+    return r === null || fold(r) === fold(root) || fold(r).startsWith(fold(root.endsWith(path.sep) ? root : root + path.sep));
+  };
+  if (path.isAbsolute(name)) return within(name) ? null : name;
   if (/[\\/]/.test(name)) return null;
   const key = Object.keys(env).find((k) => (windows ? k.toUpperCase() === "PATH" : k === "PATH"));
   const absolute = windows ? (dir: string) => /^(?:[A-Za-z]:[\\/]|\\\\[^\\])/.test(dir) : (dir: string) => dir.startsWith("/");
@@ -40,9 +64,10 @@ export function findProgram(name: string, env: NodeJS.ProcessEnv, platform: Node
     .filter(absolute);
   const names = !windows ? [name] : /\.[^.]*$/.test(name) ? (/\.(?:com|exe)$/i.test(name) ? [name] : []) : [`${name}.com`, `${name}.exe`];
   for (const dir of dirs) {
+    if (within(dir)) continue;
     for (const candidate of names) {
       const file = path.join(dir, candidate);
-      if (exists(file)) return file;
+      if (exists(file) && !within(file)) return file;
     }
   }
   return null;
@@ -71,7 +96,7 @@ export function processRunner(env: NodeJS.ProcessEnv = process.env): Runner {
       const childEnv = options.env ? options.env(base) : base;
       let program = bin;
       if (options.lookup === "path") {
-        const found = findProgram(bin, childEnv);
+        const found = findProgram(bin, childEnv, process.platform, isExecutableFile, options.lookupOutside);
         if (found === null) {
           fail(Object.assign(new Error(`spawn ${bin} ENOENT (looked in the absolute PATH entries only)`), { code: "ENOENT" }));
           return;

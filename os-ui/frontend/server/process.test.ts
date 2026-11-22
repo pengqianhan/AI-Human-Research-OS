@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, test } from "node:test";
 import { failureText, findProgram, processRunner, uvPython } from "./process.ts";
@@ -126,6 +126,25 @@ describe("findProgram", () => {
     assert.equal(findProgram("./git", env, "linux", files("./git")), null);
     assert.equal(findProgram("/opt/git", env, "linux", files()), "/opt/git", "an absolute name is taken as it is");
     assert.equal(findProgram("git", {}, "linux", files("/usr/bin/git")), null, "no PATH, nothing found");
+  });
+
+  test("with `outside`: no entry or program whose real path lies inside it, links included", { skip: process.platform === "win32" ? "the folders and links here are POSIX ones" : false }, () => {
+    const inside = tempTree();
+    const elsewhere = tempTree();
+    const links = tempTree();
+    const bin = join(inside, "node_modules", ".bin");
+    mkdirSync(bin, { recursive: true });
+    for (const dir of [bin, elsewhere]) {
+      writeFileSync(join(dir, "prog"), "#!/bin/sh\n");
+      chmodSync(join(dir, "prog"), 0o755);
+    }
+    symlinkSync(join(bin, "prog"), join(links, "prog"));
+    const env = { PATH: `${bin}/:${links}:${elsewhere}` };
+    assert.equal(findProgram("prog", env), join(bin, "prog"), "without outside, the first entry wins");
+    assert.equal(findProgram("prog", env, "linux", undefined, inside), join(elsewhere, "prog"), "the entry inside and the link into it are skipped");
+    assert.equal(findProgram("prog", { PATH: `${bin}:${links}` }, "linux", undefined, inside), null);
+    assert.equal(findProgram(join(bin, "prog"), {}, "linux", undefined, inside), null, "an absolute name inside is refused");
+    assert.equal(findProgram(join(elsewhere, "prog"), {}, "linux", undefined, inside), join(elsewhere, "prog"));
   });
 
   test("Windows: Path in any case, drive or UNC entries only, .com and .exe only, quotes stripped", () => {

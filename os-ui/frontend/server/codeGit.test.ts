@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -863,6 +863,9 @@ describe("git itself", () => {
     assert.deepEqual(parseGitVersion("git version 2.39.5 (Apple Git-154)\n"), [2, 39, 5]);
     assert.deepEqual(parseGitVersion("git version 2.45\n"), [2, 45, 0]);
     assert.equal(parseGitVersion("command not found"), null);
+    for (const other of ["v22.23.1\n", "2.45.0\n", " git version 2.45.0", "ERROR: Invalid argument or option - '--version'.\n"]) {
+      assert.equal(parseGitVersion(other), null, `no other program passes the floor: ${other}`);
+    }
     assert.deepEqual([...MIN_GIT], [2, 45]);
   });
 
@@ -878,7 +881,7 @@ describe("git itself", () => {
 
   test("the environment git gets: no GIT_* in any case, no global or system config, the rest kept", () => {
     const env = gitEnv({ PATH: "/bin", HOME: "/h", GIT_DIR: "/x", git_external_diff: "/y", Git_Config_Count: "1", GITX: "kept", PYTHONIOENCODING: "utf-8" });
-    assert.deepEqual(env, { PATH: "/bin", HOME: "/h", GITX: "kept", PYTHONIOENCODING: "utf-8", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_GRAFT_FILE: "/dev/null" });
+    assert.deepEqual(env, { PATH: "/bin", HOME: "/h", GITX: "kept", PYTHONIOENCODING: "utf-8", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_GRAFT_FILE: "/dev/null", GIT_ALLOC_LIMIT: "256m" });
   });
 
   test("every call runs in the repository's top with the guards no output can show (--work-tree, --no-optional-locks, core.fsmonitor=false, --no-ext-diff)", async () => {
@@ -1193,15 +1196,19 @@ describe("which git runs", () => {
     assert.ok(!existsSync(marker), existsSync(marker) ? readFileSync(marker, "utf8") : "");
   });
 
-  test("Windows: a git.exe planted in the workspace or the project never runs", { skip: WINDOWS ? false : "spawn() tries the working folder before PATH on Windows only" }, async () => {
+  test("Windows: a git.exe planted in the workspace or the project never runs", { skip: WINDOWS ? false : "spawn() tries the working folder before PATH on Windows only" }, async (t) => {
+    const where = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "where.exe");
+    if (!existsSync(where)) {
+      t.skip(`no ${where} to plant`);
+      return;
+    }
     const root = workspace();
     const own = init(join(root, "projects-folder", P));
     const m = fastImport(own, [{ mark: 1, message: "one", files: [["a.txt", "a\n"]] }]);
-    // A copy of node as git.exe. Run in git's place it would answer --version
-    // with its own version, which passes the floor, then exit 9 on git's
-    // options, so every route would fail; the answers below are the signal
-    // (a NODE_OPTIONS preload never runs: node stops on the bad option first).
-    for (const target of [root, own]) copyFileSync(process.execPath, join(target, "git.exe"));
+    // A copy of where.exe as git.exe. Run in git's place, it prints no
+    // "git version" for --version, so the probe would answer that problem,
+    // and it fails git's other commands; the answers below are the signal.
+    for (const target of [root, own]) copyFileSync(where, join(target, "git.exe"));
     const api = handler(root);
     assert.deepEqual(await body<Summary>(get(api, "/", { project: P })), { repo: "project", root: "projects-folder/P", filter: ".", head: { hash: m[1]!, short: m[1]!.slice(0, 7), date: "2026-09-21" } });
     assert.deepEqual((await body<Log>(get(api, "/log", { project: P }))).commits.map((c) => c.hash), [m[1]]);
@@ -1234,44 +1241,64 @@ describe("bounded work", () => {
     assert.match((await body<Diff>(get(api, "/diff", { project: P, hash: m[1]!, path: "big.txt" }))).diff, /\nBinary files \/dev\/null and b\/big\.txt differ\n/);
   });
 
-  test("at most four git processes at once and sixteen waiting; past that a request is 503", async () => {
-    const root = workspace();
-    init(root);
+  test("each project gets half: 2 of 4 git processes and 10 of 20 requests; past that 503, before .git is walked", { timeout: 20_000 }, async () => {
+    // Three projects with their own .git: P busy, F the other project, R refused (a gitfile).
+    const root = tempTree({ "projects-folder/P/PROJECT_MEMORY.md": "# P\n", "projects-folder/F/PROJECT_MEMORY.md": "# F\n", "projects-folder/R/PROJECT_MEMORY.md": "# R\n" });
+    for (const name of ["P", "F"]) init(join(root, "projects-folder", name));
+    writeFileSync(join(root, "projects-folder", "R", ".git"), "gitdir: /elsewhere\n");
     let open = true;
     let release: () => void = () => {};
     const gate = new Promise<void>((go) => (release = go));
-    let running = 0;
-    let most = 0;
+    const running = new Map<string, number>();
+    const most = new Map<string, number>();
+    const total = () => [...running.values()].reduce((a, b) => a + b, 0);
+    let onRun: () => void = () => {};
     const { run } = fakeRunner(async (call) => {
       if (call.command[1] === "--version") return ok("git version 2.55.0\n");
-      running++;
-      most = Math.max(most, running);
+      const key = call.cwd.endsWith(`${join("projects-folder", "F")}`) ? "F" : "P";
+      running.set(key, (running.get(key) ?? 0) + 1);
+      most.set(key, Math.max(most.get(key) ?? 0, running.get(key)!));
+      onRun();
       if (!open) await gate;
-      running--;
+      running.set(key, running.get(key)! - 1);
       return ok(call.command.includes("rev-parse") ? `${"a".repeat(40)}\n` : "");
     });
     const api = codeGitHandler(context(root, { run }), "git", logged);
     assert.equal((await get(api, "/", { project: P })).status, 200, "the probe is kept from here on");
     open = false;
-    most = 0;
-    // No timing: nothing can answer before the gate opens except the requests turned away.
-    let settled = 0;
-    let fiveSettled: () => void = () => {};
-    const five = new Promise<void>((go) => (fiveSettled = go));
-    const pending = Array.from({ length: 25 }, () =>
-      get(api, "/", { project: P }).then((r) => {
-        if (++settled === 5) fiveSettled();
-        return r;
-      }),
-    );
-    await five;
-    assert.equal(running, 4, "four run while sixteen wait");
-    assert.equal(settled, 5, "only the five turned away have answered");
+    most.clear();
+    // No timing: wait for counts the handler alone decides.
+    /** `n` requests for `project`; `away` resolves once `expected` of them have been turned away. */
+    const send = (project: string, n: number, expected: number) => {
+      let left = expected;
+      let done: () => void = () => {};
+      const away = new Promise<void>((go) => (done = go));
+      const answers = Array.from({ length: n }, () =>
+        get(api, "/", { project }).then((r) => {
+          if (r.status === 503 && --left === 0) done();
+          return r;
+        }),
+      );
+      return { answers, away };
+    };
+    const p = send(P, 25, 15);
+    await p.away;
+    assert.deepEqual([running.get("P"), total()], [2, 2], "P runs 2 while 8 more of its 10 wait");
+    const fourRunning = new Promise<void>((go) => (onRun = () => total() === 4 && go()));
+    const f = send("F", 11, 1);
+    await Promise.all([fourRunning, f.away]);
+    assert.deepEqual([running.get("P"), running.get("F")], [2, 2], "F runs at once beside the busy P");
+    const refused = await get(api, "/", { project: "R" });
+    assert.deepEqual([refused.status, refused.body], [503, { error: "the Code view is busy with other requests; try again" }], "20 in flight: turned away before its .git is looked at");
     release();
-    const statuses = (await Promise.all(pending)).map((r) => r.status);
-    assert.equal(most, 4);
-    assert.deepEqual([statuses.filter((s) => s === 200).length, statuses.filter((s) => s === 503).length], [20, 5]);
-    assert.equal((await get(api, "/", { project: P })).status, 200, "and the slots come back");
+    const statuses = async (answers: Promise<ApiResponse>[]) => {
+      const s = (await Promise.all(answers)).map((r) => r.status);
+      return [s.filter((x) => x === 200).length, s.filter((x) => x === 503).length];
+    };
+    assert.deepEqual(await statuses(p.answers), [10, 15]);
+    assert.deepEqual(await statuses(f.answers), [10, 1]);
+    assert.deepEqual([most.get("P"), most.get("F")], [2, 2]);
+    assert.match(((await get(api, "/", { project: "R" })).body as { problem: string }).problem, /is a file that points/, "and admitted again once the others are done");
   });
 });
 
@@ -1288,14 +1315,14 @@ describe("which commit a hash names", () => {
     assert.deepEqual([commit.hash, commit.subject], [m[1], "first"]);
   });
 
-  test("a rev-parse that times out is a failure (500), not a missing commit", async () => {
+  test("a commit lookup that times out is a failure (500), not a missing commit", async () => {
     const root = workspace();
     init(root);
     const { run } = fakeRunner((call) =>
       call.command[1] === "--version" ? ok("git version 2.55.0\n") : { code: -1, stdout: "", stderr: "\n[timed out after 10 s]", timedOut: true },
     );
     const r = await get(codeGitHandler(context(root, { run }), "git", logged), "/commit", { project: P, hash: NO_SUCH });
-    assert.deepEqual([r.status, r.body], [500, { error: "git rev-parse took longer than 10 s" }]);
+    assert.deepEqual([r.status, r.body], [500, { error: "git cat-file -t took longer than 10 s" }]);
   });
 
   test("a hash naming something other than a commit is 404 with a fixed text, though Git says why", async () => {
@@ -1403,5 +1430,99 @@ describe("protocol.allow=never under --no-lazy-fetch", { skip: NO_SCRIPTS }, () 
     };
     assert.deepEqual(catFile(["--no-lazy-fetch"]), [], "protocol.allow=never alone stops the ssh command");
     assert.deepEqual(catFile(["--no-lazy-fetch", "protocol.allow=never"]), ["ssh"], "without both, the fetch runs it (the hazard is real)");
+  });
+});
+
+/** Writes a commit object of about `bytes` (a short header, then repeated text), streamed to git, never held in this process. */
+function bigCommit(root: string, parent: string, bytes: number): Promise<string> {
+  return new Promise((done, fail) => {
+    const child = spawn("git", ["hash-object", "-t", "commit", "-w", "--stdin", "--literally"], { cwd: root, env: FIXTURE_ENV });
+    let out = "";
+    child.stdout.on("data", (d: Buffer) => (out += d.toString()));
+    child.on("error", fail);
+    child.on("close", (code) => (code === 0 ? done(out.trim()) : fail(new Error(`hash-object exited ${code}`))));
+    const tree = fx(root, ["rev-parse", `${parent}^{tree}`]);
+    child.stdin.write(`tree ${tree}\nparent ${parent}\nauthor A U Thor <author@example.com> 1790000000 +0000\ncommitter A U Thor <author@example.com> 1790000000 +0000\n\nhuge\n\n`);
+    const chunk = Buffer.from("a line of the message\n".repeat(50_000));
+    let left = bytes;
+    const pump = () => {
+      while (left > 0) {
+        const piece = left >= chunk.length ? chunk : chunk.subarray(0, left);
+        left -= piece.length;
+        if (!child.stdin.write(piece)) return void child.stdin.once("drain", pump);
+      }
+      child.stdin.end();
+    };
+    pump();
+  });
+}
+
+describe("what Git looks up by name, which git it starts, and what it loads whole", () => {
+  test("a FIFO in .git named like HEAD's full hash is never opened (core.warnAmbiguousRefs=false)", { skip: WINDOWS ? "Windows has no FIFOs in the file system" : false, timeout: 90_000 }, async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [
+      { mark: 1, message: "one", files: [["projects-folder/P/a.txt", "1\n"]] },
+      { mark: 2, message: "two", files: [["projects-folder/P/a.txt", "1\n2\n"]] },
+    ]);
+    for (const hash of [m[1]!, m[2]!]) assert.equal(spawnSync("mkfifo", [join(root, ".git", hash)]).status, 0);
+    const api = handler(root);
+    for (const [path, extra] of [["/", {}], ["/log", {}], ["/commit", { hash: m[1]! }], ["/diff", { hash: m[2]!, path: "a.txt" }]] as const) {
+      const r = await get(api, path, { project: P, ...extra });
+      assert.equal(r.status, 200, `${path}: ${JSON.stringify(r.body)}`);
+    }
+  });
+
+  test("a commit object over GIT_ALLOC_LIMIT (256m) fails with the fixed text instead of being loaded", { timeout: 120_000 }, async () => {
+    const root = workspace();
+    init(root);
+    const m = fastImport(root, [{ mark: 1, message: "one", files: [["projects-folder/P/a.txt", "1\n"]] }]);
+    const huge = await bigCommit(root, m[1]!, 270_000_000);
+    fx(root, ["update-ref", "refs/heads/main", huge]);
+    const from = LOGGED.length;
+    const api = handler(root);
+    const r = await get(api, "/", { project: P });
+    assert.deepEqual([r.status, r.body], [500, { error: "git rev-parse HEAD failed (exit 128)" }]);
+    assert.match(LOGGED.slice(from).join("\n"), /over limit/, "Git stopped at the allocation limit");
+    const c = await get(api, "/commit", { project: P, hash: huge });
+    assert.deepEqual([c.status, c.body], [500, { error: "git rev-parse HEAD failed (exit 128)" }], "a failure, not a missing commit: the hash is looked up by its header (cat-file -t)");
+  });
+
+  test("a git in an absolute PATH entry inside the workspace, or linked into it from outside, never runs", { skip: NO_SCRIPTS }, async () => {
+    const root = workspace();
+    const own = init(join(root, "projects-folder", P));
+    fastImport(own, [{ mark: 1, message: "one", files: [["a.txt", "a\n"]] }]);
+    const marker = join(mkdtempSync(join(tmpdir(), "os-ui-git-planted-")), "ran");
+    const bin = join(root, "node_modules", ".bin");
+    mkdirSync(bin, { recursive: true });
+    writeFileSync(join(bin, "git"), `#!/bin/sh\necho "$0 $*" >> '${marker}'\nexit 0\n`);
+    chmodSync(join(bin, "git"), 0o755);
+    const links = mkdtempSync(join(tmpdir(), "os-ui-git-links-"));
+    symlinkSync(join(bin, "git"), join(links, "git"));
+    // As `npm run` puts <workspace>/node_modules/.bin first, with a trailing slash.
+    for (const PATH of [`${bin}/:${process.env.PATH}`, `${links}:${process.env.PATH}`]) {
+      const api = handler(root, { ...cleanEnv(), PATH });
+      assert.equal((await get(api, "/", { project: P })).status, 200, PATH.slice(0, 80));
+      assert.equal((await get(api, "/log", { project: P })).status, 200);
+    }
+    const absolute = await body(get(handler(root, cleanEnv(), join(bin, "git")), "/", { project: P }));
+    assert.deepEqual(absolute, { repo: null, problem: "git was not found; see Settings" }, "an absolute git inside the workspace is refused too");
+    assert.ok(!existsSync(marker), existsSync(marker) ? readFileSync(marker, "utf8") : "");
+  });
+
+  test("objects/pack/multi-pack-index.d/ of plain files is accepted; a link in it is refused", (t) => {
+    const repo = init(mkdtempSync(join(tmpdir(), "os-ui-git-midx-")));
+    const gitDir = join(repo, ".git");
+    const layers = join(gitDir, "objects", "pack", "multi-pack-index.d");
+    mkdirSync(layers, { recursive: true });
+    writeFileSync(join(layers, "multi-pack-index-chain"), "");
+    assert.equal(refusal(gitDir, lstatSync(gitDir), ".git"), null);
+    try {
+      symlinkSync(join(gitDir, "HEAD"), join(layers, "multi-pack-index-1.midx"));
+    } catch (error) {
+      t.skip(`cannot create a link here: ${(error as Error).message}`);
+      return;
+    }
+    assert.match(refusal(gitDir, lstatSync(gitDir), ".git") ?? "", /has objects\/pack\/multi-pack-index\.d\/multi-pack-index-1\.midx, which is not a plain file/);
   });
 });

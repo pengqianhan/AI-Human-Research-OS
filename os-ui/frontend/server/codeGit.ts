@@ -160,9 +160,26 @@ const TIMEOUT_MS = 10_000;
 const KIB = 1024;
 const MIB = 1024 * KIB;
 const CAP = { line: 4 * KIB, log: 256 * KIB, list: 512 * KIB, message: 64 * KIB, diff: 1024 * KIB, stderr: 16 * KIB };
-/** Git processes one handler runs at once, and requests that may wait for one; past both, a request is 503. */
+/**
+ * Per handler, that is per open workspace: requests in flight (each project
+ * at most half), and git processes running (each project at most half).
+ * A request past its share is 503 before anything is read.
+ */
+const MAX_REQUESTS = 20;
+const PROJECT_REQUESTS = 10;
 const MAX_GIT = 4;
-const MAX_WAITING = 16;
+const PROJECT_GIT = 2;
+/**
+ * GIT_ALLOC_LIMIT: Git dies rather than make one heap allocation larger than
+ * this (wrapper.c's memory_limit_check, in xmalloc, xmallocz, xrealloc,
+ * xcalloc, which xdiff uses too; not mmap). Commit and tree objects are read
+ * whole whatever core.bigFileThreshold says: a 400 MB commit message took 392
+ * MB in log -1 and 773 MB in show -s, and dies at 9 MB with this limit. The
+ * largest ordinary allocation under the 4 MiB blob threshold is xdiff's
+ * diagonal array, about 134 MB for two 4 MiB files of one-byte lines.
+ */
+const ALLOC_LIMIT = "256m";
+const BUSY = "the Code view is busy with other requests; try again";
 const SHORTSTAT = /^ (\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?$/;
 const RAW = /^:(\d{6}) (\d{6}) ([0-9a-f]+) ([0-9a-f]+) ([A-Z])\d*$/;
 const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
@@ -187,6 +204,8 @@ const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
  * - core.bigFileThreshold=4m: a blob over 4 MiB is binary, so Git neither
  *   loads nor diffs it (two 500 MB text blobs took 3.4 GB in log --shortstat).
  * - core.quotePath=false: names in diff headers stay readable.
+ * - core.warnAmbiguousRefs=false: for a full hash Git otherwise looks for a
+ *   ref of that name, opening .git/<hash> (a FIFO there stalled every route).
  * Per command that diffs, --attr-source=<the empty tree> (EMPTY_TREE): no
  * .gitattributes from the working tree or the commit.
  */
@@ -208,6 +227,8 @@ export function guardArgs(gitDir: string, top: string): string[] {
     "core.bigFileThreshold=4m",
     "-c",
     "core.quotePath=false",
+    "-c",
+    "core.warnAmbiguousRefs=false",
   ];
 }
 
@@ -250,12 +271,13 @@ export function gitEnv(inherited: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   env.GIT_CONFIG_NOSYSTEM = "1";
   env.GIT_CONFIG_GLOBAL = DEV_NULL;
   env.GIT_GRAFT_FILE = DEV_NULL;
+  env.GIT_ALLOC_LIMIT = ALLOC_LIMIT;
   return env;
 }
 
-/** "git version 2.47.1.windows.2" → [2, 47, 1]. */
+/** "git version 2.47.1.windows.2" → [2, 47, 1]; anything not starting "git version " → null, so no other program passes the floor. */
 export function parseGitVersion(text: string): [number, number, number] | null {
-  const m = /(\d+)\.(\d+)(?:\.(\d+))?/.exec(text);
+  const m = /^git version (\d+)\.(\d+)(?:\.(\d+))?/.exec(text);
   return m === null ? null : [Number(m[1]), Number(m[2]), Number(m[3] ?? 0)];
 }
 
@@ -402,7 +424,8 @@ export function refusal(gitDir: string, stat: Stats, label: string, maxEntries =
   if (lstatOrNull(join(gitDir, "HEAD")) === null) return why("has no HEAD");
 
   /** Every entry below `dir`: folders when `folders`, else plain files under `cap` (no size check when cap is Infinity). */
-  const walk = (dir: string, cap: number, folders: boolean): string | null => {
+  /** `folders`: every subfolder is walked the same way (true), none is allowed (false), or only the one named (walked with none below it). */
+  const walk = (dir: string, cap: number, folders: boolean | string): string | null => {
     const st = lstatOrNull(dir);
     if (st === null) return null;
     if (!st.isDirectory()) return why(`has ${rel(dir)}, which is not a folder`);
@@ -410,8 +433,8 @@ export function refusal(gitDir: string, stat: Stats, label: string, maxEntries =
     if (entries === null) return tooMany();
     for (const entry of entries) {
       const path = join(dir, entry.name);
-      if (entry.isDirectory() && folders) {
-        const problem = walk(path, cap, folders);
+      if (entry.isDirectory() && (folders === true || folders === entry.name)) {
+        const problem = walk(path, cap, folders === true);
         if (problem !== null) return problem;
       } else if (!entry.isFile()) {
         return why(`has ${rel(path)}, which is not a plain file`);
@@ -422,11 +445,12 @@ export function refusal(gitDir: string, stat: Stats, label: string, maxEntries =
     }
     return null;
   };
-  const checks: [string, number, boolean][] = [
+  const checks: [string, number, boolean | string][] = [
     [join(gitDir, "info"), LIST_FILE, false],
     [join(gitDir, "refs"), LOOSE_REF, true],
     [join(gitDir, "reftable"), INDEX_FILE, false],
-    [join(gitDir, "objects", "pack"), Infinity, false],
+    // `git multi-pack-index write --incremental` keeps its layers in multi-pack-index.d/.
+    [join(gitDir, "objects", "pack"), Infinity, "multi-pack-index.d"],
   ];
   for (const [dir, cap, folders] of checks) {
     const problem = walk(dir, cap, folders);
@@ -570,37 +594,77 @@ function failed(step: string, result: RunResult): string {
 /**
  * The handler. `git` is an absolute path (S6a-2 may pass the one Settings
  * found) or a bare name, looked up in the absolute PATH entries of the
- * runner's environment; anything else is "git was not found". `log` takes
- * what Git printed on failures, for the server's own log.
+ * runner's environment; either way never a program whose real path lies in
+ * the workspace, and anything else is "git was not found". `log` takes what
+ * Git printed on failures, for the server's own log.
  */
 export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string) => void = (line) => console.error(line)): ApiHandler {
-  const lookup: RunOptions["lookup"] = isAbsolute(git) ? undefined : "path";
   const usable = isAbsolute(git) || !/[\\/]/.test(git);
   let ready: Promise<string | null> | null = null;
-  let active = 0;
-  const waiting: (() => void)[] = [];
 
-  /** Runs `work` in one of MAX_GIT slots, after up to MAX_WAITING others; past that, 503. */
-  async function limited<T>(work: () => Promise<T>): Promise<T> {
-    if (active < MAX_GIT) active++;
-    else if (waiting.length < MAX_WAITING) await new Promise<void>((go) => waiting.push(go));
-    else refuse(503, "the Code view is busy with other requests; try again");
+  // Requests in flight, and git processes running, each per handler and per project.
+  let requests = 0;
+  const requestsBy = new Map<string, number>();
+  let running = 0;
+  const runningBy = new Map<string, number>();
+  const queue: { key: string; go: () => void }[] = [];
+  const bump = (map: Map<string, number>, key: string, by: number) => {
+    const n = (map.get(key) ?? 0) + by;
+    if (n === 0) map.delete(key);
+    else map.set(key, n);
+  };
+
+  /** Counts a request for `project` against both shares, or 503; returns its release. */
+  function admit(project: string): () => void {
+    if (requests >= MAX_REQUESTS || (requestsBy.get(project) ?? 0) >= PROJECT_REQUESTS) refuse(503, BUSY);
+    requests++;
+    bump(requestsBy, project, 1);
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      requests--;
+      bump(requestsBy, project, -1);
+    };
+  }
+
+  /** Runs `work` once a slot is free: MAX_GIT in all, PROJECT_GIT for `key`; waiters are bounded by admission. */
+  async function limited<T>(key: string, work: () => Promise<T>): Promise<T> {
+    if (running < MAX_GIT && (runningBy.get(key) ?? 0) < PROJECT_GIT) {
+      running++;
+      bump(runningBy, key, 1);
+    } else {
+      await new Promise<void>((go) => queue.push({ key, go }));
+    }
     try {
       return await work();
     } finally {
-      const next = waiting.shift();
-      if (next !== undefined) next();
-      else active--;
+      running--;
+      bump(runningBy, key, -1);
+      for (let i = 0; i < queue.length && running < MAX_GIT; i++) {
+        const next = queue[i]!;
+        if ((runningBy.get(next.key) ?? 0) >= PROJECT_GIT) continue;
+        queue.splice(i--, 1);
+        running++;
+        bump(runningBy, next.key, 1);
+        next.go();
+      }
     }
   }
 
+  let outside: string | undefined;
+  const workspaceReal = (): string => {
+    outside ??= realpathSync.native(ctx.repoRoot);
+    return outside;
+  };
   const options = (cwd: string, cap: number, input?: string): RunOptions => ({
     cwd,
     env: gitEnv,
     timeoutMs: TIMEOUT_MS,
     maxOutputBytes: cap,
     maxErrorBytes: CAP.stderr,
-    lookup,
+    lookup: "path",
+    lookupOutside: workspaceReal(),
     input,
   });
 
@@ -609,7 +673,7 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
     if (!usable) return "git was not found; see Settings";
     let result: RunResult;
     try {
-      result = await limited(() => ctx.run([git, "--version"], options(ctx.repoRoot, CAP.line)));
+      result = await limited("", () => ctx.run([git, "--version"], options(ctx.repoRoot, CAP.line)));
     } catch (error) {
       if (error instanceof Answer) throw error;
       const code = (error as NodeJS.ErrnoException).code;
@@ -643,6 +707,7 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
   }
 
   return async (req) => {
+    let release = () => {};
     try {
       if (req.method !== "GET") return json(405, { error: "GET only" });
       if (!["/", "/log", "/commit", "/diff"].includes(req.path)) return json(404, { error: `no endpoint ${req.path}` });
@@ -667,6 +732,9 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
       const project = realpathSync.native(cwd);
       if (!project.startsWith(join(workspace, "projects-folder") + sep)) refuse(404, `projects-folder/${name} lies outside projects-folder`);
 
+      // Admitted before the synchronous walk of .git, so a request past the
+      // shares costs nothing more.
+      release = admit(name);
       const chosen = chooseRepo(workspace, project, name);
       if (chosen.repo === null) return json(200, chosen);
       const problem = await gitProblem();
@@ -677,7 +745,7 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
       const guards = guardArgs(repo.gitDir, repo.top);
       /** `diffs`, a full hash of this repository, marks a command that diffs: it gets no in-tree attributes. */
       const run = (args: string[], cap: number, diffs?: string, input?: string): Promise<RunResult> =>
-        limited(() => ctx.run([git, ...guards, ...(diffs === undefined ? [] : [`--attr-source=${EMPTY_TREE[diffs.length]}`]), ...args], options(repo.top, cap, input)));
+        limited(name, () => ctx.run([git, ...guards, ...(diffs === undefined ? [] : [`--attr-source=${EMPTY_TREE[diffs.length]}`]), ...args], options(repo.top, cap, input)));
       const must = (result: RunResult, step: string): RunResult => {
         if (result.timedOut === true || (!result.truncated && result.code !== 0)) {
           log(`code-view git ${req.path} ${step}: ${failureText(result, 2000)}`);
@@ -723,15 +791,16 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
       }
 
       // /commit and /diff: a full hash naming a commit in HEAD's history.
-      // rev-parse exits 1 for no such object and 128 for one that is not a
-      // commit; a timeout or cut output is a failure, not an answer.
-      const resolved = await run(["rev-parse", "--verify", "--quiet", `${hash!}^{commit}`], CAP.line);
+      // cat-file -t reads only the object's header (rev-parse <hash>^{commit}
+      // loads it whole, so a huge commit would die there and read as missing);
+      // it exits 128 for no such object. A timeout or cut output is a failure.
+      const resolved = await run(["cat-file", "-t", hash!], CAP.line);
       if (resolved.timedOut === true || resolved.truncated === true) {
-        log(`code-view git ${req.path} rev-parse: ${failureText(resolved, 2000)}`);
-        refuse(500, failed("rev-parse", resolved));
+        log(`code-view git ${req.path} cat-file -t: ${failureText(resolved, 2000)}`);
+        refuse(500, failed("cat-file -t", resolved));
       }
-      if (resolved.code !== 0) refuse(404, `no commit ${hash!}`);
-      const full = fullHash(resolved, "rev-parse");
+      if (resolved.code !== 0 || resolved.stdout.trim() !== "commit") refuse(404, `no commit ${hash!}`);
+      const full = hash!;
       const tip = await head();
       const ancestor = tip === null ? null : await run(["merge-base", "--is-ancestor", full, tip], CAP.line);
       if (ancestor === null || ancestor.code === 1) refuse(404, `commit ${full} is not in this repository's history from HEAD`);
@@ -815,6 +884,8 @@ export function codeGitHandler(ctx: ApiContext, git = "git", log: (line: string)
       if (error instanceof Answer) return error.response;
       log(`code-view git ${req.path}: ${errorText(error, 300)}`);
       return json(500, { error: `the Code view could not read this repository (${(error as NodeJS.ErrnoException).code ?? "internal error"})` });
+    } finally {
+      release();
     }
   };
 }

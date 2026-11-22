@@ -48,6 +48,8 @@ export interface RunOptions {
    * which spawn would search), and fail with ENOENT when none holds it.
    */
   lookup?: "path";
+  /** With lookup: also skip a PATH entry, or a program found, whose real path lies inside this folder (and refuse an absolute program there). */
+  lookupOutside?: string;
 }
 
 /** Runs one child process to completion; rejects only when it cannot start. */
