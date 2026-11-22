@@ -53,7 +53,7 @@ import { tempTree } from "./helpers.ts";
 const PLUGINS = join(import.meta.dirname, "..", "..", "frontend", "plugins");
 const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
 const sites = pluginSites(bundled.plugins);
-const CSP = appCsp(["paper-wiki", "code-view"]);
+const CSP = appCsp(["paper-wiki", "code-view", "paper-view"]);
 
 /** A registry as createRegistry builds it, from mounts the tests make. */
 function registryOf(app: Mount[], byPlugin: Record<string, Mount[]>): Registry {
@@ -148,7 +148,7 @@ describe("plugin sites", () => {
 
   test("any other plugin serves the site/ folder beside its plugin.json, in load order", () => {
     assert.deepEqual(demo.problems, []);
-    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "demo"]);
+    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "paper-view", "demo"]);
     assert.deepEqual(twoSites.get("demo"), { id: "demo", source: "bundled", reads: [], files: { kind: "plugin", dir: demoSite } });
   });
 
@@ -208,11 +208,11 @@ describe("workspaceRegistry", () => {
 
 describe("policies", () => {
   test("the app policy frames exactly the loaded plugins' origins", () => {
-    // The bundled plugins: Paper Wiki and the Code view, each framed on its own origin.
-    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view"]);
+    // The bundled plugins: Paper Wiki, the Code view, and the Paper view, each framed on its own origin.
+    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view", "paper-view"]);
     assert.equal(
       appCsp([...sites.keys()]),
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view; object-src 'none'; base-uri 'none'; form-action 'none'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view; object-src 'none'; base-uri 'none'; form-action 'none'",
     );
     assert.match(appCsp(["paper-wiki", "demo"]), /; frame-src app:\/\/paper-wiki app:\/\/demo; /);
     assert.match(appCsp(["demo", "paper-wiki"]), /; frame-src app:\/\/demo app:\/\/paper-wiki; /);
@@ -221,7 +221,7 @@ describe("policies", () => {
 
   test("app pages carry the policy for the sites the handler was given, in their order", () => {
     const index = route("app://research-os/", { renderer, workspace }, twoSites);
-    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "demo"]));
+    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "demo"]));
   });
 
   test("a workspace site's policy, and a plugin-folder site's, which adds its own files", () => {
@@ -264,6 +264,17 @@ describe("allowedNavigation", () => {
     }
     assert.equal(allowedNavigation("app://demo/index.html", false, ["paper-wiki", "demo"]), true, "once loaded");
     assert.equal(allowedNavigation("app://paper-wiki/viz.html", false, []), false, "no plugin loaded");
+  });
+
+  test("with the bundled plugins, each view's origin is a subframe's only, and a look-alike host is none", () => {
+    const bundledHosts = [...sites.keys()];
+    for (const url of ["app://code-view/index.html?project=P", "app://paper-view/index.html?project=P"]) {
+      assert.equal(allowedNavigation(url, false, bundledHosts), true, url);
+      assert.equal(allowedNavigation(url, true, bundledHosts), false, `top frame: ${url}`);
+    }
+    for (const url of ["app://paper-view.evil/", "app://paper-viewx/index.html", "app://paper-view", "app://paper/index.html"]) {
+      assert.equal(allowedNavigation(url, false, bundledHosts), false, url);
+    }
   });
 });
 
@@ -902,6 +913,7 @@ describe("read channel", () => {
       [
         ["paper-wiki", "bundled", []],
         ["code-view", "bundled", ["projects-folder/*/Code"]],
+        ["paper-view", "bundled", ["projects-folder/*/paper"]],
         ["reads-code", "bundled", ["projects-folder/*/Code"]],
         ["reads-paper", "bundled", ["projects-folder/*/paper"]],
         ["reads-local", "local", ["projects-folder/Beta/Code"]],

@@ -36,6 +36,7 @@ export function usePlugins(): { plugins: readonly PluginInfo[]; pages: readonly 
 const ICONS: ReadonlyMap<string, IconName> = new Map<string, IconName>([
   ["paper-wiki", "book"],
   ["code-view", "file"],
+  ["paper-view", "projects"],
 ]);
 
 export function pluginIcon(id: string): IconName {

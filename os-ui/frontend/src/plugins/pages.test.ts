@@ -67,6 +67,23 @@ describe("the bundled plugins in the renderer", () => {
     assert.deepEqual(plugins.find((p) => p.id === "code-view")!.contributes.handlers, ["git"]);
   });
 
+  test("the Paper view's project tab: on app://paper-view in the desktop client, no frame URL in a browser; it reads paper/ and has no handler", () => {
+    const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
+    const paper = (env: { desktop: boolean }) => pluginPages(plugins, env).filter((p) => p.plugin === "paper-view");
+    assert.deepEqual(
+      paper(desktop).map((p) => [p.key, p.slot, p.title, p.src, p.origin]),
+      [["paper-view/paper", "project", "Paper", "app://paper-view/index.html", "app://paper-view"]],
+    );
+    assert.deepEqual(
+      paper(browser).map((p) => [p.key, p.src, p.origin]),
+      [["paper-view/paper", null, null]],
+    );
+    const manifest = plugins.find((p) => p.id === "paper-view")!;
+    assert.deepEqual(manifest.reads, ["projects-folder/*/paper"]);
+    assert.equal(manifest.contributes.handlers, undefined);
+    assert.equal(manifest.site, undefined, "served from its own site/ folder, not the workspace");
+  });
+
   test("Paper Wiki's card: its name and description", () => {
     const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
     const wiki = plugins.find((p) => p.id === "paper-wiki")!;
