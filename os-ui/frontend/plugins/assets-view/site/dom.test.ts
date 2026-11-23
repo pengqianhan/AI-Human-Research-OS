@@ -16,13 +16,15 @@ import { fileURLToPath } from "node:url";
 
 const SITE = dirname(fileURLToPath(import.meta.url));
 const strip = (text: string) => text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+/** A source file's text with LF line endings, whatever the checkout gave it (Windows: CRLF), so the patterns below hold on every platform. */
+const readSource = (path: string) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 /** The page's own code and markup, tests left out, and the shared kits it bundles. */
 const sources = [
   ...readdirSync(SITE)
     .filter((f) => /\.(ts|html|css)$/.test(f) && !f.endsWith(".test.ts"))
-    .map((f) => ({ file: f, text: readFileSync(join(SITE, f), "utf8") })),
-  { file: "../../site-kit.ts", text: readFileSync(join(SITE, "../../site-kit.ts"), "utf8") },
-  { file: "../../md-kit.ts", text: readFileSync(join(SITE, "../../md-kit.ts"), "utf8") },
+    .map((f) => ({ file: f, text: readSource(join(SITE, f)) })),
+  { file: "../../site-kit.ts", text: readSource(join(SITE, "../../site-kit.ts")) },
+  { file: "../../md-kit.ts", text: readSource(join(SITE, "../../md-kit.ts")) },
 ];
 const source = (file: string) => strip(sources.find((s) => s.file === file)!.text);
 
