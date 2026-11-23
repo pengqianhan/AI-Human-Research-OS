@@ -149,24 +149,35 @@ Status on 2026-11-23:
     down, and at most 10 a second per frame (past that the bar is hidden, never
     left stale). The rule is that what Send passes is exactly what the user can
     read in the composer ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)):
-    a label is 1 to 200 characters with no line break (CR, LF, VT, FF, NEL,
-    U+2028, U+2029) and no control or format character (`\p{Cc}`, `\p{Cf}`:
-    zero-width characters, U+2060, U+FEFF, the soft hyphen, bidi controls,
-    U+FFF9-FFFB, tag characters), or the message is ignored; homoglyphs are
-    allowed, since a real file can be named so. A quote of at most 2,000
-    characters has every line break made LF, so every line gets its `> `, and
-    every control or format character but tab shown as a marker
-    (`⟨U+200B⟩`), in the text shown and sent alike; if the markers take
-    it past 2,000 characters it is cut there with `…[cut]`. The page applies
-    the same markers to names in its labels.
+    in a label every run of white space (`\p{Zs}` and tab) becomes one space
+    and the ends are trimmed, before the cap; the result must be 1 to 200
+    characters with no line break (CR, LF, VT, FF, NEL, U+2028, U+2029) and no
+    invisible character (`\p{Cc}`, `\p{Cf}`, `\p{Default_Ignorable_Code_Point}`
+    and U+2800: zero-width characters, U+2060, U+FEFF, the soft hyphen, bidi
+    controls, U+FFF9-FFFB, tag characters, variation selectors, Hangul fillers,
+    the combining grapheme joiner, the Braille blank), or the message is
+    ignored; homoglyphs are allowed, since a real file can be named so. A quote
+    of at most 2,000 characters keeps its spaces, has every line break made LF,
+    so every line gets its `> `, and every such invisible character but tab
+    shown as a marker (`⟨U+200B⟩`), except U+FE0F right after an emoji
+    (`\p{Extended_Pictographic}`), which is ordinary emoji presentation; this
+    holds in the text shown and sent alike, and if the markers take it past
+    2,000 characters it is cut there with `…[cut]`. The page applies the same
+    markers to names in its labels.
     Added: the host answers `{type: "os.select.clear"}`, posted to the page's
     origin only, when the user clears the selection or asks about it in the host,
     so the page drops its highlight. "Ask the agent about this" adds a reference
     chip (at most 8) to the project's composer and never sends; Send puts each
     chip before the typed text as `About <label>` and the quote as a blockquote.
-    Clicking a chip (or Enter or Space on it) shows exactly that text under the
-    chips, as plain text; a chip with a quote says how many lines it carries,
-    and the tooltip shows the text too. Ask adds the reference the bar showed
+    What the user is about to send is on screen as text, since a view can
+    quote what it did not show (a PDF's hidden text run): before asking, the
+    ask bar shows the start of the quote (up to 160 characters, line breaks as
+    `↵`) and its size; a chip just added opens its "Sent before your message,
+    exactly:" text under the chips at once (the newest opens, the one before
+    closes), scrollable when long. Clicking a chip (or Enter or Space on it)
+    opens or closes it; a chip with a quote says how many lines it carries, and
+    the tooltip shows the text too. This departs from mockup C for that reason
+    and awaits the Human Owner's approval. Ask adds the reference the bar showed
     when the pointer went down on it. The host cannot reach
     `/api/code-view/git`, so the mockup's header pill (latest commit) is not shown.
   - `viewSrc(page, project)` appends `?project=<encoded name>`; the tab row takes
@@ -177,11 +188,14 @@ Status on 2026-11-23:
   - `PLUGIN_CSP` (a site in its plugin folder, the Code view's) has no
     `'unsafe-inline'`: `script-src 'self'; style-src 'self'`. Paper Wiki's
     generated viewer keeps `WORKSPACE_CSP`, which needs inline script.
-  - Every git command runs with `-c diff.algorithm=myers`: the repository's
-    `diff.algorithm=patience` made two files just under 4 MiB of one-byte lines
-    need 320 MiB in one allocation, over `GIT_ALLOC_LIMIT=256m`, on every route.
-    Under myers the same files need about 96 MiB (measured by bisecting the
-    limit), so the limit stays.
+  - Myers is pinned by `--diff-algorithm=myers` on every `log` and `show`
+    (`HISTORY`), beside `-c diff.algorithm=myers`. The `-c` setting alone did
+    not hold: a `diff.<driver>.algorithm=patience`, picked by an attribute in
+    `info/attributes`, beats it, while the command-line option beats both. Under
+    patience two files just under 4 MiB of one-byte lines need 320 MiB in one
+    allocation, over `GIT_ALLOC_LIMIT=256m`, and every route answered 500; under
+    myers they need about 96 MiB (measured by bisecting the limit), so the limit
+    stays.
 - **S6a-1** is [frontend/server/codeGit.ts](frontend/server/codeGit.ts) with
   `codeGit.test.ts` in the required CI job. S6a-2 declares and mounts it. The code is the
   authority where it differs from Part 2's Gap 1, after the S5 review and an
