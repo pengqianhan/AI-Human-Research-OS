@@ -197,6 +197,18 @@ export function nestedFormsPdf(depth: number): Buffer {
   return pdfFile(objects);
 }
 
+/** Page 1 one point square, page 2 14,400 points square (the largest PDF allows): at 640 px for page 1's width, page 2 is far taller than a scrolling column can be. */
+export function oddSizesPdf(): Buffer {
+  return pdfFile([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1 1] >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 14400 14400] /Resources << /Font << /F1 5 0 R >> >> /Contents 6 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    { dict: "<< >>", stream: "BT /F1 400 Tf 100 7000 Td (BIG-PAGE) Tj ET" },
+  ]);
+}
+
 /** `n` empty US-letter pages in one flat page tree (the review opened 300,000 of them). */
 export function manyPagesPdf(n: number): Buffer {
   const kids = Array.from({ length: n }, (_, i) => `${i + 3} 0 R`).join(" ");

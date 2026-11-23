@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
 import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
 import { PLUGIN_CSP } from "../src/main/protocol.ts";
-import { HIDDEN_RUNS, hiddenPdf, HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, manyPagesPdf, nestedFormsPdf, noPagesPdf, notAPdf, passwordPdf, REMAP } from "./pdfFixtures.ts";
+import { HIDDEN_RUNS, hiddenPdf, HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, manyPagesPdf, nestedFormsPdf, noPagesPdf, notAPdf, oddSizesPdf, passwordPdf, REMAP } from "./pdfFixtures.ts";
 
 const CLIENT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = resolve(CLIENT, "../..");
@@ -1060,6 +1060,11 @@ describe("desktop client on a Research OS folder", () => {
     const { paper } = await openPaper();
     await paper.getByText(/^Page \d of 4$/).waitFor({ timeout: 60_000 });
     await paper.evaluate(() => {
+      (document.querySelector(".paper-scroll") as HTMLElement).scrollTop = 0;
+    });
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor();
+    const before = (await consoleLog()).length;
+    await paper.evaluate(() => {
       const reload = document.querySelector("button.reload") as HTMLButtonElement;
       reload.click();
       reload.click();
@@ -1074,6 +1079,7 @@ describe("desktop client on a Research OS folder", () => {
     await paper.getByText("Page 4 of 4", { exact: true }).waitFor();
     for (let i = 0; i < 50 && page.workers().filter((w) => w.url().includes("pdf.worker.min.mjs")).length !== 1; i++) await page.waitForTimeout(100);
     assert.equal(page.workers().filter((w) => w.url().includes("pdf.worker.min.mjs")).length, 1, "the first load's worker is gone");
+    assert.deepEqual((await consoleLog()).slice(before).filter((l) => /^frame app:\/\/paper-view\/.*(Uncaught|Unhandled)/.test(l)), []);
     await paper.getByRole("button", { name: "Fit width" }).click();
   });
 
@@ -1146,6 +1152,92 @@ describe("desktop client on a Research OS folder", () => {
     await paper.getByRole("button", { name: "Reload" }).click();
     await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 60_000 });
     assert.equal(await paper.locator(".page-note").count(), 0, "Reload tries every page again");
+  });
+
+  test("time with the Paper tab hidden does not count against a page's budget", SLOW, async () => {
+    const { ws, paper } = await openPaper();
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    renameSync(pdf, kept);
+    try {
+      // About 2^17 nested rectangles: seconds to draw, well inside the budget while the page is seen.
+      writeFileSync(pdf, nestedFormsPdf(17));
+      await paper.getByRole("button", { name: "Reload" }).click();
+      // The page's drawing has begun once its text is laid out (drawSlot starts both); then the tab is left.
+      await paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "FORMS-PAGE" }).waitFor({ timeout: 30_000 });
+      assert.equal(await paper.locator('.sheet[data-page="1"] canvas.pg').count(), 0, "still drawing when the tab is left");
+      await ws.getByRole("tab", { name: "Overview" }).click();
+      await page.waitForTimeout(17_000);
+      await ws.getByRole("tab", { name: "Paper" }).click();
+      await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 30_000 });
+      assert.equal(await paper.locator(".page-note").filter({ hasText: "took longer" }).count(), 0, "not stopped for time it was hidden");
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await paper.getByRole("button", { name: "Reload" }).click();
+    await paper.getByText(/^Page \d of 4$/).waitFor({ timeout: 60_000 });
+  });
+
+  test("a worker that never answers is ended after 20 s with a screen and Try again, which opens the paper", SLOW, async () => {
+    const { paper } = await openPaper();
+    await paper.locator(".sheet canvas.pg").first().waitFor({ timeout: 60_000 });
+    const before = (await consoleLog()).length;
+    // A stand-in for the next worker the page starts: it says "ready", then never answers PDF.js.
+    await paper.evaluate(() => {
+      const real = window.Worker;
+      const record = { made: 0, terminated: 0 };
+      class Silent extends EventTarget {
+        constructor() {
+          super();
+          record.made++;
+          setTimeout(() => this.dispatchEvent(new MessageEvent("message", { data: { sourceName: "worker", targetName: "main", action: "ready", data: null } })), 0);
+        }
+        postMessage(): void {}
+        terminate(): void {
+          record.terminated++;
+        }
+      }
+      Object.assign(window, { __silent: record, __realWorker: real, Worker: Silent });
+    });
+    try {
+      const started = Date.now();
+      await paper.getByRole("button", { name: "Reload" }).click();
+      await paper.getByText("The paper took too long to open", { exact: true }).waitFor({ timeout: 40_000 });
+      const waited = Date.now() - started;
+      assert.ok(waited >= 19_000 && waited < 30_000, `the screen came after ${waited} ms`);
+      await paper.getByText("PDF.js did not open paper/main.pdf within 20 s, so it was stopped.", { exact: false }).waitFor();
+      await page.waitForTimeout(2500); // the closed document's grace
+      assert.deepEqual(await paper.evaluate(() => (window as unknown as { __silent: unknown }).__silent), { made: 1, terminated: 1 }, "the silent worker was ended");
+    } finally {
+      await paper.evaluate(() => Object.assign(window, { Worker: (window as unknown as { __realWorker: unknown }).__realWorker }));
+    }
+    await paper.getByRole("button", { name: "Try again" }).click();
+    await paper.locator(".sheet canvas.pg").first().waitFor({ timeout: 30_000 });
+    assert.deepEqual((await consoleLog()).slice(before).filter((l) => /^frame app:\/\/paper-view\/.*(Uncaught|Unhandled)/.test(l)), []);
+  });
+
+  test("a page read later that is taller than one scrolling column can hold is not laid out, and the view says so", SLOW, async () => {
+    const { paper } = await openPaper();
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    renameSync(pdf, kept);
+    try {
+      writeFileSync(pdf, oddSizesPdf());
+      await paper.getByRole("button", { name: "Reload" }).click();
+      // Laid out at first as two pages of page 1's size; page 2, once read, is 14,400 points tall.
+      await paper.getByText("The Paper view shows the first 1 of this PDF's 2 pages", { exact: false }).waitFor({ timeout: 30_000 });
+      assert.equal(await paper.locator(".sheet").count(), 1);
+      assert.equal(await paper.locator(".paperbar .hint").textContent(), "paper/main.pdf · first 1 of 2 pages · select text to ask the agent about it");
+      await paper.getByText("Page 1 of 1", { exact: true }).waitFor();
+      const height = await paper.evaluate(() => (document.querySelector(".paper-scroll") as HTMLElement).scrollHeight);
+      assert.ok(height < 16_777_216, `${height} px`);
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await paper.getByRole("button", { name: "Reload" }).click();
+    await paper.getByText(/^Page \d of 4$/).waitFor({ timeout: 60_000 });
   });
 
   test("a PDF of 300,000 pages lays out the first 1,000, says so, and every page laid out can be scrolled to", SLOW, async () => {
