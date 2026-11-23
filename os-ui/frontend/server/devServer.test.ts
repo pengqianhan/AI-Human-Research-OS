@@ -27,7 +27,10 @@ describe("Vite dev server adapters", () => {
       configFile: join(FRONTEND, "vite.config.ts"),
       root: FRONTEND,
       logLevel: "silent",
-      server: { port: 0, host: "127.0.0.1" },
+      // No file watcher: nothing here edits a source file, and on Windows Vite's
+      // watcher could outlive server.close() and keep this process up (seen on CI
+      // as one FSEventWrap left after every test had passed).
+      server: { port: 0, host: "127.0.0.1", watch: null },
     });
     await server.listen();
     base = `http://127.0.0.1:${(server.httpServer!.address() as AddressInfo).port}`;

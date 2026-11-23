@@ -345,13 +345,24 @@ Status on 2026-11-23:
     What the user is about to send is on screen as text, since a view can
     quote what it did not show (a PDF's hidden text run): before asking, the
     ask bar shows the start of the quote (up to 160 characters, line breaks as
-    `↵`) and its size; a chip just added opens its "Sent before your message,
-    exactly:" text under the chips at once (the newest opens, the one before
-    closes), scrollable when long, with a line under it giving its size and
-    saying it scrolls whenever it is taller than its box. Clicking a chip (or Enter or Space on it)
-    opens or closes it; a chip with a quote says how many lines it carries, and
-    the tooltip shows the text too. This departs from mockup C for that reason
-    and awaits the Human Owner's approval. Ask adds the reference the bar showed
+    `↵`) and its size, in every view. Whether a chip opens by itself depends
+    on the view (the Human Owner's decision, 2026-11-23): the host keeps
+    `QUOTES_AS_DRAWN` in [frontend/src/plugins/select.ts](frontend/src/plugins/select.ts),
+    the bundled views whose quote is exactly the text they draw (today only the
+    Code view, which quotes the characters it draws with invisible ones
+    marked). `readSelect` marks a reference from such a view by the plugin of
+    the frame the message came from; the message has no field for it, so no
+    page can ask for it. A chip from a listed view is added closed, as in
+    mockup C: its label, "· N lines", and the hint "click a reference to see
+    exactly what is sent". A chip from any other view (the Paper view, whose
+    PDF text layer can differ from what is drawn, or any third-party view)
+    opens its "Sent before your message, exactly:" text under the chips at
+    once (the newest opens, the one before closes); a closed chip added later
+    leaves the open one as it was. An open text scrolls when long, with a line
+    under it giving its size and saying it scrolls whenever it is taller than
+    its box. Clicking a chip (or Enter or Space on it) opens or closes it; a
+    chip with a quote says how many lines it carries, and the tooltip shows
+    the text too. Ask adds the reference the bar showed
     when the pointer went down on it. The host cannot reach
     `/api/code-view/git`, so the mockup's header pill (latest commit) is not shown.
   - `viewSrc(page, project)` appends `?project=<encoded name>`; the tab row takes

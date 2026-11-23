@@ -307,7 +307,9 @@ other than U+0020, a line break, or an invisible character (control, format,
 default-ignorable, or the Braille blank) is refused; a quote's line breaks are made line feeds (each
 line gets its `> `) and its invisible characters shown as markers, in the text
 shown and sent alike. The ask bar shows the start of the quote before asking,
-and a chip just added shows its whole text under the chips without a click
+and a chip just added shows its whole text under the chips without a click,
+except one from a view that quotes exactly what it draws (`QUOTES_AS_DRAWN`:
+the Code view), which is added closed and opens on a click
 ([os-ui/PLUGINS.md](../PLUGINS.md), S6a-2).
 
 **The Paper view** (S6b of [os-ui/PLUGINS.md](../PLUGINS.md)). Its page reads
