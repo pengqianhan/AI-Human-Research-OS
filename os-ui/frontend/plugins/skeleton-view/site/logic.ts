@@ -7,7 +7,7 @@
  * tokens, and main.ts puts them on screen as text only.
  */
 import { claims, inline, linkTargets, plain, resolveLink, section, sections, snapshot, snapshotItem, studies, trimSpaces, usedBy } from "../../md-kit.ts";
-import type { Doc, Section, Table } from "../../md-kit.ts";
+import type { Block, Doc, Section, SnapshotItem, Table } from "../../md-kit.ts";
 import { clip, cutMarked, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
 
 /** The file this view reads, relative to its project. */
@@ -110,11 +110,18 @@ function sectionLabel(base: string, title: string): string {
   return `${base} · section “${cutMarked(sectionTitle(title), LABEL_MAX - base.length - 13, "…")}”`;
 }
 
-/** A block of a section, or a Snapshot item: its lines and its section's title in the label, its lines as the quote. */
-export const blockSelection = (first: number, last: number, title: string, lines: readonly string[]): Selection => ({
-  label: sectionLabel(where(first, last), title),
+/**
+ * A block of a section, or a Snapshot item: its lines and its section's
+ * title in the label (`title` null: text before the first heading), its
+ * lines as the quote.
+ */
+export const blockSelection = (first: number, last: number, title: string | null, lines: readonly string[]): Selection => ({
+  label: title === null ? `${where(first, last)} · before the first heading` : sectionLabel(where(first, last), title),
   quote: quote(lines),
 });
+
+/** Lines, first and last, that a part of the page draws. */
+export type Lines = [number, number];
 
 // ---- the Snapshot card ----------------------------------------------------------------
 
@@ -132,6 +139,8 @@ export interface SnapshotCard {
   title: SnapLine | null;
   /** Thesis, Audience, Research question: those the Snapshot has. */
   lines: SnapLine[];
+  /** The lines the card draws: the section's heading and the items above; the rest of the section is listed below the claims. */
+  drawn: Lines[];
 }
 
 const SNAPSHOT_LINES = [
@@ -139,6 +148,14 @@ const SNAPSHOT_LINES = [
   ["Audience", "Target venue or audience"],
   ["Research question", "Main research question"],
 ] as const;
+
+/** The Snapshot items the card draws, by label: the first item of each. */
+const CARD_ITEMS = ["Status", "Working title", ...SNAPSHOT_LINES.map(([, name]) => name)];
+
+/** The items of a Snapshot list that the card draws. */
+function cardItems(items: readonly SnapshotItem[]): SnapshotItem[] {
+  return CARD_ITEMS.map((name) => snapshotItem(items, name)).filter((i): i is SnapshotItem => i !== null);
+}
 
 /** The card: null without a Snapshot section (or a list in it). */
 export function snapshotCard(doc: Doc): SnapshotCard | null {
@@ -154,6 +171,7 @@ export function snapshotCard(doc: Doc): SnapshotCard | null {
     status: status === null ? null : status.value === "" ? "not filled in" : status.value,
     title: line("Working title", "Working title"),
     lines: SNAPSHOT_LINES.map(([shown, name]) => line(shown, name)).filter((l): l is SnapLine => l !== null),
+    drawn: [[snap.section.line, snap.section.line], ...cardItems(snap.items).map((i): Lines => [i.first, i.last])],
   };
 }
 
@@ -174,10 +192,30 @@ export interface ClaimRow {
   selection: Selection;
 }
 
+/** `drawn`: the lines the claims part draws, the section's heading and its table, whose rows not listed as claims a note names. */
 export type ClaimsView =
-  | { state: "no-table"; message: string }
-  | { state: "no-claims"; message: string; notes: string[] }
-  | { state: "claims"; summary: string; rows: ClaimRow[]; notes: string[] };
+  | { state: "no-table"; message: string; drawn: Lines[] }
+  | { state: "no-claims"; message: string; notes: string[]; drawn: Lines[] }
+  | { state: "claims"; summary: string; rows: ClaimRow[]; notes: string[]; drawn: Lines[] };
+
+/** "2nd", "3rd", "4th", … */
+const ordinal = (k: number) => `${k}${k % 10 === 1 && k % 100 !== 11 ? "st" : k % 10 === 2 && k % 100 !== 12 ? "nd" : k % 10 === 3 && k % 100 !== 13 ? "rd" : "th"}`;
+
+/** The table's columns the view does not draw, by header: another name, or a second column of a name it draws ("Status (2nd)"). */
+function columnsNotShown(header: readonly string[], drawn: readonly number[]): string[] {
+  const seen = new Map<string, number>();
+  const out: string[] = [];
+  header.forEach((cell, k) => {
+    const name = trimSpaces(plain(inline(cell)));
+    const key = name.toLowerCase();
+    const count = (seen.get(key) ?? 0) + 1;
+    seen.set(key, count);
+    if (drawn.includes(k)) return;
+    const shown = name === "" ? `column ${k + 1}` : name;
+    out.push(count > 1 ? `${shown} (${ordinal(count)})` : shown);
+  });
+  return out;
+}
 
 /** "“A”", "“A” or “B”", "“A”, “B”, or “C”". */
 function names(list: readonly string[]): string {
@@ -191,12 +229,25 @@ const isVerified = (status: string | null) => status !== null && status.trim().t
 /** The Claims and Evidence table as the view lists it, or why it lists nothing. */
 export function claimsView(doc: Doc): ClaimsView {
   const found = claims(sections(doc));
-  if (!found.found) return { state: "no-table", message: `No Claims and Evidence table in ${FILE}` };
+  if (!found.found) return { state: "no-table", message: `No Claims and Evidence table in ${FILE}`, drawn: [] };
+  const drawn: Lines[] = [
+    [found.section.line, found.section.line],
+    [found.table.first, found.table.last],
+  ];
+  const hiddenColumns = columnsNotShown(found.table.header, found.columns);
   const notes = [
     ...(found.missing.length > 0 ? [`No ${names(found.missing)} column in the Claims and Evidence table.`] : []),
+    ...(hiddenColumns.length > 0 ? [`Columns not shown here: ${hiddenColumns.join(", ")}; a claim's quote holds its whole row.`] : []),
     ...tableNotes(found.table),
   ];
-  if (found.claims.length === 0) return { state: "no-claims", message: "No claims yet: the Claims and Evidence table has no filled row", notes };
+  if (found.claims.length === 0) return { state: "no-claims", message: "No claims yet: the Claims and Evidence table has no filled row", notes, drawn };
+  if (found.empty.length > 0) {
+    notes.push(
+      found.empty.length === 1
+        ? `Line ${n(found.empty[0]!)} has an empty Claim cell, so it is not listed as a claim.`
+        : `Lines ${lineList(found.empty)} have an empty Claim cell, so they are not listed as claims.`,
+    );
+  }
   const rows = found.claims.map(
     (c): ClaimRow => ({
       id: c.id ?? "—",
@@ -216,6 +267,7 @@ export function claimsView(doc: Doc): ClaimsView {
     summary: `${plural(rows.length, "claim")} · ${n(verified)} verified · ${where(found.table.first, found.table.last)}`,
     rows,
     notes: [...repeatedIds(rows), ...notes],
+    drawn,
   };
 }
 
@@ -296,36 +348,122 @@ export function evidenceOf(doc: Doc, row: ClaimRow): Evidence {
 
 // ---- the rest of the file -------------------------------------------------------------
 
+/** One foldable entry of "The rest of paper_skeleton.md". */
 export interface RestSection {
-  /** Keeps a section open across a Reload: its title and which of that title it is. */
+  /** Keeps an entry open across a Reload: its name and which of that name it is. */
   key: string;
+  /** The entry's name: a section's title, or "Snapshot, other items", "Claims and Evidence, besides the table", "Before the first heading". */
   title: string;
+  /** The section title its blocks' labels name, or null for text before the first heading. */
+  labelTitle: string | null;
+  /** Its heading's line, or null when the heading is drawn above (Snapshot, Claims and Evidence) or there is none. */
+  heading: number | null;
   line: number;
   /** "line 23 · 9 entries": table rows, list items, paragraphs, and code blocks. */
   summary: string;
-  section: Section;
+  blocks: Block[];
 }
 
+export interface Rest {
+  sections: RestSection[];
+  /** More entries than SECTIONS_MAX. */
+  note: string | null;
+  /** What the view leaves out and says so, in one muted line each: the title and opening paragraph, headings with nothing under them. */
+  notShown: string[];
+  /** The lines `notShown` speaks for. */
+  accounted: Lines[];
+  /** True only when the card and the claims table draw the whole file. */
+  nothingElse: boolean;
+}
+
+/** Headings named at most in the "nothing under them" line. */
+const EMPTY_HEADINGS_MAX = 20;
+
 /**
- * Every section of levels 2 to 6 but Snapshot and Claims and Evidence (the
- * card and the table above) that has a block, in file order, at most
- * SECTIONS_MAX; `note` says how many there are when there are more.
+ * Everything the card and the claims table do not draw, in file order, so
+ * nothing in the file is hidden without the view saying so (os-ui/PLUGINS.md
+ * Part 3, §1 fact 2): text before the first heading; each section with a
+ * block, at any level; the Snapshot items the card does not draw and the
+ * rest of that section; the claims section besides its first table. Left
+ * out, with a muted line that says so: the file's level-1 title and the
+ * paragraph right under it, and headings with nothing under them. At most
+ * SECTIONS_MAX entries.
  */
-export function restSections(doc: Doc): { sections: RestSection[]; note: string | null } {
+export function restSections(doc: Doc): Rest {
   const all = sections(doc);
-  const shownAbove = [section(all, "Snapshot"), section(all, "Claims and Evidence")];
-  const seen = new Map<string, number>();
-  const listed: RestSection[] = [];
-  for (const s of all) {
-    if (s.level < 2 || s.blocks.length === 0 || shownAbove.includes(s)) continue;
-    const entries = s.blocks.reduce((sum, b) => sum + (b.kind === "table" ? b.rows.length + b.more : b.kind === "list" ? b.items.length : 1), 0);
-    const count = (seen.get(s.title) ?? 0) + 1;
-    seen.set(s.title, count);
-    listed.push({ key: `${count}\u0000${s.title}`, title: s.title, line: s.line, summary: `line ${s.line} · ${plural(entries, "entry", "entries")}`, section: s });
+  const snap = snapshot(all);
+  const snapSection = section(all, "Snapshot");
+  const found = claims(all);
+  const claimsSection = section(all, "Claims and Evidence");
+  const drawnItems = new Set(snap === null ? [] : cardItems(snap.items).map((i) => i.first));
+  const table = found.found ? found.table : null;
+  /** A section whose heading the card or the claims part draws. */
+  const drawnAbove = (s: Section) => (s === snapSection && snap !== null) || (s === claimsSection && table !== null);
+  const listed: { title: string; labelTitle: string | null; heading: number | null; blocks: Block[] }[] = [];
+  const notShown: string[] = [];
+  const accounted: Lines[] = [];
+
+  const firstHeading = doc.blocks.findIndex((b) => b.kind === "heading");
+  const before = firstHeading === -1 ? doc.blocks : doc.blocks.slice(0, firstHeading);
+  if (before.length > 0) listed.push({ title: "Before the first heading", labelTitle: null, heading: null, blocks: before });
+
+  // The file's title: its first heading when that is level 1 (and not a section the card or the table draws), and the paragraph under it.
+  const first = all[0];
+  const title = first !== undefined && first.level === 1 && first !== snapSection && first !== claimsSection ? first : null;
+  const opening = title !== null && title.blocks[0]?.kind === "paragraph" ? title.blocks[0] : null;
+  if (title !== null) {
+    const last = opening === null ? title.line : opening.last;
+    notShown.push(opening === null ? `The title (line ${n(title.line)}) is not shown.` : `The title and opening paragraph (lines ${n(title.line)}–${n(last)}) are not shown.`);
+    accounted.push([title.line, last]);
   }
+
+  const empty: Section[] = [];
+  for (const s of all) {
+    let blocks = s.blocks;
+    let name = s.title;
+    let heading: number | null = s.line;
+    if (s === title) {
+      blocks = opening === null ? s.blocks : s.blocks.slice(1);
+      heading = null;
+    } else if (s === snapSection && snap !== null) {
+      blocks = s.blocks.flatMap((b) => {
+        if (b !== snap.list) return [b];
+        const items = b.items.filter((i) => !drawnItems.has(i.first));
+        if (items.length === b.items.length) return [b];
+        if (items.length === 0) return [];
+        return [{ ...b, items, first: items[0]!.first, last: items[items.length - 1]!.last, lines: items.flatMap((i) => i.lines) }];
+      });
+      name = "Snapshot, other items";
+      heading = null;
+    } else if (s === claimsSection && table !== null) {
+      blocks = s.blocks.filter((b) => b !== table);
+      name = "Claims and Evidence, besides the table";
+      heading = null;
+    }
+    if (blocks.length > 0) listed.push({ title: name, labelTitle: s.title, heading, blocks });
+    else if (s.blocks.length === 0 && s !== title && !drawnAbove(s)) empty.push(s);
+  }
+  if (empty.length > 0) {
+    const named = empty.slice(0, EMPTY_HEADINGS_MAX).map((s) => `${s.title} (line ${n(s.line)})`);
+    const more = empty.length > EMPTY_HEADINGS_MAX ? `, and ${n(empty.length - EMPTY_HEADINGS_MAX)} more` : "";
+    notShown.push(`Headings with nothing under them: ${named.join(", ")}${more}.`);
+    for (const s of empty) accounted.push([s.line, s.line]);
+  }
+
+  const seen = new Map<string, number>();
+  const entries = listed.map((e): RestSection => {
+    const count = (seen.get(e.title) ?? 0) + 1;
+    seen.set(e.title, count);
+    const line = e.heading ?? e.blocks[0]!.first;
+    const size = e.blocks.reduce((sum, b) => sum + (b.kind === "table" ? b.rows.length + b.more : b.kind === "list" ? b.items.length : 1), 0);
+    return { key: `${count}\u0000${e.title}`, title: e.title, labelTitle: e.labelTitle, heading: e.heading, line, summary: `line ${n(line)} · ${plural(size, "entry", "entries")}`, blocks: e.blocks };
+  });
   return {
-    sections: listed.slice(0, SECTIONS_MAX),
-    note: listed.length > SECTIONS_MAX ? `${FILE} has ${n(listed.length)} sections; the first ${n(SECTIONS_MAX)} are listed.` : null,
+    sections: entries.slice(0, SECTIONS_MAX),
+    note: entries.length > SECTIONS_MAX ? `${FILE} has ${n(entries.length)} sections; the first ${n(SECTIONS_MAX)} are listed.` : null,
+    notShown,
+    accounted,
+    nothingElse: entries.length === 0 && notShown.length === 0,
   };
 }
 
@@ -344,6 +482,8 @@ export function tableNotes(table: Table): string[] {
   const uneven = table.rows.filter((r) => r.uneven).map((r) => n(r.line));
   if (uneven.length === 1) notes.push(`Line ${uneven[0]} has another number of cells than the header; it is padded or cut to it.`);
   else if (uneven.length > 1) notes.push(`Lines ${uneven.slice(0, -1).join(", ")} and ${uneven[uneven.length - 1]} have another number of cells than the header; they are padded or cut to it.`);
+  if (table.skipped.length === 1) notes.push(`Line ${n(table.skipped[0]!)} holds only invisible characters; the table goes on after it.`);
+  else if (table.skipped.length > 1) notes.push(`Lines ${lineList(table.skipped)} hold only invisible characters; the table goes on after them.`);
   return notes;
 }
 

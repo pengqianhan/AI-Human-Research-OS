@@ -50,7 +50,7 @@ function assertEveryLineOnce(text: string): void {
   const lines = text.split("\n");
   const covered = coverage(doc);
   assert.equal(new Set(covered).size, covered.length, "no line is in two blocks");
-  const nonBlank = lines.flatMap((l, k) => (l.trim() === "" ? [] : [k + 1]));
+  const nonBlank = lines.flatMap((l, k) => (/^[ \t]*$/.test(l) ? [] : [k + 1]));
   for (const no of nonBlank) assert.ok(covered.includes(no), `line ${no} belongs to a block: ${JSON.stringify(lines[no - 1])}`);
   for (const b of doc.blocks) assert.deepEqual(b.lines, lines.slice(b.first - 1, b.last), `block at ${b.first}`);
 }
@@ -324,6 +324,22 @@ describe("blocks", () => {
     );
     assert.deepEqual(splitCells("| a | b"), ["a", "b"], "no trailing pipe");
     assert.deepEqual(splitCells("| a \\|"), ["a |"], "an escaped pipe at the end is the cell's");
+  });
+
+  test("only spaces and tabs make a line blank; a line of invisible characters inside a table does not end it (review F5)", () => {
+    // JavaScript's trim() takes U+FEFF, a no-break space, U+2028, U+3000 …: none of them is a blank line here.
+    for (const odd of ["﻿", " ", " ", "　", " ​\t"]) {
+      const doc = parse(`| a |\n|---|\n| 1 |\n${odd}\n| 2 |\n`);
+      assert.equal(doc.blocks.length, 1, JSON.stringify(odd));
+      const t = doc.blocks[0] as Table;
+      assert.deepEqual([t.kind, t.first, t.last], ["table", 1, 5], JSON.stringify(odd));
+      assert.deepEqual(t.rows.map((r) => [r.line, r.cells]), [[3, ["1"]], [5, ["2"]]], "the row after it is still a row");
+      assert.deepEqual(t.skipped, [4], "and the view can say so");
+      // Outside a table it is a paragraph, not a blank line.
+      assert.deepEqual(parse(`a\n${odd}\nb\n`).blocks.map((b) => [b.kind, b.first, b.last]), [["paragraph", 1, 3]], JSON.stringify(odd));
+    }
+    assert.deepEqual(parse("a\n \t \nb\n").blocks.map((b) => [b.kind, b.first]), [["paragraph", 1], ["paragraph", 3]], "spaces and tabs are blank");
+    assert.deepEqual((parse("| a |\n|---|\n| 1 |\n").blocks[0] as Table).skipped, []);
   });
 
   test("a paragraph ends at a blank line or at a line that starts another block; its drawn text is its lines joined", () => {

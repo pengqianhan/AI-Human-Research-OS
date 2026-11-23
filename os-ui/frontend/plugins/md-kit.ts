@@ -238,7 +238,8 @@ interface Span {
 
 export type Heading = Span & { kind: "heading"; level: number; text: string };
 export type Code = Span & { kind: "code"; info: string; body: string[]; closed: boolean };
-export type Table = Span & { kind: "table"; header: string[]; rows: Row[]; more: number; columnsCut: boolean };
+/** `skipped`: lines inside the table holding nothing visible, which do not end it (they are no rows). */
+export type Table = Span & { kind: "table"; header: string[]; rows: Row[]; more: number; columnsCut: boolean; skipped: number[] };
 export type List = Span & { kind: "list"; ordered: boolean; items: Item[] };
 export type Paragraph = Span & { kind: "paragraph"; text: string };
 export type Block = Heading | Code | Table | List | Paragraph;
@@ -280,7 +281,16 @@ export function trimSpaces(text: string): string {
   return text.slice(a, b);
 }
 
-const blank = (line: string) => line.trim() === "";
+/** A blank line: spaces and tabs only. A line of other characters JavaScript's trim() takes (U+FEFF, a no-break space, U+2028, U+3000 …) is not blank. */
+const blank = (line: string) => trimSpaces(line) === "";
+
+/**
+ * A line of nothing visible that is not blank: invisible, format, and space
+ * characters other than plain spaces and tabs. Inside a table it does not
+ * end the table (the rows after it are still rows); the table records it.
+ */
+const INVISIBLE_ONLY = /^[ \t\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Z}⠀]+$/u;
+const invisibleOnly = (line: string) => !blank(line) && INVISIBLE_ONLY.test(line);
 
 /** Leading white space as columns: a space is 1, a tab 4. */
 function indentOf(line: string): number {
@@ -369,7 +379,7 @@ export function splitCells(line: string): string[] {
 
 /** A delimiter row: every cell dashes, optionally with a ":" at either end. */
 function isDelimiterRow(line: string): boolean {
-  if (!line.trimStart().startsWith("|")) return false;
+  if (!startsRow(line)) return false;
   const cells = splitCells(line);
   if (cells.length === 0) return false;
   return cells.every((cell) => {
@@ -383,7 +393,12 @@ function isDelimiterRow(line: string): boolean {
   });
 }
 
-const startsRow = (line: string) => line.trimStart().startsWith("|");
+/** A table row: "|" after spaces and tabs only. */
+function startsRow(line: string): boolean {
+  let i = 0;
+  while (i < line.length && spaceOrTab(line.charCodeAt(i))) i++;
+  return line.charCodeAt(i) === 124;
+}
 
 /** Whether `line` (followed by `next`) starts a block other than a paragraph, so a paragraph ends before it. */
 function startsBlock(line: string, next: string | undefined): boolean {
@@ -427,9 +442,18 @@ export function parse(source: string): Doc {
       const head = splitCells(line);
       const width = Math.min(head.length, LIMITS.columns);
       const rows: Row[] = [];
+      const skipped: number[] = [];
       let more = 0;
       let j = i + 2;
-      for (; j < lines.length && startsRow(lines[j]!); j++) {
+      for (; j < lines.length; j++) {
+        if (!startsRow(lines[j]!)) {
+          // Lines of nothing visible do not end the table when a row follows them.
+          let k = j;
+          while (k < lines.length && invisibleOnly(lines[k]!)) k++;
+          if (k === j || k === lines.length || !startsRow(lines[k]!)) break;
+          for (let s = j; s < k; s++) skipped.push(s + 1);
+          j = k;
+        }
         if (rows.length >= LIMITS.rows) {
           more++;
           continue;
@@ -440,7 +464,7 @@ export function parse(source: string): Doc {
         while (fitted.length < width) fitted.push("");
         rows.push({ line: j + 1, source: lines[j]!, cells: fitted, uneven });
       }
-      blocks.push({ kind: "table", header: head.slice(0, width), rows, more, columnsCut: head.length > width, ...span(i, j - 1) });
+      blocks.push({ kind: "table", header: head.slice(0, width), rows, more, columnsCut: head.length > width, skipped, ...span(i, j - 1) });
       i = j;
       continue;
     }
@@ -563,7 +587,7 @@ export interface SnapshotItem {
 }
 
 /** The first list of section "Snapshot", as label-value items; null without that section or list. */
-export function snapshot(all: readonly Section[]): { section: Section; items: SnapshotItem[] } | null {
+export function snapshot(all: readonly Section[]): { section: Section; list: List; items: SnapshotItem[] } | null {
   const sec = section(all, "Snapshot");
   const list = sec?.blocks.find((b): b is List => b.kind === "list");
   if (sec === null || sec === undefined || list === undefined) return null;
@@ -573,7 +597,7 @@ export function snapshot(all: readonly Section[]): { section: Section; items: Sn
     const value = colon === -1 ? "" : item.text.slice(colon + 1);
     return { label: trimSpaces(label), value: trimSpaces(value), first: item.first, last: item.last, lines: item.lines };
   });
-  return { section: sec, items };
+  return { section: sec, list, items };
 }
 
 /** A Snapshot item by its label, ignoring case. */
@@ -601,7 +625,7 @@ export interface Claim {
 
 export type Claims =
   | { found: false; section: Section | null }
-  | { found: true; section: Section; table: Table; missing: string[]; claims: Claim[] };
+  | { found: true; section: Section; table: Table; missing: string[]; claims: Claim[]; columns: number[]; empty: number[] };
 
 /** A claim's ID: 1 to 4 capitals, 1 to 4 digits, an optional small letter, then ": ". */
 const CLAIM_ID = /^([A-Z]{1,4}[0-9]{1,4}[a-z]?): /;
@@ -609,7 +633,8 @@ const CLAIM_ID = /^([A-Z]{1,4}[0-9]{1,4}[a-z]?): /;
 /**
  * The first table of section "Claims and Evidence", its columns found by
  * header name. A row whose Claim cell is empty is not a claim (the
- * template's placeholder row). `missing` names the headers not found.
+ * template's placeholder row; `empty` lists their lines). `missing` names
+ * the headers not found; `columns` is the column of each of CLAIM_COLUMNS, or -1.
  */
 export function claims(all: readonly Section[]): Claims {
   const sec = section(all, "Claims and Evidence");
@@ -619,10 +644,14 @@ export function claims(all: readonly Section[]): Claims {
   const missing = CLAIM_COLUMNS.filter((_, k) => at[k] === -1);
   const cell = (row: Row, k: number) => (at[k] === -1 ? null : row.cells[at[k]!]!);
   const out: Claim[] = [];
+  const empty: number[] = [];
   if (at[0] !== -1) {
     for (const row of table.rows) {
       const claim = cell(row, 0)!;
-      if (claim === "") continue;
+      if (claim === "") {
+        empty.push(row.line);
+        continue;
+      }
       const id = CLAIM_ID.exec(claim);
       out.push({
         id: id === null ? null : id[1]!,
@@ -636,7 +665,7 @@ export function claims(all: readonly Section[]): Claims {
       });
     }
   }
-  return { found: true, section: sec, table, missing, claims: out };
+  return { found: true, section: sec, table, missing, claims: out, columns: at, empty };
 }
 
 /** One row of the Experiments table: its Study (first cell), its line, and the claim IDs its Claim cell lists. */

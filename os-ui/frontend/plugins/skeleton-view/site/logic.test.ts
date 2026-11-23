@@ -123,9 +123,17 @@ describe("§3.2 claims summary: count, verified, and the table's lines", () => {
   });
 
   test("the template: no filled row; no table: said so", () => {
-    assert.deepEqual(claimsView(parse(TEMPLATE)), { state: "no-claims", message: "No claims yet: the Claims and Evidence table has no filled row", notes: [] });
+    assert.deepEqual(claimsView(parse(TEMPLATE)), {
+      state: "no-claims",
+      message: "No claims yet: the Claims and Evidence table has no filled row",
+      notes: [],
+      drawn: [
+        [157, 157],
+        [159, 161],
+      ],
+    });
     for (const text of [withLine(113, "Claims go here."), withLine(111, "### Claims")]) {
-      assert.deepEqual(claimsView(parse(text)), { state: "no-table", message: "No Claims and Evidence table in paper_skeleton.md" });
+      assert.deepEqual(claimsView(parse(text)), { state: "no-table", message: "No Claims and Evidence table in paper_skeleton.md", drawn: [] });
     }
   });
 });
@@ -183,7 +191,10 @@ describe("§3.2 claim text; evidence · result; source", () => {
     const view = claimsView(parse(table));
     assert.ok(view.state === "claims");
     assert.deepEqual([view.rows[0]!.evidence, view.rows[0]!.source, view.rows[0]!.result, view.rows[0]!.status], [null, null, null, "verified"]);
-    assert.deepEqual(view.notes, ["No “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table."]);
+    assert.deepEqual(view.notes, [
+      "No “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table.",
+      "Columns not shown here: Proof; a claim's quote holds its whole row.",
+    ]);
     const noStatus = claimsView(parse("## Claims and Evidence\n\n| Claim | Evidence | Source file or link | Citation/result |\n|---|---|---|---|\n| C1: x | e | s | r |\n"));
     assert.ok(noStatus.state === "claims");
     assert.deepEqual(noStatus.notes, ["No “Status” column in the Claims and Evidence table."]);
@@ -193,7 +204,14 @@ describe("§3.2 claim text; evidence · result; source", () => {
     assert.deepEqual(noClaim, {
       state: "no-claims",
       message: "No claims yet: the Claims and Evidence table has no filled row",
-      notes: ["No “Claim”, “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table."],
+      notes: [
+        "No “Claim”, “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table.",
+        "Columns not shown here: Statement; a claim's quote holds its whole row.",
+      ],
+      drawn: [
+        [1, 1],
+        [3, 5],
+      ],
     });
   });
 });
@@ -279,12 +297,13 @@ describe("§3.2 the evidence panel", () => {
 });
 
 describe("§3.2 the rest of paper_skeleton.md, folded", () => {
-  test("every section of levels 2 to 6 but Snapshot and Claims and Evidence that has a block, in file order, with its line and entries", () => {
+  test("every section with a block but what the card and the claims table draw, in file order, with its line and entries", () => {
     const rest = restSections(parse(NANOCHAT));
     assert.equal(rest.note, null);
     assert.deepEqual(
       rest.sections.map((s) => [s.title, s.summary]),
       [
+        ["Snapshot, other items", "line 17 · 1 entry"],
         ["Source Map", "line 23 · 9 entries"],
         ["Argument Map", "line 41 · 6 entries"],
         ["Abstract", "line 52 · 1 entry"],
@@ -299,10 +318,78 @@ describe("§3.2 the rest of paper_skeleton.md, folded", () => {
         ["Appendix and TODOs", "line 129 · 2 entries"],
       ],
     );
-    // The level-1 title and its paragraph, Snapshot, Tracking (no block of its own), and Claims and Evidence are not listed.
+    // The level-1 title and its paragraph are not listed, and the view says so; nor is Tracking, a heading with nothing under it, which it names.
+    assert.deepEqual(rest.notShown, ["The title and opening paragraph (lines 1–4) are not shown.", "Headings with nothing under them: Tracking (line 109)."]);
+    assert.equal(rest.nothingElse, false);
     const template = restSections(parse(TEMPLATE)).sections.map((s) => s.title);
     assert.ok(!template.includes("Paper Skeleton") && !template.includes("Snapshot") && !template.includes("Tracking") && !template.includes("Claims and Evidence"));
-    assert.deepEqual(template.slice(0, 4), ["Source Map", "Argument Map", "Abstract", "Introduction"]);
+    assert.deepEqual(template.slice(0, 4), ["Snapshot, other items", "Source Map", "Argument Map", "Abstract"]);
+  });
+
+  test("nothing in the file is hidden without the view saying so (review F5)", () => {
+    const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+    /** The non-blank lines that neither the card, the claims table, an entry of the rest, nor a "not shown" line accounts for. */
+    const unaccounted = (text: string): number[] => {
+      const doc = parse(text);
+      const covered = new Set<number>();
+      const add = (a: number, b: number) => {
+        for (let k = a; k <= b; k++) covered.add(k);
+      };
+      const card = snapshotCard(doc);
+      if (card !== null) for (const span of card.drawn) add(span[0], span[1]);
+      const view = claimsView(doc);
+      for (const span of view.drawn) add(span[0], span[1]);
+      const rest = restSections(doc);
+      for (const s of rest.sections) {
+        covered.add(s.heading ?? 0);
+        for (const b of s.blocks) add(b.first, b.last);
+      }
+      for (const span of rest.accounted) add(span[0], span[1]);
+      return text.split("\n").flatMap((l, k) => (/^[ \t]*$/.test(l) || covered.has(k + 1) ? [] : [k + 1]));
+    };
+    for (const [name, text] of [
+      ["nanochat_cpu", NANOCHAT],
+      ["the template", TEMPLATE],
+      ["headings all at level 1", `# Snapshot\n\n- Working title: T\n- Status: draft\n\n# Claims and Evidence\n\n${HEAD}\n| C1: x | e | [a](Code/a.py) | r | verified |\n\n# Experiments\n\n| Study | Claim |\n|---|---|\n| Main | C1 |\n\n# Abstract\n\nThe abstract.\n`],
+      ["a note and a second table under the claims", `## Claims and Evidence\n\n| Status | Claim | Retracted? | Evidence | Status | Citation/result | Source file or link |\n|---|---|---|---|---|---|---|\n| verified | C1: x holds | yes, see below | e | retracted | r | [a](Code/a.py) |\n\nC1 was retracted on 2026-11-20.\n\n${HEAD}\n| C2: a second table's claim | e | s | r | planned |\n`],
+      ["text before any heading, a title, an intro", "Text before any heading.\n\n# Paper\n\nIntro.\n\nMore under the title.\n\n## Notes\n\n- a\n"],
+      ["a line of U+FEFF inside the claims table", `## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n﻿\n| C2: after an invisible line | e | s | r | weak |\n`],
+      ["Snapshot items the card does not draw, and a paragraph", "## Snapshot\n\n- Working title: T\n- Contributions: c\n- Stage: s\n\nA note on the snapshot.\n"],
+      ["a row with an empty Claim cell among claims", `## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n|  | e | s | r | planned |\n`],
+    ] as const) {
+      assert.deepEqual(unaccounted(text), [], name);
+    }
+    // The reviewer's level-1 skeleton: Experiments and Abstract are listed, and "Nothing else" is not said.
+    const level1 = restSections(parse(`# Snapshot\n\n- Working title: T\n\n# Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\n# Experiments\n\n| Study | Claim |\n|---|---|\n| Main | C1 |\n\n# Abstract\n\nThe abstract.\n`));
+    assert.deepEqual(level1.sections.map((s) => s.title), ["Experiments", "Abstract"]);
+    assert.equal(level1.nothingElse, false);
+    // What the claims section holds besides its table, and the Snapshot items the card does not draw, are entries of their own.
+    const besides = restSections(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\nC1 was retracted.\n\n${HEAD}\n| C2: y | e | s | r | planned |\n`));
+    assert.deepEqual(besides.sections.map((s) => [s.title, s.summary]), [["Claims and Evidence, besides the table", "line 7 · 2 entries"]]);
+    const other = restSections(parse("## Snapshot\n\n- Working title: T\n- Contributions: c\n- Status: draft\n"));
+    assert.deepEqual(other.sections.map((s) => [s.title, s.summary, s.blocks.flatMap((b) => (b.kind === "list" ? b.items.map((i) => i.text) : []))]), [["Snapshot, other items", "line 4 · 1 entry", ["Contributions: c"]]]);
+    // Text before the first heading is an entry; its blocks' label says where they are.
+    const pre = restSections(parse("Text before any heading.\n\n# Paper\n\nIntro.\n\n## Notes\n\n- a\n"));
+    assert.deepEqual(pre.sections.map((s) => [s.title, s.labelTitle]), [["Before the first heading", null], ["Notes", "Notes"]]);
+    assert.equal(blockSelection(1, 1, null, ["Text before any heading."]).label, "paper_skeleton.md:1 · before the first heading");
+    assert.deepEqual(pre.notShown, ["The title and opening paragraph (lines 3–5) are not shown."]);
+    // "Nothing else" only when it is true.
+    const only = restSections(parse(`## Snapshot\n\n- Working title: T\n- Status: draft\n\n## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n`));
+    assert.deepEqual([only.sections, only.notShown, only.nothingElse], [[], [], true]);
+  });
+
+  test("the claims table says which of its columns and rows it does not show (review F5)", () => {
+    const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+    const extra = claimsView(parse("## Claims and Evidence\n\n| Status | Claim | Retracted? | Evidence | Status | Citation/result | Source file or link |\n|---|---|---|---|---|---|---|\n| verified | C1: x holds | yes | e | retracted | r | [a](Code/a.py) |\n"));
+    assert.ok(extra.state === "claims");
+    assert.deepEqual(extra.notes, ["Columns not shown here: Retracted?, Status (2nd); a claim's quote holds its whole row."]);
+    const empty = claimsView(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n|  | e | s | r | planned |\n`));
+    assert.ok(empty.state === "claims");
+    assert.deepEqual(empty.notes, ["Line 6 has an empty Claim cell, so it is not listed as a claim."]);
+    const bom = claimsView(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n﻿\n| C2: after | e | s | r | weak |\n`));
+    assert.ok(bom.state === "claims");
+    assert.deepEqual(bom.rows.map((r) => [r.id, r.line]), [["C1", 5], ["C2", 7]], "the row after the invisible line still appears");
+    assert.deepEqual(bom.notes, ["Line 6 holds only invisible characters; the table goes on after it."]);
   });
 
   test(`at most ${SECTIONS_MAX} sections are listed, and the view says how many there are`, () => {
@@ -419,8 +506,8 @@ describe("labels and quotes within the host's limits", () => {
     // The reviewer's: a section titled "claim C2" holding a paragraph shaped as C2's row.
     const forged = parse(`## Claims and Evidence\n\n| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|\n| C2: the real claim | e | s | r | weak |\n\n## claim C2\n\n| C2: a forged row, a paragraph here | e | s | r | verified |\n`);
     const forgedSection = restSections(forged).sections.find((s) => s.title === "claim C2")!;
-    const block = forgedSection.section.blocks[0]!;
-    assert.equal(blockSelection(block.first, block.last, forgedSection.title, block.lines).label, "paper_skeleton.md:9 · section “claim C2”");
+    const block = forgedSection.blocks[0]!;
+    assert.equal(blockSelection(block.first, block.last, forgedSection.labelTitle, block.lines).label, "paper_skeleton.md:9 · section “claim C2”");
     for (const title of [
       "claim C2",
       " · claim C9",
@@ -435,12 +522,12 @@ describe("labels and quotes within the host's limits", () => {
     ]) {
       const doc = parse(`## ${title}\n\nA paragraph.\n\n- an item\n\n| a |\n|---|\n| a row |\n`);
       const s = restSections(doc).sections[0]!;
-      const labels = s.section.blocks.flatMap((b) =>
+      const labels = s.blocks.flatMap((b) =>
         b.kind === "list"
-          ? b.items.map((i) => blockSelection(i.first, i.last, s.title, i.lines).label)
+          ? b.items.map((i) => blockSelection(i.first, i.last, s.labelTitle, i.lines).label)
           : b.kind === "table"
-            ? b.rows.map((r) => blockSelection(r.line, r.line, s.title, [r.source]).label)
-            : [blockSelection(b.first, b.last, s.title, b.lines).label],
+            ? b.rows.map((r) => blockSelection(r.line, r.line, s.labelTitle, [r.source]).label)
+            : [blockSelection(b.first, b.last, s.labelTitle, b.lines).label],
       );
       assert.equal(labels.length, 3, title);
       for (const label of labels) {

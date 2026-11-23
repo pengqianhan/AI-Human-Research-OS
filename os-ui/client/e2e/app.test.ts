@@ -1539,9 +1539,18 @@ describe("desktop client on a Research OS folder", () => {
       assert.deepEqual(await sk.locator(".sk-snap p b").allTextContents(), ["Thesis", "Audience", "Research question"]);
       assert.equal(await sk.locator(".sk-claims .sk-h small").textContent(), "5 claims · 5 verified · paper_skeleton.md:113–119");
       assert.deepEqual(await sk.locator(".ctable tbody tr.blk td.id").allTextContents(), ["C1verified", "C2verified", "C3verified", "C4verified", "C5verified"]);
-      assert.equal(await sk.locator(".sk-rest details").count(), 12);
+      assert.equal(await sk.locator(".sk-rest details").count(), 13);
       assert.equal(await sk.locator(".sk-rest details[open]").count(), 0, "folded");
-      assert.equal((await sk.locator(".sk-rest summary").first().textContent())?.replace(/\s+/g, " "), "Source Mapline 23 · 9 entries");
+      // Nothing is hidden without the view saying so: the Snapshot items the card does not draw, then each section.
+      assert.deepEqual(
+        (await sk.locator(".sk-rest summary").allTextContents()).slice(0, 2).map((t) => t.replace(/\s+/g, " ")),
+        ["Snapshot, other itemsline 17 · 1 entry", "Source Mapline 23 · 9 entries"],
+      );
+      assert.deepEqual(await sk.locator(".sk-rest > p.table-note").allTextContents(), [
+        "The title and opening paragraph (lines 1–4) are not shown.",
+        "Headings with nothing under them: Tracking (line 109).",
+      ]);
+      assert.equal(await sk.getByText("Nothing else in paper_skeleton.md.").count(), 0);
       await sk.locator(".sk-side .nd-empty").waitFor({ state: "attached" });
       if ((await sk.evaluate(() => innerWidth)) >= 780) {
         // As in the mockup, the Snapshot card and the evidence panel start on the same line.

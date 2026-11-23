@@ -365,13 +365,16 @@ function restSection(doc: Doc): HTMLElement {
   head.append(el("small", "", "folded; open a section to read it"));
   box.append(head);
   const rest = restSections(doc);
-  if (rest.sections.length === 0) box.append(el("div", "note-box", `Nothing else in ${FILE}.`));
+  // Only when it is true: the card and the claims table drew the whole file.
+  if (rest.nothingElse) box.append(el("div", "note-box", `Nothing else in ${FILE}.`));
   for (const s of rest.sections) box.append(folded(s));
   if (rest.note !== null) box.append(el("p", "table-note", rest.note));
+  // What is left out, said in one muted line each (section titles from the file, so marked).
+  for (const text of rest.notShown) box.append(el("p", "table-note", markInvisible(text)));
   return box;
 }
 
-/** One section: its title, line, and entries; its blocks drawn when it is first opened. */
+/** One entry: its name, line, and entries; its blocks drawn when it is first opened. */
 function folded(s: RestSection): HTMLElement {
   const details = el("details");
   const summary = el("summary");
@@ -381,7 +384,7 @@ function folded(s: RestSection): HTMLElement {
   const inner = el("div", "inner mddoc");
   details.append(summary, inner);
   const fill = () => {
-    if (inner.childElementCount === 0) for (const block of s.section.blocks) inner.append(...blockNodes(block, s.title));
+    if (inner.childElementCount === 0) for (const block of s.blocks) inner.append(...blockNodes(block, s.labelTitle));
   };
   if (state.open.has(s.key)) {
     details.open = true;
@@ -400,7 +403,7 @@ function folded(s: RestSection): HTMLElement {
 }
 
 /** A block of a section as DOM: each paragraph, list item, table row, and code block selectable. */
-function blockNodes(block: Block, title: string): HTMLElement[] {
+function blockNodes(block: Block, title: string | null): HTMLElement[] {
   if (block.kind === "paragraph") return [paragraph(block, title)];
   if (block.kind === "list") return [list(block, title)];
   if (block.kind === "table") return table(block, title);
@@ -408,13 +411,13 @@ function blockNodes(block: Block, title: string): HTMLElement[] {
   return [];
 }
 
-function paragraph(block: Paragraph, title: string): HTMLElement {
+function paragraph(block: Paragraph, title: string | null): HTMLElement {
   const p = el("p");
   p.append(...md(block.text));
   return selectable(p, () => blockSelection(block.first, block.last, title, block.lines));
 }
 
-function list(block: List, title: string): HTMLElement {
+function list(block: List, title: string | null): HTMLElement {
   const box = el(block.ordered ? "ol" : "ul");
   for (const item of block.items) {
     const li = el("li");
@@ -433,7 +436,7 @@ function list(block: List, title: string): HTMLElement {
   return box;
 }
 
-function table(block: Table, title: string): HTMLElement[] {
+function table(block: Table, title: string | null): HTMLElement[] {
   const t = el("table", "mdtable");
   const head = el("tr");
   for (const cell of block.header) {
@@ -457,7 +460,7 @@ function table(block: Table, title: string): HTMLElement[] {
   return [t, ...tableNotes(block).map((text) => el("p", "table-note", text))];
 }
 
-function code(block: Code, title: string): HTMLElement {
+function code(block: Code, title: string | null): HTMLElement {
   const pre = el("pre", "", markInvisible(block.body.map((line) => cutText(line)).join("\n")));
   return selectable(pre, () => blockSelection(block.first, block.last, title, block.lines));
 }
