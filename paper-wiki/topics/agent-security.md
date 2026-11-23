@@ -7,7 +7,7 @@ tags:
 - red-teaming
 - mcp-security
 - jailbreak-evaluation
-timestamp: 2026-11-19T00:00:00Z
+timestamp: 2026-11-23T00:00:00Z
 ---
 
 # Scope
@@ -21,6 +21,7 @@ This topic tracks papers whose main object is not agent *capability* but agent *
 * [nanoMuse](../papers/2610.08699.md) - a defense design for an open personal agent rather than an assessment: every tool call passes a fixed-order gate (denied tools, the person's rules, allow and ask lists, taint after private data is read, risk against mode, and warnings no setting can override), approvals are scoped grants the person can list and revoke, and the paper contrasts this policy boundary with Muse's privilege boundary (credentials swapped in outside the agent, kernel-level taint tracking); none of it is red-teamed.
 * [SPILLWAY](../papers/2611.07222.md) - a deterministic defense against indirect prompt injection: a call's target is admitted only if it was returned in a typed identity field of a read-only tool or named by the user, a rule-based sanitizer removes injected instructions before the model reads them, and a local judge may restore only refused targets outside the removed text; zero in-scope attack success on all 12 AgentDojo backbone-by-suite cells at the highest mean utility under attack of the defenses run.
 * [PIPETTE](../papers/2611.24362.md) - shows RL red-teamers with higher attack success can yield less robust agents after adversarial training, then couples a red-teamer rewarded for attack strategies a rolling dictionary cannot explain with an on-policy defender trained by task-alignment reasoning and a contrastive token-level reward; 0% to 10% attack success under adaptive search on 40 AgentDojo pairs.
+* [Intent Contracts](../papers/2611.24025.md) - takes tools away from the planning model: it submits a logged contract (goal, verbatim user quotation, scope) that code validates and a small trusted model checks before writing the one tool call itself; on AmPermBench every changed object is declared beforehand and bundled unrequested work no longer blocks the user's task, but unauthorized actions do not fall, because no trusted role can see the environment to check which objects the planner chose.
 
 # Synthesis
 
@@ -32,6 +33,8 @@ nanoMuse is the first defense-side paper here, and its main lesson is a distinct
 
 [PIPETTE](../papers/2611.24362.md) adds the trained-defense side to this topic's prompt-injection papers. SPILLWAY bounds what an injected instruction can reach with a deterministic egress rule outside the model; PIPETTE changes the model so it ignores the instruction, and reports lower attack success with higher utility than the non-training defenses it compares. The two fail differently: a trained policy has no guarantee and is measured only up to the attacker's budget (here 250 attempts with a 4B attacker on 40 pairs), while a target-admission rule is exact inside its scope and silent outside it. PIPETTE's first finding also generalizes beyond its method: attack success during red-teaming measured how many tasks were broken, not how many different ways, and only the second predicted robustness after training.
 
+[Intent Contracts](../papers/2611.24025.md) adds a measured limit to intent-based gating. Showing a reviewer the planner's stated intent cut unauthorized actions on original AmPermBench prompts (2/96 vs. 10/96), but once a benchmark ambiguity was clarified the gap closed, and every condition that acted, gated or not, changed a wrong target in 40-49% of the runs where it changed anything. All of those errors fell on ambiguous range references and none on exact IDs. A trusted model that sees only the user's words and the planner's claim can check consistency, not whether the named objects are the ones the user meant; that needs the environment.
+
 # Open Questions
 
 * How should layer-paradigm matching generalize to attack surfaces not covered by AI-Infra-Guard's four layers, such as persistent agent memory or inter-agent/multi-agent communication channels?
@@ -42,3 +45,4 @@ nanoMuse is the first defense-side paper here, and its main lesson is a distinct
 * How much protection does a same-process policy gate (nanoMuse's Sentinel) give against prompt injection compared with a privilege boundary that holds credentials outside the agent, and can a phone or laptop provide the latter without a per-person cloud VM?
 * SPILLWAY's floor relies on tools returning identities in typed fields. How many real MCP servers do so, and what happens to a target-admission defense when addresses arrive in free-form strings or when the attacker can write a typed field by being a sender or contact?
 * PIPETTE's coverage measure rests on an LLM grader that has not been checked against human labels, and its red-teamers differ in dataset size as well as coverage. With size held equal, how much of the robustness gain does strategy coverage explain, and does a trained defender combined with a deterministic egress rule block the adaptive attacks that either one alone misses?
+* Intent Contracts shows that a trusted executor which cannot see the environment cannot catch a planner's over-broad reading of "my jobs" or "this range". Can read-only environment queries on the trusted side resolve such references before execution without reopening the channels the design closes?

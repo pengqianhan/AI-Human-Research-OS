@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - policy-gradient
 - credit-assignment
-timestamp: 2026-11-19T00:00:00Z
+timestamp: 2026-11-23T00:00:00Z
 ---
 
 # Definition
@@ -48,3 +48,4 @@ GRPO (Group Relative Policy Optimization), introduced in DeepSeekMath (Shao et a
 * [Actor, Judge, or Teacher?](../papers/2611.17167.md) - adds a frozen judge's mean-centered per-action scores (weight 0.5) to the GRPO outcome advantage; the GRPO baseline is not rerun but taken from the GiGPO paper.
 * [Agent-R2](../papers/2611.08219.md) - RL stage after SFT, with reward equal to a multimodal judge's rubric score over the maximum (zero without a deliverable), group size 4; worth 5.7 GDPval points over SFT alone.
 * [PIPETTE](../papers/2611.24362.md) - trains both the prompt-injection red-teamer and the defender with GRPO, normalizing each reward (attack, format, strategy coverage; outcome, reasoning) within the group before the weighted sum and adding a clipped token-level term to the trajectory advantage.
+* [Duopra](../papers/2611.25773.md) - Dr. GRPO on the thinker's LoRA adapters over groups of eight full-duplex streaming rollouts that share scripted user audio and tool catalog, with a KL term toward the SFT checkpoint.

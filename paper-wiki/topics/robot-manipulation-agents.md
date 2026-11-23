@@ -7,7 +7,7 @@ tags:
 - coding-agents
 - vision-language-action
 - embodied-harness
-timestamp: 2026-09-29T00:00:00Z
+timestamp: 2026-11-23T00:00:00Z
 ---
 
 # Scope
@@ -21,6 +21,7 @@ This topic covers papers where a language-model agent, not only a learned visuom
 * [Show-Harness](../papers/2609.10522.md) - a frozen or LoRA-adapted VLM acts through nine view-relative semantic action units that a deterministic per-embodiment interpreter grounds, on real Franka and AgileX arms.
 * [EmbodiedSWE](../papers/2609.27308.md) - coding agents write full `solve(env)` programs for 28 long-horizon, contact-rich simulated tasks (11%-82% solved across six frontier models), and one verified solution is diversified into many demonstrations that train a VLA, including a sim-only policy that completes a real lamp-disassembly task.
 * [Self-Evolving Coding Agents (HexaAnything)](../papers/2609.35432.md) - a coding agent keeps task state as an executable world program and calls a frozen XR-1 VLA as one tool, gated by a typed verifier that ignores the VLA's stop signal; RoboCasa365 Composite-Unseen rises from 34.3% to 38.3%, a Qwen3.8-27B planner fine-tuned on the harness's verified traces reaches 39.5%, and agent-revised tools raise three RoboDojo tasks to 80-100%.
+* [AgentRoboCritic](../papers/2611.26613.md) - GPT-6 Astra controls robots directly with numerical actions and states a local intent per action; an intent-grounded critic labels each of over 100,000 actions across 12 benchmarks, finding that 57.7% of failures are later recovered, Choice errors are 0.2%, and Grasp at closure and Alignment in tight-tolerance tasks are the main physical bottlenecks.
 
 # Synthesis
 
@@ -28,9 +29,12 @@ The four papers split on *when* the agent's reasoning is spent. Zetta, Harness V
 
 HexaAnything sits between the two camps. Like Zetta and Harness VLA, it puts the agent in the loop at deployment time around a frozen VLA, and like Zetta it refuses to take the VLA's own stop signal as success. But it also feeds verified traces back into training, as EmbodiedSWE does; the difference is *what* gets trained. EmbodiedSWE trains the VLA from agent-generated demonstrations, while HexaAnything fine-tunes the *planner* (HexaModel v0.1, an open 27B model) on the harness's own traces, by SFT rather than RL. Its verifier works only from images, proprioception, and tool outputs, in contrast with Zetta's fallback to privileged simulator signals and EmbodiedSWE's full-state solvers. Its measured gains are modest (4.0 points on Composite-Unseen with one VLA on one benchmark, and 1.6 points overall over Codex driving the same VLA), so the case for an executable world program rests more on the per-task case studies than on the aggregate numbers.
 
+[AgentRoboCritic](../papers/2611.26613.md) studies the route the other papers here avoid: the frontier agent issues numerical poses and gripper commands step by step rather than writing a program or calling a frozen VLA. Its action-level labels suggest why the other routes help. The agent's errors are almost never about which object it meant (Choice 0.2% of failures) but about millimeter-scale contact: closures beside or on the rim of an object, and alignments it rarely recovers from (about one in three). Program-writing agents such as EmbodiedSWE and harnessed VLAs hand exactly that precision to code or a learned policy. Direct control also takes a median 31.9 s per decision against 0.11 s for pi_0.5 (reader synthesis).
+
 # Open Questions
 
 * On the same tasks, is agent effort better spent at deployment (planning over a frozen VLA) or offline (generating demonstrations to fine-tune the VLA)? No paper here compares the two directly. HexaAnything adds a third option, distilling harness traces into the planner, which also has not been compared with the other two.
 * EmbodiedSWE's solvers use full simulator state. Can a coding agent that sees only rendered frames, as the deployment-time harnesses do, still solve long-horizon contact tasks?
 * Reward hacking is frequent when a coding agent can touch the simulator (up to 43% of runs in EmbodiedSWE). Do deployment-time harnesses that call a real robot face an equivalent risk, such as false-success reports, and how should it be measured?
 * Do fixed action vocabularies (Show-Harness) and fixed VLA tool interfaces (Harness VLA) limit which tasks can be solved compared with free-form control code (EmbodiedSWE)?
+* AgentRoboCritic's critic and policy are the same model, and its Choice label only checks action against stated intent. How do action-level failure profiles change for other frontier agents, and how often is the intent itself aimed at the wrong object?

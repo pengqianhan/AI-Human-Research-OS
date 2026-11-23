@@ -6,7 +6,7 @@ tags:
 - llm-agents
 - skills
 - verification
-timestamp: 2026-11-09T00:00:00Z
+timestamp: 2026-11-23T00:00:00Z
 ---
 
 # Scope
@@ -40,6 +40,7 @@ This topic tracks papers about LLM agents that execute tasks, build reusable ski
 * [Omni Interaction Agent (Gander)](../papers/2609.08977.md) - a realtime, full-duplex multimodal front-end model that delegates long-horizon work to a completely training-free general-purpose backend agent (Codex or Claude Code) through structured `task_start`/`task_send`/`task_resolve` tool calls, treating an off-the-shelf coding/reasoning agent as a swappable execution tier rather than building bespoke agentic capability into the interaction-facing model itself.
 * [Paper2Agent](../papers/2509.06917.md) - a genuinely different angle from this topic's other agent-construction/platform papers (OpenHands, AutoDev, Apodex 1.1): those build agent execution infrastructure that a user or downstream task operates directly, whereas Paper2Agent's orchestrator-plus-four-sub-agent pipeline builds the interface itself — automatically converting one static research paper and its codebase into a tested, versioned MCP server, so the "agent" being constructed is a standing interactive proxy for a specific paper's methods rather than a general-purpose coding/task-execution platform.
 * [The Last Mile to the Real World (HEELO)](../papers/2611.07461.md) - names the step from reaching a resource to applying it in context as the main failure of real-world agents and addresses it with self-applying primitives; on 46 live tasks, Claude Code and Codex complete 9 each alone and 39 and 35 through HEELO's MCP server, though standalone agents lacked account access.
+* [Intent Contracts](../papers/2611.24025.md) - splits a tool-using agent into a strong untrusted planner with no tools and a small trusted executor that writes every call from a checked natural-language contract; the executor can carry out the authorized part of a step, which a whole-command reviewer cannot.
 
 # Synthesis
 

@@ -7,7 +7,7 @@ tags:
 - reinforcement-learning
 - evolution-strategies
 - credit-assignment
-timestamp: 2026-11-20T00:00:00Z
+timestamp: 2026-11-23T00:00:00Z
 ---
 
 # Scope
@@ -53,6 +53,7 @@ This topic tracks methods that update an LLM agent's parameters — as opposed t
 * [RepoFactory](../papers/2611.21152.md) - SFT of Qwen3.5-35B-A3B on 10,947 Qwen3.8-Max trajectories from evolved repository environments: +22.6 on NL2Repo-Bench and +8.5 on average over five coding benchmarks, against +17.5 and +6.4 without environment evolution.
 * [PIPETTE](../papers/2611.24362.md) - adversarial fine-tuning of tool-calling agents against prompt injection: on-policy GRPO with an outcome reward, a judged reasoning reward, and a per-token log-ratio between the policy under a privileged ignore-the-injection prefix and a follow-it prefix, which keeps benign utility at or above the base model where SFT and outcome-only RL lose it.
 * [AutoMaster](../papers/2611.26510.md) - SFT of 4B and 9B agent students on 512 teacher trajectories whose behavior an LLM agent shaped with natural-language skills and selected by behavior as well as outcome; beats SFT on random successful trajectories by 1.42 to 8.99 points on Terminal, Search and SWE, and keeping the skill text in the training input beats removing it in all six settings.
+* [Duopra](../papers/2611.25773.md) - trains a full-duplex speech model to act: protocol SFT, then streaming RL (Dr. GRPO, groups of eight rollouts) with time-anchored, outcome-tiered rewards for complete grounded execution, then refitting only the thinker-to-talker projector to undo speech degradation; FDB v3 Pass@1 goes 26.0% (SFT) to 26.7% (first RL stage) to 47.7%.
 
 # Synthesis
 
@@ -127,3 +128,4 @@ Harness-S works on the same all-failure groups that dynamic sampling in DAPO dis
 * Harness-S trains on rollouts produced under contexts the deployed policy never sees. Compared with a matched-context control (the same number of mixed groups drawn under the base harness), how much of its gain comes from the sibling harnesses' behaviors and how much from simply having fewer all-failure groups?
 * Per-step judge scores (Actor, Judge, or Teacher?) and same-state grouping (GiGPO) both give step-level credit on ALFWorld and WebShop and report gains of similar size over GRPO. Run in one codebase with training seeds, which is larger, and do they add?
 * AutoMaster selects its final student from up to five rounds using feedback from the benchmark it reports on, and trains each method once. Do skill-shaped demonstrations still beat successful-trajectory SFT when checkpoints are chosen on a held-out benchmark and training seeds are repeated?
+* Duopra's RL stage that adds dependent calls and outcome-tiered rewards carries nearly all of its task gain, while the earlier stage only raises call frequency. Which reward terms matter, and does the same split appear for text-only tool agents?

@@ -33,6 +33,7 @@
 * [ExpeL](expel.md) - Experiential-learning agent that extracts natural-language insights from training-task experience and recalls them at inference; a standard experience-memory baseline.
 * [FrontierPhysics](frontierphysics.md) - 56 end-to-end physics research tasks by the researchers who did the work, passed through a deterministic verifier and blocker rubrics.
 * [FrontierScience](frontierscience.md) - Expert-level science benchmark with an Olympiad track and a rubric-graded, PhD-level Research track across physics, chemistry, and biology.
+* [Full-Duplex-Bench](full-duplex-bench.md) - Benchmark series for full-duplex spoken dialogue: takeover rates for turn-taking, pauses, backchannels and interruptions (v1.0), overlap behavior (v1.5), and tool use on disfluent spoken requests (v3).
 * [GAIA](gaia.md) - 466 real-world assistant questions at three difficulty levels needing reasoning, multimodal handling, browsing, and tool use, scored by exact match after normalization.
 * [GAIA2](gaia2.md) - Simulated-smartphone benchmark of dynamic, asynchronous assistant tasks grouped into persona Universes, used for Universe-disjoint harness-optimization splits.
 * [GameCraft-Bench](gamecraft-bench.md) - 140-task benchmark of complete games built end to end by agents in a real game engine, scored through replayed gameplay against game-specific rubrics on Mechanics, Depth, Visuals, and Art.

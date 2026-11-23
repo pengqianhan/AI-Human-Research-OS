@@ -5,7 +5,7 @@ description: Using a language model to score, rank, or select other model output
 tags:
 - evaluation
 - llm-agents
-timestamp: 2026-11-20T00:00:00Z
+timestamp: 2026-11-23T00:00:00Z
 ---
 
 # Definition
@@ -65,6 +65,7 @@ LLM-as-a-judge uses a language model as the evaluator of candidate outputs — s
 * [SWE-CoWork](../papers/2611.20218.md) - GPT-6 Astra, itself an evaluated agent, rates 101 Claude-Opus-5.5 trajectories on 16 behavior dimensions before outcomes are attached; it almost never uses the lowest category.
 * [The Resolution Hypothesis](../papers/2611.23068.md) - LLM trajectory judges as selectors of candidate skills (pointwise, pairwise, ACE-style, without outcome labels): 45.4% to 49.0% pairwise accuracy against held-out rollouts, no better than chance.
 * [TwinLab-Bench](../papers/2611.26248.md) - a DeepSeek-flash judge agent scores lab reports against hidden later records, citing report text or request numbers per rubric item and re-checking full-credit core items twice; swapping in Opus 5.5 agrees on pass in 19 of 20 runs (kappa 0.83).
+* [AgentRoboCritic](../papers/2611.26613.md) - VLM critics judge each robot action's outcome and failure mode from frames, the task goal and the agent's local intent; GPT-6 Astra agrees best with 400 human labels (kappa 0.600 on failure mode) and labels the analysis set, and a LoRA-tuned Muse-Glimmer-30B trained on its labels reaches 74.24% failure-mode accuracy at over 30 times lower cost.
 
 # Notes
 

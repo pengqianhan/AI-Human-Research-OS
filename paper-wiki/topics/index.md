@@ -21,6 +21,7 @@
 * [Data agents](data-agents.md) - Papers about LLM agents that fulfill natural-language instructions over heterogeneous structured and unstructured data, and the intermediate layers that bridge agent tools and domain semantics.
 * [Embodied navigation](embodied-navigation.md) - Papers about vision-language(-action) models that translate goals and egocentric observations into navigation actions across tasks, scenes, and robot embodiments.
 * [Financial agents](financial-agents.md) - Papers about LLM agents that analyze, trade, or manage risk in financial markets.
+* [Full-duplex voice agents](full-duplex-voice-agents.md) - Papers about speech models that listen while speaking and also carry out tasks, either by calling tools themselves or by delegating to a backend agent, and about how task execution interacts with turn-taking.
 * [Game development agents](game-development-agents.md) - Papers about coding agents that build playable games and improve them across rounds through playtesting, review, and version retention, and about benchmarks that score agent-built games.
 * [Game-playing agents](game-agents.md) - Papers about models and agents that play games — video games through game controls, or board, card, social-deduction, and sandbox games through text or tool interfaces — and the datasets and benchmarks that compare their planning, strategy, and action execution.
 * [GPU kernel optimization](gpu-kernel-optimization.md) - Papers about searching for and evaluating fast GPU kernels, including the cost of on-device measurement.
