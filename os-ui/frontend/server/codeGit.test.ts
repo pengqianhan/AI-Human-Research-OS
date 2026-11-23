@@ -1343,6 +1343,25 @@ describe("the diff algorithm", () => {
     assert.equal((await get(api, "/commit", { project: P, hash: m[2]! })).status, 200);
     assert.equal((await get(api, "/diff", { project: P, hash: m[2]!, path: "data.txt" })).status, 200);
   });
+
+  test("a driver's diff.<driver>.algorithm=patience, picked by info/attributes, cannot bring patience back either", { timeout: 120_000 }, async () => {
+    const root = workspace();
+    init(root);
+    const size = 4 * 1024 * 1024 - 64;
+    const m = fastImport(root, [
+      { mark: 1, message: "one", files: [["projects-folder/P/data.txt", "\n".repeat(size)]] },
+      { mark: 2, message: "rewrite", files: [["projects-folder/P/data.txt", "a\nb\n".repeat(Math.floor(size / 4))]] },
+    ]);
+    fx(root, ["config", "diff.x.algorithm", "patience"]);
+    writeFileSync(join(root, ".git", "info", "attributes"), "* diff=x\n");
+    const api = handler(root);
+    const statuses = [
+      (await get(api, "/log", { project: P })).status,
+      (await get(api, "/commit", { project: P, hash: m[2]! })).status,
+      (await get(api, "/diff", { project: P, hash: m[2]!, path: "data.txt" })).status,
+    ];
+    assert.deepEqual(statuses, [200, 200, 200]);
+  });
 });
 
 describe("which commit a hash names", () => {

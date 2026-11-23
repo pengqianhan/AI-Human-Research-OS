@@ -142,12 +142,15 @@ agent logins or a first open on a real desktop, so on each of your machines:
         changed files and a diff of the first one appear; click another file
         to see its diff.
       - Click a line of a file, or a commit, or a line of a diff: a dark bar at
-        the bottom names it, with **Ask the agent about this**.
+        the bottom names it and, for a line or a commit, shows the start of
+        its text and how long it is, with **Ask the agent about this**.
       - Click **Ask the agent about this**: the conversation opens (if it was
         collapsed) with a small chip above the input naming what you chose,
-        and the cursor in the input. Click the chip to see exactly what will
-        be sent before your message (it opens under the chips). Nothing is
-        sent until you press Send.
+        the cursor in the input, and, under the chips, exactly what will be
+        sent before your message ("Sent before your message, exactly:"),
+        already open. Ask about a second thing: its text opens and the
+        first one's closes; click a chip to open or close its text. Nothing
+        is sent until you press Send.
       - Click the chip's **×**: it goes away.
 - [ ] **The Paper view.** In the `nanochat_cpu` workspace, click the **Paper**
       tab:

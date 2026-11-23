@@ -8,7 +8,7 @@ import { LIVE } from "../lib/mode";
 import { viewSrc } from "../plugins/pages";
 import type { PluginPage } from "../plugins/pages";
 import { usePlugins } from "../plugins/registry";
-import { addReference, MAX_REFERENCES, readSelect, selectGate } from "../plugins/select";
+import { addReference, MAX_REFERENCES, quoteGlimpse, readSelect, selectGate } from "../plugins/select";
 import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
 import { workspaceTabs } from "../shell/layoutState";
@@ -306,10 +306,22 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
             <div
               role="region"
               aria-label="Selection"
-              className="absolute bottom-[18px] left-1/2 z-[5] flex max-w-[calc(100%-36px)] -translate-x-1/2 items-center gap-2.5 rounded-full bg-[#22211e] py-1.5 pl-3.5 pr-1.5 text-[13px] text-[#f5efe4] shadow-[0_12px_32px_rgba(30,20,5,.28)]"
+              className={
+                "absolute bottom-[18px] left-1/2 z-[5] flex max-w-[calc(100%-36px)] -translate-x-1/2 items-center gap-2.5 bg-[#22211e] py-1.5 pl-3.5 pr-1.5 text-[13px] text-[#f5efe4] shadow-[0_12px_32px_rgba(30,20,5,.28)] " +
+                (selection.quote === undefined ? "rounded-full" : "w-[min(640px,calc(100%-36px))] rounded-[18px] py-2")
+              }
             >
-              <span className="min-w-0 truncate font-mono text-[12px] opacity-[.82]" title={selection.quote ?? selection.label} data-selection-label>
-                {selection.label}
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="min-w-0 truncate font-mono text-[12px] opacity-[.82]" title={selection.quote ?? selection.label} data-selection-label>
+                  {selection.label}
+                </span>
+                {/* The start of what Ask would quote, as text: a view can quote what it did not show. */}
+                {selection.quote !== undefined && (
+                  <span className="min-w-0 text-[12px] leading-[1.4]" data-selection-quote>
+                    <span className="line-clamp-2 break-words font-serif text-[13px] text-[#f5efe4]">{quoteGlimpse(selection.quote).start}</span>
+                    <span className="font-sans text-[11px] opacity-70">{quoteGlimpse(selection.quote).size}</span>
+                  </span>
+                )}
               </span>
               <button
                 type="button"

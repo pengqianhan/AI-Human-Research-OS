@@ -81,11 +81,12 @@ export function clipLabel(label: string): string {
 
 /**
  * Text as one line of visible characters, which the host requires of a label:
- * a line break, control, or format character (all legal in a file name or an
- * outline title) shows as a marker naming it, "⟨U+200B⟩".
+ * a line break, control, format, or default-ignorable character, or the
+ * Braille blank (all legal in a file name or an outline title; the class is
+ * the host's, src/plugins/select.ts), shows as a marker naming it, "⟨U+200B⟩".
  */
 export const visibleName = (text: string) =>
-  text.replace(/[\p{Cc}\p{Cf}\u2028\u2029]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
+  text.replace(/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2028\u2029\u2800]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
 
 /** Whether a message is the workspace clearing the selection: from the parent window, at the app's origin, and nothing else. */
 export function isHostClear(event: { source: unknown; origin: string; data: unknown }, parent: unknown, host: string): boolean {

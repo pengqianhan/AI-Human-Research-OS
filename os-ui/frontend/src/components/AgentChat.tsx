@@ -7,7 +7,7 @@ import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
 import { desktop } from "../lib/desktop";
-import { MESSAGE_MAX, messageWithReferences, referenceText } from "../plugins/select";
+import { MESSAGE_MAX, messageWithReferences, referenceKey, referenceText } from "../plugins/select";
 import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
 
@@ -172,10 +172,17 @@ export function AgentChat({
   const [error, setError] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(false);
   /** Which reference chip shows its text under the chips. */
-  const [preview, setPreview] = useState<number | null>(null);
+  // Kept by the reference itself, not its place, so removing another chip never opens a different one.
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
+  // A chip just added shows its text at once: what Send passes is on screen
+  // before Send, not only behind a click. The newest opens; the one before closes.
+  const added = useRef(references.length);
   useEffect(() => {
-    if (preview !== null && preview >= references.length) setPreview(null);
-  }, [preview, references.length]);
+    const newest = references[references.length - 1];
+    if (references.length > added.current && newest !== undefined) setPreviewKey(referenceKey(newest));
+    added.current = references.length;
+  }, [references]);
+  const previewed = references.find((r) => referenceKey(r) === previewKey) ?? null;
   const logRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -386,10 +393,10 @@ export function AgentChat({
                 >
                   <button
                     type="button"
-                    aria-expanded={preview === i}
+                    aria-expanded={referenceKey(ref) === previewKey}
                     aria-controls={`${ids}-preview`}
                     aria-label={`Show what will be sent for ${ref.label}`}
-                    onClick={() => setPreview(preview === i ? null : i)}
+                    onClick={() => setPreviewKey(referenceKey(ref) === previewKey ? null : referenceKey(ref))}
                     className="inline-flex min-w-0 items-center gap-[5px] rounded-[5px] hover:underline"
                   >
                     <Icon name="quote" size={14} />
@@ -412,12 +419,12 @@ export function AgentChat({
                 </li>
               ))}
             </ul>
-            {preview !== null && references[preview] !== undefined ? (
+            {previewed !== null ? (
               <div id={`${ids}-preview`} role="region" aria-label="What will be sent" className="rounded-[8px] bg-card px-2.5 py-2 shadow-[inset_0_0_0_1px_var(--line)]">
                 <p className="m-0 mb-1 text-[11.5px] text-muted">Sent before your message, exactly:</p>
                 {/* Plain text, the same string Send passes (referenceText). */}
                 <pre data-reference-preview className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.45] text-ink">
-                  {referenceText(references[preview]!)}
+                  {referenceText(previewed)}
                 </pre>
               </div>
             ) : (

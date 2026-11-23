@@ -374,7 +374,7 @@ describe("desktop client on a Research OS folder", () => {
     await shot(page, "1-files-with-a-file-open");
 
     // Chinese text arrives intact.
-    const zh = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README_zh.md"), "utf8").split("\n").find((l) => /[一-鿿]/.test(l))!;
+    const zh = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README_zh.md"), "utf8").split(/\r?\n/).find((l) => /[一-鿿]/.test(l))!;
     await code.locator(".tnode").filter({ hasText: /^README_zh\.md$/ }).click();
     await code.locator(".row .tx").filter({ hasText: zh }).first().waitFor();
 
@@ -529,12 +529,22 @@ describe("desktop client on a Research OS folder", () => {
 
     await code.getByRole("button", { name: "Files", exact: true }).click();
     await code.locator(".tnode").filter({ hasText: /^README\.md$/ }).first().click();
-    const line = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README.md"), "utf8").split("\n")[2]!;
+    const line = readFileSync(join(workspace, "projects-folder", PROJECT, "Code", "README.md"), "utf8").split(/\r?\n/)[2]!;
     await code.locator('.row[data-line="3"]').click();
     await bar.getByText("Code/README.md:3", { exact: true }).waitFor();
+    // Before asking, the bar shows the start of the text that would be quoted, as text on the page.
+    const barText = (await bar.textContent()) ?? "";
+    await shot(page, "5-ask-bar-before-asking");
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
     await chips.filter({ hasText: "Code/README.md:3" }).waitFor();
-    assert.equal(await chips.first().getAttribute("title"), `About Code/README.md:3\n> ${line}`);
+    await shot(page, "6-composer-after-asking");
+    assert.ok(barText.includes(line.slice(0, 40)), `the ask bar shows the quote's start: ${JSON.stringify(barText)}`);
+    // After asking, the text the chip will send is on screen in the composer, with no click.
+    const sent = `About Code/README.md:3\n> ${line}`;
+    const shown = chat.locator("[data-reference-preview]");
+    await shown.filter({ hasText: "About Code/README.md:3" }).waitFor({ timeout: 5000 }); // the new chip's text is shown without a click
+    assert.equal(await shown.textContent(), sent);
+    assert.equal(await chips.first().getAttribute("title"), sent);
     assert.equal(await bar.count(), 0, "asking clears the selection");
     // The cursor moves to the composer on the next frame.
     await page.waitForFunction((label) => document.activeElement?.getAttribute("aria-label") === label, `Message ${PROJECT} agent`, { timeout: 5000 });
@@ -546,6 +556,9 @@ describe("desktop client on a Research OS folder", () => {
     await bar.getByText(short, { exact: true }).waitFor();
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
     await chips.filter({ hasText: short }).waitFor();
+    // The newest chip's text opens; the one before closes.
+    await chat.locator("[data-reference-preview]").filter({ hasText: `About ${short}` }).waitFor({ timeout: 5000 });
+    assert.equal(await chat.locator("[data-reference-preview]").count(), 1);
 
     // A chip opens what it will send, as plain text in the composer: exactly the reference's text.
     await chat.getByRole("button", { name: "Show what will be sent for Code/README.md:3" }).click();
