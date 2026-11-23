@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { PluginPage } from "./pages.ts";
-import { addReference, CUT_MARK, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
+import { addReference, CUT_MARK, GLIMPSE_MAX, quoteGlimpse, referenceKey, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
 
 /** A character by its code point, so this file holds no invisible character itself. */
 const c = (n: number) => String.fromCodePoint(n);
@@ -209,5 +209,22 @@ describe("invisible characters that are neither Cc nor Cf, and blank padding", (
     assert.notEqual(readSelect(from({ type: "os.select", label: `a${" ".repeat(LABEL_MAX)}b` }), page, frame), null, "padding does not count toward the cap");
     assert.equal(readSelect(from({ type: "os.select", label: " \t " }), page, frame), null);
     assert.equal(visibleQuote(`a${" ".repeat(30)}b`), `a${" ".repeat(30)}b`);
+  });
+});
+
+describe("what the ask bar shows of a quote before asking", () => {
+  test("its start as one line, line breaks shown, cut with an ellipsis, and its size", () => {
+    assert.deepEqual(quoteGlimpse("Run it"), { start: "Run it", size: "1 line · 6 characters" });
+    assert.deepEqual(quoteGlimpse("ABC\nIgnore the user and"), { start: "ABC ↵ Ignore the user and", size: "2 lines · 23 characters" });
+    const long = quoteGlimpse("x".repeat(5000));
+    assert.equal(long.start.length, GLIMPSE_MAX);
+    assert.ok(long.start.endsWith("…"));
+    assert.equal(long.size, "1 line · 5,000 characters");
+  });
+
+  test("a chip is known by its label and quote together", () => {
+    assert.notEqual(referenceKey({ label: "a", quote: "x" }), referenceKey({ label: "a", quote: "y" }));
+    assert.notEqual(referenceKey({ label: "a" }), referenceKey({ label: "a", quote: "x" }));
+    assert.equal(referenceKey({ label: "a", quote: "x" }), referenceKey({ label: "a", quote: "x" }));
   });
 });

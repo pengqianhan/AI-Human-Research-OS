@@ -159,3 +159,25 @@ export function selectGate(now: () => number = Date.now) {
     return "accept";
   };
 }
+
+/** One reference's identity among the chips (references are unique by label and quote). */
+export function referenceKey(reference: Reference): string {
+  return `${reference.label}\u0000${reference.quote ?? ""}`;
+}
+
+/** Characters of a quote the ask bar shows before asking. */
+export const GLIMPSE_MAX = 160;
+
+/**
+ * What the ask bar shows of a quote before the user asks: its start as one
+ * line (each line break shown as " \u21b5 "), cut at GLIMPSE_MAX with "\u2026",
+ * and its size ("8 lines \u00b7 412 characters"), so text the view did not show
+ * (a PDF's hidden run) is seen before it can be added.
+ */
+export function quoteGlimpse(quote: string): { start: string; size: string } {
+  const lines = quote.split("\n");
+  const flat = lines.join(" \u21b5 ");
+  const start = flat.length <= GLIMPSE_MAX ? flat : `${flat.slice(0, GLIMPSE_MAX - 1)}\u2026`;
+  const size = `${lines.length} line${lines.length === 1 ? "" : "s"} \u00b7 ${quote.length.toLocaleString("en-US")} character${quote.length === 1 ? "" : "s"}`;
+  return { start, size };
+}
