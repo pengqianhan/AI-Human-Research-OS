@@ -17,7 +17,7 @@
  * "Loading…" rather than what the previous file or commit showed.
  */
 import type { Commit, Diff, FileChange, Log, LogCommit, Source, Unavailable } from "../../../server/codeGit.ts";
-import { button, clear, el, filesUrl, icon, isHostClear, listUrl, projectFrom } from "../../site-kit.ts";
+import { button, clear, el, filesUrl, icon, isHostClear, listUrl, projectFrom, readStart, readText } from "../../site-kit.ts";
 import {
   answerWords,
   changeCount,
@@ -36,7 +36,6 @@ import {
   notOpenable,
   imageWords,
   projectWords,
-  readText,
   ROW_MAX,
   rowText,
   parsePatch,
@@ -132,34 +131,6 @@ async function getJson<T>(url: string): Promise<Answer<T>> {
   const body = (await res.json().catch(() => null)) as (T & { error?: unknown }) | null;
   if (res.ok && body !== null) return { ok: true, body };
   return { ok: false, status: res.status, error: typeof body?.error === "string" ? body.error : null };
-}
-
-/** The first VIEW.bytes of a response's body; `cut` when the file goes on. */
-async function readStart(res: Response): Promise<{ bytes: Uint8Array; cut: boolean }> {
-  const reader = res.body!.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  let cut = false;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    total += value.length;
-    if (total >= VIEW.bytes) {
-      cut = true;
-      await reader.cancel().catch(() => {});
-      break;
-    }
-  }
-  const bytes = new Uint8Array(Math.min(total, VIEW.bytes));
-  let at = 0;
-  for (const chunk of chunks) {
-    const part = chunk.subarray(0, bytes.length - at);
-    bytes.set(part, at);
-    at += part.length;
-    if (at >= bytes.length) break;
-  }
-  return { bytes, cut };
 }
 
 // ---- pieces ---------------------------------------------------------------------------
@@ -418,7 +389,7 @@ async function openFile(path: string, pick: boolean): Promise<void> {
     showFileProblem(res.status, name, path);
     return;
   }
-  const { bytes, cut } = await readStart(res);
+  const { bytes, cut } = await readStart(res, VIEW.bytes);
   if (gen !== files.gen) return;
   const read = readText(bytes, cut);
   clear(code);

@@ -7,7 +7,7 @@
  * main.ts puts them on screen as text only.
  */
 import type { Commit, FileChange, LogCommit, Source } from "../../../server/codeGit.ts";
-import { clip, clipLabel, QUOTE_MAX, visibleName as oneLine } from "../../site-kit.ts";
+import { clip, clipLabel, QUOTE_MAX, readText, visibleName as oneLine } from "../../site-kit.ts";
 
 /** The Git handler on this page's own origin, every value encoded. */
 export function gitUrl(route: "" | "log" | "commit" | "diff", query: Record<string, string>): string {
@@ -29,34 +29,12 @@ export const VIEW = {
  * Bytes as text, or null when they are not text: a NUL byte in the first
  * 8,000 (as Git decides), or anything that is not UTF-8. `cut` says the bytes
  * stop before the file does, so up to three bytes of a character split at the
- * end are dropped rather than taken as binary.
+ * end are dropped rather than taken as binary. What the viewer makes of the
+ * bytes is site-kit's readText.
  */
 export function decodeText(bytes: Uint8Array, cut = false): string | null {
   const read = readText(bytes, cut);
   return read.kind === "text" ? read.text : null;
-}
-
-/**
- * What the viewer makes of a file's bytes: UTF-8 text, binary data (a NUL
- * byte in the first 8,000, as Git decides), or text in another encoding
- * (Latin-1, GBK, ...), which the view does not guess at and says so.
- */
-export function readText(bytes: Uint8Array, cut = false): { kind: "text"; text: string } | { kind: "binary" } | { kind: "encoding" } {
-  if (bytes.subarray(0, 8000).includes(0)) return { kind: "binary" };
-  const text = utf8(bytes, cut);
-  return text === null ? { kind: "encoding" } : { kind: "text", text };
-}
-
-function utf8(bytes: Uint8Array, cut: boolean): string | null {
-  const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
-  for (let drop = 0; drop <= (cut ? 3 : 0) && drop <= bytes.length; drop++) {
-    try {
-      return decoder.decode(bytes.subarray(0, bytes.length - drop));
-    } catch {
-      // try again without a split character at the end
-    }
-  }
-  return null;
 }
 
 /** A text's lines, at most `max` of them; `total` counts them all (a final newline ends the last line). */

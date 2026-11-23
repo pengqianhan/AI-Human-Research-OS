@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { clipLabel, LABEL_MAX, QUOTE_MAX } from "../../site-kit.ts";
+import { clipLabel, LABEL_MAX, QUOTE_MAX, readText } from "../../site-kit.ts";
 import {
   answerWords,
   imageWords,
   notOpenable,
   projectWords,
-  readText,
   ROW_CUT,
   ROW_MAX,
   rowText,
