@@ -130,26 +130,32 @@ export const HEADING: Record<Kind, string> = {
 const marker = (c: string) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`;
 
 /**
- * Look-alikes of a label's own separators: the middle dot of " · " (and its
- * kin), and the curly quotes of `section “…”`. A name shows them as markers,
- * so no name can make a label read as another form (`… · claim C1`).
+ * What a label shows as a marker, in one pass (a second pass would mark the
+ * first one's markers), the host's classes first (site-kit's visibleName:
+ * controls, format and default-ignorable characters, the Braille blank, line
+ * and paragraph separators, spaces other than U+0020), then:
+ * - look-alikes of a label's own separators, the middle dot of " · " and its
+ *   kin and the curly quotes of `section “…”`, so no name makes a label read
+ *   as another form (`… · claim C1`);
+ * - ⟨ and ⟩ themselves, so a name that spells a marker ("a⟨U+003A⟩b") is
+ *   never shown as another name's marker: each label decodes to one name
+ *   (review M3).
  */
-const SEPARATOR_LIKE = /[··‧∙⋅・･“”„‟〝〞＂]/gu;
+const TEXT_MARKED = /(?! )[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Zs}\u2028\u2029\u2800\u00B7\u0387\u2027\u2219\u22C5\u30FB\uFF65\u201C\u201D\u201E\u201F\u301D\u301E\uFF02\u27E8\u27E9]/gu;
 /**
- * In a file or folder name, also what reads as a path's own syntax: ":"
- * (`a.svg:12` would read as line 12 of a.svg), a backslash, and slashes that
- * are not "/" (a name cannot hold "/", so a look-alike would show a second,
- * deeper path).
+ * In a file or folder name, TEXT_MARKED and also what reads as a path's own
+ * syntax: ":" (`a.svg:12` would read as line 12 of a.svg), a backslash, and
+ * slashes that are not "/" (a name cannot hold "/", so a look-alike would
+ * show a second, deeper path).
  */
-const PATH_LIKE = /[:\\⁄∕⧸／]/gu;
+const NAME_MARKED = /(?! )[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Zs}\u2028\u2029\u2800\u00B7\u0387\u2027\u2219\u22C5\u30FB\uFF65\u201C\u201D\u201E\u201F\u301D\u301E\uFF02\u27E8\u27E9:\\\u2044\u2215\u29F8\uFF0F]/gu;
 
 /**
  * A file or folder name as a label shows it: one line of visible characters
- * (site-kit's visibleName: invisible characters, line breaks, and spaces other
- * than U+0020 as markers, which the host requires), and the look-alikes above
- * as markers too. Plain spaces stay: "a  b.csv" and "a b.csv" are two files.
+ * (the host refuses others), every character of NAME_MARKED as a marker, in
+ * one pass. Plain spaces stay: "a  b.csv" and "a b.csv" are two files.
  */
-export const nameInLabel = (name: string) => visibleName(name).replace(SEPARATOR_LIKE, marker).replace(PATH_LIKE, marker);
+export const nameInLabel = (name: string) => name.replace(NAME_MARKED, marker);
 
 /**
  * A file's label: its project path, each segment as nameInLabel shows it,
@@ -168,7 +174,7 @@ export function fileLabel(path: string): string {
  */
 export function datasetLabel(line: number, name: string): string {
   const base = `${README}:${line} · dataset`;
-  const shown = visibleName(trimSpaces(name.replace(/[\p{Zs}\t]+/gu, " "))).replace(SEPARATOR_LIKE, marker);
+  const shown = trimSpaces(name.replace(/[\p{Zs}\t]+/gu, " ")).replace(TEXT_MARKED, marker);
   if (shown === "") return base;
   return `${base} ${cutMarked(shown, LABEL_MAX - base.length - 1, "…")}`;
 }

@@ -618,6 +618,57 @@ describe("labels: the project path, one visible line, unforgeable, within the ho
     for (const label of [datasetLabel(208, "x · claim C1"), datasetLabel(9, "  a \t  b​ ")]) assert.equal(host(label)?.kind, "select", label);
   });
 
+  test("one label, one name: a name holding the marker text itself is marked too, so two files never share a label (review M3)", () => {
+    for (const [a, b] of [
+      ["Figs/a:b.svg", "Figs/a⟨U+003A⟩b.svg"],
+      ["Figs/a​b.svg", "Figs/a⟨U+200B⟩b.svg"],
+      ["Figs/x · claim C1.svg", "Figs/x ⟨U+00B7⟩ claim C1.svg"],
+      ["Figs/a b.svg", "Figs/a⟨U+00A0⟩b.svg"],
+    ]) {
+      assert.notEqual(fileLabel(a!), fileLabel(b!), `${a} and ${b}`);
+      assert.equal(host(fileLabel(b!))?.kind, "select");
+    }
+    assert.equal(fileLabel("Figs/a⟨U+003A⟩b.svg"), "Figs/a⟨U+27E8⟩U+003A⟨U+27E9⟩b.svg");
+    assert.notEqual(datasetLabel(9, "a​b"), datasetLabel(9, "a⟨U+200B⟩b"));
+    assert.notEqual(datasetLabel(9, "x · y"), datasetLabel(9, "x ⟨U+00B7⟩ y"));
+  });
+
+  test("labels round-trip: from any uncut label a decoder recovers the exact name, and two different names never share one (seeded random names)", () => {
+    // mulberry32: the same names on every run.
+    let seed = 0x5eed;
+    const random = () => {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const decode = (label: string) => label.replace(/⟨U\+([0-9A-F]{4,6})⟩/g, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)));
+    // Single characters, and whole marker texts, which a real name can spell.
+    const alphabet = ["a", "b", " ", ":", "·", "⟨", "⟩", "U", "+", "0", "3", "A", "​", " ", "‮", "“", "\\", "／", "\n", "\t", "\u{E0041}", "😀", "‧", "　", "⟨U+003A⟩", "⟨U+200B⟩", "⟨U+00B7⟩", "⟨U+27E8⟩", "⟨U+E0041⟩"];
+    const name = () => Array.from({ length: 1 + Math.floor(random() * 9) }, () => alphabet[Math.floor(random() * alphabet.length)]).join("");
+    const seen = new Map<string, string>();
+    for (let k = 0; k < 20_000; k++) {
+      const path = `Figs/${name()}/${name()}.svg`;
+      // Uncut: the whole label is within the host's limit (a cut can end under it, stepping back before a marker).
+      const whole = path.split("/").map(nameInLabel).join("/");
+      if (whole.length > LABEL_MAX) continue;
+      const label = fileLabel(path);
+      assert.equal(label, whole);
+      assert.equal(decode(label), path, JSON.stringify(path));
+      const other = seen.get(label);
+      assert.ok(other === undefined || other === path, `${JSON.stringify(path)} and ${JSON.stringify(other)} share ${label}`);
+      seen.set(label, path);
+      assert.equal(host(label)?.kind, "select", JSON.stringify(label));
+    }
+    // A dataset's name, which has no blank runs to collapse: its label ends in exactly it.
+    for (let k = 0; k < 5_000; k++) {
+      const n = name().replace(/[ \t 　]/g, "x");
+      const label = datasetLabel(7, n);
+      if (n.trim() === "" || label.endsWith("…")) continue;
+      assert.equal(decode(label.slice("Code/README.md:7 · dataset ".length)), n, JSON.stringify(n));
+    }
+  });
+
   test("a long label is cut to 200 characters ending in '…', never inside a marker or a surrogate pair", () => {
     const long = fileLabel(`Figs/${"a".repeat(300)}.png`);
     assert.equal(long.length, LABEL_MAX);
