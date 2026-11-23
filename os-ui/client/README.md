@@ -76,7 +76,7 @@ packages on first use):
 ```bash
 npm ci
 npm start                 # build, then open the app on this checkout
-npm test                  # unit tests (node --test)
+npm test                  # unit tests (node --test); a file fails, named, after 10 min (see ../frontend/README.md, Tests)
 npm run typecheck
 npm run test:e2e          # Playwright end-to-end; on Linux: xvfb-run -a npm run test:e2e
 npm run package           # installers for this OS into release/

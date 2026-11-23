@@ -17,7 +17,7 @@
     "build": "node scripts/build.mjs",
     "start": "node scripts/build.mjs && electron .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"test/**/*.test.ts\"",
+    "test": "node --test --test-timeout=600000 --import ../frontend/server/testGuard.ts \"test/**/*.test.ts\"",
     "test:e2e": "node --test --test-concurrency=1 \"e2e/**/*.test.ts\"",
     "package": "node scripts/build.mjs && electron-builder --publish never",
     "package:dir": "node scripts/build.mjs && electron-builder --dir --publish never"

@@ -114,12 +114,29 @@ export function processRunner(env: NodeJS.ProcessEnv = process.env): Runner {
       const err = { chunks: [] as Buffer[], bytes: 0 };
       let timedOut = false;
       let truncated = false;
+      /**
+       * Kills the child and, once it has exited, lets go of its stdout and
+       * stderr. 'close' waits for every holder of those pipes, and a killed
+       * child can leave one running: Git for Windows' cmd\git.exe starts
+       * mingw64\bin\git.exe on the same pipes and waits for it, and kill()
+       * (TerminateProcess) ends the launcher alone. Without this the result
+       * waited for that process, past timeoutMs; now its next write fails.
+       */
+      const stop = () => {
+        child.kill();
+        const letGo = () => {
+          child.stdout.destroy();
+          child.stderr.destroy();
+        };
+        if (child.exitCode !== null || child.signalCode !== null) letGo();
+        else child.once("exit", letGo);
+      };
       const timer =
         options.timeoutMs === undefined
           ? undefined
           : setTimeout(() => {
               timedOut = true;
-              child.kill();
+              stop();
             }, options.timeoutMs);
       child.stdout.on("data", (d: Buffer) => {
         if (truncated) return;
@@ -129,7 +146,7 @@ export function processRunner(env: NodeJS.ProcessEnv = process.env): Runner {
           out.bytes = cap;
           truncated = true;
           child.stdout.destroy();
-          child.kill();
+          stop();
           return;
         }
         out.chunks.push(d);
