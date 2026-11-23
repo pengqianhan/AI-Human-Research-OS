@@ -70,11 +70,14 @@ describe("§3.2 Snapshot status pill", () => {
 describe("§3.2 Snapshot lines: Working title, Thesis, Audience, Research question", () => {
   test("nanochat_cpu: each value, its continuation lines joined; selectable by its lines", () => {
     const card = snapshotCard(parse(NANOCHAT))!;
+    const value = "nanochat on a Laptop CPU: a Three-Minute End-to-End Example for the AI-Human Research OS";
     assert.deepEqual(card.title, {
       label: "Working title",
-      value: "nanochat on a Laptop CPU: a Three-Minute End-to-End Example for the AI-Human Research OS",
+      value,
+      tokens: [{ kind: "text", text: value }],
       selection: { label: "paper_skeleton.md:8–9 · section “Snapshot”", quote: `${lineAt(NANOCHAT, 8)}\n${lineAt(NANOCHAT, 9)}` },
     });
+    assert.equal(card.note, null);
     assert.deepEqual(
       card.lines.map((l) => [l.label, l.value, l.selection.label]),
       [
@@ -94,6 +97,22 @@ describe("§3.2 Snapshot lines: Working title, Thesis, Audience, Research questi
       ["Research question", null],
     ]);
     assert.deepEqual(card.title!.selection, { label: "paper_skeleton.md:8 · section “Snapshot”", quote: "- Working title:" });
+  });
+
+  test("bold labels fill the card; a Snapshot section without the items the card draws says so in one line (review F7)", () => {
+    const bold = snapshotCard(parse("## Snapshot\n\n- **Working title:** T\n- **Status:** draft\n- **One-sentence thesis**: the thesis\n"))!;
+    assert.deepEqual([bold.status, bold.title?.value, bold.lines.map((l) => [l.label, l.value])], ["draft", "T", [["Thesis", "the thesis"]]]);
+    assert.equal(bold.note, null);
+    const none = snapshotCard(parse("## Snapshot\n\n- Stage: s\n- Contributions: c\n"))!;
+    assert.deepEqual([none.status, none.title, none.lines, none.note], [null, null, [], "None of Working title, Status, One-sentence thesis, Target venue or audience, or Main research question is in the Snapshot list."]);
+    const noList = snapshotCard(parse("## Snapshot\n\nJust a paragraph.\n"))!;
+    assert.equal(noList.note, "The Snapshot section has no list of items.");
+    // What the card does not draw is listed below, as before.
+    assert.deepEqual(restSections(parse("## Snapshot\n\nJust a paragraph.\n")).sections.map((s) => s.title), ["Snapshot, other items"]);
+    // The claims table with bold headers, as an agent might write it.
+    const view = claimsView(parse("## Claims and Evidence\n\n| **Claim** | **Evidence** | **Source file or link** | **Citation/result** | **Status** |\n|---|---|---|---|---|\n| C1: x | e | s | r | verified |\n"));
+    assert.ok(view.state === "claims");
+    assert.deepEqual([view.summary, view.notes], ["1 claim · 1 verified · paper_skeleton.md:3–5", []]);
   });
 
   test("an item that is not there leaves its line out; no Snapshot section, no card", () => {

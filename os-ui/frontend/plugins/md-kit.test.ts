@@ -471,6 +471,43 @@ describe("inline tokens", () => {
   });
 });
 
+describe("labels and headers by their plain text (review F7)", () => {
+  test("a Snapshot label in bold, code, or a link, with its colon inside or after it", () => {
+    const snap = snapshot(
+      sections(parse("## Snapshot\n\n- **Working title:** T\n- **Status**: draft\n- `One-sentence thesis`: the thesis\n- [Target venue or audience](https://x.invalid/a:b): readers\n- **Main research question: none**\n- Plain: value: with a colon\n- No colon here\n")),
+    )!;
+    assert.deepEqual(
+      snap.items.map((i) => [i.label, i.value]),
+      [
+        ["Working title", "T"],
+        ["Status", "draft"],
+        ["One-sentence thesis", "the thesis"],
+        ["Target venue or audience", "readers"],
+        ["Main research question", "none"],
+        ["Plain", "value: with a colon"],
+        ["No colon here", ""],
+      ],
+    );
+    assert.equal(snapshotItem(snap.items, "status")!.value, "draft");
+    // The value keeps its own Markdown for drawing.
+    assert.deepEqual(snapshot(sections(parse("## Snapshot\n\n- **Status:** `draft` [x](y)\n")))!.items[0]!.tokens, [
+      { kind: "code", text: "draft" },
+      { kind: "text", text: " " },
+      { kind: "link", children: [{ kind: "text", text: "x" }], target: "y" },
+    ]);
+  });
+
+  test("a column is found by its header's plain text: **Claim**, `Claim`, and Claim are one header", () => {
+    const head = "| **Claim** | `Evidence` | [Source file or link](x) | **Citation/result** | *Status* |\n|---|---|---|---|---|\n| C1: x | e | s | r | verified |";
+    const found = claims(sections(parse(`## Claims and Evidence\n\n${head}\n`)));
+    assert.ok(found.found);
+    assert.deepEqual(found.missing, ["Status"], "*Status* is not in md-kit's subset, so its asterisks stay");
+    assert.deepEqual(found.claims.map((c) => [c.id, c.evidence, c.result]), [["C1", "e", "r"]]);
+    const rows = studies(sections(parse("## Experiments\n\n| Study | **Claim** |\n|---|---|\n| Main | C1 |\n")))!;
+    assert.deepEqual(rows.map((r) => r.ids), [["C1"]]);
+  });
+});
+
 describe("links", () => {
   test("resolveLink: a project path, an address as written, or null when it leaves the project", () => {
     const from = "paper_skeleton.md";

@@ -191,7 +191,7 @@ function render(doc: Doc): void {
   for (const text of docNotes(doc)) notes.append(el("div", "note-box", text));
   body.append(notes);
   const card = snapshotCard(doc);
-  if (card !== null) body.append(snapshotSection(card.status, card.title, card.lines));
+  if (card !== null) body.append(snapshotSection(card.status, card.title, card.lines, card.note));
   const view = claimsView(doc);
   const rows = view.state === "claims" ? view.rows : [];
   // Reload keeps the open claim if the file still has it.
@@ -203,13 +203,13 @@ function render(doc: Doc): void {
 
 // ---- the Snapshot card ----------------------------------------------------------------
 
-function snapshotSection(status: string | null, title: SnapLine | null, lines: readonly SnapLine[]): HTMLElement {
+function snapshotSection(status: string | null, title: SnapLine | null, lines: readonly SnapLine[], note: string | null): HTMLElement {
   const box = el("section", "card sk-snap");
   box.setAttribute("aria-label", "Snapshot");
   const eyebrow = el("div", "eyebrow", "Snapshot");
   if (status !== null) eyebrow.append(pill(status, false));
   box.append(eyebrow);
-  const value = (line: SnapLine): Node[] => (line.value === null ? [el("span", "unfilled", "not filled in")] : md(line.value));
+  const value = (line: SnapLine): Node[] => (line.value === null ? [el("span", "unfilled", "not filled in")] : inlineNodes(line.tokens));
   if (title !== null) {
     const h = el("h2");
     h.append(...value(title));
@@ -220,6 +220,8 @@ function snapshotSection(status: string | null, title: SnapLine | null, lines: r
     p.append(el("b", "", line.label), ...value(line));
     box.append(selectable(p, () => line.selection));
   }
+  // The section is there but holds nothing the card draws: said in one line (its content is listed below).
+  if (note !== null) box.append(el("p", "unfilled", note));
   return box;
 }
 

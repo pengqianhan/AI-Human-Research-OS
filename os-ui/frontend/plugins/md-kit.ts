@@ -579,11 +579,59 @@ export function resolveLink(target: string, fromFile: string): Resolved | null {
 
 /** One Snapshot item: "<Label>: <value>", the value with its continuation lines joined. */
 export interface SnapshotItem {
+  /** The label's plain text: "Status" for `Status:`, `**Status:**`, `**Status**:`, or `` `Status`: ``. */
   label: string;
+  /** The value's plain text. */
   value: string;
+  /** The value's own inline tokens, for drawing. */
+  tokens: Inline[];
   first: number;
   last: number;
   lines: string[];
+}
+
+/** Tokens without the spaces and tabs at their two ends. */
+function trimTokens(tokens: readonly Inline[]): Inline[] {
+  const out = [...tokens];
+  const first = out[0];
+  if (first?.kind === "text") {
+    let a = 0;
+    while (a < first.text.length && spaceOrTab(first.text.charCodeAt(a))) a++;
+    out[0] = { kind: "text", text: first.text.slice(a) };
+  }
+  const k = out.length - 1;
+  const last = out[k];
+  if (last?.kind === "text") {
+    let b = last.text.length;
+    while (b > 0 && spaceOrTab(last.text.charCodeAt(b - 1))) b--;
+    out[k] = { kind: "text", text: last.text.slice(0, b) };
+  }
+  return out.filter((t) => t.kind !== "text" || t.text !== "");
+}
+
+/**
+ * An item's label and value, split at its first ":" in plain text: in a
+ * text token, or inside a bold or code span (`**Status:** draft`); a colon
+ * in a link's target does not count.
+ */
+function splitItem(text: string): { label: string; tokens: Inline[] } {
+  const tokens = inline(text);
+  for (let k = 0; k < tokens.length; k++) {
+    const t = tokens[k]!;
+    const before = plain(tokens.slice(0, k));
+    if (t.kind === "text") {
+      const i = t.text.indexOf(":");
+      if (i !== -1) return { label: before + t.text.slice(0, i), tokens: [{ kind: "text", text: t.text.slice(i + 1) }, ...tokens.slice(k + 1)] };
+    } else if (t.kind === "bold" || t.kind === "code") {
+      const inner = plain([t]);
+      const i = inner.indexOf(":");
+      if (i === -1) continue;
+      const rest = inner.slice(i + 1);
+      const kept: Inline[] = trimSpaces(rest) === "" ? [] : t.kind === "bold" ? [{ kind: "bold", children: [{ kind: "text", text: rest }] }] : [{ kind: "code", text: rest }];
+      return { label: before + inner.slice(0, i), tokens: [...kept, ...tokens.slice(k + 1)] };
+    }
+  }
+  return { label: plain(tokens), tokens: [] };
 }
 
 /** The first list of section "Snapshot", as label-value items; null without that section or list. */
@@ -591,11 +639,10 @@ export function snapshot(all: readonly Section[]): { section: Section; list: Lis
   const sec = section(all, "Snapshot");
   const list = sec?.blocks.find((b): b is List => b.kind === "list");
   if (sec === null || sec === undefined || list === undefined) return null;
-  const items = list.items.map((item) => {
-    const colon = item.text.indexOf(":");
-    const label = colon === -1 ? item.text : item.text.slice(0, colon);
-    const value = colon === -1 ? "" : item.text.slice(colon + 1);
-    return { label: trimSpaces(label), value: trimSpaces(value), first: item.first, last: item.last, lines: item.lines };
+  const items = list.items.map((item): SnapshotItem => {
+    const split = splitItem(item.text);
+    const tokens = trimTokens(split.tokens);
+    return { label: trimSpaces(split.label), value: trimSpaces(plain(tokens)), tokens, first: item.first, last: item.last, lines: item.lines };
   });
   return { section: sec, list, items };
 }
@@ -604,7 +651,7 @@ export function snapshot(all: readonly Section[]): { section: Section; list: Lis
 export const snapshotItem = (items: readonly SnapshotItem[], label: string) => items.find((i) => same(i.label, label)) ?? null;
 
 /** The column of `header` named `name`, ignoring case, or -1. */
-export const column = (header: readonly string[], name: string) => header.findIndex((h) => same(h, name));
+export const column = (header: readonly string[], name: string) => header.findIndex((h) => same(plain(inline(h)), name));
 
 /** The Claims and Evidence table's columns, by header name. */
 export const CLAIM_COLUMNS = ["Claim", "Evidence", "Source file or link", "Citation/result", "Status"] as const;

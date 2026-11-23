@@ -7,7 +7,7 @@
  * tokens, and main.ts puts them on screen as text only.
  */
 import { claims, inline, linkTargets, plain, resolveLink, section, sections, snapshot, snapshotItem, studies, trimSpaces, usedBy } from "../../md-kit.ts";
-import type { Block, Doc, Section, SnapshotItem, Table } from "../../md-kit.ts";
+import type { Block, Doc, Inline, Section, SnapshotItem, Table } from "../../md-kit.ts";
 import { clip, cutMarked, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
 
 /** The file this view reads, relative to its project. */
@@ -125,10 +125,11 @@ export type Lines = [number, number];
 
 // ---- the Snapshot card ----------------------------------------------------------------
 
-/** One line of the Snapshot card: its value, or null when it is not filled in. */
+/** One line of the Snapshot card: its value (plain text, and its tokens for drawing), or null when it is not filled in. */
 export interface SnapLine {
   label: string;
   value: string | null;
+  tokens: Inline[];
   selection: Selection;
 }
 
@@ -141,6 +142,8 @@ export interface SnapshotCard {
   lines: SnapLine[];
   /** The lines the card draws: the section's heading and the items above; the rest of the section is listed below the claims. */
   drawn: Lines[];
+  /** One line when the card has nothing to draw: no list, or none of the items it draws. */
+  note: string | null;
 }
 
 const SNAPSHOT_LINES = [
@@ -150,28 +153,39 @@ const SNAPSHOT_LINES = [
 ] as const;
 
 /** The Snapshot items the card draws, by label: the first item of each. */
-const CARD_ITEMS = ["Status", "Working title", ...SNAPSHOT_LINES.map(([, name]) => name)];
+const CARD_ITEMS = ["Working title", "Status", ...SNAPSHOT_LINES.map(([, name]) => name)];
 
 /** The items of a Snapshot list that the card draws. */
 function cardItems(items: readonly SnapshotItem[]): SnapshotItem[] {
   return CARD_ITEMS.map((name) => snapshotItem(items, name)).filter((i): i is SnapshotItem => i !== null);
 }
 
-/** The card: null without a Snapshot section (or a list in it). */
+/**
+ * The card: null without a Snapshot section. Labels match on their plain
+ * text, so `**Status:** draft` is the Status item. When the section has no
+ * list, or none of the items the card draws, the card says so in one line;
+ * everything it does not draw is listed below the claims.
+ */
 export function snapshotCard(doc: Doc): SnapshotCard | null {
-  const snap = snapshot(sections(doc));
-  if (snap === null) return null;
+  const all = sections(doc);
+  const sec = section(all, "Snapshot");
+  if (sec === null) return null;
+  const snap = snapshot(all);
+  const heading: Lines = [sec.line, sec.line];
+  if (snap === null) return { status: null, title: null, lines: [], drawn: [heading], note: "The Snapshot section has no list of items." };
   const line = (shown: string, name: string): SnapLine | null => {
     const item = snapshotItem(snap.items, name);
     if (item === null) return null;
-    return { label: shown, value: item.value === "" ? null : item.value, selection: blockSelection(item.first, item.last, snap.section.title, item.lines) };
+    return { label: shown, value: item.value === "" ? null : item.value, tokens: item.tokens, selection: blockSelection(item.first, item.last, sec.title, item.lines) };
   };
   const status = snapshotItem(snap.items, "Status");
+  const drawn = cardItems(snap.items);
   return {
     status: status === null ? null : status.value === "" ? "not filled in" : status.value,
     title: line("Working title", "Working title"),
     lines: SNAPSHOT_LINES.map(([shown, name]) => line(shown, name)).filter((l): l is SnapLine => l !== null),
-    drawn: [[snap.section.line, snap.section.line], ...cardItems(snap.items).map((i): Lines => [i.first, i.last])],
+    drawn: [heading, ...drawn.map((i): Lines => [i.first, i.last])],
+    note: drawn.length > 0 ? null : `None of ${CARD_ITEMS.slice(0, -1).join(", ")}, or ${CARD_ITEMS[CARD_ITEMS.length - 1]} is in the Snapshot list.`,
   };
 }
 
@@ -398,7 +412,7 @@ export function restSections(doc: Doc): Rest {
   const drawnItems = new Set(snap === null ? [] : cardItems(snap.items).map((i) => i.first));
   const table = found.found ? found.table : null;
   /** A section whose heading the card or the claims part draws. */
-  const drawnAbove = (s: Section) => (s === snapSection && snap !== null) || (s === claimsSection && table !== null);
+  const drawnAbove = (s: Section) => s === snapSection || (s === claimsSection && table !== null);
   const listed: { title: string; labelTitle: string | null; heading: number | null; blocks: Block[] }[] = [];
   const notShown: string[] = [];
   const accounted: Lines[] = [];
@@ -425,9 +439,9 @@ export function restSections(doc: Doc): Rest {
     if (s === title) {
       blocks = opening === null ? s.blocks : s.blocks.slice(1);
       heading = null;
-    } else if (s === snapSection && snap !== null) {
+    } else if (s === snapSection) {
       blocks = s.blocks.flatMap((b) => {
-        if (b !== snap.list) return [b];
+        if (snap === null || b !== snap.list) return [b];
         const items = b.items.filter((i) => !drawnItems.has(i.first));
         if (items.length === b.items.length) return [b];
         if (items.length === 0) return [];
