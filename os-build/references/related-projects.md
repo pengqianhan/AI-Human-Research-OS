@@ -134,6 +134,17 @@ models improve.
 - [AutoSci](https://github.com/PKU-DAIR/AutoSci): Karpathy's LLM-Wiki vision,
   fully realized — wiki-centric full-lifecycle AI research platform powered by
   Claude Code.
+- [virtual-card-usdt-autonomous-research-agents-finops](https://github.com/DerrekKarkut846380/virtual-card-usdt-autonomous-research-agents-finops):
+  聚焦 2026 深度自主调研智能体（Deep Research Agents /
+  多源实时检索推演）并发扣费场景，拆解长程跨库分析触发的高频小额请款锁卡与预算失控难题，提供 CoreGold 商业虚拟卡（VCC）+ USDT +
+  Apple Pay 清算隔离架构。
+- [open-webui-tools](https://github.com/Haervwe/open-webui-tools): Open‑WebUI
+  Tools is a modular toolkit designed to extend and enrich your Open WebUI
+  instance, turning it into a powerful AI workstation.
+- [academic-commercialization-agent](https://github.com/shuxiachai/academic-commercialization-agent):
+  AI multi-agent tool that turns research papers into cited commercialization
+  and tech-transfer assessments: TRL, patent landscape, market and risks. CrewAI
+  + FastAPI, with a reproducible benchmark.
 
 ## Agent runtimes and operating systems
 
@@ -260,6 +271,16 @@ README list.
   Build mobile apps, frontend, backend, manages files, deep research, schedule
   tasks and events. Self-improving, self-healing, fully autonomous. TUI, CLI and
   Daemon.
+- [metabot](https://github.com/xvirobotics/metabot): 构建受监督的、自我进化的 Agent 组织的基础设施.
+- [most-capable-agent-system-prompt](https://github.com/fainir/most-capable-agent-system-prompt):
+  A copy-paste system prompt that has your coding agent (Claude Code, Codex,
+  Cursor) build a self-improving agent system for any computer work. Try the
+  lead follow-up demo at the website link.
+- [a-evolve](https://github.com/A-EVO-Lab/a-evolve): The official repository of
+  "Position: Agentic Evolution is the Path to Evolving LLMs".
+- [agent-qa](https://github.com/vostride/agent-qa): Open-source self-improving
+  QA agent for software teams. A test harness with memory. Write tests in
+  natural language for web and mobile.
 
 ## Skills and lists
 
@@ -327,6 +348,15 @@ README list.
   AI Scientist and other SoTA Agents just by editing config files. Support
   anthropic skills. An infinite-horizon agent framework designed for
   long-running, complex tasks.
+- [Free-Research-Crew](https://github.com/brycewang-stanford/Free-Research-Crew):
+  Free-Research-Crew (免费助研团): a crew of RA agents that co-writes CS &
+  social-science papers with real experiments and data modeling, built on a
+  curated hub of 6,000+ research skills.
+- [ScienceClaw](https://github.com/beita6969/ScienceClaw): Verifiable
+  program-level self-evolution for AI-for-Science agents: Skills and typed
+  Operators grow from replay-verified executions.
+- [research-skills](https://github.com/luwill/research-skills): Some commonly
+  used research experiences and processes are encapsulated into Agent skills.
 
 ## Articles
 
