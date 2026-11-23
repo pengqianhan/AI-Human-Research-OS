@@ -80,6 +80,15 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
 - [ ] Step 2, remaining views: Idea, Skeleton, Assets; Skills Hub as the second
       plugin; then loading a plugin from a local folder. Acceptance: the Human
       Owner opens all five views on `nanochat_cpu`.
+      Mockup C draws these three views as disabled tabs, so a second
+      clickable mockup, in C's look and filled from `nanochat_cpu`, offers two
+      alternatives for each:
+      [`os-ui/mockups/step2/views.html`](os-ui/mockups/step2/views.html)
+      (2026-11-23; it opens from disk). The Human Owner has not chosen yet,
+      and no view is built before they do. Also theirs to settle from that
+      mockup: what the Assets view holds (no decision defines it), and the
+      idea file's name, columns, and status words (its "Proposed file format"
+      panel is an agent's proposal).
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
@@ -214,8 +223,9 @@ packaged app's smoke run.
   in [os-ui/client/README.md](os-ui/client/README.md) on a fresh build of
   `main` (`npm ci`, then `npm start`, in `os-ui/client`), which covers the
   Code and Paper views, then S8. Step 2's Idea, Skeleton, and Assets views
-  are disabled tabs in mockup C, so each needs a clickable mockup the Human
-  Owner chooses before it is built. The older items below are still open.
+  wait for the Human Owner's choice in
+  [`os-ui/mockups/step2/views.html`](os-ui/mockups/step2/views.html) (Step 2
+  above). The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
