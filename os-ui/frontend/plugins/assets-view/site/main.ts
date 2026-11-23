@@ -141,11 +141,21 @@ async function limited<T, R>(items: readonly T[], limit: number, fn: (item: T) =
 }
 
 /**
+ * A picture's URL: the read channel's URL for the file, and the Reload's
+ * generation as `v`, which the channel ignores. Chromium reuses a picture it
+ * already drew for the same URL, `no-store` or not, so without it a Reload
+ * would show a file as it was before (os-ui/PLUGINS.md, the Assets view's
+ * review, M1). Within one Reload the card and the panel share the picture.
+ */
+const pictureUrl = (path: string) => `${filesUrl(workspacePath(project!, path))}&v=${state.gen}`;
+
+/**
  * Loads `path` as an <img>, the read channel's URL being its only source; on
  * an error the channel is asked for the status with a HEAD, within the same
  * slot of the queue. `place` puts the drawn image on screen.
  */
 function imageLoad(path: string, place: (img: HTMLImageElement) => void): Load {
+  const url = pictureUrl(path);
   const img = el("img");
   img.alt = "";
   let live = true;
@@ -159,7 +169,7 @@ function imageLoad(path: string, place: (img: HTMLImageElement) => void): Load {
   });
   img.addEventListener("error", () => {
     if (!live) return;
-    void fetch(filesUrl(workspacePath(project!, path)), { method: "HEAD", cache: "no-store" })
+    void fetch(url, { method: "HEAD", cache: "no-store" })
       .then((r) => r.status, () => 0)
       .then((status) => {
         if (!live) return;
@@ -167,7 +177,7 @@ function imageLoad(path: string, place: (img: HTMLImageElement) => void): Load {
         settle({ kind: "error", status });
       });
   });
-  img.src = filesUrl(workspacePath(project!, path));
+  img.src = url;
   return {
     done,
     cancel() {

@@ -40,10 +40,14 @@ describe("the page's DOM", () => {
 
   test("a picture's only source is the read channel's URL for a path the walk found; nothing else reaches a src, an href, or a style", () => {
     const main = source("main.ts");
-    // Exactly one <img> is made, in imageLoad, and its src is set in exactly one place, to the channel's URL for the item's project path.
+    // Exactly one <img> is made, in imageLoad, and its src is set in exactly one place, to the channel's URL for the item's project path
+    // with the Reload's generation beside it (M1), which the HEAD after an error asks for too.
     assert.deepEqual([...main.matchAll(/el\("img"/g)].length, 1);
-    assert.deepEqual([...main.matchAll(/\.src\s*=\s*([^;]+);/g)].map((m) => m[1]!.trim()), ["filesUrl(workspacePath(project!, path))"]);
-    assert.match(main, /function imageLoad\(path: string, place: \(img: HTMLImageElement\) => void\): Load \{\n {2}const img = el\("img"\);\n {2}img\.alt = "";/);
+    assert.deepEqual([...main.matchAll(/\.src\s*=\s*([^;]+);/g)].map((m) => m[1]!.trim()), ["url"]);
+    assert.match(main, /const pictureUrl = \(path: string\) => `\$\{filesUrl\(workspacePath\(project!, path\)\)\}&v=\$\{state\.gen\}`;/);
+    assert.match(main, /function imageLoad\(path: string, place: \(img: HTMLImageElement\) => void\): Load \{\n {2}const url = pictureUrl\(path\);\n {2}const img = el\("img"\);\n {2}img\.alt = "";/);
+    assert.deepEqual([...main.matchAll(/pictureUrl\(([^)]*)\)/g)].map((m) => m[1]), ["path"], "used in one place, imageLoad");
+    assert.match(main, /void fetch\(url, \{ method: "HEAD", cache: "no-store" \}\)/);
     // imageLoad is given only a FileItem's path, which the walk found in a listing (never a link or text from a file).
     assert.deepEqual([...main.matchAll(/(?<!function )imageLoad\(([^,]+),/g)].map((m) => m[1]!.trim()), ["item.path", "item.path"]);
     assert.doesNotMatch(main, /setAttribute\("src"|\.srcset\b|\.currentSrc\s*=/);
@@ -83,7 +87,7 @@ describe("what the page reads", () => {
     const main = source("main.ts");
     assert.deepEqual(
       [...main.matchAll(/fetch\((\w+\(workspacePath\(project!, [\w.]+\)\))/g)].map((m) => m[1]!),
-      ["listUrl(workspacePath(project!, path))", "filesUrl(workspacePath(project!, path))", "filesUrl(workspacePath(project!, path))", "filesUrl(workspacePath(project!, item.path))"],
+      ["listUrl(workspacePath(project!, path))", "filesUrl(workspacePath(project!, path))", "filesUrl(workspacePath(project!, item.path))"],
     );
     assert.doesNotMatch(main, /\/api\/|XMLHttpRequest/);
     assert.match(source("logic.ts"), /export const workspacePath = \(project: string, path: string\) => `projects-folder\/\$\{project\}\/\$\{path\}`;/);

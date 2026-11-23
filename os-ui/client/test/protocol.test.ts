@@ -1728,6 +1728,17 @@ describe("read channel", () => {
       for (const folder of ["Figs", "Figs/sub", "Baselines", "Baselines/run", "Code/results", "Code/Datasets"]) await okList(galleryList(`${G}/${folder}`));
     });
 
+    test("a picture's URL may carry the page's Reload token beside its path: the channel reads only `path` (review M1)", async () => {
+      for (const url of [gallery(`${G}/Figs/sub/b.png&v=3`), `app://assets-view/_os/files?v=7&path=${G}/Figs/sub/b.png`]) {
+        assert.equal(await okText(url), "png", url);
+        const head = await fetchRead(url, { method: "HEAD" });
+        assert.equal(head.status, 200, `HEAD ${url}`);
+      }
+      // The token changes nothing else: a second path is still refused, and so is a path outside the roots.
+      await assertRefused(gallery(`${G}/Figs/sub/b.png&v=3&path=${G}/Figs/a.svg`));
+      await assertRefused(gallery(`${G}/AGENTS.md&v=3`));
+    });
+
     test("anything else in the project is 404 from its origin: AGENTS.md, PROJECT_MEMORY.md, Code/ besides its two folders and README.md, paper/", async () => {
       for (const method of ["GET", "HEAD"]) {
         for (const url of [

@@ -1936,6 +1936,11 @@ describe("desktop client on a Research OS folder", () => {
   const assetFile = (project: string, rel: string) => join(workspace, "projects-folder", project, rel);
   /** The read channel's URL for a project path, as the page writes it. */
   const channelUrl = (project: string, rel: string) => `./_os/files?path=${encodeURIComponent(`projects-folder/${project}/${rel}`)}`;
+  /** A picture's src without the page's Reload token (`&v=<generation>`, review M1), which it must carry. */
+  const untoken = (src: string | null) => {
+    assert.match(src ?? "", /&v=\d+$/, `a Reload token in ${src}`);
+    return src!.replace(/&v=\d+$/, "");
+  };
   /** The figure cards' pictures, once each has loaded: their src and natural width. */
   const pictures = (as: Frame) => as.locator(".fcard .thumb img").evaluateAll((imgs) => imgs.map((i) => [i.getAttribute("src"), (i as HTMLImageElement).naturalWidth] as const));
   /** The workspace takes at most 10 selections a second from a view. */
@@ -1972,7 +1977,7 @@ describe("desktop client on a Research OS folder", () => {
       assert.deepEqual(await as.locator(".fcard .nm").allTextContents(), figures);
       await as.locator(".fcard .thumb img").nth(1).waitFor();
       assert.deepEqual(
-        (await pictures(as)).map(([src, w]) => [src, w > 0]),
+        (await pictures(as)).map(([src, w]) => [untoken(src), w > 0]),
         figures.map((name) => [channelUrl(ASSETS_PROJECT, `Figs/${name}`), true]),
       );
       assert.equal(await as.locator(".fcard .thumb img").evaluateAll((imgs) => imgs.every((i) => i.getAttribute("alt") === "" && i.attributes.length === 2)), true, "src and alt only");
@@ -2031,7 +2036,10 @@ describe("desktop client on a Research OS folder", () => {
       await panel.locator("h4").filter({ hasText: "Figure" }).waitFor();
       assert.equal(await panel.locator(".pn").textContent(), "Figs/probe_comparison.svg");
       await panel.locator(".big img").waitFor();
-      assert.deepEqual(await panel.locator(".big img").evaluate((i) => [i.getAttribute("src"), (i as HTMLImageElement).naturalWidth > 0]), [channelUrl(ASSETS_PROJECT, "Figs/probe_comparison.svg"), true]);
+      assert.deepEqual(
+        await panel.locator(".big img").evaluate((i) => [i.getAttribute("src"), (i as HTMLImageElement).naturalWidth > 0] as const).then(([src, drawn]) => [untoken(src), drawn]),
+        [channelUrl(ASSETS_PROJECT, "Figs/probe_comparison.svg"), true],
+      );
       assert.equal(await field("What").textContent(), "—");
       assert.deepEqual(await field("Used in").locator("li").allTextContents(), [`Code/README.md:${lineWith(readme, "![Probe comparison]")}`]);
       await label.filter({ hasText: "Figs/probe_comparison.svg" }).waitFor();
@@ -2176,7 +2184,7 @@ describe("desktop client on a Research OS folder", () => {
       const hash = as.locator(".fcard").filter({ hasText: "has#hash.svg" });
       await hash.scrollIntoViewIfNeeded();
       await hash.locator(".thumb img").waitFor();
-      assert.equal(await hash.locator(".thumb img").getAttribute("src"), channelUrl(ODD_PROJECT, "Figs/has#hash.svg"));
+      assert.equal(untoken(await hash.locator(".thumb img").getAttribute("src")), channelUrl(ODD_PROJECT, "Figs/has#hash.svg"));
       assert.ok(channelUrl(ODD_PROJECT, "Figs/has#hash.svg").includes("has%23hash.svg"));
       for (const [folder, name, expect] of [
         ["Code/results", "a+b.csv", "a, b"],
@@ -2197,7 +2205,7 @@ describe("desktop client on a Research OS folder", () => {
         await panel.locator(".pn").filter({ hasText: `Figs/${sub}/plot.svg` }).waitFor();
         assert.equal(await label.textContent(), `Figs/${sub}/plot.svg`);
         await panel.locator(".big img").waitFor();
-        assert.equal(await panel.locator(".big img").getAttribute("src"), channelUrl(ODD_PROJECT, `Figs/${sub}/plot.svg`));
+        assert.equal(untoken(await panel.locator(".big img").getAttribute("src")), channelUrl(ODD_PROJECT, `Figs/${sub}/plot.svg`));
       }
       // Markup in names, a CSV cell, and Code/README.md's dataset table stays text.
       if (process.platform !== "win32") {
@@ -2267,6 +2275,51 @@ describe("desktop client on a Research OS folder", () => {
     );
     assert.deepEqual(undrawn, [], "every picture is drawn");
     assert.equal(await cards.locator(".thumb-note").count(), 0, "no card is left waiting, busy, failed, or loading");
+  });
+
+  test("Reload draws each picture as the file is now: two pictures that swapped their contents on disk swap on screen, card and panel", SLOW, async () => {
+    const dir = assetFile(ODD_PROJECT, "Figs/swap");
+    const one = join(dir, "one.svg");
+    const two = join(dir, "two.svg");
+    const wide = svgPicture("wide", "#dcebe8").replace(/width="320"/, 'width="300"');
+    const narrow = svgPicture("narrow", "#f1e5cb").replace(/width="320"/, 'width="120"');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(one, wide);
+    writeFileSync(two, narrow);
+    try {
+      const { ws, as } = await openAssets(ODD_PROJECT);
+      await clearAsk(ws, ODD_PROJECT);
+      const reload = () => as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      const cardOf = (name: string) => as.locator(".fcard").filter({ has: as.locator(".nm", { hasText: new RegExp(`^swap/${name}$`) }) });
+      const widths = async () => {
+        for (const name of ["one.svg", "two.svg"]) {
+          await cardOf(name).scrollIntoViewIfNeeded();
+          await cardOf(name).locator(".thumb img").waitFor();
+        }
+        await as.locator(".as-prev .big img").waitFor();
+        return {
+          one: await cardOf("one.svg").locator(".thumb img").evaluate((i) => (i as HTMLImageElement).naturalWidth),
+          two: await cardOf("two.svg").locator(".thumb img").evaluate((i) => (i as HTMLImageElement).naturalWidth),
+          panel: await as.locator(".as-prev .big img").evaluate((i) => (i as HTMLImageElement).naturalWidth),
+        };
+      };
+      await reload();
+      await cardOf("one.svg").waitFor();
+      await pause();
+      await cardOf("one.svg").click();
+      assert.deepEqual(await widths(), { one: 300, two: 120, panel: 300 });
+      // The two files swap their contents on disk; Reload draws them as they are now.
+      writeFileSync(one, narrow);
+      writeFileSync(two, wide);
+      await reload();
+      await as.locator(".as-prev .pn").filter({ hasText: "Figs/swap/one.svg" }).waitFor();
+      await page.waitForTimeout(300);
+      assert.deepEqual(await widths(), { one: 120, two: 300, panel: 120 }, "each card and the panel show the file as it is on disk now");
+      const bar = ws.getByRole("region", { name: "Selection" });
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test("a hostile SVG shown as an <img> runs nothing and requests nothing outside the app", SLOW, async () => {
