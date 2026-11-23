@@ -25,7 +25,7 @@ const source = (file: string) => strip(sources.find((s) => s.file === file)!.tex
 
 describe("the page's DOM", () => {
   test("no HTML sink anywhere in the page's code or markup", () => {
-    assert.deepEqual(sources.map((s) => s.file).sort(), ["../../site-kit.ts", "index.html", "logic.ts", "main.ts", "pdfjs.ts", "style.css"]);
+    assert.deepEqual(sources.map((s) => s.file).sort(), ["../../site-kit.ts", "index.html", "logic.ts", "main.ts", "opener.ts", "pdfjs.ts", "style.css"]);
     for (const { file, text } of sources) {
       for (const sink of [/\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/, /DOMParser/, /createContextualFragment/, /srcdoc/, /\beval\(/, /new Function\b/, /\son[a-z]+=/i, /setAttribute\("style"/, /\.cssText\b/]) {
         assert.doesNotMatch(strip(text), sink, `${file}: ${sink}`);
@@ -35,7 +35,8 @@ describe("the page's DOM", () => {
 
   test("the text layer is PDF.js's TextLayer over the page's text content, without the PDF's marked-content ids", () => {
     const main = source("main.ts");
-    assert.match(main, /new lib\.TextLayer\(\{ textContentSource: page\.streamTextContent\(\), container: slot\.text,/);
+    assert.match(main, /capTextRuns\(page\.streamTextContent\(\) as ReadableStream<TextChunk>, TEXT_RUNS_MAX,/);
+    assert.match(main, /new lib\.TextLayer\(\{ textContentSource: source, container: slot\.text,/);
     // includeMarkedContent would give the DOM element ids written by the PDF.
     assert.doesNotMatch(main, /includeMarkedContent/);
   });
@@ -44,17 +45,19 @@ describe("the page's DOM", () => {
 describe("what the page asks of PDF.js", () => {
   test("one getDocument call, with the pinned options and the bytes read over the channel", async () => {
     const main = source("main.ts");
-    assert.deepEqual([...main.matchAll(/getDocument\(([^)]*)\)/g)].map((m) => m[1]), ["{ ...DOCUMENT_OPTIONS, data }"]);
-    // Each one keeps something the PDF carries from running, fetching, or reaching a native parser (pdfjs.ts says which).
+    assert.deepEqual([...main.matchAll(/getDocument\((\{[^}]*\})\)/g)].map((m) => m[1]), ["{ ...DOCUMENT_OPTIONS, data: data.slice(), worker: pdfWorker }"]);
+    assert.equal([...main.matchAll(/getDocument\(/g)].length, 1);
+    // Each one keeps something the PDF carries from running, fetching, or reaching Chromium's own font or image decoders (pdfjs.ts says which).
     const { DOCUMENT_OPTIONS } = await import("./pdfjs.ts");
     assert.deepEqual(DOCUMENT_OPTIONS, {
       enableXfa: false,
       useWasm: false,
       disableFontFace: true,
       useSystemFonts: false,
+      isImageDecoderSupported: false,
       useWorkerFetch: false,
       disableWorkerRendering: true,
-      maxImageSize: 8192 * 8192,
+      maxImageSize: 4096 * 4096,
       verbosity: 1,
     });
     // No URL for anything PDF.js could fetch (character maps, standard fonts, ICC profiles, wasm); the document comes as `data`.
@@ -69,13 +72,16 @@ describe("what the page asks of PDF.js", () => {
     }
   });
 
-  test("PDF.js is loaded from its vendored files on this origin, its worker started by the page as a module worker", () => {
+  test("PDF.js is loaded from its vendored files on this origin, each document's worker started by the page as a module worker", () => {
     const pdfjs = source("pdfjs.ts");
+    const main = source("main.ts");
     assert.match(pdfjs, /new URL\(`\.\/vendor\/\$\{file\}`, location\.href\)\.href/);
-    assert.deepEqual([...pdfjs.matchAll(/vendored\("([^"]+)"\)/g)].map((m) => m[1]), ["pdf.min.mjs", "pdf.worker.min.mjs"]);
+    assert.deepEqual([...pdfjs.matchAll(/vendored\("([^"]+)"\)/g)].map((m) => m[1]), ["pdf.worker.min.mjs", "pdf.min.mjs"]);
     assert.match(pdfjs, /new Worker\(url, \{ type: "module", name: "PDF\.js" \}\)/);
-    assert.match(pdfjs, /lib\.GlobalWorkerOptions\.workerPort = await startWorker/);
-    assert.doesNotMatch(pdfjs, /workerSrc|createObjectURL|blob:/);
+    // Handed to PDF.js as a port, document by document: PDF.js never builds or caches a worker of its own.
+    assert.match(main, /const opener = new Opener<PdfDocument>\(\(\) => startWorker\(\)\);/);
+    assert.match(main, /new lib\.PDFWorker\(\{ port: worker as Worker \}\)/);
+    assert.doesNotMatch(pdfjs + main, /workerSrc|workerPort|GlobalWorkerOptions|createObjectURL|blob:/);
   });
 });
 

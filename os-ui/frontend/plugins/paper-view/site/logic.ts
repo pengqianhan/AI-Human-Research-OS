@@ -88,9 +88,116 @@ export function pagePlan(boxes: readonly Box[], view: { top: number; height: num
 /**
  * A canvas holds at most this many pixels (4096 × 4096, 64 MiB at four bytes
  * each). Past it, a page is drawn at a lower resolution and the canvas is
- * scaled up to the page's size: blurrier at high zoom, never out of memory.
+ * scaled up to the page's size: blurrier at high zoom. It bounds the canvas,
+ * not what PDF.js holds while it draws (PAGE_BUDGET_MS bounds that in time).
  */
 export const MAX_CANVAS_PIXELS = 4096 * 4096;
+
+// ---- bounds on a hostile or enormous PDF (the review of S6b measured each) ------------
+
+/**
+ * How long one page may take to draw (PDF.js reading its content in the
+ * worker, then drawing it), or to lay out its text, before the view stops it.
+ * The nanochat_cpu paper's pages draw in well under a second; a page that
+ * takes fifteen is unreadable anyway, and a hostile one (nested forms, many
+ * large images) is stopped before it holds the worker and its memory longer.
+ */
+export const PAGE_BUDGET_MS = 15_000;
+
+/**
+ * Pages laid out at most. Every page is a sheet in one scrolling column, and
+ * each scroll frame looks at every sheet (300,000 pages took about 2 s a
+ * frame in the review); 1,000 keeps that under a few milliseconds and is more
+ * than any paper or thesis this view is for. Past it the view says how many
+ * it shows, of how many.
+ */
+export const PAGES_MAX = 1000;
+
+/**
+ * The tallest the column of pages may be, in CSS pixels, at the largest zoom.
+ * Chromium clamps an element's height at 16,777,216 px, so pages laid out
+ * below that could never be scrolled to; this stays under it with room for
+ * the scroller's padding.
+ */
+export const LAYOUT_MAX_PX = 16_000_000;
+
+/** The scroller's padding above the first page and below the last, and the gap between pages (style.css), in CSS pixels. */
+export const LAYOUT_PADDING = { top: 26, bottom: 96, gap: 18 } as const;
+
+/**
+ * How many pages, from the first, the view lays out: at most PAGES_MAX, and
+ * only as many as fit in LAYOUT_MAX_PX when every one is drawn at the largest
+ * zoom step. `heightAt(i)` is page i's height in PDF units (a page not read
+ * yet counts as the first page's height; the view checks again as it reads
+ * each). At least the first page is laid out.
+ */
+export function pagesShown(total: number, heightAt: (index: number) => number, firstWidth: number): number {
+  const scale = cssScale(STEPS[STEPS.length - 1]!, firstWidth);
+  let height = LAYOUT_PADDING.top + LAYOUT_PADDING.bottom;
+  const most = Math.min(total, PAGES_MAX);
+  for (let i = 0; i < most; i++) {
+    height += Math.floor(heightAt(i) * scale) + LAYOUT_PADDING.gap;
+    if (height > LAYOUT_MAX_PX) return Math.max(1, i);
+  }
+  return most;
+}
+
+/**
+ * Text runs (PDF.js text items) of one page made selectable at most. The
+ * review's page of 100,000 one-character runs took 138 s to lay out and about
+ * 1 GB; a dense page of an ordinary paper has a few hundred to a few thousand.
+ */
+export const TEXT_RUNS_MAX = 10_000;
+
+/** One chunk of a page's text content as PDF.js streams it. */
+export interface TextChunk {
+  items: unknown[];
+  styles?: unknown;
+  lang?: unknown;
+}
+
+/**
+ * A page's text content stream, cut after `max` text items: the stream ends
+ * there, the source is cancelled, and `onCut` is called once.
+ */
+export function capTextRuns(source: ReadableStream<TextChunk>, max: number, onCut: () => void): ReadableStream<TextChunk> {
+  const reader = source.getReader();
+  let count = 0;
+  return new ReadableStream<TextChunk>({
+    async pull(controller) {
+      const { done, value } = await reader.read();
+      if (done) {
+        controller.close();
+        return;
+      }
+      const room = max - count;
+      if (value.items.length <= room) {
+        count += value.items.length;
+        controller.enqueue(value);
+        return;
+      }
+      controller.enqueue({ ...value, items: value.items.slice(0, room) });
+      count = max;
+      onCut();
+      controller.close();
+      void reader.cancel().catch(() => {});
+    },
+    cancel(reason) {
+      return reader.cancel(reason);
+    },
+  });
+}
+
+/**
+ * The pages a selection quotes: the first and the last page (1-based) whose
+ * part of the selection holds any text that is not blank. A selection that
+ * starts at the very end of one page's text, or ends at the very start of
+ * another's, does not reach that page. null when no page holds text.
+ */
+export function quotedPages(parts: readonly { page: number; text: string }[]): { first: number; last: number } | null {
+  const pages = parts.filter((p) => p.text.trim() !== "").map((p) => p.page);
+  return pages.length === 0 ? null : { first: Math.min(...pages), last: Math.max(...pages) };
+}
 
 /** Canvas pixels per CSS pixel for a page of `width` × `height` CSS pixels: the display's ratio, lowered to the cap. */
 export function outputScale(width: number, height: number, devicePixelRatio: number, max: number = MAX_CANVAS_PIXELS): number {
@@ -182,7 +289,8 @@ function cutAt(text: string, max: number, mark: string): string {
 export function selectionLabel(first: number, last: number, heading: string | null): string {
   const base = `${PDF} ${first === last ? `p. ${first}` : `pp. ${first}–${last}`}`;
   if (heading === null) return base;
-  const shown = visibleName(heading);
+  // Blank runs collapse to one space, as the host collapses a label's (src/plugins/select.ts), so what is posted is what shows.
+  const shown = visibleName(heading.replace(/[\p{Zs}\t]+/gu, " ").trim());
   return `${base} · ${cutAt(shown, LABEL_MAX - base.length - 3, "…")}`;
 }
 
@@ -258,5 +366,35 @@ export function projectWords(search: string): Words {
   return { title: "Not a project name", text: `“${clip(given, 80)}” is not a project folder name the Paper view can open (a letter, then letters, digits, _ or -).`, retry: false };
 }
 
-/** The bar's note: "paper/main.pdf · 4 pages · select text to ask the agent about it". */
-export const pagesNote = (total: number) => `${PDF} · ${total} page${total === 1 ? "" : "s"} · select text to ask the agent about it`;
+/**
+ * The bar's note: "paper/main.pdf · 4 pages · select text to ask the agent
+ * about it", or "… · first 1,000 of 300,000 pages · …" when the view lays out
+ * fewer than the PDF has.
+ */
+export function pagesNote(total: number, shown: number = total): string {
+  const pages = shown < total ? `first ${n(shown)} of ${n(total)} pages` : `${n(total)} page${total === 1 ? "" : "s"}`;
+  return `${PDF} · ${pages} · select text to ask the agent about it`;
+}
+
+/** What the end of the column says when the view lays out fewer pages than the PDF has. */
+export const pagesLimitWords = (shown: number, total: number): string =>
+  `The Paper view shows the first ${n(shown)} of this PDF's ${n(total)} pages (it lays out at most ${n(PAGES_MAX)}, and no more than fit in one scrolling column at ${Math.round(STEPS[STEPS.length - 1]! * 100)}%). Open ${PDF} in a PDF reader for the rest.`;
+
+/** A page stopped for taking longer than PAGE_BUDGET_MS to draw. */
+export const overBudgetWords = (page: number): string =>
+  `Page ${page} took longer than ${PAGE_BUDGET_MS / 1000} s to draw, so the Paper view stopped it and the rest of the paper is shown. Reload tries again.`;
+
+/** A page whose text was cut at TEXT_RUNS_MAX runs, or stopped for taking longer than PAGE_BUDGET_MS. */
+export const textCutWords = (page: number, why: "runs" | "time"): string =>
+  why === "runs"
+    ? `Only the first ${n(TEXT_RUNS_MAX)} pieces of page ${page}'s text can be selected.`
+    : `Page ${page}'s text took longer than ${PAGE_BUDGET_MS / 1000} s to lay out, so only part of it can be selected.`;
+
+/** PDF.js did not start, or did not open the file, within its budget (opener.ts OPEN_BUDGET_MS). */
+export const slowWords = (stage: "start" | "open", seconds: number): Words =>
+  stage === "start"
+    ? { title: "The PDF reader did not start", text: `PDF.js's worker did not start within ${seconds} s, so it was stopped.`, retry: true }
+    : { title: "The paper took too long to open", text: `PDF.js did not open ${PDF} within ${seconds} s, so it was stopped. The file may be damaged or built to be slow.`, retry: true };
+
+/** A number with thousands separators. */
+const n = (value: number) => value.toLocaleString("en-US");

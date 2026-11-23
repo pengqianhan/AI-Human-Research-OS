@@ -4,8 +4,18 @@ import { readSelect, referenceText } from "../../../src/plugins/select.ts";
 import type { PluginPage } from "../../../src/plugins/pages.ts";
 import { LABEL_MAX, QUOTE_MAX } from "../../site-kit.ts";
 import {
+  capTextRuns,
   CUT,
   cssScale,
+  LAYOUT_MAX_PX,
+  overBudgetWords,
+  PAGE_BUDGET_MS,
+  PAGES_MAX,
+  pagesLimitWords,
+  pagesShown,
+  quotedPages,
+  slowWords,
+  textCutWords,
   destTop,
   fetchWords,
   fitZoom,
@@ -90,6 +100,92 @@ describe("which pages are drawn", () => {
   });
 });
 
+describe("bounds on an enormous or hostile PDF", () => {
+  const letter = () => 792;
+
+  test("at most PAGES_MAX pages are laid out, and the bar and the column say how many of how many", () => {
+    assert.equal(pagesShown(4, letter, 612), 4);
+    assert.equal(pagesShown(300_000, letter, 612), PAGES_MAX);
+    assert.equal(PAGES_MAX, 1000);
+    assert.equal(pagesNote(300_000, 1000), "paper/main.pdf · first 1,000 of 300,000 pages · select text to ask the agent about it");
+    assert.equal(pagesNote(4, 4), "paper/main.pdf · 4 pages · select text to ask the agent about it");
+    assert.match(pagesLimitWords(1000, 300_000), /^The Paper view shows the first 1,000 of this PDF's 300,000 pages .*Open paper\/main\.pdf in a PDF reader for the rest\.$/);
+  });
+
+  test("no page is laid out below what one scrolling column can reach, at the largest zoom", () => {
+    const scaleAtMost = cssScale(STEPS[STEPS.length - 1]!, 612);
+    // 1,000 letter pages at 300% take about 2.5 million pixels: all fit.
+    assert.ok(1000 * (792 * scaleAtMost + 18) < LAYOUT_MAX_PX);
+    // A one-point-wide first page makes a 14,400-point page about 27 million pixels tall at 300%: only the first page is laid out.
+    assert.equal(pagesShown(2, (i) => (i === 0 ? 1 : 14_400), 1), 1);
+    // Tall pages after ordinary ones: as many as fit, never past the clamp.
+    const tall = (i: number) => (i < 10 ? 792 : 14_400);
+    const shown = pagesShown(500, tall, 612);
+    let height = 26 + 96;
+    for (let i = 0; i < shown; i++) height += Math.floor(tall(i) * scaleAtMost) + 18;
+    assert.ok(shown > 10 && shown < 500 && height <= LAYOUT_MAX_PX, `${shown} pages, ${height} px`);
+    assert.ok(LAYOUT_MAX_PX < 16_777_216, "under Chromium's clamp on an element's height");
+  });
+
+  test("a page's text stream is cut at the run limit, and the source is cancelled", async () => {
+    let cancelled = false;
+    const chunks = [{ items: [1, 2, 3], styles: {} }, { items: [4, 5, 6, 7], styles: {} }, { items: [8], styles: {} }];
+    const source = new ReadableStream<{ items: unknown[]; styles?: unknown }>({
+      pull(controller) {
+        const next = chunks.shift();
+        if (next === undefined) controller.close();
+        else controller.enqueue(next);
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    let cuts = 0;
+    const read: unknown[] = [];
+    const reader = capTextRuns(source, 5, () => cuts++).getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      read.push(...value.items);
+    }
+    assert.deepEqual(read, [1, 2, 3, 4, 5]);
+    assert.equal(cuts, 1);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(cancelled, true);
+    // Under the limit, everything passes and nothing is cut.
+    const small = capTextRuns(new ReadableStream({ start: (c) => (c.enqueue({ items: [1] }), c.close()) }), 5, () => cuts++).getReader();
+    assert.deepEqual((await small.read()).value?.items, [1]);
+    assert.equal((await small.read()).done, true);
+    assert.equal(cuts, 1);
+  });
+
+  test("words for a page stopped, text cut, and a reader that did not answer", () => {
+    assert.equal(PAGE_BUDGET_MS, 15_000);
+    assert.equal(overBudgetWords(3), "Page 3 took longer than 15 s to draw, so the Paper view stopped it and the rest of the paper is shown. Reload tries again.");
+    assert.equal(textCutWords(2, "runs"), "Only the first 10,000 pieces of page 2's text can be selected.");
+    assert.match(textCutWords(2, "time"), /^Page 2's text took longer than 15 s to lay out/);
+    assert.deepEqual(slowWords("open", 20), {
+      title: "The paper took too long to open",
+      text: "PDF.js did not open paper/main.pdf within 20 s, so it was stopped. The file may be damaged or built to be slow.",
+      retry: true,
+    });
+    assert.equal(slowWords("start", 20).retry, true);
+  });
+});
+
+describe("the pages a selection quotes", () => {
+  test("only pages whose part of the selection holds text count", () => {
+    // From the very end of page 1's text into page 2: page 1's part is empty.
+    assert.deepEqual(quotedPages([{ page: 1, text: "" }, { page: 2, text: "\nKnob Demo This example" }]), { first: 2, last: 2 });
+    assert.deepEqual(quotedPages([{ page: 1, text: " \n " }, { page: 2, text: "x" }, { page: 3, text: "\n" }]), { first: 2, last: 2 });
+    assert.deepEqual(quotedPages([{ page: 1, text: "a" }, { page: 2, text: "" }, { page: 3, text: "b" }]), { first: 1, last: 3 });
+    assert.equal(quotedPages([{ page: 1, text: "" }]), null);
+    assert.equal(quotedPages([]), null);
+    const pages = quotedPages([{ page: 1, text: "" }, { page: 2, text: "Knob" }])!;
+    assert.equal(selectionLabel(pages.first, pages.last, "Setup"), "paper/main.pdf p. 2 · Setup");
+  });
+});
+
 describe("the outline heading a selection falls under", () => {
   test("destinations: XYZ, FitH, FitBH, FitR carry a top; Fit and broken ones do not", () => {
     const ref = { num: 26, gen: 0 };
@@ -167,6 +263,17 @@ describe("what a selection reports, and what the host makes of it", () => {
     assert.equal(long.length, LABEL_MAX);
     assert.ok(long.startsWith("paper/main.pdf pp. 12–13 · AAA") && long.endsWith("…"), long);
     assert.equal(host(long)?.kind, "select");
+    // The review's title: Hangul fillers (default-ignorable, so drawn as nothing) padding a phrase that reads as another reference.
+    const filler = String.fromCodePoint(0x3164);
+    const padded = selectionLabel(1, 1, `Setup${filler.repeat(30)}see paper/main.tex`);
+    assert.ok(padded.startsWith("paper/main.pdf p. 1 · Setup⟨U+3164⟩⟨U+3164⟩") && padded.length <= LABEL_MAX, padded);
+    assert.deepEqual(host(padded), { kind: "select", reference: { label: padded } }, "the host takes it as posted");
+    const blank = selectionLabel(1, 1, `Setup${String.fromCodePoint(0x2800)}x`);
+    assert.equal(blank, "paper/main.pdf p. 1 · Setup⟨U+2800⟩x");
+    // Blank runs collapse as the host collapses them, so the label posted is the label shown.
+    const spaced = selectionLabel(1, 1, `Set up${" ".repeat(40)}and${String.fromCodePoint(0x3000)}go\t `);
+    assert.equal(spaced, "paper/main.pdf p. 1 · Set up and go");
+    assert.deepEqual(host(spaced), { kind: "select", reference: { label: spaced } });
     const astral = selectionLabel(1, 1, "😀".repeat(200));
     assert.ok(astral.length <= LABEL_MAX && !/[\ud800-\udbff]…$/.test(astral), "a pair is never split");
   });

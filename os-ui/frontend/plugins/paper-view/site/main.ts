@@ -8,19 +8,24 @@
  * nothing else and has no bridge.
  *
  * Selected text is reported to the workspace with `os.select` (posted to the
- * app's origin only): the label names the page and the outline heading it
- * falls under, the quote is the text, cut to the host's limits here. The
- * workspace shows the "Ask the agent about this" bar and may answer
- * `os.select.clear`.
+ * app's origin only): the label names the pages whose text is quoted and the
+ * outline heading that text starts under; the quote is the selected text of
+ * the text layer, cut to the host's limits here. The text layer holds every
+ * run of the page's text, drawn or not (white on white, clipped, a remapped
+ * font): the workspace shows the quote before and after "Ask the agent about
+ * this", and only what it shows is sent.
  *
- * Pages are drawn lazily, near the view, and far pages' canvases released;
- * each document load and each zoom carries a number, so a page drawn for an
- * older document or zoom never replaces a newer one. Outline titles and the
- * PDF's text are untrusted and reach the DOM as text only (site-kit, and
- * PDF.js's TextLayer, which sets textContent).
+ * Each document runs in a PDF.js worker of its own (opener.ts). Pages are
+ * drawn lazily, near the view, far pages' canvases and text released; a page
+ * that takes longer than PAGE_BUDGET_MS is stopped, its worker replaced, and
+ * the rest of the paper drawn. Each load and each zoom carries a number, so a
+ * page drawn for an older document or zoom never replaces a newer one.
+ * Outline titles and the PDF's text are untrusted and reach the DOM as text
+ * only (site-kit, and PDF.js's TextLayer, which sets textContent).
  */
 import { button, clear, el, filesUrl, icon, isHostClear, listUrl, projectFrom } from "../../site-kit.ts";
 import {
+  capTextRuns,
   cssScale,
   destTop,
   fetchWords,
@@ -30,23 +35,32 @@ import {
   OUTLINE_MAX,
   openWords,
   outputScale,
+  overBudgetWords,
+  PAGE_BUDGET_MS,
   pageLabel,
   pagePlan,
+  pagesLimitWords,
   pagesNote,
+  pagesShown,
   projectWords,
+  quotedPages,
   quoteOf,
   readerWords,
   readingOrder,
   selectionLabel,
+  slowWords,
   TEX,
+  TEXT_RUNS_MAX,
+  textCutWords,
   zeroPagesWords,
   zoomFactor,
   zoomLabel,
   zoomStep,
 } from "./logic.ts";
-import type { Box, Heading, Words, Zoom } from "./logic.ts";
-import { DOCUMENT_OPTIONS, loadPdfJs } from "./pdfjs.ts";
-import type { LoadingTask, OutlineItem, PdfDocument, PdfJs, PdfPage, RenderTask, TextLayerTask, Viewport } from "./pdfjs.ts";
+import type { Box, Heading, OpenError, TextChunk, Words, Zoom } from "./logic.ts";
+import { OPEN_BUDGET_MS, Opener } from "./opener.ts";
+import { DOCUMENT_OPTIONS, loadPdfJs, startWorker } from "./pdfjs.ts";
+import type { OutlineItem, PdfDocument, PdfJs, PdfPage, RenderTask, TextLayerTask, Viewport } from "./pdfjs.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
 const HOST = "app://research-os";
@@ -92,6 +106,21 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") unselect();
 });
 
+/** The part of `range` inside each page's text layer it reaches, in page order. */
+function partsByPage(range: Range): { slot: Slot; part: Range }[] {
+  if (view === null) return [];
+  const out: { slot: Slot; part: Range }[] = [];
+  for (const slot of view.slots) {
+    if (!range.intersectsNode(slot.text)) continue;
+    const part = document.createRange();
+    part.selectNodeContents(slot.text);
+    if (range.comparePoint(part.startContainer, part.startOffset) < 0) part.setStart(range.startContainer, range.startOffset);
+    if (range.comparePoint(part.endContainer, part.endOffset) > 0) part.setEnd(range.endContainer, range.endOffset);
+    out.push({ slot, part });
+  }
+  return out;
+}
+
 /** Reports the text selected in the pages, or that none is. */
 function reportSelection(): void {
   if (view === null) return;
@@ -100,29 +129,35 @@ function reportSelection(): void {
     unreport();
     return;
   }
-  const range = s.getRangeAt(0);
-  const touched = view.slots.filter((slot) => range.intersectsNode(slot.sheet));
+  const parts = partsByPage(s.getRangeAt(0));
+  // The label names the pages whose text the quote holds, and the heading that text starts under.
+  const pages = quotedPages(parts.map(({ slot, part }) => ({ page: slot.index + 1, text: part.toString() })));
   const quote = quoteOf(s.toString());
-  if (touched.length === 0 || quote === null) {
+  if (pages === null || quote === null) {
     unreport();
     return;
   }
-  const first = touched[0]!;
-  const last = touched[touched.length - 1]!;
-  report(selectionLabel(first.index + 1, last.index + 1, headingFor(first, range)?.title ?? null), quote);
+  const first = parts.find(({ slot }) => slot.index + 1 === pages.first)!;
+  report(selectionLabel(pages.first, pages.last, headingFor(first.slot, first.part)?.title ?? null), quote);
 }
 
-/** The outline heading the selection starts under: by the top of its first line on its first page. */
-function headingFor(slot: Slot, range: Range): Heading | null {
+/** The outline heading the quoted text starts under: by the top of its first line on its first page. */
+function headingFor(slot: Slot, part: Range): Heading | null {
   if (view === null || view.headings.length === 0) return null;
   let y: number | null = null;
-  const rect = [...range.getClientRects()].find((r) => r.width > 0 || r.height > 0);
-  if (rect !== undefined && slot.page !== null && slot.sheet.contains(range.startContainer)) {
+  const rect = [...part.getClientRects()].find((r) => r.width > 0 && r.height > 0);
+  if (rect !== undefined && slot.page !== null) {
     const box = slot.sheet.getBoundingClientRect();
     const point = slot.page.getViewport({ scale: view.scale }).convertToPdfPoint(rect.left - box.left, rect.top - box.top);
     y = typeof point[1] === "number" && Number.isFinite(point[1]) ? point[1] : null;
   }
   return headingAt(view.headings, slot.index, y);
+}
+
+/** Whether the current selection reaches into a page (whose text layer must then stay). */
+function selectionTouches(slot: Slot): boolean {
+  const s = window.getSelection();
+  return s !== null && s.rangeCount > 0 && !s.isCollapsed && s.getRangeAt(0).intersectsNode(slot.sheet);
 }
 
 let settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -166,6 +201,8 @@ function iconButton(name: string, label: string): HTMLButtonElement {
   b.append(icon(name));
   return b;
 }
+
+const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 // ---- the bar and the scroller (mockup C's .paperbar and .paper-scroll) -----------------
 
@@ -239,6 +276,8 @@ interface Slot {
   textLayer: TextLayerTask | null;
   /** The text layer: not started, being built, or finished (or given up on). */
   textState: "none" | "building" | "done";
+  /** Stopped for taking longer than PAGE_BUDGET_MS: shown as a note, never drawn again until Reload. */
+  stopped: boolean;
 }
 
 /** The open document; null while a screen shows instead. */
@@ -251,13 +290,18 @@ let view: {
   headings: Heading[];
 } | null = null;
 
-/** The document load in progress or shown: each load and each teardown takes the next number. */
+/** Each document in its own PDF.js worker; opening one closes the one before. */
+const opener = new Opener<PdfDocument>(() => startWorker());
+/** The document load in progress or shown: each load, restart, and teardown takes the next number. */
 let generation = 0;
 /** The zoom number: each zoom change and each load takes the next, and a canvas drawn for another is stale. */
 let zoomGeneration = 0;
-let loadingTask: LoadingTask | null = null;
 let zoom: Zoom = "fit";
 let current = 0;
+/** The file as read, kept to open it again in a fresh worker after a page was stopped. */
+let bytes: Uint8Array | null = null;
+/** Pages (0-based) stopped for taking too long, since the last Reload. */
+let stoppedPages = new Set<number>();
 
 const currentZoom = () => zoomFactor(zoom, scroller.clientWidth);
 
@@ -272,12 +316,18 @@ function showPages(): void {
   app.append(bar, scroller);
 }
 
-/** Drops the document on screen: cancels every drawing and the loading task, and tells the workspace the selection went with it. */
-async function teardown(): Promise<void> {
+/**
+ * Drops the document on screen, at once: cancels every drawing, closes the
+ * document (its worker ends without anything waiting for it), and tells the
+ * workspace the selection went with it. Anything still running for the old
+ * number finds it stale.
+ */
+function teardown(): void {
   generation++;
   unselect();
   const old = view;
   view = null;
+  wanted = [];
   if (old !== null) {
     for (const slot of old.slots) {
       slot.task?.cancel();
@@ -286,9 +336,7 @@ async function teardown(): Promise<void> {
     }
   }
   clear(pages);
-  const task = loadingTask;
-  loadingTask = null;
-  if (task !== null) await task.destroy().catch(() => {});
+  opener.close();
 }
 
 function releaseCanvas(slot: Slot): void {
@@ -304,10 +352,12 @@ function releaseCanvas(slot: Slot): void {
 /** Reads paper/main.pdf and opens it, or shows the screen for what is there instead. */
 async function load(): Promise<void> {
   const keepPage = view === null ? 0 : current;
-  await teardown();
+  teardown();
+  // Taken before any await: a second Reload in the same task makes this load stale.
   const mine = generation;
-  const loading = el("div", "loading", "Loading the paper…");
-  show(loading);
+  bytes = null;
+  stoppedPages = new Set();
+  show(el("div", "loading", "Loading the paper…"));
   const pdfPath = `projects-folder/${project}/paper/main.pdf`;
   let res: Response;
   try {
@@ -331,45 +381,66 @@ async function load(): Promise<void> {
     return;
   }
   let data: Uint8Array;
-  let lib: PdfJs;
   try {
     data = new Uint8Array(await res.arrayBuffer());
   } catch {
     if (mine === generation) show(screen(fetchWords(0), () => void load()));
     return;
   }
+  if (mine !== generation) return;
+  bytes = data;
+  await openDocument(mine, { page: keepPage, down: null, gap: PAGE_GAP });
+}
+
+/**
+ * Opens the bytes read in a fresh worker (opener.ts, within OPEN_BUDGET_MS)
+ * and lays the pages out at `at`; a screen with Try again for anything else.
+ */
+async function openDocument(mine: number, at: Place): Promise<void> {
+  let lib: PdfJs;
   try {
     lib = await loadPdfJs();
   } catch (error) {
-    if (mine === generation) show(screen(readerWords(error instanceof Error ? error.message : String(error)), () => void load()));
+    if (mine === generation) show(screen(readerWords(errorText(error)), () => void load()));
     return;
   }
-  if (mine !== generation) return;
-  const task = lib.getDocument({ ...DOCUMENT_OPTIONS, data });
-  loadingTask = task;
-  let doc: PdfDocument;
-  try {
-    doc = await task.promise;
-  } catch (error) {
-    if (mine !== generation) return;
-    show(screen(openWords((error ?? {}) as object), () => void load()));
+  if (mine !== generation || bytes === null) return;
+  const data = bytes;
+  const result = await opener.open((worker) => {
+    const pdfWorker = new lib.PDFWorker({ port: worker as Worker });
+    // A copy: PDF.js hands its buffer to the worker, and a restart needs the bytes again.
+    return { pdfWorker, task: lib.getDocument({ ...DOCUMENT_OPTIONS, data: data.slice(), worker: pdfWorker }) };
+  });
+  if (mine !== generation || result.kind === "stale") return;
+  if (result.kind === "timeout") {
+    show(screen(slowWords(result.stage, OPEN_BUDGET_MS / 1000), () => void load()));
     return;
   }
-  if (mine !== generation) return;
+  if (result.kind === "failed") {
+    show(screen(result.stage === "start" ? readerWords(errorText(result.error)) : openWords((result.error ?? {}) as OpenError), () => void load()));
+    return;
+  }
+  const doc = result.doc;
   if (doc.numPages === 0) {
     show(screen(zeroPagesWords, () => void load()));
     return;
   }
-  let first: PdfPage;
-  try {
-    first = await doc.getPage(1);
-  } catch (error) {
-    if (mine === generation) show(screen(openWords((error ?? {}) as object), () => void load()));
+  const first = await withBudget(doc.getPage(1), OPEN_BUDGET_MS);
+  if (mine !== generation) return;
+  if (first === "timeout" || "error" in first) {
+    opener.close();
+    show(screen(first === "timeout" ? slowWords("open", OPEN_BUDGET_MS / 1000) : openWords((first.error ?? {}) as OpenError), () => void load()));
     return;
   }
-  if (mine !== generation) return;
-  open(lib, doc, first, Math.min(keepPage, doc.numPages - 1));
+  open(lib, doc, first.value, { ...at, page: Math.min(at.page, doc.numPages - 1) });
   void readHeadings(doc, mine);
+}
+
+/** `promise`'s outcome, or "timeout" after `ms`; never rejects. */
+function withBudget<T>(promise: Promise<T>, ms: number): Promise<{ value: T } | { error: unknown } | "timeout"> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<"timeout">((resolve) => (timer = setTimeout(() => resolve("timeout"), ms)));
+  return Promise.race([promise.then((value) => ({ value }), (error: unknown) => ({ error })), expired]).finally(() => clearTimeout(timer));
 }
 
 /** No main.pdf: lists paper/ to say why. */
@@ -411,18 +482,23 @@ function texReference(): HTMLElement {
   return line;
 }
 
-/** Lays out every page at the first page's size (corrected as each is read), and shows the bar. */
-function open(lib: PdfJs, doc: PdfDocument, first: PdfPage, startAt: number): void {
+/**
+ * Lays out the pages the view shows (pagesShown: at most PAGES_MAX, and no
+ * more than one scrolling column can hold), each at the first page's size
+ * until it is read, and shows the bar.
+ */
+function open(lib: PdfJs, doc: PdfDocument, first: PdfPage, at: Place): void {
   const base = first.getViewport({ scale: 1 });
+  const shown = pagesShown(doc.numPages, () => base.height, base.width);
   const slots: Slot[] = [];
-  for (let i = 0; i < doc.numPages; i++) {
+  for (let i = 0; i < shown; i++) {
     const sheet = el("div", "sheet");
     sheet.dataset.page = String(i + 1);
     sheet.setAttribute("aria-label", `Page ${i + 1}`);
     const text = el("div", "textLayer");
     sheet.append(text);
     pages.append(sheet);
-    slots.push({
+    const slot: Slot = {
       index: i,
       sheet,
       text,
@@ -435,14 +511,47 @@ function open(lib: PdfJs, doc: PdfDocument, first: PdfPage, startAt: number): vo
       task: null,
       textLayer: null,
       textState: "none",
-    });
+      stopped: false,
+    };
+    if (stoppedPages.has(i)) stopSlot(slot);
+    slots.push(slot);
   }
   view = { lib, doc, slots, scale: 1, headings: [] };
-  hint.textContent = pagesNote(doc.numPages);
-  hint.title = hint.textContent;
+  showLimit(doc.numPages);
   showPages();
-  current = startAt;
-  relayout({ page: startAt, down: null, gap: PAGE_GAP });
+  current = Math.min(at.page, slots.length - 1);
+  relayout({ ...at, page: current });
+}
+
+/** The bar's note, and a closing note in the column when the view shows fewer pages than the PDF has. */
+function showLimit(total: number): void {
+  if (view === null) return;
+  const shown = view.slots.length;
+  hint.textContent = pagesNote(total, shown);
+  hint.title = hint.textContent;
+  pages.querySelector(".pages-note")?.remove();
+  if (shown < total) pages.append(el("p", "pages-note", pagesLimitWords(shown, total)));
+}
+
+/**
+ * Lays out fewer pages once a page read later turns out taller than the first
+ * (pagesShown, with every height known so far), so no page is ever beyond
+ * what the column can scroll to.
+ */
+function enforceLimit(): void {
+  if (view === null) return;
+  const v = view;
+  const shown = pagesShown(v.doc.numPages, (i) => (v.slots[i] ?? v.slots[0]!).height, v.slots[0]!.width);
+  if (shown >= v.slots.length) return;
+  for (const slot of v.slots.splice(shown)) {
+    slot.task?.cancel();
+    slot.textLayer?.cancel();
+    releaseCanvas(slot);
+    slot.sheet.remove();
+  }
+  if (current >= shown) current = shown - 1;
+  showLimit(v.doc.numPages);
+  schedule();
 }
 
 /** The reader's place: a page and how far down it (a fraction of its height), or the gap above it when the view starts above the page. */
@@ -452,7 +561,7 @@ interface Place {
   gap: number;
 }
 
-/** The place last shown, kept while the frame is hidden. */
+/** The place last shown, kept while the frame is hidden and across a restart. */
 let place: Place = { page: 0, down: null, gap: PAGE_GAP };
 
 function placeNow(): Place {
@@ -472,7 +581,7 @@ function relayout(at: Place = placeNow()): void {
   for (const slot of view.slots) sizeSheet(slot);
   const sheet = view.slots[at.page]?.sheet;
   if (sheet !== undefined) scroller.scrollTop = sheet.offsetTop + (at.down === null ? -at.gap : at.down * sheet.offsetHeight);
-  current = at.page;
+  current = Math.min(at.page, view.slots.length - 1);
   place = at;
   zoomText.textContent = zoomLabel(zoom, z);
   fit.classList.toggle("active", zoom === "fit");
@@ -525,7 +634,11 @@ function schedule(): void {
   });
 }
 
-/** Names the current page, releases far canvases, and draws the pages near the view, nearest first, one at a time. */
+/**
+ * Names the current page; releases far pages (their canvas, what PDF.js kept
+ * for drawing them, and their text unless the selection reaches it); and
+ * draws the pages near the view, nearest first, one at a time.
+ */
 function update(): void {
   if (view === null || scroller.clientWidth === 0) return;
   const plan = pagePlan(sheetBoxes(), { top: scroller.scrollTop, height: scroller.clientHeight, scrollHeight: scroller.scrollHeight });
@@ -538,6 +651,13 @@ function update(): void {
     slot.task?.cancel();
     slot.task = null;
     releaseCanvas(slot);
+    slot.page?.cleanup();
+    if (slot.textState !== "none" && !slot.stopped && !selectionTouches(slot)) {
+      slot.textLayer?.cancel();
+      slot.textLayer = null;
+      clear(slot.text);
+      slot.textState = "none";
+    }
   }
   wanted = plan.draw;
   void pump();
@@ -545,21 +665,23 @@ function update(): void {
 
 /** The pages to draw, nearest first, from the last update. */
 let wanted: number[] = [];
-let pumping = false;
+/** The document number the drawing loop runs for; a loop left waiting on a stopped worker is simply abandoned. */
+let pumping = -1;
 
 async function pump(): Promise<void> {
-  if (pumping) return;
-  pumping = true;
+  const mine = generation;
+  if (pumping === mine) return;
+  pumping = mine;
   try {
     for (;;) {
-      if (view === null) return;
+      if (view === null || mine !== generation) return;
       const v = view;
-      const slot = wanted.map((i) => v.slots[i]!).find((s) => s.drawn !== zoomGeneration || s.textState === "none");
+      const slot = wanted.map((i) => v.slots[i]).find((s) => s !== undefined && !s.stopped && (s.drawn !== zoomGeneration || s.textState === "none"));
       if (slot === undefined) return;
       await drawSlot(slot);
     }
   } finally {
-    pumping = false;
+    if (pumping === mine) pumping = -1;
   }
 }
 
@@ -575,78 +697,124 @@ async function pageOf(slot: Slot): Promise<PdfPage> {
     slot.height = size.height;
     if (view !== null) {
       sizeSheet(slot);
+      enforceLimit();
       schedule();
     }
   }
   return page;
 }
 
+/**
+ * Draws one page within PAGE_BUDGET_MS, from reading the page to the last
+ * stroke on its canvas. Past it the page is stopped (overrun).
+ */
 async function drawSlot(slot: Slot): Promise<void> {
   const mine = generation;
   const v = view!;
-  let page: PdfPage;
+  const budget = setTimeout(() => overrun(slot, mine), PAGE_BUDGET_MS);
   try {
-    page = await pageOf(slot);
-  } catch (error) {
-    if (mine === generation) pageProblem(slot, error);
-    return;
-  }
-  if (mine !== generation) return;
-  if (slot.textState === "none") void buildText(slot, page, v.lib, mine);
-  if (slot.drawn === zoomGeneration) return;
-  const key = zoomGeneration;
-  const viewport: Viewport = page.getViewport({ scale: v.scale });
-  const ratio = outputScale(viewport.width, viewport.height, window.devicePixelRatio);
-  const canvas = el("canvas", "pg");
-  canvas.width = Math.max(1, Math.floor(viewport.width * ratio));
-  canvas.height = Math.max(1, Math.floor(viewport.height * ratio));
-  const context = canvas.getContext("2d", { alpha: false });
-  if (context === null) return;
-  slot.task?.cancel();
-  const task = page.render({ canvasContext: context, viewport, transform: ratio === 1 ? null : [ratio, 0, 0, ratio, 0, 0] });
-  slot.task = task;
-  try {
-    await task.promise;
-  } catch (error) {
-    canvas.width = 0;
-    canvas.height = 0;
-    if ((error as { name?: unknown } | null)?.name === "RenderingCancelledException") return;
-    if (mine === generation && key === zoomGeneration) pageProblem(slot, error);
-    return;
+    let page: PdfPage;
+    try {
+      page = await pageOf(slot);
+    } catch (error) {
+      if (mine === generation) pageProblem(slot, error);
+      return;
+    }
+    if (mine !== generation || slot.stopped) return;
+    if (slot.textState === "none") void buildText(slot, page, v.lib, mine);
+    if (slot.drawn === zoomGeneration) return;
+    const key = zoomGeneration;
+    const viewport: Viewport = page.getViewport({ scale: v.scale });
+    const ratio = outputScale(viewport.width, viewport.height, window.devicePixelRatio);
+    const canvas = el("canvas", "pg");
+    canvas.width = Math.max(1, Math.floor(viewport.width * ratio));
+    canvas.height = Math.max(1, Math.floor(viewport.height * ratio));
+    const context = canvas.getContext("2d", { alpha: false });
+    if (context === null) return;
+    slot.task?.cancel();
+    const task = page.render({ canvasContext: context, viewport, transform: ratio === 1 ? null : [ratio, 0, 0, ratio, 0, 0] });
+    slot.task = task;
+    try {
+      await task.promise;
+    } catch (error) {
+      canvas.width = 0;
+      canvas.height = 0;
+      if ((error as { name?: unknown } | null)?.name === "RenderingCancelledException") return;
+      if (mine === generation && key === zoomGeneration) pageProblem(slot, error);
+      return;
+    } finally {
+      if (slot.task === task) slot.task = null;
+    }
+    // Stale: another document, another zoom, or the page moved out of reach while it was drawn.
+    if (mine !== generation || key !== zoomGeneration || !wanted.includes(slot.index) || slot.stopped) {
+      canvas.width = 0;
+      canvas.height = 0;
+      return;
+    }
+    releaseCanvas(slot);
+    slot.sheet.prepend(canvas);
+    slot.canvas = canvas;
+    slot.drawn = key;
+    slot.sheet.querySelector(".page-note:not(.text-note)")?.remove();
   } finally {
-    if (slot.task === task) slot.task = null;
+    clearTimeout(budget);
   }
-  // Stale: another document, another zoom, or the page moved out of reach while it was drawn.
-  if (mine !== generation || key !== zoomGeneration || !wanted.includes(slot.index)) {
-    canvas.width = 0;
-    canvas.height = 0;
-    return;
-  }
-  releaseCanvas(slot);
-  slot.sheet.prepend(canvas);
-  slot.canvas = canvas;
-  slot.drawn = key;
-  slot.sheet.querySelector(".page-note")?.remove();
 }
 
-/** The page's text, selectable, from PDF.js's own TextLayer (text nodes only); built once per page and scaled by CSS with the zoom. */
+/**
+ * A page that took longer than PAGE_BUDGET_MS to draw: its drawing and text
+ * are cancelled, it shows a note, and the document is opened again in a
+ * fresh worker (the old one may be stuck on that page), at the same place,
+ * without it.
+ */
+function overrun(slot: Slot, mine: number): void {
+  if (mine !== generation || view === null) return;
+  stoppedPages.add(slot.index);
+  stopSlot(slot);
+  const at = placeNow();
+  teardown();
+  const fresh = generation;
+  show(el("div", "loading", `Page ${slot.index + 1} took too long; opening the paper again without it…`));
+  void openDocument(fresh, at);
+}
+
+/** Marks a slot as stopped: no drawing, no text, a note saying why. */
+function stopSlot(slot: Slot): void {
+  slot.stopped = true;
+  slot.task?.cancel();
+  slot.textLayer?.cancel();
+  releaseCanvas(slot);
+  slot.textState = "done";
+  slot.sheet.querySelector(".page-note")?.remove();
+  slot.sheet.append(el("div", "page-note", overBudgetWords(slot.index + 1)));
+}
+
+/**
+ * The page's text, selectable, from PDF.js's own TextLayer (text nodes only),
+ * at most TEXT_RUNS_MAX runs and within PAGE_BUDGET_MS; scaled by CSS with the
+ * zoom, and released with the page when it is far from the view.
+ */
 async function buildText(slot: Slot, page: PdfPage, lib: PdfJs, mine: number): Promise<void> {
   slot.textState = "building";
-  const layer = new lib.TextLayer({ textContentSource: page.streamTextContent(), container: slot.text, viewport: page.getViewport({ scale: view!.scale }) });
+  let cut = false;
+  const source = capTextRuns(page.streamTextContent() as ReadableStream<TextChunk>, TEXT_RUNS_MAX, () => (cut = true));
+  const layer = new lib.TextLayer({ textContentSource: source, container: slot.text, viewport: page.getViewport({ scale: view!.scale }) });
   slot.textLayer = layer;
-  try {
-    await layer.render();
-  } catch {
-    // Cancelled with its document, or the text could not be read: the page still shows, without selectable text.
+  const outcome = await withBudget(layer.render(), PAGE_BUDGET_MS);
+  if (mine !== generation || slot.textLayer !== layer) return;
+  if (outcome === "timeout") layer.cancel();
+  slot.textState = "done";
+  if (cut || outcome === "timeout") {
+    slot.sheet.querySelector(".text-note")?.remove();
+    slot.sheet.append(el("div", "page-note text-note", textCutWords(slot.index + 1, outcome === "timeout" ? "time" : "runs")));
   }
-  if (mine === generation) slot.textState = "done";
 }
 
 /** A page that could not be drawn says so on its sheet; the others still show. */
 function pageProblem(slot: Slot, error: unknown): void {
   slot.drawn = zoomGeneration;
   if (slot.textState === "none") slot.textState = "done";
-  slot.sheet.querySelector(".page-note")?.remove();
+  slot.sheet.querySelector(".page-note:not(.text-note)")?.remove();
   const message = (error as { message?: unknown } | null)?.message;
   slot.sheet.append(el("div", "page-note", `Page ${slot.index + 1} could not be drawn${typeof message === "string" && message !== "" ? ` (${message.slice(0, 200)})` : ""}.`));
 }
