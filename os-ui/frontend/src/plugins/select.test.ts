@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { PluginPage } from "./pages.ts";
-import { addReference, CUT_MARK, GLIMPSE_MAX, quoteGlimpse, referenceKey, scrollNote, textSize, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
+import { addReference, CUT_MARK, GLIMPSE_MAX, previewAfter, previewed, QUOTES_AS_DRAWN, quoteGlimpse, referenceKey, togglePreview, scrollNote, textSize, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
 
 /** A character by its code point, so this file holds no invisible character itself. */
 const c = (n: number) => String.fromCodePoint(n);
@@ -17,10 +17,10 @@ describe("readSelect", () => {
   test("a selection and a clear from the active view's frame at its origin", () => {
     assert.deepEqual(readSelect(from({ type: "os.select", label: "Code/README.md:12", quote: "Run it" }), page, frame), {
       kind: "select",
-      reference: { label: "Code/README.md:12", quote: "Run it" },
+      reference: { label: "Code/README.md:12", quote: "Run it", quotesAsDrawn: true },
     });
-    assert.deepEqual(readSelect(from({ type: "os.select", label: "63ead0b" }), page, frame), { kind: "select", reference: { label: "63ead0b" } });
-    assert.deepEqual(readSelect(from({ type: "os.select", label: "a", quote: "" }), page, frame), { kind: "select", reference: { label: "a" } });
+    assert.deepEqual(readSelect(from({ type: "os.select", label: "63ead0b" }), page, frame), { kind: "select", reference: { label: "63ead0b", quotesAsDrawn: true } });
+    assert.deepEqual(readSelect(from({ type: "os.select", label: "a", quote: "" }), page, frame), { kind: "select", reference: { label: "a", quotesAsDrawn: true } });
     assert.deepEqual(readSelect(from({ type: "os.select", label: null }), page, frame), { kind: "clear" });
   });
 
@@ -64,13 +64,13 @@ describe("readSelect", () => {
       assert.equal(readSelect(from({ type: "os.select", label }), page, frame), null, JSON.stringify(label));
     }
     assert.notEqual(readSelect(from({ type: "os.select", label: "a", quote: "line 1\n\tline 2\r\n" }), page, frame), null);
-    assert.deepEqual(readSelect(from({ type: "os.select", label: "a", quote: "x\u0007" }), page, frame), { kind: "select", reference: { label: "a", quote: "x\u27e8U+0007\u27e9" } });
+    assert.deepEqual(readSelect(from({ type: "os.select", label: "a", quote: "x\u0007" }), page, frame), { kind: "select", reference: { label: "a", quote: "x\u27e8U+0007\u27e9", quotesAsDrawn: true } });
   });
 
   test("markup in a label or quote is accepted as text, unchanged", () => {
     assert.deepEqual(readSelect(from({ type: "os.select", label: `Code/${MARKUP}`, quote: MARKUP }), page, frame), {
       kind: "select",
-      reference: { label: `Code/${MARKUP}`, quote: MARKUP },
+      reference: { label: `Code/${MARKUP}`, quote: MARKUP, quotesAsDrawn: true },
     });
   });
 });
@@ -249,5 +249,47 @@ describe("how much a chip carries", () => {
     assert.equal(textSize("About Code/a.md:1–3\n> x\n> y"), "3 lines · 27 characters");
     assert.equal(scrollNote("x\n".repeat(13) + "y".repeat(875)), "14 lines · 901 characters — scroll to read all of it");
     assert.equal(quoteGlimpse("a\nb").size, textSize("a\nb"), "the ask bar says the size the same way");
+  });
+});
+
+describe("which chip opens by itself", () => {
+  const paper: PluginPage = { key: "paper-view/paper", plugin: "paper-view", slot: "project", title: "Paper", src: "app://paper-view/index.html", origin: "app://paper-view" };
+  const other: PluginPage = { key: "someone-else/view", plugin: "someone-else", slot: "project", title: "Theirs", src: "app://someone-else/index.html", origin: "app://someone-else" };
+  const reference = (view: PluginPage, label: string, quote = "q") => {
+    const read = readSelect({ origin: view.origin!, source: frame, data: { type: "os.select", label, quote } }, view, frame);
+    assert.ok(read !== null && read.kind === "select");
+    return read.reference;
+  };
+
+  test("only the listed view, the Code view, quotes as drawn; the message cannot say so", () => {
+    assert.deepEqual([...QUOTES_AS_DRAWN], ["code-view"]);
+    assert.equal(reference(page, "Code/a.md:1").quotesAsDrawn, true);
+    assert.equal(reference(paper, "main.pdf p. 2").quotesAsDrawn, undefined);
+    assert.equal(reference(other, "theirs").quotesAsDrawn, undefined);
+    assert.equal(readSelect({ origin: other.origin!, source: frame, data: { type: "os.select", label: "x", quotesAsDrawn: true } }, other, frame), null, "a page cannot claim it");
+  });
+
+  test("a Code view chip is added closed; a chip from any other view opens and closes the one before", () => {
+    const code = reference(page, "Code/a.md:1");
+    const pdf = reference(paper, "main.pdf p. 2");
+    const theirs = reference(other, "theirs");
+    assert.equal(previewAfter(null, [], [code]), null, "the Code view's chip starts closed");
+    assert.equal(previewAfter(null, [], [pdf]), referenceKey(pdf));
+    assert.equal(previewAfter(null, [], [theirs]), referenceKey(theirs), "a third-party view's chip opens");
+    assert.equal(previewAfter(null, [code], [code, pdf]), referenceKey(pdf), "a PDF chip added after a Code chip is the open one");
+    assert.equal(previewAfter(referenceKey(pdf), [pdf], [pdf, code]), referenceKey(pdf), "a Code chip added later leaves the open one");
+    assert.equal(previewAfter(referenceKey(pdf), [pdf, code], [pdf]), referenceKey(pdf), "removing another chip changes nothing");
+    assert.equal(previewAfter(referenceKey(pdf), [pdf, code], [pdf, code]), referenceKey(pdf));
+  });
+
+  test("opening, closing and removing, as before", () => {
+    const code = reference(page, "Code/a.md:1");
+    const pdf = reference(paper, "main.pdf p. 2");
+    const opened = togglePreview(null, code);
+    assert.equal(opened, referenceKey(code));
+    assert.equal(previewed(opened, [code, pdf]), code);
+    assert.equal(togglePreview(opened, code), null, "a second click closes it");
+    assert.equal(togglePreview(opened, pdf), referenceKey(pdf), "another chip's click moves the open text");
+    assert.equal(previewed(opened, [pdf]), null, "a removed chip's text is gone");
   });
 });

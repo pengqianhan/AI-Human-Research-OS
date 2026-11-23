@@ -7,7 +7,7 @@ import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
 import { desktop } from "../lib/desktop";
-import { MESSAGE_MAX, messageWithReferences, referenceKey, referenceText, scrollNote } from "../plugins/select";
+import { MESSAGE_MAX, messageWithReferences, previewAfter, previewed as previewedOf, referenceKey, referenceText, scrollNote, togglePreview } from "../plugins/select";
 import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
 
@@ -174,15 +174,15 @@ export function AgentChat({
   /** Which reference chip shows its text under the chips. */
   // Kept by the reference itself, not its place, so removing another chip never opens a different one.
   const [previewKey, setPreviewKey] = useState<string | null>(null);
-  // A chip just added shows its text at once: what Send passes is on screen
-  // before Send, not only behind a click. The newest opens; the one before closes.
-  const added = useRef(references.length);
+  // A chip just added shows its text at once, so what Send passes is on screen
+  // before Send (the newest opens, the one before closes), unless its view
+  // quotes exactly what it draws (the Code view): that chip is added closed.
+  const before = useRef<readonly Reference[]>(references);
   useEffect(() => {
-    const newest = references[references.length - 1];
-    if (references.length > added.current && newest !== undefined) setPreviewKey(referenceKey(newest));
-    added.current = references.length;
+    setPreviewKey((open) => previewAfter(open, before.current, references));
+    before.current = references;
   }, [references]);
-  const previewed = references.find((r) => referenceKey(r) === previewKey) ?? null;
+  const previewed = previewedOf(previewKey, references);
   // Whether the open chip's text is taller than its box: then a line says how much there is and that it scrolls.
   const previewRef = useRef<HTMLPreElement | null>(null);
   const [overflows, setOverflows] = useState(false);
@@ -411,7 +411,7 @@ export function AgentChat({
                     aria-expanded={referenceKey(ref) === previewKey}
                     aria-controls={`${ids}-preview`}
                     aria-label={`Show what will be sent for ${ref.label}`}
-                    onClick={() => setPreviewKey(referenceKey(ref) === previewKey ? null : referenceKey(ref))}
+                    onClick={() => setPreviewKey(togglePreview(previewKey, ref))}
                     className="inline-flex min-w-0 items-center gap-[5px] rounded-[5px] hover:underline"
                   >
                     <Icon name="quote" size={14} />

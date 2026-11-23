@@ -26,7 +26,27 @@ export const MESSAGE_MAX = 20_000;
 export interface Reference {
   label: string;
   quote?: string;
+  /**
+   * Set by the host, never read from a message: the view that reported it
+   * quotes exactly the text it draws (QUOTES_AS_DRAWN), so its chip may start
+   * closed. Absent, the chip opens by itself.
+   */
+  quotesAsDrawn?: true;
 }
+
+/**
+ * Bundled views whose quote is exactly the text they draw, by plugin id: a
+ * chip from one of them is added closed, as in mockup C (the Human Owner's
+ * decision of 2026-11-23). Every other view's chip opens by itself, with its
+ * whole text on screen, so closed is the exception and a third-party plugin
+ * can never ask for it (the message has no field for it).
+ * - code-view: it quotes the characters it draws in a file or a diff, with
+ *   every invisible character marked.
+ * - Not paper-view: a PDF's text layer can differ from what is drawn (text in
+ *   invisible render mode, white on white, clipped or covered, or drawn as one
+ *   thing and extracted as another), so its quote must be read before Send.
+ */
+export const QUOTES_AS_DRAWN: ReadonlySet<string> = new Set(["code-view"]);
 
 export type SelectMessage = { kind: "select"; reference: Reference } | { kind: "clear" };
 
@@ -89,7 +109,8 @@ export function readSelect(event: { origin: string; source: unknown; data: unkno
   if (INVISIBLE.test(label) || LINE_BREAK.test(label) || OTHER_SPACE.test(label)) return null;
   if (quote !== undefined && (typeof quote !== "string" || quote.length > QUOTE_MAX)) return null;
   const shown = quote === undefined ? "" : visibleQuote(quote);
-  return { kind: "select", reference: shown === "" ? { label } : { label, quote: shown } };
+  const drawn = QUOTES_AS_DRAWN.has(page.plugin) ? { quotesAsDrawn: true as const } : {};
+  return { kind: "select", reference: shown === "" ? { label, ...drawn } : { label, quote: shown, ...drawn } };
 }
 
 /**
@@ -196,4 +217,26 @@ export function textSize(text: string): string {
 /** The line under a chip's text when it is taller than its box, so its end is never below a fold nobody is told about. */
 export function scrollNote(text: string): string {
   return `${textSize(text)} \u2014 scroll to read all of it`;
+}
+
+/**
+ * Which chip shows its text once `after` replaced `before`: a chip just added
+ * opens by itself, and the one open before closes, unless the new chip comes
+ * from a view that quotes what it draws (quotesAsDrawn), which is added
+ * closed and leaves the open one as it was. Otherwise nothing changes.
+ */
+export function previewAfter(open: string | null, before: readonly Reference[], after: readonly Reference[]): string | null {
+  const newest = after[after.length - 1];
+  if (after.length <= before.length || newest === undefined || newest.quotesAsDrawn === true) return open;
+  return referenceKey(newest);
+}
+
+/** A click on a chip: open its text, or close it if it was the open one. */
+export function togglePreview(open: string | null, reference: Reference): string | null {
+  return referenceKey(reference) === open ? null : referenceKey(reference);
+}
+
+/** The chip whose text is shown, if it is still among the references (a removed chip's text closes). */
+export function previewed(open: string | null, references: readonly Reference[]): Reference | null {
+  return references.find((r) => referenceKey(r) === open) ?? null;
 }

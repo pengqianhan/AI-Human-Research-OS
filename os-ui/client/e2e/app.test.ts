@@ -535,18 +535,27 @@ describe("desktop client on a Research OS folder", () => {
     await shot(page, "5-ask-bar-before-asking");
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
     await chips.filter({ hasText: "Code/README.md:3" }).waitFor();
-    await shot(page, "6-composer-after-asking");
-    assert.ok(barText.includes(line.slice(0, 40)), `the ask bar shows the quote's start: ${JSON.stringify(barText)}`);
-    // After asking, the text the chip will send is on screen in the composer, with no click.
-    const sent = `About Code/README.md:3\n> ${line}`;
-    const shown = chat.locator("[data-reference-preview]");
-    await shown.filter({ hasText: "About Code/README.md:3" }).waitFor({ timeout: 5000 }); // the new chip's text is shown without a click
-    assert.equal(await shown.textContent(), sent);
-    assert.equal(await chat.locator("[data-reference-overflow]").count(), 0, "a text that fits its box says nothing about scrolling");
-    assert.equal(await chips.first().getAttribute("title"), sent);
-    assert.equal(await bar.count(), 0, "asking clears the selection");
     // The cursor moves to the composer on the next frame.
     await page.waitForFunction((label) => document.activeElement?.getAttribute("aria-label") === label, `Message ${PROJECT} agent`, { timeout: 5000 });
+    assert.ok(barText.includes(line.slice(0, 40)), `the ask bar shows the quote's start: ${JSON.stringify(barText)}`);
+    // The Code view quotes what it draws, so its chip is added closed (the Human Owner's decision, 2026-11-23):
+    // the label, its line count, and the hint; the quote's text is not on screen until the chip is clicked.
+    const sent = `About Code/README.md:3\n> ${line}`;
+    const shown = chat.locator("[data-reference-preview]");
+    await chat.getByText("click a reference to see exactly what is sent", { exact: false }).waitFor();
+    await page.waitForTimeout(300); // a chip that opened by itself would have opened by now
+    assert.equal(await shown.count(), 0, "the Code view's chip starts closed");
+    assert.equal(await chat.getByText(line.slice(0, 40), { exact: false }).count(), 0, "the quote's text is not on screen");
+    assert.match((await chips.first().textContent()) ?? "", /Code\/README\.md:3\s*· 1 line/);
+    await shot(page, "6-composer-after-asking");
+    await chat.getByRole("button", { name: "Show what will be sent for Code/README.md:3" }).click();
+    assert.equal(await shown.textContent(), sent, "a click shows exactly what Send would pass");
+    assert.equal(await chat.locator("[data-reference-overflow]").count(), 0, "a text that fits its box says nothing about scrolling");
+    await shot(page, "6b-composer-after-a-click");
+    await chat.getByRole("button", { name: "Show what will be sent for Code/README.md:3" }).click();
+    assert.equal(await shown.count(), 0, "a second click closes it");
+    assert.equal(await chips.first().getAttribute("title"), sent);
+    assert.equal(await bar.count(), 0, "asking clears the selection");
 
     await code.getByRole("button", { name: "Changes", exact: true }).click();
     const commit = code.locator(".commit.on");
@@ -555,9 +564,8 @@ describe("desktop client on a Research OS folder", () => {
     await bar.getByText(short, { exact: true }).waitFor();
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
     await chips.filter({ hasText: short }).waitFor();
-    // The newest chip's text opens; the one before closes.
-    await chat.locator("[data-reference-preview]").filter({ hasText: `About ${short}` }).waitFor({ timeout: 5000 });
-    assert.equal(await chat.locator("[data-reference-preview]").count(), 1);
+    await page.waitForTimeout(300);
+    assert.equal(await chat.locator("[data-reference-preview]").count(), 0, "a second Code view chip is added closed too");
 
     // A chip opens what it will send, as plain text in the composer: exactly the reference's text.
     await chat.getByRole("button", { name: "Show what will be sent for Code/README.md:3" }).click();
@@ -595,6 +603,8 @@ describe("desktop client on a Research OS folder", () => {
     });
     await bar.getByText("Code/README.md:1–40", { exact: true }).waitFor();
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+    await chips.filter({ hasText: "Code/README.md:1–40" }).waitFor();
+    await chat.getByRole("button", { name: "Show what will be sent for Code/README.md:1–40" }).click();
     await chat.locator("[data-reference-preview]").filter({ hasText: "About Code/README.md:1–40" }).waitFor();
     const overflow = chat.locator("[data-reference-overflow]");
     await overflow.waitFor({ timeout: 5000 });
