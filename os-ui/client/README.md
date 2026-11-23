@@ -144,13 +144,15 @@ agent logins or a first open on a real desktop, so on each of your machines:
         the bottom names it and, for a line or a commit, shows the start of
         its text and how long it is, with **Ask the agent about this**.
       - Click **Ask the agent about this**: the conversation opens (if it was
-        collapsed) with a small chip above the input naming what you chose,
-        the cursor in the input, and, under the chips, exactly what will be
-        sent before your message ("Sent before your message, exactly:"),
-        already open (when it is long, a line under it says how long and that it
-        scrolls). Ask about a second thing: its text opens and the
-        first one's closes; click a chip to open or close its text. Nothing
-        is sent until you press Send.
+        collapsed) with a small chip above the input naming what you chose
+        and how many lines it carries, the cursor in the input, and the hint
+        "click a reference to see exactly what is sent". The chip's text is
+        not shown yet.
+      - Click the chip: under the chips, exactly what will be sent before
+        your message appears ("Sent before your message, exactly:"); when it
+        is long, a line under it says how long it is and that it scrolls.
+        Click the chip again to close it. Nothing is sent until you press
+        Send.
       - Click the chip's **×**: it goes away.
 - [ ] **Paper wiki**: a paper's Status buttons appear and change the note's
       `status:` line.
