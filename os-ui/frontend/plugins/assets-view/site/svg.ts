@@ -5,8 +5,9 @@
  * draws: the time-out cannot help, it runs on the same thread. So the page
  * reads an SVG's text first (in the picture's queue slot, at most
  * SVG_CHECK.bytes) and counts what it would draw, through <use> references
- * (`href` and `xlink:href`, same-document `#id` only), before it gives the
- * file to an <img>.
+ * (every attribute whose local name is `href`, whatever its prefix, and all of
+ * them when a <use> has several; same-document `#id` only), before it gives
+ * the file to an <img>.
  *
  * Pure and inert: a small scanner over the text, never a parser that builds
  * a document, so nothing from the file reaches the page. Linear in the
@@ -73,7 +74,9 @@ const endsName = (c: number) => isSpace(c) || c === 47 || c === 62 || c === 61 |
 export function svgExpansion(text: string): SvgCount {
   const n = text.length;
   const parent: number[] = [];
-  const target: (string | null)[] = [];
+  /** Each <use>'s references, in one flat list: element k's are refs[refStart[k] .. refStart[k + 1]). */
+  const refs: string[] = [];
+  const refStart: number[] = [];
   const ids = new Map<string, number>();
   const open: { index: number; name: string }[] = [];
   let i = 0;
@@ -127,7 +130,8 @@ export function svgExpansion(text: string): SvgCount {
     if (name === "") return fail("a tag has no name");
     const local = name.slice(name.lastIndexOf(":") + 1);
     let id: string | null = null;
-    let href: string | null = null;
+    const index = parent.length;
+    refStart.push(refs.length);
     let selfClosing = false;
     for (;;) {
       while (j < n && isSpace(text.charCodeAt(j))) j++;
@@ -156,33 +160,33 @@ export function svgExpansion(text: string): SvgCount {
       if (close === -1) return fail("an attribute's value is not closed");
       const raw = text.slice(j + 1, close);
       j = close + 1;
-      if (attr === "id" || ((attr === "href" || attr === "xlink:href") && local === "use")) {
+      // On a <use>, every attribute whose local name is href is a reference, whatever its prefix (x:href bound
+      // to XLink draws too); with more than one, each target counts, more than a browser draws (recheck).
+      const isRef = local === "use" && attr.slice(attr.lastIndexOf(":") + 1) === "href";
+      if (attr === "id" || isRef) {
         const value = unescape(raw);
         if (value === null) return fail("an attribute holds an entity the check does not know");
         if (attr === "id") id ??= value;
-        else href = value;
-      }
-    }
-    const index = parent.length;
-    parent.push(open.length === 0 ? -1 : open[open.length - 1]!.index);
-    let ref: string | null = null;
-    if (href !== null) {
-      const url = href.trim();
-      // Same document only: "#id", decoded as a URL's fragment is. Anything else draws nothing in an <img>.
-      if (url.startsWith("#")) {
-        try {
-          ref = decodeURIComponent(url.slice(1));
-        } catch {
-          return fail("a reference is not a valid URL fragment");
+        else {
+          const url = value.trim();
+          // Same document only: "#id", decoded as a URL's fragment is. Anything else draws nothing in an <img>.
+          if (url.startsWith("#")) {
+            try {
+              refs.push(decodeURIComponent(url.slice(1)));
+            } catch {
+              return fail("a reference is not a valid URL fragment");
+            }
+          }
         }
       }
     }
-    target.push(ref);
+    parent.push(open.length === 0 ? -1 : open[open.length - 1]!.index);
     if (id !== null && !ids.has(id)) ids.set(id, index);
     if (!selfClosing) open.push({ index, name });
     i = j;
   }
   if (open.length > 0) return fail("an element is not closed");
+  refStart.push(refs.length);
 
   // Children by parent, in one array (each element's children are a run).
   const count = parent.length;
@@ -193,11 +197,8 @@ export function svgExpansion(text: string): SvgCount {
   const children = new Int32Array(Math.max(1, first[count]!));
   const fill = first.slice();
   for (let k = 0; k < count; k++) if (parent[k]! >= 0) children[fill[parent[k]!]!++] = k;
-  const refOf = new Int32Array(count).fill(-1);
-  for (let k = 0; k < count; k++) {
-    const id = target[k];
-    if (id !== null && id !== undefined) refOf[k] = ids.get(id) ?? -1;
-  }
+  // Each reference's element, or -1 (another document's, or an id no element has).
+  const refOf = Int32Array.from(refs, (id) => ids.get(id) ?? -1);
 
   // Each element's count, after its children's and its reference's: depth first, iterative, each element once.
   const total = new Float64Array(count);
@@ -210,7 +211,8 @@ export function svgExpansion(text: string): SvgCount {
       const v = stack[stack.length - 1]!;
       if (state[v] === 0) {
         state[v] = 1;
-        const deps = [refOf[v]!];
+        const deps: number[] = [];
+        for (let r = refStart[v]!; r < refStart[v + 1]!; r++) deps.push(refOf[r]!);
         for (let c = first[v]!; c < first[v + 1]!; c++) deps.push(children[c]!);
         for (const d of deps) {
           if (d < 0) continue;
@@ -220,7 +222,7 @@ export function svgExpansion(text: string): SvgCount {
       } else if (state[v] === 1) {
         let sum = 1;
         for (let c = first[v]!; c < first[v + 1]!; c++) sum += total[children[c]!]!;
-        if (refOf[v]! >= 0) sum += total[refOf[v]!]!;
+        for (let r = refStart[v]!; r < refStart[v + 1]!; r++) if (refOf[r]! >= 0) sum += total[refOf[r]!]!;
         total[v] = Math.min(sum, SATURATED);
         state[v] = 2;
         stack.pop();

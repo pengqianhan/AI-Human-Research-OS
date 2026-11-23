@@ -49,6 +49,20 @@ describe("the count of elements an SVG draws through <use>", () => {
     assert.equal(count(`<svg:svg xmlns:svg="http://www.w3.org/2000/svg"><svg:g id="a"><svg:rect/></svg:g><svg:use href="#a"/></svg:svg>`), 1 + 2 + 3);
   });
 
+  test("on a <use>, every attribute whose local name is href is a reference, whatever its prefix; with more than one, each target counts (recheck)", () => {
+    const target = `<g id="a"><rect/><rect/><rect/></g>`;
+    // Any prefix bound to XLink draws: x:href, my:href. Counted as href is.
+    for (const ref of [`x:href="#a"`, `my:href="#a"`, `a:b:href="#a"`]) assert.equal(count(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:x="http://www.w3.org/1999/xlink" xmlns:my="http://www.w3.org/1999/xlink">${target}<use ${ref}/></svg>`), 1 + 4 + 5, ref);
+    // Two references on one <use>: both targets count, more than a browser draws, the safe side.
+    assert.equal(count(svg(`${target}<g id="b"><rect/></g><use href="#a" xlink:href="#b"/>`)), 1 + 4 + 2 + (1 + 4 + 2));
+    assert.equal(count(svg(`${target}<use href="#a" x:href="#a" xlink:href="#a"/>`)), 1 + 4 + (1 + 3 * 4));
+    // The recheck's 6×10 bomb written with a prefix of its own is refused like the plain one.
+    const prefixed = bomb(6, 10, "x:href").replace("<svg ", `<svg xmlns:x="http://www.w3.org/1999/xlink" `);
+    assert.deepEqual(svgVerdict(prefixed, false), { draw: false, words: "This SVG repeats its parts 6,802,462 times over; drawing it may freeze the view." });
+    // A name that only ends in "href" is not one.
+    assert.equal(count(svg(`${target}<use data-href="#a" xhref="#a"/>`)), 1 + 4 + 1);
+  });
+
   test("a reference cycle is refused, through itself, an ancestor, or another element", () => {
     for (const body of [`<use id="a" href="#a"/>`, `<g id="a"><g><use href="#a"/></g></g>`, `<g id="a"><use href="#b"/></g><g id="b"><use href="#a"/></g>`]) {
       assert.deepEqual(svgExpansion(svg(body)), { kind: "cycle" }, body);
@@ -146,6 +160,7 @@ describe("the count of elements an SVG draws through <use>", () => {
       ["one attribute value of n characters", (n) => svg(`<use href="#${"x".repeat(n)}"/>`)],
       ["n '<' in a comment", (n) => svg(`<!--${"<".repeat(n)}-->`)],
       ["entities in an id", (n) => svg(`<g id="${"&#97;".repeat(n / 5)}"/>`)],
+      ["one <use> with n / 12 prefixed hrefs", (n) => svg(`<g id="a"><rect/></g><use ${'x:href="#a" '.repeat(n / 12)}/>`)],
     ];
     for (const [name, make] of cases) {
       assert.ok(make(4 * MiB).length >= 4 * MiB * 0.95, `${name}: ${make(4 * MiB).length}`);
