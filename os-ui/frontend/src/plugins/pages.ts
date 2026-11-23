@@ -70,6 +70,17 @@ export function pluginInfo(manifest: PluginManifest, source: PluginSource): Plug
 }
 
 /**
+ * A project view's frame URL for one project: its `src` with
+ * `?project=<folder name>` (or `&project=` when it has a query already), the
+ * name encoded, so `+`, `&`, or `#` stay part of it. null where the page has
+ * no frame URL here.
+ */
+export function viewSrc(page: PluginPage, project: string): string | null {
+  if (page.src === null) return null;
+  return `${page.src}${page.src.includes("?") ? "&" : "?"}project=${encodeURIComponent(project)}`;
+}
+
+/**
  * Every page the plugins contribute, in plugin order and, within a plugin,
  * its home panels and then its project views, each in manifest order. A
  * home panel with `placement: "nav"` gets the slot "nav".

@@ -38,6 +38,7 @@ const PATHS = {
   "folder-open": <path d="M3.5 18.5V6.5A1.5 1.5 0 0 1 5 5h4.5l2 2.5H18A1.5 1.5 0 0 1 19.5 9v1.5M3.5 18.5 6 11.5h15l-2.5 7z" />,
   send: <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" />,
   quote: <path d="M4 7h11M4 12h16M4 17h9" />,
+  x: <path d="M6 6l12 12M18 6 6 18" />,
   panel: (
     <>
       <rect x="3.5" y="4" width="17" height="16" rx="2" />

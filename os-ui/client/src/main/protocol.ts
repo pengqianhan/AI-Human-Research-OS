@@ -97,11 +97,17 @@ export const WORKSPACE_CSP = [
   "base-uri 'none'",
 ].join("; ");
 
-/** Content-Security-Policy for a site shipped in its plugin folder: WORKSPACE_CSP plus its own script and style files. */
+/**
+ * Content-Security-Policy for a site shipped in its plugin folder (the Code
+ * view's): its own script and style files only, no inline script or style,
+ * since such a page shows untrusted names and text (WORKSPACE_CSP keeps
+ * inline code for Paper Wiki's generated viewer). Styles set through the DOM
+ * (element.style) are not inline styles and still apply.
+ */
 export const PLUGIN_CSP = [
   "default-src 'none'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self'",
+  "style-src 'self'",
   "img-src 'self' data:",
   "connect-src 'self'",
   "frame-src 'none'",

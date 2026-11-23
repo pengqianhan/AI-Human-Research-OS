@@ -1,11 +1,17 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import type { OsState, Project } from "../types";
 import { AgentChat } from "../components/AgentChat";
 import { ProjectOverview } from "../components/ProjectOverview";
 import { PROJECT_EXAMPLES, projectIntro } from "../lib/agentCopy";
 import { LIVE } from "../lib/mode";
+import { viewSrc } from "../plugins/pages";
+import type { PluginPage } from "../plugins/pages";
+import { usePlugins } from "../plugins/registry";
+import { addReference, MAX_REFERENCES, readSelect, selectGate } from "../plugins/select";
+import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
+import { workspaceTabs } from "../shell/layoutState";
 import type { ViewTab } from "../shell/layoutState";
 import { useToast } from "../shell/Toast";
 
@@ -17,25 +23,19 @@ interface Props {
   conversationCollapsed: boolean;
   onConversationCollapsed: (collapsed: boolean) => void;
   onBack: () => void;
+  /** Whether the workspace is the screen shown; the Shell keeps it mounted, hidden, once visited. */
+  visible: boolean;
 }
-
-/** The tab row, in mockup C's order. Idea, Skeleton, and Assets arrive in step 2. */
-const TABS: { id: ViewTab | null; label: string; later?: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: null, label: "Idea", later: "The Idea view arrives in step 2." },
-  { id: "code", label: "Code" },
-  { id: null, label: "Skeleton", later: "The Skeleton view arrives in step 2." },
-  { id: null, label: "Assets", later: "The Assets view arrives in step 2." },
-  { id: "paper", label: "Paper" },
-];
 
 /**
  * One project's workspace (mockup C): its conversation on the left, which
  * collapses to a thin strip, and its views on the right. Overview is today's
- * project overview; Code and Paper hold a placeholder until their view
- * plugins arrive later in step 1.
+ * project overview; Code is the code-view plugin's page, framed on its own
+ * origin (each plugin project view gets a tab, src/shell/layoutState.ts);
+ * Paper holds a placeholder until its plugin arrives. A view's frame, once
+ * opened, stays loaded while another tab is shown, so its place is kept.
  */
-export function WorkspacePage({ state, project, tab, onTab, conversationCollapsed, onConversationCollapsed, onBack }: Props) {
+export function WorkspacePage({ state, project, tab, onTab, conversationCollapsed, onConversationCollapsed, onBack, visible }: Props) {
   const ids = useId();
   const toast = useToast();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -47,6 +47,82 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
   const collapseRef = useRef<HTMLButtonElement | null>(null);
   const stripRef = useRef<HTMLButtonElement | null>(null);
   const moveFocus = useRef(false);
+  const { pages } = usePlugins();
+  const views = pages.filter((p) => p.slot === "project");
+  const TABS = workspaceTabs(views);
+  const activeView = views.find((v) => v.key === tab) ?? null;
+  // The plugin views opened so far; each frame stays mounted, hidden while another tab is shown.
+  const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set(activeView === null ? [] : [activeView.key]));
+  useEffect(() => {
+    if (activeView !== null && !opened.has(activeView.key)) setOpened(new Set([...opened, activeView.key]));
+  }, [activeView, opened]);
+
+  // What the active view reports as selected (the ask bar), and the references
+  // added to this project's composer. Both belong to this project: the page is
+  // mounted once per project (keyed by its name), so another project starts empty.
+  const frames = useRef(new Map<string, HTMLIFrameElement>());
+  const [selection, setSelection] = useState<Reference | null>(null);
+  const [references, setReferences] = useState<Reference[]>([]);
+  const [focusRequest, setFocusRequest] = useState(0);
+  // A selection counts only while this page is shown, its view's tab selected,
+  // the Ask button not held down, and at most a few a second (selectGate).
+  const gate = useRef(selectGate()).current;
+  const now = useRef({ visible, tab });
+  now.current = { visible, tab };
+  /** The reference the bar showed when the pointer went down on Ask; what Ask adds. */
+  const held = useRef<Reference | null>(null);
+
+  /** Hides the ask bar; `tellView` also clears the highlight in the view that reported it. */
+  function clearSelection(tellView: boolean) {
+    setSelection(null);
+    const page = activeView;
+    const frame = page === null ? undefined : frames.current.get(page.key);
+    if (tellView && page?.origin && frame?.contentWindow) frame.contentWindow.postMessage({ type: "os.select.clear" }, page.origin);
+  }
+
+  // Only the active view's frame, at its own origin, may report a selection (src/plugins/select.ts).
+  useEffect(() => {
+    setSelection(null);
+    if (activeView === null) return;
+    const onMessage = (event: MessageEvent) => {
+      const frameWindow = frames.current.get(activeView.key)?.contentWindow ?? null;
+      const message = readSelect(event, activeView, frameWindow);
+      if (message === null || frameWindow === null) return;
+      const verdict = gate(frameWindow, { visible: now.current.visible, tabSelected: now.current.tab === activeView.key, held: held.current !== null });
+      if (verdict === "over") setSelection(null);
+      if (verdict !== "accept") return;
+      setSelection(message.kind === "select" ? message.reference : null);
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      // Leaving the view (another tab): its selection goes with the ask bar.
+      if (activeView.origin !== null) frames.current.get(activeView.key)?.contentWindow?.postMessage({ type: "os.select.clear" }, activeView.origin);
+    };
+  }, [activeView]);
+
+  useEffect(() => {
+    if (selection === null) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") clearSelection(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  /** "Ask the agent about this": a reference chip in the composer, the conversation open, the cursor in its input. Nothing is sent. */
+  function ask(reference: Reference | null) {
+    if (reference === null) return;
+    const next = addReference(references, reference);
+    if (next === null) {
+      toast(`A message carries at most ${MAX_REFERENCES} references; remove one first.`);
+      return;
+    }
+    setReferences(next);
+    clearSelection(true);
+    if (conversationCollapsed) onConversationCollapsed(false);
+    setFocusRequest((n) => n + 1);
+  }
 
   // Collapsing hides the focused button and opening removes the strip; hand
   // the keyboard focus to the control that takes their place.
@@ -126,6 +202,10 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
                   intro={projectIntro(project.name)}
                   examples={PROJECT_EXAMPLES}
                   layout="stacked"
+                  references={references}
+                  onRemoveReference={(i) => setReferences(references.filter((_, j) => j !== i))}
+                  onReferencesSent={() => setReferences([])}
+                  focusRequest={focusRequest}
                 />
               </div>
             ) : (
@@ -146,12 +226,17 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
               className="flex h-full w-full flex-col items-center gap-3 rounded-card py-3 text-ink2 hover:bg-accent-tint"
             >
               <Icon name="panel-open" />
+              {references.length > 0 && (
+                <span className="min-w-5 rounded-full bg-accent px-[5px] text-center text-[11px] font-bold leading-5 text-on-accent" title="References waiting in the composer">
+                  {references.length}
+                </span>
+              )}
               <span className="rotate-180 text-[12.5px] font-semibold tracking-[.02em] [writing-mode:vertical-rl]">Project conversation</span>
             </button>
           )}
         </aside>
 
-        <div className="views-pane card flex min-h-0 min-w-0 flex-col">
+        <div className="views-pane card relative flex min-h-0 min-w-0 flex-col">
           <div role="tablist" aria-label="Project views" className="flex shrink-0 items-end gap-0.5 overflow-x-auto px-3.5 pt-1.5 shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none]">
             {TABS.map((t, i) => {
               const selected = t.id !== null && t.id === tab;
@@ -190,22 +275,31 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
           </div>
 
           <div role="tabpanel" id={`${ids}-panel`} aria-labelledby={`${ids}-tab-${TABS[selectedIndex]?.label ?? "Overview"}`}
-            // focusable, so the arrow keys scroll it even when it holds no control (Code, Paper)
-            tabIndex={0}
-            className="min-h-0 flex-1 overflow-y-auto focus-visible:outline-offset-[-2px]"
+            // focusable, so the arrow keys scroll it even when it holds no control (Paper); a view's frame takes the focus itself
+            tabIndex={activeView === null ? 0 : -1}
+            className={"relative min-h-0 flex-1 focus-visible:outline-offset-[-2px] " + (activeView === null ? "overflow-y-auto" : "overflow-hidden")}
           >
             {tab === "overview" && (
               <div className="mx-auto max-w-[880px] px-6 pb-12 pt-5">
                 <ProjectOverview project={project} />
               </div>
             )}
-            {tab === "code" && (
-              <Placeholder
-                title="Code"
-                text="This view arrives with the Code view plugin later in step 1. It will show this project's files and its Git changes, read-only."
-                path={`projects-folder/${project.name}/`}
-              />
-            )}
+            {views
+              .filter((v) => opened.has(v.key) || v.key === activeView?.key)
+              .map((v) => (
+                <ViewFrame
+                  key={v.key}
+                  page={v}
+                  project={project.name}
+                  hidden={v.key !== activeView?.key}
+                  frameRef={(el) => {
+                    if (el === null) frames.current.delete(v.key);
+                    else frames.current.set(v.key, el);
+                  }}
+                  // A reload starts with nothing selected.
+                  onLoad={() => v.key === activeView?.key && setSelection(null)}
+                />
+              ))}
             {tab === "paper" && (
               <Placeholder
                 title="Paper"
@@ -214,10 +308,75 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
               />
             )}
           </div>
+
+          {selection !== null && LIVE && (
+            <div
+              role="region"
+              aria-label="Selection"
+              className="absolute bottom-[18px] left-1/2 z-[5] flex max-w-[calc(100%-36px)] -translate-x-1/2 items-center gap-2.5 rounded-full bg-[#22211e] py-1.5 pl-3.5 pr-1.5 text-[13px] text-[#f5efe4] shadow-[0_12px_32px_rgba(30,20,5,.28)]"
+            >
+              <span className="min-w-0 truncate font-mono text-[12px] opacity-[.82]" title={selection.quote ?? selection.label} data-selection-label>
+                {selection.label}
+              </span>
+              <button
+                type="button"
+                onPointerDown={() => (held.current = selection)}
+                onPointerCancel={() => (held.current = null)}
+                onPointerLeave={() => (held.current = null)}
+                onClick={() => {
+                  const reference = held.current ?? selection;
+                  held.current = null;
+                  ask(reference);
+                }}
+                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#f5efe4] px-[13px] py-1.5 text-[12.5px] font-semibold text-accent-ink hover:bg-white"
+              >
+                <Icon name="chat" size={14} />
+                Ask the agent about this
+              </button>
+              <button
+                type="button"
+                aria-label="Clear selection"
+                title="Clear selection"
+                onClick={() => clearSelection(true)}
+                className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full opacity-70 hover:bg-white/10 hover:opacity-100"
+              >
+                <Icon name="x" size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+/** A plugin's project view for this project, on the plugin's own origin; where this build cannot serve it, a note that it opens in the desktop app. */
+function ViewFrame({
+  page,
+  project,
+  hidden,
+  frameRef,
+  onLoad,
+}: {
+  page: PluginPage;
+  project: string;
+  hidden: boolean;
+  frameRef: (el: HTMLIFrameElement | null) => void;
+  onLoad: () => void;
+}) {
+  const src = viewSrc(page, project);
+  if (src === null) {
+    return (
+      <div hidden={hidden} className="max-w-[520px] px-8 py-10">
+        <h2 className="mb-2 font-serif text-[20px] font-medium text-ink">{page.title}</h2>
+        <p className="prose-serif">The {page.title} view opens in the desktop app; this copy cannot serve it.</p>
+        <p className="src-note mt-3">
+          <code>projects-folder/{project}/</code>
+        </p>
+      </div>
+    );
+  }
+  return <iframe ref={frameRef} src={src} title={`${page.title} view`} hidden={hidden} onLoad={onLoad} className="absolute inset-0 h-full w-full border-0" />;
 }
 
 function Placeholder({ title, text, path }: { title: string; text: string; path: string }) {

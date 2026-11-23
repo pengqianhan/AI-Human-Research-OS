@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { BUNDLED_IDS } from "../plugins/bundled.ts";
 import { matchMount, TRUNK_MOUNTS } from "./api.ts";
 import { fromNodeRequest, serveNode } from "./node.ts";
-import { BUNDLED_HANDLERS } from "./pluginHandlers.ts";
+import { BUNDLED_HANDLERS, DESKTOP_ONLY_HANDLERS } from "./pluginHandlers.ts";
 import { createRegistry, loadPlugins } from "./registry.ts";
 import { context, tempTree } from "./testkit.ts";
 
@@ -15,9 +15,10 @@ const PLUGINS = resolve(dirname(fileURLToPath(import.meta.url)), "../plugins");
 
 describe("mounts", () => {
   const { plugins } = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
-  const mounts = createRegistry({ ctx: context(tempTree()), trunk: TRUNK_MOUNTS, plugins, factories: BUNDLED_HANDLERS }).all;
+  // As the dev server builds them (api-plugin.ts): desktop-only handlers declared, not mounted.
+  const mounts = createRegistry({ ctx: context(tempTree()), trunk: TRUNK_MOUNTS, plugins, factories: BUNDLED_HANDLERS, skip: DESKTOP_ONLY_HANDLERS }).all;
 
-  test("the four endpoints and which need the dev-server token", () => {
+  test("the dev server's four endpoints and which need its token; the Code view's Git history is not one", () => {
     assert.deepEqual(
       mounts.map((m) => [m.prefix, m.token]),
       [

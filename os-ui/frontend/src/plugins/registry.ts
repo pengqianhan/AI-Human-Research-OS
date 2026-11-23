@@ -33,7 +33,10 @@ export function usePlugins(): { plugins: readonly PluginInfo[]; pages: readonly 
  * The manifest has no icon field, so the renderer keeps this short list;
  * any other plugin shows the puzzle piece.
  */
-const ICONS: ReadonlyMap<string, IconName> = new Map<string, IconName>([["paper-wiki", "book"]]);
+const ICONS: ReadonlyMap<string, IconName> = new Map<string, IconName>([
+  ["paper-wiki", "book"],
+  ["code-view", "file"],
+]);
 
 export function pluginIcon(id: string): IconName {
   return ICONS.get(id) ?? "puzzle";

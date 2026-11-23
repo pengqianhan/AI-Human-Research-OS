@@ -5,7 +5,7 @@ import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { BUNDLED_IDS } from "../../plugins/bundled.ts";
 import type { PluginManifest } from "../../server/manifest.ts";
-import { bundledManifests, pluginInfo, pluginPages } from "./pages.ts";
+import { bundledManifests, pluginInfo, pluginPages, viewSrc } from "./pages.ts";
 
 const PLUGINS = resolve(dirname(fileURLToPath(import.meta.url)), "../../plugins");
 
@@ -50,6 +50,21 @@ describe("the bundled plugins in the renderer", () => {
       nav(browser).map((p) => [p.key, p.title, p.src, p.origin]),
       [["paper-wiki/viewer", "Paper wiki", "./paper-wiki/viz.html", null]],
     );
+  });
+
+  test("the Code view's project tab: on app://code-view in the desktop client, no frame URL in a browser", () => {
+    const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
+    const code = (env: { desktop: boolean }) => pluginPages(plugins, env).filter((p) => p.plugin === "code-view");
+    assert.deepEqual(
+      code(desktop).map((p) => [p.key, p.slot, p.title, p.src, p.origin]),
+      [["code-view/code", "project", "Code", "app://code-view/index.html", "app://code-view"]],
+    );
+    assert.deepEqual(
+      code(browser).map((p) => [p.key, p.src, p.origin]),
+      [["code-view/code", null, null]],
+    );
+    assert.deepEqual(plugins.find((p) => p.id === "code-view")!.reads, ["projects-folder/*/Code"]);
+    assert.deepEqual(plugins.find((p) => p.id === "code-view")!.contributes.handlers, ["git"]);
   });
 
   test("Paper Wiki's card: its name and description", () => {
@@ -163,6 +178,16 @@ describe("pluginPages", () => {
       pluginPages([a, b], desktop).map((p) => p.key),
       ["alpha/x", "beta/x"],
     );
+  });
+
+  test("viewSrc names the project in the query, encoded; no frame URL stays none", () => {
+    const [code] = pluginPages([views], desktop).filter((p) => p.slot === "project");
+    assert.equal(viewSrc(code!, "nanochat_cpu"), "app://views/code.html?project=nanochat_cpu");
+    // The read channel's URL parser reads "+" as a space; "&", "#", "%", and "?" would end or change the value.
+    assert.equal(viewSrc(code!, "a+b &c#d%e?f/g"), "app://views/code.html?project=a%2Bb%20%26c%23d%25e%3Ff%2Fg");
+    assert.equal(new URL(viewSrc(code!, "a+b &c#d%e")!).searchParams.get("project"), "a+b &c#d%e");
+    assert.equal(viewSrc({ ...code!, src: "app://views/code.html?mode=x" }, "p"), "app://views/code.html?mode=x&project=p");
+    assert.equal(viewSrc({ ...code!, src: null }, "p"), null);
   });
 
   test("no plugins, no pages", () => {

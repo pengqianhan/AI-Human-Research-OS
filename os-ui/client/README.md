@@ -128,9 +128,26 @@ agent logins or a first open on a real desktop, so on each of your machines:
 - [ ] A project card (or **Projects**, or the project under **Quick access**)
       opens its workspace. **Overview** shows the project; the conversation on
       the left lists that project's sessions under **Conversations**, and
-      collapses to a thin strip and back. **Code** and **Paper** say they
-      arrive later in step 1; **Idea**, **Skeleton**, and **Assets** are
-      marked "step 2".
+      collapses to a thin strip and back. **Paper** says it arrives later in
+      step 1; **Idea**, **Skeleton**, and **Assets** are marked "step 2".
+- [ ] **The Code view.** In a project's workspace, click the **Code** tab:
+      - **Files** lists the project's `Code/` folder on the left; click a
+        folder to open it and a file to read it on the right (it says
+        "read-only"). A file that is not text, or larger than 32 MiB, says so
+        instead.
+      - Click **Changes**: the project's commits appear, newest first (with no
+        Git history it says "No history to show"; if Git is missing or too
+        old it says so and points to **Settings**). Click a commit: its
+        changed files and a diff of the first one appear; click another file
+        to see its diff.
+      - Click a line of a file, or a commit, or a line of a diff: a dark bar at
+        the bottom names it, with **Ask the agent about this**.
+      - Click **Ask the agent about this**: the conversation opens (if it was
+        collapsed) with a small chip above the input naming what you chose,
+        and the cursor in the input. Click the chip to see exactly what will
+        be sent before your message (it opens under the chips). Nothing is
+        sent until you press Send.
+      - Click the chip's **×**: it goes away.
 - [ ] **Paper wiki**: a paper's Status buttons appear and change the note's
       `status:` line.
 - [ ] **Skills**: a disable/enable toggle works and the store updates.

@@ -7,7 +7,7 @@ import { BUNDLED_IDS } from "../plugins/bundled.ts";
 import { TRUNK_MOUNTS } from "./api.ts";
 import type { Mount } from "./api.ts";
 import type { PluginManifest } from "./manifest.ts";
-import { BUNDLED_HANDLERS } from "./pluginHandlers.ts";
+import { BUNDLED_HANDLERS, DESKTOP_ONLY_HANDLERS } from "./pluginHandlers.ts";
 import { createRegistry, loadPlugins } from "./registry.ts";
 import type { HandlerFactory, LoadedPlugin, TrunkMount } from "./registry.ts";
 import { context, tempTree } from "./testkit.ts";
@@ -107,13 +107,21 @@ describe("createRegistry", () => {
   const real = () =>
     createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins, factories: BUNDLED_HANDLERS });
 
-  test("all has the app's three endpoints, then Paper Wiki's status, with their token flags", () => {
+  test("all has the app's three endpoints, then Paper Wiki's status and the Code view's Git history, with their token flags", () => {
     assert.deepEqual(flags(real().all), [
       ["/api/skill/toggle", false],
       ["/api/paper-sources", true],
       ["/api/chat", true],
       ["/api/paper-wiki/status", false],
+      ["/api/code-view/git", false],
     ]);
+  });
+
+  test("with the dev server's skip set, the Code view's Git history is declared but mounted nowhere", () => {
+    assert.deepEqual([...DESKTOP_ONLY_HANDLERS], ["code-view/git"]);
+    const dev = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins, factories: BUNDLED_HANDLERS, skip: DESKTOP_ONLY_HANDLERS });
+    assert.deepEqual(flags(dev.byPlugin.get("code-view")!), []);
+    assert.ok(!dev.all.some((m) => m.prefix.startsWith("/api/code-view")));
   });
 
   test("the trunk on the app origin, each plugin's handlers on its own, never with the token", () => {
@@ -121,6 +129,7 @@ describe("createRegistry", () => {
     assert.deepEqual(flags(registry.app), TRUNK_MOUNTS.map((t) => [t.prefix, t.token]));
     assert.deepEqual([...registry.byPlugin.keys()], [...BUNDLED_IDS]);
     assert.deepEqual(flags(registry.byPlugin.get("paper-wiki")!), [["/api/paper-wiki/status", false]]);
+    assert.deepEqual(flags(registry.byPlugin.get("code-view")!), [["/api/code-view/git", false]]);
     const app = new Set(registry.app.map((m) => m.prefix));
     for (const [id, mounts] of registry.byPlugin) {
       for (const mount of mounts) {

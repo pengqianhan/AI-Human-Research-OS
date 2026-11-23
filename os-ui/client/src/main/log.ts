@@ -6,7 +6,10 @@ const MAX_BYTES = 1_000_000;
 /**
  * A plain append-only log in userData, for diagnosing a user's machine
  * (PATH resolution, Python choice, generator failures). Truncated past 1 MB.
- * Never logs prompts, keys, or file contents.
+ * Never logs prompts or keys. It does hold paths and names: the URL of a
+ * refused download, and what Git printed when a Code view request failed
+ * (which can quote a file name, a ref, or a config line). No endpoint serves
+ * it; Help → Show Log File only reveals it.
  */
 export function createLog(file: string) {
   try {

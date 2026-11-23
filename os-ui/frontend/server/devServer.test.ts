@@ -60,6 +60,17 @@ describe("Vite dev server adapters", () => {
     assert.equal(bad.status, 500);
   });
 
+  test("the Code view's Git history is desktop only: the dev server never answers it with the handler's JSON", async () => {
+    for (const path of ["/api/code-view/git?project=nanochat_cpu", "/api/code-view/git/log?project=nanochat_cpu", "/api/code-view/git/commit?project=nanochat_cpu&hash=" + "0".repeat(40)]) {
+      for (const token of [false, true]) {
+        const res = await call(path, {}, token);
+        const text = await res.text();
+        assert.notEqual(res.headers.get("content-type"), "application/json", path);
+        assert.ok(!/"(repo|commits|head|problem)"/.test(text), `${path}: ${text.slice(0, 200)}`);
+      }
+    }
+  });
+
   test("the viewer's status probe and the toggle's validation need no token", async () => {
     assert.deepEqual(await (await call("/api/paper-wiki/status", {}, false)).json(), { writable: true, values: ["unread", "skimmed", "read"] });
     const toggle = await call("/api/skill/toggle", { method: "POST", body: '{"skill":"a b"}' }, false);

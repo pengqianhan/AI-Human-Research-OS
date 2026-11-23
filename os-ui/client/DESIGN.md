@@ -166,9 +166,9 @@ with the trunk's endpoints only.
 | `app://research-os/api/...` | the trunk's endpoints (`TRUNK_MOUNTS`) |
 | `app://research-os/state.json` | `<workspace>/os-ui/frontend/public/state.json` |
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
-| `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`); other `api/` paths are 404 |
+| `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`); other `api/` paths are 404 |
 | `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
-| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` |
+| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code view: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`; no TypeScript ships) |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
@@ -279,9 +279,30 @@ name does not start with `.`, a file's name included:
   `.cjs`, `.html`, `.htm`, and `.xhtml` files are sent as
   `text/plain; charset=utf-8`, listings as `application/json`, and other files
   by extension (SVG as `image/svg+xml`, which an `<img>` needs).
-- No bundled plugin declares `reads` until the Code and Paper views (S6), so
-  the channel is proven by the fixture tests in
-  [test/protocol.test.ts](test/protocol.test.ts) only.
+- The Code view declares `reads: ["projects-folder/*/Code"]`. Besides the
+  fixture tests in [test/protocol.test.ts](test/protocol.test.ts), the
+  end-to-end suite reads through it: `+`, `#`, `%`, a space and Chinese text in
+  names and files, and 404 for `.env` and for a file outside `Code/`.
+
+**The Code view** (S6a-2 of [os-ui/PLUGINS.md](../PLUGINS.md)). Its page reads
+only `./_os/files`, `./_os/list`, and `/api/code-view/git` on its own origin,
+every value through `encodeURIComponent`, and puts every name, line, message,
+and patch on screen as text (its `dom.test.ts` scans the site for HTML sinks;
+`PLUGIN_CSP` allows inline script, so markup that reached the DOM would run).
+The Git handler is mounted on `app://code-view` only, with no token; the
+client builds it on the git it finds (`src/main/codeView.ts`: the children's
+PATH, absolute entries outside the workspace, never the Command Line Tools
+stub) and logs what Git prints on a failure to `main.log`, which no endpoint
+serves. A selection in the page is posted to `app://research-os` as
+`{type: "os.select", label, quote?}`; the workspace accepts it only from the
+active view's frame at that view's origin, shows "Ask the agent about this",
+and answers `{type: "os.select.clear"}` at the view's origin when the user
+clears it there. Asking adds a reference chip to the project's composer; only
+Send sends. What Send passes is exactly what the user can read in the
+composer: a label with a line break, control, or format character is refused;
+a quote's line breaks are made line feeds (each line gets its `> `) and its
+invisible characters shown as markers, in the text shown and sent alike; a
+chip, clicked, shows that text under the chips (os-ui/PLUGINS.md, S6a-2).
 
 Known limits of the channel, not yet handled:
 
@@ -289,9 +310,6 @@ Known limits of the channel, not yet handled:
   check and the open. `O_NOFOLLOW` covers the last segment only.
 - A hard link inside a root to a file elsewhere is indistinguishable from a
   regular file and is served.
-- A frame sent to a file of a type it cannot show (`application/octet-stream`)
-  starts a download, which the client does not yet cancel. To be settled in
-  S6 with the views' end-to-end tests.
 - The manifest parser accepts any plain root, `human/private` included. Before
   third-party manifests load in step 2, the host needs a deny-list or an
   explicit enable step that shows `reads`.
@@ -305,12 +323,14 @@ Known limits of the channel, not yet handled:
   by a manifest. App pages (HTML and the `index.html` fallback), with one
   `frame-src` entry per loaded plugin, in load order (`appCsp` in
   `protocol.ts`; `frame-src 'none'` if none loaded):
-  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki; object-src 'none'; base-uri 'none'; form-action 'none'`.
+  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
   A site served from a workspace folder (the Paper Wiki viewer):
   `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
-  A site in its plugin folder gets the same policy with `'self'` added to
-  `script-src` and `style-src`. Either is sent with every file the site
+  A site in its plugin folder (the Code view's) gets no inline code at all,
+  since it shows untrusted names and text:
+  `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
+  (`PLUGIN_CSP`; styles set through the DOM still apply). Either is sent with every file the site
   serves, not only HTML: an SVG a frame is sent to is a document too. Every
   read channel answer, refusals included, carries
   `sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'`
@@ -331,6 +351,9 @@ Known limits of the channel, not yet handled:
   default browser only after a dialog naming the URL is confirmed, one dialog
   at a time (Electron cannot tell which frame asked, and the viewer runs note
   HTML); every `window.open` is denied.
+- **Downloads:** every session the app creates cancels `will-download`, so a
+  frame sent to a file it cannot show (the read channel's
+  `application/octet-stream`) saves nothing and opens no Save dialog.
 - **IPC** answers only the top frame of `app://research-os/`; no channel takes
   a path.
 - **Permissions:** all denied except `clipboard-sanitized-write` (the copy
