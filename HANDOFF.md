@@ -104,9 +104,14 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       every later line number) and nine smaller ones are fixed on branch
       `step2-skeleton-review-fixes`, whose pull request follows #50.
       Those fixes are merged too (PR #51). 2.2, the Assets view, is built on
-      branch `step2-assets-view` and waits, as a draft pull request, for its
-      independent review; a pull request that still needs review is opened as
-      a draft from now on. Next is 2.3 (Idea), then 2.4.
+      branch `step2-assets-view` (PR #52); a pull request that still needs
+      review is opened as a draft from now on. Its independent review found
+      three must-fix problems (Reload kept old pictures, a 1.2 KB SVG froze
+      the view, two files could share one label) and seven smaller ones; all
+      are fixed on the same branch, with the limits that stay recorded in
+      [os-ui/PLUGINS.md](os-ui/PLUGINS.md). The fixes were checked against
+      the reviewer's own probes but not reviewed a second time. Next is 2.3
+      (Idea), then 2.4.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
