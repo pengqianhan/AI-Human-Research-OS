@@ -1517,8 +1517,10 @@ describe("read channel", () => {
   /*
    * A root that names a file (os-ui/PLUGINS.md Part 3, §1 fact 1): the
    * Skeleton view's `projects-folder/*\/paper_skeleton.md`. The rules above
-   * apply unchanged; these pin what a file root adds: the file is the whole
-   * root, so nothing beside, above, or below it is read.
+   * apply unchanged: a root names a path, not a kind of entry. When that
+   * path is a file, nothing beside, above, or below it is read; when a
+   * project holds a folder of that name, the folder's own contents are
+   * readable as a folder root's are (the last test pins it and its limit).
    */
   describe("a file root", () => {
     const SKEL = "projects-folder/Alpha/paper_skeleton.md";
@@ -1584,6 +1586,23 @@ describe("read channel", () => {
       await assertRefused(skelList("projects-folder/Deep"));
       // A "*" segment never matches a dot name.
       await assertRefused(skel("projects-folder/.Alpha/paper_skeleton.md"));
+    });
+
+    test("a folder named paper_skeleton.md is read as a folder root: its listing and files are 200, a link in it out of the root still 404 (review F6)", async () => {
+      const folder = join(project("Folder"), "paper_skeleton.md");
+      mkdirSync(join(folder, "sub"), { recursive: true });
+      writeFileSync(join(folder, "inner.txt"), "inside a folder named paper_skeleton.md");
+      writeFileSync(join(folder, "sub", "deeper.txt"), "deeper");
+      dirLink(join(ws, "human", "private"), join(folder, "priv"));
+      const linked = fileLink(join(ws, "human", "private", "secret.md"), join(folder, "secret.md"));
+      const root = "projects-folder/Folder/paper_skeleton.md";
+      assert.deepEqual((await okList(skelList(root))).entries.map((e) => e.name), ["inner.txt", "sub"], "links out of the root are left out of the listing");
+      assert.equal(await okText(skel(`${root}/inner.txt`)), "inside a folder named paper_skeleton.md");
+      assert.equal(await okText(skel(`${root}/sub/deeper.txt`)), "deeper");
+      // The limit: the root's real path is the boundary, as for any folder root (rule 7).
+      for (const url of [skel(`${root}/priv/secret.md`), skelList(`${root}/priv`), ...(linked ? [skel(`${root}/secret.md`)] : [])]) await assertRefused(url);
+      // Beside it, nothing: the project folder and its other files stay unread.
+      await assertRefused(skelList("projects-folder/Folder"));
     });
 
     test("Windows names: the same answers as for a folder root", async () => {

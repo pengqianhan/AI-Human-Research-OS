@@ -204,12 +204,15 @@ the plugin is bundled or local. A `*` segment matches any one segment whose
 name does not start with `.`, a file's name included:
 `projects-folder/*/Code` matches `projects-folder/Alpha/Code`, and
 `projects-folder/*` matches `projects-folder/notes.md` as well as a project.
-A root may name a file (`projects-folder/*/paper_skeleton.md`, the Skeleton
-view's): the file is then the whole root, so it is served by GET and HEAD,
-while a path below it, a listing of it, a sibling, and the project folder are
-404. Every rule below applies to it unchanged; `test/protocol.test.ts` ("a
-file root") pins those cases, links at the file root, `*` matching exactly one
-segment, and Windows spellings.
+A root names a path, not a kind of entry, so it may name a file
+(`projects-folder/*/paper_skeleton.md`, the Skeleton view's). When that path is
+a file, it is served by GET and HEAD, while a path below it, a listing of it, a
+sibling, and the project folder are 404. When a project holds a folder of that
+name, the folder is the root and its own contents are readable, as a folder
+root's are (a link in it leaving the root is still 404). Every rule below
+applies unchanged; `test/protocol.test.ts` ("a file root") pins those cases,
+the folder case, links at the file root, `*` matching exactly one segment, and
+Windows spellings.
 
 - `GET app://<id>/_os/files?path=<rel>` returns the file's bytes;
   `GET app://<id>/_os/list?path=<rel>` returns

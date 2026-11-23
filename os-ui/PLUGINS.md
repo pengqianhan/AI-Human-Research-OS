@@ -78,7 +78,10 @@ Status on 2026-11-23:
     [README.md](README.md)/[README_zh.md](README_zh.md) pair, which said Skeleton
     comes in step 2.
   - **File roots in `reads`** are under tests in `client/test/protocol.test.ts` ("a
-    file root"); the channel is unchanged. Twelve of fourteen mutations of
+    file root"); the channel is unchanged. A root names a path: when a project holds
+    a *folder* named `paper_skeleton.md`, its own contents are readable as a folder
+    root's are, and a link in it leaving the root is 404 (pinned; Part 3 §1 fact 1
+    is corrected). Twelve of fourteen mutations of
     `serveRead`, `matchRoot`, and `safeDecodedRelative` (each breaking one rule: most
     change one line, three rewrite `matchRoot`'s matching) made these tests fail. The two
     that did not are cases two layers hold: a listing of a file root stays 404
@@ -1183,6 +1186,13 @@ idea file's format (§5.1, §7).
   equal paths (`protocol.ts:331-334`); the declared-root check compares the root's
   real path with the declared pattern (`:410-414`); and a file is served when
   `stat` says it is one (`:594-595`). A listing of a file root is 404 (`:586-587`).
+- **Correction (2026-11-24, after the review of 2.1):** a root names a path, not a
+  kind of entry. When that path is a file, nothing below it is read; when a project
+  holds a *folder* named `paper_skeleton.md`, the folder is the root, and its own
+  contents are readable (its listing and the files in it are 200) as a folder
+  root's are. Its limit is a folder root's: a link in it that leaves the root is
+  404. The channel is unchanged; `client/test/protocol.test.ts` ("a file root")
+  pins this.
 - No test covers it: every fixture declares folders (`os-ui/client/test/protocol.test.ts:858-870`).
   So I ran a throwaway probe (macOS, Node 22.23.1, the commit's `protocol.ts` and
   `manifest.ts`, a temporary workspace; not committed) with
