@@ -105,6 +105,46 @@ export const MAX_CANVAS_PIXELS = 4096 * 4096;
 export const PAGE_BUDGET_MS = 15_000;
 
 /**
+ * Calls `onOver` once `ms` of visible time has passed, and returns a function
+ * that stops it. Time is counted in `tick` steps, and only while `visible()`:
+ * PDF.js draws a page in requestAnimationFrame steps, which stop while the
+ * frame is hidden (another tab) or the window is in the background, so that
+ * time is no part of a page's drawing. A gap longer than two ticks (timers
+ * throttled, the machine asleep) counts as two ticks at most.
+ */
+export function visibleBudget(
+  ms: number,
+  onOver: () => void,
+  visible: () => boolean,
+  clock: { now: () => number; every: (fn: () => void, ms: number) => unknown; stop: (handle: unknown) => void } = {
+    now: () => performance.now(),
+    every: (fn, every) => setInterval(fn, every),
+    stop: (handle) => clearInterval(handle as ReturnType<typeof setInterval>),
+  },
+  tick = 250,
+): () => void {
+  let spent = 0;
+  let last = clock.now();
+  let stopped = false;
+  const handle = clock.every(() => {
+    const now = clock.now();
+    const step = Math.min(now - last, 2 * tick);
+    last = now;
+    if (stopped || !visible()) return;
+    spent += step;
+    if (spent >= ms) {
+      stopped = true;
+      clock.stop(handle);
+      onOver();
+    }
+  }, tick);
+  return () => {
+    stopped = true;
+    clock.stop(handle);
+  };
+}
+
+/**
  * Pages laid out at most. Every page is a sheet in one scrolling column, and
  * each scroll frame looks at every sheet (300,000 pages took about 2 s a
  * frame in the review); 1,000 keeps that under a few milliseconds and is more

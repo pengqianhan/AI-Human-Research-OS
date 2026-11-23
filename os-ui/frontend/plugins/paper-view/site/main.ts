@@ -52,6 +52,7 @@ import {
   TEX,
   TEXT_RUNS_MAX,
   textCutWords,
+  visibleBudget,
   zeroPagesWords,
   zoomFactor,
   zoomLabel,
@@ -575,8 +576,10 @@ function placeNow(): Place {
 function relayout(at: Place = placeNow()): void {
   if (view === null) return;
   const z = currentZoom();
-  zoomGeneration++;
-  view.scale = cssScale(z, view.slots[0]!.width);
+  const scale = cssScale(z, view.slots[0]!.width);
+  // Canvases drawn at another scale are stale; at the same one (the frame shown again, a resize that keeps the zoom) they stand.
+  if (scale !== view.scale) zoomGeneration++;
+  view.scale = scale;
   pages.style.setProperty("--total-scale-factor", String(view.scale));
   for (const slot of view.slots) sizeSheet(slot);
   const sheet = view.slots[at.page]?.sheet;
@@ -704,14 +707,17 @@ async function pageOf(slot: Slot): Promise<PdfPage> {
   return page;
 }
 
+/** Whether the page can be seen: the window in front and this frame's tab shown. */
+const onScreen = () => !document.hidden && scroller.clientWidth > 0;
+
 /**
- * Draws one page within PAGE_BUDGET_MS, from reading the page to the last
- * stroke on its canvas. Past it the page is stopped (overrun).
+ * Draws one page within PAGE_BUDGET_MS of visible time, from reading the page
+ * to the last stroke on its canvas. Past it the page is stopped (overrun).
  */
 async function drawSlot(slot: Slot): Promise<void> {
   const mine = generation;
   const v = view!;
-  const budget = setTimeout(() => overrun(slot, mine), PAGE_BUDGET_MS);
+  const stopBudget = visibleBudget(PAGE_BUDGET_MS, () => overrun(slot, mine), onScreen);
   try {
     let page: PdfPage;
     try {
@@ -720,7 +726,8 @@ async function drawSlot(slot: Slot): Promise<void> {
       if (mine === generation) pageProblem(slot, error);
       return;
     }
-    if (mine !== generation || slot.stopped) return;
+    // Gone: another document, a page stopped, or one no longer laid out (enforceLimit).
+    if (mine !== generation || slot.stopped || !v.slots.includes(slot)) return;
     if (slot.textState === "none") void buildText(slot, page, v.lib, mine);
     if (slot.drawn === zoomGeneration) return;
     const key = zoomGeneration;
@@ -745,8 +752,8 @@ async function drawSlot(slot: Slot): Promise<void> {
     } finally {
       if (slot.task === task) slot.task = null;
     }
-    // Stale: another document, another zoom, or the page moved out of reach while it was drawn.
-    if (mine !== generation || key !== zoomGeneration || !wanted.includes(slot.index) || slot.stopped) {
+    // Stale: another document, another zoom, or the page moved out of reach (or out of the layout) while it was drawn.
+    if (mine !== generation || key !== zoomGeneration || !wanted.includes(slot.index) || slot.stopped || !v.slots.includes(slot)) {
       canvas.width = 0;
       canvas.height = 0;
       return;
@@ -757,7 +764,7 @@ async function drawSlot(slot: Slot): Promise<void> {
     slot.drawn = key;
     slot.sheet.querySelector(".page-note:not(.text-note)")?.remove();
   } finally {
-    clearTimeout(budget);
+    stopBudget();
   }
 }
 

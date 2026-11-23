@@ -16,6 +16,7 @@ import {
   quotedPages,
   slowWords,
   textCutWords,
+  visibleBudget,
   destTop,
   fetchWords,
   fitZoom,
@@ -157,6 +158,36 @@ describe("bounds on an enormous or hostile PDF", () => {
     assert.deepEqual((await small.read()).value?.items, [1]);
     assert.equal((await small.read()).done, true);
     assert.equal(cuts, 1);
+  });
+
+  test("a page's budget counts only time the page can be seen, and no more than two ticks for a long gap", () => {
+    let now = 0;
+    let tick: (() => void) | null = null;
+    const clock = { now: () => now, every: (fn: () => void) => (tick = fn), stop: () => (tick = null) };
+    let visible = true;
+    let over = 0;
+    const step = (ms: number) => {
+      now += ms;
+      tick?.();
+    };
+    const stop = visibleBudget(1000, () => over++, () => visible, clock, 250);
+    step(250);
+    step(250);
+    visible = false; // another tab, or the window in the background: PDF.js's drawing waits too
+    for (let i = 0; i < 100; i++) step(250);
+    assert.equal(over, 0, "25 s hidden count for nothing");
+    visible = true;
+    step(250);
+    assert.equal(over, 0);
+    step(60_000); // a sleep: one gap, at most two ticks
+    assert.equal(over, 1, "750 + 500 ms visible reach the 1,000 ms budget");
+    assert.equal(tick, null, "it stops once over");
+    stop();
+    let stopped = 0;
+    const early = visibleBudget(1000, () => stopped++, () => true, clock, 250);
+    early();
+    for (let i = 0; i < 10; i++) step(250);
+    assert.equal(stopped, 0, "a page drawn in time stops its budget");
   });
 
   test("words for a page stopped, text cut, and a reader that did not answer", () => {

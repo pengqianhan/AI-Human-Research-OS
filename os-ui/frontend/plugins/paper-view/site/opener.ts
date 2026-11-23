@@ -10,7 +10,7 @@
  * stand-ins.
  */
 
-/** How long a worker may take to start and open a document (PDF.js opened 300,000 pages, 32 MB, in about 7 s in the review). */
+/** How long a worker may take to start and open a document (a 32 MB file of 300,000 pages opens in about 1 s; the read channel serves at most 32 MiB). */
 export const OPEN_BUDGET_MS = 20_000;
 /** How long a closed document's worker gets to let PDF.js finish with it before it is terminated. */
 export const RELEASE_GRACE_MS = 2_000;
