@@ -2242,15 +2242,19 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
-  test("sixty pictures all load in the end, a few at a time, with no busy card left, also across a Reload in the middle", SLOW, async () => {
-    const { as } = await openAssets(ODD_PROJECT);
-    const cards = as.locator(".fcard").filter({ hasText: /^e2e\/p\d\d\.png/ });
+  test("sixty pictures all load in the end, a few at a time, with no busy card left, also across a Reload and leaving the tab in the middle", SLOW, async () => {
+    const { ws, as } = await openAssets(ODD_PROJECT);
+    // By the name: a card's text starts with its picture box's ("Loading…" while it loads).
+    const cards = as.locator(".fcard").filter({ has: as.locator(".nm", { hasText: /^e2e\/p\d\d\.png$/ }) });
     assert.equal(await cards.count(), 60);
     const list = as.locator(".as-list");
-    // Scroll part way, Reload while pictures load, then scroll through all of them.
+    // Scroll part way, Reload while pictures load, leave the tab and come back, then scroll through all of them.
     await list.evaluate((l) => (l.scrollTop = l.scrollHeight / 3));
     await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
     await page.waitForTimeout(50);
+    await ws.getByRole("tab", { name: "Overview" }).click();
+    await page.waitForTimeout(400);
+    await ws.getByRole("tab", { name: "Assets" }).click();
     for (let i = 0; i < 300; i++) {
       const drawn = await as.locator(".fcard .thumb img").count();
       const loadedAll = await cards.evaluateAll((cs) => cs.every((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth === 48));
@@ -2258,7 +2262,10 @@ describe("desktop client on a Research OS folder", () => {
       await list.evaluate((l, step) => (l.scrollTop = (step % 10) * (l.scrollHeight / 10)), i);
       await page.waitForTimeout(drawn > 0 ? 100 : 200);
     }
-    assert.equal(await cards.evaluateAll((cs) => cs.filter((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth === 48).length), 60);
+    const undrawn = await cards.evaluateAll((cs) =>
+      cs.filter((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth !== 48).map((c) => `${c.querySelector(".nm")?.textContent}: ${JSON.stringify(c.querySelector(".thumb")?.textContent)}`),
+    );
+    assert.deepEqual(undrawn, [], "every picture is drawn");
     assert.equal(await cards.locator(".thumb-note").count(), 0, "no card is left waiting, busy, failed, or loading");
   });
 
@@ -2292,7 +2299,7 @@ describe("desktop client on a Research OS folder", () => {
       );
       const { as } = await openAssets(ODD_PROJECT);
       await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
-      const card = as.locator(".fcard").filter({ hasText: /^hostile\.svg/ });
+      const card = as.locator(".fcard").filter({ has: as.locator(".nm", { hasText: /^hostile\.svg$/ }) });
       await card.scrollIntoViewIfNeeded();
       await card.locator(".thumb img").waitFor();
       // Drawn: the image loaded (so its references had their chance), as a card and large in the panel.
