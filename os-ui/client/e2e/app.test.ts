@@ -1543,6 +1543,11 @@ describe("desktop client on a Research OS folder", () => {
       assert.equal(await sk.locator(".sk-rest details[open]").count(), 0, "folded");
       assert.equal((await sk.locator(".sk-rest summary").first().textContent())?.replace(/\s+/g, " "), "Source Mapline 23 · 9 entries");
       await sk.locator(".sk-side .nd-empty").waitFor({ state: "attached" });
+      if ((await sk.evaluate(() => innerWidth)) >= 780) {
+        // As in the mockup, the Snapshot card and the evidence panel start on the same line.
+        const tops = await sk.evaluate(() => [".sk-snap", ".sk-side"].map((s) => document.querySelector(s)!.getBoundingClientRect().top));
+        assert.ok(Math.abs(tops[0]! - tops[1]!) < 1, `Snapshot card at ${tops[0]}, evidence panel at ${tops[1]}`);
+      }
       await shot(page, "skeleton-1-nanochat-nothing-selected");
 
       // C2: its evidence beside the table (under its row if the screen leaves the view under 780 px), and the ask bar.

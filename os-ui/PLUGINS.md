@@ -78,8 +78,9 @@ Status on 2026-11-23:
     [README.md](README.md)/[README_zh.md](README_zh.md) pair, which said Skeleton
     comes in step 2.
   - **File roots in `reads`** are under tests in `client/test/protocol.test.ts` ("a
-    file root"); the channel is unchanged. Twelve of fourteen one-line mutations of
-    `serveRead`, `matchRoot`, and `safeDecodedRelative` made these tests fail. The two
+    file root"); the channel is unchanged. Twelve of fourteen mutations of
+    `serveRead`, `matchRoot`, and `safeDecodedRelative` (each breaking one rule: most
+    change one line, three rewrite `matchRoot`'s matching) made these tests fail. The two
     that did not are cases two layers hold: a listing of a file root stays 404
     without the is-a-folder check (`opendir` fails into the catch-all), and on POSIX
     a `::$DATA` spelling stays 404 without the `:` check (the literal segment does
