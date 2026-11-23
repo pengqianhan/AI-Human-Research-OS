@@ -63,11 +63,10 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
         Files and Changes, and "Ask the agent about this" adding a reference
         chip to the project's composer), and S6b (the Paper view plugin: the
         Paper tab draws `paper/main.pdf` on `app://paper-view` with PDF.js
-        6.5.438 vendored as authorized on 2026-11-22, see Decisions). S6a-1
-        and S6a-2 are merged (PRs #43, #44); the fixes from the second
-        independent review of the Code view are in PR #47, and S6b is PR #45,
-        stacked on #47 (merge #47 first). The plugins' policy needed no change
-        for PDF.js's worker.
+        6.5.438 vendored as authorized on 2026-11-22, see Decisions). All
+        three are merged (PRs #43, #44, and #45 on 2026-11-23); #45 carried
+        the fixes from the second independent review of the Code view
+        (PR #47). The plugins' policy needed no change for PDF.js's worker.
       - Next, in order: the Human Owner runs the
         [client checklist](os-ui/client/README.md#check-it-on-your-machine),
         which now covers the Code and Paper views; then deleting
@@ -76,7 +75,8 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
         ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), S6a-1).
       - Waiting on the Human Owner: whether a third-party plugin may add its
         own left-navigation item, or only home panels and project views
-        (needed before step 2).
+        (Q-PO1 in [os-ui/PLUGINS.md](os-ui/PLUGINS.md); needed before step 2's
+        loading of a plugin from a local folder, not before its views).
 - [ ] Step 2, remaining views: Idea, Skeleton, Assets; Skills Hub as the second
       plugin; then loading a plugin from a local folder. Acceptance: the Human
       Owner opens all five views on `nanochat_cpu`.
@@ -206,15 +206,16 @@ packaged app's smoke run.
 
 ### Next session
 
-- Focus (2026-11-23): S6a-1 (the Git handler) and S6a-2 (the Code view plugin)
-  are merged; the Code view's review fixes (PR #47) and S6b (the Paper view
-  plugin, PDF.js vendored as authorized; PR #45, stacked on #47) wait for the
-  Human Owner's merge ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), under
-  "Repositioning" above), with three agent defaults to confirm in Decisions:
-  the Git version floor, the selected text on screen, and how the Paper view
-  reads. Next is the Human Owner's run of the client
-  checklist in [os-ui/client/README.md](os-ui/client/README.md), which now
-  covers the Code and Paper views, then S8. The older items below are still open.
+- Focus (2026-11-23): the Code view and the Paper view are merged (PRs #43,
+  #44, #45; [os-ui/PLUGINS.md](os-ui/PLUGINS.md), under "Repositioning"
+  above). Agent defaults still to confirm in Decisions: the Git version
+  floor, the ask bar's extra lines (in "Selected text on screen"), and how
+  the Paper view reads. Next is the Human Owner's run of the client checklist
+  in [os-ui/client/README.md](os-ui/client/README.md) on a fresh build of
+  `main` (`npm ci`, then `npm start`, in `os-ui/client`), which covers the
+  Code and Paper views, then S8. Step 2's Idea, Skeleton, and Assets views
+  are disabled tabs in mockup C, so each needs a clickable mockup the Human
+  Owner chooses before it is built. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
