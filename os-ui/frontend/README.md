@@ -140,6 +140,16 @@ cd os-ui/frontend
 npm test
 ```
 
+A test file that has not finished after 10 minutes fails with its name
+(`--test-timeout=600000`; the slowest, `server/codeGit.test.ts`, takes under
+a minute on CI, and its own per-test allowances add up to under 9 minutes).
+On Windows, `server/testGuard.ts` (preloaded with `--import`, here and in
+`os-ui/client`'s `npm test`) also prints `# [test-guard]` lines when a file's
+process stays up 5 s after its tests are done, or is still running a minute
+before that limit: the event loop's resources, child processes, unfinished
+tests, and the git on PATH. `OS_UI_TEST_GUARD=1` turns those lines on
+elsewhere.
+
 The layout itself is tested end to end in the desktop client
 (`os-ui/client/e2e/app.test.ts`, `npm run test:e2e` there).
 

@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"server/**/*.test.ts\" \"src/**/*.test.ts\" \"plugins/**/*.test.ts\""
+    "test": "node --test --test-timeout=600000 --import ./server/testGuard.ts \"server/**/*.test.ts\" \"src/**/*.test.ts\" \"plugins/**/*.test.ts\""
   },
   "dependencies": {
     "react": "^18.3.1",
