@@ -197,6 +197,26 @@ export function nestedFormsPdf(depth: number): Buffer {
   return pdfFile(objects);
 }
 
+/**
+ * Two pages: page 1 draws one full-page transparency group `count` times
+ * (each an offscreen canvas the size of the page, composited back), then the
+ * line "GROUPS-PAGE"; page 2 is one ordinary line, "AFTER-GROUPS". Slow to
+ * draw but small to hold: 2,000 took about 13 s to draw on macOS arm64, and
+ * 20,000, stopped at 15 s, peaked under 400 MB in the frame's process.
+ */
+export function transparencyGroupsPdf(count: number): Buffer {
+  return pdfFile([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /G 8 0 R >> /Font << /F1 5 0 R >> >> /Contents 6 0 R >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 7 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    { dict: "<< >>", stream: `${"/G Do\n".repeat(count)}BT /F1 18 Tf 72 740 Td (GROUPS-PAGE) Tj ET` },
+    { dict: "<< >>", stream: "BT /F1 18 Tf 72 740 Td (AFTER-GROUPS) Tj ET" },
+    { dict: "<< /Type /XObject /Subtype /Form /BBox [0 0 612 792] /Group << /S /Transparency /I true /K true >> /Resources << >> >>", stream: "0.5 g 0 0 612 792 re f" },
+  ]);
+}
+
 /** Page 1 one point square, page 2 14,400 points square (the largest PDF allows): at 640 px for page 1's width, page 2 is far taller than a scrolling column can be. */
 export function oddSizesPdf(): Buffer {
   return pdfFile([

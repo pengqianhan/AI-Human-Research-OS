@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
 import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
 import { PLUGIN_CSP } from "../src/main/protocol.ts";
-import { HIDDEN_RUNS, hiddenPdf, HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, manyPagesPdf, nestedFormsPdf, noPagesPdf, notAPdf, oddSizesPdf, passwordPdf, REMAP } from "./pdfFixtures.ts";
+import { HIDDEN_RUNS, hiddenPdf, HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, manyPagesPdf, nestedFormsPdf, noPagesPdf, notAPdf, oddSizesPdf, passwordPdf, REMAP, transparencyGroupsPdf } from "./pdfFixtures.ts";
 
 const CLIENT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = resolve(CLIENT, "../..");
@@ -1152,23 +1152,25 @@ describe("desktop client on a Research OS folder", () => {
     const pdfWorkers = () => page.workers().filter((w) => w.url().includes("pdf.worker.min.mjs"));
     renameSync(pdf, kept);
     try {
-      writeFileSync(pdf, nestedFormsPdf(20));
+      // 20,000 full-page transparency groups: about ten times the budget to draw here, at a peak under
+      // 400 MB in the frame's process (2^20 nested forms, as slow, took that process to about 3.2 GB).
+      writeFileSync(pdf, transparencyGroupsPdf(20_000));
       const started = Date.now();
       await paper.getByRole("button", { name: "Reload" }).click();
       await paper.getByText(/^Page [12] of 2$/).waitFor({ timeout: 30_000 });
       const ended: string[] = [];
       for (const w of pdfWorkers()) w.on("close", () => ended.push(w.url()));
-      // Page 1 (2^20 nested rectangles) passes the 15 s budget: it is stopped and says so.
+      // Page 1 passes the 15 s budget: it is stopped and says so.
       const note = paper.locator('.sheet[data-page="1"] .page-note');
       await note.filter({ hasText: "Page 1 took longer than 15 s to draw" }).waitFor({ timeout: 60_000 });
       const stoppedAfter = Date.now() - started;
       assert.ok(stoppedAfter < 40_000, `stopped ${stoppedAfter} ms after Reload`);
       assert.equal(await paper.locator('.sheet[data-page="1"] canvas.pg').count(), 0);
-      // The rest of the paper is drawn, by a fresh worker; the one stuck on page 1 is ended.
+      // The rest of the paper is drawn, by a fresh worker; the one that read page 1 is ended.
       await paper.locator('.sheet[data-page="2"] canvas.pg').waitFor({ timeout: 30_000 });
-      await paper.locator('.sheet[data-page="2"] .textLayer span').filter({ hasText: "AFTER-FORMS" }).waitFor();
+      await paper.locator('.sheet[data-page="2"] .textLayer span').filter({ hasText: "AFTER-GROUPS" }).waitFor();
       for (let i = 0; i < 100 && ended.length === 0; i++) await page.waitForTimeout(100);
-      assert.equal(ended.length, 1, "the worker stuck on page 1 was terminated");
+      assert.equal(ended.length, 1, "the worker that read page 1 was terminated");
       assert.equal(pdfWorkers().length, 1);
       assert.match((await paper.locator(".paperbar .hint").textContent())!, /^paper\/main\.pdf · 2 pages/);
     } finally {
