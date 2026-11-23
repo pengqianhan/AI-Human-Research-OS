@@ -407,11 +407,11 @@ async function openDocument(mine: number, at: Place): Promise<void> {
   }
   if (mine !== generation || bytes === null) return;
   const data = bytes;
-  const result = await opener.open((worker) => {
-    const pdfWorker = new lib.PDFWorker({ port: worker as Worker });
+  const result = await opener.open(
+    (worker) => new lib.PDFWorker({ port: worker as Worker }),
     // A copy: PDF.js hands its buffer to the worker, and a restart needs the bytes again.
-    return { pdfWorker, task: lib.getDocument({ ...DOCUMENT_OPTIONS, data: data.slice(), worker: pdfWorker }) };
-  });
+    (pdfWorker) => lib.getDocument({ ...DOCUMENT_OPTIONS, data: data.slice(), worker: pdfWorker }),
+  );
   if (mine !== generation || result.kind === "stale") return;
   if (result.kind === "timeout") {
     show(screen(slowWords(result.stage, OPEN_BUDGET_MS / 1000), () => void load()));

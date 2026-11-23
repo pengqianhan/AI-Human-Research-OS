@@ -68,10 +68,12 @@ export class Opener<Doc> {
   }
 
   /**
-   * Closes the document before, starts a worker, and opens a document on it
-   * with `make`, all within OPEN_BUDGET_MS. Never rejects.
+   * Closes the document before, starts a worker, wraps it for PDF.js with
+   * `wrap` (a PDFWorker), and opens a document on that with `load` (getDocument),
+   * all within OPEN_BUDGET_MS. Never rejects. If `load` throws, the wrapper is
+   * destroyed and the worker ended.
    */
-  async open(make: (worker: WorkerLike) => Made<Doc>): Promise<Opened<Doc>> {
+  async open<W extends { destroy(): void }>(wrap: (worker: WorkerLike) => W, load: (wrapped: W) => Made<Doc>["task"]): Promise<Opened<Doc>> {
     this.close();
     let stop = () => {};
     const stopped = new Promise<"closed">((resolve) => (stop = () => resolve("closed")));
@@ -99,10 +101,22 @@ export class Opener<Doc> {
         this.#end(live);
         return { kind: "failed", stage: "start", error: started.error };
       }
+      let pdfWorker: W;
+      try {
+        pdfWorker = wrap(started.worker);
+      } catch (error) {
+        this.#end(live);
+        return { kind: "failed", stage: "open", error };
+      }
       let made: Made<Doc>;
       try {
-        made = make(started.worker);
+        made = { pdfWorker, task: load(pdfWorker) };
       } catch (error) {
+        try {
+          pdfWorker.destroy();
+        } catch {
+          // already destroyed
+        }
         this.#end(live);
         return { kind: "failed", stage: "open", error };
       }

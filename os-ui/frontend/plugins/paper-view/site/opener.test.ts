@@ -72,6 +72,9 @@ function fakeDocument(opens: Promise<string>, destroys: Promise<void> = Promise.
   return { made, record };
 }
 
+/** What opener.open takes for a stand-in document: the wrapper (PDFWorker), then the loading task (getDocument). */
+const via = (d: { made: Made<string> }) => [() => d.made.pdfWorker, () => d.made.task] as const;
+
 describe("one document at a time, each in its own worker", () => {
   test("two opens at once: the first is stale and its worker ends; the second opens", async () => {
     const { clock } = manualClock();
@@ -82,13 +85,12 @@ describe("one document at a time, each in its own worker", () => {
       return w;
     }, clock);
     const docs: ReturnType<typeof fakeDocument>[] = [];
-    const make = (name: string) => () => {
+    const make = (name: string) => {
       const d = fakeDocument(Promise.resolve(name));
-      docs.push(d);
-      return d.made;
+      return [() => (docs.push(d), d.made.pdfWorker), () => d.made.task] as const;
     };
-    const first = opener.open(make("first"));
-    const second = opener.open(make("second"));
+    const first = opener.open(...make("first"));
+    const second = opener.open(...make("second"));
     assert.deepEqual(await first, { kind: "stale" });
     const opened = await second;
     assert.equal(opened.kind, "open");
@@ -111,8 +113,8 @@ describe("one document at a time, each in its own worker", () => {
     }, clock);
     const one = fakeDocument(Promise.resolve("one"));
     const two = fakeDocument(Promise.resolve("two"));
-    assert.equal((await opener.open(() => one.made)).kind, "open");
-    assert.equal((await opener.open(() => two.made)).kind, "open");
+    assert.equal((await opener.open(...via(one))).kind, "open");
+    assert.equal((await opener.open(...via(two))).kind, "open");
     await settle();
     assert.deepEqual(one.record, { taskDestroyed: true, pdfWorkerDestroyed: true });
     assert.equal(workers[0]!.ended, true);
@@ -126,7 +128,7 @@ describe("nothing waits forever", () => {
     const starting = later<FakeWorker>();
     const opener = new Opener<string>(() => starting.promise, clock);
     let outcome: unknown = null;
-    void opener.open(() => fakeDocument(Promise.resolve("x")).made).then((o) => (outcome = o));
+    void opener.open(...via(fakeDocument(Promise.resolve("x")))).then((o) => (outcome = o));
     await advance(OPEN_BUDGET_MS - 1);
     assert.equal(outcome, null);
     await advance(1);
@@ -143,7 +145,7 @@ describe("nothing waits forever", () => {
     const opener = new Opener<string>(async () => worker, clock);
     const stuck = fakeDocument(new Promise<string>(() => {}), new Promise<void>(() => {}));
     let outcome: unknown = null;
-    void opener.open(() => stuck.made).then((o) => (outcome = o));
+    void opener.open(...via(stuck)).then((o) => (outcome = o));
     await settle(); // the worker starts; the document is asked for
     await advance(OPEN_BUDGET_MS);
     assert.deepEqual(outcome, { kind: "timeout", stage: "open" });
@@ -163,8 +165,8 @@ describe("nothing waits forever", () => {
       return w;
     }, clock);
     const hung = fakeDocument(Promise.resolve("hung"), new Promise<void>(() => {}));
-    assert.equal((await opener.open(() => hung.made)).kind, "open");
-    const fresh = await opener.open(() => fakeDocument(Promise.resolve("fresh")).made);
+    assert.equal((await opener.open(...via(hung))).kind, "open");
+    const fresh = await opener.open(...via(fakeDocument(Promise.resolve("fresh"))));
     assert.equal(fresh.kind === "open" && fresh.doc, "fresh");
     assert.equal(workers[0]!.ended, false);
     await advance(RELEASE_GRACE_MS);
@@ -175,19 +177,25 @@ describe("nothing waits forever", () => {
   test("failures are outcomes, never rejections: a worker that fails to start, getDocument throwing, a document that does not parse", async () => {
     const { clock } = manualClock();
     const broken = new Opener<string>(() => Promise.reject(new Error("the worker failed to load")), clock);
-    const outcome = await broken.open(() => fakeDocument(Promise.resolve("x")).made);
+    const outcome = await broken.open(...via(fakeDocument(Promise.resolve("x"))));
     assert.equal(outcome.kind === "failed" && outcome.stage, "start");
     const worker = fakeWorker("w");
     const opener = new Opener<string>(async () => worker, clock);
-    const thrown = await opener.open(() => {
-      throw new Error("PDFWorker.create - the worker is being destroyed.");
-    });
+    // getDocument throwing after the PDFWorker was made: the PDFWorker is destroyed, the worker ended.
+    let wrapperDestroyed = false;
+    const thrown = await opener.open(
+      () => ({ destroy: () => void (wrapperDestroyed = true) }),
+      () => {
+        throw new Error("PDFWorker.create - the worker is being destroyed.");
+      },
+    );
     assert.equal(thrown.kind === "failed" && thrown.stage, "open");
     await settle();
+    assert.equal(wrapperDestroyed, true, "the PDFWorker made for it is destroyed");
     assert.equal(worker.ended, true);
     const invalid = Object.assign(new Error("Invalid PDF structure."), { name: "InvalidPDFException" });
     const bad = fakeDocument(Promise.reject(invalid));
-    const failed = await opener.open(() => bad.made);
+    const failed = await opener.open(...via(bad));
     assert.equal(failed.kind === "failed" && failed.error, invalid);
     assert.equal(bad.record.taskDestroyed, true);
   });
