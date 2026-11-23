@@ -545,6 +545,7 @@ describe("desktop client on a Research OS folder", () => {
     const shown = chat.locator("[data-reference-preview]");
     await shown.filter({ hasText: "About Code/README.md:3" }).waitFor({ timeout: 5000 }); // the new chip's text is shown without a click
     assert.equal(await shown.textContent(), sent);
+    assert.equal(await chat.locator("[data-reference-overflow]").count(), 0, "a text that fits its box says nothing about scrolling");
     assert.equal(await chips.first().getAttribute("title"), sent);
     assert.equal(await bar.count(), 0, "asking clears the selection");
     // The cursor moves to the composer on the next frame.
@@ -578,6 +579,31 @@ describe("desktop client on a Research OS folder", () => {
     const left = await chips.allTextContents();
     assert.equal(left.length, 1);
     assert.ok(left[0]!.startsWith(short), left[0]);
+    // A long quote: its text scrolls in its box, and a line under it says so.
+    await code.getByRole("button", { name: "Files", exact: true }).click();
+    await code.locator(".tnode").filter({ hasText: /^README\.md$/ }).first().click();
+    await code.locator('.row[data-line="40"]').waitFor();
+    await page.waitForTimeout(1100); // the workspace takes at most 10 selections a second from a view
+    await code.evaluate(() => {
+      const rows = document.querySelectorAll(".code-in .row");
+      const first = rows[0]!.querySelector(".tx")!;
+      const last = rows[39]!.querySelector(".tx")!;
+      const range = document.createRange();
+      range.setStart(first.firstChild!, 0);
+      range.setEnd(last.firstChild!, last.textContent!.length);
+      const selection = getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      first.closest(".code-in")!.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+    });
+    await bar.getByText("Code/README.md:1–40", { exact: true }).waitFor();
+    await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+    await chat.locator("[data-reference-preview]").filter({ hasText: "About Code/README.md:1–40" }).waitFor();
+    const overflow = chat.locator("[data-reference-overflow]");
+    await overflow.waitFor({ timeout: 5000 });
+    assert.match((await overflow.textContent()) ?? "", /^\d+ lines · [\d,]+ characters — scroll to read all of it$/);
+    await shot(page, "7-long-quote-scroll-note");
+
     assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
   });
 

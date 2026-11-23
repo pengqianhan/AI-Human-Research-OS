@@ -307,14 +307,19 @@ Status on 2026-11-23:
     down, and at most 10 a second per frame (past that the bar is hidden, never
     left stale). The rule is that what Send passes is exactly what the user can
     read in the composer ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)):
-    in a label every run of white space (`\p{Zs}` and tab) becomes one space
-    and the ends are trimmed, before the cap; the result must be 1 to 200
-    characters with no line break (CR, LF, VT, FF, NEL, U+2028, U+2029) and no
+    the host never rewrites a label: it shows and sends it exactly as the page
+    posted it, or ignores the message. A label must be 1 to 200 characters, not
+    blank, with no tab, no space character other than U+0020 (U+00A0, U+2000 to
+    U+200A, U+3000 and the rest of `\p{Zs}`), no line break (CR, LF, VT, FF, NEL, U+2028, U+2029) and no
     invisible character (`\p{Cc}`, `\p{Cf}`, `\p{Default_Ignorable_Code_Point}`
     and U+2800: zero-width characters, U+2060, U+FEFF, the soft hyphen, bidi
     controls, U+FFF9-FFFB, tag characters, variation selectors, Hangul fillers,
     the combining grapheme joiner, the Braille blank), or the message is
-    ignored; homoglyphs are allowed, since a real file can be named so. A quote
+    ignored; homoglyphs are allowed, since a real file can be named so. Runs of
+    ASCII spaces pass unchanged (`Code/a  b.md` and `Code/a b.md` are two
+    files), so blank padding with them is the page's business; the Code view
+    marks the refused characters in a name as `⟨U+XXXX⟩`, so such a file
+    still gets a label. A quote
     of at most 2,000 characters keeps its spaces, has every line break made LF,
     so every line gets its `> `, and every such invisible character but tab
     shown as a marker (`⟨U+200B⟩`), except U+FE0F right after an emoji
@@ -332,7 +337,8 @@ Status on 2026-11-23:
     ask bar shows the start of the quote (up to 160 characters, line breaks as
     `↵`) and its size; a chip just added opens its "Sent before your message,
     exactly:" text under the chips at once (the newest opens, the one before
-    closes), scrollable when long. Clicking a chip (or Enter or Space on it)
+    closes), scrollable when long, with a line under it giving its size and
+    saying it scrolls whenever it is taller than its box. Clicking a chip (or Enter or Space on it)
     opens or closes it; a chip with a quote says how many lines it carries, and
     the tooltip shows the text too. This departs from mockup C for that reason
     and awaits the Human Owner's approval. Ask adds the reference the bar showed

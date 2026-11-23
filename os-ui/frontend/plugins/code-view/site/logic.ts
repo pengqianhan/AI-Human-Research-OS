@@ -142,9 +142,11 @@ export interface Selection {
 
 /*
  * Labels are one line of visible text (the host refuses anything else): a
- * line break, control or format character in a name shows as a marker naming
- * it, "⟨U+200B⟩" (oneLine, site-kit's visibleName); a label longer than the
- * host takes is cut from the left (clipLabel), so a file's own name stays.
+ * line break, an invisible character, or a space other than U+0020 in a name
+ * (all legal in a file name) shows as a marker naming it, "⟨U+200B⟩" (oneLine,
+ * site-kit's visibleName). Plain spaces stay as they are: the path is the
+ * file's. A label longer than the host takes is cut from the left
+ * (clipLabel), so a file's own name stays.
  */
 
 /** A file of the project, by its path relative to the project ("Code/README.md"). */

@@ -74,6 +74,8 @@ describe("the selection's limits", () => {
     assert.ok(clipLabel(long).startsWith("…") && clipLabel(long).endsWith("d/file.py"));
     assert.equal(visibleName("a\nb\u200bc\u202ed"), "a⟨U+000A⟩b⟨U+200B⟩c⟨U+202E⟩d");
     assert.equal(visibleName(MARKUP), MARKUP, "markup stays text for the host to show as text");
+    // Spaces other than U+0020, which the host refuses in a label, are marked; plain spaces stay (a path's own).
+    assert.equal(visibleName(`a  b${String.fromCodePoint(0x00a0)}c${String.fromCodePoint(0x3000)}d`), "a  b⟨U+00A0⟩c⟨U+3000⟩d");
   });
 
   test("only the parent window, at the app's origin, clears the selection", () => {
