@@ -18,6 +18,24 @@ const OS_UI = join(SITE, "../../../..");
 const README = readFileSync(join(VENDOR, "README.md"), "utf8");
 const sha256 = (file: string) => createHash("sha256").update(readFileSync(join(VENDOR, file))).digest("hex");
 
+/** getDocument's own source in the build (from its definition to the loading-task class after it) and the name of its argument. */
+function getDocumentBody(lib: string): { body: string; param: string } {
+  const start = lib.indexOf("function getDocument(");
+  const end = lib.indexOf("class PDFDocumentLoadingTask", start);
+  assert.ok(start >= 0 && end > start, "getDocument is found in pdf.min.mjs");
+  const body = lib.slice(start, end);
+  const param = /^function getDocument\(([A-Za-z_$][\w$]*)/.exec(body)?.[1];
+  assert.ok(param !== undefined, "getDocument names its argument");
+  return { body, param };
+}
+
+/** The options of `names` that getDocument does not read as `<argument>.<name>`. */
+function unread(lib: string, names: readonly string[]): string[] {
+  const { body, param } = getDocumentBody(lib);
+  const own = param.replace(/\$/g, "\\$");
+  return names.filter((name) => !new RegExp(`(^|[^\\w$])${own}\\.${name}\\b`).test(body));
+}
+
 /** The README's table: file name → SHA-256. */
 function recorded(): Map<string, string> {
   const rows = [...README.matchAll(/^\| `([^`]+)` \| `[^`]+` \| `([0-9a-f]{64})` \|$/gm)];
@@ -53,10 +71,20 @@ describe("the vendored PDF.js", () => {
     }
   });
 
-  test("this PDF.js reads every option the page sets, and has no isEvalSupported", () => {
+  test("this PDF.js's getDocument reads every option the page sets from its argument, takes the page's worker, and has no isEvalSupported", () => {
     const lib = readFileSync(join(VENDOR, "pdf.min.mjs"), "utf8");
-    for (const option of Object.keys(DOCUMENT_OPTIONS)) assert.match(lib, new RegExp(`\\.${option}\\b`), option);
+    assert.deepEqual(unread(lib, [...Object.keys(DOCUMENT_OPTIONS), "data"]), []);
+    assert.match(getDocumentBody(lib).body, /^function getDocument\(([\w$]+)=\{\}\)\{[\s\S]*\b\1\.worker instanceof PDFWorker/, "getDocument uses a PDFWorker it is given");
     assert.doesNotMatch(lib, /isEvalSupported/);
+  });
+
+  test("that check fails when getDocument stops reading an option, as in a build that renamed it", () => {
+    const lib = readFileSync(join(VENDOR, "pdf.min.mjs"), "utf8");
+    const { param } = getDocumentBody(lib);
+    // A copy in memory only: the vendored file is never changed.
+    const renamed = lib.split(`${param}.disableFontFace`).join(`${param}.disableFontFaces`).split(`${param}.verbosity`).join(`${param}.logLevel`);
+    assert.notEqual(renamed, lib);
+    assert.deepEqual(unread(renamed, ["disableFontFace", "verbosity", "useWasm"]), ["disableFontFace", "verbosity"]);
   });
 
   test("no package.json or lockfile in os-ui names pdfjs-dist or its native dependency", () => {
