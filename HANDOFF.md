@@ -103,8 +103,10 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       ID showed the first one's evidence; a lone carriage return shifted
       every later line number) and nine smaller ones are fixed on branch
       `step2-skeleton-review-fixes`, whose pull request follows #50.
-      Next are 2.2 (Assets) and 2.3 (Idea); both build on `md-kit.ts`, so
-      they start from that branch once it is merged.
+      Those fixes are merged too (PR #51). 2.2, the Assets view, is built on
+      branch `step2-assets-view` and waits, as a draft pull request, for its
+      independent review; a pull request that still needs review is opened as
+      a draft from now on. Next is 2.3 (Idea), then 2.4.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
