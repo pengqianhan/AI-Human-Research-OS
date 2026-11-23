@@ -63,6 +63,43 @@ describe("the count of elements an SVG draws through <use>", () => {
     assert.equal(count(svg(`${target}<use data-href="#a" xhref="#a"/>`)), 1 + 4 + 1);
   });
 
+  test("a picture inside the SVG as a data: URL is not drawn without a click, unless it is a PNG, JPEG, GIF, or WebP (recheck: data-wrap)", () => {
+    const WORDS = "This SVG holds another picture the view cannot check; drawing it may freeze the view.";
+    const inner = Buffer.from(bomb(6, 10)).toString("base64");
+    // The recheck's data-wrap: the 6×10 bomb as an <image>'s data: URL.
+    assert.deepEqual(svgVerdict(svg(`<image width="100" height="100" href="data:image/svg+xml;base64,${inner}"/>`), false), { draw: false, words: WORDS });
+    // Any attribute of any element, in any case, after white space, escaped, or broken by a tab or line break (a URL drops them).
+    for (const attr of [
+      `xlink:href="data:image/svg+xml,&lt;svg/&gt;"`,
+      `href="  DATA:Image/SVG+XML;base64,${inner}"`,
+      `href="&#100;ata:image/svg+xml,x"`,
+      `href="da&#10;ta:image/svg+xml,x"`,
+      `href="data:,x"`,
+      `href="data:text/html,x"`,
+      `href="data:image/pngx;base64,AAAA"`,
+      `src="data:image/svg+xml,x"`,
+      `style="fill: url(data:image/svg+xml;base64,${inner})"`,
+      `style="fill: URL( 'data:image/svg+xml,x')"`,
+      `style="fill: url(&quot; data:image/svg+xml,x&quot;)"`,
+      `fill="url(data:image/svg+xml,x#p)"`,
+    ]) {
+      assert.deepEqual(svgExpansion(svg(`<image ${attr}/>`)), { kind: "embedded" }, attr);
+      assert.deepEqual(svgVerdict(svg(`<feImage ${attr}/>`), false), { draw: false, words: WORDS }, attr);
+    }
+    // A raster, as matplotlib embeds one, draws without a click; so does a url() of the document's own.
+    for (const attr of [
+      `xlink:href="data:image/png;base64,&#10;iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk"`,
+      `href="data:image/jpeg,x"`,
+      `href=" Data:Image/GIF;base64,R0lGOD"`,
+      `href="data:image/webp;base64,UklGR"`,
+      `style="fill: url(#gradient)"`,
+      `style="fill: url('data:image/png;base64,AAAA')"`,
+      `title="no data: here"`,
+    ]) {
+      assert.deepEqual(svgVerdict(svg(`<image ${attr}/>`), false), { draw: true }, attr);
+    }
+  });
+
   test("a reference cycle is refused, through itself, an ancestor, or another element", () => {
     for (const body of [`<use id="a" href="#a"/>`, `<g id="a"><g><use href="#a"/></g></g>`, `<g id="a"><use href="#b"/></g><g id="b"><use href="#a"/></g>`]) {
       assert.deepEqual(svgExpansion(svg(body)), { kind: "cycle" }, body);
@@ -121,7 +158,12 @@ describe("the count of elements an SVG draws through <use>", () => {
   <path id="m0" d="M 0 3 C 0.8 3 1.5 2.7 2.1 2.1 z" style="stroke: #1f77b4"/>
   ${glyphs}
  </defs>
- <g id="figure_1"><g id="axes_1">${labels}${points}</g></g>
+ <g id="figure_1"><g id="axes_1">
+  <image xlink:href="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAfEAAAFzCAYAAAD2Lr4cAAAABHNCSVQICAgIfAhkiAAAIABJREFU
+eJzt3XuMXGd5x/HfM7Prtb3r9XrX6/Xa3ovXu/bG3tjxJXHsOHESx3ESJ7ZJAkmTQEKhpRUUqBBC
+" id="image3b3e0ed0d2" transform="scale(1 -1) translate(0 -266.4)" x="57.6" y="-41.472" width="357.12" height="266.4"/>
+  ${labels}${points}</g></g>
 </svg>
 `;
     const elements = count(figure);
@@ -161,6 +203,10 @@ describe("the count of elements an SVG draws through <use>", () => {
       ["n '<' in a comment", (n) => svg(`<!--${"<".repeat(n)}-->`)],
       ["entities in an id", (n) => svg(`<g id="${"&#97;".repeat(n / 5)}"/>`)],
       ["one <use> with n / 12 prefixed hrefs", (n) => svg(`<g id="a"><rect/></g><use ${'x:href="#a" '.repeat(n / 12)}/>`)],
+      ["n / 40 images, each a data:image/png", (n) => svg('<image href="data:image/png;base64,AAAA"/>'.repeat(n / 40))],
+      ["one style of n / 4 'url('", (n) => svg(`<rect style="${"url(".repeat(n / 4)}"/>`)],
+      ["'url(' with n spaces and a quote after it", (n) => svg(`<rect style="url(${" ".repeat(n)}'${" ".repeat(n / 8)}x"/>`)],
+      ["n / 5 '&#10;' before data:", (n) => svg(`<image href="${"&#10;".repeat(n / 5)}data:image/png,x"/>`)],
     ];
     for (const [name, make] of cases) {
       assert.ok(make(4 * MiB).length >= 4 * MiB * 0.95, `${name}: ${make(4 * MiB).length}`);

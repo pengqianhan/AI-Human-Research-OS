@@ -18,9 +18,14 @@
  * which could define entities) is refused, as is a reference cycle or a
  * count over the bound. The human may still draw it with Show.
  *
- * It bounds <use> expansion only: other costly SVG (filters, patterns, an
- * embedded data: picture) and a file changed between the check and the
- * draw are declared limits (os-ui/PLUGINS.md, the Assets view).
+ * Besides <use> expansion, it refuses another picture held inside as a
+ * data: URL, which it cannot look into (one wrapper would hide a bomb): an
+ * attribute's value, or a url( in one (a style, a fill), that is a data: URL
+ * of any type but PNG, JPEG, GIF, or WebP (XML character references are read
+ * first). Declared limits (os-ui/PLUGINS.md, the Assets view): a data: URL
+ * inside a <style> sheet, or written with CSS escapes in a style (`\64 ata:`);
+ * HTML inside foreignObject; filters and patterns; a file changed between the
+ * check and the draw.
  */
 
 export const SVG_CHECK = {
@@ -36,7 +41,9 @@ export const SATURATED = 1e12;
 export type SvgCount =
   | { kind: "count"; elements: number }
   | { kind: "unreadable"; why: string }
-  | { kind: "cycle" };
+  | { kind: "cycle" }
+  /** Another picture inside, as a data: URL the check cannot look into (recheck: data-wrap). */
+  | { kind: "embedded" };
 
 /** XML's character references and its five named entities, in an attribute's value. */
 function unescape(value: string): string | null {
@@ -59,6 +66,33 @@ function unescape(value: string): string | null {
     return String.fromCodePoint(code);
   });
   return bad ? null : out;
+}
+
+/** After "data:", the rasters an SVG may hold and still be drawn without a click: a browser decodes them, it does not draw them as SVG. */
+const RASTER = /^image\/(?:png|jpeg|gif|webp)[;,]/;
+
+/**
+ * Whether an attribute's value (unescaped) holds a picture as a data: URL
+ * the check cannot look into (recheck: data-wrap): the value itself, after
+ * leading white space and control characters, or any url( in it (a style, a
+ * fill), after white space and a quote, is a data: URL of a type other than
+ * RASTER's. Case is ignored, and tabs and line breaks are dropped first, as
+ * a URL's parser drops them. One pass over the value.
+ */
+function holdsPicture(value: string): boolean {
+  const v = value.replace(/[\t\n\r]/g, "").toLowerCase();
+  const isData = (at: number) => v.startsWith("data:", at) && !RASTER.test(v.slice(at + 5, at + 20));
+  let k = 0;
+  while (k < v.length && v.charCodeAt(k) <= 32) k++;
+  if (isData(k)) return true;
+  for (let at = v.indexOf("url("); at !== -1; at = v.indexOf("url(", at + 4)) {
+    let j = at + 4;
+    while (j < v.length && v.charCodeAt(j) <= 32) j++;
+    if (v.charCodeAt(j) === 34 || v.charCodeAt(j) === 39) j++;
+    while (j < v.length && v.charCodeAt(j) <= 32) j++;
+    if (isData(j)) return true;
+  }
+  return false;
 }
 
 const isSpace = (c: number) => c === 32 || c === 9 || c === 10 || c === 13;
@@ -160,12 +194,14 @@ export function svgExpansion(text: string): SvgCount {
       if (close === -1) return fail("an attribute's value is not closed");
       const raw = text.slice(j + 1, close);
       j = close + 1;
+      const value = raw.includes("&") ? unescape(raw) : raw;
+      if (value === null) return fail("an attribute holds an entity the check does not know");
+      // Any attribute of any element: a picture inside as a data: URL is not looked into (recheck: data-wrap).
+      if (holdsPicture(value)) return { kind: "embedded" };
       // On a <use>, every attribute whose local name is href is a reference, whatever its prefix (x:href bound
       // to XLink draws too); with more than one, each target counts, more than a browser draws (recheck).
       const isRef = local === "use" && attr.slice(attr.lastIndexOf(":") + 1) === "href";
       if (attr === "id" || isRef) {
-        const value = unescape(raw);
-        if (value === null) return fail("an attribute holds an entity the check does not know");
         if (attr === "id") id ??= value;
         else {
           const url = value.trim();
@@ -244,6 +280,7 @@ export function svgVerdict(text: string | null, cut: boolean): SvgVerdict {
   if (text === null) return { draw: false, words: `This SVG is not UTF-8 text the view can check before drawing; ${cost}.` };
   const counted = svgExpansion(text);
   if (counted.kind === "cycle") return { draw: false, words: `This SVG refers to itself through <use>; ${cost}.` };
+  if (counted.kind === "embedded") return { draw: false, words: `This SVG holds another picture the view cannot check; ${cost}.` };
   if (counted.kind === "unreadable") return { draw: false, words: `The view could not check this SVG before drawing (${counted.why}); ${cost}.` };
   if (counted.elements > SVG_CHECK.elements) {
     const times = counted.elements >= SATURATED ? `more than ${SATURATED.toLocaleString("en-US")}` : counted.elements.toLocaleString("en-US");
