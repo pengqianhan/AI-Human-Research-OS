@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-Human Research OS · Step 2 mockups · Idea, Skeleton, Assets</title>
+<link rel="icon" href="data:,"><!-- an empty inline icon, so a static server is not asked for /favicon.ico -->
+<!--
+  Clickable mockup of three project views (Idea, Skeleton, Assets) for step 2.
+  Look and structure copy os-ui/mockups/step1/c-document.html (mockup C, chosen 2026-11-21);
+  the ask bar and reference chips follow the built app (os-ui/frontend/src/pages/WorkspacePage.tsx,
+  os-ui/frontend/src/components/AgentChat.tsx, os-ui/frontend/src/plugins/select.ts).
+  Project text, figures, and file excerpts are copied unchanged from projects-folder/nanochat_cpu/
+  into the data block near the end of this file. No network requests; open it from disk.
+-->
+<style>
+:root{
+  --bg:#f3eee5; --side:#ece5d8; --paper:#faf7f1; --card:#fffdf9; --ink:#1c1a17; --ink2:#4a453d;
+  --muted:#80786b; --faint:#b0a796; --line:rgba(70,55,30,.10); --line2:rgba(70,55,30,.18);
+  --accent:#1e5a56; --accent-ink:#164542; --accent-soft:#dcebe8; --accent-tint:#eef4f2;
+  --warn:#86581a; --warn-soft:#f3e6cc; --sample:#7a5a1e; --sample-bg:#f1e5cb;
+  --sh1:0 1px 2px rgba(60,44,20,.07),0 1px 1px rgba(60,44,20,.04);
+  --sh2:0 1px 3px rgba(60,44,20,.06),0 10px 26px rgba(60,44,20,.07);
+  --sh3:0 4px 10px rgba(60,44,20,.08),0 20px 44px rgba(60,44,20,.11);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --r:14px; --sbw:192px;
+  /* node kinds (Idea view) */
+  --kq:#3a5a8c; --kh:#7b4f86; --ke:#1e5a56; --kr:#8a6418; --kc:#9a4030;
+  /* link words (Idea view) */
+  --l-mot:#a07a2c; --l-tests:#3a5a8c; --l-sup:#3d7a3a; --l-ref:#b0412e; --l-from:#a89c86;
+  /* mockup-only chrome */
+  --mk-ink:#5b4416; --mk-line:#b8955a; --mk-bg:#f6edd6;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button{font:inherit;color:inherit}
+code,.mono{font-family:var(--mono);font-size:.92em}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.sm{width:14px;height:14px}
+
+/* ================= mockup-only strip (not part of the app) ================= */
+.mock{flex:none;display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding:7px 14px;background:repeating-linear-gradient(135deg,#efe2c2 0 9px,#f4ead3 9px 18px);border-bottom:2px dashed var(--mk-line);color:var(--mk-ink);font:12.5px/1.35 var(--sans);position:relative;z-index:20}
+.mock-tag{display:flex;flex-direction:column;gap:1px;min-width:0;flex:none}
+.mock-tag b{font:800 10.5px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase}
+.mock-tag span{font-size:11px;opacity:.85}
+.mock-q{font:700 13px/1.3 var(--sans);flex:0 1 250px;min-width:180px}
+.mock-q small{display:block;font:500 11.5px/1.3 var(--sans);opacity:.88}
+.mock-opts{display:flex;gap:8px;flex:1 1 560px;min-width:0;align-items:stretch}
+.mock-opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 9px;align-items:center;text-align:left;border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:10px;padding:4px 11px 5px 7px;cursor:pointer;flex:1 1 0;max-width:360px;min-width:0;color:var(--mk-ink)}
+.mock-opt:hover{background:#fffaf0}
+.mock-opt .L{grid-row:1/3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:800 13px var(--sans);background:#efe2c2;color:var(--mk-ink)}
+.mock-opt .t{font:700 12.5px/1.25 var(--sans)}
+.mock-opt .d{font:12px/1.3 var(--sans);opacity:.9}
+.mock-opt.on{border-style:solid;border-color:var(--mk-ink);background:#fffaf0;box-shadow:0 0 0 2px rgba(91,68,22,.16)}
+.mock-opt.on .L{background:var(--mk-ink);color:#fbf3df}
+.mock-one{font:12.5px/1.35 var(--sans);max-width:620px}
+.mock-btn{border:1.5px solid var(--mk-ink);background:#fffaf0;color:var(--mk-ink);border-radius:9px;padding:6px 11px;font:700 12px var(--sans);cursor:pointer;white-space:nowrap;flex:none;align-self:center}
+.mock-btn:hover{background:#fff}
+
+.mock-modal{position:fixed;inset:0;background:rgba(40,30,10,.38);display:grid;place-items:center;z-index:60;padding:24px}
+.mock-panel{width:min(1040px,100%);max-height:100%;display:flex;flex-direction:column;background:var(--mk-bg);border:2px dashed var(--mk-line);border-radius:14px;box-shadow:var(--sh3);color:var(--mk-ink);overflow:hidden}
+.mock-panel header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1.5px dashed var(--mk-line);background:repeating-linear-gradient(135deg,#efe2c2 0 9px,#f4ead3 9px 18px)}
+.mock-panel header h2{font:700 14px var(--sans);margin:0;flex:1}
+.mock-panel .body{overflow:auto;padding:14px 18px 18px;font:13px/1.5 var(--sans)}
+.mock-panel p{margin:0 0 10px;max-width:90ch}
+.mock-panel pre{margin:0 0 14px;background:#fffdf7;border:1px solid rgba(91,68,22,.25);border-radius:9px;padding:10px 12px;font:11.5px/1.55 var(--mono);color:#2a2315;overflow:auto;white-space:pre}
+.mock-panel h3{font:700 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;margin:16px 0 6px}
+.mock-panel ul{margin:0 0 8px;padding-left:18px}
+.mock-panel li{margin:0 0 3px}
+
+/* ================= app frame (mockup C) ================= */
+.app{display:grid;grid-template-columns:var(--sbw) minmax(0,1fr);flex:1;min-height:0;transition:grid-template-columns .18s ease}
+.app.sb-collapsed{--sbw:62px}
+.sidebar{background:var(--side);display:flex;flex-direction:column;gap:2px;padding:14px 10px 12px;min-height:0;overflow:hidden auto;box-shadow:inset -1px 0 0 var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#f6f1e7;display:grid;place-items:center;flex:none}
+.brand-mark .ic{width:17px;height:17px;stroke-width:1.6}
+.brand-text{font:500 15px/1.12 var(--serif);letter-spacing:.005em;color:var(--ink)}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:9px;background:none;color:var(--ink2);font:500 13.5px var(--sans);cursor:pointer;text-align:left;white-space:nowrap;position:relative}
+.nav-btn:hover{background:rgba(60,45,20,.06)}
+.nav-btn.active{background:var(--card);color:var(--ink);box-shadow:var(--sh1)}
+.nav-btn.active .ic{color:var(--accent)}
+.nav-btn .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.qa-mark{width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-ink);font:700 10px/18px var(--sans);text-align:center;flex:none}
+.sec-label{font:600 10.5px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:18px 10px 6px}
+.spacer{flex:1;min-height:12px}
+.mock-id{font:11px/1.35 var(--sans);color:var(--faint);padding:8px 10px 4px}
+.badge{font:700 9.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:99px;background:var(--warn-soft);color:var(--warn);white-space:nowrap;flex:none}
+.app.sb-collapsed .sidebar .lbl,.app.sb-collapsed .brand-text,.app.sb-collapsed .sec-label,.app.sb-collapsed .mock-id,.app.sb-collapsed .sidebar .badge{display:none}
+.app.sb-collapsed .nav-btn{justify-content:center;padding:9px 0}
+.app.sb-collapsed .brand{justify-content:center;padding:4px 0 18px}
+.app.sb-collapsed .sec-gap{height:14px}
+.app.sb-collapsed #sbToggle .ic{transform:rotate(180deg)}
+.main{position:relative;min-width:0;min-height:0;overflow:hidden}
+.screen{position:absolute;inset:0;overflow:auto}
+
+/* ---------- shared pieces ---------- */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;border:0;background:var(--card);box-shadow:var(--sh1),inset 0 0 0 1px var(--line);color:var(--ink);font:500 13px var(--sans);cursor:pointer;white-space:nowrap}
+.btn:hover{box-shadow:var(--sh2),inset 0 0 0 1px var(--line2)}
+.btn.small{padding:5px 10px;font-size:12.5px}
+.sample{display:inline-flex;align-items:center;gap:5px;font:700 10px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--sample);background:var(--sample-bg);padding:4px 8px;border-radius:99px;white-space:nowrap;flex:none}
+.sample::before{content:"";width:6px;height:6px;border-radius:50%;border:1.5px dashed currentColor}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 11.5px/1 var(--sans);padding:5px 9px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink);white-space:nowrap}
+.pill.neutral{background:rgba(60,45,20,.06);color:var(--ink2)}
+.agent-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 7px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink);font:500 12px var(--sans);white-space:nowrap}
+.agent-chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.src-note{font:11.5px var(--sans);color:var(--faint)}
+
+/* ---------- messages + composer ---------- */
+.sample-band{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font:12px/1.4 var(--sans);color:var(--sample);background:#f7efdc;border-radius:9px;padding:7px 10px;margin-bottom:14px}
+.thread .sample-band{position:sticky;top:0;z-index:1;box-shadow:0 6px 10px -6px rgba(60,44,20,.18)}
+.msg{margin:0 0 14px}
+.msg .who{font:600 11px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.msg.user{text-align:right}
+.msg.user .bubble{display:inline-block;text-align:left;background:#ece4d5;border-radius:13px 13px 4px 13px;padding:8px 12px;max-width:88%;font-size:13.5px}
+.msg.agent .bubble{font:15px/1.6 var(--serif);color:var(--ink)}
+.msg.agent .bubble code{font-size:12.5px;background:rgba(60,45,20,.06);padding:1px 4px;border-radius:4px}
+.tool-row{display:flex;align-items:center;gap:7px;font:11.5px/1.4 var(--mono);color:var(--muted);background:rgba(60,45,20,.045);padding:6px 9px;border-radius:8px;margin:0 0 12px}
+.composer{display:flex;flex-direction:column;gap:6px;background:var(--paper);border-radius:12px;padding:8px 8px 8px 13px;box-shadow:inset 0 0 0 1px var(--line2)}
+.composer:focus-within{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.composer .crow{display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;min-width:0;border:0;background:transparent;resize:none;font:14px/1.5 var(--sans);color:var(--ink);outline:none;height:42px;padding:2px 0}
+.composer textarea::placeholder{color:var(--faint)}
+.send{width:32px;height:32px;border-radius:9px;border:0;background:var(--accent);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}
+.send .ic{width:16px;height:16px}
+.refs{display:flex;flex-direction:column;gap:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-width:0;padding:3px 3px 3px 8px;border-radius:7px;background:var(--accent-soft);color:var(--accent-ink);font:12px/1.3 var(--mono)}
+.chip-b{display:inline-flex;align-items:center;gap:5px;min-width:0;border:0;background:none;padding:0;color:inherit;font:inherit;cursor:pointer;border-radius:5px}
+.chip-b:hover{text-decoration:underline}
+.chip-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chip-n{flex:none;font:11px var(--sans);opacity:.75}
+.chip-x{border:0;background:none;color:inherit;width:20px;height:20px;border-radius:5px;display:grid;place-items:center;cursor:pointer;flex:none}
+.chip-x:hover{background:rgba(30,90,86,.14)}
+.chip-x .ic{width:12px;height:12px}
+.ref-hint{margin:0;font:11.5px/1.4 var(--sans);color:var(--muted)}
+.ref-prev{border-radius:8px;background:var(--card);padding:7px 10px 8px;box-shadow:inset 0 0 0 1px var(--line)}
+.ref-prev p{margin:0 0 4px;font:11.5px var(--sans);color:var(--muted)}
+.ref-prev pre{margin:0;max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:11.5px/1.45 var(--mono);color:var(--ink)}
+@keyframes flash{0%{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 6px rgba(30,90,86,.18)}100%{box-shadow:inset 0 0 0 1px var(--line2),0 0 0 0 rgba(30,90,86,0)}}
+.composer.flash{animation:flash 1.2s ease-out}
+
+/* ---------- workspace ---------- */
+.ws{display:flex;flex-direction:column;overflow:hidden}
+.ws-top{display:flex;align-items:center;gap:12px;padding:13px 22px 12px;flex:none;min-width:0;flex-wrap:wrap}
+.crumbs{display:flex;align-items:center;gap:6px;font:13px var(--sans);color:var(--muted)}
+.crumbs button{border:0;background:none;padding:2px 4px;border-radius:5px;color:var(--muted);cursor:pointer}
+.crumbs button:hover{color:var(--accent);background:var(--accent-tint)}
+.ws-title{font:500 22px/1.2 var(--serif);margin:0 4px 0 2px}
+.ws-top .right{margin-left:auto;display:flex;gap:10px;align-items:center;min-width:0}
+.ws-top .right .mono{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-body{flex:1;min-height:0;display:grid;grid-template-columns:clamp(300px,28vw,360px) minmax(0,1fr);gap:14px;padding:0 14px 14px}
+.ws.conv-collapsed .ws-body{grid-template-columns:44px minmax(0,1fr)}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh2)}
+.conv{min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.conv-head{display:flex;align-items:center;gap:8px;padding:12px 10px 10px 16px;flex:none}
+.conv-head h2{font:600 13.5px var(--sans);margin:0;flex:1;min-width:0}
+.icon-btn{width:30px;height:30px;border-radius:8px;border:0;background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none}
+.icon-btn:hover{background:rgba(60,45,20,.07);color:var(--ink)}
+.thread{flex:1;min-height:0;overflow:auto;padding:2px 16px 10px}
+.conv .composer{margin:0 12px 12px;flex:none}
+.strip{display:none;flex-direction:column;align-items:center;gap:12px;padding:12px 0;border:0;background:none;width:100%;height:100%;cursor:pointer;color:var(--ink2)}
+.strip:hover{background:var(--accent-tint)}
+.strip .vert{writing-mode:vertical-rl;transform:rotate(180deg);font:600 12.5px var(--sans);letter-spacing:.02em}
+.strip .vert.s{font:700 9.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--sample);background:var(--sample-bg);padding:7px 3px;border-radius:99px}
+.strip-count{min-width:20px;height:20px;border-radius:99px;background:var(--accent);color:#fff;font:700 11px/20px var(--sans);text-align:center;padding:0 5px}
+.ws.conv-collapsed .conv>:not(.strip){display:none}
+.ws.conv-collapsed .strip{display:flex}
+.views{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative;container-type:inline-size}
+.tabs{display:flex;align-items:flex-end;gap:2px;padding:6px 14px 0;box-shadow:inset 0 -1px 0 var(--line);flex:none;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{display:inline-flex;align-items:center;gap:7px;padding:10px 11px 11px;border:0;border-bottom:2px solid transparent;background:none;font:500 13.5px var(--sans);color:var(--ink2);cursor:pointer;white-space:nowrap;flex:none}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .ro{margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:6px;font:12px var(--sans);color:var(--muted);white-space:nowrap;padding-left:8px;flex:none}
+.subbar{display:flex;align-items:center;gap:8px 12px;padding:9px 14px;flex:none;box-shadow:inset 0 -1px 0 var(--line);min-width:0;flex-wrap:wrap}
+.subbar .vt{font:600 13px var(--sans);color:var(--ink)}
+.subbar .vpath{font:12px var(--mono);color:var(--muted)}
+.subbar .hint{font:12px var(--sans);color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto}
+.subbar .snote{font:12px/1.35 var(--sans);color:var(--sample);min-width:0}
+.view{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* ---------- ask bar (built app: WorkspacePage.tsx) + toast ---------- */
+.askbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:#22211e;color:#f5efe4;padding:6px 6px 6px 14px;border-radius:99px;box-shadow:0 12px 32px rgba(30,20,5,.28);font:13px var(--sans);max-width:calc(100% - 36px);z-index:5}
+.askbar.wide{border-radius:18px;width:min(640px,calc(100% - 36px));padding:8px 6px 8px 14px}
+.ab-col{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.askbar .ref{font:12px var(--mono);opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ab-start{font:13px/1.4 var(--serif);color:#f5efe4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-word}
+.ab-size{font:11px var(--sans);opacity:.7}
+.askbar .go{display:inline-flex;align-items:center;gap:6px;background:#f5efe4;color:var(--accent-ink);border:0;border-radius:99px;padding:6px 13px;font:600 12.5px var(--sans);cursor:pointer;white-space:nowrap;flex:none}
+.askbar .go:hover{background:#fff}
+.askbar .x{border:0;background:none;color:#f5efe4;opacity:.7;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none}
+.askbar .x:hover{opacity:1;background:rgba(255,255,255,.1)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;background:#22211e;color:#f5efe4;padding:9px 16px;border-radius:10px;font:13px var(--sans);box-shadow:0 10px 30px rgba(30,20,5,.25);z-index:70;max-width:min(560px,90vw)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- stand-in tabs (built in step 1) ---------- */
+.standin{margin:34px auto;max-width:560px;padding:26px 30px;border-radius:var(--r);background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--line2)}
+.standin h3{font:500 22px var(--serif);margin:12px 0 8px}
+.standin p{font:15px/1.6 var(--serif);color:var(--ink2);margin:0 0 10px}
+
+/* ================= Idea view ================= */
+.kb{display:inline-grid;place-items:center;min-width:26px;height:19px;padding:0 6px;border-radius:6px;color:#fff;font:700 11px/19px var(--sans);letter-spacing:.02em;flex:none}
+.k-Q .kb,.kb.k-Q{background:var(--kq)} .k-H .kb,.kb.k-H{background:var(--kh)} .k-E .kb,.kb.k-E{background:var(--ke)} .k-R .kb,.kb.k-R{background:var(--kr)} .k-C .kb,.kb.k-C{background:var(--kc)}
+.st{display:inline-flex;align-items:center;gap:4px;font:600 10.5px/1 var(--sans);color:var(--ink2);white-space:nowrap}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.st.open,.st.planned{color:var(--muted)}
+.st.open::before,.st.planned::before{background:none;box-shadow:inset 0 0 0 1.5px var(--muted)}
+.st.refuted::before,.st.failed::before{background:var(--l-ref)}
+.kinds{display:flex;gap:4px 10px;flex-wrap:wrap;align-items:center;font:11.5px var(--sans);color:var(--ink2)}
+.kinds span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.kinds .none{color:var(--faint)}
+.idea-main{flex:1;min-height:0;display:flex;flex-direction:column}
+.canvas{flex:1;min-height:0;overflow:auto;position:relative;background:var(--paper)}
+/* the ask bar floats over the foot of the view: scrolling to an item keeps it above the bar */
+.canvas,.board,.doc-scroll,.sk2,.as-list,.as-prev{scroll-padding-bottom:116px;scroll-padding-top:8px}
+.gsizer{position:relative}
+.ginner{position:absolute;left:0;top:0;transform-origin:0 0}
+.glines{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.ln{fill:none;stroke-width:1.6;transition:opacity .12s}
+.ln.motivates{stroke:var(--l-mot)} .ln.tests{stroke:var(--l-tests);stroke-dasharray:5 4} .ln.supports{stroke:var(--l-sup)} .ln.refutes{stroke:var(--l-ref)} .ln.from{stroke:var(--l-from);stroke-dasharray:1.5 3.5;stroke-linecap:round}
+.ln.derived{stroke-opacity:.85}
+.has-open .ln{opacity:.16}
+.has-open .ln.hot{opacity:1;stroke-width:2.4}
+.elabel{position:absolute;transform:translate(-50%,-50%);font:700 10px/1 var(--sans);letter-spacing:.02em;padding:3px 6px;border-radius:99px;background:var(--card);box-shadow:var(--sh1),inset 0 0 0 1px currentColor;white-space:nowrap;pointer-events:none;z-index:3}
+.elabel.motivates{color:var(--l-mot)} .elabel.tests{color:var(--l-tests)} .elabel.supports{color:var(--l-sup)} .elabel.refutes{color:var(--l-ref)} .elabel.from{color:#7d7260}
+.gnode{position:absolute;display:flex;flex-direction:column;gap:4px;border:0;border-radius:10px;background:var(--card);box-shadow:var(--sh1),inset 0 0 0 1px var(--line2);padding:6px 9px 6px 11px;text-align:left;cursor:pointer;overflow:hidden;z-index:2;transition:opacity .12s,box-shadow .12s}
+.gnode::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.gnode.k-Q::before{background:var(--kq)} .gnode.k-E::before{background:var(--ke)} .gnode.k-R::before{background:var(--kr)} .gnode.k-C::before{background:var(--kc)} .gnode.k-H::before{background:var(--kh)}
+.gnode:hover{box-shadow:var(--sh2),inset 0 0 0 1px var(--line2)}
+.gn-top{display:flex;align-items:center;gap:6px;min-width:0}
+.gn-top .st{margin-left:auto}
+.gn-tx{font:12px/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ghead{position:absolute;display:flex;align-items:center;gap:6px;font:600 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.ghead .kb{min-width:20px;height:16px;font-size:10px;line-height:16px;padding:0 4px}
+.has-open .gnode{opacity:.42}
+.has-open .gnode.on,.has-open .gnode.near{opacity:1}
+.gnode.on{box-shadow:0 0 0 2px var(--accent),var(--sh2)}
+.gnode.picked,.bcard.picked{background:var(--accent-soft)}
+.glegend{position:absolute;padding:8px 10px;border-radius:10px;background:rgba(255,253,249,.92);box-shadow:inset 0 0 0 1px var(--line);font:11px/1.25 var(--sans);color:var(--ink2);z-index:1}
+.glegend b{display:block;font:600 10px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.glegend div{display:flex;align-items:center;gap:6px;margin:1px 0;white-space:nowrap;line-height:1.2}
+.glegend svg{width:26px;height:8px;flex:none;overflow:visible}
+.glegend .none{color:var(--faint)}
+/* columns variant */
+.board{flex:1;min-height:0;overflow:auto;position:relative;background:var(--paper);display:grid;grid-template-columns:minmax(150px,1fr) 30px repeat(3,minmax(150px,1fr));gap:0 26px;padding:12px 16px 112px;align-items:start}
+.bcol{display:flex;flex-direction:column;gap:9px;min-width:0;position:relative;z-index:1}
+.bcol h4{margin:0 0 2px;font:600 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+.bcol h4 .kb{min-width:20px;height:16px;font-size:10px;line-height:16px;padding:0 4px}
+.bcol.hyp{align-self:stretch;align-items:center}
+.hyp-none{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;padding:0;cursor:help;color:var(--faint);font:600 10px/1.2 var(--sans);text-align:center}
+.hyp-none .kb{opacity:.45;min-width:20px;height:16px;font-size:10px;line-height:16px;padding:0 4px}
+.hyp-rule{flex:1;width:0;border-left:1.5px dashed var(--line2);margin-top:4px;min-height:40px}
+.bcard{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;border:0;background:var(--card);border-radius:11px;box-shadow:var(--sh1),inset 0 0 0 1px var(--line);padding:8px 11px 9px;cursor:pointer;position:relative;transition:opacity .12s}
+.bcard:hover{box-shadow:var(--sh2),inset 0 0 0 1px var(--line2)}
+.bcard .gn-top .st{margin-left:auto}
+.bcard .tx{font:13.5px/1.42 var(--serif);color:var(--ink);overflow-wrap:break-word}
+.bcard .pt{font:11px/1.35 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.bcard .lk{display:none;align-self:flex-start;font:700 10px/1 var(--sans);padding:3px 7px;border-radius:99px;background:var(--card);box-shadow:inset 0 0 0 1px currentColor}
+.board.has-open .bcard{opacity:.4}
+.board.has-open .bcard.on,.board.has-open .bcard.near{opacity:1}
+.board.has-open .bcard.near .lk{display:inline-block}
+.bcard.on{box-shadow:0 0 0 2px var(--accent),var(--sh2)}
+.blines{position:absolute;left:0;top:0;pointer-events:none;z-index:0;overflow:visible}
+/* detail panel (both variants): on top, so the ask bar at the bottom never covers it */
+.ndetail{flex:none;height:156px;overflow:auto;box-shadow:inset 0 -1px 0 var(--line);padding:11px 18px 10px;background:var(--card)}
+.ndetail.has{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:4px 26px;align-content:start}
+.nd-empty{font:14.5px/1.55 var(--serif);color:var(--muted);margin:2px 0 0}
+.nd-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.nd-kind{font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.nd-text{font:16px/1.42 var(--serif);margin:0 0 6px;color:var(--ink)}
+.nd-grid{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 12px;font:12.5px/1.45 var(--sans);margin:0;align-content:start}
+.nd-grid dt{font:600 10px/2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+@container (max-width: 700px){
+  .ndetail{height:200px;padding-top:9px}
+  .ndetail.has{grid-template-columns:minmax(0,1fr)}
+  .ndetail .nd-note{display:none}
+  .nd-text{font-size:15px;margin-bottom:4px}
+  .nd-grid{grid-template-columns:84px minmax(0,1fr)}
+}
+.nd-grid dd{margin:0;min-width:0;color:var(--ink2)}
+.nd-grid code{font-size:12px}
+.lchip{display:inline-flex;align-items:center;gap:5px;margin:0 6px 4px 0;padding:2px 8px 2px 3px;border-radius:99px;border:0;background:rgba(60,45,20,.05);font:12px var(--sans);color:var(--ink2);cursor:pointer;box-shadow:inset 0 0 0 1px var(--line)}
+.lchip:hover{background:var(--accent-tint)}
+.lchip .kb{min-width:22px;height:17px;font-size:10px;line-height:17px;padding:0 4px}
+.lchip.derived{box-shadow:inset 0 0 0 1px var(--line2);background:none;border:1px dashed var(--faint);padding:1px 7px 1px 2px}
+.lchip .inf{font:italic 11px var(--sans);color:var(--muted)}
+.lw{font:600 12px var(--sans);color:var(--ink);margin-right:4px}
+.lgroup{display:inline-block;margin-right:12px;white-space:nowrap}
+.nd-note{font:11.5px/1.4 var(--sans);color:var(--muted);margin:6px 0 0}
+
+/* ================= Skeleton view ================= */
+.doc-scroll{flex:1;min-height:0;overflow:auto;background:var(--paper);padding:26px 24px 120px}
+.mddoc{max-width:760px;margin:0 auto;font:15px/1.6 var(--serif);color:var(--ink)}
+.mddoc h1{font:500 30px/1.2 var(--serif);margin:0 0 10px;letter-spacing:-.01em}
+.mddoc h2{font:500 21px/1.25 var(--serif);margin:28px 0 8px;padding-top:10px;box-shadow:inset 0 1px 0 var(--line)}
+.mddoc h3{font:600 13px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+.mddoc ul{margin:0 0 6px;padding-left:20px}
+.mddoc ol{margin:2px 0 0;padding-left:22px}
+.mddoc li{margin:0 0 3px}
+.mddoc p{margin:0 0 10px}
+.mddoc code{font-size:12.5px;background:rgba(60,45,20,.06);padding:1px 4px;border-radius:4px}
+.mdlink{color:var(--accent);text-decoration:underline;text-decoration-color:rgba(30,90,86,.35);text-underline-offset:2px}
+.mdtable{width:100%;border-collapse:collapse;margin:4px 0 14px;font:13px/1.45 var(--sans)}
+.mdtable th{text-align:left;font:600 11px var(--sans);letter-spacing:.04em;color:var(--muted);padding:6px 8px;box-shadow:inset 0 -1.5px 0 var(--line2);vertical-align:bottom}
+.mdtable td{padding:7px 8px;vertical-align:top;box-shadow:inset 0 -1px 0 var(--line);overflow-wrap:break-word}
+.mdtable td:last-child{white-space:nowrap}
+.mdtable.wide td:last-child{white-space:normal}
+.mdtable code{font-size:11.5px}
+.blk{cursor:pointer;border-radius:4px;transition:background .12s}
+.blk:hover{background:rgba(30,90,86,.07)}
+li.blk.picked,p.blk.picked{background:var(--accent-soft);box-shadow:0 0 0 4px var(--accent-soft)}
+tr.blk.picked td{background:var(--accent-soft)}
+tr.blk.on td{background:var(--accent-tint)}
+tr.blk.on td:first-child{box-shadow:inset 3px 0 0 var(--accent),inset 0 -1px 0 var(--line)}
+tr.evrow>td{padding:0 0 12px;box-shadow:inset 3px 0 0 var(--accent),inset 0 -1px 0 var(--line);background:var(--accent-tint)}
+.evbox{padding:4px 14px 2px 16px;font:13px/1.5 var(--sans);color:var(--ink2)}
+.evbox h5{margin:8px 0 4px;font:600 10px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.evbox pre{margin:0;padding:8px 10px;background:var(--card);border-radius:8px;box-shadow:inset 0 0 0 1px var(--line);font:11.5px/1.5 var(--mono);color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.evbox .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.stp{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 var(--sans);padding:4px 8px;border-radius:99px;background:#e2efe1;color:#2f5f2d;white-space:nowrap}
+.stp::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.stp.draft{background:rgba(60,45,20,.07);color:var(--ink2)}
+/* claims-first variant */
+.sk2{flex:1;min-height:0;overflow:auto;background:var(--paper);padding:20px 22px 120px;display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"snap side" "claims side" "rest side";gap:16px 20px;align-content:start}
+.sk2 .evrow.nar{display:none}
+.ctable{table-layout:fixed}
+.ctable td{overflow-wrap:break-word}
+.ctable td.id .stp{font-size:10.5px;padding:3px 7px}
+.sk-snap{grid-area:snap;padding:16px 20px}
+.sk-claims{grid-area:claims;min-width:0}
+.sk-rest{grid-area:rest;min-width:0}
+.sk-side{grid-area:side;position:sticky;top:0;align-self:start;padding:16px 18px;max-height:calc(100cqh - 40px);overflow:auto}
+.sk-snap .eyebrow{font:600 10.5px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sk-snap h2{font:500 21px/1.25 var(--serif);margin:6px 0 6px}
+.sk-snap p{font:14.5px/1.5 var(--serif);color:var(--ink2);margin:0 0 4px}
+.sk-snap p b{font:600 10px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.sk-h{font:500 19px var(--serif);margin:4px 0 8px;display:flex;align-items:baseline;gap:10px}
+.sk-h small{font:12.5px var(--sans);color:var(--muted)}
+.ctable{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border-radius:12px;box-shadow:var(--sh2);overflow:hidden;font:13px/1.45 var(--sans)}
+.ctable th{text-align:left;font:600 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px;box-shadow:inset 0 -1px 0 var(--line2)}
+.ctable td{padding:10px 10px;vertical-align:top;box-shadow:inset 0 -1px 0 var(--line)}
+.ctable tr:last-child td{box-shadow:none}
+.ctable td.cl{font:14.5px/1.4 var(--serif);color:var(--ink)}
+.ctable td.id{font:700 12px var(--sans);color:var(--kc);white-space:nowrap}
+.ctable code{font-size:11.5px}
+.ctable .muted{color:var(--muted)}
+.sk-rest details{background:var(--card);border-radius:11px;box-shadow:var(--sh1),inset 0 0 0 1px var(--line);margin:0 0 8px}
+.sk-rest summary{cursor:pointer;padding:10px 14px;font:500 15px var(--serif);display:flex;gap:10px;align-items:baseline;list-style:none}
+.sk-rest summary::-webkit-details-marker{display:none}
+.sk-rest summary::before{content:"▸";color:var(--muted);font:12px var(--sans);transition:transform .12s}
+.sk-rest details[open] summary::before{transform:rotate(90deg)}
+.sk-rest summary small{font:12px var(--sans);color:var(--muted)}
+.sk-rest .inner{padding:0 16px 10px;font:14.5px/1.55 var(--serif)}
+.sk-side h4{margin:0 0 6px;font:600 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sk-side .cl{font:16px/1.45 var(--serif);margin:4px 0 10px}
+.sk-side .evbox{padding:0}
+@container (max-width: 780px){
+  .sk2{grid-template-columns:minmax(0,1fr);grid-template-areas:"snap" "claims" "rest"}
+  .sk-side{display:none}
+  .sk2 .evrow.nar{display:table-row}
+}
+
+/* ================= Assets view ================= */
+.as-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px;background:var(--paper)}
+.as-list{overflow:auto;padding:16px 18px 120px;min-width:0}
+.as-prev{overflow:auto;padding:16px 18px 96px;box-shadow:inset 1px 0 0 var(--line);background:var(--card);min-width:0}
+.as-group{margin:0 0 20px}
+.as-group h3{font:500 18px var(--serif);margin:0 0 2px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.as-group h3 small{font:12px var(--mono);color:var(--muted)}
+.as-group .gnote{font:13px/1.45 var(--serif);color:var(--ink2);margin:0 0 10px;max-width:70ch}
+.figs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;align-items:start}
+.fcard{display:flex;flex-direction:column;gap:6px;border:0;background:var(--card);border-radius:12px;box-shadow:var(--sh1),inset 0 0 0 1px var(--line);padding:8px 8px 10px;text-align:left;cursor:pointer;min-width:0}
+.fcard:hover{box-shadow:var(--sh2),inset 0 0 0 1px var(--line2)}
+.fcard .thumb{background:#fcfcfb;border-radius:7px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.fcard .thumb svg,.as-prev .big svg{display:block;width:100%;height:auto}
+.fcard .nm,.frow .nm{font:12.5px var(--mono);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fcard .mt,.frow .mt{font:11.5px/1.35 var(--sans);color:var(--muted)}
+.rows{display:flex;flex-direction:column;gap:6px}
+.frow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:0;background:var(--card);border-radius:10px;box-shadow:var(--sh1),inset 0 0 0 1px var(--line);padding:9px 12px;text-align:left;cursor:pointer;min-width:0}
+.frow:hover{box-shadow:var(--sh2),inset 0 0 0 1px var(--line2)}
+.frow .ic{color:var(--accent);opacity:.8;grid-row:1/3}
+.frow .sz{font:11.5px var(--sans);color:var(--muted);white-space:nowrap;grid-row:1/3;grid-column:3}
+.frow .mt{grid-column:2}
+.fcard.on,.frow.on{box-shadow:0 0 0 2px var(--accent),var(--sh2)}
+.fcard.picked,.frow.picked{background:var(--accent-soft)}
+.as-prev h4{margin:0 0 2px;font:600 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.as-prev .pn{font:13px var(--mono);color:var(--ink);word-break:break-all;margin:0 0 10px}
+.as-prev .big{background:#fcfcfb;border-radius:8px;box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;margin:0 0 12px}
+.as-prev pre{margin:0 0 12px;padding:9px 10px;background:var(--paper);border-radius:8px;box-shadow:inset 0 0 0 1px var(--line);font:11px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto}
+.as-prev .mini{width:100%;border-collapse:collapse;font:11px/1.4 var(--mono);margin:0 0 6px;display:block;overflow:auto}
+.as-prev .mini th,.as-prev .mini td{padding:3px 6px;text-align:left;white-space:nowrap;box-shadow:inset 0 -1px 0 var(--line)}
+.as-prev .mini th{color:var(--muted);font-weight:600}
+.as-prev .md p{font:13.5px/1.5 var(--serif);margin:0 0 8px;color:var(--ink2)}
+.as-prev .md ul{margin:0 0 8px;padding-left:18px;font:13.5px/1.5 var(--serif);color:var(--ink2)}
+.as-prev dl{display:grid;grid-template-columns:86px minmax(0,1fr);gap:5px 12px;margin:0;font:12.5px/1.45 var(--sans)}
+.as-prev dt{font:600 10px/1.9 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.as-prev dd{margin:0;color:var(--ink2);min-width:0;word-break:break-word}
+.as-prev .empty{font:14.5px/1.55 var(--serif);color:var(--muted);margin:4px 0 0}
+@container (max-width: 760px){
+  .as-body{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .as-prev{order:-1;max-height:270px;box-shadow:inset 0 -1px 0 var(--line);padding-bottom:16px}
+  .as-list{padding-bottom:120px}
+  .tabs .ro .tx{display:none}
+}
+@container (max-width: 620px){
+  .board{grid-template-columns:minmax(140px,1fr) 22px repeat(3,minmax(140px,1fr));gap:0 18px;padding-left:12px;padding-right:12px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-projects" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13.5h8M8 16.5h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5M8 7.5h8M8 11h6"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M9 4h3a2 2 0 1 1 4 0h3v5a2 2 0 1 0 0 4v6h-5a2 2 0 1 0-4 0H5v-5a2 2 0 1 0 0-4V4z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-quote" viewBox="0 0 24 24"><path d="M4 7h11M4 12h16M4 17h9"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M9.5 4v16M15 10l-2 2 2 2"/></symbol>
+  <symbol id="i-panel-open" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M9.5 4v16M13 10l2 2-2 2"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 12.5a7.5 7.5 0 0 1-11 6.6L4 20.5l1.4-4.6A7.5 7.5 0 1 1 20 12.5z"/></symbol>
+</svg>
+
+<!-- ================= MOCKUP-ONLY STRIP: not part of the app ================= -->
+<div class="mock" id="mock" role="region" aria-label="Mockup controls, not part of the app">
+  <div class="mock-tag"><b>Mockup only</b><span>This strip is not part of the app.</span></div>
+  <div class="mock-q" id="mockQ"></div>
+  <div class="mock-opts" id="mockOpts"></div>
+</div>
+
+<div class="app" id="app">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div>
+      <div class="brand-text">AI-Human<br>Research OS</div>
+    </div>
+    <button type="button" class="nav-btn" data-hint="This mockup shows only the project workspace." title="Home"><svg class="ic"><use href="#i-home"/></svg><span class="lbl">Home</span></button>
+    <button type="button" class="nav-btn" data-hint="This mockup shows only the project workspace." title="Projects"><svg class="ic"><use href="#i-projects"/></svg><span class="lbl">Projects</span></button>
+    <button type="button" class="nav-btn" data-hint="This mockup shows only the project workspace." title="Paper wiki"><svg class="ic"><use href="#i-book"/></svg><span class="lbl">Paper wiki</span></button>
+    <button type="button" class="nav-btn" data-hint="This mockup shows only the project workspace." title="Skills"><svg class="ic"><use href="#i-spark"/></svg><span class="lbl">Skills</span></button>
+    <button type="button" class="nav-btn" data-hint="This mockup shows only the project workspace." title="Plugins"><svg class="ic"><use href="#i-puzzle"/></svg><span class="lbl">Plugins</span></button>
+    <div class="sec-label">Quick access</div><div class="sec-gap"></div>
+    <button type="button" class="nav-btn active" title="nanochat_cpu"><span class="qa-mark">n</span><span class="lbl">nanochat_cpu</span></button>
+    <div class="spacer"></div>
+    <button type="button" class="nav-btn" data-hint="This mockup shows only the project workspace." title="Settings"><svg class="ic"><use href="#i-gear"/></svg><span class="lbl">Settings</span></button>
+    <button type="button" class="nav-btn" id="sbToggle" data-act="sb" title="Collapse sidebar"><svg class="ic"><use href="#i-chev-left"/></svg><span class="lbl">Collapse</span></button>
+    <div class="mock-id">Step 2 mockup · views</div>
+  </nav>
+
+  <main class="main">
+    <section class="screen ws" id="ws">
+      <header class="ws-top">
+        <div class="crumbs"><button type="button" data-hint="This mockup shows only the project workspace.">Projects</button><svg class="ic sm"><use href="#i-chev-right"/></svg></div>
+        <h1 class="ws-title">nanochat_cpu</h1>
+        <span class="pill">Stage · probe</span><span class="pill neutral">P1</span>
+        <div class="right"><span class="mono">projects-folder/nanochat_cpu</span><span class="pill neutral">owner mixed</span></div>
+      </header>
+      <div class="ws-body">
+        <aside class="card conv" aria-label="Project conversation">
+          <div class="conv-head">
+            <h2>Project conversation</h2>
+            <span class="agent-chip" title="Static in this mockup. The app launches your own CLI; it has no model of its own.">Claude Code</span>
+            <button type="button" class="icon-btn" id="convToggle" data-act="conv" title="Collapse conversation" aria-expanded="true"><svg class="ic"><use href="#i-panel"/></svg></button>
+          </div>
+          <div class="thread">
+            <div class="sample-band"><span class="sample">sample conversation</span>Illustrative messages, not from a real session.</div>
+            <div class="msg user"><div class="who">You</div><div class="bubble">Before I review: where does this project stand?</div></div>
+            <div class="tool-row"><svg class="ic sm"><use href="#i-file"/></svg>read PROJECT_MEMORY.md · paper_skeleton.md</div>
+            <div class="msg agent"><div class="who">Project agent · Claude Code</div><div class="bubble">It is a runnable example with a short paper. All five claims in <code>paper_skeleton.md</code> are marked verified. The project's current question is still open: whether the ~3-minute example is the right first run for users, and whether to check it on another machine or OS.</div></div>
+            <div class="msg user"><div class="who">You</div><div class="bubble">Why does the Idea view show no hypotheses?</div></div>
+            <div class="msg agent"><div class="who">Project agent · Claude Code</div><div class="bubble">Because the files record none: the skeleton says the paper has no research question and documents an example. Select a node in the Idea view, a claim in the Skeleton view, or a file in the Assets view to ask me about it directly.</div></div>
+          </div>
+          <div class="composer" id="projComposer">
+            <div class="refs" id="refs" hidden>
+              <ul class="chips" id="chips" aria-label="References"></ul>
+              <div id="refNote"></div>
+            </div>
+            <div class="crow">
+              <textarea rows="1" id="projInput" placeholder="Message the project agent…" aria-label="Message the project agent"></textarea>
+              <button type="button" class="send" data-act="send" title="Send"><svg class="ic"><use href="#i-send"/></svg></button>
+            </div>
+          </div>
+          <button type="button" class="strip" data-act="conv" title="Open conversation">
+            <svg class="ic"><use href="#i-panel-open"/></svg>
+            <span class="strip-count" id="stripCount" hidden title="References waiting in the composer">0</span>
+            <span class="vert">Project conversation</span>
+            <span class="vert s">sample</span>
+          </button>
+        </aside>
+
+        <div class="card views" id="views">
+          <div class="tabs" id="viewTabs" role="tablist" aria-label="Project views">
+            <button type="button" class="tab" data-tab="overview" role="tab">Overview</button>
+            <button type="button" class="tab" data-tab="idea" role="tab">Idea</button>
+            <button type="button" class="tab" data-tab="code" role="tab">Code</button>
+            <button type="button" class="tab" data-tab="skeleton" role="tab">Skeleton</button>
+            <button type="button" class="tab" data-tab="assets" role="tab">Assets</button>
+            <button type="button" class="tab" data-tab="paper" role="tab">Paper</button>
+            <span class="ro" title="These views only read the project's files"><svg class="ic sm"><use href="#i-lock"/></svg><span class="tx">Read-only</span></span>
+          </div>
+
+          <!-- stand-ins: built in step 1 -->
+          <div class="view" id="v-overview" hidden><div style="overflow:auto;flex:1;padding:0 20px">
+            <div class="standin"><span class="pill neutral">As built in step 1</span><h3>Overview</h3><p>The project overview the app shows today: round scores, Evaluations, OS Feedback, and Local skills. It is the default tab of every project.</p><p class="src-note">Not redrawn in this mockup. See the app.</p></div>
+          </div></div>
+          <div class="view" id="v-code" hidden><div style="overflow:auto;flex:1;padding:0 20px">
+            <div class="standin"><span class="pill neutral">As built in step 1</span><h3>Code</h3><p>The project's files and its Git changes, read-only, with "Ask the agent about this" on a file, a line, or a commit.</p><p class="src-note">Not redrawn in this mockup. See the app, or os-ui/mockups/step1/c-document.html for its design.</p></div>
+          </div></div>
+          <div class="view" id="v-paper" hidden><div style="overflow:auto;flex:1;padding:0 20px">
+            <div class="standin"><span class="pill neutral">As built in step 1</span><h3>Paper</h3><p>paper/main.pdf, read-only, its pages scrolling continuously and drawn as they come into view; select text on a page to ask the agent about it.</p><p class="src-note">Not redrawn in this mockup. See the app.</p></div>
+          </div></div>
+
+          <!-- IDEA VIEW -->
+          <div class="view" id="v-idea" hidden>
+            <div class="subbar">
+              <span class="sample">sample</span>
+              <span class="snote">Drawn from this project's files; the idea file (proposed name <code>idea_graph.md</code>) does not exist yet.</span>
+            </div>
+            <div class="idea-main">
+              <div class="ndetail" id="ideaDetail" aria-live="polite"></div>
+              <div class="canvas" id="ideaA"><div class="gsizer" id="gsizer"><div class="ginner" id="ginner"></div></div></div>
+              <div class="board" id="ideaB" hidden></div>
+            </div>
+          </div>
+
+          <!-- SKELETON VIEW -->
+          <div class="view" id="v-skeleton" hidden>
+            <div class="subbar">
+              <span class="vt">paper_skeleton.md</span><span class="vpath">projects-folder/nanochat_cpu/paper_skeleton.md</span>
+              <span class="hint" id="skHint"></span>
+            </div>
+            <div class="doc-scroll" id="skA"><article class="mddoc" id="skDoc"></article></div>
+            <div class="sk2" id="skB" hidden></div>
+          </div>
+
+          <!-- ASSETS VIEW -->
+          <div class="view" id="v-assets" hidden>
+            <div class="subbar">
+              <span class="vt">Assets</span><span class="vpath" id="asCount"></span>
+              <span class="hint">Select a file to preview it and ask the agent about it.</span>
+            </div>
+            <div class="as-body">
+              <div class="as-list" id="asList"></div>
+              <aside class="as-prev" id="asPrev" aria-live="polite"></aside>
+            </div>
+          </div>
+
+          <div class="askbar" id="askbar" hidden role="region" aria-label="Selection">
+            <span class="ab-col"><span class="ref" id="askRef"></span><span class="ab-col" id="askQuote" hidden><span class="ab-start" id="askStart"></span><span class="ab-size" id="askSize"></span></span></span>
+            <button type="button" class="go" data-act="ask"><svg class="ic sm"><use href="#i-chat"/></svg>Ask the agent about this</button>
+            <button type="button" class="x" data-act="unsel" title="Clear selection" aria-label="Clear selection"><svg class="ic sm"><use href="#i-x"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ================= MOCKUP-ONLY: proposed idea file format ================= -->
+<div class="mock-modal" id="fmtModal" hidden role="dialog" aria-modal="true" aria-labelledby="fmtTitle">
+  <div class="mock-panel">
+    <header><h2 id="fmtTitle">Mockup only · Proposed format of the idea file · for discussion, not decided</h2><button type="button" class="mock-btn" data-act="fmt-close">Close</button></header>
+    <div class="body" id="fmtBody"></div>
+  </div>
+</div>
+
+<template id="fig-baseline"><!-- Figs/baseline_training_curves.svg, unchanged but for its xmlns attribute -->
+<svg width="1010" height="304" viewBox="0 0 1010 304" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+<rect width="100%" height="100%" fill="#fcfcfb"/>
+<text x="12" y="24" font-size="15" font-weight="600" fill="#0b0b0b">nanochat CPU example: d1, width 64, 0.84M params, vocab 4096</text>
+<text x="62" y="52" font-size="13" font-weight="600" fill="#0b0b0b">Base pretraining: train loss (EMA)</text>
+<line x1="62" x2="288" y1="215.2" y2="215.2" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="219.2" font-size="11" fill="#898781" text-anchor="end">6</text>
+<line x1="62" x2="288" y1="156.5" y2="156.5" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="160.5" font-size="11" fill="#898781" text-anchor="end">7</text>
+<line x1="62" x2="288" y1="97.9" y2="97.9" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="101.9" font-size="11" fill="#898781" text-anchor="end">8</text>
+<text x="62.0" y="274" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<text x="137.6" y="274" font-size="11" fill="#898781" text-anchor="middle">100</text>
+<text x="213.2" y="274" font-size="11" fill="#898781" text-anchor="middle">200</text>
+<line x1="62" x2="288" y1="258" y2="258" stroke="#898781" stroke-width="1"/>
+<text x="175.0" y="290" font-size="11" fill="#52514e" text-anchor="middle">step</text>
+<text transform="translate(23,162.0) rotate(-90)" font-size="11" fill="#52514e" text-anchor="middle">loss (nats/token)</text>
+<path d="M62.0,79.2 L62.8,79.2 L63.5,79.3 L64.3,79.3 L65.0,79.3 L65.8,79.4 L66.5,79.4 L67.3,79.5 L68.0,79.6 L68.8,79.6 L69.6,79.8 L70.3,79.9 L71.1,80.0 L71.8,80.2 L72.6,80.5 L73.3,80.7 L74.1,81.1 L74.8,81.6 L75.6,82.2 L76.4,82.9 L77.1,83.8 L77.9,84.7 L78.6,85.9 L79.4,87.3 L80.1,88.9 L80.9,90.8 L81.7,92.7 L82.4,94.9 L83.2,97.3 L83.9,99.6 L84.7,102.4 L85.4,105.3 L86.2,108.4 L86.9,111.4 L87.7,114.3 L88.5,117.0 L89.2,120.3 L90.0,122.8 L90.7,125.9 L91.5,128.8 L92.2,131.5 L93.0,134.2 L93.7,136.0 L94.5,138.4 L95.3,140.8 L96.0,142.9 L96.8,144.6 L97.5,146.5 L98.3,148.5 L99.0,150.0 L99.8,152.2 L100.5,154.2 L101.3,156.3 L102.1,158.2 L102.8,159.9 L103.6,161.3 L104.3,163.0 L105.1,164.3 L105.8,166.3 L106.6,167.2 L107.4,168.6 L108.1,170.2 L108.9,171.7 L109.6,173.1 L110.4,174.5 L111.1,176.2 L111.9,177.6 L112.6,179.0 L113.4,180.3 L114.2,181.0 L114.9,182.1 L115.7,183.3 L116.4,183.9 L117.2,184.9 L117.9,185.7 L118.7,186.6 L119.4,187.9 L120.2,189.1 L121.0,190.4 L121.7,190.5 L122.5,192.1 L123.2,192.6 L124.0,193.3 L124.7,194.0 L125.5,195.0 L126.2,195.7 L127.0,196.9 L127.8,197.4 L128.5,197.7 L129.3,197.8 L130.0,198.3 L130.8,199.6 L131.5,200.6 L132.3,201.3 L133.1,201.8 L133.8,202.4 L134.6,202.9 L135.3,203.5 L136.1,204.0 L136.8,205.0 L137.6,205.2 L138.3,206.1 L139.1,205.9 L139.9,206.0 L140.6,206.5 L141.4,206.2 L142.1,206.4 L142.9,207.0 L143.6,207.7 L144.4,208.2 L145.1,209.0 L145.9,209.2 L146.7,209.5 L147.4,210.4 L148.2,211.0 L148.9,211.3 L149.7,211.7 L150.4,211.8 L151.2,211.8 L151.9,212.3 L152.7,212.8 L153.5,213.6 L154.2,214.0 L155.0,214.8 L155.7,215.1 L156.5,215.2 L157.2,215.9 L158.0,216.5 L158.7,217.0 L159.5,217.7 L160.3,217.6 L161.0,218.0 L161.8,218.4 L162.5,218.8 L163.3,219.4 L164.0,220.0 L164.8,219.6 L165.6,220.0 L166.3,220.4 L167.1,220.1 L167.8,220.1 L168.6,220.2 L169.3,219.9 L170.1,220.9 L170.8,221.0 L171.6,221.1 L172.4,221.7 L173.1,222.1 L173.9,222.0 L174.6,222.6 L175.4,223.1 L176.1,223.7 L176.9,224.4 L177.6,224.7 L178.4,225.1 L179.2,224.9 L179.9,225.5 L180.7,225.8 L181.4,225.6 L182.2,225.7 L182.9,225.6 L183.7,225.7 L184.4,226.5 L185.2,227.1 L186.0,227.3 L186.7,227.8 L187.5,228.1 L188.2,228.5 L189.0,228.2 L189.7,228.8 L190.5,228.7 L191.3,229.0 L192.0,229.1 L192.8,229.2 L193.5,229.4 L194.3,229.1 L195.0,229.4 L195.8,229.5 L196.5,230.2 L197.3,231.1 L198.1,231.3 L198.8,232.0 L199.6,231.9 L200.3,231.8 L201.1,231.6 L201.8,231.7 L202.6,231.2 L203.3,231.3 L204.1,231.3 L204.9,231.1 L205.6,231.2 L206.4,231.7 L207.1,232.0 L207.9,232.4 L208.6,232.5 L209.4,232.8 L210.1,233.1 L210.9,233.6 L211.7,234.5 L212.4,235.1 L213.2,235.6 L213.9,235.8 L214.7,235.4 L215.4,235.0 L216.2,234.6 L216.9,235.0 L217.7,235.6 L218.5,235.7 L219.2,235.3 L220.0,236.1 L220.7,235.8 L221.5,235.9 L222.2,236.1 L223.0,236.4 L223.8,236.3 L224.5,236.5 L225.3,237.1 L226.0,236.9 L226.8,236.8 L227.5,236.7 L228.3,236.7 L229.0,236.7 L229.8,236.9 L230.6,236.9 L231.3,237.0 L232.1,237.0 L232.8,237.6 L233.6,238.0 L234.3,238.8 L235.1,239.2 L235.8,239.3 L236.6,239.4 L237.4,239.1 L238.1,239.6 L238.9,239.6 L239.6,240.2 L240.4,240.2 L241.1,240.4 L241.9,239.8 L242.6,239.2 L243.4,239.0 L244.2,239.3 L244.9,239.5 L245.7,239.4 L246.4,239.8 L247.2,240.0 L247.9,240.0 L248.7,240.6 L249.5,241.4 L250.2,241.4 L251.0,241.6 L251.7,241.3 L252.5,240.7 L253.2,240.5 L254.0,240.4 L254.7,240.2 L255.5,239.7 L256.3,240.0 L257.0,240.2 L257.8,240.3 L258.5,240.7 L259.3,241.0 L260.0,241.0 L260.8,241.4 L261.5,242.4 L262.3,242.4 L263.1,241.7 L263.8,242.1 L264.6,242.3 L265.3,242.3 L266.1,241.7 L266.8,242.2 L267.6,242.9 L268.3,243.2 L269.1,243.6 L269.9,243.4 L270.6,242.9 L271.4,243.2 L272.1,243.2 L272.9,243.5 L273.6,243.8 L274.4,244.1 L275.2,244.1 L275.9,243.8 L276.7,243.8 L277.4,243.8 L278.2,244.4 L278.9,243.9 L279.7,243.8 L280.4,243.9 L281.2,244.2 L282.0,244.1 L282.7,244.3 L283.5,244.6 L284.2,244.7 L285.0,244.8 L285.7,244.8 L286.5,244.5 L287.2,244.5 L288.0,244.2" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"><title>train loss</title></path>
+<text x="294.0" y="248.2" font-size="11" fill="#0b0b0b">5.506</text>
+<text x="392" y="52" font-size="13" font-weight="600" fill="#0b0b0b">Base pretraining: validation bpb</text>
+<line x1="392" x2="618" y1="214.7" y2="214.7" stroke="#e6e5e0" stroke-width="1"/>
+<text x="386" y="218.7" font-size="11" fill="#898781" text-anchor="end">2.5</text>
+<line x1="392" x2="618" y1="143.9" y2="143.9" stroke="#e6e5e0" stroke-width="1"/>
+<text x="386" y="147.9" font-size="11" fill="#898781" text-anchor="end">3</text>
+<line x1="392" x2="618" y1="73.1" y2="73.1" stroke="#e6e5e0" stroke-width="1"/>
+<text x="386" y="77.1" font-size="11" fill="#898781" text-anchor="end">3.5</text>
+<text x="392.0" y="274" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<text x="467.3" y="274" font-size="11" fill="#898781" text-anchor="middle">100</text>
+<text x="542.7" y="274" font-size="11" fill="#898781" text-anchor="middle">200</text>
+<text x="618.0" y="274" font-size="11" fill="#898781" text-anchor="middle">300</text>
+<line x1="392" x2="618" y1="258" y2="258" stroke="#898781" stroke-width="1"/>
+<text x="505.0" y="290" font-size="11" fill="#52514e" text-anchor="middle">step</text>
+<text transform="translate(353,162.0) rotate(-90)" font-size="11" fill="#52514e" text-anchor="middle">bits per byte</text>
+<path d="M392.0,79.2 L410.8,106.4 L429.7,170.5 L448.5,195.2 L467.3,209.6 L486.2,219.6 L505.0,227.0 L523.8,232.5 L542.7,236.9 L561.5,240.2 L580.3,242.3 L599.2,243.9 L618.0,244.8" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"><title>val bpb</title></path>
+<circle cx="392.0" cy="79.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 0, 3.4564</title></circle>
+<circle cx="410.8" cy="106.4" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 25, 3.2644</title></circle>
+<circle cx="429.7" cy="170.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 50, 2.8124</title></circle>
+<circle cx="448.5" cy="195.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 75, 2.6377</title></circle>
+<circle cx="467.3" cy="209.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 100, 2.5360</title></circle>
+<circle cx="486.2" cy="219.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 125, 2.4657</title></circle>
+<circle cx="505.0" cy="227.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 150, 2.4136</title></circle>
+<circle cx="523.8" cy="232.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 175, 2.3744</title></circle>
+<circle cx="542.7" cy="236.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 200, 2.3436</title></circle>
+<circle cx="561.5" cy="240.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 225, 2.3203</title></circle>
+<circle cx="580.3" cy="242.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 250, 2.3053</title></circle>
+<circle cx="599.2" cy="243.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 275, 2.2941</title></circle>
+<circle cx="618.0" cy="244.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 300, 2.2882</title></circle>
+<text x="624.0" y="248.8" font-size="11" fill="#0b0b0b">2.288</text>
+<text x="722" y="52" font-size="13" font-weight="600" fill="#0b0b0b">SFT: validation bpb</text>
+<line x1="722" x2="948" y1="239.7" y2="239.7" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="243.7" font-size="11" fill="#898781" text-anchor="end">2.15</text>
+<line x1="722" x2="948" y1="182.1" y2="182.1" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="186.1" font-size="11" fill="#898781" text-anchor="end">2.2</text>
+<line x1="722" x2="948" y1="124.4" y2="124.4" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="128.4" font-size="11" fill="#898781" text-anchor="end">2.25</text>
+<line x1="722" x2="948" y1="66.8" y2="66.8" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="70.8" font-size="11" fill="#898781" text-anchor="end">2.3</text>
+<text x="722.0" y="274" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<text x="779.9" y="274" font-size="11" fill="#898781" text-anchor="middle">10</text>
+<text x="837.9" y="274" font-size="11" fill="#898781" text-anchor="middle">20</text>
+<text x="895.8" y="274" font-size="11" fill="#898781" text-anchor="middle">30</text>
+<line x1="722" x2="948" y1="258" y2="258" stroke="#898781" stroke-width="1"/>
+<text x="835.0" y="290" font-size="11" fill="#52514e" text-anchor="middle">SFT step</text>
+<text transform="translate(683,162.0) rotate(-90)" font-size="11" fill="#52514e" text-anchor="middle">bits per byte</text>
+<path d="M722.0,79.2 L779.9,157.7 L837.9,196.2 L895.8,233.8 L948.0,244.8" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"><title>SFT val bpb</title></path>
+<circle cx="722.0" cy="79.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 0, 2.2892</title></circle>
+<circle cx="779.9" cy="157.7" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 10, 2.2211</title></circle>
+<circle cx="837.9" cy="196.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 20, 2.1877</title></circle>
+<circle cx="895.8" cy="233.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 30, 2.1551</title></circle>
+<circle cx="948.0" cy="244.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 39, 2.1456</title></circle>
+<text x="954.0" y="248.8" font-size="11" fill="#0b0b0b">2.146</text>
+</svg>
+</template>
+<template id="fig-probe"><!-- Figs/probe_comparison.svg, unchanged but for its xmlns attribute -->
+<svg width="720" height="456" viewBox="0 0 720 456" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+<rect width="100%" height="100%" fill="#fcfcfb"/>
+<text x="12" y="24" font-size="15" font-weight="600" fill="#0b0b0b">Probes vs baseline</text>
+<text x="62" y="52" font-size="13" font-weight="600" fill="#0b0b0b">Validation bpb at matched steps (same 300-step schedule)</text>
+<line x1="62" x2="598" y1="281.9" y2="281.9" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="285.9" font-size="11" fill="#898781" text-anchor="end">2.5</text>
+<line x1="62" x2="598" y1="198.6" y2="198.6" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="202.6" font-size="11" fill="#898781" text-anchor="end">3</text>
+<line x1="62" x2="598" y1="115.3" y2="115.3" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="119.3" font-size="11" fill="#898781" text-anchor="end">3.5</text>
+<text x="62.0" y="354" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<text x="240.7" y="354" font-size="11" fill="#898781" text-anchor="middle">100</text>
+<text x="419.3" y="354" font-size="11" fill="#898781" text-anchor="middle">200</text>
+<text x="598.0" y="354" font-size="11" fill="#898781" text-anchor="middle">300</text>
+<line x1="62" x2="598" y1="338" y2="338" stroke="#898781" stroke-width="1"/>
+<text x="330.0" y="370" font-size="11" fill="#52514e" text-anchor="middle">step</text>
+<text transform="translate(23,202.0) rotate(-90)" font-size="11" fill="#52514e" text-anchor="middle">bits per byte</text>
+<path d="M62.0,122.6 L106.7,154.6 L151.3,229.9 L196.0,259.0 L240.7,275.9 L285.3,287.7 L330.0,296.3 L374.7,302.9 L419.3,308.0 L464.0,311.9 L508.7,314.4 L553.3,316.2 L598.0,317.2" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"><title>baseline (matrix lr 0.02, vocab 4096)</title></path>
+<circle cx="62.0" cy="122.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 0, 3.4564</title></circle>
+<circle cx="106.7" cy="154.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 25, 3.2644</title></circle>
+<circle cx="151.3" cy="229.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 50, 2.8124</title></circle>
+<circle cx="196.0" cy="259.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 75, 2.6377</title></circle>
+<circle cx="240.7" cy="275.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 100, 2.5360</title></circle>
+<circle cx="285.3" cy="287.7" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 125, 2.4657</title></circle>
+<circle cx="330.0" cy="296.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 150, 2.4136</title></circle>
+<circle cx="374.7" cy="302.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 175, 2.3744</title></circle>
+<circle cx="419.3" cy="308.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 200, 2.3436</title></circle>
+<circle cx="464.0" cy="311.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 225, 2.3203</title></circle>
+<circle cx="508.7" cy="314.4" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 250, 2.3053</title></circle>
+<circle cx="553.3" cy="316.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 275, 2.2941</title></circle>
+<circle cx="598.0" cy="317.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>baseline (matrix lr 0.02, vocab 4096): step 300, 2.2882</title></circle>
+<path d="M62.0,122.6 L106.7,155.0 L151.3,229.4 L196.0,258.9 L240.7,276.0 L285.3,288.3 L330.0,297.5 L374.7,304.4 L419.3,309.7 L464.0,313.6 L508.7,316.2 L553.3,318.1 L598.0,319.2" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round"><title>probe 1: matrix lr 0.04</title></path>
+<circle cx="62.0" cy="122.6" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 0, 3.4564</title></circle>
+<circle cx="106.7" cy="155.0" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 25, 3.2617</title></circle>
+<circle cx="151.3" cy="229.4" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 50, 2.8155</title></circle>
+<circle cx="196.0" cy="258.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 75, 2.6385</title></circle>
+<circle cx="240.7" cy="276.0" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 100, 2.5358</title></circle>
+<circle cx="285.3" cy="288.3" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 125, 2.4616</title></circle>
+<circle cx="330.0" cy="297.5" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 150, 2.4065</title></circle>
+<circle cx="374.7" cy="304.4" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 175, 2.3654</title></circle>
+<circle cx="419.3" cy="309.7" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 200, 2.3337</title></circle>
+<circle cx="464.0" cy="313.6" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 225, 2.3100</title></circle>
+<circle cx="508.7" cy="316.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 250, 2.2941</title></circle>
+<circle cx="553.3" cy="318.1" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 275, 2.2828</title></circle>
+<circle cx="598.0" cy="319.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>probe 1: matrix lr 0.04: step 300, 2.2761</title></circle>
+<path d="M62.0,84.8 L106.7,123.1 L151.3,201.5 L196.0,233.0 L240.7,252.7 L285.3,267.2 L330.0,277.5 L374.7,285.1 L419.3,290.7 L464.0,295.1 L508.7,298.0 L553.3,300.1 L598.0,301.3" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round"><title>probe 2: vocab 2048</title></path>
+<circle cx="62.0" cy="84.8" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 0, 3.6833</title></circle>
+<circle cx="106.7" cy="123.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 25, 3.4531</title></circle>
+<circle cx="151.3" cy="201.5" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 50, 2.9829</title></circle>
+<circle cx="196.0" cy="233.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 75, 2.7938</title></circle>
+<circle cx="240.7" cy="252.7" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 100, 2.6756</title></circle>
+<circle cx="285.3" cy="267.2" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 125, 2.5883</title></circle>
+<circle cx="330.0" cy="277.5" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 150, 2.5267</title></circle>
+<circle cx="374.7" cy="285.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 175, 2.4809</title></circle>
+<circle cx="419.3" cy="290.7" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 200, 2.4474</title></circle>
+<circle cx="464.0" cy="295.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 225, 2.4210</title></circle>
+<circle cx="508.7" cy="298.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 250, 2.4035</title></circle>
+<circle cx="553.3" cy="300.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 275, 2.3910</title></circle>
+<circle cx="598.0" cy="301.3" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>probe 2: vocab 2048: step 300, 2.3840</title></circle>
+<text x="604.0" y="305.3" font-size="11" fill="#0b0b0b">2.384 vocab 2048</text>
+<text x="604.0" y="321.2" font-size="11" fill="#0b0b0b">2.288 baseline</text>
+<text x="604.0" y="334.2" font-size="11" fill="#0b0b0b">2.276 lr x2</text>
+<line x1="22" x2="46" y1="390" y2="390" stroke="#2a78d6" stroke-width="2"/><circle cx="34" cy="390" r="4" fill="#2a78d6"/>
+<text x="54" y="394" font-size="12" fill="#0b0b0b">baseline (matrix lr 0.02, vocab 4096)</text>
+<line x1="22" x2="46" y1="412" y2="412" stroke="#eb6834" stroke-width="2"/><circle cx="34" cy="412" r="4" fill="#eb6834"/>
+<text x="54" y="416" font-size="12" fill="#0b0b0b">probe 1: matrix lr 0.04</text>
+<line x1="22" x2="46" y1="434" y2="434" stroke="#1baf7a" stroke-width="2"/><circle cx="34" cy="434" r="4" fill="#1baf7a"/>
+<text x="54" y="438" font-size="12" fill="#0b0b0b">probe 2: vocab 2048</text>
+</svg>
+</template>
+<script type="application/json" id="repo-data">{"skeleton":"# Paper Skeleton\n\nReusable manuscript control sheet. Keep claims traceable to references, notes,\ndata, code, figures, or experiment outputs.\n\n## Snapshot\n\n- Working title: nanochat on a Laptop CPU: a Three-Minute End-to-End Example\n  for the AI-Human Research OS\n- Target venue or audience: Research OS users running their first example; not\n  submitted anywhere\n- Status: draft\n- One-sentence thesis: OpenResearch's nanochat demo, scaled to a 0.84M-parameter\n  model, runs every stage on a laptop-class CPU in about three minutes, which\n  makes it a runnable first example rather than a research result.\n- Main research question: none; the paper documents an example project.\n- Contributions:\n  1. A one-command, staged, CPU-only port with documented code changes.\n  2. Time, memory, and learning-curve measurements of every stage.\n  3. The demo's two probes (matrix learning rate ×2, vocabulary 2,048) at this\n     scale.\n\n## Source Map\n\nRelative links assume this template has been copied to\n`projects-folder/\u003cProjectName>/`; follow the copied\n[project entrypoint](index.md). Project-specific references live under\n`paper/`.\n\n| Asset | Link or path | Notes |\n|---|---|---|\n| Paper draft | [paper/main.tex](paper/main.tex) | LaTeX source; builds to `paper/main.pdf`. |\n| Code and experiments | [Code/](Code/) | Port, runner, and tools; see [Code/README.md](Code/README.md). |\n| Datasets | [Code/README.md](Code/README.md) \"Data\" | Downloaded into `Code/nanochat/.cache/`, not tracked. |\n| Figures and tables | [paper/main.tex](paper/main.tex) | Figure 1 is drawn at build time from `Code/results/training_metrics.csv`; the SVGs in [Figs/](Figs/) serve the README. |\n| Baselines | [Baselines/openresearch-demo/](Baselines/openresearch-demo/) | Unchanged reference-run evidence from the demo. |\n| Bibliography | [paper/references.bib](paper/references.bib) | Each entry checked against its source on 2026-09-29. |\n| Paper notes |  | None. |\n| Ideas and meetings | [../../ideas/](../../ideas/) | Source idea `nanochat-cpu-baseline.md`. |\n\n## Argument Map\n\n| Element | Notes |\n|---|---|\n| Problem | Research OS users need one example they can run end to end on their own machine. |\n| Gap in prior work | The OpenResearch demo needs over nine hours of pretraining on this CPU. |\n| Key idea | Shrink model, data, and steps while keeping every stage and a similar data:parameter ratio. |\n| What is new | Nothing scientifically; the port, its measurements, and its documentation. |\n| Empirical support | `Code/results/summary.json`, `Code/results/training_metrics.csv`, and the first-run timings in `Code/README.md`. |\n| Speculative or weak points | Single-seed probes; probe 2 also changes parameter count and bytes per step. |\n\n## Abstract\n\n- Problem -> gap -> method -> evidence -> implication: see the abstract in\n  [paper/main.tex](paper/main.tex).\n\n## Introduction\n\n- Motivation and task: a first runnable example for Research OS users.\n- Prior limitations: the demo's scale needs a GPU-class budget.\n- Proposed approach: the scaled-down port in `Code/nanochat/`.\n- Summary of results: 2 min 57 s end to end; base val bpb 3.456 → 2.288; SFT\n  2.289 → 2.146.\n- Contributions: see Snapshot.\n- Intro figure or table: none.\n\n## Related Work\n\nOut of scope for this example; the paper cites only its sources (nanochat,\nOpenResearch, Muon, and the datasets).\n\n## Method\n\n- Method overview: nanochat's pipeline unchanged in structure, with the recipe\n  in Table 1 of the paper.\n- Implementation source: [Code/README.md](Code/README.md) \"Changes from the\n  demo\".\n\n## Experiments\n\n| Study | Question | Data | Baselines | Metric | Output | Claim |\n|---|---|---|---|---|---|---|\n| Main result | Does every stage run and does val bpb fall? | ClimbMix shard; SFT mixture at 1/128 | Demo reference run (not comparable in scale) | val bpb, wall time, peak RAM | `Code/results/summary.json` | C1, C2 |\n| Probe 1 | Effect of a doubled Muon matrix LR | same | 300-step baseline | val bpb at matched steps | `summary.json` `probes_val_bpb` | C3 |\n| Probe 2 | Effect of a 2,048-token vocabulary | same | 300-step baseline | val bpb at matched steps | `summary.json` `probes_val_bpb` | C4 |\n\n## Results and Discussion\n\n- Main quantitative result: base val bpb 3.4564 → 2.2882; SFT 2.2892 → 2.1456.\n- Main qualitative result: the chat reply is nonsense, as expected.\n- Negative or unexpected result: SFT at the demo's LR fraction 0.8 raised val\n  bpb (2.29 → 2.63 spike).\n- Interpretation: the example demonstrates the pipeline, not a model.\n- Relation to prior work: none claimed.\n\n## Limitations\n\n- Method: single-seed probes; weight-decay scaling far outside its tuned range.\n- Data and evaluation: SFT subsample of 1/128; mostly short conversations.\n- Generalization: numbers say nothing about larger models.\n- Reproducibility: only one Windows machine tested.\n\n## Conclusion\n\n- Final answer: the scaled port runs end to end on a CPU in about three minutes.\n- Main evidence: C1–C2.\n- Takeaway: a deterministic first example for the Research OS.\n\n## Tracking\n\n### Claims and Evidence\n\n| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|\n| C1: every stage runs; whole pipeline 2 min 57 s, ≤ 1.0 GB RAM per process | first-run stage log | [Code/README.md](Code/README.md) \"What to expect\", \"Results\" | fresh run 2026-09-26 | verified |\n| C2: base val bpb 3.4564 → 2.2882; SFT 2.2892 → 2.1456 | logged runs | [Code/results/summary.json](Code/results/summary.json) | `base_val_bpb`, `sft_val_bpb` | verified |\n| C3: matrix LR ×2 ends 0.012 bpb lower | probe run | [Code/results/summary.json](Code/results/summary.json) | `probe_lr2x` step 300 | verified |\n| C4: vocab 2,048 ends 0.096 bpb higher | probe run | [Code/results/summary.json](Code/results/summary.json) | `probe_vocab2048` step 300 | verified |\n| C5: runs are deterministic | two fresh runs identical to 6 decimals | [Code/README.md](Code/README.md) \"Results\" | recorded 2026-09-26 | verified |\n\n### Figures and Tables\n\n| Label | Purpose | Source data/code | Output file | Status |\n|---|---|---|---|---|\n| Table 1 | Recipe: demo vs this example | [Code/README.md](Code/README.md) \"Recipe\" | `paper/main.pdf` | final |\n| Figure 1 | Pretraining val bpb, baseline and probes | [Code/results/training_metrics.csv](Code/results/training_metrics.csv) (pgfplots) | `paper/main.pdf` | final |\n| Table 2 | Probe deltas at steps 0–300 | [Code/results/summary.json](Code/results/summary.json) | `paper/main.pdf` | final |\n\n### Appendix and TODOs\n\n- Appendix items: none.\n- Open TODOs: Human Owner review of the draft.","readme":[{"from":16,"lines":["| | Whole example (`all`) | Baseline stages only |","|---|---|---|","| Wall-clock time | **2 min 57 s** | 1 min 29 s (+ `uv sync`) |","| Peak RAM per process | 1.0 GB (data download); training ≤ 0.94 GB | same |","| Data downloads | ~0.20 GB: 2 pretraining shards (~184 MB) + ~14 MB of SFT data | same |","| Python packages (first setup only) | ~0.2 GB of wheels, mostly the 106 MB CPU `torch` wheel | same |","| Disk inside the project | ~0.9 GB: `.venv` 0.68 GB, `.cache` ~0.21 GB | same |"]},{"from":44,"lines":["| Stage | What it runs ([runs/runcpu_small.sh](nanochat/runs/runcpu_small.sh)) | Measured |","|---|---|---|","| `setup` | `uv sync --extra cpu --frozen` | \u003c 1 s with a warm uv cache |","| `data` | `python -m nanochat.dataset -n 1`: 1 train shard + the pinned val shard | 13.2 s |","| `tok` | `tok_train --max-chars=50000000 --vocab-size=4096`, then `tok_eval` | 3.2 s + 3.5 s |","| `base` | `base_train --depth=1 --aspect-ratio=64 --head-dim=64 --window-pattern=L --max-seq-len=256 --device-batch-size=16 --total-batch-size=4096 --eval-every=25 --eval-tokens=65536 --core-metric-every=-1 --sample-every=100 --num-iterations=300` | 42.3 s |","| `eval` | `base_eval --eval=bpb,sample --device-batch-size=1 --split-tokens=16384` | 3.7 s |","| `sft` | `chat_sft --load-optimizer=0 --eval-every=10 --eval-tokens=32768 --chatcore-every=-1 --num-iterations=40 --init-lr-frac=0.1 --data-keep-every=128` (downloads its data) | 20.5 s |","| `chat` | `chat_cli -p \"What is the capital of France?\"` | 2.7 s |","| `probe_lr` | `base` recipe with `--matrix-lr=0.04 --model-tag=probe_lr2x` | 47.1 s |","| `probe_vocab` | 2,048-token tokenizer in `.cache/nanochat_v2048`, then the `base` recipe with `--model-tag=probe_vocab2048` | 3.3 s + 35.1 s |","| `summary` | [tools/summarize_results.py](tools/summarize_results.py) writes tables and figures | \u003c 1 s |"]},{"from":79,"lines":["### Recipe","","| Knob | Demo (`runs/runcpu.sh`) | This example | Why |","|---|---|---|---|","| Pretraining data | 8 shards (~0.8 GB) | 1 train + 1 val shard (~184 MB) | the fewest the dataset script allows |","| Tokenizer | 32,768 vocab, 2B chars | 4,096 vocab, 50M chars | embeddings and the LM head dominate a tiny model; 3.2 s to train |","| Model | depth 6, width 384, 73.5M params | depth 1, width 64 (1 head of 64), 0.84M params | smallest config that runs; 80 ms per 4,096-token step |","| Context / batch | 512 / 32 × 512 = 16,384 tokens | 256 / 16 × 256 = 4,096 tokens | throughput is flat above this batch on CPU |","| Base steps | 5,000 (81.9M tokens, 3.5 tokens per scaling param) | 300 (1.23M tokens, 3.95 tokens per scaling param) | similar data:param ratio, 42 s |","| Val eval | every 100 steps, 524,288 tokens | every 25 steps, 65,536 tokens | more curve points, low cost |","| Base eval | CORE (16 per task) + bpb + samples | bpb + samples (`--eval=bpb,sample`) | CORE needs a 26 MB zip that unpacks to 160 MB and is near chance for tiny models (CORE 0.0018 in a 30-step d2 check). Add `core` to re-enable |","| SFT data | full SmolTalk, MMLU, GSM8K (~980 MB) | ~1/128 of every split (~14 MB), same mixture ratios | download size and RAM (full SmolTalk alone is ~3 GB in RAM) |","| SFT steps / LR | 1,500 steps, `--init-lr-frac` 0.8 | 40 steps, `--init-lr-frac=0.1` | at 0.8, SFT val bpb spiked from 2.29 to 2.63 and ended above its start (see the SFT learning-rate note below); at 0.1 it falls steadily |","| SFT eval | every 200, 524,288 tokens | every 10, 32,768 tokens | fits the 40-step run |","| Probes | 200-step probes against a 5,000-step baseline | full 300-step runs, compared at every eval step | a full run costs only ~40 s |","| Vocab probe | 32,768 → 8,192 | 4,096 → 2,048 | same direction (smaller vocabulary) at this scale |"]},{"from":120,"lines":["## Results","","All numbers come from `bash runs/runcpu_small.sh all` on 2026-09-26 and are","in [results/summary.json](results/summary.json),","[results/training_metrics.csv](results/training_metrics.csv), both tracked.","The raw stage logs in `results/logs/` are regenerated by each run and are not","tracked (the repository ignores `*.log`). Two fresh runs gave identical val bpb to 6","decimals: training is deterministic on this machine. The per-stage timings in","`summary.json` come from the last run, a re-run with the data already cached","(152.9 s in total); the timings quoted in this README are from the first run.","","![Baseline training curves](../Figs/baseline_training_curves.svg)","","**Baseline base pretraining (val bpb on 65,536 val tokens):**","","| Step | 0 | 25 | 50 | 100 | 150 | 200 | 250 | 300 |","|---|---|---|---|---|---|---|---|---|","| val bpb | 3.4564 | 3.2644 | 2.8124 | 2.5360 | 2.4136 | 2.3436 | 2.3053 | **2.2882** |","","- Base eval (`base_eval`, 16,384 tokens per split): train bpb 2.2947, val bpb 2.3622.","- SFT val bpb: 2.2892 (step 0) → 2.2211 (10) → 2.1877 (20) → 2.1551 (30) → **2.1456** (39).","- Chat reply from the SFT checkpoint to \"What is the capital of France?\"","  (whitespace runs collapsed; the raw reply is `chat_reply` in","[results/summary.json](results/summary.json)):","  `ATedning the date that is - min B`. This is expected nonsense for a","  0.84M-parameter model. The demo's 73.5M model answered \"Paris\" and then","  looped.","","**Probes (same 300-step schedule; Δ = probe − baseline; lower bpb is better):**","","![Probe comparison](../Figs/probe_comparison.svg)","","| Step | Baseline | Probe 1: matrix lr 0.04 | Δ | Probe 2: vocab 2,048 | Δ |","|---|---|---|---|---|---|","| 0 | 3.4564 | 3.4564 | 0.0000 | 3.6833 | +0.2269 |","| 50 | 2.8124 | 2.8155 | +0.0031 | 2.9829 | +0.1704 |","| 100 | 2.5360 | 2.5358 | −0.0002 | 2.6756 | +0.1396 |","| 200 | 2.3436 | 2.3337 | −0.0100 | 2.4474 | +0.1038 |","| 300 | 2.2882 | 2.2761 | −0.0121 | 2.3840 | +0.0958 |","","- Probe 1: doubling the Muon matrix learning rate is neutral through step 100,","  then slightly better; by step 300 it is 0.012 bpb lower.","- Probe 2: the 2,048-token vocabulary is worse at every step. The gap narrows","  from 0.23 to 0.10 bpb but does not close in 300 steps.","- The demo's probe results are not part of the copied evidence, so whether","  these directions match the demo's is not checked here.","","**Wall-clock per stage and peak RAM** (final run): data 13.2 s / 1.0 GB,","tokenizer 3.2 s / 0.28 GB, tok_eval 3.5 s / 0.35 GB, base 42.3 s / 0.87 GB,","base eval 3.7 s / 0.35 GB, SFT 20.5 s / 0.68 GB, chat 2.7 s / 0.25 GB,","probe 1 47.1 s / 0.87 GB, probe 2 3.3 s + 35.1 s / 0.94 GB."]},{"from":199,"lines":["## Data","","Data is downloaded on demand into `Code/nanochat/.cache/nanochat/`","(`NANOCHAT_BASE_DIR`), not [Datasets/](Datasets/). That keeps nanochat's own","layout, and none of it is tracked. License terms were not checked in this","session; see each dataset card."]}],"datasets":[{"line":208,"source":"Pretraining text","name":"karpathy/climbmix-400b-shuffle","used":"shard_00000 (train), shard_06542 (val)"},{"line":209,"source":"SFT conversations","name":"HuggingFaceTB/smol-smoltalk","used":"3,600 of 460K train rows, 190 of 24K test rows"},{"line":210,"source":"SFT multiple choice","name":"cais/mmlu all","used":"781 of 99,842 auxiliary_train rows (×3 in the mixture), 110 test rows"},{"line":211,"source":"SFT math","name":"openai/gsm8k main","used":"59 of 7,473 train rows (×4), 11 test rows"}],"summary":"{\n  \"stages\": {\n    \"data\": {\n      \"exit\": 0,\n      \"wall_s\": 3.5,\n      \"peak_rss_mb\": 964\n    },\n    \"tok_train\": {\n      \"exit\": 0,\n      \"wall_s\": 3.2,\n      \"peak_rss_mb\": 290\n    },\n    \"tok_eval\": {\n      \"exit\": 0,\n      \"wall_s\": 3.4,\n      \"peak_rss_mb\": 347\n    },\n    \"base_train\": {\n      \"exit\": 0,\n      \"wall_s\": 41.6,\n      \"peak_rss_mb\": 871\n    },\n    \"base_eval\": {\n      \"exit\": 0,\n      \"wall_s\": 3.6,\n      \"peak_rss_mb\": 350\n    },\n    \"chat_sft\": {\n      \"exit\": 0,\n      \"wall_s\": 13.6,\n      \"peak_rss_mb\": 659\n    },\n    \"chat_cli\": {\n      \"exit\": 0,\n      \"wall_s\": 2.7,\n      \"peak_rss_mb\": 248\n    },\n    \"probe_lr2x\": {\n      \"exit\": 0,\n      \"wall_s\": 42.4,\n      \"peak_rss_mb\": 872\n    },\n    \"probe_vocab2048_tok\": {\n      \"exit\": 0,\n      \"wall_s\": 5.3,\n      \"peak_rss_mb\": 299\n    },\n    \"probe_vocab2048\": {\n      \"exit\": 0,\n      \"wall_s\": 33.6,\n      \"peak_rss_mb\": 938\n    }\n  },\n  \"baseline_wall_s_sum\": 71.6,\n  \"probes_wall_s_sum\": 81.3,\n  \"base_val_bpb\": {\n    \"0\": 3.456354,\n    \"25\": 3.264407,\n    \"50\": 2.812441,\n    \"75\": 2.637682,\n    \"100\": 2.536046,\n    \"125\": 2.465698,\n    \"150\": 2.413566,\n    \"175\": 2.374406,\n    \"200\": 2.343634,\n    \"225\": 2.320339,\n    \"250\": 2.305269,\n    \"275\": 2.294143,\n    \"300\": 2.288206\n  },\n  \"sft_val_bpb\": {\n    \"0\": 2.2892,\n    \"10\": 2.2211,\n    \"20\": 2.1877,\n    \"30\": 2.1551,\n    \"39\": 2.1456\n  },\n  \"base_eval_train_bpb\": 2.294739,\n  \"base_eval_val_bpb\": 2.362225,\n  \"chat_reply\": \"ATedning the date that is                                                                                     -                                                   min            B\",\n  \"probes_val_bpb\": {\n    \"probe_lr2x\": {\n      \"0\": {\n        \"probe\": 3.456354,\n        \"baseline\": 3.456354,\n        \"delta\": 0.0\n      },\n      \"25\": {\n        \"probe\": 3.261715,\n        \"baseline\": 3.264407,\n        \"delta\": -0.002692\n      },\n      \"50\": {\n        \"probe\": 2.815494,\n        \"baseline\": 2.812441,\n        \"delta\": 0.003053\n      },\n      \"75\": {\n        \"probe\": 2.638527,\n        \"baseline\": 2.637682,\n        \"delta\": 0.000845\n      },\n      \"100\": {\n        \"probe\": 2.535822,\n        \"baseline\": 2.536046,\n        \"delta\": -0.000224\n      },\n      \"125\": {\n        \"probe\": 2.46157,\n        \"baseline\": 2.465698,\n        \"delta\": -0.004128\n      },\n      \"150\": {\n        \"probe\": 2.406453,\n        \"baseline\": 2.413566,\n        \"delta\": -0.007113\n      },\n      \"175\": {\n        \"probe\": 2.365374,\n        \"baseline\": 2.374406,\n        \"delta\": -0.009032\n      },\n      \"200\": {\n        \"probe\": 2.333653,\n        \"baseline\": 2.343634,\n        \"delta\": -0.009981\n      },\n      \"225\": {\n        \"probe\": 2.309963,\n        \"baseline\": 2.320339,\n        \"delta\": -0.010376\n      },\n      \"250\": {\n        \"probe\": 2.294093,\n        \"baseline\": 2.305269,\n        \"delta\": -0.011176\n      },\n      \"275\": {\n        \"probe\": 2.282804,\n        \"baseline\": 2.294143,\n        \"delta\": -0.011339\n      },\n      \"300\": {\n        \"probe\": 2.276136,\n        \"baseline\": 2.288206,\n        \"delta\": -0.01207\n      }\n    },\n    \"probe_vocab2048\": {\n      \"0\": {\n        \"probe\": 3.68329,\n        \"baseline\": 3.456354,\n        \"delta\": 0.226936\n      },\n      \"25\": {\n        \"probe\": 3.4531,\n        \"baseline\": 3.264407,\n        \"delta\": 0.188693\n      },\n      \"50\": {\n        \"probe\": 2.982882,\n        \"baseline\": 2.812441,\n        \"delta\": 0.170441\n      },\n      \"75\": {\n        \"probe\": 2.793805,\n        \"baseline\": 2.637682,\n        \"delta\": 0.156123\n      },\n      \"100\": {\n        \"probe\": 2.675608,\n        \"baseline\": 2.536046,\n        \"delta\": 0.139562\n      },\n      \"125\": {\n        \"probe\": 2.588342,\n        \"baseline\": 2.465698,\n        \"delta\": 0.122644\n      },\n      \"150\": {\n        \"probe\": 2.526694,\n        \"baseline\": 2.413566,\n        \"delta\": 0.113128\n      },\n      \"175\": {\n        \"probe\": 2.480876,\n        \"baseline\": 2.374406,\n        \"delta\": 0.10647\n      },\n      \"200\": {\n        \"probe\": 2.447436,\n        \"baseline\": 2.343634,\n        \"delta\": 0.103802\n      },\n      \"225\": {\n        \"probe\": 2.421025,\n        \"baseline\": 2.320339,\n        \"delta\": 0.100686\n      },\n      \"250\": {\n        \"probe\": 2.403515,\n        \"baseline\": 2.305269,\n        \"delta\": 0.098246\n      },\n      \"275\": {\n        \"probe\": 2.391034,\n        \"baseline\": 2.294143,\n        \"delta\": 0.096891\n      },\n      \"300\": {\n        \"probe\": 2.384032,\n        \"baseline\": 2.288206,\n        \"delta\": 0.095826\n      }\n    }\n  }\n}","evalMetrics":"{\n  \"baseEvaluation\": {\n    \"trainBpb\": 1.152185,\n    \"validationBpb\": 1.119301\n  },\n  \"core\": [\n    {\n      \"task\": \"bigbench_qa_wikidata\",\n      \"accuracy\": 0,\n      \"centered\": 0,\n      \"seconds\": 0.82\n    },\n    {\n      \"task\": \"openbook_qa\",\n      \"accuracy\": 0.25,\n      \"centered\": 0,\n      \"seconds\": 1\n    },\n    {\n      \"task\": \"winogrande\",\n      \"accuracy\": 0.5625,\n      \"centered\": 0.125,\n      \"seconds\": 0.79\n    },\n    {\n      \"task\": \"bigbench_operators\",\n      \"accuracy\": 0,\n      \"centered\": 0,\n      \"seconds\": 1.2\n    }\n  ],\n  \"final\": {\n    \"baseValidationBpb\": 1.165758,\n    \"sftValidationBpb\": 0.7389,\n    \"chatAnswer\": \"Paris\"\n  }\n}","baseReadme":"# OpenResearch nanochat demo: reference run\n\nThese are unchanged copies of the reference run's evidence from\nalphaXiv/OpenResearch at commit\n`27cb342`, path `demo/nanochat/evidence/`:\n\n- [training-metrics.csv](training-metrics.csv): base and SFT loss, validation\n  bpb, throughput, and elapsed time by step.\n- [evaluation-metrics.json](evaluation-metrics.json): base bpb, the CORE tasks\n  that were completed, and the final headline metrics.\n\nRun: depth 6, 73.5M parameters, vocabulary 32,768, 5,000 base steps and 1,500\nSFT steps on an Apple M3 Max (`mps`). Base validation bpb was 1.940739 at step\n100, 1.762539 at step 200, and 1.165758 at the end. SFT validation bpb was\n0.7389. The chat answer was \"Paris\".\n\nThe CPU example in [../../Code/README.md](../../Code/README.md) is about 90×\nsmaller (0.84M parameters, 300 steps). Its numbers are not comparable to these\nbeyond the shape of the curves.\n","baselineNote":"All research must have a baseline. As Kaiming said, \"Optimize your baseline, and then you can find a better one.\" ","heads":{"Code/results/training_metrics.csv":["run,phase,step,train_loss,val_bpb,tok_per_sec,dt_ms","baseline,base,0,8.317948,3.456354,43446,94.28","baseline,base,1,8.317826,,37266,109.91","baseline,base,2,8.317536,,46728,87.66","baseline,base,3,8.317013,,36227,113.06"],"Baselines/openresearch-demo/training-metrics.csv":["phase,step,loss,validation_bpb,tokens_per_second,total_minutes","base,0,10.397551,3.195800,6072,0.00","base,1,10.396379,,10180,0.00","base,2,10.394470,,10225,0.00","base,3,10.391348,,10257,0.00"]},"sizes":{"Figs/baseline_training_curves.svg":11127,"Figs/probe_comparison.svg":9295,"Baselines/openresearch-demo/README.md":946,"Baselines/openresearch-demo/evaluation-metrics.json":660,"Baselines/openresearch-demo/training-metrics.csv":203983,"Baselines/Baseline_readme.md":114,"Code/results/summary.json":4509,"Code/results/training_metrics.csv":40250},"rows":{"Code/results/training_metrics.csv":943,"Baselines/openresearch-demo/training-metrics.csv":6501}}</script>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+  const app = $('#app'), ws = $('#ws');
+  const D = JSON.parse($('#repo-data').textContent);
+  const SKEL = D.skeleton.split('\n');
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function icon(id, cls) { return '<svg class="ic ' + (cls || '') + '" aria-hidden="true"><use href="#i-' + id + '"/></svg>'; }
+  function fmtBytes(n) { return n < 1024 ? n.toLocaleString('en-US') + ' bytes' : (n / 1024).toFixed(1) + ' KB'; }
+  function lines(file, a, b) { // a..b inclusive, 1-based, from the copied README ranges
+    const out = [];
+    for (let n = a; n <= b; n++) {
+      const r = D.readme.find(x => n >= x.from && n < x.from + x.lines.length);
+      if (!r) throw new Error('README line ' + n + ' not copied');
+      out.push(r.lines[n - r.from]);
+    }
+    return out.join('\n');
+  }
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* =================================================================
+     Idea graph: sample drawn from the project's files. Every node and
+     link names the file and line it comes from; "derived" marks a link
+     this mockup inferred rather than read.
+     ================================================================= */
+  const KIND = { Q: 'question', H: 'hypothesis', E: 'experiment', R: 'result', C: 'claim' };
+  const N = [
+    { id: 'Q1', text: 'Does every stage run and does val bpb fall?', status: 'answered', src: 'paper_skeleton.md:83 (Experiments table, “Main result” row)' },
+    { id: 'Q2', text: 'Effect of a doubled Muon matrix LR', status: 'answered', src: 'paper_skeleton.md:84 (Experiments table, “Probe 1” row)' },
+    { id: 'Q3', text: 'Effect of a 2,048-token vocabulary', status: 'answered', src: 'paper_skeleton.md:85 (Experiments table, “Probe 2” row)' },
+    { id: 'Q4', text: 'Is the ~3-minute d1 example (0.84M params) the right first-run example for Research OS users, and should it be verified on another machine or OS?', status: 'open', src: 'PROJECT_MEMORY.md:18 (“Current question”)' },
+    { id: 'E1', text: 'SFT at the demo’s --init-lr-frac 0.8', status: 'done', src: 'Code/README.md:91 (Recipe table, “SFT steps / LR” row)',
+      run: { none: 'Not recorded: no result file and no commit. The run is described only in Code/README.md:91.' } },
+    { id: 'E2', text: 'Every stage: bash runs/runcpu_small.sh all, on 2026-09-26', status: 'done', src: 'Code/README.md:122 (“Results”)',
+      run: { files: ['Code/results/summary.json', 'Code/results/training_metrics.csv'], keys: 'stages, base_val_bpb, sft_val_bpb', commit: 'c4d4a85' } },
+    { id: 'E3', text: 'Probe 1: the base recipe with --matrix-lr=0.04', status: 'done', src: 'Code/README.md:53 (stage “probe_lr”)',
+      run: { files: ['Code/results/summary.json'], keys: 'probes_val_bpb.probe_lr2x', commit: 'c4d4a85', same: true } },
+    { id: 'E4', text: 'Probe 2: a 2,048-token tokenizer, then the base recipe', status: 'done', src: 'Code/README.md:54 (stage “probe_vocab”)',
+      run: { files: ['Code/results/summary.json'], keys: 'probes_val_bpb.probe_vocab2048', commit: 'c4d4a85', same: true } },
+    { id: 'E5', text: 'Run bash runs/runcpu_small.sh all on Linux or macOS', status: 'planned', src: 'PROJECT_MEMORY.md:38 (Open TODOs, marked optional)',
+      run: { none: 'No run yet.' } },
+    { id: 'R1', from: 'E1', text: 'At 0.8, SFT val bpb spiked from 2.29 to 2.63 and ended above its start', status: 'recorded', src: 'Code/README.md:91; paper_skeleton.md:91–92' },
+    { id: 'R2', from: 'E2', text: 'Every stage exits 0; the whole example takes 2 min 57 s; peak RAM 1.0 GB (data download), training ≤ 0.94 GB', status: 'recorded', src: 'Code/README.md:18–19 (first run); Code/results/summary.json “stages”, every “exit” 0 (a later warm-cache re-run)' },
+    { id: 'R3', from: 'E2', text: 'Base val bpb 3.4564 → 2.2882 in 300 steps; SFT 2.2892 → 2.1456 in 40 steps', status: 'recorded', src: 'Code/results/summary.json “base_val_bpb” (3.456354 → 2.288206), “sft_val_bpb”; paper_skeleton.md:89' },
+    { id: 'R4', from: 'E2', text: 'Two fresh runs gave identical val bpb to 6 decimals', status: 'recorded', src: 'Code/README.md:126–127' },
+    { id: 'R5', from: 'E3', text: 'Neutral through step 100, then slightly better; at step 300, 2.2761 against the baseline’s 2.2882 (Δ −0.0121)', status: 'recorded', src: 'Code/README.md:158, 160–161; Code/results/summary.json “probes_val_bpb” → “probe_lr2x” → “300”' },
+    { id: 'R6', from: 'E4', text: 'Worse at every step; at step 300, 2.3840 against 2.2882 (Δ +0.0958); the gap narrows from 0.23 to 0.10', status: 'recorded', src: 'Code/README.md:158, 162–163; Code/results/summary.json “probes_val_bpb” → “probe_vocab2048” → “300”' },
+    { id: 'C1', text: 'every stage runs; whole pipeline 2 min 57 s, ≤ 1.0 GB RAM per process', status: 'verified', line: 115 },
+    { id: 'C2', text: 'base val bpb 3.4564 → 2.2882; SFT 2.2892 → 2.1456', status: 'verified', line: 116 },
+    { id: 'C3', text: 'matrix LR ×2 ends 0.012 bpb lower', status: 'verified', line: 117 },
+    { id: 'C4', text: 'vocab 2,048 ends 0.096 bpb higher', status: 'verified', line: 118 },
+    { id: 'C5', text: 'runs are deterministic', status: 'verified', line: 119 }
+  ];
+  N.forEach(n => {
+    n.kind = n.id[0];
+    if (n.kind === 'C') n.src = 'paper_skeleton.md:' + n.line + ' (Claims and Evidence, row ' + n.id + ')';
+  });
+  const NODE = {}; N.forEach(n => { NODE[n.id] = n; });
+  // a → b, in the decided link words (HANDOFF.md, "Idea view"). `d` = derived by this mockup.
+  const EDGES = [
+    { a: 'E1', w: 'tests', b: 'Q1', d: true, src: 'derived from Code/README.md:91: the 0.8 run is where SFT val bpb rose' },
+    { a: 'E2', w: 'tests', b: 'Q1', src: 'paper_skeleton.md:83: the “Main result” study asks Q1 and outputs Code/results/summary.json' },
+    { a: 'R1', w: 'motivates', b: 'E2', src: 'Code/README.md:91: the spike is the reason the example uses --init-lr-frac=0.1' },
+    { a: 'E3', w: 'tests', b: 'Q2', src: 'paper_skeleton.md:84' },
+    { a: 'E4', w: 'tests', b: 'Q3', src: 'paper_skeleton.md:85' },
+    { a: 'E5', w: 'tests', b: 'Q4', d: true, src: 'derived from PROJECT_MEMORY.md:18 and :38: the open TODO is the check the question asks for' },
+    { a: 'R2', w: 'supports', b: 'C1', src: 'paper_skeleton.md:115 (evidence: first-run stage log, Code/README.md)' },
+    { a: 'R3', w: 'supports', b: 'C2', src: 'paper_skeleton.md:116 (evidence: summary.json base_val_bpb, sft_val_bpb)' },
+    { a: 'R5', w: 'supports', b: 'C3', src: 'paper_skeleton.md:117 (evidence: summary.json probe_lr2x step 300)' },
+    { a: 'R6', w: 'supports', b: 'C4', src: 'paper_skeleton.md:118 (evidence: summary.json probe_vocab2048 step 300)' },
+    { a: 'R4', w: 'supports', b: 'C5', src: 'paper_skeleton.md:119 (evidence: two fresh runs, Code/README.md)' }
+  ];
+  // A result names the experiment it came from ("from"); no decided link word covers that.
+  const FROMS = N.filter(n => n.from).map(n => ({ a: n.from, w: 'from', b: n.id }));
+  const ALL = EDGES.concat(FROMS);
+
+  // Variant A: positions in the drawn map [column, row]; columns hold Q, E, R, C (no H recorded).
+  const GA = { w: 150, h: 48, gx: 56, py: 58, pad: 16, top: 26, last: 6.3, reserve: 104 };
+  const COLX = { Q: 0, E: 1, R: 2, C: 3 };
+  const ROW = { Q4: 0, E5: 0, E1: 1.1, R1: 1.1, Q1: 1.6, E2: 2.1, R2: 2.1, C1: 2.1, R3: 3.1, C2: 3.1, R4: 4.1, C5: 4.1,
+    Q2: 5.3, E3: 5.3, R5: 5.3, C3: 5.3, Q3: 6.3, E4: 6.3, R6: 6.3, C4: 6.3 };
+
+  /* ---------- the proposed idea file, one table, generated from the same data ---------- */
+  function linksOf(n) {
+    return EDGES.filter(e => e.a === n.id).map(e => e.w + ' ' + e.b).join('; ');
+  }
+  function pointsTo(n) {
+    if (n.kind === 'E') {
+      if (n.run.none) return n.status === 'planned' ? '' : 'run: not recorded';
+      return 'run: ' + n.run.files[0] + (n.run.keys ? ' (' + n.run.keys + ')' : '') + ', commit not recorded*';
+    }
+    if (n.kind === 'R') return 'from ' + n.from;
+    if (n.kind === 'C') return 'paper_skeleton.md, claim ' + n.id;
+    return '';
+  }
+  function plainSrc(n) { return n.src.replace(/[“”]/g, '"'); }
+  function nodeRow(n) {
+    const cells = [n.id, KIND[n.kind], n.text, n.status, linksOf(n), pointsTo(n), plainSrc(n)];
+    return '| ' + cells.join(' | ') + ' |';
+  }
+  function fileText() {
+    return ['# Idea graph', '',
+      'One row per node. A link names its target row by ID.', '',
+      '| ID | Kind | Statement | Status | Links | Points to | Source |',
+      '|---|---|---|---|---|---|---|'].concat(N.map(nodeRow)).concat(['',
+      '\\* The 2026-09-26 run recorded no commit (runs record their commit from step 3);',
+      'its result files were first committed in c4d4a85 on 2026-09-28.']).join('\n');
+  }
+
+  /* =================================================================
+     state
+     ================================================================= */
+  const S = {
+    tab: 'idea', variant: { idea: 'A', skeleton: 'A', assets: 'A' },
+    node: null, claim: null, asset: null, sel: null, chips: [], openChip: null
+  };
+  const VARIANTS = {
+    idea: { q: 'Idea view: 2 alternatives, pick one', sub: 'Clicking inside the view shows states, not more choices.', opts: [
+      { v: 'A', t: 'Graph', d: 'A map: small nodes, every link always drawn as a line.' },
+      { v: 'B', t: 'Columns', d: 'Readable cards in a column per kind; links drawn only for the card you select.' }] },
+    skeleton: { q: 'Skeleton view: 2 alternatives, pick one', sub: 'Clicking inside the view shows states, not more choices.', opts: [
+      { v: 'A', t: 'Document', d: 'The whole paper_skeleton.md, top to bottom as written.' },
+      { v: 'B', t: 'Claims first', d: 'The claims table with evidence beside it; the rest of the file folded.' }] },
+    assets: { q: 'Assets view: 2 alternatives of what it holds, pick one', sub: 'Same layout; only the list differs.', opts: [
+      { v: 'A', t: 'Figs/ and Baselines/', d: 'Only what the planned plugin card names.' },
+      { v: 'B', t: '+ results and datasets', d: 'Also Code/results/ and the datasets the code downloads.' }] }
+  };
+
+  /* ---------- mockup strip ---------- */
+  function renderMock() {
+    const v = VARIANTS[S.tab];
+    const q = $('#mockQ'), o = $('#mockOpts');
+    if (!v) {
+      q.innerHTML = 'Stand-in tab';
+      o.innerHTML = '<span class="mock-one">This view was built in step 1 and is not redrawn here. Nothing to choose: open the Idea, Skeleton, or Assets tab.</span>';
+      return;
+    }
+    q.innerHTML = esc(v.q) + '<small>' + esc(v.sub) + '</small>';
+    o.innerHTML = v.opts.map(x => '<button type="button" class="mock-opt' + (S.variant[S.tab] === x.v ? ' on' : '') + '" data-variant="' + x.v + '" aria-pressed="' + (S.variant[S.tab] === x.v) + '"><span class="L">' + x.v + '</span><span class="t">' + esc(x.t) + '</span><span class="d">' + esc(x.d) + '</span></button>').join('') +
+      (S.tab === 'idea' ? '<button type="button" class="mock-btn" data-act="fmt">Proposed file format</button>' : '');
+  }
+
+  /* ---------- tabs ---------- */
+  function renderTabs() {
+    $$('#viewTabs [data-tab]').forEach(b => {
+      const on = b.dataset.tab === S.tab;
+      b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on));
+    });
+    ['overview', 'idea', 'code', 'skeleton', 'assets', 'paper'].forEach(t => { $('#v-' + t).hidden = t !== S.tab; });
+    renderMock();
+    if (S.tab === 'idea') renderIdea();
+    if (S.tab === 'skeleton') renderSkeleton();
+    if (S.tab === 'assets') renderAssets();
+  }
+
+  /* =================================================================
+     IDEA VIEW
+     ================================================================= */
+  function kb(id) { return '<span class="kb k-' + id[0] + '">' + id + '</span>'; }
+  function stHtml(s) { return '<span class="st ' + s + '">' + s + '</span>'; }
+  function neighbours(id) {
+    const set = new Set();
+    ALL.forEach(e => { if (e.a === id) set.add(e.b); if (e.b === id) set.add(e.a); });
+    return set;
+  }
+
+  function renderIdea() {
+    const B = S.variant.idea === 'B';
+    $('#ideaA').hidden = B; $('#ideaB').hidden = !B;
+    if (B) renderBoard(); else renderGraph();
+    renderNodeDetail();
+  }
+
+  /* --- variant A: drawn map --- */
+  function nodeBox(id) {
+    const n = NODE[id];
+    return { x: GA.pad + COLX[n.kind] * (GA.w + GA.gx), y: GA.pad + GA.top + ROW[id] * GA.py, w: GA.w, h: GA.h };
+  }
+  function graphGeometry() {
+    // ports: on each side of a node, the lines attached are spread by the other end's height
+    const side = {};
+    const segs = ALL.map(e => {
+      const A = nodeBox(e.a), Bx = nodeBox(e.b);
+      const aLeft = A.x < Bx.x;
+      const L = aLeft ? { id: e.a, box: A } : { id: e.b, box: Bx };
+      const R = aLeft ? { id: e.b, box: Bx } : { id: e.a, box: A };
+      return { e: e, L: L, R: R };
+    });
+    segs.forEach(s => {
+      (side[s.L.id + ':r'] = side[s.L.id + ':r'] || []).push({ s: s, oy: s.R.box.y });
+      (side[s.R.id + ':l'] = side[s.R.id + ':l'] || []).push({ s: s, oy: s.L.box.y });
+    });
+    Object.keys(side).forEach(k => {
+      const list = side[k].sort((p, q) => p.oy - q.oy);
+      list.forEach((p, i) => {
+        const box = k.endsWith(':r') ? p.s.L.box : p.s.R.box;
+        const y = box.y + box.h * (i + 1) / (list.length + 1);
+        if (k.endsWith(':r')) p.s.y1 = y; else p.s.y2 = y;
+      });
+    });
+    segs.forEach(s => {
+      s.x1 = s.L.box.x + s.L.box.w; s.x2 = s.R.box.x;
+      const dx = (s.x2 - s.x1) / 2;
+      s.d = 'M' + s.x1 + ' ' + s.y1 + ' C' + (s.x1 + dx) + ' ' + s.y1 + ' ' + (s.x2 - dx) + ' ' + s.y2 + ' ' + s.x2 + ' ' + s.y2;
+      s.mx = (s.x1 + s.x2) / 2; s.my = (s.y1 + s.y2) / 2;
+    });
+    return segs;
+  }
+  function legendSvg(cls) { return '<svg viewBox="0 0 26 8"><path class="ln ' + cls + '" d="M1 4H25"/></svg>'; }
+  function renderGraph() {
+    const W = GA.pad * 2 + 4 * GA.w + 3 * GA.gx;
+    const H = GA.pad * 2 + GA.top + GA.last * GA.py + GA.h;
+    const inner = $('#ginner');
+    const segs = graphGeometry();
+    const open = S.node;
+    const near = open ? neighbours(open) : new Set();
+    let html = '<svg class="glines" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">';
+    segs.forEach(s => {
+      const hot = open && (s.e.a === open || s.e.b === open);
+      html += '<path class="ln ' + s.e.w + (s.e.d ? ' derived' : '') + (hot ? ' hot' : '') + '" d="' + s.d + '"/>';
+    });
+    html += '</svg>';
+    // one column per kind; this project records no hypotheses, so that column is left out
+    [['Q', 'Questions'], ['E', 'Experiments'], ['R', 'Results'], ['C', 'Claims']].forEach((k, i) => {
+      const n = N.filter(x => x.kind === k[0]).length;
+      html += '<div class="ghead" style="left:' + (GA.pad + i * (GA.w + GA.gx)) + 'px;top:' + GA.pad + 'px"><span class="kb k-' + k[0] + '">' + k[0] + '</span>' + k[1] + ' · ' + n + '</div>';
+    });
+    // legend in the empty top-right corner of the map
+    const lx = GA.pad + 3 * (GA.w + GA.gx), ly = GA.pad + GA.top;
+    html += '<div class="glegend" style="left:' + lx + 'px;top:' + ly + 'px;width:' + GA.w + 'px">' +
+      '<b>Lines</b>' +
+      '<div>' + legendSvg('motivates') + 'motivates</div>' +
+      '<div>' + legendSvg('tests') + 'tests</div>' +
+      '<div>' + legendSvg('supports') + 'supports</div>' +
+      '<div class="none">' + legendSvg('refutes') + 'refutes · none here</div>' +
+      '<div>' + legendSvg('from') + 'result came from</div>' +
+      '<div class="none" title="paper_skeleton.md:16: “Main research question: none”"><span class="kb k-H" style="opacity:.5;min-width:18px;height:15px;line-height:15px;font-size:9.5px">H</span>hypotheses · none</div></div>';
+    N.forEach(n => {
+      const b = nodeBox(n.id);
+      const cls = 'gnode k-' + n.kind + (open === n.id ? ' on' : '') + (near.has(n.id) ? ' near' : '') + (S.sel && S.sel.key === 'node:' + n.id ? ' picked' : '');
+      html += '<button type="button" class="' + cls + '" data-node="' + n.id + '" style="left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h + 'px" title="' + esc(n.text) + '">' +
+        '<span class="gn-top">' + kb(n.id) + stHtml(n.status) + '</span><span class="gn-tx">' + esc(n.text) + '</span></button>';
+    });
+    if (open) {
+      // each label sits nearer the other node, so labels of lines that share the open node spread apart
+      segs.filter(s => s.e.a === open || s.e.b === open).forEach(s => {
+        const t = s.L.id === open ? 0.66 : 0.34, u = 1 - t, dx = (s.x2 - s.x1) / 2;
+        const x = u * u * u * s.x1 + 3 * u * u * t * (s.x1 + dx) + 3 * u * t * t * (s.x2 - dx) + t * t * t * s.x2;
+        const y = u * u * u * s.y1 + 3 * u * u * t * s.y1 + 3 * u * t * t * s.y2 + t * t * t * s.y2;
+        html += '<span class="elabel ' + s.e.w + '" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px">' + (s.e.w === 'from' ? 'came from' : s.e.w) + '</span>';
+      });
+    }
+    inner.innerHTML = html;
+    inner.classList.toggle('has-open', !!open);
+    inner.dataset.w = W; inner.dataset.h = H;
+    fitGraph();
+  }
+  function fitGraph() {
+    const wrap = $('#ideaA'), inner = $('#ginner'), sizer = $('#gsizer');
+    if (wrap.hidden || !wrap.clientWidth) return;
+    const W = Number(inner.dataset.w), H = Number(inner.dataset.h);
+    // fit the width only (text stays readable); the map scrolls down if it is taller, and keeps
+    // a free strip at its foot for the ask bar, as the Code view does
+    let s = Math.min(1, (wrap.clientWidth - 2) / W);
+    s = Math.max(0.8, s);
+    inner.style.transform = 'scale(' + s.toFixed(3) + ')';
+    sizer.style.width = Math.floor(W * s) + 'px'; sizer.style.height = Math.floor(H * s) + 'px';
+    sizer.style.margin = '0 ' + (W * s < wrap.clientWidth ? 'auto' : '0') + ' ' + GA.reserve + 'px';
+  }
+
+  /* --- variant B: columns --- */
+  function renderBoard() {
+    const open = S.node, near = open ? neighbours(open) : new Set();
+    const col = k => N.filter(n => n.kind === k);
+    const card = n => {
+      const rel = open && near.has(n.id) ? relWord(open, n.id) : '';
+      const pt = n.kind === 'E' ? (n.run.none ? (n.status === 'planned' ? 'no run yet' : 'run not recorded') : n.run.files[0].replace('Code/results/', '') + ' · ' + n.run.commit + '*')
+        : n.kind === 'R' ? 'from ' + n.from : n.kind === 'C' ? 'paper_skeleton.md · ' + n.id : '';
+      return '<button type="button" class="bcard k-' + n.kind + (open === n.id ? ' on' : '') + (near.has(n.id) ? ' near' : '') + (S.sel && S.sel.key === 'node:' + n.id ? ' picked' : '') + '" data-node="' + n.id + '">' +
+        '<span class="gn-top">' + kb(n.id) + stHtml(n.status) + '</span>' +
+        (rel ? '<span class="lk" style="color:var(--' + relColor(rel.w) + ')">' + esc(rel.t) + '</span>' : '') +
+        '<span class="tx">' + esc(n.text) + '</span>' + (pt ? '<span class="pt">' + esc(pt) + '</span>' : '') + '</button>';
+    };
+    const head = (k, label, list) => '<h4><span class="kb k-' + k + '">' + k + '</span>' + label + ' · ' + list.length + '</h4>';
+    let h = '';
+    h += '<div class="bcol">' + head('Q', 'Questions', col('Q')) + col('Q').map(card).join('') + '</div>';
+    h += '<div class="bcol hyp"><button type="button" class="hyp-none" title="Hypotheses: none recorded" data-hint="No hypotheses: paper_skeleton.md:16 says “Main research question: none; the paper documents an example project.”"><span class="kb k-H">H</span>0</button><span class="hyp-rule"></span></div>';
+    h += '<div class="bcol">' + head('E', 'Experiments', col('E')) + col('E').map(card).join('') + '</div>';
+    h += '<div class="bcol">' + head('R', 'Results', col('R')) + col('R').map(card).join('') + '</div>';
+    h += '<div class="bcol">' + head('C', 'Claims', col('C')) + col('C').map(card).join('') + '</div>';
+    h += '<svg class="blines" id="blines"></svg>';
+    const board = $('#ideaB');
+    board.innerHTML = h;
+    board.classList.toggle('has-open', !!open);
+    requestAnimationFrame(drawBoardLines);
+  }
+  function relColor(w) { return { motivates: 'l-mot', tests: 'l-tests', supports: 'l-sup', refutes: 'l-ref', from: 'muted' }[w]; }
+  function relWord(open, other) {
+    const e = ALL.find(x => (x.a === open && x.b === other) || (x.b === open && x.a === other));
+    if (!e) return null;
+    if (e.w === 'from') return { w: 'from', t: e.a === open ? 'came from ' + open : open + ' came from it' };
+    return { w: e.w, t: e.a === other ? other + ' ' + e.w + ' ' + open : open + ' ' + e.w + ' ' + other };
+  }
+  const BCOL = { Q: 0, H: 1, E: 2, R: 3, C: 4 };
+  function drawBoardLines() {
+    const board = $('#ideaB'), svg = $('#blines');
+    if (!svg || board.hidden) return;
+    const W = board.scrollWidth, H = board.scrollHeight;
+    svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    const open = S.node;
+    if (!open) { svg.innerHTML = ''; return; }
+    const br = board.getBoundingClientRect();
+    const rect = id => {
+      const el = $('.bcard[data-node="' + id + '"]', board);
+      const r = el.getBoundingClientRect();
+      return { x: r.left - br.left + board.scrollLeft, y: r.top - br.top + board.scrollTop, w: r.width, h: r.height };
+    };
+    let p = '';
+    ALL.filter(e => e.a === open || e.b === open).forEach(e => {
+      const aL = BCOL[e.a[0]] < BCOL[e.b[0]];
+      const L = rect(aL ? e.a : e.b), R = rect(aL ? e.b : e.a);
+      const x1 = L.x + L.w, y1 = L.y + Math.min(L.h / 2, 26), x2 = R.x, y2 = R.y + Math.min(R.h / 2, 26), dx = (x2 - x1) / 2;
+      p += '<path class="ln hot ' + e.w + '" d="M' + x1 + ' ' + y1 + ' C' + (x1 + dx) + ' ' + y1 + ' ' + (x2 - dx) + ' ' + y2 + ' ' + x2 + ' ' + y2 + '"/>';
+    });
+    svg.innerHTML = p;
+  }
+
+  /* --- detail panel (both variants) --- */
+  function lchip(id, extra, derived, title) {
+    return '<button type="button" class="lchip' + (derived ? ' derived' : '') + '" data-node="' + id + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + kb(id) + (extra ? esc(extra) : '') + (derived ? '<i class="inf">inferred</i>' : '') + '</button>';
+  }
+  // after a click, bring the opened item clear of the ask bar (the scroll boxes keep a free strip at their foot)
+  function reveal() {
+    const sels = Array.prototype.slice.call(arguments);
+    requestAnimationFrame(() => sels.forEach(sel => {
+      const el = $$(sel).find(x => x.offsetParent !== null);
+      if (el) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }));
+  }
+  function renderNodeDetail() {
+    const box = $('#ideaDetail');
+    const n = S.node && NODE[S.node];
+    if (!n) {
+      // nothing selected: what the graph holds at a glance, and what is still open
+      const count = k => N.filter(x => x.kind === k).length;
+      const pending = N.filter(x => x.status === 'open' || x.status === 'planned');
+      box.className = 'ndetail';
+      box.innerHTML = '<div class="nd-head"><span class="nd-kind">This project’s graph</span></div>' +
+        '<p class="nd-text">' + count('Q') + ' questions, ' + count('E') + ' experiments, ' + count('R') + ' results, ' + count('C') + ' claims; no hypotheses are recorded.</p>' +
+        '<dl class="nd-grid"><dt>Still open</dt><dd>' + pending.map(x => lchip(x.id, ' ' + x.status)).join('') + '</dd>' +
+        '<dt>Claims</dt><dd>' + N.filter(x => x.kind === 'C' && x.status === 'verified').length + ' of ' + count('C') + ' verified in paper_skeleton.md</dd></dl>' +
+        '<p class="nd-note">Select a node to read it in full, see its links and where it comes from, and ask the agent about it.</p>';
+      return;
+    }
+    box.className = 'ndetail has';
+    const groups = [];
+    const out = EDGES.filter(e => e.a === n.id), inn = EDGES.filter(e => e.b === n.id);
+    const word = { tests: ['Tests', 'Tested by'], motivates: ['Motivates', 'Motivated by'], supports: ['Supports', 'Supported by'], refutes: ['Refutes', 'Refuted by'] };
+    Object.keys(word).forEach(w => {
+      const o = out.filter(e => e.w === w), i = inn.filter(e => e.w === w);
+      if (o.length) groups.push('<span class="lw">' + word[w][0] + '</span> ' + o.map(e => lchip(e.b, '', e.d, e.src)).join(''));
+      if (i.length) groups.push('<span class="lw">' + word[w][1] + '</span> ' + i.map(e => lchip(e.a, '', e.d, e.src)).join(''));
+    });
+    if (n.from) groups.push('<span class="lw">Came from</span> ' + lchip(n.from));
+    const made = N.filter(x => x.from === n.id);
+    if (made.length) groups.push('<span class="lw">Its results</span> ' + made.map(x => lchip(x.id)).join(''));
+    let pts = '—';
+    if (n.kind === 'E') {
+      pts = n.run.none ? esc(n.run.none)
+        : 'Result file <code>' + n.run.files.map(esc).join('</code>, <code>') + '</code>' + (n.run.keys ? ' (keys <code>' + esc(n.run.keys) + '</code>)' : '') +
+          '. Commit: none recorded by the run; its result files were first committed in <code>' + n.run.commit + '</code> on 2026-09-28.' +
+          (n.run.same ? ' The same one-command run as E2.' : '');
+    } else if (n.kind === 'C') {
+      pts = 'Row ' + n.id + ' of the Claims and Evidence table, <code>paper_skeleton.md:' + n.line + '</code><br><button type="button" class="btn small" data-goclaim="' + n.id + '">Open it in the Skeleton view ' + icon('arrow', 'sm') + '</button>';
+    } else if (n.kind === 'R') {
+      pts = 'Came from ' + n.from + ' (a result names its experiment; none of the link words says that)';
+    }
+    const notes = [];
+    if (out.concat(inn).some(e => e.d)) notes.push('A link marked “inferred” is one this mockup drew from the files; they do not state it. Hover it to see why.');
+    if (n.kind === 'E' && !n.run.none) notes.push('Runs record their own commit only from step 3.');
+    if (n.kind !== 'C') notes.push('Status words other than “verified” are a proposal (mockup strip, “Proposed file format”).');
+    box.innerHTML =
+      '<div class="nd-l"><div class="nd-head">' + kb(n.id) + '<span class="nd-kind">' + KIND[n.kind] + '</span>' + stHtml(n.status) + '</div>' +
+      '<p class="nd-text">' + esc(n.text) + '</p>' + notes.map(x => '<p class="nd-note">' + esc(x) + '</p>').join('') + '</div>' +
+      '<dl class="nd-grid">' +
+      '<dt>Links</dt><dd>' + (groups.length ? groups.map(g => '<span class="lgroup">' + g + '</span>').join('') : '—') + '</dd>' +
+      '<dt>Points to</dt><dd>' + pts + '</dd>' +
+      '<dt>From the files</dt><dd><code>' + esc(n.src) + '</code></dd>' +
+      '</dl>';
+  }
+  function openNode(id, andSelect) {
+    S.node = id;
+    if (andSelect) {
+      const n = NODE[id];
+      selectRef({ key: 'node:' + id, label: 'idea_graph.md · ' + id + ' (' + KIND[n.kind] + ')', quote: nodeRow(n) });
+    }
+    renderIdea();
+    reveal('.gnode.on', '.bcard.on');
+  }
+
+  /* =================================================================
+     SKELETON VIEW: renders paper_skeleton.md, copied unchanged below
+     ================================================================= */
+  // paths may wrap after a slash or an underscore, never inside a word
+  function wb(s) { return s.replace(/([\/_])/g, '$1<wbr>'); }
+  function inline(s) {
+    return s.split('`').map((part, k) => k % 2 ? '<code>' + wb(esc(part)) + '</code>'
+      : esc(part).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, u) => '<span class="mdlink" title="' + u + '">' + wb(t) + '</span>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')).join('');
+  }
+  function splitRow(r) { return r.replace(/^\|/, '').replace(/\|\s*$/, '').split('|').map(c => c.trim()); }
+  function parseMd(L) {
+    const secs = []; let sec = { level: 0, title: '', line: 0, blocks: [] }; secs.push(sec);
+    let i = 0;
+    while (i < L.length) {
+      const s = L[i];
+      if (!s.trim()) { i++; continue; }
+      const m = /^(#{1,6}) (.*)$/.exec(s);
+      if (m) { sec = { level: m[1].length, title: m[2], line: i + 1, blocks: [] }; secs.push(sec); i++; continue; }
+      if (s.charAt(0) === '|') {
+        const rows = [];
+        while (i < L.length && L[i].charAt(0) === '|') { rows.push({ line: i + 1, raw: L[i], cells: splitRow(L[i]) }); i++; }
+        sec.blocks.push({ type: 'table', head: rows[0], body: rows.slice(2) });
+        continue;
+      }
+      if (/^- /.test(s)) {
+        const items = [];
+        while (i < L.length && (/^- /.test(L[i]) || (items.length && /^\s+\S/.test(L[i])))) {
+          if (/^- /.test(L[i])) items.push({ from: i + 1, to: i + 1, raw: [L[i]] });
+          else { const it = items[items.length - 1]; it.raw.push(L[i]); it.to = i + 1; }
+          i++;
+        }
+        sec.blocks.push({ type: 'ul', items: items });
+        continue;
+      }
+      const start = i, raw = [];
+      while (i < L.length && L[i].trim() && !/^(#{1,6} |\||- )/.test(L[i])) { raw.push(L[i]); i++; }
+      sec.blocks.push({ type: 'p', from: start + 1, to: i, raw: raw });
+    }
+    return secs;
+  }
+  function itemHtml(raw) {
+    let head = raw[0].slice(2); const sub = [];
+    raw.slice(1).forEach(l => {
+      const m = /^\s+(\d+)\. (.*)$/.exec(l);
+      if (m) sub.push(m[2]); else if (sub.length) sub[sub.length - 1] += ' ' + l.trim(); else head += ' ' + l.trim();
+    });
+    return inline(head) + (sub.length ? '<ol>' + sub.map(x => '<li>' + inline(x) + '</li>').join('') + '</ol>' : '');
+  }
+  const SECS = parseMd(SKEL);
+  const BLK = {}; // key -> {label, quote}
+  function rangeLabel(a, b) { return 'paper_skeleton.md:' + a + (b > a ? '–' + b : ''); }
+  function blockKey(a) { return 'sk:' + a; }
+  SECS.forEach(sec => sec.blocks.forEach(b => {
+    const where = sec.title || 'Paper Skeleton';
+    if (b.type === 'p') BLK[blockKey(b.from)] = { label: rangeLabel(b.from, b.to) + ' · ' + where, quote: b.raw.join('\n') };
+    if (b.type === 'ul') b.items.forEach(it => { BLK[blockKey(it.from)] = { label: rangeLabel(it.from, it.to) + ' · ' + where, quote: it.raw.join('\n') }; });
+    if (b.type === 'table') b.body.forEach(r => {
+      const cid = /^(C\d+):/.exec(r.cells[0]);
+      BLK[blockKey(r.line)] = { label: 'paper_skeleton.md:' + r.line + (cid ? ' · claim ' + cid[1] : ' · ' + where), quote: r.raw, claim: cid ? cid[1] : null };
+    });
+  }));
+  // claims, parsed from the file's Claims and Evidence table
+  const CLAIMS = [];
+  SECS.filter(s => s.title === 'Claims and Evidence').forEach(s => s.blocks.forEach(b => {
+    if (b.type === 'table') b.body.forEach(r => {
+      const m = /^(C\d+): (.*)$/.exec(r.cells[0]);
+      CLAIMS.push({ id: m[1], text: m[2], evidence: r.cells[1], source: r.cells[2], result: r.cells[3], status: r.cells[4], line: r.line, raw: r.raw });
+    });
+  }));
+  // which study uses each claim, parsed from the Experiments table
+  const STUDY = {};
+  SECS.filter(s => s.title === 'Experiments').forEach(s => s.blocks.forEach(b => {
+    if (b.type === 'table') b.body.forEach(r => {
+      r.cells[r.cells.length - 1].split(',').map(x => x.trim()).forEach(c => { (STUDY[c] = STUDY[c] || []).push(r.cells[0] + ' (paper_skeleton.md:' + r.line + ')'); });
+    });
+  }));
+
+  // what the source file says, copied from the file (summary.json is parsed, never retyped)
+  const SUMMARY = JSON.parse(D.summary);
+  function jsonPick(obj, keys) {
+    return keys.map(k => '  "' + k + '": ' + JSON.stringify(obj[k])).join(',\n');
+  }
+  function ends(o) { const k = Object.keys(o); return '{ "' + k[0] + '": ' + o[k[0]] + ', …, "' + k[k.length - 1] + '": ' + o[k[k.length - 1]] + ' }'; }
+  function evidenceOf(id) {
+    switch (id) {
+      case 'C1': return { file: 'Code/README.md:16–19 (first run)', text: lines('README', 16, 19),
+        note: 'The stage timings in Code/results/summary.json come from a later re-run with the data already cached (152.9 s in total); this table is the first run (Code/README.md:127–129).' };
+      case 'C2': return { file: 'Code/results/summary.json', text: '"base_val_bpb": ' + ends(SUMMARY.base_val_bpb) + '\n"sft_val_bpb": ' + ends(SUMMARY.sft_val_bpb) };
+      case 'C3': return { file: 'Code/results/summary.json', text: '"probes_val_bpb" → "probe_lr2x" → "300":\n' + JSON.stringify(SUMMARY.probes_val_bpb.probe_lr2x['300']) };
+      case 'C4': return { file: 'Code/results/summary.json', text: '"probes_val_bpb" → "probe_vocab2048" → "300":\n' + JSON.stringify(SUMMARY.probes_val_bpb.probe_vocab2048['300']) };
+      case 'C5': return { file: 'Code/README.md:126–127', text: lines('README', 126, 127) };
+    }
+    return null;
+  }
+  function evidenceHtml(c, withClaim) {
+    const ev = evidenceOf(c.id);
+    const ideaNode = EDGES.filter(e => e.b === c.id).map(e => e.a);
+    return '<div class="evbox">' +
+      (withClaim ? '<div class="row2" style="margin-top:0">' + kb(c.id) + '<span class="stp' + (c.status === 'verified' ? '' : ' draft') + '">' + esc(c.status) + '</span></div><p class="cl">' + inline(c.text) + '</p>' : '') +
+      '<h5>Evidence, as the skeleton states it</h5><div>' + inline(c.evidence) + ' · ' + inline(c.source) + ' · ' + inline(c.result) + '</div>' +
+      '<h5>What the source file says · ' + esc(ev.file) + '</h5><pre>' + esc(ev.text) + '</pre>' +
+      (ev.note ? '<p class="nd-note">' + esc(ev.note) + '</p>' : '') +
+      '<h5>Used by</h5><div>' + (STUDY[c.id] ? STUDY[c.id].map(esc).join('; ') : 'No study in the Experiments table names ' + c.id + '.') + '</div>' +
+      '<div class="row2"><button type="button" class="btn small" data-gonode="' + c.id + '">Show ' + c.id + ' in the Idea view ' + icon('arrow', 'sm') + '</button>' +
+      (ideaNode.length ? '<span class="src-note">supported there by ' + ideaNode.join(', ') + '</span>' : '') + '</div></div>';
+  }
+
+  function blockAttrs(key) { return ' class="blk' + (S.sel && S.sel.key === key ? ' picked' : '') + '" data-blk="' + key + '"'; }
+  function renderBlocks(sec, opts) {
+    let h = '';
+    sec.blocks.forEach(b => {
+      if (b.type === 'p') h += '<p' + blockAttrs(blockKey(b.from)) + '>' + inline(b.raw.join(' ')) + '</p>';
+      if (b.type === 'ul') h += '<ul>' + b.items.map(it => '<li' + blockAttrs(blockKey(it.from)) + '>' + itemHtml(it.raw) + '</li>').join('') + '</ul>';
+      if (b.type === 'table') {
+        h += '<table class="mdtable' + (/Notes/.test(b.head.cells[b.head.cells.length - 1]) ? ' wide' : '') + '"><thead><tr>' + b.head.cells.map(c => '<th>' + inline(c) + '</th>').join('') + '</tr></thead><tbody>';
+        b.body.forEach(r => {
+          const key = blockKey(r.line), info = BLK[key];
+          const on = info.claim && S.claim === info.claim && opts && opts.inlineEvidence;
+          h += '<tr' + blockAttrs(key).replace('class="blk', 'class="blk' + (on ? ' on' : '')) + '>' + r.cells.map(c => '<td>' + inline(c) + '</td>').join('') + '</tr>';
+          if (on) h += '<tr class="evrow"><td colspan="' + r.cells.length + '">' + evidenceHtml(CLAIMS.find(c => c.id === info.claim), false) + '</td></tr>';
+        });
+        h += '</tbody></table>';
+      }
+    });
+    return h;
+  }
+  function renderSkeleton() {
+    const B = S.variant.skeleton === 'B';
+    $('#skA').hidden = B; $('#skB').hidden = !B;
+    $('#skHint').textContent = B ? 'Select a claim to see its evidence and ask the agent about it.' : 'Select a paragraph, a list item, or a table row to ask the agent about it; a claim row also opens its evidence.';
+    if (!B) {
+      let h = '';
+      SECS.forEach(sec => {
+        if (sec.level) h += '<h' + sec.level + '>' + inline(sec.title) + '</h' + sec.level + '>';
+        h += renderBlocks(sec, { inlineEvidence: true });
+      });
+      $('#skDoc').innerHTML = h;
+      return;
+    }
+    // claims first
+    const snap = SECS.find(s => s.title === 'Snapshot');
+    const item = key => {
+      const it = snap.blocks[0].items.find(x => x.raw[0].indexOf('- ' + key + ':') === 0);
+      return { key: blockKey(it.from), html: itemHtml(it.raw).replace(/^[^:]+:\s*/, '') };
+    };
+    const t = item('Working title'), st = item('Status'), th = item('One-sentence thesis'), au = item('Target venue or audience'), rq = item('Main research question');
+    let h = '<section class="card sk-snap"><div class="eyebrow">Snapshot<span class="stp draft">' + st.html + '</span></div>' +
+      '<h2' + blockAttrs(t.key) + '>' + t.html + '</h2>' +
+      '<p' + blockAttrs(th.key) + '><b>Thesis</b>' + th.html + '</p>' +
+      '<p' + blockAttrs(au.key) + '><b>Audience</b>' + au.html + '</p>' +
+      '<p' + blockAttrs(rq.key) + '><b>Research question</b>' + rq.html + '</p></section>';
+    h += '<section class="sk-claims"><div class="sk-h">Claims and evidence<small>' + CLAIMS.length + ' claims · ' + CLAIMS.filter(c => c.status === 'verified').length + ' verified · paper_skeleton.md:113–119</small></div>' +
+      '<table class="ctable"><colgroup><col style="width:88px"><col style="width:47%"><col></colgroup>' +
+      '<thead><tr><th>Claim</th><th></th><th>Evidence and source</th></tr></thead><tbody>' +
+      CLAIMS.map(c => {
+        const key = blockKey(c.line);
+        return '<tr class="blk' + (S.claim === c.id ? ' on' : '') + (S.sel && S.sel.key === key ? ' picked' : '') + '" data-blk="' + key + '">' +
+          '<td class="id">' + c.id + '<div style="margin-top:6px"><span class="stp' + (c.status === 'verified' ? '' : ' draft') + '">' + esc(c.status) + '</span></div></td>' +
+          '<td class="cl">' + inline(c.text) + '</td>' +
+          '<td>' + inline(c.evidence) + ' · <span class="muted">' + inline(c.result) + '</span><div>' + inline(c.source) + '</div></td></tr>' +
+          // in a narrow window the evidence opens under the row instead of beside the table
+          (S.claim === c.id ? '<tr class="evrow nar"><td colspan="3">' + evidenceHtml(c, false) + '</td></tr>' : '');
+      }).join('') + '</tbody></table></section>';
+    const c = S.claim && CLAIMS.find(x => x.id === S.claim);
+    h += '<aside class="card sk-side">' + (c ? '<h4>Claim ' + c.id + ' · paper_skeleton.md:' + c.line + '</h4>' + evidenceHtml(c, true)
+      : '<h4>Evidence</h4><p class="nd-empty">Select a claim to see its evidence: what the skeleton says, and what the source file itself says.</p>') + '</aside>';
+    h += '<section class="sk-rest"><div class="sk-h">The rest of paper_skeleton.md<small>folded; open a section to read it</small></div>';
+    SECS.forEach(sec => {
+      if (!sec.level || sec.level === 1 || sec.title === 'Snapshot' || sec.title === 'Claims and Evidence' || sec.title === 'Tracking') return;
+      if (!sec.blocks.length) return;
+      const n = sec.blocks.reduce((a, b) => a + (b.type === 'table' ? b.body.length : b.type === 'ul' ? b.items.length : 1), 0);
+      h += '<details' + (S.skOpen && S.skOpen[sec.title] ? ' open' : '') + ' data-sec="' + esc(sec.title) + '"><summary>' + inline(sec.title) + '<small>line ' + sec.line + ' · ' + n + (n === 1 ? ' entry' : ' entries') + '</small></summary><div class="inner mddoc">' + renderBlocks(sec, {}) + '</div></details>';
+    });
+    h += '</section>';
+    $('#skB').innerHTML = h;
+  }
+
+  /* =================================================================
+     ASSETS VIEW
+     ================================================================= */
+  const ASSETS = [
+    { id: 'Figs/baseline_training_curves.svg', group: 'figs', kind: 'figure', tpl: 'fig-baseline',
+      what: 'Base train loss, base val bpb, and SFT val bpb (from the script that writes it).',
+      made: 'Code/tools/summarize_results.py, from the stage logs', used: 'Code/README.md:131 and Code/README_zh.md:126. The paper’s Figure 1 is drawn separately from Code/results/training_metrics.csv (paper_skeleton.md:35).' },
+    { id: 'Figs/probe_comparison.svg', group: 'figs', kind: 'figure', tpl: 'fig-probe',
+      what: 'Val bpb of the baseline and both probes at matched steps (from the script that writes it).',
+      made: 'Code/tools/summarize_results.py, from the stage logs', used: 'Code/README.md:150 and Code/README_zh.md:143' },
+    { id: 'Baselines/openresearch-demo/README.md', group: 'base', kind: 'md', text: D.baseReadme,
+      what: 'What the reference run was and where its files come from.', made: 'Copied with the reference run', used: 'Code/README.md:74; paper_skeleton.md:36' },
+    { id: 'Baselines/openresearch-demo/evaluation-metrics.json', group: 'base', kind: 'json', text: D.evalMetrics,
+      what: 'Base bpb, the CORE tasks that were completed, and the final headline metrics (from its README).', made: 'Unchanged copy from alphaXiv/OpenResearch at 27cb342', used: 'Code/README.md:72–75' },
+    { id: 'Baselines/openresearch-demo/training-metrics.csv', group: 'base', kind: 'csv',
+      what: 'Base and SFT loss, validation bpb, throughput, and elapsed time by step (from its README).', made: 'Unchanged copy from alphaXiv/OpenResearch at 27cb342', used: 'Code/README.md:72–75' },
+    { id: 'Baselines/Baseline_readme.md', group: 'base', kind: 'md', text: D.baselineNote,
+      what: 'A note on baselines; the same file as the project template’s.', made: 'Project template (projects-folder/templates/ai_research_template/Baselines/)', used: '—' },
+    { id: 'Code/results/summary.json', group: 'res', kind: 'json', text: D.summary, cut: 40,
+      what: 'Per-stage exit code, wall time, peak RAM; headline metrics; probe deltas (from the script that writes it).', made: 'Code/tools/summarize_results.py', used: 'paper_skeleton.md:83–85, 115–118; PROJECT_MEMORY.md:17' },
+    { id: 'Code/results/training_metrics.csv', group: 'res', kind: 'csv',
+      what: 'Per-step train loss, val bpb, throughput for every training run (from the script that writes it).', made: 'Code/tools/summarize_results.py', used: 'The paper’s Figure 1 (paper_skeleton.md:126)' }
+  ].concat(D.datasets.map(d => ({ id: 'dataset:' + d.name, group: 'data', kind: 'dataset', name: d.name, line: d.line, used: d.used, src: d.source })));
+  const GROUPS = [
+    { id: 'figs', t: 'Figures', p: 'Figs/', note: 'Made by the summary script after every run; the code README shows them.' },
+    { id: 'base', t: 'Reference runs', p: 'Baselines/', note: 'The OpenResearch demo’s own run, kept unchanged so this project’s numbers have something to stand beside.' },
+    { id: 'res', t: 'Results', p: 'Code/results/', note: 'What the 2026-09-26 run measured. The Code view also lists these files.', B: true },
+    { id: 'data', t: 'Datasets', p: 'not stored in the project', note: 'Downloaded on demand into Code/nanochat/.cache/nanochat/ and not tracked; Code/Datasets/ holds only an empty placeholder. License terms were not checked (Code/README.md:203–204).', B: true }
+  ];
+  function assetMeta(a) {
+    if (a.kind === 'dataset') return a.used;
+    const sz = D.sizes[a.id];
+    const rows = D.rows[a.id];
+    return fmtBytes(sz) + (rows ? ' · ' + rows.toLocaleString('en-US') + ' rows' : '');
+  }
+  function renderAssets() {
+    const B = S.variant.assets === 'B';
+    const groups = GROUPS.filter(g => B || !g.B);
+    const list = ASSETS.filter(a => groups.some(g => g.id === a.group));
+    if (S.asset && !list.some(a => a.id === S.asset)) S.asset = null;
+    $('#asCount').textContent = list.length + ' items · ' + groups.map(g => g.p.indexOf('/') > 0 ? g.p : g.t.toLowerCase()).join(' · ');
+    let h = '';
+    groups.forEach(g => {
+      const items = list.filter(a => a.group === g.id);
+      h += '<section class="as-group"><h3>' + esc(g.t) + '<small>' + esc(g.p) + '</small></h3><p class="gnote">' + esc(g.note) + '</p>';
+      if (g.id === 'figs') {
+        h += '<div class="figs">' + items.map(a => '<button type="button" class="fcard' + (S.asset === a.id ? ' on' : '') + (S.sel && S.sel.key === 'as:' + a.id ? ' picked' : '') + '" data-asset="' + esc(a.id) + '"><span class="thumb" data-tpl="' + a.tpl + '"></span><span class="nm">' + esc(a.id.split('/').pop()) + '</span><span class="mt">' + esc(assetMeta(a)) + '</span></button>').join('') + '</div>';
+      } else {
+        h += '<div class="rows">' + items.map(a => {
+          const ic = a.kind === 'csv' ? 'table' : a.kind === 'dataset' ? 'db' : 'file';
+          const nm = a.kind === 'dataset' ? a.name : a.id.replace(g.p, '');
+          const mt = a.kind === 'dataset' ? 'Used: ' + a.used : a.what;
+          return '<button type="button" class="frow' + (S.asset === a.id ? ' on' : '') + (S.sel && S.sel.key === 'as:' + a.id ? ' picked' : '') + '" data-asset="' + esc(a.id) + '">' + icon(ic) + '<span class="nm">' + esc(nm) + '</span>' +
+            '<span class="sz">' + (a.kind === 'dataset' ? 'not stored' : esc(assetMeta(a))) + '</span><span class="mt">' + esc(mt) + '</span></button>';
+        }).join('') + '</div>';
+      }
+      h += '</section>';
+    });
+    if (!B) h += '<p class="src-note">Not listed here: Code/results/ (the result files) and the downloaded datasets. Alternative B adds them.</p>';
+    $('#asList').innerHTML = h;
+    $$('#asList .thumb').forEach(t => { t.appendChild($('#' + t.dataset.tpl).content.cloneNode(true)); });
+    renderAssetPreview();
+  }
+  function csvHead(id) {
+    const L = D.heads[id];
+    const head = L[0].split(','), body = L.slice(1).map(r => r.split(','));
+    return '<table class="mini"><thead><tr>' + head.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>' +
+      body.map(r => '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table>' +
+      '<p class="src-note">First ' + body.length + ' of ' + D.rows[id].toLocaleString('en-US') + ' rows.</p>';
+  }
+  function mdHtml(text) {
+    return text.trim().split(/\n\s*\n/).map(par => {
+      if (/^# /.test(par)) return '<p><b>' + inline(par.slice(2)) + '</b></p>';
+      if (/^- /.test(par)) return '<ul>' + par.split(/\n(?=- )/).map(li => '<li>' + inline(li.slice(2).replace(/\n\s*/g, ' ')) + '</li>').join('') + '</ul>';
+      return '<p>' + inline(par.replace(/\n/g, ' ')) + '</p>';
+    }).join('');
+  }
+  function renderAssetPreview() {
+    const box = $('#asPrev');
+    const a = S.asset && ASSETS.find(x => x.id === S.asset);
+    if (!a) { box.innerHTML = '<h4>Preview</h4><p class="empty">Select a figure or a file to preview it here.</p>'; return; }
+    let h = '';
+    if (a.kind === 'dataset') {
+      h += '<h4>Dataset · not stored in the project</h4><p class="pn">' + esc(a.name) + '</p>' +
+        '<dl><dt>What</dt><dd>' + esc(a.src) + '</dd><dt>Used</dt><dd>' + esc(a.used) + '</dd><dt>Stored</dt><dd>Downloaded on demand into <code>Code/nanochat/.cache/nanochat/</code>; not tracked</dd><dt>Listed in</dt><dd><code>Code/README.md:' + a.line + '</code></dd><dt>License</dt><dd>Not checked (Code/README.md:203–204)</dd></dl>';
+      box.innerHTML = h; return;
+    }
+    h += '<h4>' + (a.kind === 'figure' ? 'Figure' : a.kind === 'csv' ? 'Table (CSV)' : a.kind === 'json' ? 'Data (JSON)' : 'Note (Markdown)') + '</h4><p class="pn">' + esc(a.id) + '</p>';
+    if (a.kind === 'figure') h += '<div class="big" data-tpl="' + a.tpl + '"></div>';
+    if (a.kind === 'csv') h += csvHead(a.id);
+    if (a.kind === 'json') {
+      const L = a.text.split('\n'); const cut = a.cut && L.length > a.cut;
+      h += '<pre>' + esc((cut ? L.slice(0, a.cut) : L).join('\n')) + '</pre>' + (cut ? '<p class="src-note">First ' + a.cut + ' of ' + L.length + ' lines.</p>' : '');
+    }
+    if (a.kind === 'md') h += '<div class="md">' + mdHtml(a.text) + '</div>' + (/OpenResearch\)/.test(a.text) || a.id.indexOf('openresearch-demo/README') >= 0 ? '<p class="src-note">Rendered; web link addresses are left out of this mockup.</p>' : '');
+    h += '<dl><dt>What</dt><dd>' + esc(a.what) + '</dd><dt>Size</dt><dd>' + esc(assetMeta(a)) + '</dd><dt>Made by</dt><dd>' + esc(a.made) + '</dd><dt>Used in</dt><dd>' + esc(a.used) + '</dd><dt>Committed</dt><dd><code>c4d4a85</code> · 2026-09-28 (git log)</dd></dl>';
+    box.innerHTML = h;
+    const big = $('.big', box); if (big) big.appendChild($('#' + big.dataset.tpl).content.cloneNode(true));
+  }
+  function openAsset(id) {
+    S.asset = id;
+    const a = ASSETS.find(x => x.id === id);
+    const label = a.kind === 'dataset' ? 'Code/README.md:' + a.line + ' · dataset ' + a.name : a.id;
+    if (S.sel && S.sel.key === 'as:' + id) clearSel(); else selectRef({ key: 'as:' + id, label: label });
+    renderAssets();
+    reveal('#asList .on');
+  }
+
+  /* =================================================================
+     selection → ask bar → reference chip (built app's pattern)
+     ================================================================= */
+  function glimpse(q) {
+    const flat = q.split('\n').join(' ↵ ');
+    return flat.length <= 160 ? flat : flat.slice(0, 159) + '…';
+  }
+  function textSize(t) {
+    const n = t.split('\n').length;
+    return n + ' line' + (n === 1 ? '' : 's') + ' · ' + t.length.toLocaleString('en-US') + ' character' + (t.length === 1 ? '' : 's');
+  }
+  function refText(r) {
+    const head = 'About ' + r.label;
+    if (r.quote === undefined) return head;
+    return head + '\n' + r.quote.split('\n').map(l => l === '' ? '>' : '> ' + l).join('\n');
+  }
+  function selectRef(ref) {
+    S.sel = ref;
+    $('#askRef').textContent = ref.label;
+    $('#askRef').title = ref.quote || ref.label;
+    const q = ref.quote !== undefined;
+    $('#askQuote').hidden = !q;
+    $('#askbar').classList.toggle('wide', q);
+    if (q) { $('#askStart').textContent = glimpse(ref.quote); $('#askSize').textContent = textSize(ref.quote); }
+    $('#askbar').hidden = false;
+  }
+  function clearSel() {
+    const had = S.sel;
+    S.sel = null;
+    $('#askbar').hidden = true;
+    $$('.picked').forEach(el => el.classList.remove('picked'));
+    return had;
+  }
+  function chipKey(r) { return r.label + '\u0000' + (r.quote || ''); }
+  function renderChips() {
+    const box = $('#refs');
+    box.hidden = S.chips.length === 0;
+    $('#chips').innerHTML = S.chips.map((c, i) => {
+      const n = c.quote !== undefined ? c.quote.split('\n').length : 0;
+      return '<li class="chip" title="' + esc(refText(c)) + '"><button type="button" class="chip-b" data-chip="' + i + '" aria-expanded="' + (S.openChip === chipKey(c)) + '">' + icon('quote', 'sm') + '<span class="chip-l">' + esc(c.label) + '</span>' +
+        (n ? '<span class="chip-n">· ' + n + ' line' + (n === 1 ? '' : 's') + '</span>' : '') + '</button>' +
+        '<button type="button" class="chip-x" data-chip-x="' + i + '" aria-label="Remove reference ' + esc(c.label) + '" title="Remove reference">' + icon('x') + '</button></li>';
+    }).join('');
+    const open = S.chips.find(c => chipKey(c) === S.openChip);
+    $('#refNote').innerHTML = open
+      ? '<div class="ref-prev" role="region" aria-label="What will be sent"><p>Sent before your message, exactly:</p><pre id="refPre">' + esc(refText(open)) + '</pre></div>'
+      : '<p class="ref-hint">Sent before your message as “About …” lines; click a reference to see exactly what is sent.</p>';
+    const n = $('#stripCount');
+    n.textContent = String(S.chips.length); n.hidden = S.chips.length === 0;
+  }
+  function ask() {
+    if (!S.sel) return;
+    const ref = { label: S.sel.label, quote: S.sel.quote };
+    if (ref.quote === undefined) delete ref.quote;
+    const exists = S.chips.some(c => chipKey(c) === chipKey(ref));
+    if (!exists && S.chips.length >= 8) { toast('A message carries at most 8 references; remove one first.'); return; }
+    clearSel();
+    if (!exists) {
+      S.chips.push(ref);
+      // These views are not on the host's list of views that quote exactly what they draw
+      // (QUOTES_AS_DRAWN holds only code-view), so a new chip opens by itself.
+      S.openChip = chipKey(ref);
+    }
+    if (ws.classList.contains('conv-collapsed')) setConv(false);
+    renderChips();
+    const c = $('#projComposer');
+    c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    $('#projInput').focus();
+  }
+
+  /* ---------- sidebar, conversation ---------- */
+  function refit() { if (S.tab === 'idea') { if (S.variant.idea === 'A') fitGraph(); else drawBoardLines(); } }
+  function setSidebar(collapsed) {
+    app.classList.toggle('sb-collapsed', collapsed);
+    const b = $('#sbToggle');
+    b.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+    $('.lbl', b).textContent = collapsed ? 'Expand' : 'Collapse';
+    setTimeout(refit, 220);
+  }
+  function setConv(collapsed) {
+    ws.classList.toggle('conv-collapsed', collapsed);
+    $('#convToggle').setAttribute('aria-expanded', String(!collapsed));
+    requestAnimationFrame(refit);
+  }
+
+  /* ---------- the proposed file format (mockup only) ---------- */
+  function renderFmt() {
+    $('#fmtBody').innerHTML =
+      '<p>This panel is not part of the app. It shows the idea file this view would read, written out from the same sample nodes the view draws. The decided rows fix only that it is one Markdown file per project, written as a table; the name, place, columns, and status words below are proposals.</p>' +
+      '<p><b>Proposed name and place:</b> <code>idea_graph.md</code> at the project root, beside <code>paper_skeleton.md</code> (a claim node points at a row there), and added to the project template so every new project starts with an empty table.</p>' +
+      '<pre>' + esc(fileText()) + '</pre>' +
+      '<h3>Status words (proposal)</h3><ul>' +
+      '<li>question: open · answered</li><li>hypothesis: open · supported · refuted</li><li>experiment: planned · running · done · failed</li><li>result: recorded</li><li>claim: draft · verified (the word paper_skeleton.md already uses)</li></ul>' +
+      '<h3>Which kinds a link joins (proposal)</h3><ul>' +
+      '<li><b>motivates</b>: from any node to the question, hypothesis, or experiment it led to (here, R1 motivates E2).</li>' +
+      '<li><b>tests</b>: from an experiment to the question or hypothesis it tests. This project records no hypotheses, so here every experiment tests a question.</li>' +
+      '<li><b>supports</b> / <b>refutes</b>: from a result to a hypothesis or a claim. Nothing here refutes anything.</li>' +
+      '<li>A result names the experiment it came from in “Points to” (“from E2”), since none of the four link words says that.</li></ul>';
+  }
+
+  /* ---------- one delegated click handler ---------- */
+  function act(a) {
+    switch (a) {
+      case 'sb': setSidebar(!app.classList.contains('sb-collapsed')); break;
+      case 'conv': setConv(!ws.classList.contains('conv-collapsed')); break;
+      case 'ask': ask(); rerenderActive(); break;
+      case 'unsel': clearSel(); break;
+      case 'send': toast('Mockup: messages are not sent anywhere.'); break;
+      case 'fmt': renderFmt(); $('#fmtModal').hidden = false; break;
+      case 'fmt-close': $('#fmtModal').hidden = true; break;
+    }
+  }
+  function rerenderActive() { if (S.tab === 'idea') renderIdea(); if (S.tab === 'skeleton') renderSkeleton(); if (S.tab === 'assets') renderAssets(); }
+
+  document.addEventListener('click', e => {
+    if (e.target === $('#fmtModal')) { $('#fmtModal').hidden = true; return; }
+    const t = e.target.closest('[data-hint],[data-act],[data-tab],[data-variant],[data-node],[data-blk],[data-asset],[data-chip],[data-chip-x],[data-goclaim],[data-gonode]');
+    if (!t) return;
+    const d = t.dataset;
+    if (d.hint !== undefined) { toast(d.hint); return; }
+    if (d.act) { act(d.act); return; }
+    if (d.tab) { clearSel(); S.tab = d.tab; renderTabs(); return; }
+    if (d.variant) { clearSel(); S.variant[S.tab] = d.variant; renderTabs(); return; }
+    if (d.node) {
+      const again = S.sel && S.sel.key === 'node:' + d.node;
+      if (again) { clearSel(); renderIdea(); } else openNode(d.node, true);
+      return;
+    }
+    if (d.blk) {
+      const info = BLK[d.blk];
+      if (S.sel && S.sel.key === d.blk) { clearSel(); renderSkeleton(); return; }
+      if (info.claim) S.claim = info.claim;
+      selectRef({ key: d.blk, label: info.label, quote: info.quote });
+      renderSkeleton();
+      reveal('#v-skeleton .blk.picked', '#v-skeleton tr.evrow');
+      return;
+    }
+    if (d.asset) { openAsset(d.asset); return; }
+    if (d.chip !== undefined) { const c = S.chips[Number(d.chip)]; S.openChip = S.openChip === chipKey(c) ? null : chipKey(c); renderChips(); return; }
+    if (d.chipX !== undefined) { const c = S.chips.splice(Number(d.chipX), 1)[0]; if (S.openChip === chipKey(c)) S.openChip = null; renderChips(); return; }
+    if (d.goclaim) { clearSel(); S.tab = 'skeleton'; S.claim = d.goclaim; renderTabs(); scrollToClaim(d.goclaim); return; }
+    if (d.gonode) { clearSel(); S.tab = 'idea'; S.node = d.gonode; renderTabs(); return; }
+  });
+  function scrollToClaim(id) {
+    const c = CLAIMS.find(x => x.id === id);
+    const row = $('[data-blk="' + blockKey(c.line) + '"]', S.variant.skeleton === 'B' ? $('#skB') : $('#skA'));
+    if (row) row.scrollIntoView({ block: 'center' });
+  }
+  document.addEventListener('toggle', e => {
+    const d = e.target; if (!d.dataset || !d.dataset.sec) return;
+    S.skOpen = S.skOpen || {}; S.skOpen[d.dataset.sec] = d.open;
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (!$('#fmtModal').hidden) { $('#fmtModal').hidden = true; return; }
+      if (clearSel()) rerenderActive();
+    }
+  });
+  window.addEventListener('resize', refit);
+  $('#ideaB').addEventListener('scroll', () => {}, { passive: true });
+
+  /* ---------- init ---------- */
+  renderChips();
+  renderTabs();
+})();
+</script>
+</body>
+</html>

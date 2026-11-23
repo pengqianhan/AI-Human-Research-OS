@@ -63,11 +63,10 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
         Files and Changes, and "Ask the agent about this" adding a reference
         chip to the project's composer), and S6b (the Paper view plugin: the
         Paper tab draws `paper/main.pdf` on `app://paper-view` with PDF.js
-        6.5.438 vendored as authorized on 2026-11-22, see Decisions). S6a-1
-        and S6a-2 are merged (PRs #43, #44); the fixes from the second
-        independent review of the Code view are in PR #47, and S6b is PR #45,
-        stacked on #47 (merge #47 first). The plugins' policy needed no change
-        for PDF.js's worker.
+        6.5.438 vendored as authorized on 2026-11-22, see Decisions). All
+        three are merged (PRs #43, #44, and #45 on 2026-11-23); #45 carried
+        the fixes from the second independent review of the Code view
+        (PR #47). The plugins' policy needed no change for PDF.js's worker.
       - Next, in order: the Human Owner runs the
         [client checklist](os-ui/client/README.md#check-it-on-your-machine),
         which now covers the Code and Paper views; then deleting
@@ -76,10 +75,21 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
         ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), S6a-1).
       - Waiting on the Human Owner: whether a third-party plugin may add its
         own left-navigation item, or only home panels and project views
-        (needed before step 2).
+        (Q-PO1 in [os-ui/PLUGINS.md](os-ui/PLUGINS.md); needed before step 2's
+        loading of a plugin from a local folder, not before its views).
 - [ ] Step 2, remaining views: Idea, Skeleton, Assets; Skills Hub as the second
       plugin; then loading a plugin from a local folder. Acceptance: the Human
       Owner opens all five views on `nanochat_cpu`.
+      Mockup C draws these three views as disabled tabs, so a second
+      clickable mockup, in C's look and filled from `nanochat_cpu`, offers two
+      alternatives for each:
+      [`os-ui/mockups/step2/views.html`](os-ui/mockups/step2/views.html)
+      (2026-11-23; it opens from disk). The Human Owner chose the same day
+      (「全按推荐」): Idea as a drawn graph (A), Skeleton claims-first (B),
+      Assets with results and datasets (B); rows "Step 2 view designs" and
+      "Assets view" in Decisions. The idea file's name, columns, and status
+      words (the mockup's "Proposed file format" panel) stand as an agent's
+      default, not yet confirmed ("Idea file format" in Decisions).
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
@@ -206,15 +216,17 @@ packaged app's smoke run.
 
 ### Next session
 
-- Focus (2026-11-23): S6a-1 (the Git handler) and S6a-2 (the Code view plugin)
-  are merged; the Code view's review fixes (PR #47) and S6b (the Paper view
-  plugin, PDF.js vendored as authorized; PR #45, stacked on #47) wait for the
-  Human Owner's merge ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), under
-  "Repositioning" above), with three agent defaults to confirm in Decisions:
-  the Git version floor, the selected text on screen, and how the Paper view
-  reads. Next is the Human Owner's run of the client
-  checklist in [os-ui/client/README.md](os-ui/client/README.md), which now
-  covers the Code and Paper views, then S8. The older items below are still open.
+- Focus (2026-11-23): the Code view and the Paper view are merged (PRs #43,
+  #44, #45; [os-ui/PLUGINS.md](os-ui/PLUGINS.md), under "Repositioning"
+  above). Agent defaults still to confirm in Decisions: the Git version
+  floor, the ask bar's extra lines (in "Selected text on screen"), and how
+  the Paper view reads. Next is the Human Owner's run of the client checklist
+  in [os-ui/client/README.md](os-ui/client/README.md) on a fresh build of
+  `main` (`npm ci`, then `npm start`, in `os-ui/client`), which covers the
+  Code and Paper views, then S8. Step 2's Idea, Skeleton, and Assets views
+  follow the alternatives the Human Owner chose in
+  [`os-ui/mockups/step2/views.html`](os-ui/mockups/step2/views.html) (Step 2
+  above). The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
   its short paper; accepting its 2026-09-26 dispatch run also completes H2
   (evidence in the project's Progress Log, `Code/README.md`, and `paper/main.pdf`).
@@ -593,6 +605,9 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 | Project views | Five: Idea, Code, Skeleton, Assets, Paper. Canvas, the sixth the Human Owner named, is deferred until they can say what it holds | Add Canvas as a plugin |
 | Idea view | A DAG stored as one Markdown file per project: nodes are question, hypothesis, experiment, result, claim, each with a status; edges are motivates, tests, supports, refutes. An experiment node points to a run (commit plus result file), a claim node to a `paper_skeleton.md` row | Replace the node vocabulary; the file format stays a table |
 | View editing | Views render workspace files. First version: read-only, plus selecting an item to ask the agent about it. Later, direct editing opens per view, Idea and Skeleton first. **Loosens** "the GUI is for reading, agents write through skills" (cog-20260923-001) | Keep every view read-only |
+| Step 2 view designs | Chosen 2026-11-23 from the clickable mockup [`os-ui/mockups/step2/views.html`](os-ui/mockups/step2/views.html), two alternatives a view, by accepting the agent's three recommendations (「全按推荐」): **Idea** as A, a drawn graph with small nodes and every link always shown as a line, full text in a detail panel on selection; **Skeleton** as B, the claims table with each claim's evidence beside it and the rest of `paper_skeleton.md` folded; **Assets** as B (next row). All three are read-only with the same ask bar and reference chip as the Code and Paper views | Build the other alternative of that view from the same mockup |
+| Assets view | Holds a project's `Figs/`, `Baselines/`, `Code/results/`, and the list of datasets its code downloads (Human Owner, 2026-11-23, alternative B of the mockup). Nothing defined the view before; `Code/results/` also stays visible in the Code view | Alternative A: `Figs/` and `Baselines/` only |
+| Idea file format | Agent default, not yet confirmed by the Human Owner (shown as "Proposed file format" in the step 2 mockup): one file `idea_graph.md` at the project root beside `paper_skeleton.md`, a Markdown table with one row a node; the node kinds and link words are those of the "Idea view" row. `nanochat_cpu` records no hypotheses and its 2026-09-26 run recorded no commit, so its graph has no hypothesis node and its experiments say so | Rename the file or change the columns before the first project other than `nanochat_cpu` has one |
 | Bare-CLI use | A workspace stays fully usable from Claude Code or Codex with no app running; the app adds no write action that exists only in the GUI | Allow GUI-only features |
 | Trunk and plugins | A small trunk; Paper Wiki, Skills Hub, and the five views are plugins (「先做好主干，然后把其他功能做成插件」). **Supersedes** the 2026-06-12 plugin model in [memory/MEMORY.md](memory/MEMORY.md) (two plugin types only: skills and project templates). D9 still holds for indexes; a plugin manifest is the one structured file added, and skills stay plain `SKILL.md` | Compile the features back into the app |
 | Plugin contract | An own, small, declarative manifest in OhMyGame's shape with five contribution kinds: home panel, project view, skill, host-side handler, ACP agent. Plugin pages run on their own origin, as the Paper Wiki viewer already does; the contract only grows compatibly, with a declared version range | Adopt another host's format |

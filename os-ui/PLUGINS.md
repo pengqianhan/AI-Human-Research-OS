@@ -117,7 +117,7 @@ Status on 2026-11-23:
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
   placeholder tabs until S6a-2 and S6b replaced them. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **S6 is split in three**, all done, each pending its pull request: S6a-1, the
+- **S6 is split in three**, all merged (PRs #43, #44, #45): S6a-1, the
   Code view's Git handler; S6a-2, the Code view plugin (stacks on S6a-1); S6b,
   the Paper view plugin (stacks on S6a-2), with PDF.js vendored as the Human
   Owner allowed on 2026-11-22 ([HANDOFF.md](../HANDOFF.md) Decisions). The
