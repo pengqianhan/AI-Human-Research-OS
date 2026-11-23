@@ -393,6 +393,15 @@ Status on 2026-11-23:
     under the same guards) has `extensions.partialclone` or `remote.*.promisor`,
     with `protocol.allow=never` beneath. It is not done because it is a second code
     path that would need its own CI job on stock Ubuntu 24.04 Git.
+    Compared on 2026-11-22, at the Human Owner's suggestion, with
+    [OpenResearch](https://github.com/alphaXiv/OpenResearch) at `b742758`: it runs
+    the user's installed `git` by bare name with no minimum version, reaches
+    GitHub through the user's `gh`, and adds guards on clone, the first commit and
+    push only; its reads trust the repository. The agent's reading is that this
+    shows the installed Git is the right dependency, which the Code view already
+    uses, and says nothing for running the handler's reads with fewer guards.
+    The Human Owner has not yet chosen between keeping the 2.45 floor and the
+    2.41 to 2.44 path ([HANDOFF.md](../HANDOFF.md) Decisions).
   - Which git runs: an absolute path given to `codeGitHandler(ctx, git)`, or a bare
     name looked up in the absolute entries of the runner's PATH only
     (`RunOptions.lookup`), never the working folder (spawn tries it on Windows
