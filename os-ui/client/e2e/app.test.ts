@@ -1186,17 +1186,24 @@ describe("desktop client on a Research OS folder", () => {
     const kept = join(paperDir(), "main.pdf.e2e-kept");
     renameSync(pdf, kept);
     try {
-      // About 2^17 nested rectangles: seconds to draw, well inside the budget while the page is seen.
-      writeFileSync(pdf, nestedFormsPdf(17));
+      // 2^16 nested rectangles: about 1.5 s from Reload to the drawn page on the machine this was written on
+      // (2^17 took 3.1 s), so a runner several times slower still finishes well inside the 15 s budget of
+      // visible time, and a faster one is still drawing when the tab is left.
+      writeFileSync(pdf, nestedFormsPdf(16));
       await paper.getByRole("button", { name: "Reload" }).click();
-      // The page's drawing has begun once its text is laid out (drawSlot starts both); then the tab is left.
-      await paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "FORMS-PAGE" }).waitFor({ timeout: 30_000 });
-      assert.equal(await paper.locator('.sheet[data-page="1"] canvas.pg').count(), 0, "still drawing when the tab is left");
+      await paper.getByText(/^Page [12] of 2$/).waitFor({ timeout: 30_000 });
+      // Two animation frames after the layout, the page's drawing has begun (update, then drawSlot); then the tab is left.
+      await paper.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await ws.getByRole("tab", { name: "Overview" }).click();
+      assert.equal(await paper.evaluate(() => document.querySelectorAll('.sheet[data-page="1"] canvas.pg').length), 0, "still drawing when the tab was left");
       await page.waitForTimeout(17_000);
+      const back = Date.now();
       await ws.getByRole("tab", { name: "Paper" }).click();
-      await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 30_000 });
+      // Drawn, or stopped (had the hidden time counted, the 15 s would have run out while away).
+      const sheet = paper.locator('.sheet[data-page="1"]');
+      await sheet.locator("canvas.pg").or(sheet.locator(".page-note")).first().waitFor({ timeout: 30_000 });
       assert.equal(await paper.locator(".page-note").filter({ hasText: "took longer" }).count(), 0, "not stopped for time it was hidden");
+      assert.equal(await sheet.locator("canvas.pg").count(), 1, `drawn ${Date.now() - back} ms after the tab came back`);
     } finally {
       rmSync(pdf, { force: true });
       renameSync(kept, pdf);
