@@ -18,7 +18,8 @@ import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
 import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
-import { HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, noPagesPdf, notAPdf, passwordPdf } from "./pdfFixtures.ts";
+import { PLUGIN_CSP } from "../src/main/protocol.ts";
+import { HIDDEN_RUNS, hiddenPdf, HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, manyPagesPdf, nestedFormsPdf, noPagesPdf, notAPdf, passwordPdf, REMAP } from "./pdfFixtures.ts";
 
 const CLIENT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = resolve(CLIENT, "../..");
@@ -720,6 +721,8 @@ describe("desktop client on a Research OS folder", () => {
     assert.equal(await paper.getByRole("button", { name: "Fit width" }).getAttribute("aria-pressed"), "true");
     // Only pages near the view are drawn.
     assert.equal(await paper.locator('.sheet[data-page="4"] canvas.pg').count(), 0, "page 4 is not drawn while page 1 shows");
+    // The paper embeds its fonts, and none of them reaches Chromium as a FontFace (disableFontFace; the policy would not stop one).
+    assert.equal(await paper.evaluate(() => document.fonts.size), 0, "no font from the PDF was loaded");
     await shot(page, "5-paper-page-1-fit-width");
 
     await paper.getByRole("button", { name: "Next page" }).click();
@@ -797,12 +800,16 @@ describe("desktop client on a Research OS folder", () => {
     assert.equal(await label.textContent(), "paper/main.pdf p. 1 · Setup");
     assert.equal(await label.getAttribute("title"), selected, "the bar's tooltip is the quote");
 
+    // Before asking, the bar shows the start of the quote and its size as text on the page.
+    const glimpse = (await bar.locator("[data-selection-quote]").textContent())!;
+    assert.ok(glimpse.startsWith(selected.slice(0, 20)) && glimpse.endsWith(`1 line · ${selected.length} characters`), glimpse);
     await bar.getByRole("button", { name: "Ask the agent about this" }).click();
     await chips.filter({ hasText: "paper/main.pdf p. 1 · Setup" }).waitFor();
     assert.equal(await bar.count(), 0, "asking clears the selection");
     assert.equal(await paper.evaluate(() => window.getSelection()?.isCollapsed), true, "and the page's own");
-    await chat.getByRole("button", { name: "Show what will be sent for paper/main.pdf p. 1 · Setup" }).click();
+    // The chip just added shows what it will send, with no click.
     const preview = chat.locator("[data-reference-preview]");
+    await preview.waitFor({ timeout: 5000 });
     assert.equal(await preview.textContent(), `About paper/main.pdf p. 1 · Setup\n${selected.split(/\r?\n/).map((l) => (l === "" ? ">" : `> ${l}`)).join("\n")}`);
 
     // Select again: the bar, the chip, and what it will send, together.
@@ -840,7 +847,8 @@ describe("desktop client on a Research OS folder", () => {
       window.getSelection()!.addRange(range);
       document.dispatchEvent(new MouseEvent("mouseup"));
     });
-    await label.filter({ hasText: /^paper\/main\.pdf pp\. 1–4$/ }).waitFor();
+    // The label names the pages whose text is quoted: those whose text layer is built (near the view).
+    await label.filter({ hasText: /^paper\/main\.pdf pp\. 1–[2-4]$/ }).waitFor();
     const quote = (await label.getAttribute("title"))!;
     assert.ok(quote.length <= 2000 && quote.endsWith("…[cut]"), `${quote.length} characters, ending ${JSON.stringify(quote.slice(-12))}`);
     await bar.getByRole("button", { name: "Clear selection" }).click();
@@ -947,6 +955,237 @@ describe("desktop client on a Research OS folder", () => {
     await paper.getByText("Page 1 of 4", { exact: true }).waitFor({ timeout: 60_000 });
   });
 
+  /** Drags from the start of one element to the end of another, as a reader selects several lines. */
+  async function dragFromTo(from: Locator, to: Locator): Promise<void> {
+    await from.scrollIntoViewIfNeeded();
+    const a = (await from.boundingBox())!;
+    const b = (await to.boundingBox())!;
+    await page.mouse.move(a.x + 1, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.mouse.move((a.x + b.x) / 2, (a.y + b.y + b.height) / 2, { steps: 6 });
+    await page.mouse.move(b.x + b.width - 1, b.y + b.height / 2, { steps: 6 });
+    await page.mouse.up();
+  }
+
+  test("text the page does not show but its text layer holds is on screen before Send: in the ask bar, then in the composer", SLOW, async () => {
+    const sessionFiles = readdirSync(sessions).length;
+    const { ws, paper } = await openPaper();
+    const bar = ws.getByRole("region", { name: "Selection" });
+    const chat = ws.getByRole("region", { name: `${PROJECT} agent`, exact: true });
+    const chips = chat.getByRole("list", { name: "References" }).getByRole("listitem");
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    const remapped = `${REMAP.A}${REMAP.B}${REMAP.C}`;
+    renameSync(pdf, kept);
+    try {
+      writeFileSync(pdf, hiddenPdf());
+      await paper.getByRole("button", { name: "Reload" }).click();
+      await paper.getByText("Page 1 of 1", { exact: true }).waitFor({ timeout: 60_000 });
+      await paper.locator(".textLayer span").filter({ hasText: "VISIBLE-END" }).waitFor();
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+      for (let i = (await chips.count()) - 1; i >= 0; i--) await chips.nth(i).getByRole("button", { name: /^Remove reference / }).click();
+      await page.waitForTimeout(1100);
+      await dragFromTo(paper.locator(".textLayer span").filter({ hasText: "VISIBLE-START" }).first(), paper.locator(".textLayer span").filter({ hasText: "VISIBLE-END" }).first());
+      // What a PDF's selection quotes is its text layer: the hidden runs and the remapped sentence are in it.
+      const selected = (await paper.evaluate(() => window.getSelection()?.toString() ?? "")).trim();
+      for (const run of [...HIDDEN_RUNS, remapped]) assert.ok(selected.includes(run), `the text layer holds ${run}`);
+      const lines = selected.split(/\r?\n/).length;
+
+      // Before asking: the bar shows the quote's start, hidden runs included, and its whole size, as text on the page.
+      const glimpse = bar.locator("[data-selection-quote]");
+      await glimpse.waitFor();
+      const shownBefore = (await glimpse.textContent())!;
+      assert.ok(shownBefore.startsWith(`VISIBLE-START first line ↵ ${HIDDEN_RUNS[0]}`), shownBefore);
+      assert.ok(shownBefore.endsWith(`${lines} lines · ${selected.length} characters`), shownBefore);
+      assert.ok(await glimpse.isVisible());
+      await shot(page, "9-hidden-text-ask-bar-before-asking");
+
+      // After asking: every hidden run and the remapped sentence are text in the composer, with no click or hover.
+      await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+      await chips.filter({ hasText: "paper/main.pdf p. 1" }).waitFor();
+      const shown = chat.locator("[data-reference-preview]");
+      await shown.waitFor({ timeout: 5000 });
+      assert.ok(await shown.isVisible());
+      const sent = (await shown.textContent())!;
+      for (const run of [...HIDDEN_RUNS, remapped]) assert.ok(sent.includes(`> ${run}`), `the composer shows ${run}: ${sent}`);
+      await shot(page, "10-hidden-text-composer-after-asking");
+      await chips.first().getByRole("button", { name: /^Remove reference / }).click();
+      assert.equal(readdirSync(sessions).length, sessionFiles, "nothing was sent");
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await paper.getByRole("button", { name: "Reload" }).click();
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor({ timeout: 60_000 });
+  });
+
+  test("a selection that only touches a page boundary is labelled by the pages and heading of the text it quotes", SLOW, async () => {
+    const { ws, paper } = await openPaper();
+    const bar = ws.getByRole("region", { name: "Selection" });
+    await paper.getByText(/^Page \d of 4$/).waitFor({ timeout: 60_000 });
+    await paper.evaluate(() => {
+      const scroller = document.querySelector(".paper-scroll") as HTMLElement;
+      scroller.scrollTop = (document.querySelector('.sheet[data-page="2"]') as HTMLElement).offsetTop - 300;
+    });
+    await paper.locator('.sheet[data-page="2"] .textLayer span').nth(2).waitFor({ timeout: 30_000 });
+    await paper.locator('.sheet[data-page="1"] .textLayer span').last().waitFor({ timeout: 30_000 });
+    if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    await page.waitForTimeout(1100);
+    // From just after the last character of page 1's text to inside page 2's: page 1 contributes nothing to the quote.
+    const quote = await paper.evaluate(() => {
+      const texts = (root: Element) => {
+        const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const out: Text[] = [];
+        while (walk.nextNode()) if ((walk.currentNode as Text).data.trim() !== "") out.push(walk.currentNode as Text);
+        return out;
+      };
+      const one = texts(document.querySelector('.sheet[data-page="1"] .textLayer')!);
+      const two = texts(document.querySelector('.sheet[data-page="2"] .textLayer')!);
+      const last = one[one.length - 1]!;
+      const range = document.createRange();
+      range.setStart(last, last.data.length);
+      range.setEnd(two[2]!, two[2]!.data.length);
+      window.getSelection()!.removeAllRanges();
+      window.getSelection()!.addRange(range);
+      document.dispatchEvent(new MouseEvent("mouseup"));
+      return window.getSelection()!.toString();
+    });
+    const label = bar.locator("[data-selection-label]");
+    await label.waitFor({ timeout: 10_000 });
+    assert.equal(await label.textContent(), "paper/main.pdf p. 2 · Setup", `quote ${JSON.stringify(quote)}`);
+    await bar.getByRole("button", { name: "Clear selection" }).click();
+  });
+
+  test("two Reloads at once leave one document, every page drawn, and one PDF.js worker", SLOW, async () => {
+    const { paper } = await openPaper();
+    await paper.getByText(/^Page \d of 4$/).waitFor({ timeout: 60_000 });
+    await paper.evaluate(() => {
+      const reload = document.querySelector("button.reload") as HTMLButtonElement;
+      reload.click();
+      reload.click();
+    });
+    await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 60_000 });
+    await page.waitForTimeout(1500);
+    assert.equal(await paper.locator(".sheet").count(), 4, "one document's sheets");
+    for (let n = 2; n <= 4; n++) {
+      await paper.getByRole("button", { name: "Next page" }).click();
+      await paper.locator(`.sheet[data-page="${n}"] canvas.pg`).waitFor({ timeout: 30_000 });
+    }
+    await paper.getByText("Page 4 of 4", { exact: true }).waitFor();
+    for (let i = 0; i < 50 && page.workers().filter((w) => w.url().includes("pdf.worker.min.mjs")).length !== 1; i++) await page.waitForTimeout(100);
+    assert.equal(page.workers().filter((w) => w.url().includes("pdf.worker.min.mjs")).length, 1, "the first load's worker is gone");
+    await paper.getByRole("button", { name: "Fit width" }).click();
+  });
+
+  test("a PDF.js worker that stops answering is replaced on Reload: the paper is drawn again, with no stuck screen or uncaught error", SLOW, async () => {
+    const { paper } = await openPaper();
+    await paper.locator(".sheet canvas.pg").first().waitFor({ timeout: 60_000 });
+    const before = (await consoleLog()).length;
+    const worker = page.workers().find((w) => w.url().includes("pdf.worker.min.mjs"))!;
+    assert.ok(worker !== undefined, "PDF.js's worker runs");
+    // Busy for 25 s, as a page whose decoding never yields would keep it.
+    const stall = worker
+      .evaluate(() => {
+        const end = Date.now() + 25_000;
+        while (Date.now() < end);
+      })
+      .catch(() => {});
+    try {
+      await page.waitForTimeout(500);
+      const reloadedAt = Date.now();
+      await paper.getByRole("button", { name: "Reload" }).click();
+      // Polled with evaluate: Playwright's locators in this frame wait for its pending evaluate in the stalled worker.
+      const drawn = async () => paper.evaluate(() => ({ canvases: document.querySelectorAll(".sheet canvas.pg").length, app: (document.getElementById("app")!.textContent ?? "").slice(0, 60) }));
+      let state = await drawn();
+      while (state.canvases === 0 && Date.now() - reloadedAt < 10_000) {
+        await page.waitForTimeout(200);
+        state = await drawn();
+      }
+      assert.ok(state.canvases > 0, `the page in view is drawn by a fresh worker within 10 s of Reload, while the old one is still busy: ${JSON.stringify(state)}`);
+      assert.match(state.app, /^Page \d of 4/);
+      assert.ok(Date.now() - reloadedAt < 20_000, "before the stalled worker would have answered");
+    } finally {
+      // The page terminates the stalled worker after the closed document's grace (opener.test.ts shows it with
+      // stand-ins, and the next test with a page that stalls it); a loop Playwright itself runs in a worker is
+      // not cut short by that, so the suite waits it out before using this frame again.
+      await stall;
+    }
+    assert.deepEqual((await consoleLog()).slice(before).filter((l) => /^frame app:\/\/paper-view\/.*(Uncaught|Unhandled)/.test(l)), []);
+  });
+
+  test("a page that takes longer than its budget is stopped, its worker replaced, and the rest of the paper drawn", SLOW, async () => {
+    const { paper } = await openPaper();
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    const pdfWorkers = () => page.workers().filter((w) => w.url().includes("pdf.worker.min.mjs"));
+    renameSync(pdf, kept);
+    try {
+      writeFileSync(pdf, nestedFormsPdf(20));
+      const started = Date.now();
+      await paper.getByRole("button", { name: "Reload" }).click();
+      await paper.getByText(/^Page [12] of 2$/).waitFor({ timeout: 30_000 });
+      const ended: string[] = [];
+      for (const w of pdfWorkers()) w.on("close", () => ended.push(w.url()));
+      // Page 1 (2^20 nested rectangles) passes the 15 s budget: it is stopped and says so.
+      const note = paper.locator('.sheet[data-page="1"] .page-note');
+      await note.filter({ hasText: "Page 1 took longer than 15 s to draw" }).waitFor({ timeout: 60_000 });
+      const stoppedAfter = Date.now() - started;
+      assert.ok(stoppedAfter < 40_000, `stopped ${stoppedAfter} ms after Reload`);
+      assert.equal(await paper.locator('.sheet[data-page="1"] canvas.pg').count(), 0);
+      // The rest of the paper is drawn, by a fresh worker; the one stuck on page 1 is ended.
+      await paper.locator('.sheet[data-page="2"] canvas.pg').waitFor({ timeout: 30_000 });
+      await paper.locator('.sheet[data-page="2"] .textLayer span').filter({ hasText: "AFTER-FORMS" }).waitFor();
+      for (let i = 0; i < 100 && ended.length === 0; i++) await page.waitForTimeout(100);
+      assert.equal(ended.length, 1, "the worker stuck on page 1 was terminated");
+      assert.equal(pdfWorkers().length, 1);
+      assert.match((await paper.locator(".paperbar .hint").textContent())!, /^paper\/main\.pdf · 2 pages/);
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await paper.getByRole("button", { name: "Reload" }).click();
+    await paper.locator('.sheet[data-page="1"] canvas.pg').waitFor({ timeout: 60_000 });
+    assert.equal(await paper.locator(".page-note").count(), 0, "Reload tries every page again");
+  });
+
+  test("a PDF of 300,000 pages lays out the first 1,000, says so, and every page laid out can be scrolled to", SLOW, async () => {
+    const { paper } = await openPaper();
+    const pdf = join(paperDir(), "main.pdf");
+    const kept = join(paperDir(), "main.pdf.e2e-kept");
+    renameSync(pdf, kept);
+    try {
+      writeFileSync(pdf, manyPagesPdf(300_000));
+      await paper.getByRole("button", { name: "Reload" }).click();
+      await paper.getByText(/^Page \d of 1000$/).waitFor({ timeout: 60_000 });
+      assert.equal(await paper.locator(".sheet").count(), 1000);
+      assert.equal(await paper.locator(".paperbar .hint").textContent(), "paper/main.pdf · first 1,000 of 300,000 pages · select text to ask the agent about it");
+      await paper.getByText("The Paper view shows the first 1,000 of this PDF's 300,000 pages", { exact: false }).waitFor();
+      // At the largest zoom, the last page laid out is inside what the column can scroll to.
+      for (let i = 0; i < 12; i++) await paper.getByRole("button", { name: "Zoom in" }).click();
+      await paper.getByText("300%", { exact: true }).waitFor();
+      const reach = await paper.evaluate(async () => {
+        const scroller = document.querySelector(".paper-scroll") as HTMLElement;
+        const last = document.querySelector('.sheet[data-page="1000"]') as HTMLElement;
+        scroller.scrollTop = scroller.scrollHeight;
+        const t = performance.now();
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        return { scrollHeight: scroller.scrollHeight, lastBottom: last.offsetTop + last.offsetHeight, frameMs: performance.now() - t };
+      });
+      assert.ok(reach.scrollHeight < 16_777_216 && reach.lastBottom <= reach.scrollHeight, JSON.stringify(reach));
+      await paper.getByText("Page 1000 of 1000", { exact: true }).waitFor();
+      await paper.getByRole("button", { name: "Fit width" }).click();
+      await paper.evaluate(() => {
+        (document.querySelector(".paper-scroll") as HTMLElement).scrollTop = 0;
+      });
+      await paper.getByText("Page 1 of 1000", { exact: true }).waitFor();
+    } finally {
+      rmSync(pdf, { force: true });
+      renameSync(kept, pdf);
+    }
+    await paper.getByRole("button", { name: "Reload" }).click();
+    await paper.getByText("Page 1 of 4", { exact: true }).waitFor({ timeout: 60_000 });
+  });
+
   test("a PDF's pictures (JPEG and raw) and a font it does not embed are drawn, under the same policy", SLOW, async () => {
     const { paper } = await openPaper();
     const pdf = join(paperDir(), "main.pdf");
@@ -1041,6 +1280,31 @@ describe("desktop client on a Research OS folder", () => {
       assert.equal(createHash("sha256").update(readFileSync(join(CLIENT, "out/plugins/paper-view/site/vendor", file))).digest("hex"), hash, `out/ ${file}`);
     }
     assert.doesNotMatch(readFileSync(join(CLIENT, "out/plugins/paper-view/site/main.js"), "utf8"), /pdfjsVersion/, "PDF.js is not bundled into the page's script");
+    // PDF.js's worker runs under the plugin policy as served: no WebAssembly ('wasm-unsafe-eval' is not in it), and a violation reports exactly PLUGIN_CSP.
+    const worker = page.workers().find((w) => w.url() === "app://paper-view/vendor/pdf.worker.min.mjs");
+    assert.ok(worker !== undefined, "PDF.js's worker runs from the site's own origin");
+    const marked = (await consoleLog()).length;
+    const inWorker = await worker.evaluate(async () => {
+      const policies: string[] = [];
+      self.addEventListener("securitypolicyviolation", (event) => policies.push(`${event.effectiveDirective} | ${event.originalPolicy}`));
+      let wasm = "compiled";
+      try {
+        await WebAssembly.compile(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
+      } catch (error) {
+        wasm = `${(error as Error).name}: ${(error as Error).message}`;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return { wasm, policies };
+    });
+    assert.match(inWorker.wasm, /^CompileError: .*Content Security policy.*script-src 'self'/);
+    assert.deepEqual(inWorker.policies, [`script-src | ${PLUGIN_CSP}`]);
+    // That refusal is the probe's own, not something PDF.js asked for: out of the final policy check.
+    await page.waitForTimeout(300);
+    await app.evaluate((_electron, from) => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= from; i--) if (/WebAssembly/.test(seen[i]!)) seen.splice(i, 1);
+    }, marked);
+    for (let i = logs.length - 1; i >= 0; i--) if (/WebAssembly module violates/.test(logs[i]!)) logs.splice(i, 1);
     // No inline script runs in the page, whatever reaches its DOM.
     const before = logs.length;
     const inline = await paper.evaluate(() => {
