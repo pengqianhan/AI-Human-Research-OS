@@ -82,6 +82,29 @@ describe("processRunner", () => {
     assert.match(result.stderr, /timed out/);
   });
 
+  test("a killed child settles once it exits, though a process it started still holds its stdout and stderr", async () => {
+    // As Git for Windows' cmd\git.exe, which starts mingw64\bin\git.exe on the same pipes and waits for it: kill() ends the launcher only.
+    const launcher = (then: string) =>
+      `const c=require('child_process').spawn(process.execPath,['-e','setTimeout(()=>{},15000)'],{stdio:'inherit'});process.stderr.write('pid '+c.pid+'\\n');${then}`;
+    const cases = [
+      ["timeout", launcher("setTimeout(()=>{},60000)"), { timeoutMs: 500 }],
+      ["cap", launcher("const b=Buffer.alloc(65536,120);setTimeout(function f(){process.stdout.write(b,f)},200)"), { maxOutputBytes: 100_000 }],
+    ] as const;
+    for (const [name, script, limit] of cases) {
+      const started = Date.now();
+      const result = await run([node, "-e", script], { cwd: process.cwd(), ...limit });
+      const elapsed = Date.now() - started;
+      const pid = Number(/pid (\d+)/.exec(result.stderr)?.[1]);
+      try {
+        process.kill(pid);
+      } catch {
+        // already gone
+      }
+      assert.equal(name === "timeout" ? result.timedOut : result.truncated, true, name);
+      assert.ok(elapsed < 5_000, `${name}: settled after ${elapsed} ms, not when the process it started let go`);
+    }
+  });
+
   test("lookup: path runs the program from an absolute PATH entry, never from the working folder", { skip: process.platform === "win32" ? "the planted program is a shell script; findProgram's Windows rules are tested below" : false }, async () => {
     const cwd = tempTree();
     const elsewhere = tempTree();
