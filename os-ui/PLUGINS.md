@@ -6,14 +6,126 @@ before implementation; Part 3, step 2's Idea, Skeleton, and Assets views, by ano
 design agent on 2026-11-23. Each part is its author's report, kept as written, so "I"
 is that agent and line numbers refer to the code as it was that day.
 
-Status on 2026-11-23:
+Status on 2026-11-24:
 
 - **Step 2's three views are designed** (Part 3, against commit `5874a32`): the
   Skeleton, Assets, and Idea views as the Human Owner chose them in
   [mockups/step2/views.html](mockups/step2/views.html), one pull request each in that
   order, with no new dependency and no change to contract 1.0. **2.1, the Skeleton
-  view, is built** on branch `step2-skeleton-view` (below); Assets and Idea are not.
+  view, is built** on branch `step2-skeleton-view`, and **2.2, the Assets view**, on
+  branch `step2-assets-view` (both below); Idea is not.
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.2, the Assets view**, is the bundled plugin
+  [frontend/plugins/assets-view/](frontend/plugins/assets-view/) (manifest as §4.1,
+  `reads` exactly §1 fact 1's six roots), with `walk.ts` (the folder walk),
+  `queue.ts` (the picture queue), and `logic.ts` (every rule of §4.2, the CSV
+  reader, labels, words) beside `main.ts`. md-kit and site-kit are unchanged; the
+  Skeleton view's tests are untouched. Where the code differs from Part 3 or the
+  mockup:
+  - **Labels** (the brief for 2.2 over §1 fact 5's `clipLabel`): a file's label is
+    its project path, each name through `visibleName` and with the look-alikes of a
+    label's own forms shown as `⟨U+XXXX⟩` markers too: the middle dot and its kin
+    and curly quotes (so no name reads as `… · claim C1` or `· section “…”`), `:`
+    (so `x.csv:12` cannot read as a line), a backslash, and slashes other than `/`
+    (so no name shows a second, deeper path). The marker keeps the real name
+    recoverable, where the Skeleton view's titles replace such characters. A label
+    over 200 characters is cut by `cutMarked` at its end, ending in "…", never in a
+    marker or a surrogate pair (`clipLabel` cut from the left and could split
+    either). A dataset's label is `Code/README.md:<line> · dataset <name>`, the name
+    as plain text with blank runs one space and invisible characters and separator
+    look-alikes as markers; the name is what is cut. Every label is checked through
+    the host's own `readSelect` in `logic.test.ts`. No quote is posted.
+  - **Identity**: an item is its project path (`file:Figs/a/plot.svg`) or its
+    README line (`dataset:208`); the open item, the selection, a card's picture,
+    and the panel are found by that key, never by a name shown, so two files of one
+    name in two folders, or two datasets of one name, each open their own detail.
+    Reload keeps the open item (a dataset only while its line has the same name),
+    clears the selection, and keeps the list's scroll.
+  - **The walk** (§4.2): "depth 4" is four folder levels below the group's folder
+    (`Figs/a/b/c/d/` is listed, `…/d/e/` is not); the 40 listings count the group's
+    own; the walk stops at the 501st file. Beside the group, in words: "No Figs/
+    folder this view can read" (404), "Figs/ is empty" (nothing listed), "Figs/
+    holds only empty folders", "could not be listed" with the reason, and a sentence
+    beginning "More files than shown:" for each stop (depth, listings, files) and
+    for a listing the channel cut at 5,000 names; a subfolder that could not be
+    listed is named. `Code/Datasets/`'s state is said under the dataset rows.
+  - **The bar's count** names a group's folder when it was listed, and "datasets"
+    when `Code/README.md` was read or `Code/Datasets/` listed.
+  - **Descriptions**: a list's top-level items and a table's body rows, in file
+    order; a link inside bold counts; a link to a file of another folder (a
+    subfolder's) describes nothing; an item with nothing after its link gives no
+    second line. The panel's What adds "from <README.md>:<line>" under the text, and
+    a README.md that could not be read is named beside its group and in the panel.
+  - **Used in**: the place is the line that names the file (a table row with its
+    first cell, cut at 80 characters); a link whose text breaks across a
+    paragraph's or item's lines gives the block's lines; headings and a table's
+    header row are read, code blocks are not. When `paper_skeleton.md` or
+    `Code/README.md` could not be read, the panel says so instead of "Not named".
+  - **Datasets**: a row shows its cells as `<header>: <text>` but an empty one and
+    the one that is just the name (`Source: cais/mmlu all` stays); a row with no
+    name reads "(no name)". Notes say when the dataset table has rows past 500,
+    columns past 30, or rows of another width, and when the Data section goes on
+    after the table (that text is not shown).
+  - **Previews**: a CSV's first record is drawn as its header and N counts the
+    records after it; a record ends at LF or CRLF only (a lone CR is a character),
+    a blank line is a record, a quote not at a field's start is a character; notes
+    name rows of another width, columns past 30, cut cells, and a quote never
+    closed; "All N rows" when there are 20 or fewer. A JSON or text file: "N lines"
+    when 40 or fewer. A Markdown preview says it is drawn as text, links not
+    followed and images not loaded. Sizes divide by 1,024, as the mockup's
+    `fmtBytes` does. A PDF's heading is "File", as §4.2's list has it.
+  - **Pictures** (§4.3): the `<img>` has `src` and an empty `alt` only, the name
+    being the card's caption. The queue also retries once a load that failed while
+    the channel's `HEAD` answers 200 (a busy moment can fail the load and free its
+    slots before the `HEAD`), ends a load after 30 s with "Try again", and runs the
+    panel's large picture too, first in line, dropping it when another item opens.
+    Reload frees every slot at once and drops the answers of loads it cancelled;
+    leaving the tab cancels nothing (a picture keeps loading while the frame is
+    hidden), and no load holds a slot past its time-out; the end-to-end suite
+    Reloads and leaves the tab while sixty pictures load, and all sixty are drawn.
+    A card past the 200th
+    figure shows
+    **Show**. A card is a `div` with `role="button"` (Enter and Space click it),
+    since its picture box may hold a button and a `<button>` holds none.
+  - **Narrow window**: below 760 px of the frame's width (the mockup's container
+    rule), the preview sits above the list, at most 270 px tall.
+  - **Results' sentence**, "The Code view also lists these files.", shows also when
+    `Code/results/` is not there, under it the folder's state.
+  - **Test fixtures and the end-to-end suite** (the brief for 2.2 over §6): no test
+    reads a live project file. [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md)
+    holds frozen copies of nanochat_cpu's `Figs/`, `Baselines/` (its 6,501-row
+    reference CSV cut to 300 rows), `Code/results/`, `Code/Datasets/`, and
+    `Code/README.md`, and of the template's. The suite checks the view on
+    `assets_e2e`, a project it makes from the template with that copy laid over it,
+    not on nanochat_cpu, whose copy it only photographs; the hostile names and files
+    (the design's, plus a markup-named SVG, one name in two folders, two datasets of
+    one name, binary data, a depth past the cap) are in a third project,
+    `assets_odd`, so they never change what the first checks. The isolation test
+    asks for files that are there (`AGENTS.md`, `PROJECT_MEMORY.md`,
+    `Code/README_zh.md`, another project's `Code/` file) rather than §6's
+    `Code/tools/…` and `Code/nanochat/…`, which `assets_e2e` has not. The hostile
+    SVG holds a script, `onload`, two external images, `@import`, a
+    `foreignObject` with an image and a frame, a `<use>` to an outside URL, and a
+    `javascript:` link, all aimed at a local HTTP listener; drawn as a card and
+    large (natural width 320), it ran nothing and the listener heard no request
+    (§1 fact 3 is now pinned).
+  - **Protocol tests** (`client/test/protocol.test.ts`, "the Assets view's reads",
+    on the bundled origin): its six roots are read; `AGENTS.md`,
+    `PROJECT_MEMORY.md`, `index.md`, `Code/` besides `results/`, `Datasets/` and
+    `README.md`, `paper/`, and listings of the project, `Code/`, `paper/` and the two
+    file roots are 404; a link inside a declared folder leaving the workspace,
+    reaching `human/private`, or reaching `Code/`, and a project whose `Figs` or
+    `Code/results` is itself such a link, are 404 and left out of listings. Widening
+    a root in `plugin.json` (`Code/results` to `Code`, or `Figs` to the project)
+    fails the first group; dropping `serveRead`'s containment check, or its
+    declared-root check, fails the second.
+  - **The checklist** asks the Human Owner to look at nanochat_cpu and change
+    nothing. §6's "Click `training-metrics.csv`" is `training_metrics.csv` under
+    Results (943 rows); the hyphenated one is the reference run's.
+  - Not verified: Windows and Linux (the suite ran on macOS arm64 only), and the
+    Human Owner's checklist line. Known limit, as §1 fact 3 says: the memory to
+    decode a very large picture is not bounded.
 
 - **2.1, the Skeleton view**, is the bundled plugin
   [frontend/plugins/skeleton-view/](frontend/plugins/skeleton-view/) (manifest as
