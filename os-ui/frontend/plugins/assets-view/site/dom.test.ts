@@ -45,7 +45,7 @@ describe("the page's DOM", () => {
     assert.deepEqual([...main.matchAll(/el\("img"/g)].length, 1);
     assert.deepEqual([...main.matchAll(/\.src\s*=\s*([^;]+);/g)].map((m) => m[1]!.trim()), ["url"]);
     assert.match(main, /const pictureUrl = \(path: string\) => `\$\{filesUrl\(workspacePath\(project!, path\)\)\}&v=\$\{state\.gen\}`;/);
-    assert.match(main, /function imageLoad\(path: string, place: \(img: HTMLImageElement\) => void\): Load \{\n {2}const url = pictureUrl\(path\);\n {2}const img = el\("img"\);\n {2}img\.alt = "";/);
+    assert.match(main, /function imageLoad\(path: string, place: \(img: HTMLImageElement\) => boolean\): Load \{\n {2}const url = pictureUrl\(path\);\n {2}const img = el\("img"\);\n {2}img\.alt = "";/);
     assert.deepEqual([...main.matchAll(/pictureUrl\(([^)]*)\)/g)].map((m) => m[1]), ["path"], "used in one place, imageLoad");
     assert.match(main, /void fetch\(url, \{ method: "HEAD", cache: "no-store" \}\)/);
     // imageLoad is given only a FileItem's path, which the walk found in a listing (never a link or text from a file).

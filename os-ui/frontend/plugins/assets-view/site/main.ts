@@ -156,9 +156,9 @@ const pictureUrl = (path: string) => `${filesUrl(workspacePath(project!, path))}
 /**
  * Loads `path` as an <img>, the read channel's URL being its only source; on
  * an error the channel is asked for the status with a HEAD, within the same
- * slot of the queue. `place` puts the drawn image on screen.
+ * slot of the queue. `place` puts the drawn image on screen, or says it could not.
  */
-function imageLoad(path: string, place: (img: HTMLImageElement) => void): Load {
+function imageLoad(path: string, place: (img: HTMLImageElement) => boolean): Load {
   const url = pictureUrl(path);
   const img = el("img");
   img.alt = "";
@@ -168,8 +168,8 @@ function imageLoad(path: string, place: (img: HTMLImageElement) => void): Load {
   img.addEventListener("load", () => {
     if (!live) return;
     live = false;
-    place(img);
-    settle({ kind: "ok" });
+    // Not placed (its card was replaced by a Reload meanwhile): the queue forgets the job.
+    settle(place(img) ? { kind: "ok" } : { kind: "dropped" });
   });
   img.addEventListener("error", () => {
     if (!live) return;
@@ -282,6 +282,8 @@ const state = {
   openName: null as string | null,
   /** Each open of the preview: an answer for an earlier one is dropped. */
   previewGen: 0,
+  /** Each render of the list: a card's picture goes only into the render it was asked for. */
+  renderGen: 0,
   /** The preview's image job, dropped when another item opens. */
   previewJob: null as string | null,
 };
@@ -343,6 +345,10 @@ async function load(): Promise<void> {
 }
 
 function render(model: Model): void {
+  // Loads asked for on the list this render replaces (a Show, the panel's picture, while Reload read) end here.
+  state.renderGen++;
+  queue.reset();
+  state.previewJob = null;
   const scroll = listBox.scrollTop;
   clear(listBox);
   nodes = new Map();
@@ -387,13 +393,15 @@ function near(entries: IntersectionObserverEntry[]): void {
 }
 
 function wantThumb(item: FileItem, order: number): void {
-  const gen = state.gen;
+  // Only into the cards it was asked for: a Show clicked while Reload read is for a card the Reload replaces (review S4).
+  const rendered = state.renderGen;
   queue.want(item.key, order, () =>
     imageLoad(item.path, (img) => {
       const box = thumbs.get(item.key);
-      if (gen !== state.gen || box === undefined) return;
+      if (rendered !== state.renderGen || box === undefined) return false;
       clear(box);
       box.append(img);
+      return true;
     }),
   );
 }
@@ -607,9 +615,10 @@ async function fillPreview(item: FileItem, box: HTMLElement, size: HTMLElement, 
     state.previewJob = key;
     queue.want(key, -1, () =>
       imageLoad(item.path, (img) => {
-        if (!current()) return;
+        if (!current()) return false;
         clear(big);
         big.append(img);
+        return true;
       }),
     );
     return;

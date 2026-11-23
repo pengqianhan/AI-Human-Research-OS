@@ -206,6 +206,21 @@ describe("the image queue", () => {
     assert.equal(load.started.filter((k) => k === "k1").length, 2);
   });
 
+  test("a load whose picture the page could not place (its card was replaced by a Reload) leaves no job: asking again loads it (review S4)", async () => {
+    const { q, load, states, changes, want } = setup();
+    want("p201", 0);
+    const before = changes.length;
+    await load.end("p201", { kind: "dropped" });
+    assert.equal(q.stateOf("p201"), null, "not counted as loaded");
+    assert.equal(q.inFlight, 0);
+    assert.equal(changes.length, before, "no state is reported for it");
+    // Show on the new card: a new load, which draws.
+    want("p201", 0);
+    assert.equal(load.started.filter((k) => k === "p201").length, 2);
+    await load.end("p201", { kind: "ok" });
+    assert.equal(states.get("p201")?.state, "loaded");
+  });
+
   test("a load that throws as it starts, or whose promise rejects, fails (status 0) and frees its slot", async () => {
     const { q, states } = setup();
     q.want("throws", 0, () => {

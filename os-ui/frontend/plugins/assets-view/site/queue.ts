@@ -23,8 +23,12 @@ export const QUEUE = {
   timeoutMs: 30_000,
 } as const;
 
-/** How a load ended: drawn, or the channel's status for the file (0: the app could not be reached). */
-export type LoadOutcome = { kind: "ok" } | { kind: "error"; status: number };
+/**
+ * How a load ended: drawn; the channel's status for the file (0: the app
+ * could not be reached); or loaded but not placed, its card replaced by a
+ * Reload meanwhile, so the job is forgotten and the next ask loads it again.
+ */
+export type LoadOutcome = { kind: "ok" } | { kind: "error"; status: number } | { kind: "dropped" };
 
 /** One load: it ends once, with `done`; `cancel` stops it (its `done` may then never settle). */
 export interface Load {
@@ -191,6 +195,12 @@ export class ImageQueue {
     job.stopTimer = null;
     this.free(job);
     if (this.jobs.get(job.key) !== job) return;
+    if (outcome.kind === "dropped") {
+      // Its picture went nowhere: no state to show, and nothing to keep it from loading when asked again.
+      this.jobs.delete(job.key);
+      this.pump();
+      return;
+    }
     if (outcome.kind === "ok") this.set(job, { state: "loaded" });
     else if ((outcome.status === 503 || outcome.status === 200) && job.tries < 2) {
       // Busy, or failed while the file is there: once more, after a moment.
