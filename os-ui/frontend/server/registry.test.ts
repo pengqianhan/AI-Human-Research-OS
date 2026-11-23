@@ -39,7 +39,7 @@ const flags = (mounts: readonly Mount[]) => mounts.map((m) => [m.prefix, m.token
 describe("loadPlugins", () => {
   test("the real plugins/ folder is BUNDLED_IDS, and every manifest in it parses", () => {
     const folders = readdirSync(PLUGINS, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
-    // fixtures/ holds the md-kit and Skeleton view tests' frozen files: no plugin.json, so the build skips it too.
+    // fixtures/ holds the md-kit, Skeleton view, and Assets view tests' frozen files: no plugin.json, so the build skips it too.
     assert.deepEqual(folders.filter((f) => f !== "fixtures").sort(), [...BUNDLED_IDS].sort());
     assert.ok(!existsSync(join(PLUGINS, "fixtures", "plugin.json")), "fixtures/ is no plugin");
     const result = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none);

@@ -1,0 +1,217 @@
+{
+  "stages": {
+    "data": {
+      "exit": 0,
+      "wall_s": 3.5,
+      "peak_rss_mb": 964
+    },
+    "tok_train": {
+      "exit": 0,
+      "wall_s": 3.2,
+      "peak_rss_mb": 290
+    },
+    "tok_eval": {
+      "exit": 0,
+      "wall_s": 3.4,
+      "peak_rss_mb": 347
+    },
+    "base_train": {
+      "exit": 0,
+      "wall_s": 41.6,
+      "peak_rss_mb": 871
+    },
+    "base_eval": {
+      "exit": 0,
+      "wall_s": 3.6,
+      "peak_rss_mb": 350
+    },
+    "chat_sft": {
+      "exit": 0,
+      "wall_s": 13.6,
+      "peak_rss_mb": 659
+    },
+    "chat_cli": {
+      "exit": 0,
+      "wall_s": 2.7,
+      "peak_rss_mb": 248
+    },
+    "probe_lr2x": {
+      "exit": 0,
+      "wall_s": 42.4,
+      "peak_rss_mb": 872
+    },
+    "probe_vocab2048_tok": {
+      "exit": 0,
+      "wall_s": 5.3,
+      "peak_rss_mb": 299
+    },
+    "probe_vocab2048": {
+      "exit": 0,
+      "wall_s": 33.6,
+      "peak_rss_mb": 938
+    }
+  },
+  "baseline_wall_s_sum": 71.6,
+  "probes_wall_s_sum": 81.3,
+  "base_val_bpb": {
+    "0": 3.456354,
+    "25": 3.264407,
+    "50": 2.812441,
+    "75": 2.637682,
+    "100": 2.536046,
+    "125": 2.465698,
+    "150": 2.413566,
+    "175": 2.374406,
+    "200": 2.343634,
+    "225": 2.320339,
+    "250": 2.305269,
+    "275": 2.294143,
+    "300": 2.288206
+  },
+  "sft_val_bpb": {
+    "0": 2.2892,
+    "10": 2.2211,
+    "20": 2.1877,
+    "30": 2.1551,
+    "39": 2.1456
+  },
+  "base_eval_train_bpb": 2.294739,
+  "base_eval_val_bpb": 2.362225,
+  "chat_reply": "ATedning the date that is                                                                                     -                                                   min            B",
+  "probes_val_bpb": {
+    "probe_lr2x": {
+      "0": {
+        "probe": 3.456354,
+        "baseline": 3.456354,
+        "delta": 0.0
+      },
+      "25": {
+        "probe": 3.261715,
+        "baseline": 3.264407,
+        "delta": -0.002692
+      },
+      "50": {
+        "probe": 2.815494,
+        "baseline": 2.812441,
+        "delta": 0.003053
+      },
+      "75": {
+        "probe": 2.638527,
+        "baseline": 2.637682,
+        "delta": 0.000845
+      },
+      "100": {
+        "probe": 2.535822,
+        "baseline": 2.536046,
+        "delta": -0.000224
+      },
+      "125": {
+        "probe": 2.46157,
+        "baseline": 2.465698,
+        "delta": -0.004128
+      },
+      "150": {
+        "probe": 2.406453,
+        "baseline": 2.413566,
+        "delta": -0.007113
+      },
+      "175": {
+        "probe": 2.365374,
+        "baseline": 2.374406,
+        "delta": -0.009032
+      },
+      "200": {
+        "probe": 2.333653,
+        "baseline": 2.343634,
+        "delta": -0.009981
+      },
+      "225": {
+        "probe": 2.309963,
+        "baseline": 2.320339,
+        "delta": -0.010376
+      },
+      "250": {
+        "probe": 2.294093,
+        "baseline": 2.305269,
+        "delta": -0.011176
+      },
+      "275": {
+        "probe": 2.282804,
+        "baseline": 2.294143,
+        "delta": -0.011339
+      },
+      "300": {
+        "probe": 2.276136,
+        "baseline": 2.288206,
+        "delta": -0.01207
+      }
+    },
+    "probe_vocab2048": {
+      "0": {
+        "probe": 3.68329,
+        "baseline": 3.456354,
+        "delta": 0.226936
+      },
+      "25": {
+        "probe": 3.4531,
+        "baseline": 3.264407,
+        "delta": 0.188693
+      },
+      "50": {
+        "probe": 2.982882,
+        "baseline": 2.812441,
+        "delta": 0.170441
+      },
+      "75": {
+        "probe": 2.793805,
+        "baseline": 2.637682,
+        "delta": 0.156123
+      },
+      "100": {
+        "probe": 2.675608,
+        "baseline": 2.536046,
+        "delta": 0.139562
+      },
+      "125": {
+        "probe": 2.588342,
+        "baseline": 2.465698,
+        "delta": 0.122644
+      },
+      "150": {
+        "probe": 2.526694,
+        "baseline": 2.413566,
+        "delta": 0.113128
+      },
+      "175": {
+        "probe": 2.480876,
+        "baseline": 2.374406,
+        "delta": 0.10647
+      },
+      "200": {
+        "probe": 2.447436,
+        "baseline": 2.343634,
+        "delta": 0.103802
+      },
+      "225": {
+        "probe": 2.421025,
+        "baseline": 2.320339,
+        "delta": 0.100686
+      },
+      "250": {
+        "probe": 2.403515,
+        "baseline": 2.305269,
+        "delta": 0.098246
+      },
+      "275": {
+        "probe": 2.391034,
+        "baseline": 2.294143,
+        "delta": 0.096891
+      },
+      "300": {
+        "probe": 2.384032,
+        "baseline": 2.288206,
+        "delta": 0.095826
+      }
+    }
+  }
+}
