@@ -201,8 +201,9 @@ export function nestedFormsPdf(depth: number): Buffer {
  * Two pages: page 1 draws one full-page transparency group `count` times
  * (each an offscreen canvas the size of the page, composited back), then the
  * line "GROUPS-PAGE"; page 2 is one ordinary line, "AFTER-GROUPS". Slow to
- * draw but small to hold: 2,000 took about 13 s to draw on macOS arm64, and
- * 20,000, stopped at 15 s, peaked under 400 MB in the frame's process.
+ * draw but small to hold. On macOS arm64, 2,000 took about 13 s to draw (4 s
+ * with no GPU at a scale factor of 1, the faster), 6,000 about 11 s with no
+ * GPU; 60,000, stopped at 15 s, peaked at about 0.5 GB in the frame's process.
  */
 export function transparencyGroupsPdf(count: number): Buffer {
   return pdfFile([

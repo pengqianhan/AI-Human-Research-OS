@@ -1152,9 +1152,10 @@ describe("desktop client on a Research OS folder", () => {
     const pdfWorkers = () => page.workers().filter((w) => w.url().includes("pdf.worker.min.mjs"));
     renameSync(pdf, kept);
     try {
-      // 20,000 full-page transparency groups: about ten times the budget to draw here, at a peak under
-      // 400 MB in the frame's process (2^20 nested forms, as slow, took that process to about 3.2 GB).
-      writeFileSync(pdf, transparencyGroupsPdf(20_000));
+      // 60,000 full-page transparency groups: at the rate measured for 6,000 with no GPU at a scale factor
+      // of 1 (the faster way here), about seven times the budget to draw, at a peak of about 0.5 GB in the
+      // frame's process (2^20 nested forms, stopped at the same 15 s, took that process to about 3.2 GB).
+      writeFileSync(pdf, transparencyGroupsPdf(60_000));
       const started = Date.now();
       await paper.getByRole("button", { name: "Reload" }).click();
       await paper.getByText(/^Page [12] of 2$/).waitFor({ timeout: 30_000 });
