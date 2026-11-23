@@ -2322,6 +2322,60 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  test("a click during Reload: after it, the workspace's selection and the page's marked item agree (review S3)", SLOW, async () => {
+    const gone = assetFile(ODD_PROJECT, "Code/results/gone.csv");
+    writeFileSync(gone, "x\nGONE\n");
+    try {
+      const { ws, as } = await openAssets(ODD_PROJECT);
+      await clearAsk(ws, ODD_PROJECT);
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const label = bar.locator("[data-selection-label]");
+      const reload = () => as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      const row = (name: string) => as.locator(".as-group").filter({ has: as.locator("h3 small", { hasText: "Code/results/" }) }).locator(".frow").filter({ has: as.locator(".nm", { hasText: new RegExp(`^${name.replace(/[.%]/g, "\\$&")}$`) }) });
+      /** The next read of paper_skeleton.md waits 3 s, so the old list stays on screen, clickable, while Reload reads. */
+      const slowReload = async () => {
+        await as.evaluate(() => {
+          const real = window.fetch.bind(window);
+          let once = true;
+          window.fetch = async (input, init) => {
+            if (once && String(input).includes("paper_skeleton.md")) {
+              once = false;
+              await new Promise((r) => setTimeout(r, 3000));
+            }
+            return real(input, init);
+          };
+        });
+        await reload();
+        await page.waitForTimeout(200);
+      };
+      await reload();
+      await row("gone.csv").waitFor();
+      // A file the Reload no longer finds: clicked while it reads, it is not selected afterwards, on either side.
+      rmSync(gone);
+      await slowReload();
+      await pause();
+      await row("gone.csv").click();
+      await label.filter({ hasText: "Code/results/gone.csv" }).waitFor();
+      await row("gone.csv").waitFor({ state: "detached", timeout: 10_000 });
+      await bar.waitFor({ state: "detached", timeout: 5000 });
+      assert.equal(await as.locator(".picked").count(), 0);
+      // A file the Reload finds again: clicked while it reads, it is open, marked, and the workspace's selection afterwards.
+      await slowReload();
+      await pause();
+      await row("100%.json").click();
+      await label.filter({ hasText: "Code/results/100%.json" }).waitFor();
+      await as.locator(".as-prev .pn").filter({ hasText: "Code/results/100%.json" }).waitFor();
+      await page.waitForTimeout(3500); // the Reload ends
+      assert.equal(await row("100%.json").evaluate((r) => r.classList.contains("picked") && r.classList.contains("on")), true, "marked and open after the Reload");
+      assert.equal(await label.textContent(), "Code/results/100%.json");
+      assert.equal(await as.locator(".picked").count(), 1);
+      await bar.getByRole("button", { name: "Clear selection" }).click();
+      await as.locator(".picked").waitFor({ state: "detached" });
+    } finally {
+      rmSync(gone, { force: true });
+    }
+  });
+
   test("a hostile SVG shown as an <img> runs nothing and requests nothing outside the app", SLOW, async () => {
     const hits: string[] = [];
     const server = createServer((req, res) => {

@@ -60,21 +60,25 @@ const app = document.getElementById("app")!;
 // ---- selection: reported to the workspace -------------------------------------------
 
 let picked: Element | null = null;
+/** What the workspace holds: the selected item's key and the label posted for it (picked's, or a node a Reload replaced). */
+let selected: { key: string; label: string } | null = null;
 
 function post(message: { type: "os.select"; label: string | null }): void {
   if (window.parent !== window) window.parent.postMessage(message, HOST);
 }
 
-function select(node: Element, selection: Selection): void {
+function select(node: Element, key: string, selection: Selection): void {
   unpick();
   node.classList.add("picked");
   picked = node;
+  selected = { key, label: selection.label };
   post({ type: "os.select", label: selection.label });
 }
 
 function unpick(): void {
   picked?.classList.remove("picked");
   picked = null;
+  selected = null;
 }
 
 /** Clears the selection; `report` false when the workspace asked for it. The open item stays open. */
@@ -347,6 +351,18 @@ function render(model: Model): void {
   observer = new IntersectionObserver(near, { root: listBox, rootMargin: "100% 0px 100% 0px" });
   let order = 0;
   for (const view of model.groups) listBox.append(groupNode(view, () => order++));
+  // An item selected while the Reload read (on the list it replaced): still here with the same label, it is
+  // open and marked on the new list; otherwise the workspace is told there is no selection (review S3).
+  if (selected !== null) {
+    const keep = model.items.get(selected.key)?.selection.label === selected.label ? nodes.get(selected.key) : undefined;
+    if (keep !== undefined) {
+      const item = model.items.get(selected.key)!;
+      state.open = selected.key;
+      state.openName = "line" in item ? item.name : null;
+      picked = keep;
+      keep.classList.add("picked");
+    } else unselect();
+  }
   // Reload keeps the open item if it is still there (a dataset by its line and name), else the panel empties.
   if (state.open !== null) {
     const item = model.items.get(state.open);
@@ -431,7 +447,7 @@ function clickable(node: HTMLElement, key: string, selection: Selection): HTMLEl
       return;
     }
     open(key);
-    select(node, selection);
+    select(node, key, selection);
   });
   return node;
 }
