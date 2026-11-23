@@ -418,8 +418,9 @@ and nothing else from the file; at most four load at once (`queue.ts`), a busy
 one is tried once more after a second, and a failed one asks the channel for
 its status with a `HEAD` in the same slot. An SVG is shown only that way, and
 only after `svg.ts` has read its text (at most 4 MiB, in the same slot) and
-counted what its `<use>` references draw: over 200,000 elements, a cycle, or a
-file it cannot check waits for the human's **Show**. The end-to-end suite pins
+counted what its `<use>` references draw: over 200,000 elements, a cycle,
+another picture held inside as a `data:` URL other than a PNG, JPEG, GIF, or
+WebP, or a file it cannot check waits for the human's **Show**. The end-to-end suite pins
 that a hostile SVG (script, `onload`, external images, `@import`,
 `foreignObject`, a `<use>` to an outside URL) runs nothing and that a local
 HTTP listener its URLs name hears no request. Previews: a CSV's first 20 rows

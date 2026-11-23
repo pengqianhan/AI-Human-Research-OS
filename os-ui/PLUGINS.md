@@ -156,8 +156,9 @@ Status on 2026-11-24:
     row; the time-out runs on the same thread and could not help): before an
     `.svg` goes to an `<img>`, card or panel, the page reads its text through the
     channel in the same queue slot, at most 4 MiB, and `svg.ts` counts the elements
-    it draws through `<use>` (`href` and `xlink:href`, same-document `#id`, XML
-    escapes and percent-encoding read), with a scanner over the text (no document
+    it draws through `<use>` (every attribute whose local name is `href`, whatever
+    its prefix, and each of them when a `<use>` has several; same-document `#id`,
+    XML escapes and percent-encoding read), with a scanner over the text (no document
     is built and nothing of it reaches the page; `dom.test.ts` pins both) and one
     memoised, cycle-safe pass, linear in the file's size. It fails closed: over
     4 MiB, not UTF-8, not read as it expects (an unclosed or mismatched tag, its own
@@ -171,10 +172,19 @@ Status on 2026-11-24:
     answering in 5 ms; 680,241 (5 of 10, refused: the review left 5 of 10 to this
     build's call) block it about 1.1 s; 2.45 million about 5 s; 6 and 7 of 10
     never finish. nanochat_cpu's two SVGs (91 and 113 elements)
-    and a matplotlib-style figure (glyphs and a marker in `<defs>`, 5,000 `<use>`)
-    draw without a click. This bounds `<use>` expansion only. Other heavy SVG
-    (filters, patterns, a nested `data:` image) and the file changing between the
-    check and the draw stay declared limits.
+    and a matplotlib-style figure (glyphs and a marker in `<defs>`, 5,000 `<use>`,
+    an embedded `data:image/png` raster) draw without a click. Another picture held
+    inside is refused too (a recheck after the review wrapped the 6×10 bomb in one
+    `<image href="data:image/svg+xml;base64,…">`, and wrote its `<use>` with
+    `x:href`): an attribute's value on any element, or a `url(` in one (a style, a
+    fill), that is a `data:` URL of any type but `image/png`, `jpeg`, `gif`, or
+    `webp` (XML references read, leading white space and control characters
+    skipped, tabs and line breaks dropped, case ignored) gives "This SVG holds
+    another picture the view cannot check; drawing it may freeze the view." and
+    **Show**. What stays a declared limit: a `data:` URL inside a `<style>` sheet,
+    or written with CSS escapes in a style (`\64 ata:`); HTML inside
+    `foreignObject`; filters and patterns; a file changed between the check and
+    the draw.
   - **Narrow window**: below 760 px of the frame's width (the mockup's container
     rule), the preview sits above the list, at most 270 px tall.
   - **Results' sentence**, "The Code view also lists these files.", shows also when
