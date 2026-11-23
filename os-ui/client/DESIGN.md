@@ -168,7 +168,7 @@ with the trunk's endpoints only.
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
 | `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`); other `api/` paths are 404 |
 | `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
-| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code and Paper views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
+| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, and Skeleton views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
@@ -204,6 +204,12 @@ the plugin is bundled or local. A `*` segment matches any one segment whose
 name does not start with `.`, a file's name included:
 `projects-folder/*/Code` matches `projects-folder/Alpha/Code`, and
 `projects-folder/*` matches `projects-folder/notes.md` as well as a project.
+A root may name a file (`projects-folder/*/paper_skeleton.md`, the Skeleton
+view's): the file is then the whole root, so it is served by GET and HEAD,
+while a path below it, a listing of it, a sibling, and the project folder are
+404. Every rule below applies to it unchanged; `test/protocol.test.ts` ("a
+file root") pins those cases, links at the file root, `*` matching exactly one
+segment, and Windows spellings.
 
 - `GET app://<id>/_os/files?path=<rel>` returns the file's bytes;
   `GET app://<id>/_os/list?path=<rel>` returns
@@ -280,11 +286,13 @@ name does not start with `.`, a file's name included:
   `text/plain; charset=utf-8`, listings as `application/json`, and other files
   by extension (SVG as `image/svg+xml`, which an `<img>` needs).
 - The Code view declares `reads: ["projects-folder/*/Code"]`, the Paper view
-  `reads: ["projects-folder/*/paper"]`. Besides the fixture tests in
-  [test/protocol.test.ts](test/protocol.test.ts), the end-to-end suite reads
-  through both: `+`, `#`, `%`, a space and Chinese text in names and files, a
-  33 MiB `main.pdf` (413), and 404 for `.env` and for a file outside each
-  view's root.
+  `reads: ["projects-folder/*/paper"]`, the Skeleton view
+  `reads: ["projects-folder/*/paper_skeleton.md"]`. Besides the fixture tests
+  in [test/protocol.test.ts](test/protocol.test.ts), the end-to-end suite reads
+  through all three: `+`, `#`, `%`, a space and Chinese text in names and
+  files, a 33 MiB `main.pdf` (413), and 404 for `.env`, for a file outside
+  each view's root, and for a path below or a listing of the Skeleton view's
+  file.
 
 **The Code view** (S6a-2 of [os-ui/PLUGINS.md](../PLUGINS.md)). Its page reads
 only `./_os/files`, `./_os/list`, and `/api/code-view/git` on its own origin,
@@ -362,6 +370,25 @@ back before the next page is drawn (one page of nested forms reached about
 4.8 GB in a review), the sum of many images on one page (twelve at the cap peaked at 1.8 GB), and
 PDF.js's own work while it opens a file of up to 32 MiB.
 
+**The Skeleton view** (2.1 of [os-ui/PLUGINS.md](../PLUGINS.md) Part 3). Its
+page reads only `projects-folder/<project>/paper_skeleton.md` through
+`./_os/files`, at most 1 MiB of it (a larger file is a screen), and reads it
+with the plugins' shared Markdown reader, `plugins/md-kit.ts`, which returns
+blocks and tokens, never HTML: the page draws them as text, a link's target
+only as its tooltip (never followed) and an image only as its alt text (never
+loaded), with the host's invisible characters marked. The page sets no style,
+`href`, or `src` from its code (its `dom.test.ts` scans the site, md-kit, and
+site-kit). It shows mockup alternative B: the Snapshot card, the claims with
+each one's evidence beside them (under the claim when the view is narrower
+than 780 px), and the rest of the file folded by section. A Snapshot line, a
+claim row, or a paragraph, list item, table row, or code block of an open
+section posts `os.select` with `paper_skeleton.md:<lines> · claim <ID>` or
+`· <section>` and its lines as written as the quote, cut on the page to 2,000
+characters as the Code view cuts (the host ignores a longer quote). Its chip
+opens by itself: the quote is the line as written, not what the page draws
+(the Human Owner's decision of 2026-11-23). In a browser the tab says the view
+opens in the desktop app.
+
 Known limits of the channel, not yet handled:
 
 - A concurrent writer could swap a folder on the path for a link between the
@@ -381,11 +408,11 @@ Known limits of the channel, not yet handled:
   by a manifest. App pages (HTML and the `index.html` fallback), with one
   `frame-src` entry per loaded plugin, in load order (`appCsp` in
   `protocol.ts`; `frame-src 'none'` if none loaded):
-  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
+  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
   A site served from a workspace folder (the Paper Wiki viewer):
   `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
-  A site in its plugin folder (the Code and Paper views') gets no inline code
+  A site in its plugin folder (the Code, Paper, and Skeleton views') gets no inline code
   at all, since it shows untrusted names and text:
   `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   (`PLUGIN_CSP`; styles set through the DOM still apply, which is how PDF.js
