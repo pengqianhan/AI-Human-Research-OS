@@ -1471,7 +1471,7 @@ The mockup's `ASSETS` and `GROUPS` hold hand-written text for every file
 
 ## 5. Idea view (alternative A, a drawn graph)
 
-### 5.1 The idea file (agent default; needs the Human Owner's word, §7 I-1)
+### 5.1 The idea file (confirmed by the Human Owner on 2026-11-23, §7 I-1)
 
 Within the decided vocabulary (`HANDOFF.md:606`, `:610`): one Markdown file, one
 table, one row a node, four link words. An example, written from `nanochat_cpu`'s
@@ -1870,6 +1870,13 @@ included; enablement kept in `userData` (Risk 4); an enable screen that shows
 `reads` (Risk 3); and `usePlugins()` fetching local manifests (Risk 6).
 
 ## 7. Questions for the Human Owner
+
+**Answered 2026-11-23** ([HANDOFF.md](../HANDOFF.md) Decisions, "Idea file format"
+and "Step 2 views, first version"): I-1, I-2, and I-3 as proposed; I-4, new
+projects start with an empty `idea_graph.md` and the project check does not
+require it; N-1, the chips of all three views open by themselves; N-3, the cited
+file's own text is left out. N-2 and N-4 to N-7 stand on their defaults. The
+questions are kept below as they were asked.
 
 **These block the Idea view (2.3, 2.4) only.** If unanswered, the Idea view is not
 started, while the Skeleton and Assets views go ahead.
