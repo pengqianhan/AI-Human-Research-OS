@@ -36,6 +36,7 @@ import {
   noPreviewWords,
   previewCap,
   previewWords,
+  placeWhere,
   projectWords,
   README,
   SKELETON,
@@ -438,7 +439,9 @@ function card(item: FileItem, order: number, auto: boolean): HTMLElement {
   node.dataset.order = String(order);
   const thumb = el("span", "thumb");
   thumbs.set(item.key, thumb);
-  node.append(thumb, el("span", "nm", visibleName(item.rel)), el("span", "mt", sizeWords(item.size)));
+  const nm = el("span", "nm", visibleName(item.rel));
+  nm.title = visibleName(item.rel);
+  node.append(thumb, nm, el("span", "mt", sizeWords(item.size)));
   if (auto) {
     thumbState(item.key, { state: "waiting" });
     observer!.observe(node);
@@ -483,7 +486,9 @@ function thumbState(key: string, job: JobState): void {
 
 function fileRow(item: FileItem): HTMLElement {
   const node = button("frow");
-  node.append(icon(item.kind === "csv" ? "table" : "file"), el("span", "nm", visibleName(item.rel)), el("span", "sz", sizeWords(item.size)));
+  const nm = el("span", "nm", visibleName(item.rel));
+  nm.title = visibleName(item.rel);
+  node.append(icon(item.kind === "csv" ? "table" : "file"), nm, el("span", "sz", sizeWords(item.size)));
   // A description from the folder's README.md is the second line; without one there is none.
   if (item.description !== null && item.description.text !== "") node.append(el("span", "mt", markInvisible(item.description.text)));
   return clickable(node, item.key, item.selection);
@@ -540,7 +545,12 @@ function filePanel(item: FileItem, gen: number): void {
   if (words.none !== null) used.textContent = words.none;
   else {
     const list = el("ul");
-    for (const place of words.places) list.append(el("li", "", markInvisible(place)));
+    for (const place of item.usedIn.slice(0, LIMITS.usedIn)) {
+      // The file and line in monospace; a table row's first cell, from the file, as text after it.
+      const li = el("li", "", placeWhere(place));
+      if (place.cell !== null && place.cell !== "") li.append(el("span", "cell", ` · ${markInvisible(place.cell)}`));
+      list.append(li);
+    }
     used.append(list);
     if (words.more > 0) used.append(el("span", "from", `and ${words.more} more`));
   }

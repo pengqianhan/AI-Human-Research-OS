@@ -10,14 +10,18 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, truncateSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, truncateSync, writeFileSync } from "node:fs";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
+import { crc32, deflateSync } from "node:zlib";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
 import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
+import { sizeWords } from "../../frontend/plugins/assets-view/site/logic.ts";
 import { PLUGIN_CSP } from "../src/main/protocol.ts";
 import { HIDDEN_RUNS, hiddenPdf, HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, manyPagesPdf, nestedFormsPdf, noPagesPdf, notAPdf, oddSizesPdf, passwordPdf, REMAP, transparencyGroupsPdf } from "./pdfFixtures.ts";
 
@@ -199,6 +203,105 @@ function skeletonFixtures(workspace: string): void {
   copyFileSync(join(SKELETON_FIXTURES, "template.paper_skeleton.md"), join(made, "paper_skeleton.md"));
 }
 
+/**
+ * The Assets view's fixtures (os-ui/frontend/plugins/fixtures/README.md): a
+ * project made from the template with the frozen copy of nanochat_cpu's
+ * Figs/, Baselines/, Code/results/, Code/Datasets/, Code/README.md, and
+ * paper_skeleton.md laid over it, so what the suite pins is its own and not
+ * the live project's; the template project's asset folders as the frozen
+ * template copy has them; and a project of hostile names and files. All in
+ * the temporary workspace.
+ */
+const ASSETS_FIXTURES = join(SKELETON_FIXTURES, "assets_project");
+const ASSETS_TEMPLATE = join(SKELETON_FIXTURES, "assets_template");
+const ASSETS_PROJECT = "assets_e2e";
+const ODD_PROJECT = "assets_odd";
+/** The four places the Assets view lists. */
+const ASSET_FOLDERS = ["Figs", "Baselines", "Code/results", "Code/Datasets"];
+/** Names for the Assets view's groups (os-ui/PLUGINS.md Part 3, §6 "2.2"): "+", "#", "%", and a space, of four kinds. */
+const ODD_ASSETS = ["a+b.csv", "has#hash.svg", "100%.json", "with space.md"];
+/** A fixture line's text, whatever line endings the checkout gave it. */
+const assetLines = (rel: string) => readFileSync(join(ASSETS_FIXTURES, rel), "utf8").split(/\r?\n/);
+const lineWith = (lines: readonly string[], needle: string) => lines.findIndex((l) => l.includes(needle)) + 1;
+
+/** A small SVG picture with a caption (the caption is plain words, never a name). */
+const svgPicture = (caption: string, fill: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180"><rect width="320" height="180" fill="${fill}"/><text x="16" y="96" font-family="sans-serif" font-size="22" fill="#1c1a17">${caption}</text></svg>\n`;
+
+/** A PNG of `width` × `height` pixels of one colour. */
+function png(width: number, height: number, rgb: readonly [number, number, number]): Buffer {
+  const chunk = (type: string, data: Buffer) => {
+    const length = Buffer.alloc(4);
+    length.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(body) >>> 0);
+    return Buffer.concat([length, body, crc]);
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8; // bit depth
+  header[9] = 2; // truecolour
+  const row = Buffer.alloc(1 + width * 3);
+  for (let x = 0; x < width; x++) row.set(rgb, 1 + x * 3);
+  const raw = Buffer.concat(Array.from({ length: height }, () => row));
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", header), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
+}
+
+/** A project made from the template whose asset folders are `tree`'s (a fixture folder), or empty when it is null. */
+function assetProject(workspace: string, name: string, tree: string | null): string {
+  const projects = join(workspace, "projects-folder");
+  const dir = join(projects, name);
+  if (!existsSync(dir)) cpSync(join(projects, "templates", "ai_research_template"), dir, { recursive: true });
+  for (const folder of ASSET_FOLDERS) rmSync(join(dir, folder), { recursive: true, force: true });
+  if (tree !== null) cpSync(tree, dir, { recursive: true });
+  return dir;
+}
+
+function assetsFixtures(workspace: string): void {
+  const made = assetProject(workspace, ASSETS_PROJECT, ASSETS_FIXTURES);
+  copyFileSync(join(SKELETON_FIXTURES, "nanochat_cpu.paper_skeleton.md"), join(made, "paper_skeleton.md"));
+  // The template project the Skeleton view's tests made: its asset folders as the frozen template copy has them.
+  assetProject(workspace, TEMPLATE_PROJECT, ASSETS_TEMPLATE);
+  // Hostile names and files, each where the view lists it.
+  const odd = assetProject(workspace, ODD_PROJECT, ASSETS_TEMPLATE);
+  const put = (rel: string, content: string | Buffer) => {
+    mkdirSync(dirname(join(odd, rel)), { recursive: true });
+    writeFileSync(join(odd, rel), content);
+  };
+  const content: Record<string, string> = {
+    "a+b.csv": "name,value\r\n\"a, b\",1\r\n\"say \"\"hi\"\"\",2\r\n",
+    "has#hash.svg": svgPicture("has hash", "#dcebe8"),
+    "100%.json": '{\n  "percent": 100\n}\n',
+    "with space.md": "# With space\n\nA [link](https://link.invalid/x) and `code`.\n",
+  };
+  for (const folder of ["Figs", "Code/results"]) for (const name of ODD_ASSETS) put(`${folder}/${name}`, content[name]!);
+  // Windows refuses < and > in a file name.
+  if (process.platform !== "win32") {
+    put(`Figs/${MARKUP_NAME}`, `${MARKUP_TEXT}\n`);
+    put(`Figs/${MARKUP_NAME.replace(/\.txt$/, ".svg")}`, svgPicture("markup name", "#f3e6cc"));
+    put(`Code/results/${MARKUP_NAME}`, `${MARKUP_TEXT}\n`);
+  }
+  // One name in two folders: two items.
+  put("Figs/a/plot.svg", svgPicture("plot in a", "#e2efe1"));
+  put("Figs/b/plot.svg", svgPicture("plot in b", "#f1e5cb"));
+  // Sixty small pictures, for the queue.
+  for (let k = 0; k < 60; k++) put(`Figs/e2e/p${String(k).padStart(2, "0")}.png`, png(48, 27, [40 + ((k * 37) % 200), 90 + ((k * 53) % 150), 120 + ((k * 29) % 120)]));
+  // A cell with markup, a file the channel refuses (sparse, so it costs no disk), binary data, and a folder past the depth cap.
+  put("Code/results/markup.csv", `cell,other\n"${MARKUP_TEXT.replace(/"/g, '""')}",2\n`);
+  put("Code/results/huge.csv", "");
+  truncateSync(join(odd, "Code/results/huge.csv"), 33 * 1024 * 1024);
+  put("Code/results/binary.dat", Buffer.from([0x89, 0x50, 0x00, 0x00, 0x01, 0x02]));
+  put("Code/results/deep/a/b/c/d/past-the-depth.txt", "deep\n");
+  put("Code/results/deep/a/b/c/within-the-depth.txt", "within\n");
+  // Code/README.md: a dataset table with markup and one name twice.
+  put(
+    "Code/README.md",
+    ["# Code", "", "## Data", "", `Words before the table, with ${MARKUP_TEXT} in them.`, "", "| Data | Source | Used |", "|---|---|---|", `| first | [twice](https://data.invalid/one) | ${MARKUP_TEXT} |`, "| second | [twice](https://data.invalid/two) | b |", ""].join("\n"),
+  );
+}
+
 /** The home folder the suite's git commands share; removed with the workspace. */
 let gitHome: string | null = null;
 
@@ -256,6 +359,7 @@ describe("desktop client on a Research OS folder", () => {
     workspace = copyWorkspace();
     codeFixtures(workspace);
     skeletonFixtures(workspace);
+    assetsFixtures(workspace);
     userData = tempDir("os-client-data-");
     sessions = tempDir("os-client-sessions-");
     ({ app, page, logs } = await launch({
@@ -1815,6 +1919,500 @@ describe("desktop client on a Research OS folder", () => {
     const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/skeleton-view\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
     for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
     assert.ok(canary(await consoleLog()), "a CSP violation inside the Skeleton view's frame is seen");
+  });
+
+  /** A project's workspace with its Assets tab open, and the Assets view's frame once its groups or a screen show. */
+  async function openAssets(project: string = ASSETS_PROJECT): Promise<{ ws: Locator; as: Frame }> {
+    await nav(page, "Projects").click();
+    await screen(page, "projects").getByRole("button", { name: `Open workspace: ${project}` }).click();
+    const ws = screen(page, "workspace");
+    await ws.getByRole("heading", { name: project, exact: true }).waitFor();
+    await ws.getByRole("tab", { name: "Assets" }).click();
+    const as = await pluginFrame(page, `app://assets-view/index.html?project=${project}`);
+    await as.locator(".as-group, .placeholder").first().waitFor();
+    return { ws, as };
+  }
+  /** A file of a project in the temporary workspace. */
+  const assetFile = (project: string, rel: string) => join(workspace, "projects-folder", project, rel);
+  /** The read channel's URL for a project path, as the page writes it. */
+  const channelUrl = (project: string, rel: string) => `./_os/files?path=${encodeURIComponent(`projects-folder/${project}/${rel}`)}`;
+  /** The figure cards' pictures, once each has loaded: their src and natural width. */
+  const pictures = (as: Frame) => as.locator(".fcard .thumb img").evaluateAll((imgs) => imgs.map((i) => [i.getAttribute("src"), (i as HTMLImageElement).naturalWidth] as const));
+  /** The workspace takes at most 10 selections a second from a view. */
+  const pause = () => page.waitForTimeout(1100);
+
+  test("the Assets view on nanochat_cpu as copied: four groups, nothing selected", SLOW, async () => {
+    // A look at the live project's copy, for the screenshot; what the suite pins is the frozen copy's, below.
+    const width = await windowWidth(1440);
+    try {
+      const { as } = await openAssets(PROJECT);
+      assert.deepEqual(await as.locator(".as-group h3").allTextContents(), ["FiguresFigs/", "Reference runsBaselines/", "ResultsCode/results/", "Datasetslisted in Code/README.md"]);
+      await as.locator(".as-prev .empty").waitFor();
+      await as
+        .locator(".fcard .thumb img")
+        .first()
+        .waitFor({ timeout: 10_000 })
+        .catch(() => {});
+      await shot(page, "assets-1-nanochat-cpu-nothing-selected");
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("the Assets view on the frozen copy of nanochat_cpu's assets: groups, figures from the read channel, sizes, descriptions, datasets", SLOW, async () => {
+    const width = await windowWidth(1440);
+    try {
+      const { as } = await openAssets();
+      assert.equal(as.url(), `app://assets-view/index.html?project=${ASSETS_PROJECT}`);
+      assert.equal(await as.locator(".subbar .vpath").textContent(), "12 items · Figs/ · Baselines/ · Code/results/ · datasets");
+      await as.locator(".subbar").getByRole("button", { name: "Reload" }).waitFor();
+      assert.deepEqual(await as.locator(".as-group h3").allTextContents(), ["FiguresFigs/", "Reference runsBaselines/", "ResultsCode/results/", "Datasetslisted in Code/README.md"]);
+      // Two figure cards, each an <img> whose src is the read channel's URL for the file, drawn.
+      const figures = ["baseline_training_curves.svg", "probe_comparison.svg"];
+      assert.deepEqual(await as.locator(".fcard .nm").allTextContents(), figures);
+      await as.locator(".fcard .thumb img").nth(1).waitFor();
+      assert.deepEqual(
+        (await pictures(as)).map(([src, w]) => [src, w > 0]),
+        figures.map((name) => [channelUrl(ASSETS_PROJECT, `Figs/${name}`), true]),
+      );
+      assert.equal(await as.locator(".fcard .thumb img").evaluateAll((imgs) => imgs.every((i) => i.getAttribute("alt") === "" && i.attributes.length === 2)), true, "src and alt only");
+      // Sizes from the listing, as the files in the workspace have them (a CRLF checkout changes them).
+      assert.deepEqual(await as.locator(".fcard .mt").allTextContents(), figures.map((name) => sizeWords(statSync(assetFile(ASSETS_PROJECT, `Figs/${name}`)).size)));
+      const rows = (group: string) => as.locator(".as-group").filter({ has: as.locator("h3", { hasText: group }) }).locator(".frow");
+      assert.deepEqual(await rows("Reference runs").locator(".nm").allTextContents(), [
+        "Baseline_readme.md",
+        "openresearch-demo/README.md",
+        "openresearch-demo/evaluation-metrics.json",
+        "openresearch-demo/training-metrics.csv",
+      ]);
+      assert.deepEqual(
+        await rows("Reference runs").locator(".sz").allTextContents(),
+        ["Baselines/Baseline_readme.md", "Baselines/openresearch-demo/README.md", "Baselines/openresearch-demo/evaluation-metrics.json", "Baselines/openresearch-demo/training-metrics.csv"].map((rel) =>
+          sizeWords(statSync(assetFile(ASSETS_PROJECT, rel)).size),
+        ),
+      );
+      // Only the two files the folder's README.md describes have a second line.
+      assert.deepEqual(await rows("Reference runs").locator(".mt").allTextContents(), [
+        "base bpb, the CORE tasks that were completed, and the final headline metrics.",
+        "base and SFT loss, validation bpb, throughput, and elapsed time by step.",
+      ]);
+      assert.deepEqual(await rows("Results").locator(".nm").allTextContents(), ["summary.json", "training_metrics.csv"]);
+      await as.getByText("The Code view also lists these files.", { exact: true }).waitFor();
+      // The datasets Code/README.md lists, its words before the table as the note, and an empty Code/Datasets/.
+      const data = as.locator(".as-group").filter({ has: as.locator("h3", { hasText: "Datasets" }) });
+      assert.deepEqual(await data.locator(".frow .nm").allTextContents(), ["karpathy/climbmix-400b-shuffle", "HuggingFaceTB/smol-smoltalk", "cais/mmlu", "openai/gsm8k"]);
+      assert.deepEqual(await data.locator(".frow .sz").allTextContents(), ["listed", "listed", "listed", "listed"]);
+      assert.ok(((await data.locator(".gnote").textContent()) ?? "").startsWith("Data is downloaded on demand into Code/nanochat/.cache/nanochat/"));
+      await data.getByText("Code/Datasets/ is empty", { exact: true }).waitFor();
+      await as.locator(".as-prev .empty").filter({ hasText: "Select a figure or a file to preview it here." }).waitFor();
+      assert.equal(await as.locator(".picked, .on").count(), 0);
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("a figure, a CSV, a JSON file, and a dataset each open their own preview; a chip opens by itself; nothing is sent", SLOW, async () => {
+    const sessionFiles = readdirSync(sessions).length;
+    const width = await windowWidth(1440);
+    try {
+      const { ws, as } = await openAssets();
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const chat = ws.getByRole("region", { name: `${ASSETS_PROJECT} agent`, exact: true });
+      const chips = chat.getByRole("list", { name: "References" }).getByRole("listitem");
+      await clearAsk(ws, ASSETS_PROJECT);
+      const label = bar.locator("[data-selection-label]");
+      const panel = as.locator(".as-prev");
+      const field = (name: string) => panel.locator("dt").filter({ hasText: new RegExp(`^${name}$`) }).locator("xpath=following-sibling::dd[1]");
+      const readme = assetLines("Code/README.md");
+
+      // A figure: drawn large through the channel, where it is used, and the ask bar with its path and no quote.
+      await pause();
+      await as.locator(".fcard").filter({ hasText: "probe_comparison.svg" }).click();
+      await panel.locator("h4").filter({ hasText: "Figure" }).waitFor();
+      assert.equal(await panel.locator(".pn").textContent(), "Figs/probe_comparison.svg");
+      await panel.locator(".big img").waitFor();
+      assert.deepEqual(await panel.locator(".big img").evaluate((i) => [i.getAttribute("src"), (i as HTMLImageElement).naturalWidth > 0]), [channelUrl(ASSETS_PROJECT, "Figs/probe_comparison.svg"), true]);
+      assert.equal(await field("What").textContent(), "—");
+      assert.deepEqual(await field("Used in").locator("li").allTextContents(), [`Code/README.md:${lineWith(readme, "![Probe comparison]")}`]);
+      await label.filter({ hasText: "Figs/probe_comparison.svg" }).waitFor();
+      assert.equal(await label.textContent(), "Figs/probe_comparison.svg");
+      assert.equal(await bar.locator("[data-selection-quote]").count(), 0, "no quote");
+      assert.equal(await as.locator(".fcard.picked.on").count(), 1);
+      await shot(page, "assets-2-figure-selected-preview-and-ask-bar");
+      await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+      await chips.filter({ hasText: "Figs/probe_comparison.svg" }).waitFor();
+      // The chip opens by itself: the Assets view is not among the views that quote what they draw.
+      const preview = chat.locator("[data-reference-preview]");
+      await preview.waitFor({ timeout: 5000 });
+      assert.equal(await preview.textContent(), "About Figs/probe_comparison.svg");
+      await as.locator(".picked").waitFor({ state: "detached" });
+      assert.equal(await as.locator(".fcard.on").count(), 1, "the preview stays open");
+      await shot(page, "assets-6-composer-after-ask-chip-open");
+      await chat.getByRole("button", { name: "Remove reference Figs/probe_comparison.svg" }).click();
+
+      // A CSV: its header and first 20 rows, and how many rows it has, in the panel (not the list).
+      const csvLines = assetLines("Code/results/training_metrics.csv").filter((l) => l !== "");
+      await pause();
+      await as.locator(".frow").filter({ hasText: "training_metrics.csv" }).click();
+      await panel.locator("h4").filter({ hasText: "Table (CSV)" }).waitFor();
+      await panel.locator(".mini tbody tr").first().waitFor();
+      assert.deepEqual(await panel.locator(".mini th").allTextContents(), csvLines[0]!.split(","));
+      assert.equal(await panel.locator(".mini tbody tr").count(), 20);
+      assert.deepEqual(await panel.locator(".mini tbody tr").first().locator("td").allTextContents(), csvLines[1]!.split(","));
+      const total = csvLines.length - 1;
+      await panel.getByText(`First 20 of ${total.toLocaleString("en-US")} rows.`, { exact: true }).waitFor();
+      assert.equal(await field("Size").textContent(), `${sizeWords(statSync(assetFile(ASSETS_PROJECT, "Code/results/training_metrics.csv")).size)} · ${total.toLocaleString("en-US")} rows`);
+      await label.filter({ hasText: "Code/results/training_metrics.csv" }).waitFor();
+      await shot(page, "assets-3-csv-first-rows-and-row-count");
+
+      // A JSON file: its first 40 lines as written, and where it is used.
+      const json = assetLines("Code/results/summary.json");
+      const jsonLines = json[json.length - 1] === "" ? json.length - 1 : json.length;
+      await pause();
+      await as.locator(".frow").filter({ hasText: "summary.json" }).click();
+      await panel.locator("h4").filter({ hasText: "Data (JSON)" }).waitFor();
+      await panel.locator("pre").waitFor();
+      assert.equal(await panel.locator("pre").textContent(), json.slice(0, 40).join("\n"));
+      await panel.getByText(`First 40 of ${jsonLines} lines.`, { exact: true }).waitFor();
+      const skeleton = readFileSync(join(SKELETON_FIXTURES, "nanochat_cpu.paper_skeleton.md"), "utf8").split(/\r?\n/);
+      const used = await field("Used in").locator("li").allTextContents();
+      assert.equal(used.length, 8);
+      assert.equal(used[0], `paper_skeleton.md:${lineWith(skeleton, "| Empirical support |")} · Empirical support`);
+      assert.ok(used.includes(`paper_skeleton.md:${lineWith(skeleton, "| C2: ")} · C2: base val bpb 3.4564 → 2.2882; SFT 2.2892 → 2.1456`), used.join("\n"));
+      assert.equal(used[7], `Code/README.md:${lineWith(readme, "[results/summary.json](results/summary.json)):")}`);
+      await shot(page, "assets-4-json-selected");
+
+      // A described file: its description and where it comes from.
+      await pause();
+      await as.locator(".frow").filter({ hasText: "openresearch-demo/evaluation-metrics.json" }).click();
+      await panel.locator(".pn").filter({ hasText: "Baselines/openresearch-demo/evaluation-metrics.json" }).waitFor();
+      const demo = readFileSync(join(ASSETS_FIXTURES, "Baselines/openresearch-demo/README.md"), "utf8").split(/\r?\n/);
+      assert.equal(
+        await field("What").textContent(),
+        `base bpb, the CORE tasks that were completed, and the final headline metrics.from Baselines/openresearch-demo/README.md:${lineWith(demo, "[evaluation-metrics.json]")}`,
+      );
+
+      // A dataset: its README line in the label, and what Code/README.md says about it.
+      const first = lineWith(readme, "| Pretraining text |");
+      await pause();
+      await as.locator(".frow").filter({ hasText: "karpathy/climbmix-400b-shuffle" }).click();
+      await label.filter({ hasText: "dataset karpathy/climbmix-400b-shuffle" }).waitFor();
+      assert.equal(await label.textContent(), `Code/README.md:${first} · dataset karpathy/climbmix-400b-shuffle`);
+      await panel.locator("h4").filter({ hasText: "Dataset · listed in Code/README.md" }).waitFor();
+      assert.deepEqual(await panel.locator("dt").allTextContents(), ["Data", "Source", "Used", "Listed in"]);
+      assert.equal(await field("Source").textContent(), "karpathy/climbmix-400b-shuffle (https://huggingface.co/datasets/karpathy/climbmix-400b-shuffle)");
+      assert.equal(await field("Listed in").textContent(), `Code/README.md:${first}`);
+      assert.equal(await panel.locator("a, img").count(), 0, "an address is text, never a link");
+      await as.locator(".as-group").filter({ has: as.locator("h3", { hasText: "Datasets" }) }).scrollIntoViewIfNeeded();
+      await shot(page, "assets-5-datasets-group");
+      // The same click again clears the selection and keeps the preview.
+      await pause();
+      await as.locator(".frow").filter({ hasText: "karpathy/climbmix-400b-shuffle" }).click();
+      await bar.waitFor({ state: "detached" });
+      assert.equal(await as.locator(".frow.on").count(), 1);
+      assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("in a narrow window the preview sits above the list, and nothing scrolls sideways", SLOW, async () => {
+    const width = await windowWidth(1440);
+    try {
+      const { ws, as } = await openAssets();
+      await clearAsk(ws, ASSETS_PROJECT);
+      await windowWidth(1000);
+      await page.waitForTimeout(300);
+      assert.ok((await as.evaluate(() => innerWidth)) < 760, `the view is ${await as.evaluate(() => innerWidth)} px wide`);
+      await pause();
+      await as.locator(".fcard").filter({ hasText: "baseline_training_curves.svg" }).click();
+      await as.locator(".as-prev .big img").waitFor();
+      const [prev, list] = await as.evaluate(() => [".as-prev", ".as-list"].map((s) => document.querySelector(s)!.getBoundingClientRect().top));
+      assert.ok(prev! < list!, `the preview (${prev}) is above the list (${list})`);
+      assert.equal(await as.evaluate(() => [...document.querySelectorAll(".as-body, .as-list, .as-prev")].some((e) => e.scrollWidth > e.clientWidth + 1)), false);
+      await shot(page, "assets-7-narrow-window");
+      const bar = ws.getByRole("region", { name: "Selection" });
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("a project made from the template: an empty Figs/, no Code/results/, the Data section's bullet as the note; an absent folder reads otherwise than an empty one", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const figs = assetFile(TEMPLATE_PROJECT, "Figs");
+    try {
+      const { as } = await openAssets(TEMPLATE_PROJECT);
+      assert.equal(await as.locator(".subbar .vpath").textContent(), "1 item · Figs/ · Baselines/ · datasets");
+      await as.getByText("Figs/ is empty", { exact: true }).waitFor();
+      await as.getByText("No Code/results/ folder this view can read", { exact: true }).waitFor();
+      await as.getByText("No dataset table in Code/README.md's Data section", { exact: true }).waitFor();
+      const data = as.locator(".as-group").filter({ has: as.locator("h3", { hasText: "Datasets" }) });
+      assert.equal(await data.locator(".gnote li").textContent(), "Datasets live in Datasets/. Record source, version, and license per dataset.");
+      await data.getByText("Code/Datasets/ is empty", { exact: true }).waitFor();
+      assert.deepEqual(await as.locator(".frow .nm").allTextContents(), ["Baseline_readme.md"]);
+      await shot(page, "assets-8-template-project-empty-states");
+      // Figs/ gone: no longer "empty", but not there.
+      renameSync(figs, `${figs}.e2e-kept`);
+      await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      await as.getByText("No Figs/ folder this view can read", { exact: true }).waitFor();
+      assert.equal(await as.getByText("Figs/ is empty", { exact: true }).count(), 0);
+    } finally {
+      if (existsSync(`${figs}.e2e-kept`)) renameSync(`${figs}.e2e-kept`, figs);
+      await windowWidth(width);
+    }
+  });
+
+  test("hostile names and files: markup and odd names stay text, one name in two folders is two items, a 33 MiB CSV is refused, a depth cap is said", SLOW, async () => {
+    const width = await windowWidth(1440);
+    try {
+      const { ws, as } = await openAssets(ODD_PROJECT);
+      await clearAsk(ws, ODD_PROJECT);
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const label = bar.locator("[data-selection-label]");
+      const panel = as.locator(".as-prev");
+      // Odd names reach the channel through encodeURIComponent: each opens its own file. The card is past
+      // the sixty pictures, so its picture loads once it comes near the view.
+      const hash = as.locator(".fcard").filter({ hasText: "has#hash.svg" });
+      await hash.scrollIntoViewIfNeeded();
+      await hash.locator(".thumb img").waitFor();
+      assert.equal(await hash.locator(".thumb img").getAttribute("src"), channelUrl(ODD_PROJECT, "Figs/has#hash.svg"));
+      assert.ok(channelUrl(ODD_PROJECT, "Figs/has#hash.svg").includes("has%23hash.svg"));
+      for (const [folder, name, expect] of [
+        ["Code/results", "a+b.csv", "a, b"],
+        ["Code/results", "100%.json", '"percent": 100'],
+        ["Code/results", "with space.md", "A link and code."],
+        ["Figs", "a+b.csv", "a, b"],
+      ] as const) {
+        await pause();
+        await as.locator(".as-group").filter({ has: as.locator("h3 small", { hasText: `${folder}/` }) }).locator(".frow").filter({ hasText: name }).click();
+        await panel.locator(".pn").filter({ hasText: `${folder}/${name}` }).waitFor();
+        await panel.getByText(expect, { exact: false }).first().waitFor();
+        await label.filter({ hasText: `${folder}/${name}` }).waitFor();
+      }
+      // One name in two folders: each opens its own preview and label.
+      for (const sub of ["b", "a"]) {
+        await pause();
+        await as.locator(".fcard").filter({ hasText: `${sub}/plot.svg` }).click();
+        await panel.locator(".pn").filter({ hasText: `Figs/${sub}/plot.svg` }).waitFor();
+        assert.equal(await label.textContent(), `Figs/${sub}/plot.svg`);
+        await panel.locator(".big img").waitFor();
+        assert.equal(await panel.locator(".big img").getAttribute("src"), channelUrl(ODD_PROJECT, `Figs/${sub}/plot.svg`));
+      }
+      // Markup in names, a CSV cell, and Code/README.md's dataset table stays text.
+      if (process.platform !== "win32") {
+        await as.locator(".frow .nm").filter({ hasText: MARKUP_NAME }).first().waitFor();
+        await as.locator(".fcard .nm").filter({ hasText: MARKUP_NAME.replace(/\.txt$/, ".svg") }).waitFor();
+        await pause();
+        await as.locator(".as-group").filter({ has: as.locator("h3 small", { hasText: "Code/results/" }) }).locator(".frow").filter({ hasText: MARKUP_NAME }).click();
+        await panel.locator("pre").filter({ hasText: MARKUP_TEXT }).waitFor();
+        await label.filter({ hasText: `Code/results/${MARKUP_NAME}` }).waitFor();
+      }
+      await pause();
+      await as.locator(".frow").filter({ hasText: "markup.csv" }).click();
+      await panel.locator(".mini td").filter({ hasText: MARKUP_TEXT }).waitFor();
+      const data = as.locator(".as-group").filter({ has: as.locator("h3", { hasText: "Datasets" }) });
+      assert.equal(await data.locator(".gnote").textContent(), `Words before the table, with ${MARKUP_TEXT} in them.`);
+      // Two datasets of one name are two rows, each with its own line.
+      await pause();
+      await data.locator(".frow").nth(1).click();
+      const readmeLines = readFileSync(assetFile(ODD_PROJECT, "Code/README.md"), "utf8").split(/\r?\n/);
+      await label.filter({ hasText: "· dataset twice" }).waitFor();
+      assert.equal(await label.textContent(), `Code/README.md:${lineWith(readmeLines, "| second |")} · dataset twice`);
+      assert.equal(await panel.locator("dd").first().textContent(), "second");
+      // A file over the channel's 32 MiB, binary data, and a folder past the depth cap.
+      await pause();
+      await as.locator(".frow").filter({ hasText: "huge.csv" }).click();
+      await panel.getByText("Too large to show", { exact: true }).waitFor();
+      await pause();
+      await as.locator(".frow").filter({ hasText: "binary.dat" }).click();
+      await panel.getByText("binary.dat holds binary data.", { exact: true }).waitFor();
+      await as.locator(".frow .nm").filter({ hasText: "deep/a/b/c/within-the-depth.txt" }).waitFor();
+      assert.equal(await as.locator(".frow .nm").filter({ hasText: "past-the-depth.txt" }).count(), 0);
+      const note = as.getByText("More files than shown: folders more than 4 levels below Code/results/ are not listed (Code/results/deep/a/b/c/d/).", { exact: true });
+      await note.waitFor();
+      await note.scrollIntoViewIfNeeded();
+      await shot(page, "assets-9-capped-group-depth-note");
+      assert.equal(await as.evaluate(() => document.querySelectorAll("script:not([src]), iframe, object, embed, a").length), 0, "nothing in the frame came from a name or a file as markup");
+      assert.equal(await page.locator('img[src="x"]').count(), 0);
+      assert.deepEqual(await pwned(as), [undefined, undefined]);
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("sixty pictures all load in the end, a few at a time, with no busy card left, also across a Reload in the middle", SLOW, async () => {
+    const { as } = await openAssets(ODD_PROJECT);
+    const cards = as.locator(".fcard").filter({ hasText: /^e2e\/p\d\d\.png/ });
+    assert.equal(await cards.count(), 60);
+    const list = as.locator(".as-list");
+    // Scroll part way, Reload while pictures load, then scroll through all of them.
+    await list.evaluate((l) => (l.scrollTop = l.scrollHeight / 3));
+    await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+    await page.waitForTimeout(50);
+    for (let i = 0; i < 300; i++) {
+      const drawn = await as.locator(".fcard .thumb img").count();
+      const loadedAll = await cards.evaluateAll((cs) => cs.every((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth === 48));
+      if (loadedAll) break;
+      await list.evaluate((l, step) => (l.scrollTop = (step % 10) * (l.scrollHeight / 10)), i);
+      await page.waitForTimeout(drawn > 0 ? 100 : 200);
+    }
+    assert.equal(await cards.evaluateAll((cs) => cs.filter((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth === 48).length), 60);
+    assert.equal(await cards.locator(".thumb-note").count(), 0, "no card is left waiting, busy, failed, or loading");
+  });
+
+  test("a hostile SVG shown as an <img> runs nothing and requests nothing outside the app", SLOW, async () => {
+    const hits: string[] = [];
+    const server = createServer((req, res) => {
+      hits.push(req.url ?? "");
+      res.end("x");
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const at = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const file = assetFile(ODD_PROJECT, "Figs/hostile.svg");
+    try {
+      // The listener does hear a request: what follows would see one.
+      await fetch(`${at}/control`);
+      assert.deepEqual(hits.splice(0), ["/control"]);
+      writeFileSync(
+        file,
+        [
+          `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="320" height="180" onload="window.top.__pwned=11">`,
+          `<style>@import url("${at}/style.css");</style>`,
+          `<script>window.top.__pwned=12; fetch("${at}/script");</script>`,
+          `<rect width="320" height="180" fill="#f3e6cc"/>`,
+          `<image href="${at}/image.png" width="60" height="60"/>`,
+          `<image xlink:href="${at}/xlink.png" x="70" width="60" height="60"/>`,
+          `<use href="${at}/use.svg#shape"/>`,
+          `<foreignObject width="320" height="180"><div xmlns="http://www.w3.org/1999/xhtml"><img src="${at}/fo.png" onerror="window.top.__pwned=13"/><iframe src="${at}/frame"></iframe></div></foreignObject>`,
+          `<a href="javascript:window.top.__pwned=14"><text x="16" y="160">hostile</text></a>`,
+          `</svg>`,
+        ].join("\n"),
+      );
+      const { as } = await openAssets(ODD_PROJECT);
+      await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      const card = as.locator(".fcard").filter({ hasText: /^hostile\.svg/ });
+      await card.scrollIntoViewIfNeeded();
+      await card.locator(".thumb img").waitFor();
+      // Drawn: the image loaded (so its references had their chance), as a card and large in the panel.
+      assert.equal(await card.locator(".thumb img").evaluate((i) => (i as HTMLImageElement).naturalWidth), 320);
+      await pause();
+      await card.click();
+      await as.locator(".as-prev .big img").waitFor();
+      assert.equal(await as.locator(".as-prev .big img").evaluate((i) => (i as HTMLImageElement).naturalWidth), 320);
+      await card.locator(".thumb img").click();
+      await page.waitForTimeout(1500);
+      assert.deepEqual(hits, [], "no request left the app");
+      assert.deepEqual(await pwned(as), [undefined, undefined], "no script in the SVG ran");
+      // Nothing from the SVG reached the page's DOM: the only <use> elements are the page's own icons.
+      assert.equal(await as.evaluate(() => document.querySelectorAll("script:not([src]), iframe, object, embed, a, foreignObject, image").length), 0);
+      assert.deepEqual(await as.evaluate(() => [...new Set([...document.querySelectorAll("use")].map((u) => u.getAttribute("href")))].sort()), ["#i-db", "#i-file", "#i-table"]);
+      assert.equal(as.url(), `app://assets-view/index.html?project=${ODD_PROJECT}`, "no navigation");
+      const bar = screen(page, "workspace").getByRole("region", { name: "Selection" });
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    } finally {
+      rmSync(file, { force: true });
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
+  test("the Assets view's frame is sealed off: no bridge, its six roots only, no other origin's endpoints", SLOW, async () => {
+    const { as } = await openAssets();
+    const status = (url: string) => as.evaluate(async (u) => (await fetch(u)).status, url);
+    const rel = (p: string) => `./_os/files?path=${encodeURIComponent(p)}`;
+    const relList = (p: string) => `./_os/list?path=${encodeURIComponent(p)}`;
+    const P = `projects-folder/${ASSETS_PROJECT}`;
+    // Every refused path is a file or folder that is there in the temporary workspace.
+    for (const there of ["AGENTS.md", "PROJECT_MEMORY.md", "Code/README_zh.md", "paper"]) assert.ok(existsSync(assetFile(ASSETS_PROJECT, there)), there);
+    assert.ok(existsSync(join(workspace, "projects-folder", PROJECT, "Code", "e2e", "a+b.txt")));
+    assert.deepEqual(
+      {
+        figure: await status(rel(`${P}/Figs/probe_comparison.svg`)),
+        baseline: await status(rel(`${P}/Baselines/openresearch-demo/training-metrics.csv`)),
+        result: await status(rel(`${P}/Code/results/summary.json`)),
+        readme: await status(rel(`${P}/Code/README.md`)),
+        skeleton: await status(rel(`${P}/paper_skeleton.md`)),
+        figsListing: await status(relList(`${P}/Figs`)),
+        datasetsListing: await status(relList(`${P}/Code/Datasets`)),
+        agents: await status(rel(`${P}/AGENTS.md`)),
+        memory: await status(rel(`${P}/PROJECT_MEMORY.md`)),
+        readmeZh: await status(rel(`${P}/Code/README_zh.md`)),
+        codeOfAnother: await status(rel(`projects-folder/${PROJECT}/Code/e2e/a+b.txt`)),
+        codeListing: await status(relList(`${P}/Code`)),
+        paperListing: await status(relList(`${P}/paper`)),
+        projectListing: await status(relList(P)),
+        dotEnvRoot: await status(rel(".env")),
+        codeViewGit: await status(`/api/code-view/git/log?project=${PROJECT}`),
+        chat: await status("/api/chat/sessions"),
+        wikiStatus: await status("/api/paper-wiki/status"),
+      },
+      {
+        figure: 200,
+        baseline: 200,
+        result: 200,
+        readme: 200,
+        skeleton: 200,
+        figsListing: 200,
+        datasetsListing: 200,
+        agents: 404,
+        memory: 404,
+        readmeZh: 404,
+        codeOfAnother: 404,
+        codeListing: 404,
+        paperListing: 404,
+        projectListing: 404,
+        dotEnvRoot: 404,
+        codeViewGit: 404,
+        chat: 404,
+        wikiStatus: 404,
+      },
+    );
+    const probe = await as.evaluate(async () => {
+      const outcome = async (fn: () => Promise<unknown>) => {
+        try {
+          return String(await fn());
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        own: typeof (window as { osDesktop?: unknown }).osDesktop,
+        parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
+        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
+      };
+    });
+    assert.equal(probe.own, "undefined");
+    assert.match(probe.parent, /^blocked: SecurityError/);
+    assert.match(probe.appApi, /^blocked/);
+    assert.match(probe.wikiOrigin, /^blocked/);
+    // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline').
+    const before = logs.length;
+    const inline = await as.evaluate(() => {
+      const script = document.createElement("script");
+      script.textContent = "window.__inline = 1";
+      document.body.append(script);
+      script.remove();
+      return (window as { __inline?: unknown }).__inline;
+    });
+    assert.equal(inline, undefined, "an inline script ran in the Assets view's page");
+    await page.waitForTimeout(300);
+    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
+    await app.evaluate(() => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/assets-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
+    });
+    // The frame's CSP reports reach the suite, so the final check sees this frame too.
+    await as.evaluate(() => {
+      const img = new Image();
+      img.src = "https://csp-canary.invalid/assets.png";
+      document.body.append(img);
+      img.remove();
+    });
+    const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/assets-view\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
+    for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
+    assert.ok(canary(await consoleLog()), "a CSP violation inside the Assets view's frame is seen");
   });
 
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {

@@ -90,6 +90,7 @@ code { font-family: var(--mono); font-size: .92em; }
 .as-prev dd ul { margin: 0; padding: 0; list-style: none; }
 .as-prev dd li { font: 12px/1.55 var(--mono); }
 .as-prev dd .from, .as-prev dd .addr { color: var(--muted); }
+.as-prev dd li .cell { font: 12px/1.55 var(--sans); color: var(--muted); }
 .as-prev dd .from { display: block; font: 11.5px var(--sans); }
 .as-prev .empty { font: 14.5px/1.55 var(--serif); color: var(--muted); margin: 4px 0 0; }
 .mdlink { color: var(--accent); text-decoration: underline; text-decoration-color: rgba(30, 90, 86, .35); text-underline-offset: 2px; }

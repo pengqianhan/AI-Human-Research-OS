@@ -304,8 +304,11 @@ export interface Place {
   cell: string | null;
 }
 
+/** "paper_skeleton.md:126", "Code/README.md:120–130": the file and its lines. */
+export const placeWhere = (p: Place) => `${p.file}:${p.first === p.last ? p.first : `${p.first}–${p.last}`}`;
+
 /** "paper_skeleton.md:126 · Figure 1", "Code/README.md:131". */
-export const placeText = (p: Place) => `${p.file}:${p.first === p.last ? p.first : `${p.first}–${p.last}`}${p.cell === null || p.cell === "" ? "" : ` · ${p.cell}`}`;
+export const placeText = (p: Place) => `${placeWhere(p)}${p.cell === null || p.cell === "" ? "" : ` · ${p.cell}`}`;
 
 /**
  * Where each project path is named in paper_skeleton.md and Code/README.md
