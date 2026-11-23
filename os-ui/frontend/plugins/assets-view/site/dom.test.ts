@@ -81,6 +81,41 @@ describe("the page's DOM", () => {
     assert.match(source("main.ts"), /const md = \(text: string\) => inlineNodes\(inline\(text\)\);/);
   });
 
+  test("no roundabout way to a sink: bracket or object-key forms, a src, a new element, or a cast, in any site file (review S7)", () => {
+    const code = sources.filter((s) => s.file.endsWith(".ts")).map((s) => ({ file: s.file, text: strip(s.text) }));
+    // A sink's name, or a piece of one, as a whole quoted string ("inner" + "HTML", el["src"], setAttribute(name, …)), in any quotes.
+    // Matched as quote, word, same quote, so no other literal in the file can hide one.
+    const SINK_WORD = /(["'`])(inner|outer|html|innerhtml|outerhtml|insertadjacenthtml|srcdoc|srcset|src|href|style|action|formaction|iframe|embed|script|on[a-z]*)\1/gi;
+    // main.ts removes a cancelled picture's src and marks the open card with the class "on"; site-kit points an icon at the sprite;
+    // svg.ts compares a scanned attribute's name.
+    const allowed: Record<string, Record<string, number>> = { "main.ts": { src: 1, on: 2 }, "../../site-kit.ts": { href: 1 }, "svg.ts": { href: 1 } };
+    assert.equal([...source("main.ts").matchAll(/classList\.toggle\("on", /g)].length, 2);
+    for (const { file, text } of code) {
+      const counts = new Map<string, number>();
+      for (const m of text.matchAll(SINK_WORD)) counts.set(m[2]!.toLowerCase(), (counts.get(m[2]!.toLowerCase()) ?? 0) + 1);
+      assert.deepEqual(Object.fromEntries(counts), allowed[file] ?? {}, `${file}: a sink's name as a string`);
+      // A write through brackets with a string in them: x["inner" + "HTML"] = …, x[`src`] = ….
+      assert.doesNotMatch(text, /\[[^\]\n]*["'`][^\]\n]*\]\s*=(?!=)/, `${file}: a write through a string-indexed bracket`);
+      // An object key that is a sink's name: Object.assign(x, { innerHTML: … }), { src: … }.
+      assert.doesNotMatch(text, /[{,]\s*["'`]?(innerHTML|outerHTML|srcdoc|srcset|src|href|style|action|formAction)["'`]?\s*:/, `${file}: a sink as an object key`);
+      assert.doesNotMatch(text, /Object\.assign\(|Reflect\.set\(|defineProperty\(|\bas any\b|\bas unknown as\b|\bas [^;,)]*Record</, `${file}: a way around the types or a computed write`);
+      // A src is set in one place only: main.ts's draw(), to the picture's URL.
+      assert.equal([...text.matchAll(/\.src\b/g)].length, file === "main.ts" ? 1 : 0, `${file}: .src`);
+      // Elements are made by site-kit's el() and icon() only.
+      assert.equal([...text.matchAll(/createElement(NS)?\(/g)].length, file === "../../site-kit.ts" ? 3 : 0, `${file}: createElement`);
+    }
+    // The tags the page makes, each named in its code: no other.
+    const TAGS = new Set(["aside", "b", "br", "button", "code", "dd", "div", "dl", "dt", "h3", "h4", "img", "li", "p", "pre", "section", "small", "span", "table", "tbody", "td", "th", "thead", "tr", "ul"]);
+    for (const { file, text } of code) {
+      for (const m of text.matchAll(/\bel\(([^,)]+)/g)) {
+        const arg = m[1]!.trim();
+        const tag = /^"([a-z0-9]+)"$/.exec(arg)?.[1];
+        assert.ok((tag !== undefined && TAGS.has(tag)) || /^[\w.!\[\]0]+ \? "ol" : "ul"$/.test(arg) || (file === "../../site-kit.ts" && arg === "tag: K"), `${file}: el(${arg})`);
+      }
+      assert.equal([...text.matchAll(/\bel\("img"/g)].length, file === "main.ts" ? 1 : 0, `${file}: an <img>`);
+    }
+  });
+
   test("the page's markup loads its own script and style only, and nothing inline", () => {
     const html = sources.find((s) => s.file === "index.html")!.text;
     assert.deepEqual([...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]), ['<script src="./main.js" defer>']);
