@@ -168,7 +168,7 @@ with the trunk's endpoints only.
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
 | `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`); other `api/` paths are 404 |
 | `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
-| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code view: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`; no TypeScript ships) |
+| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code and Paper views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
@@ -279,17 +279,19 @@ name does not start with `.`, a file's name included:
   `.cjs`, `.html`, `.htm`, and `.xhtml` files are sent as
   `text/plain; charset=utf-8`, listings as `application/json`, and other files
   by extension (SVG as `image/svg+xml`, which an `<img>` needs).
-- The Code view declares `reads: ["projects-folder/*/Code"]`. Besides the
-  fixture tests in [test/protocol.test.ts](test/protocol.test.ts), the
-  end-to-end suite reads through it: `+`, `#`, `%`, a space and Chinese text in
-  names and files, and 404 for `.env` and for a file outside `Code/`.
+- The Code view declares `reads: ["projects-folder/*/Code"]`, the Paper view
+  `reads: ["projects-folder/*/paper"]`. Besides the fixture tests in
+  [test/protocol.test.ts](test/protocol.test.ts), the end-to-end suite reads
+  through both: `+`, `#`, `%`, a space and Chinese text in names and files, a
+  33 MiB `main.pdf` (413), and 404 for `.env` and for a file outside each
+  view's root.
 
 **The Code view** (S6a-2 of [os-ui/PLUGINS.md](../PLUGINS.md)). Its page reads
 only `./_os/files`, `./_os/list`, and `/api/code-view/git` on its own origin,
 every value through `encodeURIComponent`, and puts every name, line, message,
-and patch on screen as text (its `dom.test.ts` scans the site for HTML sinks;
-`PLUGIN_CSP` allows inline script, so markup that reached the DOM would run).
-The Git handler is mounted on `app://code-view` only, with no token; the
+and patch on screen as text (its `dom.test.ts` scans the site and
+`plugins/site-kit.ts` for HTML sinks; `PLUGIN_CSP` has no inline script, the
+second layer). The Git handler is mounted on `app://code-view` only, with no token; the
 client builds it on the git it finds (`src/main/codeView.ts`: the children's
 PATH, absolute entries outside the workspace, never the Command Line Tools
 stub) and logs what Git prints on a failure to `main.log`, which no endpoint
@@ -299,10 +301,66 @@ active view's frame at that view's origin, shows "Ask the agent about this",
 and answers `{type: "os.select.clear"}` at the view's origin when the user
 clears it there. Asking adds a reference chip to the project's composer; only
 Send sends. What Send passes is exactly what the user can read in the
-composer: a label with a line break, control, or format character is refused;
-a quote's line breaks are made line feeds (each line gets its `> `) and its
-invisible characters shown as markers, in the text shown and sent alike; a
-chip, clicked, shows that text under the chips (os-ui/PLUGINS.md, S6a-2).
+composer: the host never rewrites a label (runs of ASCII spaces pass as
+they are, since they are part of a path), and a label with a tab, a space
+other than U+0020, a line break, or an invisible character (control, format,
+default-ignorable, or the Braille blank) is refused; a quote's line breaks are made line feeds (each
+line gets its `> `) and its invisible characters shown as markers, in the text
+shown and sent alike. The ask bar shows the start of the quote before asking,
+and a chip just added shows its whole text under the chips without a click,
+except one from a view that quotes exactly what it draws (`QUOTES_AS_DRAWN`:
+the Code view), which is added closed and opens on a click
+([os-ui/PLUGINS.md](../PLUGINS.md), S6a-2).
+
+**The Paper view** (S6b of [os-ui/PLUGINS.md](../PLUGINS.md)). Its page reads
+only `projects-folder/<project>/paper/main.pdf` through `./_os/files` (and
+lists `paper/` when that is 404, to say why), and draws it with Mozilla's
+PDF.js 6.5.438, vendored unmodified in its `site/vendor/` (the Human Owner's
+yes of 2026-11-22; its README gives the source, the registry's integrity, and
+each file's SHA-256, which `npm test` checks). The page imports `pdf.min.mjs`
+at run time from its own origin and starts `pdf.worker.min.mjs` itself, one
+module worker per document handed to PDF.js as a `PDFWorker` port
+(`site/opener.ts`), so neither file is bundled, PDF.js builds no `blob:`
+worker, and it never falls back to parsing on the page's thread. Opening a
+document closes the one before without waiting on it (its worker is
+terminated after 2 s at most), and an open that does not finish within 20 s
+ends with a screen and Try again. The PDF is untrusted input: the document
+options turn off XFA, WebAssembly, Chromium's font engine (glyphs are drawn
+as paths on the canvas) and its JPEG decoder (PDF.js decodes JPEG itself),
+system fonts, and every fetch, and cap each image at 4096 × 4096 pixels; no
+annotation layer, attachment, or PDF JavaScript is ever asked for, so links
+are inert; the text layer is PDF.js's own (text nodes), and outline titles go
+only into the selection label, as text (`site.test.ts`; the end-to-end
+suite's hostile PDF has JavaScript actions, a URI link, and a markup title).
+A selection posts `os.select` with the label `paper/main.pdf p. <n>` (or
+`pp. <n>–<m>`), naming the pages whose text the quote holds, and
+` · <outline heading>` when the PDF has an outline, and the quote cut on the
+page to 2,000 characters with `…[cut]`. In a browser the tab says the view
+opens in the desktop app.
+
+What a selection quotes is the PDF's text layer, which can differ from what
+is drawn: text in the invisible render mode, white on white, a fifth of a
+point tall, clipped, or covered is selected with what surrounds it, and a
+font's `/ToUnicode` map can make glyphs drawn as "ABC" extract as a sentence.
+The view cannot tell those apart, so it does not try: the workspace shows the
+quote's start and size in the ask bar, and the composer shows exactly what
+will be sent as soon as it is added. Read it before pressing Send.
+
+Resource bounds of the Paper view, as measured on macOS arm64
+([os-ui/PLUGINS.md](../PLUGINS.md), S6b, has the numbers): pages are drawn
+near the view only; a far page gives back its canvas, what PDF.js kept to
+draw it, and its text layer; each canvas holds at most 4096 × 4096 pixels;
+a page that takes longer than 15 s to draw (counting only time it can be
+seen: PDF.js's drawing waits while the tab is hidden) is stopped, noted, and
+its worker replaced, and its text is cut at 10,000 runs and given the same
+15 s; at
+most 1,000 pages are laid out, never past what one scrolling column can
+reach at 300%. Not bounded: memory within each page's 15 s, which adds up
+over the pages of one paper, since a stopped page's memory is not all given
+back before the next page is drawn (one page of nested forms reached about
+3.5 GB in the frame's process before it was stopped; four such pages reached
+4.8 GB in a review), the sum of many images on one page (twelve at the cap peaked at 1.8 GB), and
+PDF.js's own work while it opens a file of up to 32 MiB.
 
 Known limits of the channel, not yet handled:
 
@@ -323,14 +381,30 @@ Known limits of the channel, not yet handled:
   by a manifest. App pages (HTML and the `index.html` fallback), with one
   `frame-src` entry per loaded plugin, in load order (`appCsp` in
   `protocol.ts`; `frame-src 'none'` if none loaded):
-  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
+  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
   A site served from a workspace folder (the Paper Wiki viewer):
   `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
-  A site in its plugin folder (the Code view's) gets no inline code at all,
-  since it shows untrusted names and text:
+  A site in its plugin folder (the Code and Paper views') gets no inline code
+  at all, since it shows untrusted names and text:
   `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
-  (`PLUGIN_CSP`; styles set through the DOM still apply). Either is sent with every file the site
+  (`PLUGIN_CSP`; styles set through the DOM still apply, which is how PDF.js
+  positions its text layer). The Paper view needed no change to it: with no
+  `worker-src`, Chromium takes the worker's source from `script-src 'self'`
+  (the CSP fallback order), so PDF.js's module worker loads from the site's
+  own origin, and a worker from `blob:` or `data:` is not allowed by it. The
+  end-to-end suite pins that the worker runs under `PLUGIN_CSP` as served
+  (WebAssembly is refused in it, and the violation names exactly that
+  policy); that a `worker-src 'none'` stops the worker was tried by hand, not
+  by a test. No `'wasm-unsafe-eval'`, `blob:`, or font source is needed
+  either, since the page turns WebAssembly and font loading off; the
+  end-to-end suite fails on any policy violation, the Paper view's frame
+  included, with PDFs holding text, a font they do not embed, and JPEG and
+  raw pictures. The policy is not what keeps a PDF's fonts out of Chromium:
+  a FontFace made from bytes fetches nothing, so no policy would stop it. The
+  document option `disableFontFace` does, and the end-to-end suite checks
+  the frame's `document.fonts` stays empty after drawing a paper that embeds
+  its fonts. Either policy is sent with every file the site
   serves, not only HTML: an SVG a frame is sent to is a document too. Every
   read channel answer, refusals included, carries
   `sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'`
@@ -560,7 +634,7 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 | API + real harness | `node --test` with `os-harness/tests/fake_claude.py` | `POST /send` → detached turn → trace; resume → turn 2 |
 | Dev-server adapters | `node --test` on a real Vite dev server | token before routing, mounts, context root |
 | Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the read channel on fixture plugins (routing, methods, dot paths, roots, link and junction escapes, listings, caps, headers), the navigation guard's targets, window bounds, menu |
-| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
+| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, the Code view (files, Git changes, selection to a reference chip, isolation), the Paper view (PDF.js draws `paper/main.pdf` lazily, pages and zoom, selection to a reference chip, every `paper/` state, a hostile PDF, text a PDF hides shown before Send, two Reloads at once, a stalled worker, a worker that never answers, a page over its time budget and time hidden not counted, a 300,000-page PDF and a page taller than the column, pictures and a non-embedded font read from the canvas, no FontFace, isolation, the worker under the plugin policy, the vendored files as shipped), endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
 | Package smoke | the same E2E (`OS_CLIENT_E2E_EXECUTABLE=release`) on the unpacked app | the asar layout starts, generates, and isolates the viewer |
 | CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above, those tests included, on six OS/arch rows and uploads installers as artifacts | |
 

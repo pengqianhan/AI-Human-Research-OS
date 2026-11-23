@@ -12,12 +12,12 @@
  * may answer `os.select.clear` when the user clears it there.
  *
  * Every name, line, message, and patch is untrusted and goes on screen as
- * text only (dom.ts). Each load carries a generation number, so an answer
- * that arrives after the user moved on is dropped, and a pane shows
+ * text only (../../site-kit.ts). Each load carries a generation number, so an
+ * answer that arrives after the user moved on is dropped, and a pane shows
  * "Loading…" rather than what the previous file or commit showed.
  */
 import type { Commit, Diff, FileChange, Log, LogCommit, Source, Unavailable } from "../../../server/codeGit.ts";
-import { button, clear, el, icon } from "./dom.ts";
+import { button, clear, el, filesUrl, icon, isHostClear, listUrl, projectFrom } from "../../site-kit.ts";
 import {
   answerWords,
   changeCount,
@@ -27,23 +27,19 @@ import {
   diffTextSelection,
   fileSelection,
   fileWords,
-  filesUrl,
   gitUrl,
   IMAGE,
   lineSelection,
   linesNote,
-  listUrl,
   logCommand,
   n,
   notOpenable,
   imageWords,
-  isHostClear,
   projectWords,
   readText,
   ROW_MAX,
   rowText,
   parsePatch,
-  projectFrom,
   rangeSelection,
   splitLines,
   statLine,

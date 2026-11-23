@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, ReactNode } from "react";
 import { Badge } from "./Badge";
 import type { BadgeTone } from "./Badge";
@@ -7,7 +7,7 @@ import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
 import { desktop } from "../lib/desktop";
-import { MESSAGE_MAX, messageWithReferences, referenceText } from "../plugins/select";
+import { MESSAGE_MAX, messageWithReferences, previewAfter, previewed as previewedOf, referenceKey, referenceText, scrollNote, togglePreview } from "../plugins/select";
 import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
 
@@ -172,10 +172,32 @@ export function AgentChat({
   const [error, setError] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(false);
   /** Which reference chip shows its text under the chips. */
-  const [preview, setPreview] = useState<number | null>(null);
+  // Kept by the reference itself, not its place, so removing another chip never opens a different one.
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
+  // A chip just added shows its text at once, so what Send passes is on screen
+  // before Send (the newest opens, the one before closes), unless its view
+  // quotes exactly what it draws (the Code view): that chip is added closed.
+  const before = useRef<readonly Reference[]>(references);
   useEffect(() => {
-    if (preview !== null && preview >= references.length) setPreview(null);
-  }, [preview, references.length]);
+    setPreviewKey((open) => previewAfter(open, before.current, references));
+    before.current = references;
+  }, [references]);
+  const previewed = previewedOf(previewKey, references);
+  // Whether the open chip's text is taller than its box: then a line says how much there is and that it scrolls.
+  const previewRef = useRef<HTMLPreElement | null>(null);
+  const [overflows, setOverflows] = useState(false);
+  useLayoutEffect(() => {
+    const el = previewRef.current;
+    if (el === null) {
+      setOverflows(false);
+      return;
+    }
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, [previewed]);
   const logRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -386,10 +408,10 @@ export function AgentChat({
                 >
                   <button
                     type="button"
-                    aria-expanded={preview === i}
+                    aria-expanded={referenceKey(ref) === previewKey}
                     aria-controls={`${ids}-preview`}
                     aria-label={`Show what will be sent for ${ref.label}`}
-                    onClick={() => setPreview(preview === i ? null : i)}
+                    onClick={() => setPreviewKey(togglePreview(previewKey, ref))}
                     className="inline-flex min-w-0 items-center gap-[5px] rounded-[5px] hover:underline"
                   >
                     <Icon name="quote" size={14} />
@@ -412,13 +434,18 @@ export function AgentChat({
                 </li>
               ))}
             </ul>
-            {preview !== null && references[preview] !== undefined ? (
+            {previewed !== null ? (
               <div id={`${ids}-preview`} role="region" aria-label="What will be sent" className="rounded-[8px] bg-card px-2.5 py-2 shadow-[inset_0_0_0_1px_var(--line)]">
                 <p className="m-0 mb-1 text-[11.5px] text-muted">Sent before your message, exactly:</p>
                 {/* Plain text, the same string Send passes (referenceText). */}
-                <pre data-reference-preview className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.45] text-ink">
-                  {referenceText(references[preview]!)}
+                <pre ref={previewRef} data-reference-preview className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.45] text-ink">
+                  {referenceText(previewed)}
                 </pre>
+                {overflows && (
+                  <p data-reference-overflow className="m-0 mt-1 text-[11.5px] font-medium text-accent-ink">
+                    {scrollNote(referenceText(previewed))}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="m-0 text-[11.5px] text-muted">Sent before your message as “About …” lines; click a reference to see exactly what is sent.</p>

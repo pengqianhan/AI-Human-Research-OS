@@ -33,10 +33,13 @@ the desktop-OS shell of draggable windows and a dock, which stays in
 - **Projects** lists every project; a row or a Home card opens the project's
   **workspace**: its conversation on the left, collapsible to a thin strip,
   and its views on the right. **Overview** is the project overview; **Code**
-  (desktop app only) shows the project's `Code/` files and Git changes, and
-  "Ask the agent about this" puts what you selected in the conversation's
-  input as a reference; **Paper** arrives later in step 1; **Idea**,
-  **Skeleton**, and **Assets** in step 2.
+  (desktop app only) shows the project's `Code/` files and Git changes;
+  **Paper** (desktop app only) shows the project's `paper/main.pdf`, read-only,
+  with page and zoom controls, or says why it cannot (not built yet, no
+  `paper/` folder, not a PDF, password-protected, too large). In both,
+  "Ask the agent about this" puts what you selected (a line, a commit, text
+  of the paper) in the conversation's input as a reference; **Idea**,
+  **Skeleton**, and **Assets** come in step 2.
 - **Paper wiki**: the standalone `paper-wiki/viz.html` graph and timeline
   viewer, embedded by iframe (DESIGN.md §4); a note's Status row saves your
   unread / skimmed / read state into the note's file.

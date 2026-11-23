@@ -76,7 +76,7 @@ packages on first use):
 ```bash
 npm ci
 npm start                 # build, then open the app on this checkout
-npm test                  # unit tests (node --test)
+npm test                  # unit tests (node --test); a file fails, named, after 10 min (see ../frontend/README.md, Tests)
 npm run typecheck
 npm run test:e2e          # Playwright end-to-end; on Linux: xvfb-run -a npm run test:e2e
 npm run package           # installers for this OS into release/
@@ -128,8 +128,9 @@ agent logins or a first open on a real desktop, so on each of your machines:
 - [ ] A project card (or **Projects**, or the project under **Quick access**)
       opens its workspace. **Overview** shows the project; the conversation on
       the left lists that project's sessions under **Conversations**, and
-      collapses to a thin strip and back. **Paper** says it arrives later in
-      step 1; **Idea**, **Skeleton**, and **Assets** are marked "step 2".
+      collapses to a thin strip and back. The tabs are **Overview**, **Idea**,
+      **Code**, **Skeleton**, **Assets**, **Paper**; **Idea**, **Skeleton**,
+      and **Assets** are marked "step 2".
 - [ ] **The Code view.** In a project's workspace, click the **Code** tab:
       - **Files** lists the project's `Code/` folder on the left; click a
         folder to open it and a file to read it on the right (it says
@@ -141,13 +142,47 @@ agent logins or a first open on a real desktop, so on each of your machines:
         changed files and a diff of the first one appear; click another file
         to see its diff.
       - Click a line of a file, or a commit, or a line of a diff: a dark bar at
-        the bottom names it, with **Ask the agent about this**.
+        the bottom names it and, for a line or a commit, shows the start of
+        its text and how long it is, with **Ask the agent about this**.
       - Click **Ask the agent about this**: the conversation opens (if it was
-        collapsed) with a small chip above the input naming what you chose,
-        and the cursor in the input. Click the chip to see exactly what will
-        be sent before your message (it opens under the chips). Nothing is
-        sent until you press Send.
+        collapsed) with a small chip above the input naming what you chose
+        and how many lines it carries, the cursor in the input, and the hint
+        "click a reference to see exactly what is sent". The chip's text is
+        not shown yet.
+      - Click the chip: under the chips, exactly what will be sent before
+        your message appears ("Sent before your message, exactly:"); when it
+        is long, a line under it says how long it is and that it scrolls.
+        Click the chip again to close it. Nothing is sent until you press
+        Send.
       - Click the chip's **×**: it goes away.
+- [ ] **The Paper view.** In the `nanochat_cpu` workspace, click the **Paper**
+      tab:
+      - The paper appears as pages, like a PDF reader, read-only. The bar
+        above it says **Page 1 of 4** and **Fit · …%**.
+      - Click **›** (next page) and **‹** (previous page): the page number
+        changes and the view moves to that page. Scroll with the mouse or
+        trackpad: the page number follows.
+      - Click **+** and **−**: the pages get bigger and smaller (the label
+        shows a percentage); **Fit width** makes a page as wide as the view
+        again. Make the window narrower or wider: in Fit width the pages
+        follow.
+      - Drag across some text of the paper, as you would to copy it: the text
+        is highlighted and the dark bar at the bottom names it, for example
+        `paper/main.pdf p. 1 · Setup` (the page, and the section it is in),
+        with the start of the selected text and its size under it.
+        Click **Ask the agent about this**: a chip appears above the
+        conversation's input, and under it, without a click, the exact text
+        that will be sent. Nothing is sent until you press Send.
+      - **Read that text before you press Send.** A PDF can hold text you do
+        not see on the page (white on white, hidden, or a font that shows
+        other letters than it stands for), and selecting across it quotes it
+        too. The bar and the composer show what will really be sent; if it
+        holds words you did not select, remove the chip.
+      - Switch to **Overview** and back to **Paper**: you are on the same page.
+      - With the agent (or by hand), rename `paper/main.pdf`, then click
+        **Reload**: the view says the paper has not been built yet and offers
+        `paper/main.tex` to ask about. Rename it back and click **Try again**:
+        the paper is back.
 - [ ] **Paper wiki**: a paper's Status buttons appear and change the note's
       `status:` line.
 - [ ] **Skills**: a disable/enable toggle works and the store updates.

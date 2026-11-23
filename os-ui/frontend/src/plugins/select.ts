@@ -26,7 +26,27 @@ export const MESSAGE_MAX = 20_000;
 export interface Reference {
   label: string;
   quote?: string;
+  /**
+   * Set by the host, never read from a message: the view that reported it
+   * quotes exactly the text it draws (QUOTES_AS_DRAWN), so its chip may start
+   * closed. Absent, the chip opens by itself.
+   */
+  quotesAsDrawn?: true;
 }
+
+/**
+ * Bundled views whose quote is exactly the text they draw, by plugin id: a
+ * chip from one of them is added closed, as in mockup C (the Human Owner's
+ * decision of 2026-11-23). Every other view's chip opens by itself, with its
+ * whole text on screen, so closed is the exception and a third-party plugin
+ * can never ask for it (the message has no field for it).
+ * - code-view: it quotes the characters it draws in a file or a diff, with
+ *   every invisible character marked.
+ * - Not paper-view: a PDF's text layer can differ from what is drawn (text in
+ *   invisible render mode, white on white, clipped or covered, or drawn as one
+ *   thing and extracted as another), so its quote must be read before Send.
+ */
+export const QUOTES_AS_DRAWN: ReadonlySet<string> = new Set(["code-view"]);
 
 export type SelectMessage = { kind: "select"; reference: Reference } | { kind: "clear" };
 
@@ -38,15 +58,33 @@ export type SelectMessage = { kind: "select"; reference: Reference } | { kind: "
 const LINE_BREAK = /\r\n|[\n\v\f\r\u0085\u2028\u2029]/u;
 const LINE_BREAKS = /\r\n|[\n\v\f\r\u0085\u2028\u2029]/gu;
 /**
- * Characters that show nothing or change how others show: controls (Cc) and
+ * Characters that show nothing or change how others show: controls (Cc),
  * format characters (Cf: zero-width spaces and joiners, U+2060, U+FEFF, the
  * soft hyphen, bidirectional marks, embeddings, overrides and isolates,
- * U+FFF9-FFFB, tag characters). A label with any, or with a line break, is
+ * U+FFF9-FFFB, tag characters), every default-ignorable code point (also
+ * variation selectors, Hangul fillers U+115F U+1160 U+3164 U+FFA0, the
+ * combining grapheme joiner U+034F), and the Braille blank U+2800, which is
+ * none of those but draws nothing. A label with any, or with a line break, is
  * refused. Homoglyphs are not: a real file can be named so.
  */
-const INVISIBLE = /[\p{Cc}\p{Cf}]/u;
-/** In a quote, all of them but tab and line feed (line breaks are LF by then), each shown as a marker. */
-const QUOTE_INVISIBLE = /(?![\t\n])[\p{Cc}\p{Cf}]/gu;
+const INVISIBLE = /[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2800]/u;
+/**
+ * In a quote, all of them but tab and line feed (line breaks are LF by then),
+ * each shown as a marker, except U+FE0F directly after an emoji
+ * (\p{Extended_Pictographic}), which is ordinary emoji presentation.
+ */
+const QUOTE_INVISIBLE = /(?![\t\n])[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2800]/gu;
+const EMOJI_BEFORE = /\p{Extended_Pictographic}$/u;
+/**
+ * A space character other than U+0020 (no-break, en, em, thin, ideographic,
+ * Ogham, ...): refused in a label, like the invisible class, since it reads
+ * as a plain space but names another file. The host never rewrites a label:
+ * it shows and sends it exactly as the page posted it, or refuses it. Blank
+ * padding made of ASCII spaces is therefore the page's business (the Paper
+ * view collapses white space in the heading it adds; the Code view posts real
+ * paths, where two spaces and one name different files).
+ */
+const OTHER_SPACE = /(?! )\p{Zs}/u;
 /** Ends a quote that its markers made longer than QUOTE_MAX. */
 export const CUT_MARK = "…[cut]";
 
@@ -67,10 +105,12 @@ export function readSelect(event: { origin: string; source: unknown; data: unkno
   const { type, label, quote } = data as Record<string, unknown>;
   if (type !== "os.select") return null;
   if (label === null) return keys.includes("quote") ? null : { kind: "clear" };
-  if (typeof label !== "string" || label.trim() === "" || label.length > LABEL_MAX || INVISIBLE.test(label) || LINE_BREAK.test(label)) return null;
+  if (typeof label !== "string" || label.trim() === "" || label.length > LABEL_MAX) return null;
+  if (INVISIBLE.test(label) || LINE_BREAK.test(label) || OTHER_SPACE.test(label)) return null;
   if (quote !== undefined && (typeof quote !== "string" || quote.length > QUOTE_MAX)) return null;
   const shown = quote === undefined ? "" : visibleQuote(quote);
-  return { kind: "select", reference: shown === "" ? { label } : { label, quote: shown } };
+  const drawn = QUOTES_AS_DRAWN.has(page.plugin) ? { quotesAsDrawn: true as const } : {};
+  return { kind: "select", reference: shown === "" ? { label, ...drawn } : { label, quote: shown, ...drawn } };
 }
 
 /**
@@ -82,7 +122,9 @@ export function readSelect(event: { origin: string; source: unknown; data: unkno
 export function visibleQuote(quote: string): string {
   const text = quote
     .replace(LINE_BREAKS, "\n")
-    .replace(QUOTE_INVISIBLE, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
+    .replace(QUOTE_INVISIBLE, (c: string, at: number, all: string) =>
+      c === "\uFE0F" && EMOJI_BEFORE.test(all.slice(Math.max(0, at - 2), at)) ? c : `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`,
+    );
   if (text.length <= QUOTE_MAX) return text;
   let end = QUOTE_MAX - CUT_MARK.length;
   const open = text.lastIndexOf("⟨", end - 1);
@@ -143,4 +185,58 @@ export function selectGate(now: () => number = Date.now) {
     recent.push(at);
     return "accept";
   };
+}
+
+/** One reference's identity among the chips (references are unique by label and quote). */
+export function referenceKey(reference: Reference): string {
+  return `${reference.label}\u0000${reference.quote ?? ""}`;
+}
+
+/** Characters of a quote the ask bar shows before asking. */
+export const GLIMPSE_MAX = 160;
+
+/**
+ * What the ask bar shows of a quote before the user asks: its start as one
+ * line (each line break shown as " \u21b5 "), cut at GLIMPSE_MAX with "\u2026",
+ * and its size ("8 lines \u00b7 412 characters"), so text the view did not show
+ * (a PDF's hidden run) is seen before it can be added.
+ */
+export function quoteGlimpse(quote: string): { start: string; size: string } {
+  const lines = quote.split("\n");
+  const flat = lines.join(" \u21b5 ");
+  const start = flat.length <= GLIMPSE_MAX ? flat : `${flat.slice(0, GLIMPSE_MAX - 1)}\u2026`;
+  return { start, size: textSize(quote) };
+}
+
+/** A text's size as the ask bar and the composer say it: "14 lines \u00b7 901 characters". */
+export function textSize(text: string): string {
+  const lines = text.split("\n").length;
+  return `${lines} line${lines === 1 ? "" : "s"} \u00b7 ${text.length.toLocaleString("en-US")} character${text.length === 1 ? "" : "s"}`;
+}
+
+/** The line under a chip's text when it is taller than its box, so its end is never below a fold nobody is told about. */
+export function scrollNote(text: string): string {
+  return `${textSize(text)} \u2014 scroll to read all of it`;
+}
+
+/**
+ * Which chip shows its text once `after` replaced `before`: a chip just added
+ * opens by itself, and the one open before closes, unless the new chip comes
+ * from a view that quotes what it draws (quotesAsDrawn), which is added
+ * closed and leaves the open one as it was. Otherwise nothing changes.
+ */
+export function previewAfter(open: string | null, before: readonly Reference[], after: readonly Reference[]): string | null {
+  const newest = after[after.length - 1];
+  if (after.length <= before.length || newest === undefined || newest.quotesAsDrawn === true) return open;
+  return referenceKey(newest);
+}
+
+/** A click on a chip: open its text, or close it if it was the open one. */
+export function togglePreview(open: string | null, reference: Reference): string | null {
+  return referenceKey(reference) === open ? null : referenceKey(reference);
+}
+
+/** The chip whose text is shown, if it is still among the references (a removed chip's text closes). */
+export function previewed(open: string | null, references: readonly Reference[]): Reference | null {
+  return references.find((r) => referenceKey(r) === open) ?? null;
 }

@@ -216,10 +216,14 @@ const NUMSTAT = /^(\d+|-)\t(\d+|-)\t/;
  * - core.quotePath=false: names in diff headers stay readable.
  * - core.warnAmbiguousRefs=false: for a full hash Git otherwise looks for a
  *   ref of that name, opening .git/<hash> (a FIFO there stalled every route).
- * - diff.algorithm=myers: the output does not depend on the repository's
- *   config, and the allocation limit holds. Two files just under 4 MiB of one-
- *   or two-byte lines need about 96 MiB in one allocation under myers, 160 to
- *   320 MiB under patience, which then died at GIT_ALLOC_LIMIT on every route.
+ * - diff.algorithm=myers here, and --diff-algorithm=myers on every log and
+ *   show (HISTORY), which is what pins it: a per-driver
+ *   diff.<driver>.algorithm, picked by info/attributes, beats the -c setting
+ *   but not the command-line option. So the output does not depend on the
+ *   repository's config, and the allocation limit holds: two files just under
+ *   4 MiB of one- or two-byte lines need about 96 MiB in one allocation under
+ *   myers, 160 to 320 MiB under patience, which died at GIT_ALLOC_LIMIT on
+ *   every route.
  * Per command that diffs, --attr-source=<the empty tree> (EMPTY_TREE): no
  * .gitattributes from the working tree or the commit.
  */
@@ -258,6 +262,7 @@ const HISTORY = [
   "--no-use-mailmap", // %an is printed, but log.mailmap still reads .mailmap and mailmap.file (a FIFO there stalls every command)
   `-O${DEV_NULL}`, // diff.orderFile names a file anywhere; a missing one fails every diff, a FIFO stalls it
   "--no-follow", // log.follow would follow a path out of the project (a file once renamed to the project's name)
+  "--diff-algorithm=myers", // beats diff.algorithm and every diff.<driver>.algorithm an attribute picks (Git 2.42+); see guardArgs
   "--no-renames", // a moved file is a deletion and an addition, so -z output has one path per entry
   "--diff-merges=first-parent", // a merge is compared with its first parent, in the plain raw format
   "--root", // log.showRoot=false would hide a root commit's changes

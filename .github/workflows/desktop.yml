@@ -84,11 +84,26 @@ jobs:
           npm ci --prefix os-ui/frontend --no-audit --no-fund
           npm ci --prefix os-ui/client --no-audit --no-fund
 
+      # Under two minutes when healthy. Each test file fails, named, after 10
+      # minutes (--test-timeout in both package.json files); this limit ends
+      # the step when the runner itself stays up after that, as it does while
+      # a process a test started still holds a test file's output open.
       - name: Type-check and unit tests
+        timeout-minutes: 20
         run: |
           npm test --prefix os-ui/frontend
           npm run typecheck --prefix os-ui/client
           npm test --prefix os-ui/client
+
+      # Which node, git, esbuild or uv processes outlived the step, and whose
+      # children they are: what an in-process dump cannot see.
+      - name: Processes left after the unit tests
+        if: (failure() || cancelled()) && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-CimInstance Win32_Process |
+            Where-Object { $_.Name -match '^(node|git|esbuild|uv|python|bash|cmd)\b' } |
+            ForEach-Object { "{0} (parent {1}) {2}: {3}" -f $_.ProcessId, $_.ParentProcessId, $_.Name, $_.CommandLine }
 
       - name: Build
         working-directory: os-ui/client

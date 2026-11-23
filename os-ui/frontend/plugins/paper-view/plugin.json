@@ -1,0 +1,11 @@
+{
+  "contract": "^1.0",
+  "id": "paper-view",
+  "name": "Paper view",
+  "version": "0.1.0",
+  "description": "Renders the project's paper/main.pdf, read-only, with PDF.js.",
+  "reads": ["projects-folder/*/paper"],
+  "contributes": {
+    "projectViews": [{ "id": "paper", "title": "Paper", "entry": "index.html" }]
+  }
+}

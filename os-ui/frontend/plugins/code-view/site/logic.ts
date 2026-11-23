@@ -1,25 +1,13 @@
 /**
- * The Code view page's pure parts: URLs, text decoding, the patch's rows, the
- * labels a selection reports, and the words each answer state shows. No DOM
- * and no fetch, so `npm test` runs them in Node. Everything here treats file
+ * The Code view page's pure parts: the Git handler's URLs, text decoding, the
+ * patch's rows, the labels a selection reports, and the words each answer
+ * state shows (what it shares with the Paper view is in ../../site-kit.ts). No
+ * DOM and no fetch, so `npm test` runs them in Node. Everything here treats file
  * names, contents, diffs, and commit text as data: it builds strings, and
  * main.ts puts them on screen as text only.
  */
 import type { Commit, FileChange, LogCommit, Source } from "../../../server/codeGit.ts";
-
-/** A project folder name, as the Git handler and chat.ts accept it. */
-const PROJECT = /^[A-Za-z][A-Za-z0-9_-]*$/;
-
-/** The project named in this page's `?project=`, or null when it is missing or not a folder name. */
-export function projectFrom(search: string): string | null {
-  const name = new URLSearchParams(search).get("project");
-  return name !== null && PROJECT.test(name) ? name : null;
-}
-
-
-/** The read channel on this page's own origin (os-ui/client/DESIGN.md §3.2); `rel` is relative to the workspace. */
-export const filesUrl = (rel: string) => `./_os/files?path=${encodeURIComponent(rel)}`;
-export const listUrl = (rel: string) => `./_os/list?path=${encodeURIComponent(rel)}`;
+import { clip, clipLabel, QUOTE_MAX, visibleName as oneLine } from "../../site-kit.ts";
 
 /** The Git handler on this page's own origin, every value encoded. */
 export function gitUrl(route: "" | "log" | "commit" | "diff", query: Record<string, string>): string {
@@ -36,10 +24,6 @@ export const VIEW = {
   /** Lines put on screen at most, for a file or a diff. */
   lines: 5000,
 } as const;
-
-/** The host's limits for os.select (src/plugins/select.ts); the page cuts to them. */
-export const LABEL_MAX = 200;
-export const QUOTE_MAX = 2000;
 
 /**
  * Bytes as text, or null when they are not text: a NUL byte in the first
@@ -150,30 +134,20 @@ export function parsePatch(diff: string): DiffRow[] {
   return rows;
 }
 
-/** `text` cut to `max` characters, ending in "…" when cut. */
-export function clip(text: string, max: number): string {
-  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
-}
-
-/** A label cut to the host's limit from the left, so the file's own name stays readable. */
-export function clipLabel(label: string): string {
-  return label.length <= LABEL_MAX ? label : `…${label.slice(label.length - (LABEL_MAX - 1))}`;
-}
-
 /** What a selection reports (os.select): a one-line label and, for text, the quote. */
 export interface Selection {
   label: string;
   quote?: string;
 }
 
-/** Labels are one line: any control character in a name (a newline is legal in a file name) becomes a space. */
-/**
+/*
  * Labels are one line of visible text (the host refuses anything else): a
- * line break, control or format character in a name (all legal in a file
- * name) shows as a marker naming it, "⟨U+200B⟩".
+ * line break, an invisible character, or a space other than U+0020 in a name
+ * (all legal in a file name) shows as a marker naming it, "⟨U+200B⟩" (oneLine,
+ * site-kit's visibleName). Plain spaces stay as they are: the path is the
+ * file's. A label longer than the host takes is cut from the left
+ * (clipLabel), so a file's own name stays.
  */
-const oneLine = (text: string) =>
-  text.replace(/[\p{Cc}\p{Cf}\u2028\u2029]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
 
 /** A file of the project, by its path relative to the project ("Code/README.md"). */
 export const fileSelection = (path: string): Selection => ({ label: clipLabel(oneLine(path)) });
@@ -297,13 +271,6 @@ export function projectWords(search: string): Words {
   const given = new URLSearchParams(search).get("project");
   if (given === null || given === "") return { title: "No project given", text: "The Code view opens from a project's workspace, which names the project it shows.", retry: false };
   return { title: "Not a project name", text: `“${clip(given, 80)}” is not a project folder name the Code view can open (a letter, then letters, digits, _ or -).`, retry: false };
-}
-
-/** Whether a message is the workspace clearing the selection: from the parent window, at the app's origin, and nothing else. */
-export function isHostClear(event: { source: unknown; origin: string; data: unknown }, parent: unknown, host: string): boolean {
-  if (event.source !== parent || event.origin !== host) return false;
-  const data = event.data as { type?: unknown } | null;
-  return typeof data === "object" && data !== null && data.type === "os.select.clear";
 }
 
 /** Folders first, then files, each in the channel's order. */

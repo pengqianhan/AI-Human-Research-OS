@@ -115,13 +115,181 @@ Status on 2026-11-23:
     - `safeRelative` also refuses `CONIN$`, `CONOUT$`, and `COM¹`-`COM³`,
       `LPT¹`-`LPT³`.
 - **The layout shell is built** (Part 1's S7), ahead of S3 to S6, with Code and Paper as
-  placeholder tabs. The dock shell in `frontend/src/desktop/` is unreferenced and is
+  placeholder tabs until S6a-2 and S6b replaced them. The dock shell in `frontend/src/desktop/` is unreferenced and is
   deleted in S8.
-- **S6 is split in three.** S6a-1, the Code view's Git handler, and S6a-2, the Code
-  view plugin, are done (each pending its pull request; S6a-2 stacks on S6a-1);
-  S6b, the Paper view, is next and vendors PDF.js as Part 2 describes (the Human
-  Owner said yes on 2026-11-22; [HANDOFF.md](../HANDOFF.md) Decisions). The
-  end-to-end suite now reaches the read channel through the Code view.
+- **S6 is split in three**, all done, each pending its pull request: S6a-1, the
+  Code view's Git handler; S6a-2, the Code view plugin (stacks on S6a-1); S6b,
+  the Paper view plugin (stacks on S6a-2), with PDF.js vendored as the Human
+  Owner allowed on 2026-11-22 ([HANDOFF.md](../HANDOFF.md) Decisions). The
+  end-to-end suite reaches the read channel through both views. What is left
+  of step 1 is S8 (deleting the dock shell), after the Human Owner's run of
+  the [client checklist](client/README.md#check-it-on-your-machine).
+- **S6b** is the bundled plugin [frontend/plugins/paper-view/](frontend/plugins/paper-view/)
+  (manifest as Part 2's, `reads: ["projects-folder/*/paper"]`, one project
+  view `paper`, no handlers) and the workspace's Paper tab, last in the row as
+  in the mockup. Where the code differs from Part 2:
+  - PDF.js is `pdfjs-dist` 6.5.438 from the npm registry (its tarball checked
+    against the registry's published integrity before anything was copied):
+    `pdf.min.mjs`, `pdf.worker.min.mjs`, and the package's `LICENSE`,
+    unmodified, in `site/vendor/` with a README giving the version, the
+    source URL, the integrity, and each file's SHA-256. `vendor.test.ts`
+    recomputes the hashes, checks the folder holds nothing else, and that no
+    `package.json` or lockfile in `os-ui/` names `pdfjs-dist` or
+    `@napi-rs/canvas`; `.gitattributes` marks the three files `binary`, so a
+    Windows checkout keeps their bytes. The README and `LICENSE` are the
+    third-party notice: the repository has no notices file of its own, and
+    the package has no `NOTICE`.
+  - The two files are not bundled: the page `import()`s `pdf.min.mjs` from its
+    own origin at run time and starts `pdf.worker.min.mjs` itself as a module
+    worker. So what ships is the hashed bytes (the end-to-end suite checks
+    `out/` and what the frame fetches), PDF.js never wraps a worker in a
+    `blob:` URL, and it cannot fall back to parsing on the page's thread: a
+    worker that does not start shows "The PDF reader could not start".
+  - **One worker per document** ([site/opener.ts](frontend/plugins/paper-view/site/opener.ts),
+    after the review of S6b): each open starts its own worker and hands it to
+    PDF.js as a `PDFWorker` port (PDF.js's shared, cached worker let one
+    stuck document strand the next, and threw `PDFWorker.create - the worker
+    is being destroyed` uncaught). Opening a document closes the one before
+    without waiting for it: its worker is terminated once PDF.js lets it go,
+    or after 2 s. An open that does not finish within 20 s (the worker not
+    starting, or not answering) is ended, its worker terminated, with a
+    screen and Try again. A Reload takes its number before anything waits,
+    so two in one task leave one document.
+  - **Bounds** (logic.ts). The review's numbers come first; the new ones
+    were measured in the app on macOS arm64 with a probe script of the same
+    shape as the review's (one app per probe, peak working set of the
+    frame's process sampled every 0.5 s), the nested forms in a two-page
+    fixture whose page 2 is ordinary:
+    - A page that takes longer than 15 s to draw (its content read in the
+      worker, then drawn) is stopped: it shows a note, its worker is
+      terminated, and the paper is opened again in a fresh one at the same
+      place without that page, until Reload. Only time the page can be seen
+      counts: PDF.js draws in animation-frame steps, which stop while the tab
+      is hidden or the window is in the background, so that time (and a
+      sleep) is not counted. 15 s is many times what an ordinary page needs
+      (the nanochat paper's take well under a second). The review's nested
+      forms (20 levels, 4.6 KB) ran 35 s and reached 6.4 GB in the frame's
+      process; now page 1 is stopped at 15.2 s, page 2 drawn, at a peak of
+      2.9-3.5 GB, of which about 1.3 GB was still held 20 to 50 s after the
+      ordinary paper was reloaded. That bound is per page, and pages add up:
+      a stopped page's memory is not all given back before the next page is
+      drawn. In the second review, four such pages in one paper peaked at
+      4.8 GB in the frame's process (5.2 GB in all), which still held 3.2 GB
+      8 s after the ordinary paper was reloaded and about 1.45 GB later.
+      Here, under other conditions (four such pages, scrolled to the end once
+      the first two were stopped, no reload), the peak was 5.1 GB in the
+      frame's process (5.5 GB in all), and it still held 3.9 GB 10 s after
+      the fourth page was stopped.
+    - A page's text is cut at 10,000 runs (a note says so) and gets the same
+      15 s budget: the review's 100,000 one-character runs took 138 s and
+      about 1 GB; now 10,000 are laid out in about 1 s at a peak of 388 MB.
+    - At most 1,000 pages are laid out, and only as many as fit in one
+      scrolling column at 300% under Chromium's 16,777,216 px clamp on an
+      element's height (a page read later that is taller than the first lays
+      out fewer: the review's one-point page followed by a 14,400-point one
+      shows one page and says so); the bar and the end of the column say
+      "first 1,000 of 300,000". The review's 300,000 pages made 600,050 elements, about 2 s a
+      scroll frame, and pages past the clamp unreachable; now 2,049
+      elements, 7 ms a frame, the column 838,215 px tall at fit width.
+    - `maxImageSize` is 4096 × 4096 (64 MiB decoded), down from 8192², which
+      bounds each image, not a page: the review's twelve 8192² images (peak
+      3.4 GB) are now left out (peak 186 MB in the frame's process); twelve
+      at the new cap still peak at 1.8 GB there. A 400-dpi full-page scan
+      fits; a 600-dpi one is not drawn.
+    - Far pages give back their canvas, what PDF.js kept to draw them
+      (`page.cleanup()`), and their text layer unless the selection reaches
+      it. Scrolling through 200 pages of 1,500 runs each ended with 11,000
+      text spans and 1.1 GB in the frame's process, against 341,000 spans
+      and 3.0 GB without.
+    Still unbounded, as known limits: memory within each page's 15 s, which
+    adds up over the pages of one paper (four pages of nested forms reached
+    4.8 GB in the frame's process in the review, above); the sum of many
+    images on one page; PDF.js's own work on a file within
+    the 32 MiB cap while it opens (300,000 pages open in about 1 s).
+  - **`PLUGIN_CSP` is unchanged.** Part 2 expected it to gain
+    `worker-src 'self'`; with no `worker-src`, Chromium takes a worker's
+    source from `script-src 'self'`, so the worker loads from the site's own
+    origin as it is. The end-to-end suite pins that the worker runs under
+    `PLUGIN_CSP` as served (its WebAssembly is refused and the violation
+    carries exactly that policy); that a `worker-src 'none'` stops the worker
+    was tried by hand on 2026-11-23, not by a committed test. Nothing changes
+    for the Code view's page either: it could already start a same-origin
+    worker, and still can. No `'wasm-unsafe-eval'`, `blob:`, or font source
+    was needed.
+  - `isEvalSupported` no longer exists in PDF.js 6, which evaluates no code
+    (`vendor.test.ts` checks both files for `eval(` and `new Function`). The
+    options the page sets, each pinned by `site.test.ts` and checked by
+    `vendor.test.ts` to be read by this PDF.js's `getDocument` from its
+    argument: `enableXfa: false`, `useWasm: false` (PostScript functions run
+    as JavaScript, not compiled wasm), `disableFontFace: true` (glyphs drawn
+    as paths, so no font from the PDF reaches Chromium's font engine; the
+    policy would not stop a FontFace made from bytes, so the end-to-end suite
+    checks the frame's `document.fonts` stays empty), `useSystemFonts: false`,
+    `isImageDecoderSupported: false` (JPEG bytes from the PDF are decoded by
+    PDF.js's own code, not Chromium's ImageDecoder; a 12-megapixel JPEG page
+    takes about 560 ms to appear instead of 150 ms), `useWorkerFetch: false`,
+    `disableWorkerRendering: true` (`pdf.renderer.min.mjs` is not vendored),
+    `maxImageSize` 4096², and `verbosity: 1`. Pixels PDF.js has decoded
+    still reach Chromium when it scales a very large image down (a BMP it
+    writes itself). No URL is given for character maps, standard fonts, ICC
+    profiles, or wasm, none of which is vendored: JPX, JBIG2, and CCITTFax
+    images (decoded with the package's `wasm/` files), ICC colour, and CJK
+    text in fonts the PDF does not embed do not render as in a full reader. A
+    line in a non-embedded Helvetica, a JPEG, and a raw RGB picture do draw,
+    under the unchanged policy (an e2e test reads the canvas's pixels);
+    pdfTeX output embeds its fonts.
+  - Nothing the PDF carries is run or followed: no annotation layer (links
+    are inert; the e2e clicks one and sees no navigation or dialog), no
+    attachments, no scripting sandbox, no XFA; the text layer is PDF.js's own
+    `TextLayer` (text nodes, positioned through CSSOM), without marked-content
+    ids. Its style rules, which are in `web/pdf_viewer.css` and not vendored,
+    are written into the site's `style.css` after that file.
+  - Every state has a screen with "Try again": the paper; not built yet
+    (Part 2's sentence, with `paper/main.tex` selectable); no `paper/`
+    folder; neither `main.pdf` nor `main.tex`; not a PDF ("it is not a valid
+    PDF file", or PDF.js's message); password-protected; no pages; larger than
+    32 MiB (413); busy (503); the app unreachable; PDF.js not starting; PDF.js
+    not opening the file within 20 s. A page stopped for its budget, or one
+    that could not be drawn, says so on its sheet while the others show.
+  - The label is `paper/main.pdf p. 2 · Setup`, or `pp. 2–3` across pages:
+    the pages whose text the quote holds (a selection that starts at the very
+    end of page 1's text names page 2 only), and the last outline entry at or
+    above where that text starts (by page and by the destination's top). The
+    paper's outline titles carry no section numbers, so there is no "§2". A
+    title's invisible characters (the host's class: controls, format and
+    default-ignorable characters, the Braille blank) show as markers, its
+    blank runs collapse to one space as the host collapses a label's, and the
+    title, not the page, is what is cut to keep the label within 200
+    characters. The quote is the selected text trimmed, cut on the page to
+    2,000 characters ending `…[cut]` (the host's own mark). Shared with the
+    Code view through [frontend/plugins/site-kit.ts](frontend/plugins/site-kit.ts),
+    which replaces its `dom.ts`; each site's bundle includes it.
+  - **What a selection quotes is the PDF's text layer, which can differ from
+    what is drawn.** PDF.js's text layer holds every text run on the page,
+    whether the canvas shows it or not: text in the invisible render mode,
+    white on white, a fifth of a point tall, clipped away, or under a white
+    box is selected along with what is around it, and a font's `/ToUnicode`
+    map can make glyphs drawn as "ABC" extract as a whole sentence, which
+    nothing in the text layer can tell apart. So the Paper view does not
+    guess at hidden text: the workspace shows the start and the size of the
+    quote in the ask bar before asking, and after asking the composer shows
+    exactly what will be sent, with no click. The human should read it before
+    pressing Send (the end-to-end suite's `hiddenPdf` checks both).
+  - Against the mockup: the pages scroll continuously, one sheet under
+    another, so that only pages near the view are drawn (far canvases are
+    released, each canvas at most 4096 × 4096 pixels, at most 1,000 pages);
+    previous and next scroll to a page, and the label names the page a
+    quarter down the view.
+    100% is the mockup's 640px-wide sheet; the steps are the mockup's 80% to
+    150% and then 200%, 250%, 300% for reading a figure; Fit width is the
+    mockup's (80% to 150%). The note reads "paper/main.pdf · 4 pages · select
+    text to ask the agent about it", followed by **Reload**. Selection is of
+    text, not of a paragraph; next and previous clear it as in the mockup,
+    and zoom keeps it. The place is kept across zoom, a resize, Reload, and
+    another tab.
+  - A layout saved on the trunk's old tab `paper` opens `paper-view/paper`;
+    the Plugins page lists the Paper view as enabled. In a browser the tab
+    says the view opens in the desktop app (no frame URL there).
 - **S6a-2** is the bundled plugin [frontend/plugins/code-view/](frontend/plugins/code-view/)
   (manifest as Part 2's, `reads: ["projects-folder/*/Code"]`, handler `git`), the
   workspace's Code tab, and the host side of the selection message. Where the code
@@ -149,24 +317,52 @@ Status on 2026-11-23:
     down, and at most 10 a second per frame (past that the bar is hidden, never
     left stale). The rule is that what Send passes is exactly what the user can
     read in the composer ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)):
-    a label is 1 to 200 characters with no line break (CR, LF, VT, FF, NEL,
-    U+2028, U+2029) and no control or format character (`\p{Cc}`, `\p{Cf}`:
-    zero-width characters, U+2060, U+FEFF, the soft hyphen, bidi controls,
-    U+FFF9-FFFB, tag characters), or the message is ignored; homoglyphs are
-    allowed, since a real file can be named so. A quote of at most 2,000
-    characters has every line break made LF, so every line gets its `> `, and
-    every control or format character but tab shown as a marker
-    (`⟨U+200B⟩`), in the text shown and sent alike; if the markers take
-    it past 2,000 characters it is cut there with `…[cut]`. The page applies
-    the same markers to names in its labels.
+    the host never rewrites a label: it shows and sends it exactly as the page
+    posted it, or ignores the message. A label must be 1 to 200 characters, not
+    blank, with no tab, no space character other than U+0020 (U+00A0, U+2000 to
+    U+200A, U+3000 and the rest of `\p{Zs}`), no line break (CR, LF, VT, FF, NEL, U+2028, U+2029) and no
+    invisible character (`\p{Cc}`, `\p{Cf}`, `\p{Default_Ignorable_Code_Point}`
+    and U+2800: zero-width characters, U+2060, U+FEFF, the soft hyphen, bidi
+    controls, U+FFF9-FFFB, tag characters, variation selectors, Hangul fillers,
+    the combining grapheme joiner, the Braille blank), or the message is
+    ignored; homoglyphs are allowed, since a real file can be named so. Runs of
+    ASCII spaces pass unchanged (`Code/a  b.md` and `Code/a b.md` are two
+    files), so blank padding with them is the page's business; the Code view
+    marks the refused characters in a name as `⟨U+XXXX⟩`, so such a file
+    still gets a label. A quote
+    of at most 2,000 characters keeps its spaces, has every line break made LF,
+    so every line gets its `> `, and every such invisible character but tab
+    shown as a marker (`⟨U+200B⟩`), except U+FE0F right after an emoji
+    (`\p{Extended_Pictographic}`), which is ordinary emoji presentation; this
+    holds in the text shown and sent alike, and if the markers take it past
+    2,000 characters it is cut there with `…[cut]`. The page applies the same
+    markers to names in its labels.
     Added: the host answers `{type: "os.select.clear"}`, posted to the page's
     origin only, when the user clears the selection or asks about it in the host,
     so the page drops its highlight. "Ask the agent about this" adds a reference
     chip (at most 8) to the project's composer and never sends; Send puts each
     chip before the typed text as `About <label>` and the quote as a blockquote.
-    Clicking a chip (or Enter or Space on it) shows exactly that text under the
-    chips, as plain text; a chip with a quote says how many lines it carries,
-    and the tooltip shows the text too. Ask adds the reference the bar showed
+    What the user is about to send is on screen as text, since a view can
+    quote what it did not show (a PDF's hidden text run): before asking, the
+    ask bar shows the start of the quote (up to 160 characters, line breaks as
+    `↵`) and its size, in every view. Whether a chip opens by itself depends
+    on the view (the Human Owner's decision, 2026-11-23): the host keeps
+    `QUOTES_AS_DRAWN` in [frontend/src/plugins/select.ts](frontend/src/plugins/select.ts),
+    the bundled views whose quote is exactly the text they draw (today only the
+    Code view, which quotes the characters it draws with invisible ones
+    marked). `readSelect` marks a reference from such a view by the plugin of
+    the frame the message came from; the message has no field for it, so no
+    page can ask for it. A chip from a listed view is added closed, as in
+    mockup C: its label, "· N lines", and the hint "click a reference to see
+    exactly what is sent". A chip from any other view (the Paper view, whose
+    PDF text layer can differ from what is drawn, or any third-party view)
+    opens its "Sent before your message, exactly:" text under the chips at
+    once (the newest opens, the one before closes); a closed chip added later
+    leaves the open one as it was. An open text scrolls when long, with a line
+    under it giving its size and saying it scrolls whenever it is taller than
+    its box. Clicking a chip (or Enter or Space on it) opens or closes it; a
+    chip with a quote says how many lines it carries, and the tooltip shows
+    the text too. Ask adds the reference the bar showed
     when the pointer went down on it. The host cannot reach
     `/api/code-view/git`, so the mockup's header pill (latest commit) is not shown.
   - `viewSrc(page, project)` appends `?project=<encoded name>`; the tab row takes
@@ -177,11 +373,14 @@ Status on 2026-11-23:
   - `PLUGIN_CSP` (a site in its plugin folder, the Code view's) has no
     `'unsafe-inline'`: `script-src 'self'; style-src 'self'`. Paper Wiki's
     generated viewer keeps `WORKSPACE_CSP`, which needs inline script.
-  - Every git command runs with `-c diff.algorithm=myers`: the repository's
-    `diff.algorithm=patience` made two files just under 4 MiB of one-byte lines
-    need 320 MiB in one allocation, over `GIT_ALLOC_LIMIT=256m`, on every route.
-    Under myers the same files need about 96 MiB (measured by bisecting the
-    limit), so the limit stays.
+  - Myers is pinned by `--diff-algorithm=myers` on every `log` and `show`
+    (`HISTORY`), beside `-c diff.algorithm=myers`. The `-c` setting alone did
+    not hold: a `diff.<driver>.algorithm=patience`, picked by an attribute in
+    `info/attributes`, beats it, while the command-line option beats both. Under
+    patience two files just under 4 MiB of one-byte lines need 320 MiB in one
+    allocation, over `GIT_ALLOC_LIMIT=256m`, and every route answered 500; under
+    myers they need about 96 MiB (measured by bisecting the limit), so the limit
+    stays.
 - **S6a-1** is [frontend/server/codeGit.ts](frontend/server/codeGit.ts) with
   `codeGit.test.ts` in the required CI job. S6a-2 declares and mounts it. The code is the
   authority where it differs from Part 2's Gap 1, after the S5 review and an
@@ -221,6 +420,15 @@ Status on 2026-11-23:
     under the same guards) has `extensions.partialclone` or `remote.*.promisor`,
     with `protocol.allow=never` beneath. It is not done because it is a second code
     path that would need its own CI job on stock Ubuntu 24.04 Git.
+    Compared on 2026-11-22, at the Human Owner's suggestion, with
+    [OpenResearch](https://github.com/alphaXiv/OpenResearch) at `b742758`: it runs
+    the user's installed `git` by bare name with no minimum version, reaches
+    GitHub through the user's `gh`, and adds guards on clone, the first commit and
+    push only; its reads trust the repository. The agent's reading is that this
+    shows the installed Git is the right dependency, which the Code view already
+    uses, and says nothing for running the handler's reads with fewer guards.
+    The Human Owner has not yet chosen between keeping the 2.45 floor and the
+    2.41 to 2.44 path ([HANDOFF.md](../HANDOFF.md) Decisions).
   - Which git runs: an absolute path given to `codeGitHandler(ctx, git)`, or a bare
     name looked up in the absolute entries of the runner's PATH only
     (`RunOptions.lookup`), never the working folder (spawn tries it on Windows

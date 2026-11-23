@@ -47,8 +47,8 @@ describe("the saved layout (localStorage osui.layout.v1)", () => {
 
   test("the other fields keep their valid values and drop the rest", () => {
     assert.deepEqual(
-      readLayout({ screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "paper" }, []),
-      { screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "paper" },
+      readLayout({ screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "code-view/code" }, [], projectKeys()),
+      { screen: "workspace", project: "nanochat_cpu", sidebarCollapsed: true, homeConversationOpen: true, conversationCollapsed: true, tab: "code-view/code" },
     );
     assert.deepEqual(readLayout({ project: 3, sidebarCollapsed: "yes", tab: "idea" }, []), DEFAULT_LAYOUT);
     for (const raw of [null, [], "x", 1]) assert.deepEqual(readLayout(raw, []), DEFAULT_LAYOUT);
@@ -63,10 +63,19 @@ describe("the saved layout (localStorage osui.layout.v1)", () => {
     assert.equal(readLayout({ tab: "gone/view" }, [], tabs).tab, "overview");
     assert.equal(readLayout({ tab: "paper-wiki/viewer" }, [], tabs).tab, "overview", "a left-navigation page is no tab");
   });
+
+  test('a tab saved as "paper", before S6b, opens the Paper view; without its plugin, Overview', () => {
+    const tabs = projectKeys();
+    assert.ok(tabs.includes("paper-view/paper"), JSON.stringify(tabs));
+    assert.equal(readLayout({ tab: "paper" }, [], tabs).tab, "paper-view/paper");
+    assert.equal(readLayout({ tab: "paper-view/paper" }, [], tabs).tab, "paper-view/paper");
+    assert.equal(readLayout({ tab: "paper" }, [], []).tab, "overview");
+    assert.equal(readLayout({ tab: "paper" }, [], ["code-view/code"]).tab, "overview", "the Code view alone does not make Paper a tab");
+  });
 });
 
 describe("the workspace's tab row", () => {
-  test("mockup C's order, with the Code view's tab from the plugin registry", () => {
+  test("mockup C's order, with the Code and Paper views' tabs from the plugin registry", () => {
     const views = pluginPages(bundledManifests(rawManifests(), BUNDLED_IDS).plugins, { desktop: true }).filter((p) => p.slot === "project");
     assert.deepEqual(
       workspaceTabs(views).map((t) => [t.id, t.label, t.later !== undefined]),
@@ -76,14 +85,21 @@ describe("the workspace's tab row", () => {
         ["code-view/code", "Code", false],
         [null, "Skeleton", true],
         [null, "Assets", true],
-        ["paper", "Paper", false],
+        ["paper-view/paper", "Paper", false],
       ],
     );
   });
 
-  test("no Code tab without its plugin; another project view goes before Paper", () => {
+  test("no Code or Paper tab without its plugin; another project view goes before Paper", () => {
     assert.deepEqual(
       workspaceTabs([{ key: "other/view", title: "Other" }]).map((t) => t.label),
+      ["Overview", "Idea", "Skeleton", "Assets", "Other"],
+    );
+    assert.deepEqual(
+      workspaceTabs([
+        { key: "paper-view/paper", title: "Paper" },
+        { key: "other/view", title: "Other" },
+      ]).map((t) => t.label),
       ["Overview", "Idea", "Skeleton", "Assets", "Other", "Paper"],
     );
   });

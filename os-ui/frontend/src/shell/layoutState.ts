@@ -7,10 +7,10 @@ export type PluginScreen = `${string}/${string}`;
 /** The pages the left navigation switches between. */
 export type Screen = TrunkScreen | PluginScreen;
 
-/** A plugin's project view, by its key "<plugin>/<page>" (src/plugins/pages.ts): the Code tab is "code-view/code". */
+/** A plugin's project view, by its key "<plugin>/<page>" (src/plugins/pages.ts): the Code tab is "code-view/code", the Paper tab "paper-view/paper". */
 export type PluginTab = `${string}/${string}`;
-/** The tabs of a project workspace: the app's Overview and Paper (a placeholder until its plugin), and the plugins' project views. */
-export type ViewTab = "overview" | "paper" | PluginTab;
+/** The tabs of a project workspace: the app's Overview and the plugins' project views. */
+export type ViewTab = "overview" | PluginTab;
 
 /** What the layout remembers across reloads, per browser profile. */
 export interface LayoutState {
@@ -29,9 +29,12 @@ const KEY = "osui.layout.v1";
 const TRUNK_SCREENS: TrunkScreen[] = ["home", "projects", "skills", "plugins", "settings", "workspace"];
 /** Screens saved before a plugin's page replaced them: the Paper wiki page was "wiki" until S4. */
 const RENAMED: ReadonlyMap<string, PluginScreen> = new Map([["wiki", "paper-wiki/viewer"]]);
-const TRUNK_TABS: ViewTab[] = ["overview", "paper"];
-/** Tabs saved before a plugin's project view replaced them: Code was the trunk's placeholder tab "code" until S6a-2. */
-const RENAMED_TABS: ReadonlyMap<string, PluginTab> = new Map([["code", "code-view/code"]]);
+const TRUNK_TABS: ViewTab[] = ["overview"];
+/** Tabs saved before a plugin's project view replaced them: the trunk's placeholder tabs "code" until S6a-2 and "paper" until S6b. */
+const RENAMED_TABS: ReadonlyMap<string, PluginTab> = new Map([
+  ["code", "code-view/code"],
+  ["paper", "paper-view/paper"],
+]);
 
 export const DEFAULT_LAYOUT: LayoutState = {
   screen: "home",
@@ -106,13 +109,13 @@ export interface WorkspaceTab {
 }
 
 /** Where a bundled plugin's project view sits in mockup C's tab row. */
-const PLACED_VIEWS: readonly string[] = ["code-view/code"];
+const PLACED_VIEWS: readonly string[] = ["code-view/code", "paper-view/paper"];
 
 /**
  * The workspace's tab row, in mockup C's order: Overview, Idea (step 2), the
  * Code view, Skeleton and Assets (step 2), any other plugin project view, then
- * Paper. `views` are the loaded plugins' project views (key and title); a
- * placed view whose plugin is not loaded leaves no tab.
+ * the Paper view. `views` are the loaded plugins' project views (key and
+ * title); a placed view whose plugin is not loaded leaves no tab.
  */
 export function workspaceTabs(views: readonly { key: PluginTab; title: string }[]): WorkspaceTab[] {
   const tab = (key: string): WorkspaceTab[] => views.filter((v) => v.key === key).map((v) => ({ id: v.key, label: v.title }));
@@ -123,6 +126,6 @@ export function workspaceTabs(views: readonly { key: PluginTab; title: string }[
     { id: null, label: "Skeleton", later: "The Skeleton view arrives in step 2." },
     { id: null, label: "Assets", later: "The Assets view arrives in step 2." },
     ...views.filter((v) => !PLACED_VIEWS.includes(v.key)).map((v) => ({ id: v.key, label: v.title })),
-    { id: "paper", label: "Paper" },
+    ...tab("paper-view/paper"),
   ];
 }

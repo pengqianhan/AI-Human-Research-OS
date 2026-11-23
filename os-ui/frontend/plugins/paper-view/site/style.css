@@ -1,0 +1,77 @@
+/* The Paper view's page, in mockup C's visual language (os-ui/mockups/step1/c-document.html: .paperbar .paper-scroll .sheet). */
+:root {
+  --bg: #f3eee5; --paper: #faf7f1; --card: #fffdf9; --ink: #1c1a17; --ink2: #4a453d;
+  --muted: #80786b; --faint: #b0a796; --line: rgba(70, 55, 30, .10); --line2: rgba(70, 55, 30, .18);
+  --accent: #1e5a56; --accent-ink: #164542; --accent-soft: #dcebe8; --accent-tint: #eef4f2;
+  --sh1: 0 1px 2px rgba(60, 44, 20, .07), 0 1px 1px rgba(60, 44, 20, .04);
+  --sh2: 0 1px 3px rgba(60, 44, 20, .06), 0 10px 26px rgba(60, 44, 20, .07);
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--card); color: var(--ink); font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+.ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ic.sm { width: 14px; height: 14px; }
+.ic.muted { color: var(--muted); }
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+#app { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+
+/* the bar */
+.paperbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; flex: none; box-shadow: inset 0 -1px 0 var(--line); min-width: 0; user-select: none; }
+.paperbar .grp { display: inline-flex; align-items: center; gap: 2px; background: rgba(60, 45, 20, .05); border-radius: 9px; padding: 2px; flex: none; }
+.paperbar .lbl2 { font: 500 12.5px var(--sans); color: var(--ink2); padding: 0 8px; white-space: nowrap; min-width: 84px; text-align: center; }
+.paperbar .hint { margin-left: auto; font: 12px var(--sans); color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icon-btn { width: 30px; height: 30px; border-radius: 8px; border: 0; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; flex: none; }
+.icon-btn:hover { background: rgba(60, 45, 20, .07); color: var(--ink); }
+.icon-btn:disabled { opacity: .35; cursor: default; background: none; }
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 9px; border: 0; background: var(--card); box-shadow: var(--sh1), inset 0 0 0 1px var(--line); color: var(--ink); font: 500 13px var(--sans); cursor: pointer; white-space: nowrap; }
+.btn:hover { box-shadow: var(--sh2), inset 0 0 0 1px var(--line2); }
+.btn.ghost { background: none; box-shadow: none; color: var(--accent); padding: 6px 8px; flex: none; }
+.btn.ghost:hover, .paperbar .btn.ghost.active { background: var(--accent-tint); }
+.link { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
+.reload { font: 12px var(--sans); text-decoration: none; flex: none; }
+.reload:hover { text-decoration: underline; }
+
+/* the pages: one sheet each, 640px wide at 100% (logic.ts SHEET_WIDTH) */
+.paper-scroll { flex: 1; min-height: 0; overflow: auto; position: relative; background: #e7e0d3; padding: 26px 24px 96px; outline: none; scrollbar-gutter: stable; }
+.pages { --scale-round-x: 1px; --scale-round-y: 1px; --user-unit: 1; }
+.sheet { position: relative; margin: 0 auto 18px; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 14px 34px rgba(60, 44, 20, .14); overflow: hidden; }
+.sheet canvas.pg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.page-note { position: absolute; left: 16px; right: 16px; top: 16px; z-index: 2; font: 13px var(--sans); color: var(--muted); background: var(--paper); border-radius: 8px; padding: 10px 12px; user-select: none; }
+.page-note.text-note { top: auto; bottom: 16px; }
+.pages-note { max-width: 640px; margin: 0 auto; font: 14px/1.55 var(--serif); color: var(--ink2); background: var(--paper); border-radius: 10px; padding: 14px 16px; user-select: none; }
+
+/*
+ * The text layer above each canvas: transparent, selectable text that PDF.js's
+ * TextLayer lays out (one span per run, sized by CSS variables it sets). The
+ * rules follow web/pdf_viewer.css's .textLayer section of PDF.js 6.5.438
+ * (Apache-2.0, vendor/LICENSE), which is not vendored.
+ */
+.textLayer { position: absolute; text-align: initial; inset: 0; overflow: clip; opacity: 1; line-height: 1; letter-spacing: normal; word-spacing: normal; text-size-adjust: none; forced-color-adjust: none; transform-origin: 0 0; caret-color: CanvasText; z-index: 0; color-scheme: only light;
+  --min-font-size: 1; --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size)); --min-font-size-inv: calc(1 / var(--min-font-size)); }
+.textLayer :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; user-select: text; }
+.textLayer > :not(.markedContent), .textLayer .markedContent span:not(.markedContent) { z-index: 1; --font-height: 0; font-size: calc(var(--text-scale-factor) * var(--font-height)); --scale-x: 1; --rotate: 0deg; transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv)); }
+.textLayer .markedContent { display: contents; }
+.textLayer span[role="img"] { user-select: none; cursor: default; }
+.textLayer ::selection { background: rgba(30, 90, 86, .28); color: transparent; }
+.textLayer br::selection { background: transparent; }
+.textLayer .endOfContent { display: block; position: absolute; inset: 100% 0 0; z-index: 0; cursor: default; user-select: none; }
+.textLayer.selecting .endOfContent { top: 0; }
+[data-main-rotation="90"] { transform: rotate(90deg) translateY(-100%); }
+[data-main-rotation="180"] { transform: rotate(180deg) translate(-100%, -100%); }
+[data-main-rotation="270"] { transform: rotate(270deg) translateX(-100%); }
+
+/* screens */
+.placeholder { padding: 40px 32px; max-width: 560px; font: 15px/1.6 var(--serif); color: var(--ink2); white-space: normal; overflow-wrap: anywhere; }
+.placeholder h4 { font: 500 20px var(--serif); margin: 0 0 8px; color: var(--ink); }
+.placeholder p { margin: 0; }
+.placeholder .btn { margin: 14px 8px 0 0; }
+.texline { display: flex; align-items: center; gap: 6px; margin-top: 12px !important; }
+.fileref { border: 0; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); border-radius: 6px; padding: 2px 8px; font: 12.5px var(--mono); color: var(--accent-ink); cursor: pointer; }
+.fileref:hover { background: var(--accent-tint); }
+.fileref.picked { background: var(--accent-soft); box-shadow: inset 0 0 0 1px rgba(30, 90, 86, .35); }
+.loading { font: 13px var(--sans); color: var(--muted); padding: 14px 16px; }
