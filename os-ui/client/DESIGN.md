@@ -353,9 +353,11 @@ seen: PDF.js's drawing waits while the tab is hidden) is stopped, noted, and
 its worker replaced, and its text is cut at 10,000 runs and given the same
 15 s; at
 most 1,000 pages are laid out, never past what one scrolling column can
-reach at 300%. Not bounded: memory within a page's 15 s (a page of nested
-forms reached about 3.5 GB in the frame's process before it was stopped),
-the sum of many images on one page (twelve at the cap peaked at 1.8 GB), and
+reach at 300%. Not bounded: memory within each page's 15 s, which adds up
+over the pages of one paper, since a stopped page's memory is not all given
+back before the next page is drawn (one page of nested forms reached about
+3.5 GB in the frame's process before it was stopped; four such pages reached
+4.8 GB in a review), the sum of many images on one page (twelve at the cap peaked at 1.8 GB), and
 PDF.js's own work while it opens a file of up to 32 MiB.
 
 Known limits of the channel, not yet handled:

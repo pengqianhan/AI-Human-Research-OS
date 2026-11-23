@@ -171,7 +171,15 @@ Status on 2026-11-23:
       forms (20 levels, 4.6 KB) ran 35 s and reached 6.4 GB in the frame's
       process; now page 1 is stopped at 15.2 s, page 2 drawn, at a peak of
       2.9-3.5 GB, of which about 1.3 GB was still held 20 to 50 s after the
-      ordinary paper was reloaded.
+      ordinary paper was reloaded. That bound is per page, and pages add up:
+      a stopped page's memory is not all given back before the next page is
+      drawn. In the second review, four such pages in one paper peaked at
+      4.8 GB in the frame's process (5.2 GB in all), which still held 3.2 GB
+      8 s after the ordinary paper was reloaded and about 1.45 GB later.
+      Here, under other conditions (four such pages, scrolled to the end once
+      the first two were stopped, no reload), the peak was 5.1 GB in the
+      frame's process (5.5 GB in all), and it still held 3.9 GB 10 s after
+      the fourth page was stopped.
     - A page's text is cut at 10,000 runs (a note says so) and gets the same
       15 s budget: the review's 100,000 one-character runs took 138 s and
       about 1 GB; now 10,000 are laid out in about 1 s at a peak of 388 MB.
@@ -193,8 +201,10 @@ Status on 2026-11-23:
       it. Scrolling through 200 pages of 1,500 runs each ended with 11,000
       text spans and 1.1 GB in the frame's process, against 341,000 spans
       and 3.0 GB without.
-    Still unbounded, as known limits: memory within one page's 15 s (above);
-    the sum of many images on one page; PDF.js's own work on a file within
+    Still unbounded, as known limits: memory within each page's 15 s, which
+    adds up over the pages of one paper (four pages of nested forms reached
+    4.8 GB in the frame's process in the review, above); the sum of many
+    images on one page; PDF.js's own work on a file within
     the 32 MiB cap while it opens (300,000 pages open in about 1 s).
   - **`PLUGIN_CSP` is unchanged.** Part 2 expected it to gain
     `worker-src 'self'`; with no `worker-src`, Chromium takes a worker's

@@ -101,6 +101,9 @@ export const MAX_CANVAS_PIXELS = 4096 * 4096;
  * The nanochat_cpu paper's pages draw in well under a second; a page that
  * takes fifteen is unreadable anyway, and a hostile one (nested forms, many
  * large images) is stopped before it holds the worker and its memory longer.
+ * A bound in time, per page: what a page takes in memory within it is not
+ * bounded, nor all given back before the next page is drawn, so pages add up
+ * (os-ui/PLUGINS.md, S6b, Bounds).
  */
 export const PAGE_BUDGET_MS = 15_000;
 

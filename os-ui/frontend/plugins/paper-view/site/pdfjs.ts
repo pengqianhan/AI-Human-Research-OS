@@ -104,8 +104,8 @@ export const DOCUMENT_OPTIONS = {
   /**
    * An image of more pixels than this (4096 × 4096, 64 MiB once decoded) is
    * left out of the drawing. It bounds each image only: a page of many images
-   * is bounded by the page's time budget (logic.ts PAGE_BUDGET_MS), not by a
-   * memory cap. A 400-dpi full-page scan fits; a 600-dpi one does not.
+   * is bounded in time, per page (logic.ts PAGE_BUDGET_MS), and its memory is
+   * not capped. A 400-dpi full-page scan fits; a 600-dpi one does not.
    */
   maxImageSize: 4096 * 4096,
   /** Warnings and errors only, in the page's console. */
