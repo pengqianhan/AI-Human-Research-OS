@@ -10,7 +10,7 @@
  * a dataset, never a name shown on screen: two files of one name in two
  * folders are two items.
  */
-import { cutText, inline, plain, resolveLink, section, sections, splitLines, trimSpaces } from "../../md-kit.ts";
+import { CUT, cutText, inline, LIMITS as LIMITS_MD, plain, resolveLink, section, sections, splitCells, splitLines, trimSpaces } from "../../md-kit.ts";
 import type { Block, Doc, Inline, Table } from "../../md-kit.ts";
 import { clip, cutMarked, LABEL_MAX, readText, visibleName } from "../../site-kit.ts";
 import { WALK } from "./walk.ts";
@@ -263,18 +263,26 @@ export function readProblem(read: Exclude<DocRead, { ok: true }>): string {
 }
 
 /**
- * What md-kit left unread of a file (its caps: LIMITS.lines lines, rows and
- * columns of a table), as one sentence ending in `then`, or null when it read
- * everything: "Code/README.md: the view does not read lines past 20,000, so
- * places there are not listed."
+ * What md-kit left unread of a file, as one sentence ending in `then`, or
+ * null when it read everything: lines past LIMITS.lines, everything after a
+ * code fence that is never closed (md-kit reads it as code), a table's rows
+ * past its cap; and, when the caller reads a table's cells (`cells`; Used in
+ * reads a row as written and does not), its columns past the cap, cells cut
+ * at 2,000 characters, and cells past the header's count (review S2).
  */
-export function unreadWords(doc: Doc, file: string, then: string): string | null {
+export function unreadWords(doc: Doc, file: string, then: string, cells = true): string | null {
   const parts: string[] = [];
   if (doc.cut) parts.push(`lines past ${n(doc.lines)}`);
   for (const block of doc.blocks) {
-    if (block.kind !== "table" || (block.more === 0 && !block.columnsCut)) continue;
-    const what = [...(block.more > 0 ? [`rows past ${n(block.rows.length)}`] : []), ...(block.columnsCut ? [`columns past ${n(block.header.length)}`] : [])].join(" and ");
-    parts.push(`${what} of the table at line ${n(block.first)}`);
+    if (block.kind === "code" && !block.closed) parts.push(`everything after the unclosed code fence at line ${n(block.first)}`);
+    if (block.kind !== "table") continue;
+    const what = [
+      ...(block.more > 0 ? [`rows past ${n(block.rows.length)}`] : []),
+      ...(cells && block.columnsCut ? [`columns past ${n(block.header.length)}`] : []),
+      ...(cells && block.rows.some((r) => r.cells.some((c) => c.endsWith(CUT))) ? [`cells past ${n(LIMITS_MD.cell)} characters`] : []),
+      ...(cells && block.rows.some((r) => splitCells(r.source).length > block.header.length) ? ["cells past the header's count"] : []),
+    ];
+    if (what.length > 0) parts.push(`${what.join(" and ")} of the table at line ${n(block.first)}`);
   }
   return parts.length === 0 ? null : `${visibleName(file)}: the view does not read ${listed(parts, 3)}, so ${then}.`;
 }
@@ -308,16 +316,106 @@ function named(tokens: readonly Inline[], out: { target?: string; code?: string 
   return out;
 }
 
-/** The project paths `tokens` name from `file`: a link or image whose target resolves to it, or a code span whose whole text is it. */
-function pathsNamed(tokens: readonly Inline[], file: string): Set<string> {
-  const out = new Set<string>();
-  for (const thing of named(tokens)) {
-    if (thing.code !== undefined) {
-      if (thing.code !== "") out.add(thing.code);
+/** A link's address as written after "](": inside <…>, or up to white space (a title after it is left out). */
+export function cleanTarget(target: string): string {
+  const raw = trimSpaces(target);
+  if (raw.startsWith("<")) {
+    const end = raw.indexOf(">");
+    return end === -1 ? raw : raw.slice(1, end);
+  }
+  const space = raw.search(/[ \t]/);
+  return space === -1 ? raw : raw.slice(0, space);
+}
+
+/**
+ * `line` with its code spans blanked (a run of N backticks to the next run of
+ * exactly N, as md-kit reads them), so a link written in code is no link.
+ * Linear: each run's next run of the same length is looked up once.
+ */
+function blankCodeSpans(line: string): string {
+  const starts: number[] = [];
+  const lengths: number[] = [];
+  for (let i = 0; i < line.length; ) {
+    if (line.charCodeAt(i) !== 96 || (i > 0 && line.charCodeAt(i - 1) === 92)) {
+      i++;
       continue;
     }
-    const resolved = resolveLink(thing.target!, file);
-    if (resolved?.kind === "path") out.add(resolved.path);
+    let j = i;
+    while (j < line.length && line.charCodeAt(j) === 96) j++;
+    starts.push(i);
+    lengths.push(j - i);
+    i = j;
+  }
+  const next = new Int32Array(starts.length).fill(-1);
+  const latest = new Map<number, number>();
+  for (let r = starts.length - 1; r >= 0; r--) {
+    next[r] = latest.get(lengths[r]!) ?? -1;
+    latest.set(lengths[r]!, r);
+  }
+  let out = "";
+  let at = 0;
+  for (let r = 0; r < starts.length; r++) {
+    if (starts[r]! < at || next[r]! < 0) continue;
+    const close = next[r]!;
+    const end = starts[close]! + lengths[close]!;
+    out += line.slice(at, starts[r]) + " ".repeat(end - starts[r]!);
+    at = end;
+    r = close;
+  }
+  return out + line.slice(at);
+}
+
+/**
+ * The addresses of the links and images of one line, as a writer gives them
+ * (review S2): after each "](" outside code, a <…> address, or one up to
+ * white space with balanced parentheses (`loss (1).png`), a title after it
+ * left out; whatever the link's text holds ("[Figure [1]]"). One pass.
+ */
+function addresses(line: string): string[] {
+  const text = blankCodeSpans(line);
+  const out: string[] = [];
+  // Once no ">" is left, no later <…> address can close: not looked for again (one pass, not one per "](<").
+  let noClose = false;
+  let i = text.indexOf("](");
+  while (i !== -1) {
+    let j = i + 2;
+    while (j < text.length && (text.charCodeAt(j) === 32 || text.charCodeAt(j) === 9)) j++;
+    if (text.charCodeAt(j) === 60 && !noClose) {
+      const end = text.indexOf(">", j + 1);
+      if (end === -1) noClose = true;
+      else {
+        out.push(text.slice(j + 1, end));
+        i = text.indexOf("](", end);
+        continue;
+      }
+    }
+    const start = j;
+    let depth = 0;
+    for (; j < text.length; j++) {
+      const c = text.charCodeAt(j);
+      if (c === 92) {
+        j++;
+        continue;
+      }
+      if (c === 40) depth++;
+      else if (c === 41) {
+        if (depth === 0) break;
+        depth--;
+      } else if (c === 32 || c === 9) break;
+    }
+    if (j > start) out.push(text.slice(start, j).replace(/\\(.)/g, "$1"));
+    i = text.indexOf("](", Math.max(j, i + 2));
+  }
+  return out;
+}
+
+/** The project paths one line of `file` names, in NFC: a link or image whose address resolves to it, or a code span whose whole text is it. */
+function pathsNamed(line: string, file: string): Set<string> {
+  const out = new Set<string>();
+  for (const thing of named(inline(line))) if (thing.code !== undefined && thing.code !== "") out.add(thing.code.normalize("NFC"));
+  for (const address of addresses(line)) {
+    const resolved = resolveLink(address, file);
+    if (resolved?.kind === "path") out.add(resolved.path.normalize("NFC"));
   }
   return out;
 }
@@ -341,7 +439,8 @@ export interface Description {
  */
 export function descriptions(doc: Doc, readme: string): Map<string, Description> {
   const out = new Map<string, Description>();
-  const describe = (path: string, text: string, line: number) => {
+  const describe = (raw: string, text: string, line: number) => {
+    const path = raw.normalize("NFC");
     if (out.has(path)) return;
     out.set(path, { text: cutText(trimSpaces(text), LIMITS.description), readme, line });
   };
@@ -351,7 +450,7 @@ export function descriptions(doc: Doc, readme: string): Map<string, Description>
         const tokens = flatten(inline(item.text));
         const at = tokens.findIndex((t) => t.kind === "link");
         if (at === -1) continue;
-        const resolved = resolveLink((tokens[at] as Extract<Inline, { kind: "link" }>).target, readme);
+        const resolved = resolveLink(cleanTarget((tokens[at] as Extract<Inline, { kind: "link" }>).target), readme);
         if (resolved?.kind !== "path") continue;
         let rest = trimSpaces(plain(tokens.slice(at + 1)));
         if (rest.startsWith(":") || rest.startsWith("—")) rest = rest.slice(1);
@@ -365,7 +464,7 @@ export function descriptions(doc: Doc, readme: string): Map<string, Description>
           if (link !== undefined) found = { cell: c, target: link.target };
         }
         if (found === null) continue;
-        const resolved = resolveLink(found.target, readme);
+        const resolved = resolveLink(cleanTarget(found.target), readme);
         if (resolved?.kind !== "path") continue;
         const others = row.cells
           .filter((_, c) => c !== found!.cell)
@@ -421,24 +520,25 @@ export function usedInIndex(docs: readonly { file: string; doc: Doc }[]): Map<st
     const lines = (from: number, source: readonly string[], joined: readonly string[], last: number) => {
       const found = new Set<string>();
       source.forEach((line, k) => {
-        const paths = pathsNamed(inline(line), file);
+        const paths = pathsNamed(line, file);
         for (const p of paths) found.add(p);
         add(paths, from + k, from + k, null);
       });
       const spanning = new Set<string>();
-      for (const text of joined) for (const p of pathsNamed(inline(text), file)) if (!found.has(p)) spanning.add(p);
+      for (const text of joined) for (const p of pathsNamed(text, file)) if (!found.has(p)) spanning.add(p);
       add(spanning, from, last, null);
     };
     for (const block of doc.blocks) {
-      if (block.kind === "heading") add(pathsNamed(inline(block.text), file), block.first, block.first, null);
+      if (block.kind === "heading") add(pathsNamed(block.lines[0]!, file), block.first, block.first, null);
       else if (block.kind === "paragraph") lines(block.first, block.lines, [block.text], block.last);
       else if (block.kind === "list") {
         for (const item of block.items) lines(item.first, item.lines, [item.text, ...item.children.map((c) => c.text)], item.last);
       } else if (block.kind === "table") {
-        add(block.header.flatMap((cell) => [...pathsNamed(inline(cell), file)]), block.first, block.first, null);
+        // Rows as written, so a link in a cell md-kit cut, or past the header's cells, is found (review S2).
+        add(pathsNamed(block.lines[0]!, file), block.first, block.first, null);
         for (const row of block.rows) {
           const cell = trimSpaces(plain(inline(row.cells[0] ?? "")));
-          add(row.cells.flatMap((c) => [...pathsNamed(inline(c), file)]), row.line, row.line, clip(cell, 80));
+          add(pathsNamed(row.source, file), row.line, row.line, clip(cell, 80));
         }
       }
     }
@@ -609,7 +709,7 @@ export function buildModel(input: ModelInput): Model {
   ] as const) {
     if (read.ok) {
       docs.push({ file, doc: read.doc });
-      const unread = unreadWords(read.doc, file, "places there are not listed");
+      const unread = unreadWords(read.doc, file, "places there are not listed", false);
       if (unread !== null) usedInNotes.push(unread);
     } else usedInNotes.push(`${file} could not be read (${readProblem(read)}), so places in it are not listed.`);
   }
@@ -684,13 +784,14 @@ export function buildModel(input: ModelInput): Model {
 
 /**
  * "Used in" for one file: at most LIMITS.usedIn places and how many more;
- * "Not named in …" only when both files were read whole and name it nowhere;
+ * "No link or path to this file was found in …" only when both files were
+ * read whole and neither names it in a form the view reads;
  * and, beside the places or in their stead, what could not be read (`notes`).
  */
 export function usedInWords(item: FileItem, notes: readonly string[]): { places: string[]; more: number; none: string | null; notes: string[] } {
   const places = item.usedIn.slice(0, LIMITS.usedIn).map(placeText);
   const more = Math.max(0, item.usedIn.length - LIMITS.usedIn);
-  const none = places.length === 0 && notes.length === 0 ? `Not named in ${SKELETON} or ${README}` : null;
+  const none = places.length === 0 && notes.length === 0 ? `No link or path to this file was found in ${SKELETON} or ${README}.` : null;
   return { places, more, none, notes: [...notes] };
 }
 

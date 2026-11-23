@@ -44,6 +44,7 @@ import {
   sizeWords,
   SKELETON,
   usedInIndex,
+  unreadWords,
   usedInWords,
   walkNotes,
   workspacePath,
@@ -355,15 +356,15 @@ describe("§4.2 Used in: paper_skeleton.md and Code/README.md, by link, image, o
     assert.deepEqual(at("Figs/probe_comparison.svg"), [`Code/README.md:${rd("![Probe comparison]")}`]);
     // A folder link (Baselines/openresearch-demo/) names no file in it.
     assert.deepEqual(at("Baselines/openresearch-demo/README.md"), []);
-    assert.deepEqual(usedInWords(file(model, "Baselines/Baseline_readme.md"), model.usedInNotes), { places: [], more: 0, none: "Not named in paper_skeleton.md or Code/README.md", notes: [] });
+    assert.deepEqual(usedInWords(file(model, "Baselines/Baseline_readme.md"), model.usedInNotes), { places: [], more: 0, none: "No link or path to this file was found in paper_skeleton.md or Code/README.md.", notes: [] });
   };
   test("on nanochat_cpu's frozen files", () => check((t) => t));
   test("the same on CRLF copies", () => check(crlf));
 
-  test("a link broken across a paragraph's lines names its lines; a code span must be the whole path; code blocks are not read", () => {
+  test("a link whose text breaks across a paragraph's lines is placed on the line of its address; a code span must be the whole path; code blocks are not read", () => {
     const md = ["Before", "the [training", "curves](../Figs/a.svg) here.", "","`Figs/a.svg` and `see Figs/a.svg` and `Figs/a.svg `", "", "```", "[x](../Figs/a.svg)", "```", "- item [a](../Figs/a.svg)", "  and [a](../Figs/a.svg) again"].join("\n");
     const index = usedInIndex([{ file: README, doc: parse(md) }]);
-    assert.deepEqual(index.get("Figs/a.svg")!.map(placeText), ["Code/README.md:1–3", "Code/README.md:5", "Code/README.md:10", "Code/README.md:11"]);
+    assert.deepEqual(index.get("Figs/a.svg")!.map(placeText), ["Code/README.md:3", "Code/README.md:5", "Code/README.md:10", "Code/README.md:11"]);
   });
 
   test(`at most ${LIMITS.usedIn} places, then "and N more"; a file that could not be read is named instead of "Not named"`, () => {
@@ -808,14 +809,74 @@ describe("nothing read is left out without a word: unread files and md-kit's cap
     const model = await modelOf(PROJECT, read(`# s\n\n${rows(501)}\n`), read(`# r\n\n${rows(3, 31)}\n`));
     assert.deepEqual(model.usedInNotes, [
       "paper_skeleton.md: the view does not read rows past 500 of the table at line 3, so places there are not listed.",
-      "Code/README.md: the view does not read columns past 30 of the table at line 3, so places there are not listed.",
-    ]);
+    ], "Used in reads a row as written: its columns past 30 are read");
     assert.deepEqual((await modelOf(PROJECT, read(`# s\n\n${rows(500)}\n`), read(`# r\n\n${rows(3, 30)}\n`))).usedInNotes, [], "at the caps, nothing is left out");
     assert.deepEqual(markdownPreview(parse(`${rows(501)}\n\n${rows(2, 31)}\n`), false).notes, [
       "The table at line 1 has 1 more row; the first 500 are shown.",
       "The table at line 505 has more than 30 columns; the first 30 are shown.",
     ]);
     assert.deepEqual(markdownPreview(parse(`${rows(500)}\n\n${rows(2, 30)}\n`), false).notes, []);
+  });
+});
+
+describe("Used in finds the forms a writer uses, says what it could not read, and words the empty case by what it searched (review S2)", () => {
+  const placesOf = (file: string, skeleton: string) => usedInIndex([{ file: SKELETON, doc: parse(skeleton) }]).get(file)?.map(placeText) ?? [];
+  test("a link with a title, a <…> destination, parentheses in the address, and '[' in the link text are found", () => {
+    for (const eol of [(t: string) => t, crlf]) {
+      assert.deepEqual(placesOf("Figs/a.svg", eol('See [Figure 1](Figs/a.svg "Loss curve").\n')), ["paper_skeleton.md:1"]);
+      assert.deepEqual(placesOf("Figs/a.svg", eol("See [Figure 1](Figs/a.svg 'Loss') and ![x](Figs/a.svg (title)).\n")), ["paper_skeleton.md:1"]);
+      assert.deepEqual(placesOf("Figs/loss curve.png", eol("See [Figure 1](<Figs/loss curve.png>).\n")), ["paper_skeleton.md:1"]);
+      assert.deepEqual(placesOf("Figs/loss (1).png", eol("See [Figure 1](Figs/loss%20(1).png).\n")), ["paper_skeleton.md:1"]);
+      assert.deepEqual(placesOf("Figs/a.svg", eol("See [Figure [1]](Figs/a.svg).\n")), ["paper_skeleton.md:1"]);
+    }
+    // In a code span a link is not a link: only a code span that is exactly the path counts.
+    assert.deepEqual(placesOf("Figs/a.svg", "Run `make [x](Figs/a.svg)` first.\n"), []);
+    assert.deepEqual(placesOf("Figs/a.svg", "Run ``a ` [x](Figs/a.svg) b`` first.\n"), []);
+  });
+
+  test("a link in a cell past 2,000 characters, or in a cell past the header's count, is found: a table row is read as written", () => {
+    assert.deepEqual(placesOf("Figs/a.svg", `| Claim | Source |\n|---|---|\n| ${"long claim text ".repeat(130)}[fig](Figs/a.svg) | x |\n`).length, 1);
+    assert.deepEqual(placesOf("Figs/a.svg", "| Figure | Note |\n|---|---|\n| Figure 1 | shown | [file](Figs/a.svg) |\n"), ["paper_skeleton.md:3 · Figure 1"]);
+  });
+
+  test("what md-kit does not read is said: everything after an unclosed fence; for descriptions, cut cells and cells past the header", async () => {
+    const fence = await modelOf(PROJECT, read("## Runs\n\n```bash\npython plot.py\n\n## Figures\n\n- [Figure 1](Figs/probe_comparison.svg)\n"), read(README_LF));
+    assert.ok(fence.usedInNotes.includes("paper_skeleton.md: the view does not read everything after the unclosed code fence at line 3, so places there are not listed."), fence.usedInNotes.join("\n"));
+    const cells = parse(`| File | What |\n|---|---|\n| [a.csv](a.csv) | ${"w".repeat(2100)} |\n| [b.csv](b.csv) | b | extra |\n`);
+    assert.equal(
+      unreadWords(cells, "Baselines/README.md", "they describe no file here"),
+      "Baselines/README.md: the view does not read cells past 2,000 characters and cells past the header's count of the table at line 1, so they describe no file here.",
+    );
+    // Used in reads a row as written, so it says nothing of cells.
+    assert.equal(unreadWords(cells, SKELETON, "places there are not listed", false), null);
+  });
+
+  test("a line of hostile text costs Used in one pass (4× the input, well under 16× the time)", (t) => {
+    const cases: [string, (n: number) => string][] = [
+      ["'](<' with no '>'", (n) => "](<".repeat(n / 3)],
+      ["'](' again and again", (n) => "](".repeat(n / 2)],
+      ["an address of n '('", (n) => `[x](${"(".repeat(n)}`],
+      ["backtick runs of every length", (n) => Array.from({ length: Math.floor(Math.sqrt(2 * n)) }, (_, k) => "`".repeat(k + 1)).join("](x)")],
+      ["'\\' before every character", (n) => "\\(".repeat(n / 2)],
+    ];
+    for (const [name, make] of cases) {
+      const ratio = growth(make, (line) => usedInIndex([{ file: SKELETON, doc: parse(line) }]), 100_000);
+      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
+      t.diagnostic(`Used in, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
+    }
+  });
+
+  test("paths are compared in NFC, not by case: a name written in one Unicode form is found under the other", () => {
+    const nfd = "Figs/café.svg";
+    const nfc = "Figs/café.svg";
+    assert.deepEqual(placesOf(nfc, `[x](${nfd})\n`), ["paper_skeleton.md:1"]);
+    assert.deepEqual(placesOf(nfc, `\`${nfd}\`\n`), ["paper_skeleton.md:1"]);
+    assert.deepEqual(placesOf("Figs/CAFE.svg", "[x](Figs/cafe.svg)\n"), []);
+  });
+
+  test("the empty case says what was searched, not that the file is named nowhere", async () => {
+    const model = await nanochat();
+    assert.equal(usedInWords(file(model, "Baselines/Baseline_readme.md"), model.usedInNotes).none, "No link or path to this file was found in paper_skeleton.md or Code/README.md.");
   });
 });
 
