@@ -184,6 +184,28 @@ describe("the image queue", () => {
     assert.equal(q.inFlight, 0);
   });
 
+  test("drop: the panel's image of an item the user left is cancelled and forgotten, its slot free, its late answer dropped", async () => {
+    const { q, time, load, states, changes, want } = setup();
+    for (let k = 0; k < 5; k++) want(`k${k}`, k);
+    q.drop("k1"); // loading
+    q.drop("k4"); // waiting
+    q.drop("none"); // never asked for
+    assert.deepEqual(load.cancelled("k1"), [true]);
+    assert.equal(q.stateOf("k1"), null);
+    assert.equal(q.stateOf("k4"), null);
+    assert.equal(q.inFlight, 3, "the dropped load's slot is free, and nothing waits to take it");
+    const before = changes.length;
+    await load.end("k1", { kind: "ok" });
+    assert.equal(changes.length, before, "no change reported after the drop");
+    assert.equal(states.get("k1")?.state, "loading");
+    assert.equal(q.inFlight, 3);
+    assert.equal(time.pending(), 3, "the dropped load's time-out is gone too");
+    // Asked for again, it is a new job, which starts in the free slot.
+    want("k1", 0);
+    assert.equal(q.stateOf("k1")?.state, "loading");
+    assert.equal(load.started.filter((k) => k === "k1").length, 2);
+  });
+
   test("a load that throws as it starts, or whose promise rejects, fails (status 0) and frees its slot", async () => {
     const { q, states } = setup();
     q.want("throws", 0, () => {

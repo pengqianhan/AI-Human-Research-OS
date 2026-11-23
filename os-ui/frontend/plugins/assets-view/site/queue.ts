@@ -108,18 +108,30 @@ export class ImageQueue {
     this.pump();
   }
 
+  /** Forgets `key`'s job (the panel's image of an item the user left): a load is cancelled and its slot freed; a later answer is dropped. */
+  drop(key: string): void {
+    const job = this.jobs.get(key);
+    if (job === undefined) return;
+    this.jobs.delete(key);
+    this.stop(job);
+    this.pump();
+  }
+
   /** Reload, or the page leaving: every load is cancelled and its slot freed; answers that arrive later are dropped. */
   reset(): void {
     const old = this.jobs;
     this.jobs = new Map();
-    for (const job of old.values()) {
-      job.stopTimer?.();
-      job.stopTimer = null;
-      if (job.load !== null) {
-        this.free(job);
-        job.load.cancel();
-        job.load = null;
-      }
+    for (const job of old.values()) this.stop(job);
+  }
+
+  /** Cancels a job's timer and load, freeing its slot. */
+  private stop(job: Job): void {
+    job.stopTimer?.();
+    job.stopTimer = null;
+    if (job.load !== null) {
+      this.free(job);
+      job.load.cancel();
+      job.load = null;
     }
   }
 

@@ -1653,4 +1653,134 @@ describe("read channel", () => {
       }
     });
   });
+
+  /*
+   * The Assets view's reads, as bundled (os-ui/PLUGINS.md Part 3, §1 fact 1 and
+   * §4.1): four folder roots and two file roots per project, its narrowest
+   * set. Everything else in the project stays unreadable from its origin, and a
+   * link inside a declared folder is followed only while it stays in that
+   * root, never out of the workspace or into human/private.
+   */
+  describe("the Assets view's reads", () => {
+    const G = "projects-folder/Gallery";
+    const gallery = (raw: string) => files(raw, "assets-view");
+    const galleryList = (raw: string) => list(raw, "assets-view");
+    const put = (rel: string, text: string) => {
+      mkdirSync(path.dirname(join(ws, rel)), { recursive: true });
+      writeFileSync(join(ws, rel), text);
+    };
+    for (const [rel, text] of Object.entries({
+      "Figs/a.svg": "<svg xmlns='http://www.w3.org/2000/svg'/>",
+      "Figs/sub/b.png": "png",
+      "Figs/.env": "SECRET figs env",
+      "Baselines/run/x.csv": "a,b\n1,2\n",
+      "Code/results/r.json": "{}",
+      "Code/Datasets/d.csv": "d",
+      "Code/README.md": "# Gallery code\n",
+      "Code/README_zh.md": "SECRET zh",
+      "Code/run.py": "SECRET code",
+      "Code/tools/t.py": "SECRET tool",
+      "paper_skeleton.md": "# Gallery skeleton\n",
+      "AGENTS.md": "SECRET agents",
+      "PROJECT_MEMORY.md": "SECRET memory",
+      "index.md": "SECRET index",
+      "paper/main.tex": "SECRET tex",
+    })) {
+      put(`${G}/${rel}`, text);
+    }
+    // Links inside declared folders: out of the workspace, into human/private, and to the project's own unread files.
+    const gl = (rel: string) => join(ws, G, rel);
+    dirLink(outside, gl("Figs/out-dir"));
+    dirLink(join(ws, "human", "private"), gl("Figs/private"));
+    relLink(join(ws, G, "Code"), gl("Code/results/code"));
+    mkdirSync(join(ws, "projects-folder", "GalleryLink", "Code"), { recursive: true });
+    const galleryLinks = {
+      outFile: fileLink(join(outside, "x.txt"), gl("Figs/outside.txt")),
+      privFile: fileLink(join(ws, "human", "private", "secret.md"), gl("Baselines/secret.md")),
+      agents: fileLink(gl("AGENTS.md"), gl("Baselines/agents.md")),
+      readmeOut: fileLink(join(ws, "human", "private", "secret.md"), join(ws, "projects-folder", "GalleryLink", "Code", "README.md")),
+    };
+    // A project whose Figs is itself a link into human/private, and whose Code/results is a link to its Code.
+    mkdirSync(join(ws, "projects-folder", "GalleryEvil", "Code"), { recursive: true });
+    writeFileSync(join(ws, "projects-folder", "GalleryEvil", "Code", "run.py"), "SECRET evil code");
+    relLink(join(ws, "human", "private"), join(ws, "projects-folder", "GalleryEvil", "Figs"));
+    relLink(join(ws, "projects-folder", "GalleryEvil", "Code"), join(ws, "projects-folder", "GalleryEvil", "Code", "results"));
+
+    test("its six roots per project are read: the four folders, listed and read, and the two files", async () => {
+      assert.deepEqual(readSites.get("assets-view")?.reads, [
+        "projects-folder/*/Figs",
+        "projects-folder/*/Baselines",
+        "projects-folder/*/Code/results",
+        "projects-folder/*/Code/Datasets",
+        "projects-folder/*/Code/README.md",
+        "projects-folder/*/paper_skeleton.md",
+      ]);
+      assert.equal(await okText(gallery(`${G}/Figs/sub/b.png`)), "png");
+      assert.equal(await okText(gallery(`${G}/Baselines/run/x.csv`)), "a,b\n1,2\n");
+      assert.equal(await okText(gallery(`${G}/Code/results/r.json`)), "{}");
+      assert.equal(await okText(gallery(`${G}/Code/Datasets/d.csv`)), "d");
+      assert.equal(await okText(gallery(`${G}/Code/README.md`)), "# Gallery code\n");
+      assert.equal(await okText(gallery(`${G}/paper_skeleton.md`)), "# Gallery skeleton\n");
+      const svg = await fetchRead(gallery(`${G}/Figs/a.svg`));
+      assert.equal(svg.status, 200);
+      assert.equal(svg.headers.get("content-type"), "image/svg+xml", "an <img> needs the type");
+      assert.equal(svg.headers.get("content-security-policy"), READ_CSP);
+      for (const folder of ["Figs", "Figs/sub", "Baselines", "Baselines/run", "Code/results", "Code/Datasets"]) await okList(galleryList(`${G}/${folder}`));
+    });
+
+    test("anything else in the project is 404 from its origin: AGENTS.md, PROJECT_MEMORY.md, Code/ besides its two folders and README.md, paper/", async () => {
+      for (const method of ["GET", "HEAD"]) {
+        for (const url of [
+          gallery(`${G}/AGENTS.md`),
+          gallery(`${G}/PROJECT_MEMORY.md`),
+          gallery(`${G}/index.md`),
+          gallery(`${G}/Code/run.py`),
+          gallery(`${G}/Code/tools/t.py`),
+          gallery(`${G}/Code/README_zh.md`),
+          gallery(`${G}/Code/README.md/x`),
+          gallery(`${G}/paper/main.tex`),
+          gallery(`${G}/Figs/.env`),
+          gallery(`${G}/Code/Results/r.json`),
+          galleryList(G),
+          galleryList(`${G}/Code`),
+          galleryList(`${G}/Code/tools`),
+          galleryList(`${G}/paper`),
+          galleryList(`${G}/Code/README.md`),
+          galleryList(`${G}/paper_skeleton.md`),
+          galleryList("projects-folder"),
+          gallery("AGENTS.md"),
+          gallery(".env"),
+        ]) {
+          await assertRefused(url, { method });
+        }
+      }
+      // Another plugin's root is not one of these: Alpha's Code/run.py stays the Code view's.
+      await assertRefused(gallery(`${CODE}/run.py`));
+      assert.equal(await okText(files(`${CODE}/run.py`)), "print(1)");
+    });
+
+    test("a link inside a declared folder that leaves it, the workspace, or reaches human/private is 404, and the listing leaves it out", async () => {
+      const refused = [
+        gallery(`${G}/Figs/out-dir/x.txt`),
+        galleryList(`${G}/Figs/out-dir`),
+        gallery(`${G}/Figs/private/secret.md`),
+        galleryList(`${G}/Figs/private`),
+        gallery(`${G}/Code/results/code/run.py`),
+        galleryList(`${G}/Code/results/code`),
+        // A root that is a link out of its place: into human/private, or a declared folder linked to an undeclared one.
+        gallery("projects-folder/GalleryEvil/Figs/secret.md"),
+        galleryList("projects-folder/GalleryEvil/Figs"),
+        gallery("projects-folder/GalleryEvil/Code/results/run.py"),
+        galleryList("projects-folder/GalleryEvil/Code/results"),
+      ];
+      if (galleryLinks.outFile) refused.push(gallery(`${G}/Figs/outside.txt`));
+      if (galleryLinks.privFile) refused.push(gallery(`${G}/Baselines/secret.md`));
+      if (galleryLinks.agents) refused.push(gallery(`${G}/Baselines/agents.md`));
+      if (galleryLinks.readmeOut) refused.push(gallery("projects-folder/GalleryLink/Code/README.md"));
+      for (const url of refused) await assertRefused(url);
+      assert.deepEqual((await okList(galleryList(`${G}/Figs`))).entries.map((e) => e.name), ["a.svg", "sub"], "the links out are left out, and so is .env");
+      assert.deepEqual((await okList(galleryList(`${G}/Baselines`))).entries.map((e) => e.name), ["run"]);
+      assert.deepEqual((await okList(galleryList(`${G}/Code/results`))).entries.map((e) => e.name), ["r.json"]);
+    });
+  });
 });
