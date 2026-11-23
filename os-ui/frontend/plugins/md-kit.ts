@@ -634,19 +634,20 @@ function trimTokens(tokens: readonly Inline[]): Inline[] {
  */
 function splitItem(text: string): { label: string; tokens: Inline[] } {
   const tokens = inline(text);
+  // The label's plain text is built once, when the colon is found: one pass over the tokens.
+  const before = (k: number) => plain(tokens.slice(0, k));
   for (let k = 0; k < tokens.length; k++) {
     const t = tokens[k]!;
-    const before = plain(tokens.slice(0, k));
     if (t.kind === "text") {
       const i = t.text.indexOf(":");
-      if (i !== -1) return { label: before + t.text.slice(0, i), tokens: [{ kind: "text", text: t.text.slice(i + 1) }, ...tokens.slice(k + 1)] };
+      if (i !== -1) return { label: before(k) + t.text.slice(0, i), tokens: [{ kind: "text", text: t.text.slice(i + 1) }, ...tokens.slice(k + 1)] };
     } else if (t.kind === "bold" || t.kind === "code") {
       const inner = plain([t]);
       const i = inner.indexOf(":");
       if (i === -1) continue;
       const rest = inner.slice(i + 1);
       const kept: Inline[] = trimSpaces(rest) === "" ? [] : t.kind === "bold" ? [{ kind: "bold", children: [{ kind: "text", text: rest }] }] : [{ kind: "code", text: rest }];
-      return { label: before + inner.slice(0, i), tokens: [...kept, ...tokens.slice(k + 1)] };
+      return { label: before(k) + inner.slice(0, i), tokens: [...kept, ...tokens.slice(k + 1)] };
     }
   }
   return { label: plain(tokens), tokens: [] };

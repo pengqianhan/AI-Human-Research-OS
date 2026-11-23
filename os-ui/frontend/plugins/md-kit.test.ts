@@ -542,6 +542,23 @@ describe("labels and headers by their plain text (review F7)", () => {
     ]);
   });
 
+  test("a long Snapshot item with no colon costs one pass, not one per token", (t) => {
+    // Each line is cut at LIMITS.cell when drawn, so the tokens come from continuation lines: 100,000 characters in all.
+    const line = (unit: string) => unit.repeat(Math.floor(1000 / unit.length));
+    for (const [name, unit] of [
+      ["text and code spans", "a`b`"],
+      ["links only", "[x](y)"],
+      ["bold only", "**b**"],
+    ] as const) {
+      const text = `## Snapshot\n\n- ${line(unit)}\n${Array.from({ length: 99 }, () => `  ${line(unit)}`).join("\n")}\n`;
+      let items = 0;
+      const ms = timed(() => (items = snapshot(sections(parse(text)))!.items.length));
+      assert.equal(items, 1, name);
+      assert.ok(ms < 500, `${name}: ${ms.toFixed(1)} ms`);
+      t.diagnostic(`snapshot, ${name} (${text.length} characters): ${ms.toFixed(1)} ms`);
+    }
+  });
+
   test("a column is found by its header's plain text: **Claim**, `Claim`, and Claim are one header", () => {
     const head = "| **Claim** | `Evidence` | [Source file or link](x) | **Citation/result** | *Status* |\n|---|---|---|---|---|\n| C1: x | e | s | r | verified |";
     const found = claims(sections(parse(`## Claims and Evidence\n\n${head}\n`)));
