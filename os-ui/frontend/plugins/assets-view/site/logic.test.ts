@@ -329,7 +329,7 @@ describe("§4.2 Used in: paper_skeleton.md and Code/README.md, by link, image, o
     assert.deepEqual(at("Figs/probe_comparison.svg"), [`Code/README.md:${rd("![Probe comparison]")}`]);
     // A folder link (Baselines/openresearch-demo/) names no file in it.
     assert.deepEqual(at("Baselines/openresearch-demo/README.md"), []);
-    assert.deepEqual(usedInWords(file(model, "Baselines/Baseline_readme.md"), model.usedInNotes), { places: [], more: 0, none: "Not named in paper_skeleton.md or Code/README.md" });
+    assert.deepEqual(usedInWords(file(model, "Baselines/Baseline_readme.md"), model.usedInNotes), { places: [], more: 0, none: "Not named in paper_skeleton.md or Code/README.md", notes: [] });
   };
   test("on nanochat_cpu's frozen files", () => check((t) => t));
   test("the same on CRLF copies", () => check(crlf));
@@ -348,7 +348,8 @@ describe("§4.2 Used in: paper_skeleton.md and Code/README.md, by link, image, o
     assert.equal(words.places.length, LIMITS.usedIn);
     assert.equal(words.more, 4);
     const none = usedInWords({ usedIn: [] } as unknown as FileItem, ["paper_skeleton.md could not be read (it is not there, or it is a link the Assets view may not follow), so places in it are not listed."]);
-    assert.match(none.none!, /^paper_skeleton\.md could not be read/);
+    assert.equal(none.none, null, "not \"Not named\": one file was not read");
+    assert.match(none.notes[0]!, /^paper_skeleton\.md could not be read/);
   });
 
   test("the model says which file could not be read for Used in", async () => {
@@ -651,6 +652,116 @@ describe("identity: by path and by README line, never by a name shown", () => {
     assert.equal(group(model, "figs").cards.length + group(model, "figs").rows.length, 0);
     // Four files (two of them README.md) and three datasets.
     assert.equal(model.items.size, 7);
+  });
+});
+
+describe("nothing read is left out without a word: unread files and md-kit's caps", () => {
+  test("Used in lists the places it found and also says which file it could not read", async () => {
+    const model = await modelOf(PROJECT, { ok: false, status: 503 }, read(README_LF));
+    const words = usedInWords(file(model, "Figs/probe_comparison.svg"), model.usedInNotes);
+    assert.deepEqual(words.places, [`Code/README.md:${lineOf(README_LF, "![Probe comparison]")}`]);
+    assert.equal(words.none, null);
+    assert.deepEqual(words.notes, ["paper_skeleton.md could not be read (too many files were being read at once; Reload to try again), so places in it are not listed."]);
+    // Both read: no note.
+    assert.deepEqual(usedInWords(file(await nanochat(), "Figs/probe_comparison.svg"), (await nanochat()).usedInNotes).notes, []);
+  });
+
+  test("a file past md-kit's 20,000 lines: Used in, the datasets, and a folder's README.md say what was not read", async () => {
+    const long = (last: string) => `${"x\n".repeat(20_000)}${last}\n`;
+    const skeletonLong = read(long("[a](Figs/probe_comparison.svg)"));
+    const readmeLong = read(`${README_LF}${long("## Data")}`);
+    const model = await modelOf(PROJECT, skeletonLong, readmeLong);
+    assert.deepEqual(model.usedInNotes, [
+      "paper_skeleton.md: the view does not read lines past 20,000, so places there are not listed.",
+      "Code/README.md: the view does not read lines past 20,000, so places there are not listed.",
+    ]);
+    assert.ok(group(model, "datasets").notes.includes("Code/README.md: the view does not read lines past 20,000, so datasets listed there are not shown."));
+    // A folder's README.md: said beside its group, and on its files without a description.
+    const list = async (path: string): Promise<ListAnswer> =>
+      path === "Baselines" ? { ok: true, entries: [{ name: "README.md", dir: false, size: 1 }, { name: "a.csv", dir: false, size: 1 }], truncated: false } : { ok: false, status: 404 };
+    const walks = await Promise.all(GROUPS.map((g) => walk(g.folder, list)));
+    const cut = buildModel({ walks, skeleton: read("# s\n"), readme: read("# r\n"), readmes: new Map([["Baselines/README.md", read(long("- [a](a.csv): too far"))]]) });
+    const note = "Baselines/README.md: the view does not read lines past 20,000, so they describe no file here.";
+    assert.ok(group(cut, "baselines").notes.includes(note), group(cut, "baselines").notes.join("\n"));
+    assert.equal(file(cut, "Baselines/a.csv").readmeNote, note);
+  });
+
+  test("a table past md-kit's 500 rows or 30 columns: Used in and descriptions say the rest is not read; a Markdown preview says so", async () => {
+    const rows = (count: number, columns = 2) => [`| ${Array.from({ length: columns }, (_, k) => `h${k}`).join(" | ")} |`, `|${"---|".repeat(columns)}`, ...Array.from({ length: count }, (_, k) => `| r${k} |${" x |".repeat(columns - 1)}`)].join("\n");
+    const model = await modelOf(PROJECT, read(`# s\n\n${rows(501)}\n`), read(`# r\n\n${rows(3, 31)}\n`));
+    assert.deepEqual(model.usedInNotes, [
+      "paper_skeleton.md: the view does not read rows past 500 of the table at line 3, so places there are not listed.",
+      "Code/README.md: the view does not read columns past 30 of the table at line 3, so places there are not listed.",
+    ]);
+    assert.deepEqual((await modelOf(PROJECT, read(`# s\n\n${rows(500)}\n`), read(`# r\n\n${rows(3, 30)}\n`))).usedInNotes, [], "at the caps, nothing is left out");
+    assert.deepEqual(markdownPreview(parse(`${rows(501)}\n\n${rows(2, 31)}\n`), false).notes, [
+      "The table at line 1 has 1 more row; the first 500 are shown.",
+      "The table at line 505 has more than 30 columns; the first 30 are shown.",
+    ]);
+    assert.deepEqual(markdownPreview(parse(`${rows(500)}\n\n${rows(2, 30)}\n`), false).notes, []);
+  });
+});
+
+describe("each limit at its boundary", () => {
+  const csvRows = (count: number) => `h\n${Array.from({ length: count }, (_, k) => String(k)).join("\n")}\n`;
+  test("CSV rows: 20 are all shown, 21 are the first 20 of 21", () => {
+    for (const eol of [(t: string) => t, crlf]) {
+      assert.deepEqual([csvPreview(eol(csvRows(20)), false).words, csvPreview(eol(csvRows(20)), false).rows.length], ["All 20 rows", 20]);
+      assert.deepEqual([csvPreview(eol(csvRows(21)), false).words, csvPreview(eol(csvRows(21)), false).rows.length], ["First 20 of 21 rows", 20]);
+    }
+  });
+  test("CSV columns: 30 are shown without a note, 31 are cut to 30 with one", () => {
+    const wide = (count: number) => `${Array.from({ length: count }, (_, k) => `c${k}`).join(",")}\n${Array.from({ length: count }, () => "1").join(",")}\n`;
+    assert.deepEqual([csvPreview(wide(30), false).width, csvPreview(wide(30), false).notes], [30, []]);
+    assert.deepEqual([csvPreview(wide(31), false).width, csvPreview(wide(31), false).notes], [30, ["Rows have up to 31 cells; the first 30 columns are shown."]]);
+  });
+  test("CSV cells: 200 characters stay whole, 201 are cut to 200 and marked", () => {
+    const at = (count: number) => csvPreview(`h\n${"c".repeat(count)}\n`, false);
+    assert.deepEqual([at(200).rows[0]![0], at(200).notes], ["c".repeat(200), []]);
+    assert.deepEqual([at(201).rows[0]![0], at(201).notes], [`${"c".repeat(200)} …[cut]`, ["Cells longer than 200 characters are cut."]]);
+    // A quoted cell is measured as its text, without its quotes.
+    assert.equal(csvPreview(`h\n"${"q".repeat(200)}"\n`, false).rows[0]![0], "q".repeat(200));
+  });
+  test("lines of a text preview: 40 are all shown, 41 are the first 40 of 41; a line of 2,000 characters stays whole, 2,001 is cut", () => {
+    const lines = (count: number) => `${Array.from({ length: count }, (_, k) => `l${k}`).join("\n")}\n`;
+    assert.deepEqual([linesPreview(lines(40), false).words, linesPreview(lines(40), false).lines.length], ["40 lines", 40]);
+    assert.deepEqual([linesPreview(lines(41), false).words, linesPreview(lines(41), false).lines.length], ["First 40 of 41 lines", 40]);
+    assert.deepEqual([linesPreview(crlf(lines(41)), false).words, linesPreview(crlf(lines(41)), false).lines], [linesPreview(lines(41), false).words, linesPreview(lines(41), false).lines]);
+    assert.equal(linesPreview("z".repeat(2000), false).lines[0], "z".repeat(2000));
+    assert.equal(linesPreview("z".repeat(2001), false).lines[0], `${"z".repeat(2000)} …[cut]`);
+  });
+  test("Used in: 10 places are all listed, 11 are 10 and 1 more", () => {
+    const places = (count: number) => usedInIndex([{ file: README, doc: parse(Array.from({ length: count }, (_, k) => `- ${k} [x](../Figs/a.svg)`).join("\n")) }]).get("Figs/a.svg")!;
+    assert.deepEqual(
+      [10, 11].map((count) => {
+        const w = usedInWords({ usedIn: places(count) } as unknown as FileItem, []);
+        return [w.places.length, w.more];
+      }),
+      [
+        [10, 0],
+        [10, 1],
+      ],
+    );
+  });
+  test("descriptions: 300 characters stay whole, 301 are cut to 300 and marked", () => {
+    const at = (count: number) => descriptions(parse(`- [a.csv](a.csv): ${"d".repeat(count)}`), "Baselines/README.md").get("Baselines/a.csv")!.text;
+    assert.equal(at(300), "d".repeat(300));
+    assert.equal(at(301), `${"d".repeat(300)} …[cut]`);
+  });
+  test("figures: 200 are all drawn without a note, the 201st asks for Show", async () => {
+    const figs = (count: number) => async (path: string): Promise<ListAnswer> =>
+      path === "Figs" ? { ok: true, entries: Array.from({ length: count }, (_, k) => ({ name: `f${String(k).padStart(3, "0")}.png`, dir: false, size: 1 })), truncated: false } : { ok: false, status: 404 };
+    const notesFor = async (count: number) => {
+      const walks = await Promise.all(GROUPS.map((g) => walk(g.folder, figs(count))));
+      return group(buildModel({ walks, skeleton: read("# s\n"), readme: read("# r\n"), readmes: new Map() }), "figs").notes;
+    };
+    assert.deepEqual(await notesFor(LIMITS.thumbs), []);
+    assert.deepEqual(await notesFor(LIMITS.thumbs + 1), ["Pictures are drawn for the first 200 of 201 figures; click Show on a card past them to draw it."]);
+  });
+  test("Markdown preview: 200 blocks are all shown, 201 are the first 200 of 201", () => {
+    const blocks = (count: number) => Array.from({ length: count }, (_, k) => `P${k}.`).join("\n\n");
+    assert.deepEqual(markdownPreview(parse(blocks(200)), false), { blocks: parse(blocks(200)).blocks, notes: [] });
+    assert.deepEqual(markdownPreview(parse(blocks(201)), false).notes, ["The first 200 of 201 blocks are shown."]);
   });
 });
 

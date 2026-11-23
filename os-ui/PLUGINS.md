@@ -61,7 +61,14 @@ Status on 2026-11-24:
     first cell, cut at 80 characters); a link whose text breaks across a
     paragraph's or item's lines gives the block's lines; headings and a table's
     header row are read, code blocks are not. When `paper_skeleton.md` or
-    `Code/README.md` could not be read, the panel says so instead of "Not named".
+    `Code/README.md` could not be read, or not whole, the panel says so beside the
+    places it found; "Not named in …" appears only when both were read whole.
+  - **What md-kit leaves unread is said**: past its caps (20,000 lines, 500 rows or
+    30 columns of a table), a sentence names what of `paper_skeleton.md` or
+    `Code/README.md` was not read for Used in, what of `Code/README.md` for the
+    datasets, and what of a folder's `README.md` for descriptions (beside its group,
+    and in the panel of its files without one); a Markdown preview names a table cut
+    to 500 rows or 30 columns.
   - **Datasets**: a row shows its cells as `<header>: <text>` but an empty one and
     the one that is just the name (`Source: cais/mmlu all` stays); a row with no
     name reads "(no name)". Notes say when the dataset table has rows past 500,

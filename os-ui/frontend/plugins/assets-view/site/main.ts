@@ -543,7 +543,7 @@ function filePanel(item: FileItem, gen: number): void {
   const used = el("dd");
   const words = usedInWords(item, state.model?.usedInNotes ?? []);
   if (words.none !== null) used.textContent = words.none;
-  else {
+  else if (words.places.length > 0) {
     const list = el("ul");
     for (const place of item.usedIn.slice(0, LIMITS.usedIn)) {
       // The file and line in monospace; a table row's first cell, from the file, as text after it.
@@ -554,6 +554,8 @@ function filePanel(item: FileItem, gen: number): void {
     used.append(list);
     if (words.more > 0) used.append(el("span", "from", `and ${words.more} more`));
   }
+  // Beside the places found: a file that could not be read, or not all of it.
+  for (const note of words.notes) used.append(el("span", "from", note));
   dl.append(el("dt", "", "What"), what, el("dt", "", "Size"), size, el("dt", "", "Used in"), used);
   side.append(dl);
   void fillPreview(item, preview, size, name, gen);

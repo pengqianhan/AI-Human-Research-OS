@@ -195,6 +195,23 @@ export function readProblem(read: Exclude<DocRead, { ok: true }>): string {
   return statusWords(read.status);
 }
 
+/**
+ * What md-kit left unread of a file (its caps: LIMITS.lines lines, rows and
+ * columns of a table), as one sentence ending in `then`, or null when it read
+ * everything: "Code/README.md: the view does not read lines past 20,000, so
+ * places there are not listed."
+ */
+export function unreadWords(doc: Doc, file: string, then: string): string | null {
+  const parts: string[] = [];
+  if (doc.cut) parts.push(`lines past ${n(doc.lines)}`);
+  for (const block of doc.blocks) {
+    if (block.kind !== "table" || (block.more === 0 && !block.columnsCut)) continue;
+    const what = [...(block.more > 0 ? [`rows past ${n(block.rows.length)}`] : []), ...(block.columnsCut ? [`columns past ${n(block.header.length)}`] : [])].join(" and ");
+    parts.push(`${what} of the table at line ${n(block.first)}`);
+  }
+  return parts.length === 0 ? null : `${visibleName(file)}: the view does not read ${listed(parts, 3)}, so ${then}.`;
+}
+
 /** A read channel status, in a few words. */
 export function statusWords(status: number): string {
   if (status === 404) return "it is not there, or it is a link the Assets view may not follow";
@@ -359,7 +376,9 @@ export function usedInIndex(docs: readonly { file: string; doc: Doc }[]): Map<st
       }
     }
   }
-  for (const list of index.values()) list.sort((a, b) => (a.file === b.file ? a.first - b.first : 0));
+  // In the order of `docs`, then by line.
+  const order = new Map(docs.map((d, k) => [d.file, k]));
+  for (const list of index.values()) list.sort((a, b) => order.get(a.file)! - order.get(b.file)! || a.first - b.first || a.last - b.last);
   return index;
 }
 
@@ -521,8 +540,11 @@ export function buildModel(input: ModelInput): Model {
     [SKELETON, input.skeleton],
     [README, input.readme],
   ] as const) {
-    if (read.ok) docs.push({ file, doc: read.doc });
-    else usedInNotes.push(`${file} could not be read (${readProblem(read)}), so places in it are not listed.`);
+    if (read.ok) {
+      docs.push({ file, doc: read.doc });
+      const unread = unreadWords(read.doc, file, "places there are not listed");
+      if (unread !== null) usedInNotes.push(unread);
+    } else usedInNotes.push(`${file} could not be read (${readProblem(read)}), so places in it are not listed.`);
   }
   const used = usedInIndex(docs);
   const described = new Map<string, Description>();
@@ -531,8 +553,11 @@ export function buildModel(input: ModelInput): Model {
   for (const [path, read] of input.readmes) {
     const folder = folderOfPath(path);
     // Only a README.md in the file's own folder describes it: a link to another folder's file is no description.
-    if (read.ok) for (const [file, d] of descriptions(read.doc, path)) if (folderOfPath(file) === folder) described.set(file, d);
-    if (!read.ok) readmeNotes.set(folder, `${visibleName(path)} could not be read (${readProblem(read)}), so it describes no file here.`);
+    if (read.ok) {
+      for (const [file, d] of descriptions(read.doc, path)) if (folderOfPath(file) === folder) described.set(file, d);
+      const unread = unreadWords(read.doc, path, "they describe no file here");
+      if (unread !== null) readmeNotes.set(folder, unread);
+    } else readmeNotes.set(folder, `${visibleName(path)} could not be read (${readProblem(read)}), so it describes no file here.`);
   }
   const items = new Map<string, FileItem | Dataset>();
   let count = 0;
@@ -549,7 +574,8 @@ export function buildModel(input: ModelInput): Model {
         group: group.id,
         kind: kindOf(group.id, f.name),
         description: described.get(f.path) ?? null,
-        readmeNote: readmeNotes.get(f.folder) ?? null,
+        // Why the folder's README.md may not describe it: it could not be read, or not all of it was.
+        readmeNote: described.has(f.path) ? null : (readmeNotes.get(f.folder) ?? null),
         usedIn: used.get(f.path) ?? [],
         selection: { label: fileLabel(f.path) },
       };
@@ -575,6 +601,7 @@ export function buildModel(input: ModelInput): Model {
     if (!input.readme.ok) message = "status" in input.readme && input.readme.status === 404 ? `No ${README}` : `${README} could not be read: ${readProblem(input.readme)}`;
     else {
       view = datasets(input.readme.doc);
+      if (input.readme.doc.cut) notes.unshift(`${README}: the view does not read lines past ${n(input.readme.doc.lines)}, so datasets listed there are not shown.`);
       if (view.state === "no-section") message = `${README} has no Data section`;
       else if (view.state === "no-table") message = `No dataset table in ${README}'s Data section`;
       else {
@@ -588,12 +615,16 @@ export function buildModel(input: ModelInput): Model {
   return { count: `${plural(count, "item")}${present.length > 0 ? ` · ${present.join(" · ")}` : ""}`, groups, items, usedInNotes };
 }
 
-/** "Used in" for one file: at most LIMITS.usedIn places, how many more, or why there is none. */
-export function usedInWords(item: FileItem, notes: readonly string[]): { places: string[]; more: number; none: string | null } {
+/**
+ * "Used in" for one file: at most LIMITS.usedIn places and how many more;
+ * "Not named in …" only when both files were read whole and name it nowhere;
+ * and, beside the places or in their stead, what could not be read (`notes`).
+ */
+export function usedInWords(item: FileItem, notes: readonly string[]): { places: string[]; more: number; none: string | null; notes: string[] } {
   const places = item.usedIn.slice(0, LIMITS.usedIn).map(placeText);
   const more = Math.max(0, item.usedIn.length - LIMITS.usedIn);
-  if (places.length > 0) return { places, more, none: null };
-  return { places, more, none: notes.length === 0 ? `Not named in ${SKELETON} or ${README}` : notes.join(" ") };
+  const none = places.length === 0 && notes.length === 0 ? `Not named in ${SKELETON} or ${README}` : null;
+  return { places, more, none, notes: [...notes] };
 }
 
 // ---- previews -------------------------------------------------------------------------
@@ -763,10 +794,16 @@ export function linesPreview(text: string, cut: boolean): LinesPreview {
 /** A Markdown file's first blocks, and what the preview leaves out. */
 export function markdownPreview(doc: Doc, cut: boolean): { blocks: Block[]; notes: string[] } {
   const notes: string[] = [];
+  const blocks = doc.blocks.slice(0, LIMITS.mdBlocks);
+  for (const block of blocks) {
+    if (block.kind !== "table") continue;
+    if (block.more > 0) notes.push(`The table at line ${n(block.first)} has ${plural(block.more, "more row")}; the first ${n(block.rows.length)} are shown.`);
+    if (block.columnsCut) notes.push(`The table at line ${n(block.first)} has more than ${n(block.header.length)} columns; the first ${n(block.header.length)} are shown.`);
+  }
   if (doc.blocks.length > LIMITS.mdBlocks) notes.push(`The first ${n(LIMITS.mdBlocks)} of ${n(doc.blocks.length)} blocks are shown.`);
   if (doc.cut) notes.push(`Only the first ${n(doc.lines)} lines are read.`);
   if (cut) notes.push(`Only the first ${capWords(LIMITS.previewBytes)} of the file are read.`);
-  return { blocks: doc.blocks.slice(0, LIMITS.mdBlocks), notes };
+  return { blocks, notes };
 }
 
 /** The panel's Size line: the listing's size, then the rows or lines once the preview has counted them. */
