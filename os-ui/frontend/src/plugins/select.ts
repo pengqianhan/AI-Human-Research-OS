@@ -184,6 +184,16 @@ export function quoteGlimpse(quote: string): { start: string; size: string } {
   const lines = quote.split("\n");
   const flat = lines.join(" \u21b5 ");
   const start = flat.length <= GLIMPSE_MAX ? flat : `${flat.slice(0, GLIMPSE_MAX - 1)}\u2026`;
-  const size = `${lines.length} line${lines.length === 1 ? "" : "s"} \u00b7 ${quote.length.toLocaleString("en-US")} character${quote.length === 1 ? "" : "s"}`;
-  return { start, size };
+  return { start, size: textSize(quote) };
+}
+
+/** A text's size as the ask bar and the composer say it: "14 lines \u00b7 901 characters". */
+export function textSize(text: string): string {
+  const lines = text.split("\n").length;
+  return `${lines} line${lines === 1 ? "" : "s"} \u00b7 ${text.length.toLocaleString("en-US")} character${text.length === 1 ? "" : "s"}`;
+}
+
+/** The line under a chip's text when it is taller than its box, so its end is never below a fold nobody is told about. */
+export function scrollNote(text: string): string {
+  return `${textSize(text)} \u2014 scroll to read all of it`;
 }

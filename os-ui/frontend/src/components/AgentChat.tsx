@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, ReactNode } from "react";
 import { Badge } from "./Badge";
 import type { BadgeTone } from "./Badge";
@@ -7,7 +7,7 @@ import { getPreferredAgent, setPreferredAgent } from "../lib/agentPref";
 import type { AgentId } from "../lib/agentPref";
 import { relativeTime, stripInlineMarkdown } from "../lib/format";
 import { desktop } from "../lib/desktop";
-import { MESSAGE_MAX, messageWithReferences, referenceKey, referenceText } from "../plugins/select";
+import { MESSAGE_MAX, messageWithReferences, referenceKey, referenceText, scrollNote } from "../plugins/select";
 import type { Reference } from "../plugins/select";
 import { Icon } from "../shell/icons";
 
@@ -183,6 +183,21 @@ export function AgentChat({
     added.current = references.length;
   }, [references]);
   const previewed = references.find((r) => referenceKey(r) === previewKey) ?? null;
+  // Whether the open chip's text is taller than its box: then a line says how much there is and that it scrolls.
+  const previewRef = useRef<HTMLPreElement | null>(null);
+  const [overflows, setOverflows] = useState(false);
+  useLayoutEffect(() => {
+    const el = previewRef.current;
+    if (el === null) {
+      setOverflows(false);
+      return;
+    }
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const watch = new ResizeObserver(measure);
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, [previewed]);
   const logRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -423,9 +438,14 @@ export function AgentChat({
               <div id={`${ids}-preview`} role="region" aria-label="What will be sent" className="rounded-[8px] bg-card px-2.5 py-2 shadow-[inset_0_0_0_1px_var(--line)]">
                 <p className="m-0 mb-1 text-[11.5px] text-muted">Sent before your message, exactly:</p>
                 {/* Plain text, the same string Send passes (referenceText). */}
-                <pre data-reference-preview className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.45] text-ink">
+                <pre ref={previewRef} data-reference-preview className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-[1.45] text-ink">
                   {referenceText(previewed)}
                 </pre>
+                {overflows && (
+                  <p data-reference-overflow className="m-0 mt-1 text-[11.5px] font-medium text-accent-ink">
+                    {scrollNote(referenceText(previewed))}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="m-0 text-[11.5px] text-muted">Sent before your message as “About …” lines; click a reference to see exactly what is sent.</p>

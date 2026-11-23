@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { PluginPage } from "./pages.ts";
-import { addReference, CUT_MARK, GLIMPSE_MAX, quoteGlimpse, referenceKey, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
+import { addReference, CUT_MARK, GLIMPSE_MAX, quoteGlimpse, referenceKey, scrollNote, textSize, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
 
 /** A character by its code point, so this file holds no invisible character itself. */
 const c = (n: number) => String.fromCodePoint(n);
@@ -240,5 +240,14 @@ describe("the host never rewrites a label", () => {
     assert.equal(one.reference.label, "Code/a  b.md:3");
     assert.equal(two.reference.label, "Code/a b.md:3");
     assert.notEqual(referenceKey(one.reference), referenceKey(two.reference));
+  });
+});
+
+describe("how much a chip carries", () => {
+  test("its size, and the line under a text taller than its box", () => {
+    assert.equal(textSize("a"), "1 line · 1 character");
+    assert.equal(textSize("About Code/a.md:1–3\n> x\n> y"), "3 lines · 27 characters");
+    assert.equal(scrollNote("x\n".repeat(13) + "y".repeat(875)), "14 lines · 901 characters — scroll to read all of it");
+    assert.equal(quoteGlimpse("a\nb").size, textSize("a\nb"), "the ask bar says the size the same way");
   });
 });

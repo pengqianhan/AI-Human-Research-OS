@@ -179,7 +179,8 @@ Status on 2026-11-23:
     ask bar shows the start of the quote (up to 160 characters, line breaks as
     `↵`) and its size; a chip just added opens its "Sent before your message,
     exactly:" text under the chips at once (the newest opens, the one before
-    closes), scrollable when long. Clicking a chip (or Enter or Space on it)
+    closes), scrollable when long, with a line under it giving its size and
+    saying it scrolls whenever it is taller than its box. Clicking a chip (or Enter or Space on it)
     opens or closes it; a chip with a quote says how many lines it carries, and
     the tooltip shows the text too. This departs from mockup C for that reason
     and awaits the Human Owner's approval. Ask adds the reference the bar showed
