@@ -55,11 +55,30 @@ function assertEveryLineOnce(text: string): void {
   for (const b of doc.blocks) assert.deepEqual(b.lines, lines.slice(b.first - 1, b.last), `block at ${b.first}`);
 }
 
-/** How long `run` takes, in milliseconds. */
-function timed(run: () => unknown): number {
-  const start = performance.now();
-  run();
-  return performance.now() - start;
+/**
+ * How the cost of `run` grows when its input grows from `n` to 4n: the best
+ * of several timings at 4n over the best at n. One pass gives about 4, a pass
+ * per element about 16, whatever the machine's speed, so a slow CI runner
+ * passes and a quadratic regression fails (GROWTH_MAX leaves room for noise).
+ * The larger input is timed again only while the ratio is over the limit.
+ */
+const GROWTH_MAX = 10;
+function growth(make: (n: number) => string, run: (input: string) => unknown, n: number, tries = 5): number {
+  const small = make(n);
+  const big = make(4 * n);
+  const time = (input: string) => {
+    const start = performance.now();
+    run(input);
+    return performance.now() - start;
+  };
+  // Warm up: both sizes run once, so both are timed in optimised code.
+  time(small);
+  time(big);
+  let s = Infinity;
+  for (let k = 0; k < tries; k++) s = Math.min(s, time(small));
+  let b = Infinity;
+  for (let k = 0; k < tries && b / Math.max(s, 0.05) >= GROWTH_MAX; k++) b = Math.min(b, time(big));
+  return b / Math.max(s, 0.05);
 }
 
 describe("md-kit on nanochat_cpu's skeleton (a frozen copy)", () => {
@@ -447,27 +466,28 @@ describe("inline tokens", () => {
   });
 
   test("input built to make a scanner backtrack costs one pass", (t) => {
-    const cases: [string, string][] = [
-      ["100,000 '[' and backticks", "[`".repeat(50_000)],
-      ["100,000 '['", "[".repeat(100_000)],
-      ["100,000 '[' then one ']'", `${"[".repeat(100_000)}]`],
-      ["'[x](' with no ')'", "[x](".repeat(25_000)],
-      ["backtick runs of every length", Array.from({ length: 440 }, (_, k) => "`".repeat(k + 1)).join(" ")],
-      ["'**' with nothing to close", "** a ".repeat(20_000)],
-      ["'![' without ']'", "![".repeat(50_000)],
-      ["'\\' before every character", "\\[".repeat(50_000)],
+    // Each case at n characters; checked at 25,000 and 100,000 (the size of the hostile cases before).
+    const cases: [string, (n: number) => string][] = [
+      ["'[' and backticks", (n) => "[`".repeat(n / 2)],
+      ["'['", (n) => "[".repeat(n)],
+      ["'[' then one ']'", (n) => `${"[".repeat(n)}]`],
+      ["'[x](' with no ')'", (n) => "[x](".repeat(n / 4)],
+      ["backtick runs of every length", (n) => Array.from({ length: Math.floor(Math.sqrt(2 * n)) }, (_, k) => "`".repeat(k + 1)).join(" ")],
+      ["'**' with nothing to close", (n) => "** a ".repeat(n / 5)],
+      ["'![' without ']'", (n) => "![".repeat(n / 2)],
+      ["'\\' before every character", (n) => "\\[".repeat(n / 2)],
     ];
-    for (const [name, text] of cases) {
-      assert.ok(text.length >= 95_000, `${name}: ${text.length} characters`);
-      let tokens: ReturnType<typeof inline> = [];
-      const ms = timed(() => (tokens = inline(text)));
-      assert.ok(ms < 500, `${name}: ${ms.toFixed(1)} ms`);
-      assert.ok(tokens.length >= 1, name);
-      t.diagnostic(`inline, ${name} (${text.length} characters): ${ms.toFixed(1)} ms`);
+    for (const [name, make] of cases) {
+      assert.ok(make(100_000).length >= 95_000, `${name}: ${make(100_000).length} characters`);
+      assert.ok(inline(make(100_000)).length >= 1, name);
+      const ratio = growth(make, inline, 25_000);
+      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
+      t.diagnostic(`inline, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
     }
     // The same for a whole file of such lines through parse.
-    const file = `${"| [` |\n".repeat(10)}${"[`".repeat(50_000)}\n`;
-    assert.ok(timed(() => parse(file)) < 500);
+    const file = (n: number) => `${"| [` |\n".repeat(10)}${"[`".repeat(n / 2)}\n`;
+    const ratio = growth(file, parse, 25_000);
+    assert.ok(ratio < GROWTH_MAX, `parse: 4× the input cost ${ratio.toFixed(1)}× the time`);
   });
 });
 
@@ -550,12 +570,12 @@ describe("labels and headers by their plain text (review F7)", () => {
       ["links only", "[x](y)"],
       ["bold only", "**b**"],
     ] as const) {
-      const text = `## Snapshot\n\n- ${line(unit)}\n${Array.from({ length: 99 }, () => `  ${line(unit)}`).join("\n")}\n`;
-      let items = 0;
-      const ms = timed(() => (items = snapshot(sections(parse(text)))!.items.length));
-      assert.equal(items, 1, name);
-      assert.ok(ms < 500, `${name}: ${ms.toFixed(1)} ms`);
-      t.diagnostic(`snapshot, ${name} (${text.length} characters): ${ms.toFixed(1)} ms`);
+      // n characters: n / 1,000 lines of 1,000; checked at 25,000 and 100,000 (the size before).
+      const text = (n: number) => `## Snapshot\n\n- ${line(unit)}\n${Array.from({ length: n / 1000 - 1 }, () => `  ${line(unit)}`).join("\n")}\n`;
+      assert.equal(snapshot(sections(parse(text(100_000))))!.items.length, 1, name);
+      const ratio = growth(text, (input) => snapshot(sections(parse(input))), 25_000);
+      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
+      t.diagnostic(`snapshot, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
     }
   });
 

@@ -98,6 +98,30 @@ const nanochat = (eol: (t: string) => string = (t) => t) => modelOf(PROJECT, rea
 const file = (model: Model, path: string) => model.items.get(`file:${path}`) as FileItem;
 const group = (model: Model, id: string) => model.groups.find((g) => g.group.id === id)!;
 
+/**
+ * How the cost of `run` grows when its input grows from `n` to 4n: the best
+ * of several timings at 4n over the best at n. One pass gives about 4, a pass
+ * per element about 16, whatever the machine's speed (as md-kit.test.ts).
+ */
+const GROWTH_MAX = 10;
+function growth(make: (n: number) => string, run: (input: string) => unknown, n: number, tries = 5): number {
+  const small = make(n);
+  const big = make(4 * n);
+  const time = (input: string) => {
+    const start = performance.now();
+    run(input);
+    return performance.now() - start;
+  };
+  // Warm up: both sizes run once, so both are timed in optimised code.
+  time(small);
+  time(big);
+  let s = Infinity;
+  for (let k = 0; k < tries; k++) s = Math.min(s, time(small));
+  let b = Infinity;
+  for (let k = 0; k < tries && b / Math.max(s, 0.05) >= GROWTH_MAX; k++) b = Math.min(b, time(big));
+  return b / Math.max(s, 0.05);
+}
+
 /** The host's own reading of a label (src/plugins/select.ts): taken exactly as posted, or null. */
 const PAGE: PluginPage = { key: "assets-view/assets", plugin: "assets-view", slot: "project", title: "Assets", src: "app://assets-view/index.html", origin: "app://assets-view" };
 const host = (label: string) => readSelect({ origin: PAGE.origin!, source: PAGE, data: { type: "os.select", label } }, PAGE, PAGE);
@@ -482,31 +506,31 @@ describe("previews (§4.2): CSV, JSON, Markdown, other text, PDF, and the size l
     assert.equal(previewCap("json"), LIMITS.previewBytes + 1);
   });
 
-  test("CSV: hostile input of 100,000 characters costs one pass", (t) => {
-    const cases: [string, string][] = [
-      ["one field of 100,000 characters", "x".repeat(100_000)],
-      ["100,000 commas", ",".repeat(100_000)],
-      ["100,000 quotes", '"'.repeat(100_000)],
-      ["doubled quotes in one field", `"${'""'.repeat(50_000)}"`],
-      ["100,000 line breaks", "\n".repeat(100_000)],
-      ["50,000 CRLF", "\r\n".repeat(50_000)],
-      ["a quote opening every line", '"\n'.repeat(50_000)],
-      ["100,000 lone CRs", "\r".repeat(100_000)],
+  test("CSV: hostile input costs one pass (4× the input, well under 16× the time)", (t) => {
+    // Each case at n characters; checked at 200,000 and 800,000 (below about 1 ms a timing is mostly the JIT).
+    const cases: [string, (n: number) => string][] = [
+      ["one field of n characters", (n) => "x".repeat(n)],
+      ["n commas", (n) => ",".repeat(n)],
+      ["n quotes", (n) => '"'.repeat(n)],
+      ["doubled quotes in one field", (n) => `"${'""'.repeat(n / 2)}"`],
+      ["n line breaks", (n) => "\n".repeat(n)],
+      ["n / 2 CRLF", (n) => "\r\n".repeat(n / 2)],
+      ["a quote opening every line", (n) => '"\n'.repeat(n / 2)],
+      ["n lone CRs", (n) => "\r".repeat(n)],
     ];
-    for (const [name, input] of cases) {
-      const start = performance.now();
-      const p = csvPreview(input, false);
-      const ms = performance.now() - start;
-      assert.ok(ms < 100, `${name}: ${ms.toFixed(1)} ms`);
+    for (const [name, make] of cases) {
+      const p = csvPreview(make(100_000), false);
       assert.ok(p.rows.length <= LIMITS.csvRows && p.header.length <= LIMITS.csvColumns, name);
       for (const row of [p.header, ...p.rows]) for (const cell of row) assert.ok(cell.length <= LIMITS.csvCell + " …[cut]".length, name);
-      t.diagnostic(`csvPreview, ${name}: ${ms.toFixed(1)} ms`);
+      const ratio = growth(make, (input) => csvPreview(input, false), 200_000);
+      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
+      t.diagnostic(`csvPreview, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
     }
-    // 2 MiB, the whole read cap, of short rows.
-    const big = "a,b,c\n".repeat(Math.floor((2 * 1024 * 1024) / 6));
-    const start = performance.now();
-    assert.equal(csvPreview(big, false).total, Math.floor((2 * 1024 * 1024) / 6) - 1);
-    assert.ok(performance.now() - start < 500);
+    // The whole read cap, 2 MiB of short rows, and a quarter of it.
+    const rows = (n: number) => "a,b,c\n".repeat(Math.floor(n / 6));
+    assert.equal(csvPreview(rows(2 * 1024 * 1024), false).total, Math.floor((2 * 1024 * 1024) / 6) - 1);
+    const ratio = growth(rows, (input) => csvPreview(input, false), 512 * 1024);
+    assert.ok(ratio < GROWTH_MAX, `2 MiB of rows: 4× the input cost ${ratio.toFixed(1)}× the time`);
   });
 
   test("JSON and other text: the first 40 lines, each cut at 2,000; First 40 of N lines; LF, CRLF, and a lone CR", () => {
