@@ -7,7 +7,7 @@
  * tokens, and main.ts puts them on screen as text only.
  */
 import { claims, inline, linkTargets, plain, resolveLink, section, sections, snapshot, snapshotItem, studies, trimSpaces, usedBy } from "../../md-kit.ts";
-import type { Block, Doc, Inline, Section, SnapshotItem, Table } from "../../md-kit.ts";
+import type { Block, Doc, Inline, Item, List, Section, SnapshotItem, Table } from "../../md-kit.ts";
 import { clip, cutMarked, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
 
 /** The file this view reads, relative to its project. */
@@ -96,8 +96,8 @@ function quote(lines: readonly string[]): string {
 function sectionTitle(title: string): string {
   return visibleName(
     trimSpaces(plain(inline(title)).replace(/[\p{Zs}\t]+/gu, " "))
-      .replace(/[··‧∙⋅・]/g, "-")
-      .replace(/[“”„‟〝〞＂]/g, '"'),
+      .replace(/[\u00B7\u0387\u2027\u2219\u22C5\u30FB]/g, "-")
+      .replace(/[\u201C\u201D\u201E\u201F\u301D\u301E\uFF02]/g, '"'),
   );
 }
 
@@ -156,6 +156,16 @@ const SNAPSHOT_LINES = [
 /** The Snapshot items the card draws, by label: the first item of each. */
 const CARD_ITEMS = ["Working title", "Status", ...SNAPSHOT_LINES.map(([, name]) => name)];
 
+/** The last line of a list item's own text (before its first nested item), by the item's first line. */
+function ownLast(list: List, first: number): number {
+  const item = list.items.find((i) => i.first === first)!;
+  return item.children.length > 0 ? item.children[0]!.first - 1 : item.last;
+}
+
+/** A drawn item's nested items, as items of their own: each with its lines, for a label and a quote. */
+const nestedItems = (item: Item): Item[] =>
+  item.children.map((c) => ({ first: c.first, last: c.last, lines: item.lines.slice(c.first - item.first, c.last - item.first + 1), text: c.text, children: [] }));
+
 /** The items of a Snapshot list that the card draws. */
 function cardItems(items: readonly SnapshotItem[]): SnapshotItem[] {
   return CARD_ITEMS.map((name) => snapshotItem(items, name)).filter((i): i is SnapshotItem => i !== null);
@@ -185,7 +195,8 @@ export function snapshotCard(doc: Doc): SnapshotCard | null {
     status: status === null ? null : status.value === "" ? "not filled in" : status.value,
     title: line("Working title", "Working title"),
     lines: SNAPSHOT_LINES.map(([shown, name]) => line(shown, name)).filter((l): l is SnapLine => l !== null),
-    drawn: [heading, ...drawn.map((i): Lines => [i.first, i.last])],
+    // The card draws an item's own text, not its nested items, which are listed below the claims.
+    drawn: [heading, ...drawn.map((i): Lines => [i.first, ownLast(snap.list, i.first)])],
     note: drawn.length > 0 ? null : `None of ${CARD_ITEMS.slice(0, -1).join(", ")}, or ${CARD_ITEMS[CARD_ITEMS.length - 1]} is in the Snapshot list.`,
   };
 }
@@ -443,8 +454,9 @@ export function restSections(doc: Doc): Rest {
     } else if (s === snapSection) {
       blocks = s.blocks.flatMap((b) => {
         if (snap === null || b !== snap.list) return [b];
-        const items = b.items.filter((i) => !drawnItems.has(i.first));
-        if (items.length === b.items.length) return [b];
+        // Items the card does not draw, and the nested items of those it does (it draws only their own text).
+        const items = b.items.flatMap((i) => (drawnItems.has(i.first) ? nestedItems(i) : [i]));
+        if (items.length === b.items.length && items.every((i, k) => i === b.items[k])) return [b];
         if (items.length === 0) return [];
         return [{ ...b, items, first: items[0]!.first, last: items[items.length - 1]!.last, lines: items.flatMap((i) => i.lines) }];
       });

@@ -397,6 +397,25 @@ describe("§3.2 the rest of paper_skeleton.md, folded", () => {
     assert.deepEqual([only.sections, only.notShown, only.nothingElse], [[], [], true]);
   });
 
+  test("items nested under a line the card draws are listed below, since the card draws only the line's own text", () => {
+    const text = "## Snapshot\n\n- Status: draft\n  - a nested note on the status\n- Working title: T\n  wrapped title\n  1. a sub-item of the title\n";
+    const card = snapshotCard(parse(text))!;
+    assert.equal(card.title!.value, "T wrapped title");
+    assert.deepEqual(card.drawn, [
+      [1, 1],
+      [5, 6],
+      [3, 3],
+    ]);
+    const other = restSections(parse(text)).sections;
+    assert.deepEqual(
+      other.map((s) => [s.title, s.summary, s.blocks.flatMap((b) => (b.kind === "list" ? b.items.map((i) => [i.first, i.text]) : []))]),
+      [["Snapshot, other items", "line 4 · 2 entries", [[4, "a nested note on the status"], [7, "a sub-item of the title"]]]],
+    );
+    // Selecting one quotes its own line under its section.
+    const item = (other[0]!.blocks[0] as Block & { items: { first: number; last: number; lines: string[] }[] }).items[0]!;
+    assert.deepEqual(blockSelection(item.first, item.last, other[0]!.labelTitle, item.lines), { label: "paper_skeleton.md:4 · section “Snapshot”", quote: "  - a nested note on the status" });
+  });
+
   test("the claims table says which of its columns and rows it does not show (review F5)", () => {
     const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
     const extra = claimsView(parse("## Claims and Evidence\n\n| Status | Claim | Retracted? | Evidence | Status | Citation/result | Source file or link |\n|---|---|---|---|---|---|---|\n| verified | C1: x holds | yes | e | retracted | r | [a](Code/a.py) |\n"));
@@ -554,7 +573,7 @@ describe("labels and quotes within the host's limits", () => {
       "**claim** C2",
       "x” · claim C2",
       "“claim C2”",
-      "x · claim C2",
+      "x \u0387 claim C2",
       "x\u00A0·\u3000claim C2",
       "paper_skeleton.md:1 · claim C1",
       `${"T".repeat(190)} · claim C2`,

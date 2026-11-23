@@ -462,9 +462,13 @@ function table(block: Table, title: string | null): HTMLElement[] {
   return [t, ...tableNotes(block).map((text) => el("p", "table-note", text))];
 }
 
+/** A fenced code block: its info string (after the opening fence) as a caption, then its lines; selected whole. */
 function code(block: Code, title: string | null): HTMLElement {
-  const pre = el("pre", "", markInvisible(block.body.map((line) => cutText(line)).join("\n")));
-  return selectable(pre, () => blockSelection(block.first, block.last, title, block.lines));
+  const box = el("div", "codeblock");
+  // The info string is in the quote, so it is on screen too.
+  if (block.info !== "") box.append(el("div", "fence-info", markInvisible(block.info)));
+  box.append(el("pre", "", markInvisible(block.body.map((line) => cutText(line)).join("\n"))));
+  return selectable(box, () => blockSelection(block.first, block.last, title, block.lines));
 }
 
 // ---- start ----------------------------------------------------------------------------

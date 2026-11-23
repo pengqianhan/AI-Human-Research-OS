@@ -62,7 +62,9 @@ Status on 2026-11-23:
     stay out, and a muted line says so, as does one naming headings with nothing
     under them. "Nothing else in paper_skeleton.md." appears only when it is true; a
     test accounts for every non-blank line of both fixtures and of the reviewer's
-    skeletons.
+    skeletons. The card draws a Snapshot line's own text only, so items nested under
+    it are listed under "Snapshot, other items" too; a fenced block's info string,
+    which its quote holds, is drawn as a caption above it.
   - **Entries in a section's summary** count table rows (those past 500 too), list
     items, paragraphs, and also fenced code blocks, which §3.2 does not name.
   - **Notes the design does not list:** more than 20,000 lines read; a table's rows

@@ -1667,11 +1667,17 @@ describe("desktop client on a Research OS folder", () => {
       lines[claimRow] = `| C1: ${MARKUP_TEXT} | ![x](https://md-image.invalid/a.png) | [x](javascript:window.top.__pwned=6) | r | verified |`;
       const sourceMap = lines.indexOf("## Source Map");
       lines[sourceMap] = `## Source Map ${MARKUP_TEXT}`;
+      // A fence whose info string carries markup: on screen as text, as it is in the quote.
+      lines.push("", "## Fenced", "", `\`\`\`${MARKUP_TEXT}`, "code", "```");
       writeFileSync(file, lines.join("\n"));
       await sk.locator(".subbar").getByRole("button", { name: "Reload" }).click();
       await sk.locator(".sk-claims .sk-h small").filter({ hasText: "1 claim · 1 verified" }).waitFor();
       assert.equal(await sk.locator(".ctable td.cl").textContent(), MARKUP_TEXT, "the claim's markup is its text");
       await sk.locator(".sk-rest summary").filter({ hasText: MARKUP_TEXT }).waitFor();
+      const fenced = sk.locator(".sk-rest details").filter({ has: sk.locator("summary", { hasText: "Fenced" }) });
+      await fenced.locator("summary").click();
+      assert.equal(await fenced.locator(".fence-info").textContent(), MARKUP_TEXT, "the info string is drawn, as text");
+      assert.equal(await fenced.locator("pre").textContent(), "code");
       const link = sk.locator(".ctable tr.blk .mdlink");
       assert.equal(await link.getAttribute("title"), "javascript:window.top.__pwned=6");
       assert.equal(await link.getAttribute("href"), null);
