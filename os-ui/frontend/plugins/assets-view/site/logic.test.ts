@@ -38,6 +38,8 @@ import {
   previewCap,
   previewWords,
   projectWords,
+  readmeFrom,
+  readmePlan,
   README,
   readProblem,
   sizeLine,
@@ -88,13 +90,15 @@ function diskList(root: string): (path: string) => Promise<ListAnswer> {
 }
 
 const read = (t: string): DocRead => ({ ok: true, doc: parse(t) });
+/** README.md reads as main.ts holds them: their descriptions, not their documents (review S6). */
+const asReadmes = (entries: [string, DocRead][]) => new Map(entries.map(([p, r]) => [p, readmeFrom(r, p)]));
 const sizeOf = (root: string, rel: string) => statSync(join(root, rel)).size;
 
 /** The model of a fixture tree, as main.ts builds it, with its texts LF or CRLF. */
 async function modelOf(root: string, skeleton: DocRead, readme: DocRead, eol: (t: string) => string = (t) => t): Promise<Model> {
   const list = diskList(root);
   const walks = await Promise.all(GROUPS.map((g) => walk(g.folder, list)));
-  const readmes = new Map<string, DocRead>(walks.flatMap((w) => w.readmes).map((p) => [p, read(eol(text(join(root, p))))]));
+  const readmes = new Map(walks.flatMap((w) => w.readmes).map((p) => [p, readmeFrom(read(eol(text(join(root, p)))), p)]));
   return buildModel({ walks, skeleton, readme, readmes });
 }
 const nanochat = (eol: (t: string) => string = (t) => t) => modelOf(PROJECT, read(eol(SKELETON_LF)), read(eol(README_LF)), eol);
@@ -297,7 +301,7 @@ describe("§4.2 descriptions: only a README.md in the same folder, its first ite
       return tree[path] === undefined ? { ok: false, status: 404 } : { ok: true, entries: tree[path]!, truncated: false };
     };
     const walks = await Promise.all(GROUPS.map((g) => walk(g.folder, list)));
-    const readmes = new Map<string, DocRead>([
+    const readmes = asReadmes([
       // The top README describes run/a.csv by a link into the subfolder: not its own folder's file.
       ["Baselines/README.md", read("- [a](run/a.csv): from the folder above")],
       ["Baselines/run/README.md", { ok: false, status: 503 }],
@@ -745,7 +749,7 @@ describe("identity: by path and by README line, never by a name shown", () => {
       return tree[path] === undefined ? { ok: false, status: 404 } : { ok: true, entries: tree[path]!, truncated: false };
     };
     const walks = await Promise.all(GROUPS.map((g) => walk(g.folder, list)));
-    const readmes = new Map<string, DocRead>([
+    const readmes = asReadmes([
       ["Baselines/a/README.md", read("- [metrics.csv](metrics.csv): run A")],
       ["Baselines/b/README.md", read("- [metrics.csv](metrics.csv): run B")],
     ]);
@@ -798,7 +802,7 @@ describe("nothing read is left out without a word: unread files and md-kit's cap
     const list = async (path: string): Promise<ListAnswer> =>
       path === "Baselines" ? { ok: true, entries: [{ name: "README.md", dir: false, size: 1 }, { name: "a.csv", dir: false, size: 1 }], truncated: false } : { ok: false, status: 404 };
     const walks = await Promise.all(GROUPS.map((g) => walk(g.folder, list)));
-    const cut = buildModel({ walks, skeleton: read("# s\n"), readme: read("# r\n"), readmes: new Map([["Baselines/README.md", read(long("- [a](a.csv): too far"))]]) });
+    const cut = buildModel({ walks, skeleton: read("# s\n"), readme: read("# r\n"), readmes: asReadmes([["Baselines/README.md", read(long("- [a](a.csv): too far"))]]) });
     const note = "Baselines/README.md: the view does not read lines past 20,000, so they describe no file here.";
     assert.ok(group(cut, "baselines").notes.includes(note), group(cut, "baselines").notes.join("\n"));
     assert.equal(file(cut, "Baselines/a.csv").readmeNote, note);
@@ -902,6 +906,56 @@ describe("a CSV preview cut at the 2 MiB read (review S5)", () => {
     assert.deepEqual(p.rows, []);
     assert.equal(p.words, "No complete row in the first 2 MiB");
     assert.deepEqual(p.notes, ["A quoted field opened in row 1 is still open where the preview stops reading, at 2 MiB; that row is not shown."]);
+  });
+});
+
+describe("README.md files read for descriptions (review S6)", () => {
+  /** The reviewer's shape: four groups of 40 folders, each with a README.md just under 1 MiB. */
+  const fanout = () =>
+    GROUPS.map((g): WalkResult => {
+      const folders = Array.from({ length: 40 }, (_, k) => `${g.folder}/f${String(k).padStart(2, "0")}`);
+      return {
+        root: "ok",
+        status: 200,
+        empty: false,
+        files: folders.map((f) => ({ path: `${f}/README.md`, rel: `${f.slice(g.folder.length + 1)}/README.md`, name: "README.md", size: 1024 * 1024 - 1, folder: f })),
+        folders: [g.folder, ...folders],
+        readmes: folders.map((f) => `${f}/README.md`),
+        truncated: [],
+        failed: [],
+        deeper: [],
+        unlisted: [],
+        capped: false,
+      };
+    });
+
+  test("at most 8 MiB of them are read, in walk order by their listed sizes; the rest are named beside their group, and in the panel of their files", () => {
+    const walks = fanout();
+    const plan = readmePlan(walks);
+    assert.equal(LIMITS.readmeBytes, 8 * 1024 * 1024);
+    assert.equal(plan.read.length, 8);
+    assert.deepEqual(plan.read.slice(0, 2), ["Figs/f00/README.md", "Figs/f01/README.md"]);
+    assert.equal(plan.skipped.length, 152);
+    const readmes = new Map<string, ReturnType<typeof readmeFrom>>([
+      ...plan.read.map((p): [string, ReturnType<typeof readmeFrom>] => [p, readmeFrom(read("- [README.md](README.md): this file\n"), p)]),
+      ...plan.skipped.map((p): [string, ReturnType<typeof readmeFrom>] => [p, { ok: false, skipped: true }]),
+    ]);
+    const model = buildModel({ walks, skeleton: read("# s\n"), readme: read("# r\n"), readmes });
+    assert.deepEqual(group(model, "figs").notes, [
+      "README.md files past the first 8 MiB are not read for descriptions: Figs/f08/README.md, Figs/f09/README.md, Figs/f10/README.md, Figs/f11/README.md, Figs/f12/README.md, and 27 more.",
+    ]);
+    assert.equal(file(model, "Figs/f00/README.md").description?.text, "this file");
+    assert.equal(file(model, "Figs/f08/README.md").readmeNote, "Figs/f08/README.md is not read: the view reads at most 8 MiB of README.md files for descriptions.");
+    // Within the cap, all are read.
+    assert.deepEqual(readmePlan(GROUPS.map(() => ({ ...walks[0]!, files: walks[0]!.files.slice(0, 2) }))).skipped, []);
+  });
+
+  test("a README.md is held as its descriptions, not as its parsed document, so the documents do not pile up until the page is drawn", () => {
+    const held = readmeFrom(read("- [a.csv](a.csv): first\n"), "Baselines/README.md");
+    assert.ok(held.ok);
+    assert.deepEqual(Object.keys(held).sort(), ["described", "ok", "unread"]);
+    assert.equal(held.ok && held.described.get("Baselines/a.csv")?.text, "first");
+    assert.deepEqual(readmeFrom({ ok: false, status: 404 }, "x/README.md"), { ok: false, status: 404 });
   });
 });
 

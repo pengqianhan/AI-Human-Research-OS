@@ -60,6 +60,8 @@ export const LIMITS = {
   usedIn: 10,
   /** Figures whose thumbnail loads without a click. */
   thumbs: 200,
+  /** Bytes of README.md files read for descriptions in all, by their listed sizes (review S6). */
+  readmeBytes: 8 * 1024 * 1024,
 } as const;
 
 /** A project path as the read channel takes it, relative to the workspace. */
@@ -420,6 +422,39 @@ function pathsNamed(line: string, file: string): Set<string> {
   return out;
 }
 
+// ---- the README.md files read for descriptions (review S6) ------------------------------
+
+/**
+ * Which README.md files are read for descriptions: in walk order, while their
+ * listed sizes add up to at most LIMITS.readmeBytes; the rest are not read,
+ * and the view names them. Four groups of 40 folders of 1 MiB each would
+ * otherwise be 160 MiB to read and parse before the page is drawn.
+ */
+export function readmePlan(walks: readonly WalkResult[]): { read: string[]; skipped: string[] } {
+  const read: string[] = [];
+  const skipped: string[] = [];
+  let total = 0;
+  for (const walk of walks) {
+    for (const f of walk.files) {
+      if (f.name !== "README.md") continue;
+      if (total + f.size <= LIMITS.readmeBytes) {
+        total += f.size;
+        read.push(f.path);
+      } else skipped.push(f.path);
+    }
+  }
+  return { read, skipped };
+}
+
+/** A README.md as the page holds it: its descriptions and what of it was not read, never its parsed document. */
+export type ReadmeRead = { ok: true; described: Map<string, Description>; unread: string | null } | Exclude<DocRead, { ok: true }> | { ok: false; skipped: true };
+
+/** A README.md just read, reduced to what the page keeps (review S6): the document is not held until the page is drawn. */
+export function readmeFrom(read: DocRead, path: string): ReadmeRead {
+  if (!read.ok) return read;
+  return { ok: true, described: descriptions(read.doc, path), unread: unreadWords(read.doc, path, "they describe no file here") };
+}
+
 // ---- descriptions ---------------------------------------------------------------------
 
 export interface Description {
@@ -673,8 +708,8 @@ export interface ModelInput {
   walks: readonly WalkResult[];
   skeleton: DocRead;
   readme: DocRead;
-  /** Each folder's README.md the walks found, by project path. */
-  readmes: ReadonlyMap<string, DocRead>;
+  /** Each folder's README.md the walks found, by project path: its descriptions (readmeFrom), or why it has none. */
+  readmes: ReadonlyMap<string, ReadmeRead | DocRead>;
 }
 
 /** The group's folder as the view writes it, "Figs/". */
@@ -717,13 +752,27 @@ export function buildModel(input: ModelInput): Model {
   const described = new Map<string, Description>();
   const readmeNotes = new Map<string, string>();
   const folderOfPath = (path: string) => path.slice(0, path.lastIndexOf("/"));
-  for (const [path, read] of input.readmes) {
+  const skipped: string[] = [];
+  // A caller that hands parsed documents (not the page, which reduces each as it reads it) gets the same budget.
+  let budget = LIMITS.readmeBytes;
+  for (const [path, given] of input.readmes) {
+    let read: ReadmeRead;
+    if (given.ok && "doc" in given) {
+      const size = given.doc.blocks.reduce((sum, b) => sum + b.lines.reduce((s, l) => s + l.length + 1, 0), 0);
+      if (size > budget) read = { ok: false, skipped: true };
+      else {
+        budget -= size;
+        read = readmeFrom(given, path);
+      }
+    } else read = given as ReadmeRead;
     const folder = folderOfPath(path);
     // Only a README.md in the file's own folder describes it: a link to another folder's file is no description.
     if (read.ok) {
-      for (const [file, d] of descriptions(read.doc, path)) if (folderOfPath(file) === folder) described.set(file, d);
-      const unread = unreadWords(read.doc, path, "they describe no file here");
-      if (unread !== null) readmeNotes.set(folder, unread);
+      for (const [file, d] of read.described) if (folderOfPath(file) === folder) described.set(file, d);
+      if (read.unread !== null) readmeNotes.set(folder, read.unread);
+    } else if ("skipped" in read) {
+      skipped.push(path);
+      readmeNotes.set(folder, `${visibleName(path)} is not read: the view reads at most ${LIMITS.readmeBytes / 1024 / 1024} MiB of README.md files for descriptions.`);
     } else readmeNotes.set(folder, `${visibleName(path)} could not be read (${readProblem(read)}), so it describes no file here.`);
   }
   const items = new Map<string, FileItem | Dataset>();
@@ -751,10 +800,13 @@ export function buildModel(input: ModelInput): Model {
     });
     count += files.length;
     const notes = [...(group.id === "results" ? ["The Code view also lists these files."] : []), ...walkNotes(group, walk)];
+    // README.md files past the cap: one line for the group, not one a folder.
+    const notRead = skipped.filter((p) => p.startsWith(`${group.folder}/`));
     for (const folder of walk.folders) {
       const note = readmeNotes.get(folder);
-      if (note !== undefined) notes.push(note);
+      if (note !== undefined && !notRead.includes(`${folder}/README.md`)) notes.push(note);
     }
+    if (notRead.length > 0) notes.push(`README.md files past the first ${LIMITS.readmeBytes / 1024 / 1024} MiB are not read for descriptions: ${listed(notRead.map((p) => visibleName(p)))}.`);
     if (group.id === "figs") {
       const figures = files.filter((f) => f.kind === "figure").length;
       if (figures > LIMITS.thumbs) notes.push(`Pictures are drawn for the first ${n(LIMITS.thumbs)} of ${n(figures)} figures; click Show on a card past them to draw it.`);
@@ -1017,4 +1069,5 @@ export function projectWords(search: string): Words {
   if (given === null || given === "") return { title: "No project given", text: "The Assets view opens from a project's workspace, which names the project it shows.", retry: false };
   return { title: "Not a project name", text: `“${clip(given, 80)}” is not a project folder name the Assets view can open (a letter, then letters, digits, _ or -).`, retry: false };
 }
+
 

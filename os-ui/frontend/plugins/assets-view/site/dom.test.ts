@@ -101,7 +101,7 @@ describe("what the page reads", () => {
     assert.match(source("logic.ts"), /export const workspacePath = \(project: string, path: string\) => `projects-folder\/\$\{project\}\/\$\{path\}`;/);
     // The files read: the walk's listings (groups' folders), the two the design names, the README.md files the walk found, and a file the walk found.
     assert.match(main, /readDoc\(SKELETON\), readDoc\(README\), Promise\.all\(GROUPS\.map\(\(g\) => walk\(g\.folder, listAt\)\)\)/);
-    assert.match(main, /const paths = walks\.flatMap\(\(w\) => w\.readmes\);/);
+    assert.match(main, /const plan = readmePlan\(walks\);\n {2}const reads = await limited\(plan\.read, 4, async \(path\) => readmeFrom\(await readDoc\(path\), path\)\);/);
     assert.match(source("logic.ts"), /export const SKELETON = "paper_skeleton\.md";\nexport const README = "Code\/README\.md";/);
     // No kit fetches or imports anything.
     for (const file of ["../../md-kit.ts", "logic.ts", "walk.ts", "queue.ts", "svg.ts"]) assert.doesNotMatch(source(file), /fetch\(|XMLHttpRequest|import\(/, file);

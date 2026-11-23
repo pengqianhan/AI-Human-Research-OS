@@ -41,13 +41,15 @@ import {
   placeWhere,
   projectWords,
   README,
+  readmeFrom,
+  readmePlan,
   SKELETON,
   sizeLine,
   sizeWords,
   usedInWords,
   workspacePath,
 } from "./logic.ts";
-import type { Dataset, DocRead, FileItem, GroupView, Model, Selection, Words } from "./logic.ts";
+import type { Dataset, DocRead, FileItem, GroupView, Model, ReadmeRead, Selection, Words } from "./logic.ts";
 import { ImageQueue } from "./queue.ts";
 import { SVG_CHECK, svgVerdict } from "./svg.ts";
 import type { JobState, Load, LoadOutcome } from "./queue.ts";
@@ -379,11 +381,14 @@ async function load(): Promise<void> {
   if (body.parentNode !== app) show(el("div", "loading", "Loading…"));
   const [skeleton, readme, walks] = await Promise.all([readDoc(SKELETON), readDoc(README), Promise.all(GROUPS.map((g) => walk(g.folder, listAt)))]);
   if (gen !== state.gen) return;
-  // Each listed folder's README.md, at most four at once.
-  const paths = walks.flatMap((w) => w.readmes);
-  const reads = await limited(paths, 4, readDoc);
+  // Each listed folder's README.md within the cap (readmePlan), at most four at once, each reduced to its
+  // descriptions as soon as it is read, so no parsed document is held until the page is drawn (review S6).
+  const plan = readmePlan(walks);
+  const reads = await limited(plan.read, 4, async (path) => readmeFrom(await readDoc(path), path));
   if (gen !== state.gen) return;
-  state.model = buildModel({ walks, skeleton, readme, readmes: new Map(paths.map((p, k) => [p, reads[k]!])) });
+  const readmes = new Map<string, ReadmeRead>(plan.read.map((p, k) => [p, reads[k]!]));
+  for (const p of plan.skipped) readmes.set(p, { ok: false, skipped: true });
+  state.model = buildModel({ walks, skeleton, readme, readmes });
   render(state.model);
 }
 
