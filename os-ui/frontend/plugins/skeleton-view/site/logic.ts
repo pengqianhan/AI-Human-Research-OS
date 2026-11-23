@@ -70,12 +70,21 @@ function label(base: string, title: string): string {
 }
 
 /**
+ * A character the host takes for a line break in a quote (src/plugins/select.ts
+ * LINE_BREAKS) but md-kit leaves inside a line: a lone CR. Quoted as the
+ * marker the host would show for an invisible character, so the quote has
+ * one line for each line its label cites.
+ */
+const BREAK_IN_LINE = /\r/g;
+const marker = (c: string) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`;
+
+/**
  * A quote: the lines as written, joined by line feeds, cut to the host's
  * QUOTE_MAX as the Code view cuts (site-kit's clip, ending "…"), so the
  * host, which ignores a longer quote, takes it.
  */
 function quote(lines: readonly string[]): string {
-  const text = lines.join("\n");
+  const text = lines.join("\n").replace(BREAK_IN_LINE, marker);
   if (text.length <= QUOTE_MAX) return text;
   const cut = clip(text, QUOTE_MAX);
   const before = cut.charCodeAt(cut.length - 2);

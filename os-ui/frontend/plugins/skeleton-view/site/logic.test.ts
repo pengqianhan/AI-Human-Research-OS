@@ -370,6 +370,18 @@ describe("labels and quotes within the host's limits", () => {
     assert.equal(emoji.length <= QUOTE_MAX && /^x+…$/.test(emoji), true, emoji.slice(-4));
   });
 
+  test("a lone CR in a row: its label keeps the LF line number, and the host shows the CR as a marker in a one-line quote (review F2)", () => {
+    const text = withLine(116, lineAt(NANOCHAT, 116).replace("logged runs", "logged\rruns"));
+    const row = rowsOf(text)[1]!;
+    assert.equal(row.selection.label, "paper_skeleton.md:116 · claim C2");
+    const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
+    const frame = {};
+    const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", ...row.selection } }, page, frame);
+    assert.ok(read?.kind === "select");
+    assert.equal(read.reference.quote!.split("\n").length, 1, "one line, as the label cites one");
+    assert.match(read.reference.quote!, /logged⟨U\+000D⟩runs/);
+  });
+
   test("a CRLF copy gives the same rows, selections, and Snapshot, with no carriage return", () => {
     const lf = parse(NANOCHAT);
     const cr = parse(crlf(NANOCHAT));

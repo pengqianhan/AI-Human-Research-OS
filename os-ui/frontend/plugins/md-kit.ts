@@ -17,7 +17,8 @@
  * escapes. Anything else (setext headings, block quotes, HTML, footnotes,
  * reference links, a table without a leading "|", deeper lists) is kept as
  * its literal text. Every non-blank line belongs to exactly one block, and no
- * block keeps a carriage return: CRLF, a lone CR, and LF all end a line.
+ * block keeps the CR of a CRLF: CRLF and LF end a line, and a lone CR stays in
+ * its line as a character (line numbers are LF-counted, as grep -n counts).
  */
 
 /** What the reader takes at most (os-ui/PLUGINS.md Part 3, §1 fact 6). */
@@ -142,7 +143,7 @@ export function inline(text: string): Inline[] {
         if (i + len <= to && close >= 0 && runStart[close]! + len <= to) {
           flush();
           let code = text.slice(i + len, runStart[close]);
-          if (code.length >= 2 && code.startsWith(" ") && code.endsWith(" ") && code.trim() !== "") code = code.slice(1, -1);
+          if (code.length >= 2 && code.startsWith(" ") && code.endsWith(" ") && trimSpaces(code) !== "") code = code.slice(1, -1);
           out.push({ kind: "code", text: code });
           i = runStart[close]! + len;
           continue;
@@ -250,19 +251,33 @@ export interface Doc {
   cut: boolean;
 }
 
-/** A text's lines: CRLF, CR, and LF each end one; a final line break ends the last line. */
+/**
+ * A text's lines: LF ends one, and a CR right before it is dropped (CRLF); a
+ * final line break ends the last line. A lone CR is no line break: it stays
+ * in its line as a character (drawn as a marker), so line numbers are the
+ * ones `grep -n`, the Code view, and an agent's tools count.
+ */
 export function splitLines(text: string): string[] {
   const lines: string[] = [];
   let start = 0;
   for (let i = 0; i < text.length; i++) {
-    const c = text.charCodeAt(i);
-    if (c !== 10 && c !== 13) continue;
-    lines.push(text.slice(start, i));
-    if (c === 13 && text.charCodeAt(i + 1) === 10) i++;
+    if (text.charCodeAt(i) !== 10) continue;
+    lines.push(text.slice(start, i > start && text.charCodeAt(i - 1) === 13 ? i - 1 : i));
     start = i + 1;
   }
   if (start < text.length) lines.push(text.slice(start));
   return lines;
+}
+
+const spaceOrTab = (c: number) => c === 32 || c === 9;
+
+/** `text` without the spaces and tabs at either end (not JavaScript's trim, which also takes a CR, a byte-order mark, a no-break space, …). */
+export function trimSpaces(text: string): string {
+  let a = 0;
+  let b = text.length;
+  while (a < b && spaceOrTab(text.charCodeAt(a))) a++;
+  while (b > a && spaceOrTab(text.charCodeAt(b - 1))) b--;
+  return text.slice(a, b);
 }
 
 const blank = (line: string) => line.trim() === "";
@@ -286,12 +301,12 @@ function headingOf(line: string): { level: number; text: string } | null {
   if (level < 1 || level > 6) return null;
   const after = line.charCodeAt(level);
   if (after !== 32 && after !== 9) return null;
-  let text = line.slice(level).trim();
+  let text = trimSpaces(line.slice(level));
   // A closing sequence: "#"s at the end, after a space (or all of it).
   let end = text.length;
   while (end > 0 && text.charCodeAt(end - 1) === 35) end--;
   if (end === 0) text = "";
-  else if (end < text.length && (text.charCodeAt(end - 1) === 32 || text.charCodeAt(end - 1) === 9)) text = text.slice(0, end).trim();
+  else if (end < text.length && (text.charCodeAt(end - 1) === 32 || text.charCodeAt(end - 1) === 9)) text = trimSpaces(text.slice(0, end));
   return { level, text };
 }
 
@@ -301,11 +316,13 @@ function fenceOf(line: string): { char: number; length: number; info: string } |
   if (char !== TICK && char !== 126) return null;
   let length = 0;
   while (length < line.length && line.charCodeAt(length) === char) length++;
-  return length >= 3 ? { char, length, info: line.slice(length).trim() } : null;
+  return length >= 3 ? { char, length, info: trimSpaces(line.slice(length)) } : null;
 }
 
 function closesFence(line: string, fence: { char: number; length: number }): boolean {
-  const trimmed = line.trimEnd();
+  let end = line.length;
+  while (end > 0 && spaceOrTab(line.charCodeAt(end - 1))) end--;
+  const trimmed = line.slice(0, end);
   let length = 0;
   while (length < trimmed.length && trimmed.charCodeAt(length) === fence.char) length++;
   return length >= fence.length && length === trimmed.length;
@@ -332,7 +349,7 @@ function markerOf(text: string): { kind: string; width: number } | null {
  */
 export function splitCells(line: string): string[] {
   const cells: string[] = [];
-  const body = line.trim();
+  const body = trimSpaces(line);
   let cell = "";
   // body starts with "|": skip it.
   for (let i = 1; i < body.length; i++) {
@@ -346,8 +363,8 @@ export function splitCells(line: string): string[] {
     } else cell += body[i];
   }
   // Text after the last "|" is a cell; nothing (a trailing "|") is none.
-  if (cell.trim() !== "" || !body.endsWith("|") || body.endsWith("\\|")) cells.push(cell);
-  return cells.map((c) => cutText(c.trim()));
+  if (trimSpaces(cell) !== "" || !body.endsWith("|") || body.endsWith("\\|")) cells.push(cell);
+  return cells.map((c) => cutText(trimSpaces(c)));
 }
 
 /** A delimiter row: every cell dashes, optionally with a ":" at either end. */
@@ -373,8 +390,8 @@ function startsBlock(line: string, next: string | undefined): boolean {
   return headingOf(line) !== null || fenceOf(line) !== null || (startsRow(line) && next !== undefined && isDelimiterRow(next)) || markerOf(line) !== null;
 }
 
-/** A drawn line: trimmed and cut at LIMITS.cell characters. */
-const drawn = (line: string) => cutText(line.trim());
+/** A drawn line: without spaces and tabs at either end, and cut at LIMITS.cell characters. */
+const drawn = (line: string) => cutText(trimSpaces(line));
 
 /** The blocks of a Markdown text, in one pass over at most LIMITS.lines lines. */
 export function parse(source: string): Doc {
@@ -443,7 +460,7 @@ export function parse(source: string): Doc {
         // A continuation line: indented by two or more columns.
         if (indentOf(current) < 2) break;
         const item = items[items.length - 1]!;
-        const inner = current.trimStart();
+        const inner = trimSpaces(current);
         const nested = markerOf(inner);
         if (nested !== null) item.children.push({ first: j + 1, last: j + 1, text: drawn(inner.slice(nested.width)), ordered: nested.kind === "1." });
         else if (item.children.length > 0) {
@@ -489,7 +506,7 @@ export function sections(doc: Doc): Section[] {
   return out;
 }
 
-const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const same = (a: string, b: string) => trimSpaces(a).toLowerCase() === trimSpaces(b).toLowerCase();
 
 /** The first section whose title is `title`, ignoring case. */
 export function section(all: readonly Section[], title: string): Section | null {
@@ -509,7 +526,7 @@ export type Resolved = { kind: "path"; path: string } | { kind: "address"; text:
  * backslash.
  */
 export function resolveLink(target: string, fromFile: string): Resolved | null {
-  const raw = target.trim();
+  const raw = trimSpaces(target);
   if (raw === "") return null;
   if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) || raw.startsWith("/") || raw.startsWith("#")) return { kind: "address", text: raw };
   let path = raw;
@@ -554,7 +571,7 @@ export function snapshot(all: readonly Section[]): { section: Section; items: Sn
     const colon = item.text.indexOf(":");
     const label = colon === -1 ? item.text : item.text.slice(0, colon);
     const value = colon === -1 ? "" : item.text.slice(colon + 1);
-    return { label: label.trim(), value: value.trim(), first: item.first, last: item.last, lines: item.lines };
+    return { label: trimSpaces(label), value: trimSpaces(value), first: item.first, last: item.last, lines: item.lines };
   });
   return { section: sec, items };
 }
@@ -638,7 +655,7 @@ export function studies(all: readonly Section[]): Study[] | null {
   return table.rows.map((row) => ({
     study: row.cells[0] ?? "",
     line: row.line,
-    ids: row.cells[at]!.split(",").map((s) => s.trim()).filter((s) => s !== ""),
+    ids: row.cells[at]!.split(",").map((s) => trimSpaces(s)).filter((s) => s !== ""),
   }));
 }
 

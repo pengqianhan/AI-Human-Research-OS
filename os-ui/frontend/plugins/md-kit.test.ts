@@ -29,6 +29,7 @@ import {
   usedBy,
 } from "./md-kit.ts";
 import type { Block, Doc, Table } from "./md-kit.ts";
+import { markInvisible } from "./site-kit.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 /** A fixture as LF text, whatever line endings the checkout gave it. */
@@ -167,20 +168,38 @@ describe("md-kit on nanochat_cpu's skeleton (a frozen copy)", () => {
     assert.deepEqual(section(all, "Tracking")!.blocks, [], "Tracking holds only subsections");
   });
 
-  test("a CRLF copy, and a lone-CR copy, give the same blocks, line numbers, claims and quotes, with no CR anywhere", () => {
+  test("a CRLF copy gives the same blocks, line numbers, claims and quotes, with no CR anywhere", () => {
     const lf = parse(NANOCHAT);
-    for (const [name, text] of [
-      ["CRLF", crlf(NANOCHAT)],
-      ["CR", NANOCHAT.split("\n").join("\r")],
-    ] as const) {
-      const other = parse(text);
-      assert.deepEqual(other, lf, name);
-      assert.deepEqual(claims(sections(other)), claims(sections(lf)), name);
-      assert.deepEqual(snapshot(sections(other)), snapshot(sections(lf)), name);
-      assert.doesNotMatch(JSON.stringify(other), /\\r/, `${name}: no carriage return in any block, cell, row, or text`);
-    }
+    const other = parse(crlf(NANOCHAT));
+    assert.deepEqual(other, lf);
+    assert.deepEqual(claims(sections(other)), claims(sections(lf)));
+    assert.deepEqual(snapshot(sections(other)), snapshot(sections(lf)));
+    assert.doesNotMatch(JSON.stringify(other), /\\r/, "no carriage return in any block, cell, row, or text");
     // The template too.
     assert.deepEqual(parse(crlf(TEMPLATE)), parse(TEMPLATE));
+  });
+
+  test("a lone CR is no line break: line numbers stay those of LF (grep -n, the Code view, an agent), and the CR shows as a marker", () => {
+    // Line 4 of the skeleton, "data, code, figures, or experiment outputs.", with a lone CR inside it (review F2).
+    const text = NANOCHAT.replace("data, code, figures, or experiment outputs.", "data, code, figures, or\rexperiment outputs.");
+    assert.notEqual(text, NANOCHAT);
+    const lf = parse(NANOCHAT);
+    const cr = parse(text);
+    assert.equal(cr.lines, lf.lines, "no extra line");
+    assert.deepEqual(
+      cr.blocks.map((b) => [b.kind, b.first, b.last]),
+      lf.blocks.map((b) => [b.kind, b.first, b.last]),
+      "every block on the same lines as in the LF copy",
+    );
+    assert.deepEqual(claims(sections(cr)), claims(sections(lf)), "C1 to C5 on lines 115 to 119");
+    const intro = cr.blocks[1]!;
+    assert.ok(intro.kind === "paragraph" && intro.first === 3 && intro.last === 4);
+    assert.equal(intro.lines[1], "data, code, figures, or\rexperiment outputs.", "the CR stays in its line");
+    assert.match(markInvisible(intro.text), /or⟨U\+000D⟩experiment/, "drawn as a marker");
+    // At the end of a line, where trimming would drop it, too.
+    const atEnd = parse("## Source Map\r \n\ntext\r\n");
+    assert.deepEqual(atEnd.blocks.map((b) => [b.kind, b.first]), [["heading", 1], ["paragraph", 3]]);
+    assert.match(markInvisible((atEnd.blocks[0] as Block & { text: string }).text), /Source Map⟨U\+000D⟩/);
   });
 });
 
@@ -455,8 +474,9 @@ describe("links", () => {
 });
 
 describe("splitLines", () => {
-  test("CRLF, CR, and LF each end a line; a final line break ends the last one", () => {
-    assert.deepEqual(splitLines("a\r\nb\rc\nd"), ["a", "b", "c", "d"]);
+  test("CRLF and LF each end a line, a lone CR does not; a final line break ends the last one", () => {
+    assert.deepEqual(splitLines("a\r\nb\rc\nd"), ["a", "b\rc", "d"]);
+    assert.deepEqual(splitLines("a\r\r\nb"), ["a\r", "b"]);
     assert.deepEqual(splitLines("a\n"), ["a"]);
     assert.deepEqual(splitLines("a\n\n"), ["a", ""]);
     assert.deepEqual(splitLines("\r\n"), [""]);
