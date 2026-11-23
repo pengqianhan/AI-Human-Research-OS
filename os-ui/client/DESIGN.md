@@ -204,12 +204,15 @@ the plugin is bundled or local. A `*` segment matches any one segment whose
 name does not start with `.`, a file's name included:
 `projects-folder/*/Code` matches `projects-folder/Alpha/Code`, and
 `projects-folder/*` matches `projects-folder/notes.md` as well as a project.
-A root may name a file (`projects-folder/*/paper_skeleton.md`, the Skeleton
-view's): the file is then the whole root, so it is served by GET and HEAD,
-while a path below it, a listing of it, a sibling, and the project folder are
-404. Every rule below applies to it unchanged; `test/protocol.test.ts` ("a
-file root") pins those cases, links at the file root, `*` matching exactly one
-segment, and Windows spellings.
+A root names a path, not a kind of entry, so it may name a file
+(`projects-folder/*/paper_skeleton.md`, the Skeleton view's). When that path is
+a file, it is served by GET and HEAD, while a path below it, a listing of it, a
+sibling, and the project folder are 404. When a project holds a folder of that
+name, the folder is the root and its own contents are readable, as a folder
+root's are (a link in it leaving the root is still 404). Every rule below
+applies unchanged; `test/protocol.test.ts` ("a file root") pins those cases,
+the folder case, links at the file root, `*` matching exactly one segment, and
+Windows spellings.
 
 - `GET app://<id>/_os/files?path=<rel>` returns the file's bytes;
   `GET app://<id>/_os/list?path=<rel>` returns
@@ -380,11 +383,18 @@ loaded), with the host's invisible characters marked. The page sets no style,
 `href`, or `src` from its code (its `dom.test.ts` scans the site, md-kit, and
 site-kit). It shows mockup alternative B: the Snapshot card, the claims with
 each one's evidence beside them (under the claim when the view is narrower
-than 780 px), and the rest of the file folded by section. A Snapshot line, a
+than 780 px), and everything else in the file folded by section, so nothing is
+hidden without the view saying so (the title and the paragraph under it, left
+out, are named in a muted line). Line numbers are counted by LF, as `grep -n`
+counts them: a lone CR is a character, drawn as a marker. A Snapshot line, a
 claim row, or a paragraph, list item, table row, or code block of an open
-section posts `os.select` with `paper_skeleton.md:<lines> · claim <ID>` or
-`· <section>` and its lines as written as the quote, cut on the page to 2,000
-characters as the Code view cuts (the host ignores a longer quote). Its chip
+section posts `os.select` with the label `paper_skeleton.md:<lines> · claim
+<ID>` for a claim, or `· section “<title>”` for anything else (the title as
+plain text, a middle dot and curly quotes in it replaced, so no title can
+forge a claim's label), and its lines as written as the quote, cut on the
+page to 2,000 characters ending in the host's own `…[cut]` (the host ignores
+a longer quote); a lone CR, which the host would take for a line break, is
+quoted as `⟨U+000D⟩`. Its chip
 opens by itself: the quote is the line as written, not what the page draws
 (the Human Owner's decision of 2026-11-23). In a browser the tab says the view
 opens in the desktop app.

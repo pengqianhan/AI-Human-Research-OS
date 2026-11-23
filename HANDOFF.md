@@ -96,10 +96,15 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       Human Owner; on 2026-11-23 they answered I-1 to I-4, N-1, and N-3 with
       the defaults proposed (Decisions: "Idea file format", "Step 2 views,
       first version"), so nothing waits on them before 2.1 to 2.4.
-      2.1, the Skeleton view, is built (branch `step2-skeleton-view`, its
-      pull request opened 2026-11-23): the Skeleton tab draws
-      `paper_skeleton.md` on `app://skeleton-view`, and the client checklist
-      has its line. Next are 2.2 (Assets) and 2.3 (Idea).
+      2.1, the Skeleton view, is merged (PR #50, 2026-11-23): the Skeleton
+      tab draws `paper_skeleton.md` on `app://skeleton-view`, and the client
+      checklist has its line. #50 was merged while its independent review
+      was running; the review's two must-fix findings (two claims with one
+      ID showed the first one's evidence; a lone carriage return shifted
+      every later line number) and nine smaller ones are fixed on branch
+      `step2-skeleton-review-fixes`, whose pull request follows #50.
+      Next are 2.2 (Assets) and 2.3 (Idea); both build on `md-kit.ts`, so
+      they start from that branch once it is merged.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes

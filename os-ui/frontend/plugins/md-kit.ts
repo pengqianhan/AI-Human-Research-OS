@@ -17,7 +17,8 @@
  * escapes. Anything else (setext headings, block quotes, HTML, footnotes,
  * reference links, a table without a leading "|", deeper lists) is kept as
  * its literal text. Every non-blank line belongs to exactly one block, and no
- * block keeps a carriage return: CRLF, a lone CR, and LF all end a line.
+ * block keeps the CR of a CRLF: CRLF and LF end a line, and a lone CR stays in
+ * its line as a character (line numbers are LF-counted, as grep -n counts).
  */
 
 /** What the reader takes at most (os-ui/PLUGINS.md Part 3, §1 fact 6). */
@@ -142,7 +143,7 @@ export function inline(text: string): Inline[] {
         if (i + len <= to && close >= 0 && runStart[close]! + len <= to) {
           flush();
           let code = text.slice(i + len, runStart[close]);
-          if (code.length >= 2 && code.startsWith(" ") && code.endsWith(" ") && code.trim() !== "") code = code.slice(1, -1);
+          if (code.length >= 2 && code.startsWith(" ") && code.endsWith(" ") && trimSpaces(code) !== "") code = code.slice(1, -1);
           out.push({ kind: "code", text: code });
           i = runStart[close]! + len;
           continue;
@@ -237,7 +238,8 @@ interface Span {
 
 export type Heading = Span & { kind: "heading"; level: number; text: string };
 export type Code = Span & { kind: "code"; info: string; body: string[]; closed: boolean };
-export type Table = Span & { kind: "table"; header: string[]; rows: Row[]; more: number; columnsCut: boolean };
+/** `skipped`: lines inside the table holding nothing visible, which do not end it (they are no rows). */
+export type Table = Span & { kind: "table"; header: string[]; rows: Row[]; more: number; columnsCut: boolean; skipped: number[] };
 export type List = Span & { kind: "list"; ordered: boolean; items: Item[] };
 export type Paragraph = Span & { kind: "paragraph"; text: string };
 export type Block = Heading | Code | Table | List | Paragraph;
@@ -250,22 +252,45 @@ export interface Doc {
   cut: boolean;
 }
 
-/** A text's lines: CRLF, CR, and LF each end one; a final line break ends the last line. */
+/**
+ * A text's lines: LF ends one, and a CR right before it is dropped (CRLF); a
+ * final line break ends the last line. A lone CR is no line break: it stays
+ * in its line as a character (drawn as a marker), so line numbers are the
+ * ones `grep -n`, the Code view, and an agent's tools count.
+ */
 export function splitLines(text: string): string[] {
   const lines: string[] = [];
   let start = 0;
   for (let i = 0; i < text.length; i++) {
-    const c = text.charCodeAt(i);
-    if (c !== 10 && c !== 13) continue;
-    lines.push(text.slice(start, i));
-    if (c === 13 && text.charCodeAt(i + 1) === 10) i++;
+    if (text.charCodeAt(i) !== 10) continue;
+    lines.push(text.slice(start, i > start && text.charCodeAt(i - 1) === 13 ? i - 1 : i));
     start = i + 1;
   }
   if (start < text.length) lines.push(text.slice(start));
   return lines;
 }
 
-const blank = (line: string) => line.trim() === "";
+const spaceOrTab = (c: number) => c === 32 || c === 9;
+
+/** `text` without the spaces and tabs at either end (not JavaScript's trim, which also takes a CR, a byte-order mark, a no-break space, …). */
+export function trimSpaces(text: string): string {
+  let a = 0;
+  let b = text.length;
+  while (a < b && spaceOrTab(text.charCodeAt(a))) a++;
+  while (b > a && spaceOrTab(text.charCodeAt(b - 1))) b--;
+  return text.slice(a, b);
+}
+
+/** A blank line: spaces and tabs only. A line of other characters JavaScript's trim() takes (U+FEFF, a no-break space, U+2028, U+3000 …) is not blank. */
+const blank = (line: string) => trimSpaces(line) === "";
+
+/**
+ * A line of nothing visible that is not blank: invisible, format, and space
+ * characters other than plain spaces and tabs. Inside a table it does not
+ * end the table (the rows after it are still rows); the table records it.
+ */
+const INVISIBLE_ONLY = /^[ \t\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Z}\u2800]+$/u;
+const invisibleOnly = (line: string) => !blank(line) && INVISIBLE_ONLY.test(line);
 
 /** Leading white space as columns: a space is 1, a tab 4. */
 function indentOf(line: string): number {
@@ -286,30 +311,49 @@ function headingOf(line: string): { level: number; text: string } | null {
   if (level < 1 || level > 6) return null;
   const after = line.charCodeAt(level);
   if (after !== 32 && after !== 9) return null;
-  let text = line.slice(level).trim();
+  let text = trimSpaces(line.slice(level));
   // A closing sequence: "#"s at the end, after a space (or all of it).
   let end = text.length;
   while (end > 0 && text.charCodeAt(end - 1) === 35) end--;
   if (end === 0) text = "";
-  else if (end < text.length && (text.charCodeAt(end - 1) === 32 || text.charCodeAt(end - 1) === 9)) text = text.slice(0, end).trim();
+  else if (end < text.length && (text.charCodeAt(end - 1) === 32 || text.charCodeAt(end - 1) === 9)) text = trimSpaces(text.slice(0, end));
   return { level, text };
 }
 
-/** A fence: three or more backticks or tildes; its character, length, and info string. */
-function fenceOf(line: string): { char: number; length: number; info: string } | null {
-  const char = line.charCodeAt(0);
-  if (char !== TICK && char !== 126) return null;
-  let length = 0;
-  while (length < line.length && line.charCodeAt(length) === char) length++;
-  return length >= 3 ? { char, length, info: line.slice(length).trim() } : null;
+/** Leading spaces (not tabs), at most `max` + 1 counted. */
+function spacesBefore(line: string, max: number): number {
+  let n = 0;
+  while (n <= max && line.charCodeAt(n) === 32) n++;
+  return n;
 }
 
-function closesFence(line: string, fence: { char: number; length: number }): boolean {
-  const trimmed = line.trimEnd();
-  let length = 0;
-  while (length < trimmed.length && trimmed.charCodeAt(length) === fence.char) length++;
-  return length >= fence.length && length === trimmed.length;
+/**
+ * A fence, as in CommonMark: up to three spaces, then three or more
+ * backticks or tildes; its character, length, indentation, and info string.
+ */
+function fenceOf(line: string): { char: number; length: number; indent: number; info: string } | null {
+  const indent = spacesBefore(line, 3);
+  if (indent > 3) return null;
+  const char = line.charCodeAt(indent);
+  if (char !== TICK && char !== 126) return null;
+  let end = indent;
+  while (end < line.length && line.charCodeAt(end) === char) end++;
+  return end - indent >= 3 ? { char, length: end - indent, indent, info: trimSpaces(line.slice(end)) } : null;
 }
+
+/** A closing fence: up to three spaces, at least as many of the same character, then only spaces and tabs. */
+function closesFence(line: string, fence: { char: number; length: number }): boolean {
+  const indent = spacesBefore(line, 3);
+  if (indent > 3) return false;
+  let end = line.length;
+  while (end > indent && spaceOrTab(line.charCodeAt(end - 1))) end--;
+  let k = indent;
+  while (k < end && line.charCodeAt(k) === fence.char) k++;
+  return k - indent >= fence.length && k === end;
+}
+
+/** A code line with up to `indent` leading spaces taken off, as CommonMark takes off the opening fence's indentation. */
+const unindent = (line: string, indent: number) => line.slice(Math.min(indent, spacesBefore(line, indent)));
 
 /** A list item's marker at the start of `text`: "-", "*", "+", or 1 to 9 digits and ".", then a space or the end. */
 function markerOf(text: string): { kind: string; width: number } | null {
@@ -332,7 +376,7 @@ function markerOf(text: string): { kind: string; width: number } | null {
  */
 export function splitCells(line: string): string[] {
   const cells: string[] = [];
-  const body = line.trim();
+  const body = trimSpaces(line);
   let cell = "";
   // body starts with "|": skip it.
   for (let i = 1; i < body.length; i++) {
@@ -346,13 +390,13 @@ export function splitCells(line: string): string[] {
     } else cell += body[i];
   }
   // Text after the last "|" is a cell; nothing (a trailing "|") is none.
-  if (cell.trim() !== "" || !body.endsWith("|") || body.endsWith("\\|")) cells.push(cell);
-  return cells.map((c) => cutText(c.trim()));
+  if (trimSpaces(cell) !== "" || !body.endsWith("|") || body.endsWith("\\|")) cells.push(cell);
+  return cells.map((c) => cutText(trimSpaces(c)));
 }
 
 /** A delimiter row: every cell dashes, optionally with a ":" at either end. */
 function isDelimiterRow(line: string): boolean {
-  if (!line.trimStart().startsWith("|")) return false;
+  if (!startsRow(line)) return false;
   const cells = splitCells(line);
   if (cells.length === 0) return false;
   return cells.every((cell) => {
@@ -366,19 +410,25 @@ function isDelimiterRow(line: string): boolean {
   });
 }
 
-const startsRow = (line: string) => line.trimStart().startsWith("|");
+/** A table row: "|" after spaces and tabs only. */
+function startsRow(line: string): boolean {
+  let i = 0;
+  while (i < line.length && spaceOrTab(line.charCodeAt(i))) i++;
+  return line.charCodeAt(i) === 124;
+}
 
 /** Whether `line` (followed by `next`) starts a block other than a paragraph, so a paragraph ends before it. */
 function startsBlock(line: string, next: string | undefined): boolean {
   return headingOf(line) !== null || fenceOf(line) !== null || (startsRow(line) && next !== undefined && isDelimiterRow(next)) || markerOf(line) !== null;
 }
 
-/** A drawn line: trimmed and cut at LIMITS.cell characters. */
-const drawn = (line: string) => cutText(line.trim());
+/** A drawn line: without spaces and tabs at either end, and cut at LIMITS.cell characters. */
+const drawn = (line: string) => cutText(trimSpaces(line));
 
 /** The blocks of a Markdown text, in one pass over at most LIMITS.lines lines. */
 export function parse(source: string): Doc {
-  const all = splitLines(source.startsWith("﻿") ? source.slice(1) : source);
+  // No byte-order mark is dropped here: the decoder (site-kit readText) drops one, and a second is a character, shown as a marker.
+  const all = splitLines(source);
   const cut = all.length > LIMITS.lines;
   const lines = cut ? all.slice(0, LIMITS.lines) : all;
   const blocks: Block[] = [];
@@ -402,7 +452,7 @@ export function parse(source: string): Doc {
       while (j < lines.length && !closesFence(lines[j]!, fence)) j++;
       const closed = j < lines.length;
       const end = closed ? j : lines.length - 1;
-      blocks.push({ kind: "code", info: cutText(fence.info), body: lines.slice(i + 1, closed ? j : lines.length), closed, ...span(i, end) });
+      blocks.push({ kind: "code", info: cutText(fence.info), body: lines.slice(i + 1, closed ? j : lines.length).map((l) => unindent(l, fence.indent)), closed, ...span(i, end) });
       i = end + 1;
       continue;
     }
@@ -410,9 +460,18 @@ export function parse(source: string): Doc {
       const head = splitCells(line);
       const width = Math.min(head.length, LIMITS.columns);
       const rows: Row[] = [];
+      const skipped: number[] = [];
       let more = 0;
       let j = i + 2;
-      for (; j < lines.length && startsRow(lines[j]!); j++) {
+      for (; j < lines.length; j++) {
+        if (!startsRow(lines[j]!)) {
+          // Lines of nothing visible do not end the table when a row follows them.
+          let k = j;
+          while (k < lines.length && invisibleOnly(lines[k]!)) k++;
+          if (k === j || k === lines.length || !startsRow(lines[k]!)) break;
+          for (let s = j; s < k; s++) skipped.push(s + 1);
+          j = k;
+        }
         if (rows.length >= LIMITS.rows) {
           more++;
           continue;
@@ -423,7 +482,7 @@ export function parse(source: string): Doc {
         while (fitted.length < width) fitted.push("");
         rows.push({ line: j + 1, source: lines[j]!, cells: fitted, uneven });
       }
-      blocks.push({ kind: "table", header: head.slice(0, width), rows, more, columnsCut: head.length > width, ...span(i, j - 1) });
+      blocks.push({ kind: "table", header: head.slice(0, width), rows, more, columnsCut: head.length > width, skipped, ...span(i, j - 1) });
       i = j;
       continue;
     }
@@ -443,7 +502,7 @@ export function parse(source: string): Doc {
         // A continuation line: indented by two or more columns.
         if (indentOf(current) < 2) break;
         const item = items[items.length - 1]!;
-        const inner = current.trimStart();
+        const inner = trimSpaces(current);
         const nested = markerOf(inner);
         if (nested !== null) item.children.push({ first: j + 1, last: j + 1, text: drawn(inner.slice(nested.width)), ordered: nested.kind === "1." });
         else if (item.children.length > 0) {
@@ -489,7 +548,7 @@ export function sections(doc: Doc): Section[] {
   return out;
 }
 
-const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const same = (a: string, b: string) => trimSpaces(a).toLowerCase() === trimSpaces(b).toLowerCase();
 
 /** The first section whose title is `title`, ignoring case. */
 export function section(all: readonly Section[], title: string): Section | null {
@@ -509,7 +568,7 @@ export type Resolved = { kind: "path"; path: string } | { kind: "address"; text:
  * backslash.
  */
 export function resolveLink(target: string, fromFile: string): Resolved | null {
-  const raw = target.trim();
+  const raw = trimSpaces(target);
   if (raw === "") return null;
   if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) || raw.startsWith("/") || raw.startsWith("#")) return { kind: "address", text: raw };
   let path = raw;
@@ -538,32 +597,80 @@ export function resolveLink(target: string, fromFile: string): Resolved | null {
 
 /** One Snapshot item: "<Label>: <value>", the value with its continuation lines joined. */
 export interface SnapshotItem {
+  /** The label's plain text: "Status" for `Status:`, `**Status:**`, `**Status**:`, or `` `Status`: ``. */
   label: string;
+  /** The value's plain text. */
   value: string;
+  /** The value's own inline tokens, for drawing. */
+  tokens: Inline[];
   first: number;
   last: number;
   lines: string[];
 }
 
+/** Tokens without the spaces and tabs at their two ends. */
+function trimTokens(tokens: readonly Inline[]): Inline[] {
+  const out = [...tokens];
+  const first = out[0];
+  if (first?.kind === "text") {
+    let a = 0;
+    while (a < first.text.length && spaceOrTab(first.text.charCodeAt(a))) a++;
+    out[0] = { kind: "text", text: first.text.slice(a) };
+  }
+  const k = out.length - 1;
+  const last = out[k];
+  if (last?.kind === "text") {
+    let b = last.text.length;
+    while (b > 0 && spaceOrTab(last.text.charCodeAt(b - 1))) b--;
+    out[k] = { kind: "text", text: last.text.slice(0, b) };
+  }
+  return out.filter((t) => t.kind !== "text" || t.text !== "");
+}
+
+/**
+ * An item's label and value, split at its first ":" in plain text: in a
+ * text token, or inside a bold or code span (`**Status:** draft`); a colon
+ * in a link's target does not count.
+ */
+function splitItem(text: string): { label: string; tokens: Inline[] } {
+  const tokens = inline(text);
+  // The label's plain text is built once, when the colon is found: one pass over the tokens.
+  const before = (k: number) => plain(tokens.slice(0, k));
+  for (let k = 0; k < tokens.length; k++) {
+    const t = tokens[k]!;
+    if (t.kind === "text") {
+      const i = t.text.indexOf(":");
+      if (i !== -1) return { label: before(k) + t.text.slice(0, i), tokens: [{ kind: "text", text: t.text.slice(i + 1) }, ...tokens.slice(k + 1)] };
+    } else if (t.kind === "bold" || t.kind === "code") {
+      const inner = plain([t]);
+      const i = inner.indexOf(":");
+      if (i === -1) continue;
+      const rest = inner.slice(i + 1);
+      const kept: Inline[] = trimSpaces(rest) === "" ? [] : t.kind === "bold" ? [{ kind: "bold", children: [{ kind: "text", text: rest }] }] : [{ kind: "code", text: rest }];
+      return { label: before(k) + inner.slice(0, i), tokens: [...kept, ...tokens.slice(k + 1)] };
+    }
+  }
+  return { label: plain(tokens), tokens: [] };
+}
+
 /** The first list of section "Snapshot", as label-value items; null without that section or list. */
-export function snapshot(all: readonly Section[]): { section: Section; items: SnapshotItem[] } | null {
+export function snapshot(all: readonly Section[]): { section: Section; list: List; items: SnapshotItem[] } | null {
   const sec = section(all, "Snapshot");
   const list = sec?.blocks.find((b): b is List => b.kind === "list");
   if (sec === null || sec === undefined || list === undefined) return null;
-  const items = list.items.map((item) => {
-    const colon = item.text.indexOf(":");
-    const label = colon === -1 ? item.text : item.text.slice(0, colon);
-    const value = colon === -1 ? "" : item.text.slice(colon + 1);
-    return { label: label.trim(), value: value.trim(), first: item.first, last: item.last, lines: item.lines };
+  const items = list.items.map((item): SnapshotItem => {
+    const split = splitItem(item.text);
+    const tokens = trimTokens(split.tokens);
+    return { label: trimSpaces(split.label), value: trimSpaces(plain(tokens)), tokens, first: item.first, last: item.last, lines: item.lines };
   });
-  return { section: sec, items };
+  return { section: sec, list, items };
 }
 
 /** A Snapshot item by its label, ignoring case. */
 export const snapshotItem = (items: readonly SnapshotItem[], label: string) => items.find((i) => same(i.label, label)) ?? null;
 
 /** The column of `header` named `name`, ignoring case, or -1. */
-export const column = (header: readonly string[], name: string) => header.findIndex((h) => same(h, name));
+export const column = (header: readonly string[], name: string) => header.findIndex((h) => same(plain(inline(h)), name));
 
 /** The Claims and Evidence table's columns, by header name. */
 export const CLAIM_COLUMNS = ["Claim", "Evidence", "Source file or link", "Citation/result", "Status"] as const;
@@ -584,7 +691,7 @@ export interface Claim {
 
 export type Claims =
   | { found: false; section: Section | null }
-  | { found: true; section: Section; table: Table; missing: string[]; claims: Claim[] };
+  | { found: true; section: Section; table: Table; missing: string[]; claims: Claim[]; columns: number[]; empty: number[] };
 
 /** A claim's ID: 1 to 4 capitals, 1 to 4 digits, an optional small letter, then ": ". */
 const CLAIM_ID = /^([A-Z]{1,4}[0-9]{1,4}[a-z]?): /;
@@ -592,7 +699,8 @@ const CLAIM_ID = /^([A-Z]{1,4}[0-9]{1,4}[a-z]?): /;
 /**
  * The first table of section "Claims and Evidence", its columns found by
  * header name. A row whose Claim cell is empty is not a claim (the
- * template's placeholder row). `missing` names the headers not found.
+ * template's placeholder row; `empty` lists their lines). `missing` names
+ * the headers not found; `columns` is the column of each of CLAIM_COLUMNS, or -1.
  */
 export function claims(all: readonly Section[]): Claims {
   const sec = section(all, "Claims and Evidence");
@@ -602,10 +710,14 @@ export function claims(all: readonly Section[]): Claims {
   const missing = CLAIM_COLUMNS.filter((_, k) => at[k] === -1);
   const cell = (row: Row, k: number) => (at[k] === -1 ? null : row.cells[at[k]!]!);
   const out: Claim[] = [];
+  const empty: number[] = [];
   if (at[0] !== -1) {
     for (const row of table.rows) {
       const claim = cell(row, 0)!;
-      if (claim === "") continue;
+      if (claim === "") {
+        empty.push(row.line);
+        continue;
+      }
       const id = CLAIM_ID.exec(claim);
       out.push({
         id: id === null ? null : id[1]!,
@@ -619,7 +731,7 @@ export function claims(all: readonly Section[]): Claims {
       });
     }
   }
-  return { found: true, section: sec, table, missing, claims: out };
+  return { found: true, section: sec, table, missing, claims: out, columns: at, empty };
 }
 
 /** One row of the Experiments table: its Study (first cell), its line, and the claim IDs its Claim cell lists. */
@@ -636,9 +748,10 @@ export function studies(all: readonly Section[]): Study[] | null {
   const at = column(table.header, "Claim");
   if (at === -1) return null;
   return table.rows.map((row) => ({
-    study: row.cells[0] ?? "",
+    study: trimSpaces(plain(inline(row.cells[0] ?? ""))),
     line: row.line,
-    ids: row.cells[at]!.split(",").map((s) => s.trim()).filter((s) => s !== ""),
+    // The cell's plain text, so `C1`, **C1**, and [C1](#c1) are C1; listed with "," or ";".
+    ids: plain(inline(row.cells[at]!)).split(/[,;]/).map((s) => trimSpaces(s)).filter((s) => s !== ""),
   }));
 }
 

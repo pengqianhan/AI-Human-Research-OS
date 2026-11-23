@@ -29,6 +29,7 @@ import {
   usedBy,
 } from "./md-kit.ts";
 import type { Block, Doc, Table } from "./md-kit.ts";
+import { markInvisible, readText } from "./site-kit.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 /** A fixture as LF text, whatever line endings the checkout gave it. */
@@ -49,7 +50,7 @@ function assertEveryLineOnce(text: string): void {
   const lines = text.split("\n");
   const covered = coverage(doc);
   assert.equal(new Set(covered).size, covered.length, "no line is in two blocks");
-  const nonBlank = lines.flatMap((l, k) => (l.trim() === "" ? [] : [k + 1]));
+  const nonBlank = lines.flatMap((l, k) => (/^[ \t]*$/.test(l) ? [] : [k + 1]));
   for (const no of nonBlank) assert.ok(covered.includes(no), `line ${no} belongs to a block: ${JSON.stringify(lines[no - 1])}`);
   for (const b of doc.blocks) assert.deepEqual(b.lines, lines.slice(b.first - 1, b.last), `block at ${b.first}`);
 }
@@ -167,20 +168,38 @@ describe("md-kit on nanochat_cpu's skeleton (a frozen copy)", () => {
     assert.deepEqual(section(all, "Tracking")!.blocks, [], "Tracking holds only subsections");
   });
 
-  test("a CRLF copy, and a lone-CR copy, give the same blocks, line numbers, claims and quotes, with no CR anywhere", () => {
+  test("a CRLF copy gives the same blocks, line numbers, claims and quotes, with no CR anywhere", () => {
     const lf = parse(NANOCHAT);
-    for (const [name, text] of [
-      ["CRLF", crlf(NANOCHAT)],
-      ["CR", NANOCHAT.split("\n").join("\r")],
-    ] as const) {
-      const other = parse(text);
-      assert.deepEqual(other, lf, name);
-      assert.deepEqual(claims(sections(other)), claims(sections(lf)), name);
-      assert.deepEqual(snapshot(sections(other)), snapshot(sections(lf)), name);
-      assert.doesNotMatch(JSON.stringify(other), /\\r/, `${name}: no carriage return in any block, cell, row, or text`);
-    }
+    const other = parse(crlf(NANOCHAT));
+    assert.deepEqual(other, lf);
+    assert.deepEqual(claims(sections(other)), claims(sections(lf)));
+    assert.deepEqual(snapshot(sections(other)), snapshot(sections(lf)));
+    assert.doesNotMatch(JSON.stringify(other), /\\r/, "no carriage return in any block, cell, row, or text");
     // The template too.
     assert.deepEqual(parse(crlf(TEMPLATE)), parse(TEMPLATE));
+  });
+
+  test("a lone CR is no line break: line numbers stay those of LF (grep -n, the Code view, an agent), and the CR shows as a marker", () => {
+    // Line 4 of the skeleton, "data, code, figures, or experiment outputs.", with a lone CR inside it (review F2).
+    const text = NANOCHAT.replace("data, code, figures, or experiment outputs.", "data, code, figures, or\rexperiment outputs.");
+    assert.notEqual(text, NANOCHAT);
+    const lf = parse(NANOCHAT);
+    const cr = parse(text);
+    assert.equal(cr.lines, lf.lines, "no extra line");
+    assert.deepEqual(
+      cr.blocks.map((b) => [b.kind, b.first, b.last]),
+      lf.blocks.map((b) => [b.kind, b.first, b.last]),
+      "every block on the same lines as in the LF copy",
+    );
+    assert.deepEqual(claims(sections(cr)), claims(sections(lf)), "C1 to C5 on lines 115 to 119");
+    const intro = cr.blocks[1]!;
+    assert.ok(intro.kind === "paragraph" && intro.first === 3 && intro.last === 4);
+    assert.equal(intro.lines[1], "data, code, figures, or\rexperiment outputs.", "the CR stays in its line");
+    assert.match(markInvisible(intro.text), /or⟨U\+000D⟩experiment/, "drawn as a marker");
+    // At the end of a line, where trimming would drop it, too.
+    const atEnd = parse("## Source Map\r \n\ntext\r\n");
+    assert.deepEqual(atEnd.blocks.map((b) => [b.kind, b.first]), [["heading", 1], ["paragraph", 3]]);
+    assert.match(markInvisible((atEnd.blocks[0] as Block & { text: string }).text), /Source Map⟨U\+000D⟩/);
   });
 });
 
@@ -305,6 +324,22 @@ describe("blocks", () => {
     );
     assert.deepEqual(splitCells("| a | b"), ["a", "b"], "no trailing pipe");
     assert.deepEqual(splitCells("| a \\|"), ["a |"], "an escaped pipe at the end is the cell's");
+  });
+
+  test("only spaces and tabs make a line blank; a line of invisible characters inside a table does not end it (review F5)", () => {
+    // JavaScript's trim() takes U+FEFF, a no-break space, U+2028, U+3000 …: none of them is a blank line here.
+    for (const odd of ["\uFEFF", "\u00A0", "\u2028", "\u3000", " \u200B\t"]) {
+      const doc = parse(`| a |\n|---|\n| 1 |\n${odd}\n| 2 |\n`);
+      assert.equal(doc.blocks.length, 1, JSON.stringify(odd));
+      const t = doc.blocks[0] as Table;
+      assert.deepEqual([t.kind, t.first, t.last], ["table", 1, 5], JSON.stringify(odd));
+      assert.deepEqual(t.rows.map((r) => [r.line, r.cells]), [[3, ["1"]], [5, ["2"]]], "the row after it is still a row");
+      assert.deepEqual(t.skipped, [4], "and the view can say so");
+      // Outside a table it is a paragraph, not a blank line.
+      assert.deepEqual(parse(`a\n${odd}\nb\n`).blocks.map((b) => [b.kind, b.first, b.last]), [["paragraph", 1, 3]], JSON.stringify(odd));
+    }
+    assert.deepEqual(parse("a\n \t \nb\n").blocks.map((b) => [b.kind, b.first]), [["paragraph", 1], ["paragraph", 3]], "spaces and tabs are blank");
+    assert.deepEqual((parse("| a |\n|---|\n| 1 |\n").blocks[0] as Table).skipped, []);
   });
 
   test("a paragraph ends at a blank line or at a line that starts another block; its drawn text is its lines joined", () => {
@@ -436,6 +471,105 @@ describe("inline tokens", () => {
   });
 });
 
+describe("the review's small ones (F8, F9, F11)", () => {
+  const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+
+  test("F8: a fence may be indented by up to three spaces, opening and closing, as in CommonMark", () => {
+    // A table GitHub shows as code is code here too, not claims.
+    const wrapped = parse(` \`\`\`\n## Claims and Evidence\n\n${HEAD}\n| C1: shown as code on GitHub | e | s | r | verified |\n \`\`\`\n`);
+    assert.deepEqual(wrapped.blocks.map((b) => [b.kind, b.first, b.last]), [["code", 1, 7]]);
+    assert.equal(claims(sections(wrapped)).found, false);
+    // An indented closing fence closes the block, so what follows is read.
+    const closed = parse(`## Notes\n\n\`\`\`\ncode\n   \`\`\`\n\n## Claims and Evidence\n\n${HEAD}\n| C1: a claim | e | s | r | verified |\n`);
+    assert.deepEqual(closed.blocks.map((b) => [b.kind, b.first, b.last]), [["heading", 1, 1], ["code", 3, 5], ["heading", 7, 7], ["table", 9, 11]]);
+    assert.deepEqual((closed.blocks[1] as Block & { body: string[] }).body, ["code"]);
+    // Up to three: four spaces is no fence (indented code is not in md-kit's subset, so it is a paragraph).
+    assert.deepEqual(parse("    ```\nx\n").blocks.map((b) => b.kind), ["paragraph"]);
+    assert.deepEqual(parse("```\nx\n    ```\ny\n").blocks.map((b) => [b.kind, b.first, b.last]), [["code", 1, 4]], "a closing fence indented by four is code");
+    // The opening fence's indentation is taken off the body, as CommonMark does.
+    assert.deepEqual((parse("  ```\n  a\n    b\nc\n  ```\n").blocks[0] as Block & { body: string[] }).body, ["a", "  b", "c"]);
+  });
+
+  test("F9: the Experiments table's Claim cell is read as plain text, split on , and ;", () => {
+    const rows = studies(sections(parse("## Experiments\n\n| Study | Claim |\n|---|---|\n| Plain | C1 |\n| Code span | `C1` |\n| Linked | [C1](#c1) |\n| Semicolon | C1; C2 |\n| Bold | **C1** |\n| **Bold study** | C3 |\n")))!;
+    assert.deepEqual(rows.map((r) => [r.study, r.ids]), [
+      ["Plain", ["C1"]],
+      ["Code span", ["C1"]],
+      ["Linked", ["C1"]],
+      ["Semicolon", ["C1", "C2"]],
+      ["Bold", ["C1"]],
+      ["Bold study", ["C3"]],
+    ]);
+    assert.deepEqual(usedBy(rows, "C1").map((s) => s.study), ["Plain", "Code span", "Linked", "Semicolon", "Bold"]);
+  });
+
+  test("F11: md-kit drops no byte-order mark; the decoder drops exactly one, so a second shows as a marker", () => {
+    const doc = parse("\uFEFF# T\n");
+    assert.deepEqual(doc.blocks.map((b) => b.kind), ["paragraph"], "a mark before # is a character: no heading");
+    assert.equal(markInvisible((doc.blocks[0] as Block & { text: string }).text), "⟨U+FEFF⟩# T");
+    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0xef, 0xbb, 0xbf, ...new TextEncoder().encode("# T\n")]);
+    const read = readText(bytes);
+    assert.ok(read.kind === "text");
+    assert.equal(read.text, "\uFEFF# T\n", "one of the two is dropped");
+    assert.equal(markInvisible((parse(read.text).blocks[0] as Block & { text: string }).text), "⟨U+FEFF⟩# T");
+    assert.deepEqual(parse("# T\n").blocks.map((b) => b.kind), ["heading"]);
+  });
+});
+
+describe("labels and headers by their plain text (review F7)", () => {
+  test("a Snapshot label in bold, code, or a link, with its colon inside or after it", () => {
+    const snap = snapshot(
+      sections(parse("## Snapshot\n\n- **Working title:** T\n- **Status**: draft\n- `One-sentence thesis`: the thesis\n- [Target venue or audience](https://x.invalid/a:b): readers\n- **Main research question: none**\n- Plain: value: with a colon\n- No colon here\n")),
+    )!;
+    assert.deepEqual(
+      snap.items.map((i) => [i.label, i.value]),
+      [
+        ["Working title", "T"],
+        ["Status", "draft"],
+        ["One-sentence thesis", "the thesis"],
+        ["Target venue or audience", "readers"],
+        ["Main research question", "none"],
+        ["Plain", "value: with a colon"],
+        ["No colon here", ""],
+      ],
+    );
+    assert.equal(snapshotItem(snap.items, "status")!.value, "draft");
+    // The value keeps its own Markdown for drawing.
+    assert.deepEqual(snapshot(sections(parse("## Snapshot\n\n- **Status:** `draft` [x](y)\n")))!.items[0]!.tokens, [
+      { kind: "code", text: "draft" },
+      { kind: "text", text: " " },
+      { kind: "link", children: [{ kind: "text", text: "x" }], target: "y" },
+    ]);
+  });
+
+  test("a long Snapshot item with no colon costs one pass, not one per token", (t) => {
+    // Each line is cut at LIMITS.cell when drawn, so the tokens come from continuation lines: 100,000 characters in all.
+    const line = (unit: string) => unit.repeat(Math.floor(1000 / unit.length));
+    for (const [name, unit] of [
+      ["text and code spans", "a`b`"],
+      ["links only", "[x](y)"],
+      ["bold only", "**b**"],
+    ] as const) {
+      const text = `## Snapshot\n\n- ${line(unit)}\n${Array.from({ length: 99 }, () => `  ${line(unit)}`).join("\n")}\n`;
+      let items = 0;
+      const ms = timed(() => (items = snapshot(sections(parse(text)))!.items.length));
+      assert.equal(items, 1, name);
+      assert.ok(ms < 500, `${name}: ${ms.toFixed(1)} ms`);
+      t.diagnostic(`snapshot, ${name} (${text.length} characters): ${ms.toFixed(1)} ms`);
+    }
+  });
+
+  test("a column is found by its header's plain text: **Claim**, `Claim`, and Claim are one header", () => {
+    const head = "| **Claim** | `Evidence` | [Source file or link](x) | **Citation/result** | *Status* |\n|---|---|---|---|---|\n| C1: x | e | s | r | verified |";
+    const found = claims(sections(parse(`## Claims and Evidence\n\n${head}\n`)));
+    assert.ok(found.found);
+    assert.deepEqual(found.missing, ["Status"], "*Status* is not in md-kit's subset, so its asterisks stay");
+    assert.deepEqual(found.claims.map((c) => [c.id, c.evidence, c.result]), [["C1", "e", "r"]]);
+    const rows = studies(sections(parse("## Experiments\n\n| Study | **Claim** |\n|---|---|\n| Main | C1 |\n")))!;
+    assert.deepEqual(rows.map((r) => r.ids), [["C1"]]);
+  });
+});
+
 describe("links", () => {
   test("resolveLink: a project path, an address as written, or null when it leaves the project", () => {
     const from = "paper_skeleton.md";
@@ -455,8 +589,9 @@ describe("links", () => {
 });
 
 describe("splitLines", () => {
-  test("CRLF, CR, and LF each end a line; a final line break ends the last one", () => {
-    assert.deepEqual(splitLines("a\r\nb\rc\nd"), ["a", "b", "c", "d"]);
+  test("CRLF and LF each end a line, a lone CR does not; a final line break ends the last one", () => {
+    assert.deepEqual(splitLines("a\r\nb\rc\nd"), ["a", "b\rc", "d"]);
+    assert.deepEqual(splitLines("a\r\r\nb"), ["a\r", "b"]);
     assert.deepEqual(splitLines("a\n"), ["a"]);
     assert.deepEqual(splitLines("a\n\n"), ["a", ""]);
     assert.deepEqual(splitLines("\r\n"), [""]);

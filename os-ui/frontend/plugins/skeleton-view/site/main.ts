@@ -30,6 +30,7 @@ import {
   filePath,
   fileVerdict,
   fileWords,
+  openRow,
   projectWords,
   READ_MAX,
   restSections,
@@ -37,7 +38,7 @@ import {
   tableNotes,
   topBar,
 } from "./logic.ts";
-import type { ClaimRow, ClaimsView, RestSection, Selection, SnapLine, Words } from "./logic.ts";
+import type { ClaimRow, ClaimsView, OpenClaim, RestSection, Selection, SnapLine, Words } from "./logic.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
 const HOST = "app://research-os";
@@ -125,8 +126,8 @@ function pill(text: string, done: boolean): HTMLElement {
 const state = {
   gen: 0,
   doc: null as Doc | null,
-  /** The claim whose evidence shows, by its ID (or its line when it has none); kept across Reload. */
-  claim: null as string | null,
+  /** The claim whose evidence shows, by its line; across a Reload found again by openRow (its ID when one row has it). */
+  claim: null as OpenClaim | null,
   /** Open sections of the rest of the file, by RestSection.key; kept while the page lives. */
   open: new Set<string>(),
 };
@@ -190,11 +191,11 @@ function render(doc: Doc): void {
   for (const text of docNotes(doc)) notes.append(el("div", "note-box", text));
   body.append(notes);
   const card = snapshotCard(doc);
-  if (card !== null) body.append(snapshotSection(card.status, card.title, card.lines));
+  if (card !== null) body.append(snapshotSection(card.status, card.title, card.lines, card.note));
   const view = claimsView(doc);
   const rows = view.state === "claims" ? view.rows : [];
   // Reload keeps the open claim if the file still has it.
-  if (state.claim !== null && !rows.some((r) => claimKey(r) === state.claim)) state.claim = null;
+  state.claim = openClaimOf(openRow(rows, state.claim));
   renderClaims(doc, view);
   body.append(claimsBox, side, restSection(doc));
   show(body);
@@ -202,13 +203,13 @@ function render(doc: Doc): void {
 
 // ---- the Snapshot card ----------------------------------------------------------------
 
-function snapshotSection(status: string | null, title: SnapLine | null, lines: readonly SnapLine[]): HTMLElement {
+function snapshotSection(status: string | null, title: SnapLine | null, lines: readonly SnapLine[], note: string | null): HTMLElement {
   const box = el("section", "card sk-snap");
   box.setAttribute("aria-label", "Snapshot");
   const eyebrow = el("div", "eyebrow", "Snapshot");
   if (status !== null) eyebrow.append(pill(status, false));
   box.append(eyebrow);
-  const value = (line: SnapLine): Node[] => (line.value === null ? [el("span", "unfilled", "not filled in")] : md(line.value));
+  const value = (line: SnapLine): Node[] => (line.value === null ? [el("span", "unfilled", "not filled in")] : inlineNodes(line.tokens));
   if (title !== null) {
     const h = el("h2");
     h.append(...value(title));
@@ -219,13 +220,15 @@ function snapshotSection(status: string | null, title: SnapLine | null, lines: r
     p.append(el("b", "", line.label), ...value(line));
     box.append(selectable(p, () => line.selection));
   }
+  // The section is there but holds nothing the card draws: said in one line (its content is listed below).
+  if (note !== null) box.append(el("p", "unfilled", note));
   return box;
 }
 
 // ---- the claims and their evidence ----------------------------------------------------
 
-/** How a claim is kept open across Reload: its ID, or its line when it has none. */
-const claimKey = (row: ClaimRow) => (row.id === "—" ? `line ${row.line}` : row.id);
+/** A row as the open claim: its line, and its ID to find it again after a Reload. */
+const openClaimOf = (row: ClaimRow | null): OpenClaim | null => (row === null ? null : { line: row.line, id: row.id === "—" ? null : row.id });
 
 function renderClaims(doc: Doc, view: ClaimsView): void {
   clear(claimsBox);
@@ -246,7 +249,8 @@ function renderClaims(doc: Doc, view: ClaimsView): void {
   hrow.append(el("th", "", "Claim"), el("th"), el("th", "", "Evidence and source"));
   thead.append(hrow);
   const tbody = el("tbody");
-  const open = view.rows.find((r) => claimKey(r) === state.claim) ?? null;
+  // By line: two rows may share an ID.
+  const open = view.rows.find((r) => r.line === state.claim?.line) ?? null;
   for (const row of view.rows) {
     const tr = el("tr");
     tr.dataset.line = String(row.line);
@@ -305,8 +309,8 @@ function renderClaims(doc: Doc, view: ClaimsView): void {
 
 /** A claim row was clicked: its evidence opens, beside the table or under the row. */
 function openClaim(doc: Doc, view: ClaimsView, row: ClaimRow): void {
-  if (state.claim === claimKey(row)) return;
-  state.claim = claimKey(row);
+  if (state.claim?.line === row.line) return;
+  state.claim = openClaimOf(row);
   renderClaims(doc, view);
 }
 
@@ -363,13 +367,16 @@ function restSection(doc: Doc): HTMLElement {
   head.append(el("small", "", "folded; open a section to read it"));
   box.append(head);
   const rest = restSections(doc);
-  if (rest.sections.length === 0) box.append(el("div", "note-box", `Nothing else in ${FILE}.`));
+  // Only when it is true: the card and the claims table drew the whole file.
+  if (rest.nothingElse) box.append(el("div", "note-box", `Nothing else in ${FILE}.`));
   for (const s of rest.sections) box.append(folded(s));
   if (rest.note !== null) box.append(el("p", "table-note", rest.note));
+  // What is left out, said in one muted line each (section titles from the file, so marked).
+  for (const text of rest.notShown) box.append(el("p", "table-note", markInvisible(text)));
   return box;
 }
 
-/** One section: its title, line, and entries; its blocks drawn when it is first opened. */
+/** One entry: its name, line, and entries; its blocks drawn when it is first opened. */
 function folded(s: RestSection): HTMLElement {
   const details = el("details");
   const summary = el("summary");
@@ -379,7 +386,7 @@ function folded(s: RestSection): HTMLElement {
   const inner = el("div", "inner mddoc");
   details.append(summary, inner);
   const fill = () => {
-    if (inner.childElementCount === 0) for (const block of s.section.blocks) inner.append(...blockNodes(block, s.title));
+    if (inner.childElementCount === 0) for (const block of s.blocks) inner.append(...blockNodes(block, s.labelTitle));
   };
   if (state.open.has(s.key)) {
     details.open = true;
@@ -398,7 +405,7 @@ function folded(s: RestSection): HTMLElement {
 }
 
 /** A block of a section as DOM: each paragraph, list item, table row, and code block selectable. */
-function blockNodes(block: Block, title: string): HTMLElement[] {
+function blockNodes(block: Block, title: string | null): HTMLElement[] {
   if (block.kind === "paragraph") return [paragraph(block, title)];
   if (block.kind === "list") return [list(block, title)];
   if (block.kind === "table") return table(block, title);
@@ -406,13 +413,13 @@ function blockNodes(block: Block, title: string): HTMLElement[] {
   return [];
 }
 
-function paragraph(block: Paragraph, title: string): HTMLElement {
+function paragraph(block: Paragraph, title: string | null): HTMLElement {
   const p = el("p");
   p.append(...md(block.text));
   return selectable(p, () => blockSelection(block.first, block.last, title, block.lines));
 }
 
-function list(block: List, title: string): HTMLElement {
+function list(block: List, title: string | null): HTMLElement {
   const box = el(block.ordered ? "ol" : "ul");
   for (const item of block.items) {
     const li = el("li");
@@ -431,7 +438,7 @@ function list(block: List, title: string): HTMLElement {
   return box;
 }
 
-function table(block: Table, title: string): HTMLElement[] {
+function table(block: Table, title: string | null): HTMLElement[] {
   const t = el("table", "mdtable");
   const head = el("tr");
   for (const cell of block.header) {
@@ -455,9 +462,13 @@ function table(block: Table, title: string): HTMLElement[] {
   return [t, ...tableNotes(block).map((text) => el("p", "table-note", text))];
 }
 
-function code(block: Code, title: string): HTMLElement {
-  const pre = el("pre", "", markInvisible(block.body.map((line) => cutText(line)).join("\n")));
-  return selectable(pre, () => blockSelection(block.first, block.last, title, block.lines));
+/** A fenced code block: its info string (after the opening fence) as a caption, then its lines; selected whole. */
+function code(block: Code, title: string | null): HTMLElement {
+  const box = el("div", "codeblock");
+  // The info string is in the quote, so it is on screen too.
+  if (block.info !== "") box.append(el("div", "fence-info", markInvisible(block.info)));
+  box.append(el("pre", "", markInvisible(block.body.map((line) => cutText(line)).join("\n"))));
+  return selectable(box, () => blockSelection(block.first, block.last, title, block.lines));
 }
 
 // ---- start ----------------------------------------------------------------------------

@@ -8,10 +8,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { readSelect } from "../../../src/plugins/select.ts";
+import { CUT_MARK, quoteGlimpse, readSelect, referenceText } from "../../../src/plugins/select.ts";
 import type { PluginPage } from "../../../src/plugins/pages.ts";
 import { parse } from "../../md-kit.ts";
-import { LABEL_MAX, QUOTE_MAX, readStart } from "../../site-kit.ts";
+import { LABEL_MAX, markInvisible, QUOTE_MAX, readStart } from "../../site-kit.ts";
 import {
   blockSelection,
   claimsView,
@@ -20,7 +20,9 @@ import {
   evidenceOf,
   fileVerdict,
   fileWords,
+  openRow,
   projectWords,
+  QUOTE_CUT,
   READ_MAX,
   restSections,
   SECTIONS_MAX,
@@ -68,17 +70,20 @@ describe("§3.2 Snapshot status pill", () => {
 describe("§3.2 Snapshot lines: Working title, Thesis, Audience, Research question", () => {
   test("nanochat_cpu: each value, its continuation lines joined; selectable by its lines", () => {
     const card = snapshotCard(parse(NANOCHAT))!;
+    const value = "nanochat on a Laptop CPU: a Three-Minute End-to-End Example for the AI-Human Research OS";
     assert.deepEqual(card.title, {
       label: "Working title",
-      value: "nanochat on a Laptop CPU: a Three-Minute End-to-End Example for the AI-Human Research OS",
-      selection: { label: "paper_skeleton.md:8–9 · Snapshot", quote: `${lineAt(NANOCHAT, 8)}\n${lineAt(NANOCHAT, 9)}` },
+      value,
+      tokens: [{ kind: "text", text: value }],
+      selection: { label: "paper_skeleton.md:8–9 · section “Snapshot”", quote: `${lineAt(NANOCHAT, 8)}\n${lineAt(NANOCHAT, 9)}` },
     });
+    assert.equal(card.note, null);
     assert.deepEqual(
       card.lines.map((l) => [l.label, l.value, l.selection.label]),
       [
-        ["Thesis", "OpenResearch's nanochat demo, scaled to a 0.84M-parameter model, runs every stage on a laptop-class CPU in about three minutes, which makes it a runnable first example rather than a research result.", "paper_skeleton.md:13–15 · Snapshot"],
-        ["Audience", "Research OS users running their first example; not submitted anywhere", "paper_skeleton.md:10–11 · Snapshot"],
-        ["Research question", "none; the paper documents an example project.", "paper_skeleton.md:16 · Snapshot"],
+        ["Thesis", "OpenResearch's nanochat demo, scaled to a 0.84M-parameter model, runs every stage on a laptop-class CPU in about three minutes, which makes it a runnable first example rather than a research result.", "paper_skeleton.md:13–15 · section “Snapshot”"],
+        ["Audience", "Research OS users running their first example; not submitted anywhere", "paper_skeleton.md:10–11 · section “Snapshot”"],
+        ["Research question", "none; the paper documents an example project.", "paper_skeleton.md:16 · section “Snapshot”"],
       ],
     );
   });
@@ -91,7 +96,23 @@ describe("§3.2 Snapshot lines: Working title, Thesis, Audience, Research questi
       ["Audience", null],
       ["Research question", null],
     ]);
-    assert.deepEqual(card.title!.selection, { label: "paper_skeleton.md:8 · Snapshot", quote: "- Working title:" });
+    assert.deepEqual(card.title!.selection, { label: "paper_skeleton.md:8 · section “Snapshot”", quote: "- Working title:" });
+  });
+
+  test("bold labels fill the card; a Snapshot section without the items the card draws says so in one line (review F7)", () => {
+    const bold = snapshotCard(parse("## Snapshot\n\n- **Working title:** T\n- **Status:** draft\n- **One-sentence thesis**: the thesis\n"))!;
+    assert.deepEqual([bold.status, bold.title?.value, bold.lines.map((l) => [l.label, l.value])], ["draft", "T", [["Thesis", "the thesis"]]]);
+    assert.equal(bold.note, null);
+    const none = snapshotCard(parse("## Snapshot\n\n- Stage: s\n- Contributions: c\n"))!;
+    assert.deepEqual([none.status, none.title, none.lines, none.note], [null, null, [], "None of Working title, Status, One-sentence thesis, Target venue or audience, or Main research question is in the Snapshot list."]);
+    const noList = snapshotCard(parse("## Snapshot\n\nJust a paragraph.\n"))!;
+    assert.equal(noList.note, "The Snapshot section has no list of items.");
+    // What the card does not draw is listed below, as before.
+    assert.deepEqual(restSections(parse("## Snapshot\n\nJust a paragraph.\n")).sections.map((s) => s.title), ["Snapshot, other items"]);
+    // The claims table with bold headers, as an agent might write it.
+    const view = claimsView(parse("## Claims and Evidence\n\n| **Claim** | **Evidence** | **Source file or link** | **Citation/result** | **Status** |\n|---|---|---|---|---|\n| C1: x | e | s | r | verified |\n"));
+    assert.ok(view.state === "claims");
+    assert.deepEqual([view.summary, view.notes], ["1 claim · 1 verified · paper_skeleton.md:3–5", []]);
   });
 
   test("an item that is not there leaves its line out; no Snapshot section, no card", () => {
@@ -121,9 +142,17 @@ describe("§3.2 claims summary: count, verified, and the table's lines", () => {
   });
 
   test("the template: no filled row; no table: said so", () => {
-    assert.deepEqual(claimsView(parse(TEMPLATE)), { state: "no-claims", message: "No claims yet: the Claims and Evidence table has no filled row", notes: [] });
+    assert.deepEqual(claimsView(parse(TEMPLATE)), {
+      state: "no-claims",
+      message: "No claims yet: the Claims and Evidence table has no filled row",
+      notes: [],
+      drawn: [
+        [157, 157],
+        [159, 161],
+      ],
+    });
     for (const text of [withLine(113, "Claims go here."), withLine(111, "### Claims")]) {
-      assert.deepEqual(claimsView(parse(text)), { state: "no-table", message: "No Claims and Evidence table in paper_skeleton.md" });
+      assert.deepEqual(claimsView(parse(text)), { state: "no-table", message: "No Claims and Evidence table in paper_skeleton.md", drawn: [] });
     }
   });
 });
@@ -181,7 +210,10 @@ describe("§3.2 claim text; evidence · result; source", () => {
     const view = claimsView(parse(table));
     assert.ok(view.state === "claims");
     assert.deepEqual([view.rows[0]!.evidence, view.rows[0]!.source, view.rows[0]!.result, view.rows[0]!.status], [null, null, null, "verified"]);
-    assert.deepEqual(view.notes, ["No “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table."]);
+    assert.deepEqual(view.notes, [
+      "No “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table.",
+      "Columns not shown here: Proof; a claim's quote holds its whole row.",
+    ]);
     const noStatus = claimsView(parse("## Claims and Evidence\n\n| Claim | Evidence | Source file or link | Citation/result |\n|---|---|---|---|\n| C1: x | e | s | r |\n"));
     assert.ok(noStatus.state === "claims");
     assert.deepEqual(noStatus.notes, ["No “Status” column in the Claims and Evidence table."]);
@@ -191,8 +223,55 @@ describe("§3.2 claim text; evidence · result; source", () => {
     assert.deepEqual(noClaim, {
       state: "no-claims",
       message: "No claims yet: the Claims and Evidence table has no filled row",
-      notes: ["No “Claim”, “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table."],
+      notes: [
+        "No “Claim”, “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table.",
+        "Columns not shown here: Statement; a claim's quote holds its whole row.",
+      ],
+      drawn: [
+        [1, 1],
+        [3, 5],
+      ],
     });
+  });
+});
+
+describe("two claims with one ID (review F1)", () => {
+  const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+  const TWO = `## Claims and Evidence\n\n${HEAD}\n| C3: first C3 | e1 | [one](Code/one.py) | r1 | verified |\n| C3: second C3 | e2 | [two](Code/two.py) | r2 | removed |\n\n## Experiments\n\n| Study | Claim |\n|---|---|\n| Main | C3 |\n`;
+
+  test("a note under the table names the ID and its lines", () => {
+    const view = claimsView(parse(TWO));
+    assert.ok(view.state === "claims");
+    assert.deepEqual(view.notes, ["C3 is used by 2 rows: lines 5 and 6."]);
+    const three = claimsView(parse(TWO.replace("| C3: second C3", "| C3: second C3 | e | s | r | weak |\n| C3: third C3")));
+    assert.ok(three.state === "claims");
+    assert.deepEqual(three.notes.filter((n) => n.startsWith("C3")), ["C3 is used by 3 rows: lines 5, 6, and 7."]);
+    const nano = claimsView(parse(NANOCHAT));
+    assert.ok(nano.state === "claims" && nano.notes.length === 0, "no note without a repeated ID");
+  });
+
+  test("each row's evidence is its own; Used by lists the studies naming the ID for each", () => {
+    const doc = parse(TWO);
+    const rows = rowsOf(TWO);
+    const [first, second] = [evidenceOf(doc, rows[0]!), evidenceOf(doc, rows[1]!)];
+    assert.deepEqual([first.heading, first.files, first.usedBy], ["Claim C3 · paper_skeleton.md:5", [{ kind: "path", text: "Code/one.py" }], ["Main (paper_skeleton.md:12)"]]);
+    assert.deepEqual([second.heading, second.files, second.usedBy], ["Claim C3 · paper_skeleton.md:6", [{ kind: "path", text: "Code/two.py" }], ["Main (paper_skeleton.md:12)"]]);
+  });
+
+  test("the open claim is kept by its line; across a Reload by its ID only when one row has it", () => {
+    const rows = rowsOf(TWO);
+    assert.equal(openRow(rows, null), null);
+    assert.equal(openRow(rows, { line: 6, id: "C3" })?.line, 6, "the second C3, not the first");
+    assert.equal(openRow(rows, { line: 5, id: "C3" })?.line, 5);
+    // Reload after a line was added above: the ID moves the claim when it is unique.
+    const moved = rowsOf(withLine(114, `${lineAt(NANOCHAT, 114)}\n| C0: new | e | s | r | weak |`));
+    assert.equal(openRow(moved, { line: 116, id: "C2" })?.line, 117);
+    // Not unique: by its line; that line no longer a claim: closed.
+    assert.equal(openRow(rows, { line: 6, id: "C3" })?.text, "second C3");
+    assert.equal(openRow(rows, { line: 9, id: "C3" }), null);
+    // A claim with no ID: by its line.
+    const noId = rowsOf(withLine(117, lineAt(NANOCHAT, 117).replace("C3: ", "")));
+    assert.equal(openRow(noId, { line: 117, id: null })?.line, 117);
   });
 });
 
@@ -237,12 +316,13 @@ describe("§3.2 the evidence panel", () => {
 });
 
 describe("§3.2 the rest of paper_skeleton.md, folded", () => {
-  test("every section of levels 2 to 6 but Snapshot and Claims and Evidence that has a block, in file order, with its line and entries", () => {
+  test("every section with a block but what the card and the claims table draw, in file order, with its line and entries", () => {
     const rest = restSections(parse(NANOCHAT));
     assert.equal(rest.note, null);
     assert.deepEqual(
       rest.sections.map((s) => [s.title, s.summary]),
       [
+        ["Snapshot, other items", "line 17 · 1 entry"],
         ["Source Map", "line 23 · 9 entries"],
         ["Argument Map", "line 41 · 6 entries"],
         ["Abstract", "line 52 · 1 entry"],
@@ -257,10 +337,97 @@ describe("§3.2 the rest of paper_skeleton.md, folded", () => {
         ["Appendix and TODOs", "line 129 · 2 entries"],
       ],
     );
-    // The level-1 title and its paragraph, Snapshot, Tracking (no block of its own), and Claims and Evidence are not listed.
+    // The level-1 title and its paragraph are not listed, and the view says so; nor is Tracking, a heading with nothing under it, which it names.
+    assert.deepEqual(rest.notShown, ["The title and opening paragraph (lines 1–4) are not shown.", "Headings with nothing under them: Tracking (line 109)."]);
+    assert.equal(rest.nothingElse, false);
     const template = restSections(parse(TEMPLATE)).sections.map((s) => s.title);
     assert.ok(!template.includes("Paper Skeleton") && !template.includes("Snapshot") && !template.includes("Tracking") && !template.includes("Claims and Evidence"));
-    assert.deepEqual(template.slice(0, 4), ["Source Map", "Argument Map", "Abstract", "Introduction"]);
+    assert.deepEqual(template.slice(0, 4), ["Snapshot, other items", "Source Map", "Argument Map", "Abstract"]);
+  });
+
+  test("nothing in the file is hidden without the view saying so (review F5)", () => {
+    const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+    /** The non-blank lines that neither the card, the claims table, an entry of the rest, nor a "not shown" line accounts for. */
+    const unaccounted = (text: string): number[] => {
+      const doc = parse(text);
+      const covered = new Set<number>();
+      const add = (a: number, b: number) => {
+        for (let k = a; k <= b; k++) covered.add(k);
+      };
+      const card = snapshotCard(doc);
+      if (card !== null) for (const span of card.drawn) add(span[0], span[1]);
+      const view = claimsView(doc);
+      for (const span of view.drawn) add(span[0], span[1]);
+      const rest = restSections(doc);
+      for (const s of rest.sections) {
+        covered.add(s.heading ?? 0);
+        for (const b of s.blocks) add(b.first, b.last);
+      }
+      for (const span of rest.accounted) add(span[0], span[1]);
+      return text.split("\n").flatMap((l, k) => (/^[ \t]*$/.test(l) || covered.has(k + 1) ? [] : [k + 1]));
+    };
+    for (const [name, text] of [
+      ["nanochat_cpu", NANOCHAT],
+      ["the template", TEMPLATE],
+      ["headings all at level 1", `# Snapshot\n\n- Working title: T\n- Status: draft\n\n# Claims and Evidence\n\n${HEAD}\n| C1: x | e | [a](Code/a.py) | r | verified |\n\n# Experiments\n\n| Study | Claim |\n|---|---|\n| Main | C1 |\n\n# Abstract\n\nThe abstract.\n`],
+      ["a note and a second table under the claims", `## Claims and Evidence\n\n| Status | Claim | Retracted? | Evidence | Status | Citation/result | Source file or link |\n|---|---|---|---|---|---|---|\n| verified | C1: x holds | yes, see below | e | retracted | r | [a](Code/a.py) |\n\nC1 was retracted on 2026-11-20.\n\n${HEAD}\n| C2: a second table's claim | e | s | r | planned |\n`],
+      ["text before any heading, a title, an intro", "Text before any heading.\n\n# Paper\n\nIntro.\n\nMore under the title.\n\n## Notes\n\n- a\n"],
+      ["a line of U+FEFF inside the claims table", `## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\uFEFF\n| C2: after an invisible line | e | s | r | weak |\n`],
+      ["Snapshot items the card does not draw, and a paragraph", "## Snapshot\n\n- Working title: T\n- Contributions: c\n- Stage: s\n\nA note on the snapshot.\n"],
+      ["a row with an empty Claim cell among claims", `## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n|  | e | s | r | planned |\n`],
+    ] as const) {
+      assert.deepEqual(unaccounted(text), [], name);
+    }
+    // The reviewer's level-1 skeleton: Experiments and Abstract are listed, and "Nothing else" is not said.
+    const level1 = restSections(parse(`# Snapshot\n\n- Working title: T\n\n# Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\n# Experiments\n\n| Study | Claim |\n|---|---|\n| Main | C1 |\n\n# Abstract\n\nThe abstract.\n`));
+    assert.deepEqual(level1.sections.map((s) => s.title), ["Experiments", "Abstract"]);
+    assert.equal(level1.nothingElse, false);
+    // What the claims section holds besides its table, and the Snapshot items the card does not draw, are entries of their own.
+    const besides = restSections(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\nC1 was retracted.\n\n${HEAD}\n| C2: y | e | s | r | planned |\n`));
+    assert.deepEqual(besides.sections.map((s) => [s.title, s.summary]), [["Claims and Evidence, besides the table", "line 7 · 2 entries"]]);
+    const other = restSections(parse("## Snapshot\n\n- Working title: T\n- Contributions: c\n- Status: draft\n"));
+    assert.deepEqual(other.sections.map((s) => [s.title, s.summary, s.blocks.flatMap((b) => (b.kind === "list" ? b.items.map((i) => i.text) : []))]), [["Snapshot, other items", "line 4 · 1 entry", ["Contributions: c"]]]);
+    // Text before the first heading is an entry; its blocks' label says where they are.
+    const pre = restSections(parse("Text before any heading.\n\n# Paper\n\nIntro.\n\n## Notes\n\n- a\n"));
+    assert.deepEqual(pre.sections.map((s) => [s.title, s.labelTitle]), [["Before the first heading", null], ["Notes", "Notes"]]);
+    assert.equal(blockSelection(1, 1, null, ["Text before any heading."]).label, "paper_skeleton.md:1 · before the first heading");
+    assert.deepEqual(pre.notShown, ["The title and opening paragraph (lines 3–5) are not shown."]);
+    // "Nothing else" only when it is true.
+    const only = restSections(parse(`## Snapshot\n\n- Working title: T\n- Status: draft\n\n## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n`));
+    assert.deepEqual([only.sections, only.notShown, only.nothingElse], [[], [], true]);
+  });
+
+  test("items nested under a line the card draws are listed below, since the card draws only the line's own text", () => {
+    const text = "## Snapshot\n\n- Status: draft\n  - a nested note on the status\n- Working title: T\n  wrapped title\n  1. a sub-item of the title\n";
+    const card = snapshotCard(parse(text))!;
+    assert.equal(card.title!.value, "T wrapped title");
+    assert.deepEqual(card.drawn, [
+      [1, 1],
+      [5, 6],
+      [3, 3],
+    ]);
+    const other = restSections(parse(text)).sections;
+    assert.deepEqual(
+      other.map((s) => [s.title, s.summary, s.blocks.flatMap((b) => (b.kind === "list" ? b.items.map((i) => [i.first, i.text]) : []))]),
+      [["Snapshot, other items", "line 4 · 2 entries", [[4, "a nested note on the status"], [7, "a sub-item of the title"]]]],
+    );
+    // Selecting one quotes its own line under its section.
+    const item = (other[0]!.blocks[0] as Block & { items: { first: number; last: number; lines: string[] }[] }).items[0]!;
+    assert.deepEqual(blockSelection(item.first, item.last, other[0]!.labelTitle, item.lines), { label: "paper_skeleton.md:4 · section “Snapshot”", quote: "  - a nested note on the status" });
+  });
+
+  test("the claims table says which of its columns and rows it does not show (review F5)", () => {
+    const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+    const extra = claimsView(parse("## Claims and Evidence\n\n| Status | Claim | Retracted? | Evidence | Status | Citation/result | Source file or link |\n|---|---|---|---|---|---|---|\n| verified | C1: x holds | yes | e | retracted | r | [a](Code/a.py) |\n"));
+    assert.ok(extra.state === "claims");
+    assert.deepEqual(extra.notes, ["Columns not shown here: Retracted?, Status (2nd); a claim's quote holds its whole row."]);
+    const empty = claimsView(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n|  | e | s | r | planned |\n`));
+    assert.ok(empty.state === "claims");
+    assert.deepEqual(empty.notes, ["Line 6 has an empty Claim cell, so it is not listed as a claim."]);
+    const bom = claimsView(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\uFEFF\n| C2: after | e | s | r | weak |\n`));
+    assert.ok(bom.state === "claims");
+    assert.deepEqual(bom.rows.map((r) => [r.id, r.line]), [["C1", 5], ["C2", 7]], "the row after the invisible line still appears");
+    assert.deepEqual(bom.notes, ["Line 6 holds only invisible characters; the table goes on after it."]);
   });
 
   test(`at most ${SECTIONS_MAX} sections are listed, and the view says how many there are`, () => {
@@ -272,9 +439,9 @@ describe("§3.2 the rest of paper_skeleton.md, folded", () => {
   });
 
   test("a block of an open section: its lines and its section in the label, its lines as the quote", () => {
-    assert.deepEqual(blockSelection(83, 83, "Experiments", [lineAt(NANOCHAT, 83)]), { label: "paper_skeleton.md:83 · Experiments", quote: lineAt(NANOCHAT, 83) });
+    assert.deepEqual(blockSelection(83, 83, "Experiments", [lineAt(NANOCHAT, 83)]), { label: "paper_skeleton.md:83 · section “Experiments”", quote: lineAt(NANOCHAT, 83) });
     assert.deepEqual(blockSelection(25, 28, "Source Map", NANOCHAT.split("\n").slice(24, 28)), {
-      label: "paper_skeleton.md:25–28 · Source Map",
+      label: "paper_skeleton.md:25–28 · section “Source Map”",
       quote: NANOCHAT.split("\n").slice(24, 28).join("\n"),
     });
   });
@@ -293,15 +460,15 @@ describe("§3.2 the narrow window", () => {
 
 describe("labels and quotes within the host's limits", () => {
   test("a section title's invisible characters are markers, its blank runs one space; a long title is what is cut", () => {
-    assert.equal(blockSelection(5, 5, "Sec​tion‮ one", ["x"]).label, "paper_skeleton.md:5 · Sec⟨U+200B⟩tion⟨U+202E⟩ one");
-    assert.equal(blockSelection(5, 5, "a\t 　 b", ["x"]).label, "paper_skeleton.md:5 · a b");
+    assert.equal(blockSelection(5, 5, "Sec\u200Btion\u202E one", ["x"]).label, "paper_skeleton.md:5 · section “Sec⟨U+200B⟩tion⟨U+202E⟩ one”");
+    assert.equal(blockSelection(5, 5, "a\t\u00A0\u3000 b", ["x"]).label, "paper_skeleton.md:5 · section “a b”");
     const long = blockSelection(123, 456, "T".repeat(500), ["x"]).label;
     assert.equal(long.length, LABEL_MAX);
-    assert.ok(long.startsWith("paper_skeleton.md:123–456 · TTT") && long.endsWith("T…"), long);
+    assert.ok(long.startsWith("paper_skeleton.md:123–456 · section “TTT") && long.endsWith("T…”"), long);
     // What the host takes: one line of visible characters, and the label exactly as posted.
     const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
     const frame = {};
-    for (const label of ["paper_skeleton.md:5 · Sec⟨U+200B⟩tion", long, "paper_skeleton.md:116 · claim C2"]) {
+    for (const label of ["paper_skeleton.md:5 · section “Sec⟨U+200B⟩tion”", long, "paper_skeleton.md:116 · claim C2"]) {
       const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", label, quote: "x" } }, page, frame);
       assert.ok(read?.kind === "select" && read.reference.label === label, label);
     }
@@ -311,7 +478,7 @@ describe("labels and quotes within the host's limits", () => {
     const lines = Array.from({ length: 40 }, (_, k) => `- line ${k}: ${"x".repeat(80)}`);
     const selection = blockSelection(1, 40, "Big", lines);
     assert.equal(selection.quote!.length, QUOTE_MAX);
-    assert.ok(selection.quote!.endsWith("…"));
+    assert.ok(selection.quote!.endsWith(CUT_MARK), "ending in the host's mark (review F3)");
     assert.ok(selection.quote!.startsWith(`${lines[0]}\n${lines[1]}`));
     // A whole claim row can be 30 cells of 2,000 characters.
     const huge = `| C1: ${"y".repeat(5000)} | e | s | r | verified |`;
@@ -326,7 +493,119 @@ describe("labels and quotes within the host's limits", () => {
     assert.equal((ask(selection.quote!) as { reference: { quotesAsDrawn?: true } }).reference.quotesAsDrawn, undefined);
     // A cut never leaves half a surrogate pair.
     const emoji = blockSelection(1, 1, "E", [`${"x".repeat(QUOTE_MAX - 2)}😀😀`]).quote!;
-    assert.equal(emoji.length <= QUOTE_MAX && /^x+…$/.test(emoji), true, emoji.slice(-4));
+    assert.equal(emoji.length <= QUOTE_MAX && /^x+…\[cut\]$/.test(emoji), true, emoji.slice(-8));
+  });
+
+  test("a lone CR in a row: its label keeps the LF line number, and the host shows the CR as a marker in a one-line quote (review F2)", () => {
+    const text = withLine(116, lineAt(NANOCHAT, 116).replace("logged runs", "logged\rruns"));
+    const row = rowsOf(text)[1]!;
+    assert.equal(row.selection.label, "paper_skeleton.md:116 · claim C2");
+    const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
+    const frame = {};
+    const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", ...row.selection } }, page, frame);
+    assert.ok(read?.kind === "select");
+    assert.equal(read.reference.quote!.split("\n").length, 1, "one line, as the label cites one");
+    assert.match(read.reference.quote!, /logged⟨U\+000D⟩runs/);
+  });
+
+  test("U+2028, U+2029, NEL, VT, FF inside a line: drawn as markers, quoted on one line, and the ask bar agrees with the chip (review F10)", () => {
+    const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
+    const frame = {};
+    for (const sep of ["\u2028", "\u2029", "\u0085", "\v", "\f"]) {
+      const code = sep.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0");
+      const text = withLine(116, lineAt(NANOCHAT, 116).replace("base val bpb", `base val${sep}bpb`));
+      const row = rowsOf(text)[1]!;
+      assert.equal(row.selection.label, "paper_skeleton.md:116 · claim C2", code);
+      assert.match(markInvisible(row.text), new RegExp(`val⟨U\\+${code}⟩bpb`), `${code}: drawn as a marker`);
+      const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", ...row.selection } }, page, frame);
+      assert.ok(read?.kind === "select", code);
+      const quoted = read.reference.quote!;
+      assert.equal(quoted.split("\n").length, 1, `${code}: one line, as the label cites one`);
+      assert.ok(quoted.includes(`val⟨U+${code}⟩bpb`), code);
+      // What the bar shows before asking and what the chip sends are the same one line.
+      assert.ok(quoteGlimpse(quoted).size.startsWith("1 line ·"), code);
+      assert.equal(referenceText(read.reference), `About paper_skeleton.md:116 · claim C2\n> ${quoted}`, code);
+    }
+  });
+
+  test("a cut quote ends in the host's own mark, within 2,000 characters, splitting no pair and no marker (review F3)", () => {
+    assert.equal(QUOTE_CUT, CUT_MARK, "the page's mark is the host's");
+    const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
+    const frame = {};
+    const host = (selection: { label: string; quote?: string }) => {
+      const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", ...selection } }, page, frame);
+      assert.ok(read?.kind === "select", selection.label);
+      return read.reference;
+    };
+    // The reviewer's claim: the cell's last word fell past the cut, and a bare "…" did not say so.
+    const cell = `C1: The method improves accuracy${" ".repeat(1965)}not`;
+    const row = rowsOf(withLine(115, `| ${cell} | e | s | r | verified |`))[0]!;
+    assert.equal(row.selection.quote!.length, QUOTE_MAX);
+    assert.ok(row.selection.quote!.endsWith(CUT_MARK), JSON.stringify(row.selection.quote!.slice(-12)));
+    const sent = host(row.selection);
+    assert.ok(sent.quote!.endsWith(CUT_MARK) && referenceText(sent).endsWith(CUT_MARK), "the open chip ends in it");
+    // A line that really ends in "…" is not taken for a cut.
+    assert.equal(blockSelection(1, 1, "S", [`${"x".repeat(1999)}…`]).quote, `${"x".repeat(1999)}…`);
+    // Never half a surrogate pair, never half a marker the page wrote (a lone CR's).
+    // Each over 2,000 characters once the page's CR markers are in; the cut point (2,000 − 6) falls inside a pair or a marker.
+    for (const body of [`${"x".repeat(1993)}😀😀😀😀`, `${"x".repeat(1990)}${"\r".repeat(8)}`, `${"x".repeat(1990)}\r${"y".repeat(10)}`]) {
+      const q = blockSelection(1, 1, "S", [body]).quote!;
+      assert.ok(q.length <= QUOTE_MAX && q.endsWith(CUT_MARK), `${q.length} ${JSON.stringify(q.slice(-20))}`);
+      const kept = q.slice(0, -CUT_MARK.length);
+      assert.doesNotMatch(kept, /[\uD800-\uDBFF]$/, "no lone high surrogate");
+      assert.doesNotMatch(kept, /⟨[^⟩]*$/, "no half marker");
+      assert.ok(host({ label: "x", quote: q }).quote!.endsWith(CUT_MARK));
+    }
+  });
+
+  test("no section title can forge a claim's label (review F4)", () => {
+    const CLAIM = /^paper_skeleton\.md:\d+(–\d+)? · claim /;
+    const SECTION = /^paper_skeleton\.md:\d+(–\d+)? · section “[^”]*”$/;
+    // The reviewer's: a section titled "claim C2" holding a paragraph shaped as C2's row.
+    const forged = parse(`## Claims and Evidence\n\n| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|\n| C2: the real claim | e | s | r | weak |\n\n## claim C2\n\n| C2: a forged row, a paragraph here | e | s | r | verified |\n`);
+    const forgedSection = restSections(forged).sections.find((s) => s.title === "claim C2")!;
+    const block = forgedSection.blocks[0]!;
+    assert.equal(blockSelection(block.first, block.last, forgedSection.labelTitle, block.lines).label, "paper_skeleton.md:9 · section “claim C2”");
+    for (const title of [
+      "claim C2",
+      " · claim C9",
+      "[claim C2](x)",
+      "**claim** C2",
+      "x” · claim C2",
+      "“claim C2”",
+      "x \u0387 claim C2",
+      "x\u00A0·\u3000claim C2",
+      "paper_skeleton.md:1 · claim C1",
+      `${"T".repeat(190)} · claim C2`,
+    ]) {
+      const doc = parse(`## ${title}\n\nA paragraph.\n\n- an item\n\n| a |\n|---|\n| a row |\n`);
+      const s = restSections(doc).sections[0]!;
+      const labels = s.blocks.flatMap((b) =>
+        b.kind === "list"
+          ? b.items.map((i) => blockSelection(i.first, i.last, s.labelTitle, i.lines).label)
+          : b.kind === "table"
+            ? b.rows.map((r) => blockSelection(r.line, r.line, s.labelTitle, [r.source]).label)
+            : [blockSelection(b.first, b.last, s.labelTitle, b.lines).label],
+      );
+      assert.equal(labels.length, 3, title);
+      for (const label of labels) {
+        assert.doesNotMatch(label, CLAIM, `${title}: ${label}`);
+        assert.match(label, SECTION, `${title}: ${label}`);
+        assert.ok(label.length <= LABEL_MAX);
+      }
+    }
+    // The title is its plain text: a link is its text, bold its words.
+    assert.equal(blockSelection(3, 3, "[Method](x) and **more**", ["x"]).label, "paper_skeleton.md:3 · section “Method and more”");
+  });
+
+  test("a cut label splits no marker and no pair (review F3)", () => {
+    for (const title of [`${"T".repeat(150)}${"\u200B".repeat(20)}`, `${"T".repeat(165)}\u200B${"T".repeat(30)}`, "😀".repeat(120)]) {
+      const label = blockSelection(3, 3, title, ["x"]).label;
+      assert.ok(label.length <= LABEL_MAX, `${label.length}`);
+      assert.ok(label.endsWith("…”"), label.slice(-12));
+      assert.doesNotMatch(label, /⟨[^⟩]*…”$/, `half a marker: ${label.slice(-14)}`);
+      assert.doesNotMatch(label, /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/, "no lone surrogate");
+    }
   });
 
   test("a CRLF copy gives the same rows, selections, and Snapshot, with no carriage return", () => {

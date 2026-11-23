@@ -30,38 +30,78 @@ Status on 2026-11-23:
     message whose quote is over 2,000 characters
     ([src/plugins/select.ts](frontend/src/plugins/select.ts) `readSelect`, the
     `quote.length > QUOTE_MAX` check), so a click on a long block would show no ask
-    bar. The page cuts every quote to 2,000 characters as the Code view does
-    (site-kit's `clip`, ending "…", §1 fact 6), never leaving half a surrogate pair. A
-    claim row can be 60,000 characters (30 cells of 2,000); `logic.test.ts` sends a
-    40-line block (3,669 characters), cut, through `readSelect`, and shows the uncut
-    one ignored.
+    bar. The page cuts every quote to 2,000 characters ending in the host's own
+    `…[cut]` (not §1 fact 6's `clip` with a bare "…", which could not be told from
+    text that ends so; after the review, 2026-11-24), by the host's rule: never inside
+    a `⟨U+XXXX⟩` marker or a surrogate pair (site-kit's new `cutMarked`; the Code view
+    keeps `clip`). Labels are cut by the same rule, ending in "…". A claim row can be
+    60,000 characters (30 cells of 2,000); `logic.test.ts` sends a 40-line block
+    (3,669 characters), cut, through `readSelect`, and shows the uncut one ignored.
+  - **Labels** (after the review): a claim is `paper_skeleton.md:<line> · claim <ID>`
+    (`· Claims and Evidence` without an ID); anything else in a section, a Snapshot
+    line included, is `paper_skeleton.md:<lines> · section “<title>”`, the title as
+    plain text with a middle dot (or look-alike) made "-" and curly quotes straight,
+    so no title can forge a claim's label; text before the first heading is
+    `· before the first heading`. §1 fact 5 had `· <section>`.
+  - **Line numbers are LF-counted** (after the review): a lone CR is no line break,
+    so a label's line is the one `grep -n` and the Code view give; the CR stays in its
+    line, drawn as `⟨U+000D⟩`. The host takes CR, VT, FF, NEL, U+2028, and U+2029 in a
+    quote for line breaks, so the page quotes each as its marker, and the quote has
+    one line for each line its label cites; U+2028 and U+2029 are drawn as markers too.
+  - **Two claims with one ID:** the open claim is kept by its line (by its ID only
+    across a Reload, and only when one row has it), and a note names the ID and its
+    lines.
   - **The 1 MiB cap** is read as `readStart(res, READ_MAX + 1)`: `readStart` says
     `cut` when the body reaches its limit, so a file of exactly 1 MiB is read and one
     byte more is the "too large" screen.
+  - **"The rest of paper_skeleton.md" lists everything not drawn above it** (after
+    the review; §3.2 listed sections of levels 2 to 6 only): text before the first
+    heading; sections at any level; "Snapshot, other items" (items the card does not
+    draw, such as Contributions, and the section's other blocks); "Claims and
+    Evidence, besides the table". The file's level-1 title and the paragraph under it
+    stay out, and a muted line says so, as does one naming headings with nothing
+    under them. "Nothing else in paper_skeleton.md." appears only when it is true; a
+    test accounts for every non-blank line of both fixtures and of the reviewer's
+    skeletons. The card draws a Snapshot line's own text only, so items nested under
+    it are listed under "Snapshot, other items" too; a fenced block's info string,
+    which its quote holds, is drawn as a caption above it.
   - **Entries in a section's summary** count table rows (those past 500 too), list
     items, paragraphs, and also fenced code blocks, which §3.2 does not name.
   - **Notes the design does not list:** more than 20,000 lines read; a table's rows
-    past 500, columns past 30, and rows of another width than the header; more than
-    300 sections; a missing column, the Claim column included (then no row is a
-    claim, and the view says "No claims yet" with that note).
+    past 500, columns past 30, rows of another width than the header, and lines of
+    only invisible characters inside it (which do not end it); more than 300
+    sections; a missing column, the Claim column included (then no row is a claim,
+    and the view says "No claims yet" with that note); the claims table's columns it
+    does not draw ("Columns not shown here: Retracted?, Status (2nd)"); its rows with
+    an empty Claim cell; a repeated claim ID; a Snapshot section with no list, or
+    none of the items the card draws (the card says so).
+  - **Labels and headers by their plain text** (after the review): `**Status:**
+    draft`, `**Status**: draft`, and `` `Status`: draft `` are the Status item, and
+    `**Claim**`, `` `Claim` ``, and `Claim` are one header, wherever md-kit finds a
+    column by name; "Used by" reads the Experiments Claim cell's plain text, split
+    on "," and ";".
   - **"Files it names"** shows a project path in monospace, an address as text with
     "(an address, not a file of the project)", and a target that leaves the project
     "(outside the project)". "Used by" reads "Main result (paper_skeleton.md:83)", as
     the mockup has it. The empty panel says "the files it names" where the mockup
     said "what the source file itself says" (N-3).
-  - **Reload** keeps the open claim (by its ID) and the open sections, keeps the
-    scroll, and clears the selection.
+  - **Reload** keeps the open claim (by its ID when one row has it, else by its line)
+    and the open sections, keeps the scroll, and clears the selection.
   - **A wide table in an open section** (the Experiments table's seven columns in the
     main column at a 1,440 px window) wraps paths in code anywhere and, if still wider,
     scrolls inside its card; the end-to-end suite checks that neither the page nor a
     section's card is wider than its box.
-  - **md-kit's subset, as built** (its header and tests): an ATX heading starts at
-    column 0, and "#" alone is text; a list ends at a blank line, and another marker
-    kind starts another list; a bare "1." is an empty item; a paragraph ends at a
-    heading, a fence, a list marker, or a "|" line followed by a delimiter row;
-    `\|` in a cell is a pipe, inside code spans too (as GFM); a link's text holds no
-    "[" and its target runs to the first ")" (no titles); a leading byte-order mark is
-    dropped. Nested items carry whether they are numbered, for drawing.
+  - **md-kit's subset, as built** (its header and tests): LF (or CRLF) ends a line,
+    a lone CR does not; a blank line holds only spaces and tabs (U+FEFF, a no-break
+    space, U+3000 … are text), and md-kit trims only spaces and tabs; an ATX heading
+    starts at column 0, and "#" alone is text; a fence may be indented by up to three
+    spaces, opening and closing, as in CommonMark; a list ends at a blank line, and
+    another marker kind starts another list; a bare "1." is an empty item; a
+    paragraph ends at a heading, a fence, a list marker, or a "|" line followed by a
+    delimiter row; `\|` in a cell is a pipe, inside code spans too (as GFM); a link's
+    text holds no "[" and its target runs to the first ")" (no titles). md-kit drops
+    no byte-order mark: the decoder drops one, and a second is drawn as `⟨U+FEFF⟩`.
+    Nested items carry whether they are numbered, for drawing.
   - **Test fixtures:** md-kit's and the view's tests, and the end-to-end suite, read
     frozen copies of `nanochat_cpu`'s and the template's `paper_skeleton.md` in
     [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md), not the live
@@ -78,7 +118,10 @@ Status on 2026-11-23:
     [README.md](README.md)/[README_zh.md](README_zh.md) pair, which said Skeleton
     comes in step 2.
   - **File roots in `reads`** are under tests in `client/test/protocol.test.ts` ("a
-    file root"); the channel is unchanged. Twelve of fourteen mutations of
+    file root"); the channel is unchanged. A root names a path: when a project holds
+    a *folder* named `paper_skeleton.md`, its own contents are readable as a folder
+    root's are, and a link in it leaving the root is 404 (pinned; Part 3 §1 fact 1
+    is corrected). Twelve of fourteen mutations of
     `serveRead`, `matchRoot`, and `safeDecodedRelative` (each breaking one rule: most
     change one line, three rewrite `matchRoot`'s matching) made these tests fail. The two
     that did not are cases two layers hold: a listing of a file root stays 404
@@ -1183,6 +1226,13 @@ idea file's format (§5.1, §7).
   equal paths (`protocol.ts:331-334`); the declared-root check compares the root's
   real path with the declared pattern (`:410-414`); and a file is served when
   `stat` says it is one (`:594-595`). A listing of a file root is 404 (`:586-587`).
+- **Correction (2026-11-24, after the review of 2.1):** a root names a path, not a
+  kind of entry. When that path is a file, nothing below it is read; when a project
+  holds a *folder* named `paper_skeleton.md`, the folder is the root, and its own
+  contents are readable (its listing and the files in it are 200) as a folder
+  root's are. Its limit is a folder root's: a link in it that leaves the root is
+  404. The channel is unchanged; `client/test/protocol.test.ts` ("a file root")
+  pins this.
 - No test covers it: every fixture declares folders (`os-ui/client/test/protocol.test.ts:858-870`).
   So I ran a throwaway probe (macOS, Node 22.23.1, the commit's `protocol.ts` and
   `manifest.ts`, a temporary workspace; not committed) with

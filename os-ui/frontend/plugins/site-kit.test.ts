@@ -67,7 +67,7 @@ describe("the DOM helpers", () => {
     (globalThis as { document?: unknown }).document = fake.document;
     try {
       const { inlineNodes } = await import("./site-kit.ts");
-      const nodes = inlineNodes(inline(`a \`${MARKUP}\` **b [c](javascript:alert(1)** ![pic](https://md-image.invalid/a.png) ‮evil`));
+      const nodes = inlineNodes(inline(`a \`${MARKUP}\` **b [c](javascript:alert(1)** ![pic](https://md-image.invalid/a.png) \u202Eevil`));
       assert.deepEqual(nodes.map(shape), [
         "a ",
         { tag: "code", text: MARKUP },
@@ -100,7 +100,7 @@ describe("markInvisible", () => {
       assert.equal(markInvisible(text), visibleQuote(text), `U+${p.toString(16)}`);
     }
     assert.equal(markInvisible("tab\there"), "tab\there", "a tab stays");
-    assert.equal(markInvisible("❤️ and x️"), "❤️ and x⟨U+FE0F⟩", "U+FE0F stays after an emoji only");
+    assert.equal(markInvisible("❤\uFE0F and x\uFE0F"), "❤\uFE0F and x⟨U+FE0F⟩", "U+FE0F stays after an emoji only");
     assert.equal(markInvisible(MARKUP), MARKUP, "markup stays text, drawn as text");
   });
 });
@@ -147,7 +147,7 @@ describe("reading a response", () => {
     assert.deepEqual(readText(bytes.subarray(0, bytes.length - 1), true), { kind: "text", text: "ab" });
     assert.deepEqual(readText(bytes.subarray(0, bytes.length - 1)), { kind: "encoding" });
     assert.deepEqual(readText(new Uint8Array([0x61, 0x00])), { kind: "binary" });
-    assert.deepEqual(readText(new TextEncoder().encode("﻿bom")), { kind: "text", text: "bom" }, "a byte-order mark is dropped");
+    assert.deepEqual(readText(new TextEncoder().encode("\uFEFFbom")), { kind: "text", text: "bom" }, "a byte-order mark is dropped");
   });
 });
 

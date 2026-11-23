@@ -1539,9 +1539,18 @@ describe("desktop client on a Research OS folder", () => {
       assert.deepEqual(await sk.locator(".sk-snap p b").allTextContents(), ["Thesis", "Audience", "Research question"]);
       assert.equal(await sk.locator(".sk-claims .sk-h small").textContent(), "5 claims · 5 verified · paper_skeleton.md:113–119");
       assert.deepEqual(await sk.locator(".ctable tbody tr.blk td.id").allTextContents(), ["C1verified", "C2verified", "C3verified", "C4verified", "C5verified"]);
-      assert.equal(await sk.locator(".sk-rest details").count(), 12);
+      assert.equal(await sk.locator(".sk-rest details").count(), 13);
       assert.equal(await sk.locator(".sk-rest details[open]").count(), 0, "folded");
-      assert.equal((await sk.locator(".sk-rest summary").first().textContent())?.replace(/\s+/g, " "), "Source Mapline 23 · 9 entries");
+      // Nothing is hidden without the view saying so: the Snapshot items the card does not draw, then each section.
+      assert.deepEqual(
+        (await sk.locator(".sk-rest summary").allTextContents()).slice(0, 2).map((t) => t.replace(/\s+/g, " ")),
+        ["Snapshot, other itemsline 17 · 1 entry", "Source Mapline 23 · 9 entries"],
+      );
+      assert.deepEqual(await sk.locator(".sk-rest > p.table-note").allTextContents(), [
+        "The title and opening paragraph (lines 1–4) are not shown.",
+        "Headings with nothing under them: Tracking (line 109).",
+      ]);
+      assert.equal(await sk.getByText("Nothing else in paper_skeleton.md.").count(), 0);
       await sk.locator(".sk-side .nd-empty").waitFor({ state: "attached" });
       if ((await sk.evaluate(() => innerWidth)) >= 780) {
         // As in the mockup, the Snapshot card and the evidence panel start on the same line.
@@ -1605,7 +1614,7 @@ describe("desktop client on a Research OS folder", () => {
       await page.waitForTimeout(1100);
       await experiments.locator("tbody tr.blk").filter({ hasText: "Main result" }).click();
       const label = bar.locator("[data-selection-label]");
-      await label.filter({ hasText: "paper_skeleton.md:83 · Experiments" }).waitFor();
+      await label.filter({ hasText: "paper_skeleton.md:83 · section “Experiments”" }).waitFor();
       assert.equal(await label.getAttribute("title"), fixtureLine("nanochat_cpu.paper_skeleton.md", 83));
       await experiments.locator("tr.blk.picked").scrollIntoViewIfNeeded();
       await shot(page, "skeleton-4-folded-section-open-line-selected");
@@ -1614,7 +1623,7 @@ describe("desktop client on a Research OS folder", () => {
       await limits.locator("summary").click();
       await page.waitForTimeout(1100);
       await limits.locator("li.blk").first().click();
-      await label.filter({ hasText: "paper_skeleton.md:98 · Limitations" }).waitFor();
+      await label.filter({ hasText: "paper_skeleton.md:98 · section “Limitations”" }).waitFor();
       await sk.locator("body").press("Escape");
       await bar.waitFor({ state: "detached" });
       assert.equal(await sk.locator(".picked").count(), 0);
@@ -1658,11 +1667,17 @@ describe("desktop client on a Research OS folder", () => {
       lines[claimRow] = `| C1: ${MARKUP_TEXT} | ![x](https://md-image.invalid/a.png) | [x](javascript:window.top.__pwned=6) | r | verified |`;
       const sourceMap = lines.indexOf("## Source Map");
       lines[sourceMap] = `## Source Map ${MARKUP_TEXT}`;
+      // A fence whose info string carries markup: on screen as text, as it is in the quote.
+      lines.push("", "## Fenced", "", `\`\`\`${MARKUP_TEXT}`, "code", "```");
       writeFileSync(file, lines.join("\n"));
       await sk.locator(".subbar").getByRole("button", { name: "Reload" }).click();
       await sk.locator(".sk-claims .sk-h small").filter({ hasText: "1 claim · 1 verified" }).waitFor();
       assert.equal(await sk.locator(".ctable td.cl").textContent(), MARKUP_TEXT, "the claim's markup is its text");
       await sk.locator(".sk-rest summary").filter({ hasText: MARKUP_TEXT }).waitFor();
+      const fenced = sk.locator(".sk-rest details").filter({ has: sk.locator("summary", { hasText: "Fenced" }) });
+      await fenced.locator("summary").click();
+      assert.equal(await fenced.locator(".fence-info").textContent(), MARKUP_TEXT, "the info string is drawn, as text");
+      assert.equal(await fenced.locator("pre").textContent(), "code");
       const link = sk.locator(".ctable tr.blk .mdlink");
       assert.equal(await link.getAttribute("title"), "javascript:window.top.__pwned=6");
       assert.equal(await link.getAttribute("href"), null);
@@ -1678,6 +1693,38 @@ describe("desktop client on a Research OS folder", () => {
       assert.deepEqual(await pwned(sk), [undefined, undefined]);
       assert.equal(await page.locator('img[src="x"]').count(), 0);
       const bar = screen(page, "workspace").getByRole("region", { name: "Selection" });
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    } finally {
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
+  test("two claims with one ID: each row opens its own evidence, and a note names the ID", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = skeletonFile(TEMPLATE_PROJECT);
+    const original = readFileSync(file, "utf8");
+    try {
+      const { ws, sk } = await openSkeleton(TEMPLATE_PROJECT);
+      await clearAsk(ws, TEMPLATE_PROJECT);
+      const lines = original.split(/\r?\n/);
+      const at = lines.findIndex((l) => l.includes("planned / verified / weak / removed"));
+      lines.splice(at, 1, "| C3: first C3 | e1 | [one](Code/one.py) | r1 | verified |", "| C3: second C3 | e2 | [two](Code/two.py) | r2 | removed |");
+      writeFileSync(file, lines.join("\n"));
+      const [first, second] = [at + 1, at + 2];
+      await sk.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      await sk.locator(".sk-claims .sk-h small").filter({ hasText: "2 claims · 1 verified" }).waitFor();
+      await page.waitForTimeout(1100);
+      await sk.locator(`.ctable tr.blk[data-line="${second}"]`).click();
+      await sk.locator(".sk-side h4").filter({ hasText: `Claim C3 · paper_skeleton.md:${second}` }).waitFor({ state: "attached", timeout: 5000 });
+      assert.deepEqual(await sk.locator(".sk-side .files li").allTextContents(), ["Code/two.py"], "the second row's evidence, not the first's");
+      assert.deepEqual(await sk.locator(".ctable tr.on").evaluateAll((trs) => trs.map((tr) => (tr as HTMLElement).dataset.line)), [String(second)]);
+      await page.waitForTimeout(1100);
+      await sk.locator(`.ctable tr.blk[data-line="${first}"]`).click();
+      await sk.locator(".sk-side h4").filter({ hasText: `Claim C3 · paper_skeleton.md:${first}` }).waitFor({ state: "attached" });
+      assert.deepEqual(await sk.locator(".sk-side .files li").allTextContents(), ["Code/one.py"]);
+      await sk.getByText(`C3 is used by 2 rows: lines ${first} and ${second}.`, { exact: true }).waitFor({ timeout: 5000 });
+      const bar = ws.getByRole("region", { name: "Selection" });
       if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
     } finally {
       writeFileSync(file, original);
