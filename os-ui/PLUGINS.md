@@ -155,25 +155,32 @@ Status on 2026-11-23:
     starting, or not answering) is ended, its worker terminated, with a
     screen and Try again. A Reload takes its number before anything waits,
     so two in one task leave one document.
-  - **Bounds** (logic.ts, measured in the app on macOS arm64; the review's
-    numbers first):
+  - **Bounds** (logic.ts). The review's numbers come first; the new ones
+    were measured in the app on macOS arm64 with a probe script of the same
+    shape as the review's (one app per probe, peak working set of the
+    frame's process sampled every 0.5 s), the nested forms in a two-page
+    fixture whose page 2 is ordinary:
     - A page that takes longer than 15 s to draw (its content read in the
       worker, then drawn) is stopped: it shows a note, its worker is
       terminated, and the paper is opened again in a fresh one at the same
-      place without that page, until Reload. 15 s is many times what an
-      ordinary page needs (the nanochat paper's take well under a second).
-      The review's nested forms (20 levels, 4.6 KB) ran 35 s and reached
-      6.4 GB in the frame's process; now page 1 is stopped at 15.2 s, page 2
-      drawn, at a peak of 2.9-3.5 GB, of which about 1.3 GB was still held
-      30 s later.
+      place without that page, until Reload. Only time the page can be seen
+      counts: PDF.js draws in animation-frame steps, which stop while the tab
+      is hidden or the window is in the background, so that time (and a
+      sleep) is not counted. 15 s is many times what an ordinary page needs
+      (the nanochat paper's take well under a second). The review's nested
+      forms (20 levels, 4.6 KB) ran 35 s and reached 6.4 GB in the frame's
+      process; now page 1 is stopped at 15.2 s, page 2 drawn, at a peak of
+      2.9-3.5 GB, of which about 1.3 GB was still held 20 to 50 s after the
+      ordinary paper was reloaded.
     - A page's text is cut at 10,000 runs (a note says so) and gets the same
-      15 s budget; the review's 100,000 one-character runs took 138 s and
-      about 1 GB.
+      15 s budget: the review's 100,000 one-character runs took 138 s and
+      about 1 GB; now 10,000 are laid out in about 1 s at a peak of 388 MB.
     - At most 1,000 pages are laid out, and only as many as fit in one
       scrolling column at 300% under Chromium's 16,777,216 px clamp on an
       element's height (a page read later that is taller than the first lays
-      out fewer); the bar and the end of the column say "first 1,000 of
-      300,000". The review's 300,000 pages made 600,050 elements, about 2 s a
+      out fewer: the review's one-point page followed by a 14,400-point one
+      shows one page and says so); the bar and the end of the column say
+      "first 1,000 of 300,000". The review's 300,000 pages made 600,050 elements, about 2 s a
       scroll frame, and pages past the clamp unreachable; now 2,049
       elements, 7 ms a frame, the column 838,215 px tall at fit width.
     - `maxImageSize` is 4096 × 4096 (64 MiB decoded), down from 8192², which

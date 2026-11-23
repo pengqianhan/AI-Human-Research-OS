@@ -347,8 +347,10 @@ Resource bounds of the Paper view, as measured on macOS arm64
 ([os-ui/PLUGINS.md](../PLUGINS.md), S6b, has the numbers): pages are drawn
 near the view only; a far page gives back its canvas, what PDF.js kept to
 draw it, and its text layer; each canvas holds at most 4096 × 4096 pixels;
-a page that takes longer than 15 s to draw is stopped, noted, and its worker
-replaced, and its text is cut at 10,000 runs and given the same 15 s; at
+a page that takes longer than 15 s to draw (counting only time it can be
+seen: PDF.js's drawing waits while the tab is hidden) is stopped, noted, and
+its worker replaced, and its text is cut at 10,000 runs and given the same
+15 s; at
 most 1,000 pages are laid out, never past what one scrolling column can
 reach at 300%. Not bounded: memory within a page's 15 s (a page of nested
 forms reached about 3.5 GB in the frame's process before it was stopped),
@@ -627,7 +629,7 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 | API + real harness | `node --test` with `os-harness/tests/fake_claude.py` | `POST /send` → detached turn → trace; resume → turn 2 |
 | Dev-server adapters | `node --test` on a real Vite dev server | token before routing, mounts, context root |
 | Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the read channel on fixture plugins (routing, methods, dot paths, roots, link and junction escapes, listings, caps, headers), the navigation guard's targets, window bounds, menu |
-| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, the Code view (files, Git changes, selection to a reference chip, isolation), the Paper view (PDF.js draws `paper/main.pdf` lazily, pages and zoom, selection to a reference chip, every `paper/` state, a hostile PDF, text a PDF hides shown before Send, two Reloads at once, a stalled worker, a page over its time budget, a 300,000-page PDF, pictures and a non-embedded font read from the canvas, no FontFace, isolation, the worker under the plugin policy, the vendored files as shipped), endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
+| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, the Code view (files, Git changes, selection to a reference chip, isolation), the Paper view (PDF.js draws `paper/main.pdf` lazily, pages and zoom, selection to a reference chip, every `paper/` state, a hostile PDF, text a PDF hides shown before Send, two Reloads at once, a stalled worker, a worker that never answers, a page over its time budget and time hidden not counted, a 300,000-page PDF and a page taller than the column, pictures and a non-embedded font read from the canvas, no FontFace, isolation, the worker under the plugin policy, the vendored files as shipped), endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
 | Package smoke | the same E2E (`OS_CLIENT_E2E_EXECUTABLE=release`) on the unpacked app | the asar layout starts, generates, and isolates the viewer |
 | CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above, those tests included, on six OS/arch rows and uploads installers as artifacts | |
 
