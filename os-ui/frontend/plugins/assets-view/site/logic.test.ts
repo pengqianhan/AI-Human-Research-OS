@@ -838,6 +838,17 @@ describe("Used in finds the forms a writer uses, says what it could not read, an
     assert.deepEqual(placesOf("Figs/a.svg", "Run ``a ` [x](Figs/a.svg) b`` first.\n"), []);
   });
 
+  test("a '](' with no '[' before it to close is no link: an escaped '\\[' makes none, as md-kit reads it (review S2, follow-up)", () => {
+    for (const eol of [(t: string) => t, crlf]) {
+      assert.deepEqual(placesOf("Figs/a.svg", eol("See \\[f](Figs/a.svg).\n")), [], "an escaped [ opens no link");
+      assert.deepEqual(placesOf("Figs/a.svg", eol("See f](Figs/a.svg).\n")), [], "a ] with no [ closes none");
+      // An escaped [ inside a link's text leaves the link; a link after an escaped one is still found.
+      assert.deepEqual(placesOf("Figs/a.svg", eol("See [f \\[1](Figs/a.svg).\n")), ["paper_skeleton.md:1"]);
+      assert.deepEqual(placesOf("Figs/b.svg", eol("See \\[f](Figs/a.svg) and ![b](Figs/b.svg).\n")), ["paper_skeleton.md:1"]);
+      assert.deepEqual(placesOf("Figs/a.svg", eol("See \\\\[f](Figs/a.svg).\n")), ["paper_skeleton.md:1"], "an escaped backslash escapes no [");
+    }
+  });
+
   test("a link in a cell past 2,000 characters, or in a cell past the header's count, is found: a table row is read as written", () => {
     assert.deepEqual(placesOf("Figs/a.svg", `| Claim | Source |\n|---|---|\n| ${"long claim text ".repeat(130)}[fig](Figs/a.svg) | x |\n`).length, 1);
     assert.deepEqual(placesOf("Figs/a.svg", "| Figure | Note |\n|---|---|\n| Figure 1 | shown | [file](Figs/a.svg) |\n"), ["paper_skeleton.md:3 · Figure 1"]);
@@ -846,6 +857,12 @@ describe("Used in finds the forms a writer uses, says what it could not read, an
   test("what md-kit does not read is said: everything after an unclosed fence; for descriptions, cut cells and cells past the header", async () => {
     const fence = await modelOf(PROJECT, read("## Runs\n\n```bash\npython plot.py\n\n## Figures\n\n- [Figure 1](Figs/probe_comparison.svg)\n"), read(README_LF));
     assert.ok(fence.usedInNotes.includes("paper_skeleton.md: the view does not read everything after the unclosed code fence at line 3, so places there are not listed."), fence.usedInNotes.join("\n"));
+    // The datasets too (follow-up): a fence never closed before the Data section hides it, and the group says why.
+    const hidden = await modelOf(PROJECT, read("# s\n"), read("# Code\n\n```bash\npython run.py\n\n## Data\n\n| Dataset | Use |\n|---|---|\n| cais/mmlu | eval |\n"));
+    assert.ok(
+      group(hidden, "datasets").notes.includes("Code/README.md: the view does not read everything after the unclosed code fence at line 3, so datasets listed there are not shown."),
+      group(hidden, "datasets").notes.join("\n"),
+    );
     const cells = parse(`| File | What |\n|---|---|\n| [a.csv](a.csv) | ${"w".repeat(2100)} |\n| [b.csv](b.csv) | b | extra |\n`);
     assert.equal(
       unreadWords(cells, "Baselines/README.md", "they describe no file here"),
@@ -862,6 +879,8 @@ describe("Used in finds the forms a writer uses, says what it could not read, an
       ["an address of n '('", (n) => `[x](${"(".repeat(n)}`],
       ["backtick runs of every length", (n) => Array.from({ length: Math.floor(Math.sqrt(2 * n)) }, (_, k) => "`".repeat(k + 1)).join("](x)")],
       ["'\\' before every character", (n) => "\\(".repeat(n / 2)],
+      ["'[' n times, then '](' n times", (n) => `${"[".repeat(n / 3)}${"](".repeat(n / 3)}`],
+      ["'\\[' and '](' in turn", (n) => "\\[](".repeat(n / 4)],
     ];
     for (const [name, make] of cases) {
       const ratio = growth(make, (line) => usedInIndex([{ file: SKELETON, doc: parse(line) }]), 100_000);

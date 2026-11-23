@@ -371,15 +371,34 @@ function blankCodeSpans(line: string): string {
  * The addresses of the links and images of one line, as a writer gives them
  * (review S2): after each "](" outside code, a <…> address, or one up to
  * white space with balanced parentheses (`loss (1).png`), a title after it
- * left out; whatever the link's text holds ("[Figure [1]]"). One pass.
+ * left out; whatever the link's text holds ("[Figure [1]]"). A "](" whose
+ * "]" closes no unescaped "[" is no link, as md-kit reads it: "\[f](x)"
+ * names nothing. `before`: the "[" left open by the block's earlier lines (a
+ * link's text may break across lines); `open` is what this line leaves. One pass.
  */
-function addresses(line: string): string[] {
+function addresses(line: string, before = 0): { found: string[]; open: number } {
   const text = blankCodeSpans(line);
   const out: string[] = [];
+  // Which "]" closes a "[" before it; a backslash escapes the character after it.
+  const closes = new Uint8Array(text.length);
+  let open = before;
+  for (let k = 0; k < text.length; k++) {
+    const c = text.charCodeAt(k);
+    if (c === 92) k++;
+    else if (c === 91) open++;
+    else if (c === 93 && open > 0) {
+      open--;
+      closes[k] = 1;
+    }
+  }
   // Once no ">" is left, no later <…> address can close: not looked for again (one pass, not one per "](<").
   let noClose = false;
   let i = text.indexOf("](");
   while (i !== -1) {
+    if (closes[i] === 0) {
+      i = text.indexOf("](", i + 1);
+      continue;
+    }
     let j = i + 2;
     while (j < text.length && (text.charCodeAt(j) === 32 || text.charCodeAt(j) === 9)) j++;
     if (text.charCodeAt(j) === 60 && !noClose) {
@@ -408,14 +427,20 @@ function addresses(line: string): string[] {
     if (j > start) out.push(text.slice(start, j).replace(/\\(.)/g, "$1"));
     i = text.indexOf("](", Math.max(j, i + 2));
   }
-  return out;
+  return { found: out, open };
 }
 
-/** The project paths one line of `file` names, in NFC: a link or image whose address resolves to it, or a code span whose whole text is it. */
-function pathsNamed(line: string, file: string): Set<string> {
+/**
+ * The project paths one line of `file` names, in NFC: a link or image whose
+ * address resolves to it, or a code span whose whole text is it. `before`, as
+ * for addresses; the "[" this line leaves open are counted in `open`.
+ */
+function pathsNamed(line: string, file: string, before = 0, open?: { count: number }): Set<string> {
   const out = new Set<string>();
   for (const thing of named(inline(line))) if (thing.code !== undefined && thing.code !== "") out.add(thing.code.normalize("NFC"));
-  for (const address of addresses(line)) {
+  const read = addresses(line, before);
+  if (open !== undefined) open.count = read.open;
+  for (const address of read.found) {
     const resolved = resolveLink(address, file);
     if (resolved?.kind === "path") out.add(resolved.path.normalize("NFC"));
   }
@@ -554,8 +579,10 @@ export function usedInIndex(docs: readonly { file: string; doc: Doc }[]): Map<st
     /** Lines one by one, then the joined text for what no single line names. */
     const lines = (from: number, source: readonly string[], joined: readonly string[], last: number) => {
       const found = new Set<string>();
+      // A "[" left open on one line may be closed on the next: its link's text breaks across them.
+      const open = { count: 0 };
       source.forEach((line, k) => {
-        const paths = pathsNamed(line, file);
+        const paths = pathsNamed(line, file, open.count, open);
         for (const p of paths) found.add(p);
         add(paths, from + k, from + k, null);
       });
@@ -820,6 +847,9 @@ export function buildModel(input: ModelInput): Model {
     if (!input.readme.ok) message = "status" in input.readme && input.readme.status === 404 ? `No ${README}` : `${README} could not be read: ${readProblem(input.readme)}`;
     else {
       view = datasets(input.readme.doc);
+      // A fence never closed: md-kit reads the rest as code, so a Data section after it is not seen.
+      const fence = input.readme.doc.blocks.find((b) => b.kind === "code" && !b.closed);
+      if (fence !== undefined) notes.unshift(`${README}: the view does not read everything after the unclosed code fence at line ${n(fence.first)}, so datasets listed there are not shown.`);
       if (input.readme.doc.cut) notes.unshift(`${README}: the view does not read lines past ${n(input.readme.doc.lines)}, so datasets listed there are not shown.`);
       if (view.state === "no-section") message = `${README} has no Data section`;
       else if (view.state === "no-table") message = `No dataset table in ${README}'s Data section`;
