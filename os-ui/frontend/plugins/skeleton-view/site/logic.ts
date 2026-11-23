@@ -68,12 +68,13 @@ function label(base: string, title: string): string {
 }
 
 /**
- * A character the host takes for a line break in a quote (src/plugins/select.ts
- * LINE_BREAKS) but md-kit leaves inside a line: a lone CR. Quoted as the
- * marker the host would show for an invisible character, so the quote has
- * one line for each line its label cites.
+ * The characters the host takes for a line break in a quote
+ * (src/plugins/select.ts LINE_BREAKS) but md-kit leaves inside a line: a
+ * lone CR, VT, FF, NEL, U+2028, U+2029. Quoted as the marker the page draws
+ * for them, so the quote has one line for each line its label cites, and
+ * the ask bar and the chip show the line as the page does.
  */
-const BREAK_IN_LINE = /\r/g;
+const BREAK_IN_LINE = /[\r\v\f\u0085\u2028\u2029]/g;
 const marker = (c: string) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`;
 
 /**

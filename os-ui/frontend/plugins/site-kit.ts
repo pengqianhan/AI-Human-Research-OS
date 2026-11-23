@@ -75,12 +75,14 @@ export function inlineNodes(tokens: readonly Inline[]): Node[] {
  * Text with the host's quote class (src/plugins/select.ts QUOTE_INVISIBLE:
  * controls, format and default-ignorable characters, the Braille blank, all
  * but tab and line feed) drawn as markers, "⟨U+202E⟩", as the composer shows
- * them in a quote, so a bidi control cannot reorder what a view draws. U+FE0F
- * right after an emoji is ordinary emoji presentation and stays.
+ * them in a quote, so a bidi control cannot reorder what a view draws; also
+ * U+2028 and U+2029, which break a line on screen and in the host's quote
+ * but not in a file's line count. U+FE0F right after an emoji is ordinary
+ * emoji presentation and stays.
  */
 export function markInvisible(text: string): string {
-  return text.replace(/(?![\t\n])[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}⠀]/gu, (c: string, at: number, all: string) =>
-    c === "️" && /\p{Extended_Pictographic}$/u.test(all.slice(Math.max(0, at - 2), at)) ? c : `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`,
+  return text.replace(/(?![\t\n])[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2800\u2028\u2029]/gu, (c: string, at: number, all: string) =>
+    c === "\uFE0F" && /\p{Extended_Pictographic}$/u.test(all.slice(Math.max(0, at - 2), at)) ? c : `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`,
   );
 }
 

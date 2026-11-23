@@ -8,10 +8,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { CUT_MARK, readSelect, referenceText } from "../../../src/plugins/select.ts";
+import { CUT_MARK, quoteGlimpse, readSelect, referenceText } from "../../../src/plugins/select.ts";
 import type { PluginPage } from "../../../src/plugins/pages.ts";
 import { parse } from "../../md-kit.ts";
-import { LABEL_MAX, QUOTE_MAX, readStart } from "../../site-kit.ts";
+import { LABEL_MAX, markInvisible, QUOTE_MAX, readStart } from "../../site-kit.ts";
 import {
   blockSelection,
   claimsView,
@@ -372,7 +372,7 @@ describe("§3.2 the rest of paper_skeleton.md, folded", () => {
       ["headings all at level 1", `# Snapshot\n\n- Working title: T\n- Status: draft\n\n# Claims and Evidence\n\n${HEAD}\n| C1: x | e | [a](Code/a.py) | r | verified |\n\n# Experiments\n\n| Study | Claim |\n|---|---|\n| Main | C1 |\n\n# Abstract\n\nThe abstract.\n`],
       ["a note and a second table under the claims", `## Claims and Evidence\n\n| Status | Claim | Retracted? | Evidence | Status | Citation/result | Source file or link |\n|---|---|---|---|---|---|---|\n| verified | C1: x holds | yes, see below | e | retracted | r | [a](Code/a.py) |\n\nC1 was retracted on 2026-11-20.\n\n${HEAD}\n| C2: a second table's claim | e | s | r | planned |\n`],
       ["text before any heading, a title, an intro", "Text before any heading.\n\n# Paper\n\nIntro.\n\nMore under the title.\n\n## Notes\n\n- a\n"],
-      ["a line of U+FEFF inside the claims table", `## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n﻿\n| C2: after an invisible line | e | s | r | weak |\n`],
+      ["a line of U+FEFF inside the claims table", `## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\uFEFF\n| C2: after an invisible line | e | s | r | weak |\n`],
       ["Snapshot items the card does not draw, and a paragraph", "## Snapshot\n\n- Working title: T\n- Contributions: c\n- Stage: s\n\nA note on the snapshot.\n"],
       ["a row with an empty Claim cell among claims", `## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n|  | e | s | r | planned |\n`],
     ] as const) {
@@ -405,7 +405,7 @@ describe("§3.2 the rest of paper_skeleton.md, folded", () => {
     const empty = claimsView(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n|  | e | s | r | planned |\n`));
     assert.ok(empty.state === "claims");
     assert.deepEqual(empty.notes, ["Line 6 has an empty Claim cell, so it is not listed as a claim."]);
-    const bom = claimsView(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n﻿\n| C2: after | e | s | r | weak |\n`));
+    const bom = claimsView(parse(`## Claims and Evidence\n\n${HEAD}\n| C1: x | e | s | r | verified |\n\uFEFF\n| C2: after | e | s | r | weak |\n`));
     assert.ok(bom.state === "claims");
     assert.deepEqual(bom.rows.map((r) => [r.id, r.line]), [["C1", 5], ["C2", 7]], "the row after the invisible line still appears");
     assert.deepEqual(bom.notes, ["Line 6 holds only invisible characters; the table goes on after it."]);
@@ -441,8 +441,8 @@ describe("§3.2 the narrow window", () => {
 
 describe("labels and quotes within the host's limits", () => {
   test("a section title's invisible characters are markers, its blank runs one space; a long title is what is cut", () => {
-    assert.equal(blockSelection(5, 5, "Sec​tion‮ one", ["x"]).label, "paper_skeleton.md:5 · section “Sec⟨U+200B⟩tion⟨U+202E⟩ one”");
-    assert.equal(blockSelection(5, 5, "a\t 　 b", ["x"]).label, "paper_skeleton.md:5 · section “a b”");
+    assert.equal(blockSelection(5, 5, "Sec\u200Btion\u202E one", ["x"]).label, "paper_skeleton.md:5 · section “Sec⟨U+200B⟩tion⟨U+202E⟩ one”");
+    assert.equal(blockSelection(5, 5, "a\t\u00A0\u3000 b", ["x"]).label, "paper_skeleton.md:5 · section “a b”");
     const long = blockSelection(123, 456, "T".repeat(500), ["x"]).label;
     assert.equal(long.length, LABEL_MAX);
     assert.ok(long.startsWith("paper_skeleton.md:123–456 · section “TTT") && long.endsWith("T…”"), long);
@@ -487,6 +487,26 @@ describe("labels and quotes within the host's limits", () => {
     assert.ok(read?.kind === "select");
     assert.equal(read.reference.quote!.split("\n").length, 1, "one line, as the label cites one");
     assert.match(read.reference.quote!, /logged⟨U\+000D⟩runs/);
+  });
+
+  test("U+2028, U+2029, NEL, VT, FF inside a line: drawn as markers, quoted on one line, and the ask bar agrees with the chip (review F10)", () => {
+    const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
+    const frame = {};
+    for (const sep of ["\u2028", "\u2029", "\u0085", "\v", "\f"]) {
+      const code = sep.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0");
+      const text = withLine(116, lineAt(NANOCHAT, 116).replace("base val bpb", `base val${sep}bpb`));
+      const row = rowsOf(text)[1]!;
+      assert.equal(row.selection.label, "paper_skeleton.md:116 · claim C2", code);
+      assert.match(markInvisible(row.text), new RegExp(`val⟨U\\+${code}⟩bpb`), `${code}: drawn as a marker`);
+      const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", ...row.selection } }, page, frame);
+      assert.ok(read?.kind === "select", code);
+      const quoted = read.reference.quote!;
+      assert.equal(quoted.split("\n").length, 1, `${code}: one line, as the label cites one`);
+      assert.ok(quoted.includes(`val⟨U+${code}⟩bpb`), code);
+      // What the bar shows before asking and what the chip sends are the same one line.
+      assert.ok(quoteGlimpse(quoted).size.startsWith("1 line ·"), code);
+      assert.equal(referenceText(read.reference), `About paper_skeleton.md:116 · claim C2\n> ${quoted}`, code);
+    }
   });
 
   test("a cut quote ends in the host's own mark, within 2,000 characters, splitting no pair and no marker (review F3)", () => {
@@ -535,7 +555,7 @@ describe("labels and quotes within the host's limits", () => {
       "x” · claim C2",
       "“claim C2”",
       "x · claim C2",
-      "x ·　claim C2",
+      "x\u00A0·\u3000claim C2",
       "paper_skeleton.md:1 · claim C1",
       `${"T".repeat(190)} · claim C2`,
     ]) {
@@ -560,7 +580,7 @@ describe("labels and quotes within the host's limits", () => {
   });
 
   test("a cut label splits no marker and no pair (review F3)", () => {
-    for (const title of [`${"T".repeat(150)}${"​".repeat(20)}`, `${"T".repeat(165)}​${"T".repeat(30)}`, "😀".repeat(120)]) {
+    for (const title of [`${"T".repeat(150)}${"\u200B".repeat(20)}`, `${"T".repeat(165)}\u200B${"T".repeat(30)}`, "😀".repeat(120)]) {
       const label = blockSelection(3, 3, title, ["x"]).label;
       assert.ok(label.length <= LABEL_MAX, `${label.length}`);
       assert.ok(label.endsWith("…”"), label.slice(-12));

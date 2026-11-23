@@ -29,7 +29,7 @@ import {
   usedBy,
 } from "./md-kit.ts";
 import type { Block, Doc, Table } from "./md-kit.ts";
-import { markInvisible } from "./site-kit.ts";
+import { markInvisible, readText } from "./site-kit.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 /** A fixture as LF text, whatever line endings the checkout gave it. */
@@ -328,7 +328,7 @@ describe("blocks", () => {
 
   test("only spaces and tabs make a line blank; a line of invisible characters inside a table does not end it (review F5)", () => {
     // JavaScript's trim() takes U+FEFF, a no-break space, U+2028, U+3000 …: none of them is a blank line here.
-    for (const odd of ["﻿", " ", " ", "　", " ​\t"]) {
+    for (const odd of ["\uFEFF", "\u00A0", "\u2028", "\u3000", " \u200B\t"]) {
       const doc = parse(`| a |\n|---|\n| 1 |\n${odd}\n| 2 |\n`);
       assert.equal(doc.blocks.length, 1, JSON.stringify(odd));
       const t = doc.blocks[0] as Table;
@@ -468,6 +468,51 @@ describe("inline tokens", () => {
     // The same for a whole file of such lines through parse.
     const file = `${"| [` |\n".repeat(10)}${"[`".repeat(50_000)}\n`;
     assert.ok(timed(() => parse(file)) < 500);
+  });
+});
+
+describe("the review's small ones (F8, F9, F11)", () => {
+  const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+
+  test("F8: a fence may be indented by up to three spaces, opening and closing, as in CommonMark", () => {
+    // A table GitHub shows as code is code here too, not claims.
+    const wrapped = parse(` \`\`\`\n## Claims and Evidence\n\n${HEAD}\n| C1: shown as code on GitHub | e | s | r | verified |\n \`\`\`\n`);
+    assert.deepEqual(wrapped.blocks.map((b) => [b.kind, b.first, b.last]), [["code", 1, 7]]);
+    assert.equal(claims(sections(wrapped)).found, false);
+    // An indented closing fence closes the block, so what follows is read.
+    const closed = parse(`## Notes\n\n\`\`\`\ncode\n   \`\`\`\n\n## Claims and Evidence\n\n${HEAD}\n| C1: a claim | e | s | r | verified |\n`);
+    assert.deepEqual(closed.blocks.map((b) => [b.kind, b.first, b.last]), [["heading", 1, 1], ["code", 3, 5], ["heading", 7, 7], ["table", 9, 11]]);
+    assert.deepEqual((closed.blocks[1] as Block & { body: string[] }).body, ["code"]);
+    // Up to three: four spaces is no fence (indented code is not in md-kit's subset, so it is a paragraph).
+    assert.deepEqual(parse("    ```\nx\n").blocks.map((b) => b.kind), ["paragraph"]);
+    assert.deepEqual(parse("```\nx\n    ```\ny\n").blocks.map((b) => [b.kind, b.first, b.last]), [["code", 1, 4]], "a closing fence indented by four is code");
+    // The opening fence's indentation is taken off the body, as CommonMark does.
+    assert.deepEqual((parse("  ```\n  a\n    b\nc\n  ```\n").blocks[0] as Block & { body: string[] }).body, ["a", "  b", "c"]);
+  });
+
+  test("F9: the Experiments table's Claim cell is read as plain text, split on , and ;", () => {
+    const rows = studies(sections(parse("## Experiments\n\n| Study | Claim |\n|---|---|\n| Plain | C1 |\n| Code span | `C1` |\n| Linked | [C1](#c1) |\n| Semicolon | C1; C2 |\n| Bold | **C1** |\n| **Bold study** | C3 |\n")))!;
+    assert.deepEqual(rows.map((r) => [r.study, r.ids]), [
+      ["Plain", ["C1"]],
+      ["Code span", ["C1"]],
+      ["Linked", ["C1"]],
+      ["Semicolon", ["C1", "C2"]],
+      ["Bold", ["C1"]],
+      ["Bold study", ["C3"]],
+    ]);
+    assert.deepEqual(usedBy(rows, "C1").map((s) => s.study), ["Plain", "Code span", "Linked", "Semicolon", "Bold"]);
+  });
+
+  test("F11: md-kit drops no byte-order mark; the decoder drops exactly one, so a second shows as a marker", () => {
+    const doc = parse("\uFEFF# T\n");
+    assert.deepEqual(doc.blocks.map((b) => b.kind), ["paragraph"], "a mark before # is a character: no heading");
+    assert.equal(markInvisible((doc.blocks[0] as Block & { text: string }).text), "⟨U+FEFF⟩# T");
+    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0xef, 0xbb, 0xbf, ...new TextEncoder().encode("# T\n")]);
+    const read = readText(bytes);
+    assert.ok(read.kind === "text");
+    assert.equal(read.text, "\uFEFF# T\n", "one of the two is dropped");
+    assert.equal(markInvisible((parse(read.text).blocks[0] as Block & { text: string }).text), "⟨U+FEFF⟩# T");
+    assert.deepEqual(parse("# T\n").blocks.map((b) => b.kind), ["heading"]);
   });
 });
 

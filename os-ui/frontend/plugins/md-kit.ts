@@ -289,7 +289,7 @@ const blank = (line: string) => trimSpaces(line) === "";
  * characters other than plain spaces and tabs. Inside a table it does not
  * end the table (the rows after it are still rows); the table records it.
  */
-const INVISIBLE_ONLY = /^[ \t\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Z}⠀]+$/u;
+const INVISIBLE_ONLY = /^[ \t\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Z}\u2800]+$/u;
 const invisibleOnly = (line: string) => !blank(line) && INVISIBLE_ONLY.test(line);
 
 /** Leading white space as columns: a space is 1, a tab 4. */
@@ -320,23 +320,40 @@ function headingOf(line: string): { level: number; text: string } | null {
   return { level, text };
 }
 
-/** A fence: three or more backticks or tildes; its character, length, and info string. */
-function fenceOf(line: string): { char: number; length: number; info: string } | null {
-  const char = line.charCodeAt(0);
-  if (char !== TICK && char !== 126) return null;
-  let length = 0;
-  while (length < line.length && line.charCodeAt(length) === char) length++;
-  return length >= 3 ? { char, length, info: trimSpaces(line.slice(length)) } : null;
+/** Leading spaces (not tabs), at most `max` + 1 counted. */
+function spacesBefore(line: string, max: number): number {
+  let n = 0;
+  while (n <= max && line.charCodeAt(n) === 32) n++;
+  return n;
 }
 
-function closesFence(line: string, fence: { char: number; length: number }): boolean {
-  let end = line.length;
-  while (end > 0 && spaceOrTab(line.charCodeAt(end - 1))) end--;
-  const trimmed = line.slice(0, end);
-  let length = 0;
-  while (length < trimmed.length && trimmed.charCodeAt(length) === fence.char) length++;
-  return length >= fence.length && length === trimmed.length;
+/**
+ * A fence, as in CommonMark: up to three spaces, then three or more
+ * backticks or tildes; its character, length, indentation, and info string.
+ */
+function fenceOf(line: string): { char: number; length: number; indent: number; info: string } | null {
+  const indent = spacesBefore(line, 3);
+  if (indent > 3) return null;
+  const char = line.charCodeAt(indent);
+  if (char !== TICK && char !== 126) return null;
+  let end = indent;
+  while (end < line.length && line.charCodeAt(end) === char) end++;
+  return end - indent >= 3 ? { char, length: end - indent, indent, info: trimSpaces(line.slice(end)) } : null;
 }
+
+/** A closing fence: up to three spaces, at least as many of the same character, then only spaces and tabs. */
+function closesFence(line: string, fence: { char: number; length: number }): boolean {
+  const indent = spacesBefore(line, 3);
+  if (indent > 3) return false;
+  let end = line.length;
+  while (end > indent && spaceOrTab(line.charCodeAt(end - 1))) end--;
+  let k = indent;
+  while (k < end && line.charCodeAt(k) === fence.char) k++;
+  return k - indent >= fence.length && k === end;
+}
+
+/** A code line with up to `indent` leading spaces taken off, as CommonMark takes off the opening fence's indentation. */
+const unindent = (line: string, indent: number) => line.slice(Math.min(indent, spacesBefore(line, indent)));
 
 /** A list item's marker at the start of `text`: "-", "*", "+", or 1 to 9 digits and ".", then a space or the end. */
 function markerOf(text: string): { kind: string; width: number } | null {
@@ -410,7 +427,8 @@ const drawn = (line: string) => cutText(trimSpaces(line));
 
 /** The blocks of a Markdown text, in one pass over at most LIMITS.lines lines. */
 export function parse(source: string): Doc {
-  const all = splitLines(source.startsWith("﻿") ? source.slice(1) : source);
+  // No byte-order mark is dropped here: the decoder (site-kit readText) drops one, and a second is a character, shown as a marker.
+  const all = splitLines(source);
   const cut = all.length > LIMITS.lines;
   const lines = cut ? all.slice(0, LIMITS.lines) : all;
   const blocks: Block[] = [];
@@ -434,7 +452,7 @@ export function parse(source: string): Doc {
       while (j < lines.length && !closesFence(lines[j]!, fence)) j++;
       const closed = j < lines.length;
       const end = closed ? j : lines.length - 1;
-      blocks.push({ kind: "code", info: cutText(fence.info), body: lines.slice(i + 1, closed ? j : lines.length), closed, ...span(i, end) });
+      blocks.push({ kind: "code", info: cutText(fence.info), body: lines.slice(i + 1, closed ? j : lines.length).map((l) => unindent(l, fence.indent)), closed, ...span(i, end) });
       i = end + 1;
       continue;
     }
@@ -729,9 +747,10 @@ export function studies(all: readonly Section[]): Study[] | null {
   const at = column(table.header, "Claim");
   if (at === -1) return null;
   return table.rows.map((row) => ({
-    study: row.cells[0] ?? "",
+    study: trimSpaces(plain(inline(row.cells[0] ?? ""))),
     line: row.line,
-    ids: row.cells[at]!.split(",").map((s) => trimSpaces(s)).filter((s) => s !== ""),
+    // The cell's plain text, so `C1`, **C1**, and [C1](#c1) are C1; listed with "," or ";".
+    ids: plain(inline(row.cells[at]!)).split(/[,;]/).map((s) => trimSpaces(s)).filter((s) => s !== ""),
   }));
 }
 
