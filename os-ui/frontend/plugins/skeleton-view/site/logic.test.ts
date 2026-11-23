@@ -73,14 +73,14 @@ describe("§3.2 Snapshot lines: Working title, Thesis, Audience, Research questi
     assert.deepEqual(card.title, {
       label: "Working title",
       value: "nanochat on a Laptop CPU: a Three-Minute End-to-End Example for the AI-Human Research OS",
-      selection: { label: "paper_skeleton.md:8–9 · Snapshot", quote: `${lineAt(NANOCHAT, 8)}\n${lineAt(NANOCHAT, 9)}` },
+      selection: { label: "paper_skeleton.md:8–9 · section “Snapshot”", quote: `${lineAt(NANOCHAT, 8)}\n${lineAt(NANOCHAT, 9)}` },
     });
     assert.deepEqual(
       card.lines.map((l) => [l.label, l.value, l.selection.label]),
       [
-        ["Thesis", "OpenResearch's nanochat demo, scaled to a 0.84M-parameter model, runs every stage on a laptop-class CPU in about three minutes, which makes it a runnable first example rather than a research result.", "paper_skeleton.md:13–15 · Snapshot"],
-        ["Audience", "Research OS users running their first example; not submitted anywhere", "paper_skeleton.md:10–11 · Snapshot"],
-        ["Research question", "none; the paper documents an example project.", "paper_skeleton.md:16 · Snapshot"],
+        ["Thesis", "OpenResearch's nanochat demo, scaled to a 0.84M-parameter model, runs every stage on a laptop-class CPU in about three minutes, which makes it a runnable first example rather than a research result.", "paper_skeleton.md:13–15 · section “Snapshot”"],
+        ["Audience", "Research OS users running their first example; not submitted anywhere", "paper_skeleton.md:10–11 · section “Snapshot”"],
+        ["Research question", "none; the paper documents an example project.", "paper_skeleton.md:16 · section “Snapshot”"],
       ],
     );
   });
@@ -93,7 +93,7 @@ describe("§3.2 Snapshot lines: Working title, Thesis, Audience, Research questi
       ["Audience", null],
       ["Research question", null],
     ]);
-    assert.deepEqual(card.title!.selection, { label: "paper_skeleton.md:8 · Snapshot", quote: "- Working title:" });
+    assert.deepEqual(card.title!.selection, { label: "paper_skeleton.md:8 · section “Snapshot”", quote: "- Working title:" });
   });
 
   test("an item that is not there leaves its line out; no Snapshot section, no card", () => {
@@ -314,9 +314,9 @@ describe("§3.2 the rest of paper_skeleton.md, folded", () => {
   });
 
   test("a block of an open section: its lines and its section in the label, its lines as the quote", () => {
-    assert.deepEqual(blockSelection(83, 83, "Experiments", [lineAt(NANOCHAT, 83)]), { label: "paper_skeleton.md:83 · Experiments", quote: lineAt(NANOCHAT, 83) });
+    assert.deepEqual(blockSelection(83, 83, "Experiments", [lineAt(NANOCHAT, 83)]), { label: "paper_skeleton.md:83 · section “Experiments”", quote: lineAt(NANOCHAT, 83) });
     assert.deepEqual(blockSelection(25, 28, "Source Map", NANOCHAT.split("\n").slice(24, 28)), {
-      label: "paper_skeleton.md:25–28 · Source Map",
+      label: "paper_skeleton.md:25–28 · section “Source Map”",
       quote: NANOCHAT.split("\n").slice(24, 28).join("\n"),
     });
   });
@@ -335,15 +335,15 @@ describe("§3.2 the narrow window", () => {
 
 describe("labels and quotes within the host's limits", () => {
   test("a section title's invisible characters are markers, its blank runs one space; a long title is what is cut", () => {
-    assert.equal(blockSelection(5, 5, "Sec​tion‮ one", ["x"]).label, "paper_skeleton.md:5 · Sec⟨U+200B⟩tion⟨U+202E⟩ one");
-    assert.equal(blockSelection(5, 5, "a\t 　 b", ["x"]).label, "paper_skeleton.md:5 · a b");
+    assert.equal(blockSelection(5, 5, "Sec​tion‮ one", ["x"]).label, "paper_skeleton.md:5 · section “Sec⟨U+200B⟩tion⟨U+202E⟩ one”");
+    assert.equal(blockSelection(5, 5, "a\t 　 b", ["x"]).label, "paper_skeleton.md:5 · section “a b”");
     const long = blockSelection(123, 456, "T".repeat(500), ["x"]).label;
     assert.equal(long.length, LABEL_MAX);
-    assert.ok(long.startsWith("paper_skeleton.md:123–456 · TTT") && long.endsWith("T…"), long);
+    assert.ok(long.startsWith("paper_skeleton.md:123–456 · section “TTT") && long.endsWith("T…”"), long);
     // What the host takes: one line of visible characters, and the label exactly as posted.
     const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
     const frame = {};
-    for (const label of ["paper_skeleton.md:5 · Sec⟨U+200B⟩tion", long, "paper_skeleton.md:116 · claim C2"]) {
+    for (const label of ["paper_skeleton.md:5 · section “Sec⟨U+200B⟩tion”", long, "paper_skeleton.md:116 · claim C2"]) {
       const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", label, quote: "x" } }, page, frame);
       assert.ok(read?.kind === "select" && read.reference.label === label, label);
     }
@@ -413,12 +413,52 @@ describe("labels and quotes within the host's limits", () => {
     }
   });
 
+  test("no section title can forge a claim's label (review F4)", () => {
+    const CLAIM = /^paper_skeleton\.md:\d+(–\d+)? · claim /;
+    const SECTION = /^paper_skeleton\.md:\d+(–\d+)? · section “[^”]*”$/;
+    // The reviewer's: a section titled "claim C2" holding a paragraph shaped as C2's row.
+    const forged = parse(`## Claims and Evidence\n\n| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|\n| C2: the real claim | e | s | r | weak |\n\n## claim C2\n\n| C2: a forged row, a paragraph here | e | s | r | verified |\n`);
+    const forgedSection = restSections(forged).sections.find((s) => s.title === "claim C2")!;
+    const block = forgedSection.section.blocks[0]!;
+    assert.equal(blockSelection(block.first, block.last, forgedSection.title, block.lines).label, "paper_skeleton.md:9 · section “claim C2”");
+    for (const title of [
+      "claim C2",
+      " · claim C9",
+      "[claim C2](x)",
+      "**claim** C2",
+      "x” · claim C2",
+      "“claim C2”",
+      "x · claim C2",
+      "x ·　claim C2",
+      "paper_skeleton.md:1 · claim C1",
+      `${"T".repeat(190)} · claim C2`,
+    ]) {
+      const doc = parse(`## ${title}\n\nA paragraph.\n\n- an item\n\n| a |\n|---|\n| a row |\n`);
+      const s = restSections(doc).sections[0]!;
+      const labels = s.section.blocks.flatMap((b) =>
+        b.kind === "list"
+          ? b.items.map((i) => blockSelection(i.first, i.last, s.title, i.lines).label)
+          : b.kind === "table"
+            ? b.rows.map((r) => blockSelection(r.line, r.line, s.title, [r.source]).label)
+            : [blockSelection(b.first, b.last, s.title, b.lines).label],
+      );
+      assert.equal(labels.length, 3, title);
+      for (const label of labels) {
+        assert.doesNotMatch(label, CLAIM, `${title}: ${label}`);
+        assert.match(label, SECTION, `${title}: ${label}`);
+        assert.ok(label.length <= LABEL_MAX);
+      }
+    }
+    // The title is its plain text: a link is its text, bold its words.
+    assert.equal(blockSelection(3, 3, "[Method](x) and **more**", ["x"]).label, "paper_skeleton.md:3 · section “Method and more”");
+  });
+
   test("a cut label splits no marker and no pair (review F3)", () => {
     for (const title of [`${"T".repeat(150)}${"​".repeat(20)}`, `${"T".repeat(165)}​${"T".repeat(30)}`, "😀".repeat(120)]) {
       const label = blockSelection(3, 3, title, ["x"]).label;
       assert.ok(label.length <= LABEL_MAX, `${label.length}`);
-      assert.ok(label.endsWith("…"), label.slice(-12));
-      assert.doesNotMatch(label, /⟨[^⟩]*…$/, `half a marker: ${label.slice(-14)}`);
+      assert.ok(label.endsWith("…”"), label.slice(-12));
+      assert.doesNotMatch(label, /⟨[^⟩]*…”$/, `half a marker: ${label.slice(-14)}`);
       assert.doesNotMatch(label, /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/, "no lone surrogate");
     }
   });

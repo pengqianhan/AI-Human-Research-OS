@@ -382,9 +382,13 @@ site-kit). It shows mockup alternative B: the Snapshot card, the claims with
 each one's evidence beside them (under the claim when the view is narrower
 than 780 px), and the rest of the file folded by section. A Snapshot line, a
 claim row, or a paragraph, list item, table row, or code block of an open
-section posts `os.select` with `paper_skeleton.md:<lines> · claim <ID>` or
-`· <section>` and its lines as written as the quote, cut on the page to 2,000
-characters as the Code view cuts (the host ignores a longer quote). Its chip
+section posts `os.select` with the label `paper_skeleton.md:<lines> · claim
+<ID>` for a claim, or `· section “<title>”` for anything else (the title as
+plain text, a middle dot and curly quotes in it replaced, so no title can
+forge a claim's label), and its lines as written as the quote, cut on the
+page to 2,000 characters ending in the host's own `…[cut]` (the host ignores
+a longer quote); a lone CR, which the host would take for a line break, is
+quoted as `⟨U+000D⟩`. Its chip
 opens by itself: the quote is the line as written, not what the page draws
 (the Human Owner's decision of 2026-11-23). In a browser the tab says the view
 opens in the desktop app.

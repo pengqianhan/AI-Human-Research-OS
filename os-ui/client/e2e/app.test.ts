@@ -1605,7 +1605,7 @@ describe("desktop client on a Research OS folder", () => {
       await page.waitForTimeout(1100);
       await experiments.locator("tbody tr.blk").filter({ hasText: "Main result" }).click();
       const label = bar.locator("[data-selection-label]");
-      await label.filter({ hasText: "paper_skeleton.md:83 · Experiments" }).waitFor();
+      await label.filter({ hasText: "paper_skeleton.md:83 · section “Experiments”" }).waitFor();
       assert.equal(await label.getAttribute("title"), fixtureLine("nanochat_cpu.paper_skeleton.md", 83));
       await experiments.locator("tr.blk.picked").scrollIntoViewIfNeeded();
       await shot(page, "skeleton-4-folded-section-open-line-selected");
@@ -1614,7 +1614,7 @@ describe("desktop client on a Research OS folder", () => {
       await limits.locator("summary").click();
       await page.waitForTimeout(1100);
       await limits.locator("li.blk").first().click();
-      await label.filter({ hasText: "paper_skeleton.md:98 · Limitations" }).waitFor();
+      await label.filter({ hasText: "paper_skeleton.md:98 · section “Limitations”" }).waitFor();
       await sk.locator("body").press("Escape");
       await bar.waitFor({ state: "detached" });
       assert.equal(await sk.locator(".picked").count(), 0);

@@ -6,7 +6,7 @@
  * runs them in Node. The file is data: everything here builds strings and
  * tokens, and main.ts puts them on screen as text only.
  */
-import { claims, inline, linkTargets, resolveLink, section, sections, snapshot, snapshotItem, studies, usedBy } from "../../md-kit.ts";
+import { claims, inline, linkTargets, plain, resolveLink, section, sections, snapshot, snapshotItem, studies, trimSpaces, usedBy } from "../../md-kit.ts";
 import type { Doc, Section, Table } from "../../md-kit.ts";
 import { clip, cutMarked, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
 
@@ -85,9 +85,34 @@ function quote(lines: readonly string[]): string {
   return cutMarked(lines.join("\n").replace(BREAK_IN_LINE, marker), QUOTE_MAX, QUOTE_CUT);
 }
 
+/**
+ * A section's title as a block's label shows it: its plain text (inline
+ * Markdown reduced to its words), blank runs one space, a middle dot or a
+ * look-alike as "-", curly quotes as straight ones, so the title cannot
+ * imitate the label's own " · " and “…”; then invisible characters as
+ * markers, as the host requires of a label.
+ */
+function sectionTitle(title: string): string {
+  return visibleName(
+    trimSpaces(plain(inline(title)).replace(/[\p{Zs}\t]+/gu, " "))
+      .replace(/[··‧∙⋅・]/g, "-")
+      .replace(/[“”„‟〝〞＂]/g, '"'),
+  );
+}
+
+/**
+ * A block of a section (a Snapshot item, a paragraph, a list item, a table
+ * row, a code block): `paper_skeleton.md:<lines> · section “<title>”`, a
+ * form a claim's label (`… · claim C2`) never has, so no title can forge
+ * one. The title is what is cut to keep the label within LABEL_MAX.
+ */
+function sectionLabel(base: string, title: string): string {
+  return `${base} · section “${cutMarked(sectionTitle(title), LABEL_MAX - base.length - 13, "…")}”`;
+}
+
 /** A block of a section, or a Snapshot item: its lines and its section's title in the label, its lines as the quote. */
 export const blockSelection = (first: number, last: number, title: string, lines: readonly string[]): Selection => ({
-  label: label(where(first, last), title),
+  label: sectionLabel(where(first, last), title),
   quote: quote(lines),
 });
 
