@@ -63,9 +63,11 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
         Files and Changes, and "Ask the agent about this" adding a reference
         chip to the project's composer), and S6b (the Paper view plugin: the
         Paper tab draws `paper/main.pdf` on `app://paper-view` with PDF.js
-        6.5.438 vendored as authorized on 2026-11-22, see Decisions), all done
-        pending their pull requests (S6a-2 stacks on S6a-1, S6b on S6a-2). The
-        plugins' policy needed no change for PDF.js's worker.
+        6.5.438 vendored as authorized on 2026-11-22, see Decisions). S6a-1
+        and S6a-2 are merged (PRs #43, #44); the fixes from the second
+        independent review of the Code view are in PR #47, and S6b is PR #45,
+        stacked on #47 (merge #47 first). The plugins' policy needed no change
+        for PDF.js's worker.
       - Next, in order: the Human Owner runs the
         [client checklist](os-ui/client/README.md#check-it-on-your-machine),
         which now covers the Code and Paper views; then deleting
@@ -204,10 +206,13 @@ packaged app's smoke run.
 
 ### Next session
 
-- Focus (2026-11-23): S6a-1 (the Git handler), S6a-2 (the Code view plugin),
-  and S6b (the Paper view plugin, PDF.js vendored as authorized) are done
-  pending their pull requests ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), under
-  "Repositioning" above). Next is the Human Owner's run of the client
+- Focus (2026-11-23): S6a-1 (the Git handler) and S6a-2 (the Code view plugin)
+  are merged; the Code view's review fixes (PR #47) and S6b (the Paper view
+  plugin, PDF.js vendored as authorized; PR #45, stacked on #47) wait for the
+  Human Owner's merge ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), under
+  "Repositioning" above), with three agent defaults to confirm in Decisions:
+  the Git version floor, the selected text on screen, and how the Paper view
+  reads. Next is the Human Owner's run of the client
   checklist in [os-ui/client/README.md](os-ui/client/README.md), which now
   covers the Code and Paper views, then S8. The older items below are still open.
 - Also pending: the Human Owner accepts or revises the `nanochat_cpu` example, including
@@ -612,6 +617,7 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 | Paper view renderer | The Paper view may vendor Mozilla's PDF.js to render `paper/main.pdf` (Human Owner, 2026-11-22: 「可以内置 PDF.js」). As [os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 2 specifies: only `pdf.min.mjs`, `pdf.worker.min.mjs`, and the Apache-2.0 licence, copied into the plugin's `site/vendor/` with a README giving version, source URL, and SHA-256; not installed through npm | Remove the vendored files; the view then says the paper opens in a PDF reader |
 | Git version for the Code view | The Code view's Git handler needs Git 2.45 or later (for `--no-lazy-fetch`) and says so below that, rather than running with fewer guards; stock Ubuntu 24.04 (2.43) and Debian 12 (2.39) fall short. Default taken by the agent on 2026-11-22 after an independent security review, reported to the Human Owner, not yet confirmed by them | Serve Git 2.41 to 2.44 by refusing repositories with a promisor remote, as recorded under S6a-1 in [os-ui/PLUGINS.md](os-ui/PLUGINS.md); it needs its own CI job on stock Ubuntu 24.04 Git |
 | Selected text on screen | When a view offers a selection, the ask bar shows the start and size of the text, and a reference chip just added opens its "Sent before your message, exactly:" text without a click. This departs from mockup C (a one-line bar, a chip opened by a click). Default taken by the agent on 2026-11-23 after an independent review showed a PDF's text layer putting text the page does not show into a quote; reported to the Human Owner, not yet confirmed by them | Restore the one-line bar and the click-to-open chip (commit `270a829`, [os-ui/PLUGINS.md](os-ui/PLUGINS.md) has the rule); a quote would again be on screen only after a click or a hover |
+| How the Paper view reads | Pages scroll continuously and are drawn as they come into view (mockup C pages one at a time); zoom steps go up to 300%; PDF.js draws glyphs itself (`disableFontFace`), so no font from a PDF is loaded and text can look slightly different from a system viewer; the first 1,000 pages are laid out, a page that takes more than 15 s of visible time to draw is stopped with a note, and images over 4096 × 4096 are left out. Defaults taken by the agent on 2026-11-23, the bounds after an independent review; reported to the Human Owner, not yet confirmed by them | Each is one constant or option in `os-ui/frontend/plugins/paper-view/site/` (`logic.ts`, `pdfjs.ts`), described with its measured cost in [os-ui/PLUGINS.md](os-ui/PLUGINS.md); paging one page at a time would be a change to the page's layout code |
 
 ## Deviations from the original plan
 
