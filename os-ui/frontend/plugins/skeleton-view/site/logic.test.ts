@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { readSelect } from "../../../src/plugins/select.ts";
+import { CUT_MARK, readSelect, referenceText } from "../../../src/plugins/select.ts";
 import type { PluginPage } from "../../../src/plugins/pages.ts";
 import { parse } from "../../md-kit.ts";
 import { LABEL_MAX, QUOTE_MAX, readStart } from "../../site-kit.ts";
@@ -22,6 +22,7 @@ import {
   fileWords,
   openRow,
   projectWords,
+  QUOTE_CUT,
   READ_MAX,
   restSections,
   SECTIONS_MAX,
@@ -352,7 +353,7 @@ describe("labels and quotes within the host's limits", () => {
     const lines = Array.from({ length: 40 }, (_, k) => `- line ${k}: ${"x".repeat(80)}`);
     const selection = blockSelection(1, 40, "Big", lines);
     assert.equal(selection.quote!.length, QUOTE_MAX);
-    assert.ok(selection.quote!.endsWith("…"));
+    assert.ok(selection.quote!.endsWith(CUT_MARK), "ending in the host's mark (review F3)");
     assert.ok(selection.quote!.startsWith(`${lines[0]}\n${lines[1]}`));
     // A whole claim row can be 30 cells of 2,000 characters.
     const huge = `| C1: ${"y".repeat(5000)} | e | s | r | verified |`;
@@ -367,7 +368,7 @@ describe("labels and quotes within the host's limits", () => {
     assert.equal((ask(selection.quote!) as { reference: { quotesAsDrawn?: true } }).reference.quotesAsDrawn, undefined);
     // A cut never leaves half a surrogate pair.
     const emoji = blockSelection(1, 1, "E", [`${"x".repeat(QUOTE_MAX - 2)}😀😀`]).quote!;
-    assert.equal(emoji.length <= QUOTE_MAX && /^x+…$/.test(emoji), true, emoji.slice(-4));
+    assert.equal(emoji.length <= QUOTE_MAX && /^x+…\[cut\]$/.test(emoji), true, emoji.slice(-8));
   });
 
   test("a lone CR in a row: its label keeps the LF line number, and the host shows the CR as a marker in a one-line quote (review F2)", () => {
@@ -380,6 +381,46 @@ describe("labels and quotes within the host's limits", () => {
     assert.ok(read?.kind === "select");
     assert.equal(read.reference.quote!.split("\n").length, 1, "one line, as the label cites one");
     assert.match(read.reference.quote!, /logged⟨U\+000D⟩runs/);
+  });
+
+  test("a cut quote ends in the host's own mark, within 2,000 characters, splitting no pair and no marker (review F3)", () => {
+    assert.equal(QUOTE_CUT, CUT_MARK, "the page's mark is the host's");
+    const page: PluginPage = { key: "skeleton-view/skeleton", plugin: "skeleton-view", slot: "project", title: "Skeleton", src: "app://skeleton-view/index.html", origin: "app://skeleton-view" };
+    const frame = {};
+    const host = (selection: { label: string; quote?: string }) => {
+      const read = readSelect({ origin: page.origin!, source: frame, data: { type: "os.select", ...selection } }, page, frame);
+      assert.ok(read?.kind === "select", selection.label);
+      return read.reference;
+    };
+    // The reviewer's claim: the cell's last word fell past the cut, and a bare "…" did not say so.
+    const cell = `C1: The method improves accuracy${" ".repeat(1965)}not`;
+    const row = rowsOf(withLine(115, `| ${cell} | e | s | r | verified |`))[0]!;
+    assert.equal(row.selection.quote!.length, QUOTE_MAX);
+    assert.ok(row.selection.quote!.endsWith(CUT_MARK), JSON.stringify(row.selection.quote!.slice(-12)));
+    const sent = host(row.selection);
+    assert.ok(sent.quote!.endsWith(CUT_MARK) && referenceText(sent).endsWith(CUT_MARK), "the open chip ends in it");
+    // A line that really ends in "…" is not taken for a cut.
+    assert.equal(blockSelection(1, 1, "S", [`${"x".repeat(1999)}…`]).quote, `${"x".repeat(1999)}…`);
+    // Never half a surrogate pair, never half a marker the page wrote (a lone CR's).
+    // Each over 2,000 characters once the page's CR markers are in; the cut point (2,000 − 6) falls inside a pair or a marker.
+    for (const body of [`${"x".repeat(1993)}😀😀😀😀`, `${"x".repeat(1990)}${"\r".repeat(8)}`, `${"x".repeat(1990)}\r${"y".repeat(10)}`]) {
+      const q = blockSelection(1, 1, "S", [body]).quote!;
+      assert.ok(q.length <= QUOTE_MAX && q.endsWith(CUT_MARK), `${q.length} ${JSON.stringify(q.slice(-20))}`);
+      const kept = q.slice(0, -CUT_MARK.length);
+      assert.doesNotMatch(kept, /[\uD800-\uDBFF]$/, "no lone high surrogate");
+      assert.doesNotMatch(kept, /⟨[^⟩]*$/, "no half marker");
+      assert.ok(host({ label: "x", quote: q }).quote!.endsWith(CUT_MARK));
+    }
+  });
+
+  test("a cut label splits no marker and no pair (review F3)", () => {
+    for (const title of [`${"T".repeat(150)}${"​".repeat(20)}`, `${"T".repeat(165)}​${"T".repeat(30)}`, "😀".repeat(120)]) {
+      const label = blockSelection(3, 3, title, ["x"]).label;
+      assert.ok(label.length <= LABEL_MAX, `${label.length}`);
+      assert.ok(label.endsWith("…"), label.slice(-12));
+      assert.doesNotMatch(label, /⟨[^⟩]*…$/, `half a marker: ${label.slice(-14)}`);
+      assert.doesNotMatch(label, /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/, "no lone surrogate");
+    }
   });
 
   test("a CRLF copy gives the same rows, selections, and Snapshot, with no carriage return", () => {

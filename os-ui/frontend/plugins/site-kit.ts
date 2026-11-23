@@ -169,6 +169,22 @@ export function clip(text: string, max: number): string {
   return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
 }
 
+/**
+ * `text` cut to at most `max` characters ending in `mark`, by the host's own
+ * rule for a quote (src/plugins/select.ts visibleQuote): never inside a
+ * "⟨U+XXXX⟩" marker, never between the halves of a surrogate pair. Unlike
+ * `clip`, which the Code view uses, the mark says the text was cut.
+ */
+export function cutMarked(text: string, max: number, mark: string): string {
+  if (text.length <= max) return text;
+  let end = max - mark.length;
+  const open = text.lastIndexOf("⟨", end - 1);
+  if (open !== -1 && text.indexOf("⟩", open) >= end) end = open;
+  const last = text.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end--;
+  return text.slice(0, end) + mark;
+}
+
 /** A label cut to the host's limit from the left, so a file's own name stays readable. */
 export function clipLabel(label: string): string {
   return label.length <= LABEL_MAX ? label : `…${label.slice(label.length - (LABEL_MAX - 1))}`;

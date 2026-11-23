@@ -8,7 +8,7 @@
  */
 import { claims, inline, linkTargets, resolveLink, section, sections, snapshot, snapshotItem, studies, usedBy } from "../../md-kit.ts";
 import type { Doc, Section, Table } from "../../md-kit.ts";
-import { clip, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
+import { clip, cutMarked, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
 
 /** The file this view reads, relative to its project. */
 export const FILE = "paper_skeleton.md";
@@ -45,17 +45,15 @@ export function topBar(project: string): { title: string; path: string; hint: st
 
 // ---- labels and quotes ----------------------------------------------------------------
 
+/**
+ * Ends a quote the page cut: the host's own mark (src/plugins/select.ts
+ * CUT_MARK, which a test pins equal), so a cut is never mistaken for text
+ * that really ends in "…".
+ */
+export const QUOTE_CUT = "…[cut]";
+
 /** "paper_skeleton.md:8" or "paper_skeleton.md:8–9". */
 const where = (first: number, last: number) => `${FILE}:${first === last ? first : `${first}–${last}`}`;
-
-/** `text` cut to `max` characters ending "…", never leaving half a surrogate pair. */
-function cutEnd(text: string, max: number): string {
-  if (text.length <= max) return text;
-  let end = max - 1;
-  const last = text.charCodeAt(end - 1);
-  if (last >= 0xd800 && last <= 0xdbff) end--;
-  return `${text.slice(0, end)}…`;
-}
 
 /**
  * A label: where, then " · " and `title` as one line of visible characters
@@ -66,7 +64,7 @@ function cutEnd(text: string, max: number): string {
 function label(base: string, title: string): string {
   const shown = visibleName(title.replace(/[\p{Zs}\t]+/gu, " ").trim());
   if (shown === "") return base;
-  return `${base} · ${cutEnd(shown, LABEL_MAX - base.length - 3)}`;
+  return `${base} · ${cutMarked(shown, LABEL_MAX - base.length - 3, "…")}`;
 }
 
 /**
@@ -80,15 +78,11 @@ const marker = (c: string) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase
 
 /**
  * A quote: the lines as written, joined by line feeds, cut to the host's
- * QUOTE_MAX as the Code view cuts (site-kit's clip, ending "…"), so the
- * host, which ignores a longer quote, takes it.
+ * QUOTE_MAX (which it ignores a longer quote past) ending in QUOTE_CUT, by
+ * the host's own rule: no marker or surrogate pair is split.
  */
 function quote(lines: readonly string[]): string {
-  const text = lines.join("\n").replace(BREAK_IN_LINE, marker);
-  if (text.length <= QUOTE_MAX) return text;
-  const cut = clip(text, QUOTE_MAX);
-  const before = cut.charCodeAt(cut.length - 2);
-  return before >= 0xd800 && before <= 0xdbff ? `${cut.slice(0, -2)}…` : cut;
+  return cutMarked(lines.join("\n").replace(BREAK_IN_LINE, marker), QUOTE_MAX, QUOTE_CUT);
 }
 
 /** A block of a section, or a Snapshot item: its lines and its section's title in the label, its lines as the quote. */
