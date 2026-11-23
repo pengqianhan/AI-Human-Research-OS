@@ -299,9 +299,10 @@ active view's frame at that view's origin, shows "Ask the agent about this",
 and answers `{type: "os.select.clear"}` at the view's origin when the user
 clears it there. Asking adds a reference chip to the project's composer; only
 Send sends. What Send passes is exactly what the user can read in the
-composer: a label's white space runs become one space, and a label with a
-line break or an invisible character (control, format, default-ignorable, or
-the Braille blank) is refused; a quote's line breaks are made line feeds (each
+composer: the host never rewrites a label (runs of ASCII spaces pass as
+they are, since they are part of a path), and a label with a tab, a space
+other than U+0020, a line break, or an invisible character (control, format,
+default-ignorable, or the Braille blank) is refused; a quote's line breaks are made line feeds (each
 line gets its `> `) and its invisible characters shown as markers, in the text
 shown and sent alike. The ask bar shows the start of the quote before asking,
 and a chip just added shows its whole text under the chips without a click

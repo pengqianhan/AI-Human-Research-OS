@@ -169,11 +169,12 @@ export interface Selection {
 /** Labels are one line: any control character in a name (a newline is legal in a file name) becomes a space. */
 /**
  * Labels are one line of visible text (the host refuses anything else): a
- * line break, control or format character in a name (all legal in a file
- * name) shows as a marker naming it, "⟨U+200B⟩".
+ * line break, an invisible character, or a space other than U+0020 in a name
+ * (all legal in a file name) shows as a marker naming it, "⟨U+200B⟩".
+ * Plain spaces stay as they are: the path is the file's.
  */
 const oneLine = (text: string) =>
-  text.replace(/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2028\u2029\u2800]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
+  text.replace(/(?! )[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Zs}\u2028\u2029\u2800]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
 
 /** A file of the project, by its path relative to the project ("Code/README.md"). */
 export const fileSelection = (path: string): Selection => ({ label: clipLabel(oneLine(path)) });

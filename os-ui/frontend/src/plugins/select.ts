@@ -55,8 +55,16 @@ const INVISIBLE = /[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2800]/u;
  */
 const QUOTE_INVISIBLE = /(?![\t\n])[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2800]/gu;
 const EMOJI_BEFORE = /\p{Extended_Pictographic}$/u;
-/** White space in a label: each run becomes one space, and the ends are trimmed. */
-const LABEL_SPACE = /[\p{Zs}\t]+/gu;
+/**
+ * A space character other than U+0020 (no-break, en, em, thin, ideographic,
+ * Ogham, ...): refused in a label, like the invisible class, since it reads
+ * as a plain space but names another file. The host never rewrites a label:
+ * it shows and sends it exactly as the page posted it, or refuses it. Blank
+ * padding made of ASCII spaces is therefore the page's business (the Paper
+ * view collapses white space in the heading it adds; the Code view posts real
+ * paths, where two spaces and one name different files).
+ */
+const OTHER_SPACE = /(?! )\p{Zs}/u;
 /** Ends a quote that its markers made longer than QUOTE_MAX. */
 export const CUT_MARK = "…[cut]";
 
@@ -77,13 +85,11 @@ export function readSelect(event: { origin: string; source: unknown; data: unkno
   const { type, label, quote } = data as Record<string, unknown>;
   if (type !== "os.select") return null;
   if (label === null) return keys.includes("quote") ? null : { kind: "clear" };
-  if (typeof label !== "string") return null;
-  // Blank padding is half of a label trick (a far-off phrase that reads as another reference), so white space is collapsed first.
-  const shownLabel = label.replace(LABEL_SPACE, " ").trim();
-  if (shownLabel === "" || shownLabel.length > LABEL_MAX || INVISIBLE.test(shownLabel) || LINE_BREAK.test(shownLabel)) return null;
+  if (typeof label !== "string" || label.trim() === "" || label.length > LABEL_MAX) return null;
+  if (INVISIBLE.test(label) || LINE_BREAK.test(label) || OTHER_SPACE.test(label)) return null;
   if (quote !== undefined && (typeof quote !== "string" || quote.length > QUOTE_MAX)) return null;
   const shown = quote === undefined ? "" : visibleQuote(quote);
-  return { kind: "select", reference: shown === "" ? { label: shownLabel } : { label: shownLabel, quote: shown } };
+  return { kind: "select", reference: shown === "" ? { label } : { label, quote: shown } };
 }
 
 /**

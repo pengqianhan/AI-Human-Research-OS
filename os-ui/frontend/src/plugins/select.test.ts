@@ -60,7 +60,7 @@ describe("readSelect", () => {
     assert.notEqual(readSelect(from({ type: "os.select", label: "a".repeat(LABEL_MAX), quote: "q".repeat(QUOTE_MAX) }), page, frame), null);
     assert.equal(readSelect(from({ type: "os.select", label: "a".repeat(LABEL_MAX + 1) }), page, frame), null);
     assert.equal(readSelect(from({ type: "os.select", label: "a", quote: "q".repeat(QUOTE_MAX + 1) }), page, frame), null);
-    for (const label of ["a\nAbout b", "a\rb", "a\u0000b", "a\u0085b", `Code/${c(0x202e)}gnp.exe`, `a${c(0x2066)}b${c(0x2069)}`]) {
+    for (const label of ["a\nAbout b", "a\rb", "a\tb", "a\u0000b", "a\u0085b", `Code/${c(0x202e)}gnp.exe`, `a${c(0x2066)}b${c(0x2069)}`]) {
       assert.equal(readSelect(from({ type: "os.select", label }), page, frame), null, JSON.stringify(label));
     }
     assert.notEqual(readSelect(from({ type: "os.select", label: "a", quote: "line 1\n\tline 2\r\n" }), page, frame), null);
@@ -202,13 +202,16 @@ describe("invisible characters that are neither Cc nor Cf, and blank padding", (
     assert.equal(visibleQuote(`x${c(0xfe0f)} ${c(0xfe0f)}`), `x${mark(0xfe0f)} ${mark(0xfe0f)}`, "after a letter or a space it is marked");
   });
 
-  test("in a label every run of white space is one space and the ends are trimmed, before the length check; a quote keeps its spaces", () => {
-    const read = readSelect(from({ type: "os.select", label: `  Setup${" ".repeat(30)}see${c(0xa0)}${c(0x3000)}\tpaper/main.tex  ` }), page, frame);
+  test("in a label ASCII spaces pass unchanged; a tab or any other space character is refused; a quote keeps its spaces", () => {
+    const read = readSelect(from({ type: "os.select", label: `Setup${" ".repeat(30)}see paper/main.tex` }), page, frame);
     assert.ok(read !== null && read.kind === "select");
-    assert.equal(read.reference.label, "Setup see paper/main.tex");
-    assert.notEqual(readSelect(from({ type: "os.select", label: `a${" ".repeat(LABEL_MAX)}b` }), page, frame), null, "padding does not count toward the cap");
-    assert.equal(readSelect(from({ type: "os.select", label: " \t " }), page, frame), null);
-    assert.equal(visibleQuote(`a${" ".repeat(30)}b`), `a${" ".repeat(30)}b`);
+    assert.equal(read.reference.label, `Setup${" ".repeat(30)}see paper/main.tex`, "padding with plain spaces is the page's business");
+    for (const n of [0x09, 0xa0, 0x1680, 0x2000, 0x2005, 0x200a, 0x202f, 0x205f, 0x3000]) {
+      assert.equal(readSelect(from({ type: "os.select", label: `Code/a${c(n)}b.md` }), page, frame), null, n.toString(16));
+    }
+    assert.equal(readSelect(from({ type: "os.select", label: "   " }), page, frame), null, "blank");
+    assert.equal(readSelect(from({ type: "os.select", label: `a${" ".repeat(LABEL_MAX)}b` }), page, frame), null, "spaces count toward the cap");
+    assert.equal(visibleQuote(`a${" ".repeat(30)}b${c(0xa0)}c`), `a${" ".repeat(30)}b${c(0xa0)}c`, "quotes are unchanged");
   });
 });
 
@@ -226,5 +229,16 @@ describe("what the ask bar shows of a quote before asking", () => {
     assert.notEqual(referenceKey({ label: "a", quote: "x" }), referenceKey({ label: "a", quote: "y" }));
     assert.notEqual(referenceKey({ label: "a" }), referenceKey({ label: "a", quote: "x" }));
     assert.equal(referenceKey({ label: "a", quote: "x" }), referenceKey({ label: "a", quote: "x" }));
+  });
+});
+
+describe("the host never rewrites a label", () => {
+  test("two paths that differ only in a run of spaces stay two labels and two references", () => {
+    const one = readSelect(from({ type: "os.select", label: "Code/a  b.md:3", quote: "x" }), page, frame);
+    const two = readSelect(from({ type: "os.select", label: "Code/a b.md:3", quote: "x" }), page, frame);
+    assert.ok(one !== null && one.kind === "select" && two !== null && two.kind === "select");
+    assert.equal(one.reference.label, "Code/a  b.md:3");
+    assert.equal(two.reference.label, "Code/a b.md:3");
+    assert.notEqual(referenceKey(one.reference), referenceKey(two.reference));
   });
 });
