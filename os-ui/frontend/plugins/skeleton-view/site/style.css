@@ -94,7 +94,7 @@ tr.evrow > td { padding: 0 0 12px; box-shadow: inset 3px 0 0 var(--accent), inse
 .sk-rest summary::before { content: "▸"; color: var(--muted); font: 12px var(--sans); transition: transform .12s; }
 .sk-rest details[open] summary::before { transform: rotate(90deg); }
 .sk-rest summary small { font: 12px var(--sans); color: var(--muted); white-space: nowrap; }
-.sk-rest .inner { padding: 0 16px 10px; }
+.sk-rest .inner { padding: 0 16px 10px; overflow-x: auto; }
 .mddoc { font: 14.5px/1.55 var(--serif); color: var(--ink); overflow-wrap: anywhere; }
 .mddoc ul { margin: 0 0 6px; padding-left: 20px; }
 .mddoc ol { margin: 2px 0 0; padding-left: 22px; }
@@ -107,9 +107,10 @@ tr.evrow > td { padding: 0 0 12px; box-shadow: inset 3px 0 0 var(--accent), inse
 .mdimg::before { content: "[image: "; color: var(--muted); font-style: normal; }
 .mdimg::after { content: "]"; color: var(--muted); font-style: normal; }
 .mdtable { width: 100%; border-collapse: collapse; margin: 4px 0 14px; font: 13px/1.45 var(--sans); }
-.mdtable th { text-align: left; font: 600 11px var(--sans); letter-spacing: .04em; color: var(--muted); padding: 6px 8px; box-shadow: inset 0 -1.5px 0 var(--line2); vertical-align: bottom; }
+.mdtable th { text-align: left; font: 600 11px var(--sans); letter-spacing: .04em; color: var(--muted); padding: 6px 8px; box-shadow: inset 0 -1.5px 0 var(--line2); vertical-align: bottom; overflow-wrap: break-word; }
 .mdtable td { padding: 7px 8px; vertical-align: top; box-shadow: inset 0 -1px 0 var(--line); overflow-wrap: break-word; }
-.mdtable code { font-size: 11.5px; }
+/* A path in code may wrap anywhere, so the table fits its card; anything wider scrolls inside the section, not the page. */
+.mdtable code { font-size: 11.5px; overflow-wrap: anywhere; }
 .mdtable tr.uneven td:first-child { box-shadow: inset 2px 0 0 var(--faint), inset 0 -1px 0 var(--line); }
 
 /* screens */
@@ -126,5 +127,4 @@ tr.evrow > td { padding: 0 0 12px; box-shadow: inset 3px 0 0 var(--accent), inse
   .sk2 { grid-template-columns: minmax(0, 1fr); grid-template-areas: "notes" "snap" "claims" "rest"; padding: 16px 14px 120px; }
   .sk-side { display: none; }
   .evrow.nar { display: table-row; }
-  .ctable col.c-id { width: 70px; }
 }
