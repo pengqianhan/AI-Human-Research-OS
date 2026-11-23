@@ -905,7 +905,9 @@ export function csvPreview(text: string, cut: boolean): CsvPreview {
   }
   // Still inside quotes at the end: the field that opened them ran to the end of the text.
   const openQuote = quoted ? quoteRecord : null;
-  if (any) {
+  // A read cut at its cap stops inside its last record (unless right after a line break): that record is neither
+  // shown nor counted, so no row that is whole in the file is called uneven (review S5).
+  if (any && !cut) {
     endField();
     endRecord();
   }
@@ -920,7 +922,8 @@ export function csvPreview(text: string, cut: boolean): CsvPreview {
   const total = cut ? null : Math.max(0, records - 1);
   const shown = body.length;
   let words: string;
-  if (records === 0) words = cut ? `The first ${capWords(LIMITS.csvBytes)} hold no row` : "The file holds no row";
+  if (cut && shown === 0) words = `No complete row in the first ${capWords(LIMITS.csvBytes)}`;
+  else if (records === 0) words = "The file holds no row";
   else if (total === null) words = `First ${n(shown)} ${shown === 1 ? "row" : "rows"} of a file over ${capWords(LIMITS.csvBytes)}`;
   else if (shown === total) words = total === 0 ? "No row after the first" : `All ${plural(total, "row")}`;
   else words = `First ${n(shown)} of ${plural(total, "row")}`;
@@ -931,8 +934,13 @@ export function csvPreview(text: string, cut: boolean): CsvPreview {
     const which = uneven.map(n);
     notes.push(`${plural(unevenCount, "row")} (${unevenCount > uneven.length ? `${which.join(", ")}, …` : listed(which)}) ${unevenCount === 1 ? "has" : "have"} another number of cells than the first; shown padded.`);
   }
-  if (openQuote !== null && !cut) {
-    notes.push(`A quoted field opened in ${openQuote === 0 ? "the first row" : `row ${n(openQuote)}`} is never closed; the rest of the file is read as its text.`);
+  if (openQuote !== null) {
+    const where = openQuote === 0 ? "the first row" : `row ${n(openQuote)}`;
+    notes.push(
+      cut
+        ? `A quoted field opened in ${where} is still open where the preview stops reading, at ${capWords(LIMITS.csvBytes)}; that row is not shown.`
+        : `A quoted field opened in ${where} is never closed; the rest of the file is read as its text.`,
+    );
   }
   return { header: pad(header), rows: body.map(pad), width, total, words, notes };
 }

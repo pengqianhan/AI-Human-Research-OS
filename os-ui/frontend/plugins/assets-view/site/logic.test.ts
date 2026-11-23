@@ -880,6 +880,31 @@ describe("Used in finds the forms a writer uses, says what it could not read, an
   });
 });
 
+describe("a CSV preview cut at the 2 MiB read (review S5)", () => {
+  const MiB = 1024 * 1024;
+  test("the row the read stops inside is neither shown nor called uneven", () => {
+    for (const eol of ["\n", "\r\n"]) {
+      const row = (k: number) => `${k},${"v".repeat(150 * 1024)},tail${k}`;
+      const text = ["id,blob,tail", ...Array.from({ length: 15 }, (_, k) => row(k + 1))].join(eol).slice(0, 2 * MiB);
+      const p = csvPreview(text, true);
+      assert.equal(p.rows.length, 13, "the 14th row is cut by the read");
+      assert.deepEqual(p.rows[12]![2], "tail13");
+      assert.equal(p.words, "First 13 rows of a file over 2 MiB");
+      assert.deepEqual(p.notes, ["Cells longer than 200 characters are cut."]);
+    }
+    // A read that stops right after a line break cut no row.
+    assert.equal(csvPreview("h\n1\n2\n", true).rows.length, 2);
+  });
+
+  test("a quoted field still open where the read stops is said as such, not as an uneven row", () => {
+    const text = `h1,h2\n"${"x".repeat(3 * MiB)}",2\nnext,3\n`.slice(0, 2 * MiB);
+    const p = csvPreview(text, true);
+    assert.deepEqual(p.rows, []);
+    assert.equal(p.words, "No complete row in the first 2 MiB");
+    assert.deepEqual(p.notes, ["A quoted field opened in row 1 is still open where the preview stops reading, at 2 MiB; that row is not shown."]);
+  });
+});
+
 describe("each limit at its boundary", () => {
   const csvRows = (count: number) => `h\n${Array.from({ length: count }, (_, k) => String(k)).join("\n")}\n`;
   test("CSV rows: 20 are all shown, 21 are the first 20 of 21", () => {
