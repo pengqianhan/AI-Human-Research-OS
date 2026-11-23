@@ -90,6 +90,12 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       "Assets view" in Decisions. The idea file's name, columns, and status
       words (the mockup's "Proposed file format" panel) stand as an agent's
       default, not yet confirmed ("Idea file format" in Decisions).
+      The design is [os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 3: where each
+      thing a view shows comes from for any project, what the first version
+      leaves out of the mockup, and the order, one pull request a view:
+      Skeleton (2.1), Assets (2.2), Idea (2.3), then `nanochat_cpu`'s own
+      idea file and the template's (2.4). Its §7 lists the questions for the
+      Human Owner; I-1 to I-4, on the idea file, block only 2.3 and 2.4.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
