@@ -165,10 +165,16 @@ agent logins or a first open on a real desktop, so on each of your machines:
         follow.
       - Drag across some text of the paper, as you would to copy it: the text
         is highlighted and the dark bar at the bottom names it, for example
-        `paper/main.pdf p. 1 · Setup` (the page, and the section it is in).
+        `paper/main.pdf p. 1 · Setup` (the page, and the section it is in),
+        with the start of the selected text and its size under it.
         Click **Ask the agent about this**: a chip appears above the
-        conversation's input; click it to see exactly the text that will be
-        sent. Nothing is sent until you press Send.
+        conversation's input, and under it, without a click, the exact text
+        that will be sent. Nothing is sent until you press Send.
+      - **Read that text before you press Send.** A PDF can hold text you do
+        not see on the page (white on white, hidden, or a font that shows
+        other letters than it stands for), and selecting across it quotes it
+        too. The bar and the composer show what will really be sent; if it
+        holds words you did not select, remove the chip.
       - Switch to **Overview** and back to **Paper**: you are on the same page.
       - With the agent (or by hand), rename `paper/main.pdf`, then click
         **Reload**: the view says the paper has not been built yet and offers

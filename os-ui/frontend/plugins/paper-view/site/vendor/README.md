@@ -34,13 +34,20 @@ line endings. `client/scripts/build.mjs` copies the folder as it is into
 Not vendored, so not available to the view: the package's `cmaps/` and
 `standard_fonts/` (fonts a PDF does not embed are drawn with a fallback, and
 CJK text without embedded fonts may not render), `iccs/`, and `wasm/` (its
-`openjpeg`, `jbig2`, and `qcms` decoders: JPX and JBIG2 images and ICC colour
-profiles do not render as in a full PDF reader), `pdf.renderer.min.mjs`
+`openjpeg`, `jbig2`, and `qcms` decoders: JPX, JBIG2, and CCITTFax images and
+ICC colour profiles do not render as in a full PDF reader), `pdf.renderer.min.mjs`
 (drawing in a worker), `pdf.sandbox.min.mjs`
 (the PDF's own JavaScript, which the view never runs), and `web/` (the
 viewer). The text layer's style rules in `../style.css` are written for the
 markup PDF.js's `TextLayer` produces and follow `web/pdf_viewer.css`'s
 `.textLayer` section.
+
+PDF.js's text layer holds every text run of a page, whether the canvas
+draws it or not, and the text a font maps its glyphs to, which need not be
+the letters drawn. What a selection in the Paper view quotes is that text
+layer, so it can hold words the reader never saw; the workspace shows the
+quote before and after "Ask the agent about this", and only what it shows is
+sent ([os-ui/PLUGINS.md](../../../../../PLUGINS.md), S6b).
 
 To update: download the new `pdfjs-dist` tarball from the registry into an
 empty folder, check its SHA-512 against `npm view pdfjs-dist@<version>

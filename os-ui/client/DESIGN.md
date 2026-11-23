@@ -315,21 +315,45 @@ lists `paper/` when that is 404, to say why), and draws it with Mozilla's
 PDF.js 6.5.438, vendored unmodified in its `site/vendor/` (the Human Owner's
 yes of 2026-11-22; its README gives the source, the registry's integrity, and
 each file's SHA-256, which `npm test` checks). The page imports `pdf.min.mjs`
-at run time from its own origin and starts `pdf.worker.min.mjs` itself, as a
-module worker handed to PDF.js as its port, so neither file is bundled, PDF.js
-builds no `blob:` worker, and it never falls back to parsing on the page's
-thread. The PDF is untrusted input: the document options turn off XFA,
-WebAssembly, the browser's font engine (glyphs are drawn as paths on the
-canvas), system fonts, and every fetch, and cap image size; no annotation
-layer, attachment, or PDF JavaScript is ever asked for, so links are inert;
-the text layer is PDF.js's own (text nodes), and outline titles go only into
-the selection label, as text (`site.test.ts`; the end-to-end suite's hostile
-PDF has JavaScript actions, a URI link, and a markup title). Pages are drawn
-near the view only, far canvases released, each canvas at most 4096 × 4096
-pixels. A selection posts `os.select` with the label
-`paper/main.pdf p. <n>` (or `pp. <n>–<m>`) and ` · <outline heading>` when the
-PDF has an outline, and the quote cut on the page to 2,000 characters with
-`…[cut]`. In a browser the tab says the view opens in the desktop app.
+at run time from its own origin and starts `pdf.worker.min.mjs` itself, one
+module worker per document handed to PDF.js as a `PDFWorker` port
+(`site/opener.ts`), so neither file is bundled, PDF.js builds no `blob:`
+worker, and it never falls back to parsing on the page's thread. Opening a
+document closes the one before without waiting on it (its worker is
+terminated after 2 s at most), and an open that does not finish within 20 s
+ends with a screen and Try again. The PDF is untrusted input: the document
+options turn off XFA, WebAssembly, Chromium's font engine (glyphs are drawn
+as paths on the canvas) and its JPEG decoder (PDF.js decodes JPEG itself),
+system fonts, and every fetch, and cap each image at 4096 × 4096 pixels; no
+annotation layer, attachment, or PDF JavaScript is ever asked for, so links
+are inert; the text layer is PDF.js's own (text nodes), and outline titles go
+only into the selection label, as text (`site.test.ts`; the end-to-end
+suite's hostile PDF has JavaScript actions, a URI link, and a markup title).
+A selection posts `os.select` with the label `paper/main.pdf p. <n>` (or
+`pp. <n>–<m>`), naming the pages whose text the quote holds, and
+` · <outline heading>` when the PDF has an outline, and the quote cut on the
+page to 2,000 characters with `…[cut]`. In a browser the tab says the view
+opens in the desktop app.
+
+What a selection quotes is the PDF's text layer, which can differ from what
+is drawn: text in the invisible render mode, white on white, a fifth of a
+point tall, clipped, or covered is selected with what surrounds it, and a
+font's `/ToUnicode` map can make glyphs drawn as "ABC" extract as a sentence.
+The view cannot tell those apart, so it does not try: the workspace shows the
+quote's start and size in the ask bar, and the composer shows exactly what
+will be sent as soon as it is added. Read it before pressing Send.
+
+Resource bounds of the Paper view, as measured on macOS arm64
+([os-ui/PLUGINS.md](../PLUGINS.md), S6b, has the numbers): pages are drawn
+near the view only; a far page gives back its canvas, what PDF.js kept to
+draw it, and its text layer; each canvas holds at most 4096 × 4096 pixels;
+a page that takes longer than 15 s to draw is stopped, noted, and its worker
+replaced, and its text is cut at 10,000 runs and given the same 15 s; at
+most 1,000 pages are laid out, never past what one scrolling column can
+reach at 300%. Not bounded: memory within a page's 15 s (a page of nested
+forms reached about 3.5 GB in the frame's process before it was stopped),
+the sum of many images on one page (twelve at the cap peaked at 1.8 GB), and
+PDF.js's own work while it opens a file of up to 32 MiB.
 
 Known limits of the channel, not yet handled:
 
@@ -361,12 +385,19 @@ Known limits of the channel, not yet handled:
   positions its text layer). The Paper view needed no change to it: with no
   `worker-src`, Chromium takes the worker's source from `script-src 'self'`
   (the CSP fallback order), so PDF.js's module worker loads from the site's
-  own origin, a `worker-src 'none'` stops it (tried), and a worker from
-  `blob:` or `data:` is not allowed by it. No `'wasm-unsafe-eval'`, `blob:`, or
-  font source is needed either, since the page turns WebAssembly and font
-  loading off; the end-to-end suite fails on any policy violation, the Paper
-  view's frame included, with PDFs holding text, a font they do not embed, and
-  JPEG and raw pictures. Either policy is sent with every file the site
+  own origin, and a worker from `blob:` or `data:` is not allowed by it. The
+  end-to-end suite pins that the worker runs under `PLUGIN_CSP` as served
+  (WebAssembly is refused in it, and the violation names exactly that
+  policy); that a `worker-src 'none'` stops the worker was tried by hand, not
+  by a test. No `'wasm-unsafe-eval'`, `blob:`, or font source is needed
+  either, since the page turns WebAssembly and font loading off; the
+  end-to-end suite fails on any policy violation, the Paper view's frame
+  included, with PDFs holding text, a font they do not embed, and JPEG and
+  raw pictures. The policy is not what keeps a PDF's fonts out of Chromium:
+  a FontFace made from bytes fetches nothing, so no policy would stop it. The
+  document option `disableFontFace` does, and the end-to-end suite checks
+  the frame's `document.fonts` stays empty after drawing a paper that embeds
+  its fonts. Either policy is sent with every file the site
   serves, not only HTML: an SVG a frame is sent to is a document too. Every
   read channel answer, refusals included, carries
   `sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'`
@@ -596,7 +627,7 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 | API + real harness | `node --test` with `os-harness/tests/fake_claude.py` | `POST /send` → detached turn → trace; resume → turn 2 |
 | Dev-server adapters | `node --test` on a real Vite dev server | token before routing, mounts, context root |
 | Client modules | `node --test` | settings, workspace and real paths, env import and AppImage cleanup, Python choice per platform, generator serialization, input polling, notifier, doctor, protocol routing/traversal/symlinks/CSP/415/401, plugin sites and origin isolation (a second, fake plugin), the read channel on fixture plugins (routing, methods, dot paths, roots, link and junction escapes, listings, caps, headers), the navigation guard's targets, window bounds, menu |
-| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, the Code view (files, Git changes, selection to a reference chip, isolation), the Paper view (PDF.js draws `paper/main.pdf` lazily, pages and zoom, selection to a reference chip, every `paper/` state, a hostile PDF, pictures and a non-embedded font read from the canvas, isolation, the vendored files as shipped), endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
+| E2E | Playwright `_electron` on a copy of the repository **without** `.git` in the system temp folder, a throwaway `HOME` (uv keeps its real Python and cache), its own settings folder, and the fake agent CLI | snapshot generated, Settings, a Root Agent turn without a token prompt, the Code view (files, Git changes, selection to a reference chip, isolation), the Paper view (PDF.js draws `paper/main.pdf` lazily, pages and zoom, selection to a reference chip, every `paper/` state, a hostile PDF, text a PDF hides shown before Send, two Reloads at once, a stalled worker, a page over its time budget, a 300,000-page PDF, pictures and a non-embedded font read from the canvas, no FontFace, isolation, the worker under the plugin policy, the vendored files as shipped), endpoint refusals, Paper Wiki isolation (no bridge, no app API, no web), the viewer's Status buttons write the note, navigation guard, sidebar regenerate, settings, no CSP violations, unusable-folder welcome |
 | Package smoke | the same E2E (`OS_CLIENT_E2E_EXECUTABLE=release`) on the unpacked app | the asar layout starts, generates, and isolates the viewer |
 | CI | `ci.yml` (required) runs the shared-core tests; `desktop.yml` (advisory, path-filtered) runs everything above, those tests included, on six OS/arch rows and uploads installers as artifacts | |
 
