@@ -8,12 +8,89 @@ is that agent and line numbers refer to the code as it was that day.
 
 Status on 2026-11-23:
 
-- **Step 2's three views are designed, not built** (Part 3, against commit
-  `5874a32`): the Skeleton, Assets, and Idea views as the Human Owner chose them in
+- **Step 2's three views are designed** (Part 3, against commit `5874a32`): the
+  Skeleton, Assets, and Idea views as the Human Owner chose them in
   [mockups/step2/views.html](mockups/step2/views.html), one pull request each in that
-  order, with no new dependency and no change to contract 1.0. Waiting on the Human
-  Owner: the idea file's format, which blocks the Idea view only, and the questions
-  in Part 3 §7.
+  order, with no new dependency and no change to contract 1.0. **2.1, the Skeleton
+  view, is built** on branch `step2-skeleton-view` (below); Assets and Idea are not.
+  The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.1, the Skeleton view**, is the bundled plugin
+  [frontend/plugins/skeleton-view/](frontend/plugins/skeleton-view/) (manifest as
+  §3.1), the shared [frontend/plugins/md-kit.ts](frontend/plugins/md-kit.ts),
+  `readStart(res, maxBytes)` and `readText` moved into
+  [frontend/plugins/site-kit.ts](frontend/plugins/site-kit.ts) unchanged (the Code
+  view passes its 2 MiB), with `inlineNodes` and `markInvisible` added there. Where the
+  code differs from Part 3 or the mockup:
+  - **What one click selects in an open section:** a paragraph, a list item (with its
+    nested items), a table row, or a fenced code block, the mockup's units, which §1
+    fact 5's label row cites (`views.html:1192-1196`) and which the checklist's "click
+    a line" needs. md-kit's block (a whole table or list) is not a selection unit.
+  - **A quote longer than the host takes:** the host ignores, rather than cuts, a
+    message whose quote is over 2,000 characters
+    ([src/plugins/select.ts](frontend/src/plugins/select.ts) `readSelect`, the
+    `quote.length > QUOTE_MAX` check), so a click on a long block would show no ask
+    bar. The page cuts every quote to 2,000 characters as the Code view does
+    (site-kit's `clip`, ending "…", §1 fact 6), never leaving half a surrogate pair. A
+    claim row can be 60,000 characters (30 cells of 2,000); `logic.test.ts` sends a
+    40-line block (3,669 characters), cut, through `readSelect`, and shows the uncut
+    one ignored.
+  - **The 1 MiB cap** is read as `readStart(res, READ_MAX + 1)`: `readStart` says
+    `cut` when the body reaches its limit, so a file of exactly 1 MiB is read and one
+    byte more is the "too large" screen.
+  - **Entries in a section's summary** count table rows (those past 500 too), list
+    items, paragraphs, and also fenced code blocks, which §3.2 does not name.
+  - **Notes the design does not list:** more than 20,000 lines read; a table's rows
+    past 500, columns past 30, and rows of another width than the header; more than
+    300 sections; a missing column, the Claim column included (then no row is a
+    claim, and the view says "No claims yet" with that note).
+  - **"Files it names"** shows a project path in monospace, an address as text with
+    "(an address, not a file of the project)", and a target that leaves the project
+    "(outside the project)". "Used by" reads "Main result (paper_skeleton.md:83)", as
+    the mockup has it. The empty panel says "the files it names" where the mockup
+    said "what the source file itself says" (N-3).
+  - **Reload** keeps the open claim (by its ID) and the open sections, keeps the
+    scroll, and clears the selection.
+  - **A wide table in an open section** (the Experiments table's seven columns in the
+    main column at a 1,440 px window) wraps paths in code anywhere and, if still wider,
+    scrolls inside its card; the end-to-end suite checks that neither the page nor a
+    section's card is wider than its box.
+  - **md-kit's subset, as built** (its header and tests): an ATX heading starts at
+    column 0, and "#" alone is text; a list ends at a blank line, and another marker
+    kind starts another list; a bare "1." is an empty item; a paragraph ends at a
+    heading, a fence, a list marker, or a "|" line followed by a delimiter row;
+    `\|` in a cell is a pipe, inside code spans too (as GFM); a link's text holds no
+    "[" and its target runs to the first ")" (no titles); a leading byte-order mark is
+    dropped. Nested items carry whether they are numbered, for drawing.
+  - **Test fixtures:** md-kit's and the view's tests, and the end-to-end suite, read
+    frozen copies of `nanochat_cpu`'s and the template's `paper_skeleton.md` in
+    [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md), not the live
+    files. That folder has no `plugin.json`, so `server/registry.test.ts`, which
+    required every folder in `plugins/` to be a bundled plugin, now allows exactly it,
+    and the build skips it. The end-to-end suite writes the nanochat copy over the
+    temporary workspace's file and makes a project `skeleton_e2e` from the template
+    there; e2e expectations are computed with `split(/\r?\n/)`, so a CRLF checkout
+    passes.
+  - **Files the design's list missed:** `src/pages/PluginsPage.tsx` (its planned
+    "Skeleton view" card is removed, as its comment asks once a manifest is bundled),
+    `src/shell/layoutState.test.ts`, the client test's other plugin lists
+    (`protocol.test.ts`, besides the policy literal), and the
+    [README.md](README.md)/[README_zh.md](README_zh.md) pair, which said Skeleton
+    comes in step 2.
+  - **File roots in `reads`** are under tests in `client/test/protocol.test.ts` ("a
+    file root"); the channel is unchanged. Twelve of fourteen mutations of
+    `serveRead`, `matchRoot`, and `safeDecodedRelative` (each breaking one rule: most
+    change one line, three rewrite `matchRoot`'s matching) made these tests fail. The two
+    that did not are cases two layers hold: a listing of a file root stays 404
+    without the is-a-folder check (`opendir` fails into the catch-all), and on POSIX
+    a `::$DATA` spelling stays 404 without the `:` check (the literal segment does
+    not match, and no such file exists). A path below the file root has no line of
+    its own (`realpath` fails with ENOTDIR); making file-system errors throw instead
+    of answering 404 fails it. In the `*` segment the disk decides:
+    `alpha` reads Alpha's file on a case-insensitive file system, as S5 documents for
+    folder roots.
+  - Not verified: Windows and Linux (the suite ran on macOS arm64 only), and the
+    Human Owner's checklist line.
 
 - **S1 to S5 are done**: the manifest parser, the server-side registry with the dev
   server built from it, the client serving plugin origins from the registry (S3), the

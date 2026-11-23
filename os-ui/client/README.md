@@ -129,8 +129,8 @@ agent logins or a first open on a real desktop, so on each of your machines:
       opens its workspace. **Overview** shows the project; the conversation on
       the left lists that project's sessions under **Conversations**, and
       collapses to a thin strip and back. The tabs are **Overview**, **Idea**,
-      **Code**, **Skeleton**, **Assets**, **Paper**; **Idea**, **Skeleton**,
-      and **Assets** are marked "step 2".
+      **Code**, **Skeleton**, **Assets**, **Paper**; **Idea** and **Assets**
+      are marked "step 2".
 - [ ] **The Code view.** In a project's workspace, click the **Code** tab:
       - **Files** lists the project's `Code/` folder on the left; click a
         folder to open it and a file to read it on the right (it says
@@ -155,6 +155,32 @@ agent logins or a first open on a real desktop, so on each of your machines:
         Click the chip again to close it. Nothing is sent until you press
         Send.
       - Click the chip's **×**: it goes away.
+- [ ] **The Skeleton view.** In the `nanochat_cpu` workspace, click the
+      **Skeleton** tab:
+      - A card shows the paper's working title, thesis, audience, and
+        research question, with its status (*draft*). Under it, **Claims and
+        evidence** lists C1 to C5, each *verified*; below that, the rest of
+        `paper_skeleton.md` is folded by section, each with its line and how
+        many entries it holds.
+      - Click C2: on the right, its evidence as the skeleton states it, the
+        file it names (`Code/results/summary.json`), and the study that uses
+        it (*Main result*). The dark bar at the bottom names the claim's
+        line, `paper_skeleton.md:116 · claim C2`, with the start of the row
+        and its size.
+      - Click **Ask the agent about this**: a chip appears above the
+        conversation's input and, under it without a click, the exact text
+        that will be sent: the claim's row as written in the file, link
+        addresses and `|` included. Nothing is sent until you press Send;
+        remove the chip with its **×**.
+      - Open a section (**Experiments**, say) and click a row or a line: the
+        bar names that line and the section.
+      - Make the window narrower until the evidence column on the right goes:
+        the evidence of the claim you clicked opens under its row instead.
+      - Ask the agent to change C5's status from `verified` to `weak` in
+        `paper_skeleton.md`, then click **Reload**: C5 shows *weak* and the
+        count says 4 verified. Ask it to change the status back to
+        `verified`, click **Reload** again, and check C5 is *verified*, so
+        the project is as it was.
 - [ ] **The Paper view.** In the `nanochat_cpu` workspace, click the **Paper**
       tab:
       - The paper appears as pages, like a PDF reader, read-only. The bar

@@ -75,7 +75,7 @@ describe("the saved layout (localStorage osui.layout.v1)", () => {
 });
 
 describe("the workspace's tab row", () => {
-  test("mockup C's order, with the Code and Paper views' tabs from the plugin registry", () => {
+  test("mockup C's order, with the Code, Skeleton, and Paper views' tabs from the plugin registry", () => {
     const views = pluginPages(bundledManifests(rawManifests(), BUNDLED_IDS).plugins, { desktop: true }).filter((p) => p.slot === "project");
     assert.deepEqual(
       workspaceTabs(views).map((t) => [t.id, t.label, t.later !== undefined]),
@@ -83,22 +83,23 @@ describe("the workspace's tab row", () => {
         ["overview", "Overview", false],
         [null, "Idea", true],
         ["code-view/code", "Code", false],
-        [null, "Skeleton", true],
+        ["skeleton-view/skeleton", "Skeleton", false],
         [null, "Assets", true],
         ["paper-view/paper", "Paper", false],
       ],
     );
   });
 
-  test("no Code or Paper tab without its plugin; another project view goes before Paper", () => {
+  test("no Code, Skeleton, or Paper tab without its plugin; another project view goes before Paper", () => {
     assert.deepEqual(
       workspaceTabs([{ key: "other/view", title: "Other" }]).map((t) => t.label),
-      ["Overview", "Idea", "Skeleton", "Assets", "Other"],
+      ["Overview", "Idea", "Assets", "Other"],
     );
     assert.deepEqual(
       workspaceTabs([
         { key: "paper-view/paper", title: "Paper" },
         { key: "other/view", title: "Other" },
+        { key: "skeleton-view/skeleton", title: "Skeleton" },
       ]).map((t) => t.label),
       ["Overview", "Idea", "Skeleton", "Assets", "Other", "Paper"],
     );

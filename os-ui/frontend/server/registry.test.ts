@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -39,7 +39,9 @@ const flags = (mounts: readonly Mount[]) => mounts.map((m) => [m.prefix, m.token
 describe("loadPlugins", () => {
   test("the real plugins/ folder is BUNDLED_IDS, and every manifest in it parses", () => {
     const folders = readdirSync(PLUGINS, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
-    assert.deepEqual(folders.sort(), [...BUNDLED_IDS].sort());
+    // fixtures/ holds the md-kit and Skeleton view tests' frozen files: no plugin.json, so the build skips it too.
+    assert.deepEqual(folders.filter((f) => f !== "fixtures").sort(), [...BUNDLED_IDS].sort());
+    assert.ok(!existsSync(join(PLUGINS, "fixtures", "plugin.json")), "fixtures/ is no plugin");
     const result = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none);
     assert.deepEqual(result.problems, []);
     assert.deepEqual(result.plugins.map((p) => [p.manifest.id, p.source, p.dir]), BUNDLED_IDS.map((id) => [id, "bundled", join(PLUGINS, id)]));

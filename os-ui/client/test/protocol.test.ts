@@ -53,7 +53,7 @@ import { tempTree } from "./helpers.ts";
 const PLUGINS = join(import.meta.dirname, "..", "..", "frontend", "plugins");
 const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
 const sites = pluginSites(bundled.plugins);
-const CSP = appCsp(["paper-wiki", "code-view", "paper-view"]);
+const CSP = appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view"]);
 
 /** A registry as createRegistry builds it, from mounts the tests make. */
 function registryOf(app: Mount[], byPlugin: Record<string, Mount[]>): Registry {
@@ -148,7 +148,7 @@ describe("plugin sites", () => {
 
   test("any other plugin serves the site/ folder beside its plugin.json, in load order", () => {
     assert.deepEqual(demo.problems, []);
-    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "paper-view", "demo"]);
+    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "demo"]);
     assert.deepEqual(twoSites.get("demo"), { id: "demo", source: "bundled", reads: [], files: { kind: "plugin", dir: demoSite } });
   });
 
@@ -208,11 +208,11 @@ describe("workspaceRegistry", () => {
 
 describe("policies", () => {
   test("the app policy frames exactly the loaded plugins' origins", () => {
-    // The bundled plugins: Paper Wiki, the Code view, and the Paper view, each framed on its own origin.
-    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view", "paper-view"]);
+    // The bundled plugins: Paper Wiki, the Code view, the Paper view, and the Skeleton view, each framed on its own origin.
+    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view"]);
     assert.equal(
       appCsp([...sites.keys()]),
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view; object-src 'none'; base-uri 'none'; form-action 'none'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view; object-src 'none'; base-uri 'none'; form-action 'none'",
     );
     assert.match(appCsp(["paper-wiki", "demo"]), /; frame-src app:\/\/paper-wiki app:\/\/demo; /);
     assert.match(appCsp(["demo", "paper-wiki"]), /; frame-src app:\/\/demo app:\/\/paper-wiki; /);
@@ -221,7 +221,7 @@ describe("policies", () => {
 
   test("app pages carry the policy for the sites the handler was given, in their order", () => {
     const index = route("app://research-os/", { renderer, workspace }, twoSites);
-    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "demo"]));
+    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "demo"]));
   });
 
   test("a workspace site's policy, and a plugin-folder site's, which adds its own files", () => {
@@ -268,7 +268,7 @@ describe("allowedNavigation", () => {
 
   test("with the bundled plugins, each view's origin is a subframe's only, and a look-alike host is none", () => {
     const bundledHosts = [...sites.keys()];
-    for (const url of ["app://code-view/index.html?project=P", "app://paper-view/index.html?project=P"]) {
+    for (const url of ["app://code-view/index.html?project=P", "app://paper-view/index.html?project=P", "app://skeleton-view/index.html?project=P"]) {
       assert.equal(allowedNavigation(url, false, bundledHosts), true, url);
       assert.equal(allowedNavigation(url, true, bundledHosts), false, `top frame: ${url}`);
     }
@@ -800,6 +800,13 @@ describe("read channel", () => {
     "projects-folder/Beta/Code/lib/l.py": "l",
     // Spelled "code" on disk, where the plugin declares "Code".
     "projects-folder/Low/code/x.py": "SECRET low",
+    // A file root (reads-file): each project's paper_skeleton.md, and files beside, above, and below where "*" would match.
+    "projects-folder/Alpha/paper_skeleton.md": "# Alpha skeleton\n",
+    "projects-folder/Beta/paper_skeleton.md": "# Beta skeleton\n",
+    "projects-folder/paper_skeleton.md": "SECRET no project segment",
+    "projects-folder/Deep/Nest/paper_skeleton.md": "SECRET two project segments",
+    // Spelled otherwise on disk than declared.
+    "projects-folder/LowS/Paper_Skeleton.md": "SECRET low skeleton",
   });
   const outside = tempTree({ "x.txt": "SECRET outside", "proj/y.txt": "SECRET outside root" });
   const code = join(ws, CODE);
@@ -867,8 +874,10 @@ describe("read channel", () => {
     "reads-code/site/_os/other/x": "SITE FILE",
     "reads-paper/plugin.json": manifest("reads-paper", ["projects-folder/*/paper"]),
     "reads-local/plugin.json": manifest("reads-local", ["projects-folder/Beta/Code"]),
+    // A root that is a file, as the Skeleton view declares it (os-ui/PLUGINS.md Part 3, §1 fact 1).
+    "reads-file/plugin.json": manifest("reads-file", ["projects-folder/*/paper_skeleton.md"]),
   });
-  const withReads = loadPlugins(pluginRoot, ["reads-code", "reads-paper"], "bundled", { trunk: TRUNK_MOUNTS, plugins: bundled.plugins });
+  const withReads = loadPlugins(pluginRoot, ["reads-code", "reads-paper", "reads-file"], "bundled", { trunk: TRUNK_MOUNTS, plugins: bundled.plugins });
   const local = loadPlugins(pluginRoot, ["reads-local"], "local", { trunk: TRUNK_MOUNTS, plugins: [...bundled.plugins, ...withReads.plugins] });
   const readSites = pluginSites([...bundled.plugins, ...withReads.plugins, ...local.plugins]);
   const roots = { renderer, workspace: ws };
@@ -914,8 +923,10 @@ describe("read channel", () => {
         ["paper-wiki", "bundled", []],
         ["code-view", "bundled", ["projects-folder/*/Code"]],
         ["paper-view", "bundled", ["projects-folder/*/paper"]],
+        ["skeleton-view", "bundled", ["projects-folder/*/paper_skeleton.md"]],
         ["reads-code", "bundled", ["projects-folder/*/Code"]],
         ["reads-paper", "bundled", ["projects-folder/*/paper"]],
+        ["reads-file", "bundled", ["projects-folder/*/paper_skeleton.md"]],
         ["reads-local", "local", ["projects-folder/Beta/Code"]],
       ],
     );
@@ -1501,5 +1512,114 @@ describe("read channel", () => {
   test("rule 14: a local plugin reads its manifest's roots like a bundled one", async () => {
     assert.equal(await okText(files("projects-folder/Beta/Code/b.py", "reads-local")), "b");
     await assertRefused(files(`${CODE}/run.py`, "reads-local"));
+  });
+
+  /*
+   * A root that names a file (os-ui/PLUGINS.md Part 3, §1 fact 1): the
+   * Skeleton view's `projects-folder/*\/paper_skeleton.md`. The rules above
+   * apply unchanged; these pin what a file root adds: the file is the whole
+   * root, so nothing beside, above, or below it is read.
+   */
+  describe("a file root", () => {
+    const SKEL = "projects-folder/Alpha/paper_skeleton.md";
+    const skel = (raw: string) => files(raw, "reads-file");
+    const skelList = (raw: string) => list(raw, "reads-file");
+    // Links at the file root: out of the workspace, into human/private, and to another project's file root.
+    const skelLinks = {
+      out: (mkdirSync(project("LinkOut")), fileLink(join(outside, "x.txt"), join(project("LinkOut"), "paper_skeleton.md"))),
+      priv: (mkdirSync(project("LinkPriv")), fileLink(join(ws, "human", "private", "secret.md"), join(project("LinkPriv"), "paper_skeleton.md"))),
+      peer: (mkdirSync(project("LinkPeer")), fileLink(join(project("Beta"), "paper_skeleton.md"), join(project("LinkPeer"), "paper_skeleton.md"))),
+    };
+    // Names Windows would read as the file itself (a trailing dot or space); elsewhere they are other files, so a
+    // rule that compared names as Windows resolves them would serve these.
+    if (posix) {
+      writeFileSync(join(project("Alpha"), "paper_skeleton.md."), "SECRET trailing dot");
+      writeFileSync(join(project("Alpha"), "paper_skeleton.md "), "SECRET trailing space");
+    }
+
+    test("the file itself is the root: GET and HEAD are 200; a path below it, a listing of it, a sibling, the project folder are 404", async () => {
+      assert.equal(await okText(skel(SKEL)), "# Alpha skeleton\n");
+      assert.equal(await okText(skel("projects-folder/Beta/paper_skeleton.md")), "# Beta skeleton\n", "'*' matches any project");
+      const head = await fetchRead(skel(SKEL), { method: "HEAD" });
+      assert.equal(head.status, 200);
+      assertReadHeaders(head, "HEAD of the file root");
+      assert.equal(head.headers.get("content-type"), "text/plain; charset=utf-8", ".md is sent as text");
+      assert.equal(await head.text(), "");
+      for (const method of ["GET", "HEAD"]) {
+        for (const url of [
+          skel(`${SKEL}/x`),
+          skel(`${SKEL}/x/y.md`),
+          skelList(SKEL),
+          skelList(`${SKEL}/x`),
+          skel("projects-folder/Alpha/PROJECT_MEMORY.md"),
+          skel(`${CODE}/run.py`),
+          skel("projects-folder/Alpha/paper/main.tex"),
+          skel("projects-folder/Alpha"),
+          skelList("projects-folder/Alpha"),
+          skelList("projects-folder"),
+          // A project folder without the file.
+          skel("projects-folder/Low/paper_skeleton.md"),
+        ]) {
+          await assertRefused(url, { method });
+        }
+      }
+      // Each origin keeps to its own roots: the folder-root plugin does not read the file, nor the file-root plugin Code/.
+      await assertRefused(files(SKEL));
+      assert.equal(await okText(files(`${CODE}/run.py`)), "print(1)");
+    });
+
+    test("a link at the file root is followed to another project's file root only, never to a file outside the root", async () => {
+      if (skelLinks.out) await assertRefused(skel("projects-folder/LinkOut/paper_skeleton.md"));
+      if (skelLinks.priv) await assertRefused(skel("projects-folder/LinkPriv/paper_skeleton.md"));
+      if (skelLinks.peer) assert.equal(await okText(skel("projects-folder/LinkPeer/paper_skeleton.md")), "# Beta skeleton\n");
+      // A project folder that is a link to another project: its file is that project's, a root too.
+      assert.equal(await okText(skel("projects-folder/Mirror/paper_skeleton.md")), "# Beta skeleton\n");
+      // A project folder linked into human/private holds no paper_skeleton.md the channel will give.
+      await assertRefused(skel("projects-folder/Evil3/paper_skeleton.md"));
+    });
+
+    test("'*' matches exactly one segment: neither none nor two", async () => {
+      await assertRefused(skel("projects-folder/paper_skeleton.md"));
+      await assertRefused(skel("projects-folder/Deep/Nest/paper_skeleton.md"));
+      await assertRefused(skelList("projects-folder/Deep"));
+      // A "*" segment never matches a dot name.
+      await assertRefused(skel("projects-folder/.Alpha/paper_skeleton.md"));
+    });
+
+    test("Windows names: the same answers as for a folder root", async () => {
+      // The literal last segment is compared as written, before the disk is asked: a trailing dot or space, an
+      // NTFS stream, and another case are no root, as "Code." or "CODE" are none for a folder root.
+      for (const [fileRoot, folderRoot] of [
+        [`${SKEL}.`, "projects-folder/Alpha/Code./run.py"],
+        [`${SKEL}%20`, "projects-folder/Alpha/Code%20/run.py"],
+        [`${SKEL}.%20.`, "projects-folder/Alpha/Code.%20./run.py"],
+        [`${SKEL}::$DATA`, `${CODE}::$DATA/run.py`],
+        [`${SKEL}:stream`, `${CODE}:stream/run.py`],
+        ["projects-folder/Alpha/PAPER_SKELETON.md", "projects-folder/Alpha/CODE/run.py"],
+        ["projects-folder/Alpha/Paper_skeleton.md", "projects-folder/Alpha/code/run.py"],
+        ["projects-folder/Alpha/paper_skeleton.MD", "projects-folder/Alpha/COde/run.py"],
+      ]) {
+        await assertRefused(skel(fileRoot!));
+        // The folder root's counterpart: its own last segment spelled the same way.
+        await assertRefused(files(folderRoot!));
+      }
+      // Below a folder root, a stream name is refused too (rule 5); a file root has nothing below it.
+      await assertRefused(files(`${CODE}/run.py::$DATA`));
+      // A file spelled on disk otherwise than declared is readable by neither spelling, as a folder is (Low/code).
+      await assertRefused(skel("projects-folder/LowS/paper_skeleton.md"));
+      await assertRefused(skel("projects-folder/LowS/Paper_Skeleton.md"));
+      // In the "*" segment the disk decides, for both kinds of root alike: another case on a case-insensitive file
+      // system, or a trailing dot or space on Windows, reads the same project; anywhere else it names none.
+      for (const spelling of ["alpha", "ALPHA", "Alpha.", "Alpha%20"]) {
+        const fileRes = await fetchRead(skel(`projects-folder/${spelling}/paper_skeleton.md`));
+        const folderRes = await fetchRead(files(`projects-folder/${spelling}/Code/run.py`));
+        assert.equal(fileRes.status, folderRes.status, `${spelling}: the file root answers as the folder root does`);
+        assert.ok([200, 404].includes(fileRes.status), `${spelling}: ${fileRes.status}`);
+        if (fileRes.status === 200) {
+          assert.equal(await fileRes.text(), "# Alpha skeleton\n", `${spelling}: the same file, nothing else`);
+          assert.equal(await folderRes.text(), "print(1)", spelling);
+        }
+      }
+    });
   });
 });

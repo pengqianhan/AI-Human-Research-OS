@@ -1,0 +1,11 @@
+{
+  "contract": "^1.0",
+  "id": "skeleton-view",
+  "name": "Skeleton view",
+  "version": "0.1.0",
+  "description": "A project's paper_skeleton.md, its claims and their evidence first, read-only.",
+  "reads": ["projects-folder/*/paper_skeleton.md"],
+  "contributes": {
+    "projectViews": [{ "id": "skeleton", "title": "Skeleton", "entry": "index.html" }]
+  }
+}

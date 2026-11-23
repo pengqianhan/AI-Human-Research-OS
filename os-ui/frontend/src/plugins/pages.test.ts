@@ -84,6 +84,24 @@ describe("the bundled plugins in the renderer", () => {
     assert.equal(manifest.site, undefined, "served from its own site/ folder, not the workspace");
   });
 
+  test("the Skeleton view's project tab: on app://skeleton-view in the desktop client, no frame URL in a browser; it reads one file per project and has no handler", () => {
+    const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
+    const skeleton = (env: { desktop: boolean }) => pluginPages(plugins, env).filter((p) => p.plugin === "skeleton-view");
+    assert.deepEqual(
+      skeleton(desktop).map((p) => [p.key, p.slot, p.title, p.src, p.origin]),
+      [["skeleton-view/skeleton", "project", "Skeleton", "app://skeleton-view/index.html", "app://skeleton-view"]],
+    );
+    assert.deepEqual(
+      skeleton(browser).map((p) => [p.key, p.src, p.origin]),
+      [["skeleton-view/skeleton", null, null]],
+    );
+    const manifest = plugins.find((p) => p.id === "skeleton-view")!;
+    assert.deepEqual(manifest.reads, ["projects-folder/*/paper_skeleton.md"]);
+    assert.equal(manifest.contributes.handlers, undefined);
+    assert.equal(manifest.site, undefined, "served from its own site/ folder, not the workspace");
+    assert.equal(viewSrc(skeleton(desktop)[0]!, "nanochat_cpu"), "app://skeleton-view/index.html?project=nanochat_cpu");
+  });
+
   test("Paper Wiki's card: its name and description", () => {
     const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
     const wiki = plugins.find((p) => p.id === "paper-wiki")!;

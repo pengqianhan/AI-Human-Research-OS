@@ -10,7 +10,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, truncateSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, truncateSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -180,6 +180,25 @@ function codeFixtures(workspace: string): void {
   writeFileSync(join(workspace, ".env"), "SECRET=1\n");
 }
 
+/**
+ * The Skeleton view's fixtures: the frozen copies of nanochat_cpu's and the
+ * template's paper_skeleton.md (os-ui/frontend/plugins/fixtures/README.md),
+ * so what the suite pins (line 116, lines 113–119, line 83) is its own and not
+ * the live file's. A second project, made from the template, in the temporary
+ * workspace only.
+ */
+const SKELETON_FIXTURES = join(REPO, "os-ui", "frontend", "plugins", "fixtures");
+const TEMPLATE_PROJECT = "skeleton_e2e";
+/** A fixture's line `n` (from 1), whatever line endings the checkout gave it. */
+const fixtureLine = (name: string, n: number) => readFileSync(join(SKELETON_FIXTURES, name), "utf8").split(/\r?\n/)[n - 1]!;
+
+function skeletonFixtures(workspace: string): void {
+  copyFileSync(join(SKELETON_FIXTURES, "nanochat_cpu.paper_skeleton.md"), join(workspace, "projects-folder", PROJECT, "paper_skeleton.md"));
+  const made = join(workspace, "projects-folder", TEMPLATE_PROJECT);
+  cpSync(join(workspace, "projects-folder", "templates", "ai_research_template"), made, { recursive: true });
+  copyFileSync(join(SKELETON_FIXTURES, "template.paper_skeleton.md"), join(made, "paper_skeleton.md"));
+}
+
 /** The home folder the suite's git commands share; removed with the workspace. */
 let gitHome: string | null = null;
 
@@ -236,6 +255,7 @@ describe("desktop client on a Research OS folder", () => {
   before(async () => {
     workspace = copyWorkspace();
     codeFixtures(workspace);
+    skeletonFixtures(workspace);
     userData = tempDir("os-client-data-");
     sessions = tempDir("os-client-sessions-");
     ({ app, page, logs } = await launch({
@@ -1471,6 +1491,283 @@ describe("desktop client on a Research OS folder", () => {
     assert.ok(canary(await consoleLog()), "a CSP violation inside the Paper view's frame is seen");
     // PDF.js ran in its own worker, never on the page's thread.
     assert.deepEqual([...logs, ...(await consoleLog())].filter((l) => /fake worker|could not start/i.test(l)), []);
+  });
+
+  /** A project's workspace with its Skeleton tab open, and the Skeleton view's frame once the file is drawn or a screen shows. */
+  async function openSkeleton(project: string = PROJECT): Promise<{ ws: Locator; sk: Frame }> {
+    await nav(page, "Projects").click();
+    await screen(page, "projects").getByRole("button", { name: `Open workspace: ${project}` }).click();
+    const ws = screen(page, "workspace");
+    await ws.getByRole("heading", { name: project, exact: true }).waitFor();
+    await ws.getByRole("tab", { name: "Skeleton" }).click();
+    const sk = await pluginFrame(page, `app://skeleton-view/index.html?project=${project}`);
+    await sk.locator(".sk-claims, .placeholder").first().waitFor();
+    return { ws, sk };
+  }
+  /** Clears the ask bar and removes every reference chip of the project's composer. */
+  async function clearAsk(ws: Locator, project: string): Promise<void> {
+    const bar = ws.getByRole("region", { name: "Selection" });
+    if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    const chips = ws.getByRole("region", { name: `${project} agent`, exact: true }).getByRole("list", { name: "References" }).getByRole("listitem");
+    for (let i = (await chips.count()) - 1; i >= 0; i--) await chips.nth(i).getByRole("button", { name: /^Remove reference / }).click();
+  }
+  /** Sets the window's width, keeping its height; returns the width it had. */
+  const windowWidth = (width: number | null) =>
+    app.evaluate(({ BrowserWindow }, w) => {
+      const win = BrowserWindow.getAllWindows()[0]!;
+      const [before, height] = win.getSize();
+      if (w !== null) win.setSize(w, height!);
+      return before!;
+    }, width);
+  const skeletonFile = (project: string) => join(workspace, "projects-folder", project, "paper_skeleton.md");
+
+  test("the Skeleton view on nanochat_cpu: the Snapshot card, the claims, C2's evidence, and a chip; nothing is sent", SLOW, async () => {
+    const sessionFiles = readdirSync(sessions).length;
+    const width = await windowWidth(1440);
+    try {
+      const { ws, sk } = await openSkeleton();
+      assert.equal(sk.url(), `app://skeleton-view/index.html?project=${PROJECT}`);
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const chat = ws.getByRole("region", { name: `${PROJECT} agent`, exact: true });
+      const chips = chat.getByRole("list", { name: "References" }).getByRole("listitem");
+      await clearAsk(ws, PROJECT);
+      // The bar, the Snapshot card, the claims, and the rest of the file, folded.
+      assert.equal(await sk.locator(".subbar .vpath").textContent(), `projects-folder/${PROJECT}/paper_skeleton.md`);
+      await sk.locator(".subbar").getByRole("button", { name: "Reload" }).waitFor();
+      assert.equal(await sk.locator(".sk-snap h2").textContent(), "nanochat on a Laptop CPU: a Three-Minute End-to-End Example for the AI-Human Research OS");
+      assert.equal(await sk.locator(".sk-snap .eyebrow .stp").textContent(), "draft");
+      assert.deepEqual(await sk.locator(".sk-snap p b").allTextContents(), ["Thesis", "Audience", "Research question"]);
+      assert.equal(await sk.locator(".sk-claims .sk-h small").textContent(), "5 claims · 5 verified · paper_skeleton.md:113–119");
+      assert.deepEqual(await sk.locator(".ctable tbody tr.blk td.id").allTextContents(), ["C1verified", "C2verified", "C3verified", "C4verified", "C5verified"]);
+      assert.equal(await sk.locator(".sk-rest details").count(), 12);
+      assert.equal(await sk.locator(".sk-rest details[open]").count(), 0, "folded");
+      assert.equal((await sk.locator(".sk-rest summary").first().textContent())?.replace(/\s+/g, " "), "Source Mapline 23 · 9 entries");
+      await sk.locator(".sk-side .nd-empty").waitFor({ state: "attached" });
+      if ((await sk.evaluate(() => innerWidth)) >= 780) {
+        // As in the mockup, the Snapshot card and the evidence panel start on the same line.
+        const tops = await sk.evaluate(() => [".sk-snap", ".sk-side"].map((s) => document.querySelector(s)!.getBoundingClientRect().top));
+        assert.ok(Math.abs(tops[0]! - tops[1]!) < 1, `Snapshot card at ${tops[0]}, evidence panel at ${tops[1]}`);
+      }
+      await shot(page, "skeleton-1-nanochat-nothing-selected");
+
+      // C2: its evidence beside the table (under its row if the screen leaves the view under 780 px), and the ask bar.
+      await page.waitForTimeout(1100); // the workspace takes at most 10 selections a second from a view
+      await sk.locator('.ctable tr.blk[data-line="116"]').click();
+      await sk.locator(".sk-side h4").filter({ hasText: "Claim C2 · paper_skeleton.md:116" }).waitFor({ state: "attached" });
+      const wide = (await sk.evaluate(() => innerWidth)) >= 780;
+      const evidence = wide ? sk.locator(".sk-side") : sk.locator(".ctable tr.evrow.nar");
+      await evidence.waitFor({ state: "visible" });
+      assert.deepEqual(await evidence.locator(".files li").allTextContents(), ["Code/results/summary.json"]);
+      const sideText = (await evidence.textContent()) ?? "";
+      assert.ok(sideText.includes("Files it names") && sideText.includes("Used by") && sideText.includes("Main result (paper_skeleton.md:83)"), sideText);
+      assert.ok(!sideText.includes("What the source file says"), "the cited file's own text is left out (the Human Owner's decision)");
+      const label = bar.locator("[data-selection-label]");
+      await label.filter({ hasText: "paper_skeleton.md:116 · claim C2" }).waitFor();
+      assert.equal(await label.textContent(), "paper_skeleton.md:116 · claim C2");
+      const row = fixtureLine("nanochat_cpu.paper_skeleton.md", 116);
+      assert.equal(await label.getAttribute("title"), row, "the quote is the row as written");
+      const glimpse = (await bar.locator("[data-selection-quote]").textContent())!;
+      assert.ok(glimpse.startsWith(row.slice(0, 40)) && glimpse.endsWith(`1 line · ${row.length} characters`), glimpse);
+      assert.equal(await sk.locator(".ctable tr.picked").count(), 1);
+      await shot(page, "skeleton-2-claim-C2-selected-evidence-and-ask-bar");
+
+      // Ask: a chip whose text opens by itself (the Skeleton view quotes the line as written, not what it draws).
+      await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+      await chips.filter({ hasText: "paper_skeleton.md:116 · claim C2" }).waitFor();
+      const preview = chat.locator("[data-reference-preview]");
+      await preview.waitFor({ timeout: 5000 });
+      assert.equal(await preview.textContent(), `About paper_skeleton.md:116 · claim C2\n> ${row}`);
+      assert.equal(await bar.count(), 0, "asking clears the selection");
+      await sk.locator(".picked").waitFor({ state: "detached" }); // and the view's highlight
+      await sk.locator(".sk-side h4").filter({ hasText: "Claim C2" }).waitFor({ state: "attached" }); // the evidence stays open
+      await shot(page, "skeleton-3-composer-after-ask-chip-open");
+      await chat.getByRole("button", { name: "Remove reference paper_skeleton.md:116 · claim C2" }).click();
+      assert.equal(await chips.count(), 0);
+      assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("a folded section opens and its line is selected; in a narrow window the evidence opens under its claim", SLOW, async () => {
+    const width = await windowWidth(1440);
+    try {
+      const { ws, sk } = await openSkeleton();
+      await clearAsk(ws, PROJECT);
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const experiments = sk.locator(".sk-rest details").filter({ has: sk.locator("summary", { hasText: "Experiments" }) });
+      await experiments.locator("summary").click();
+      await experiments.locator("tr.blk").first().waitFor();
+      assert.equal(await experiments.locator("tbody tr.blk").count(), 3);
+      /** Whether the page, or a section's card, is wider than its box: a wide table scrolls inside its section instead. */
+      const overflows = () => sk.evaluate(() => [...document.querySelectorAll(".sk2, .sk-rest details")].some((e) => e.scrollWidth > e.clientWidth + 1));
+      assert.equal(await overflows(), false, "an open section's table stays in its card");
+      await page.waitForTimeout(1100);
+      await experiments.locator("tbody tr.blk").filter({ hasText: "Main result" }).click();
+      const label = bar.locator("[data-selection-label]");
+      await label.filter({ hasText: "paper_skeleton.md:83 · Experiments" }).waitFor();
+      assert.equal(await label.getAttribute("title"), fixtureLine("nanochat_cpu.paper_skeleton.md", 83));
+      await experiments.locator("tr.blk.picked").scrollIntoViewIfNeeded();
+      await shot(page, "skeleton-4-folded-section-open-line-selected");
+      // A list item of another open section, and Escape clears it.
+      const limits = sk.locator(".sk-rest details").filter({ has: sk.locator("summary", { hasText: "Limitations" }) });
+      await limits.locator("summary").click();
+      await page.waitForTimeout(1100);
+      await limits.locator("li.blk").first().click();
+      await label.filter({ hasText: "paper_skeleton.md:98 · Limitations" }).waitFor();
+      await sk.locator("body").press("Escape");
+      await bar.waitFor({ state: "detached" });
+      assert.equal(await sk.locator(".picked").count(), 0);
+
+      // Narrow: the panel goes, and the open claim's evidence is under its row.
+      await windowWidth(1000);
+      await sk.locator(".sk-side").waitFor({ state: "hidden" });
+      assert.ok((await sk.evaluate(() => innerWidth)) < 780);
+      await page.waitForTimeout(1100);
+      await sk.locator('.ctable tr.blk[data-line="115"]').click();
+      const under = sk.locator(".ctable tr.evrow.nar");
+      await under.waitFor({ state: "visible" });
+      assert.equal(await under.evaluate((tr) => (tr.previousElementSibling as HTMLElement).dataset.line), "115", "under C1's row");
+      assert.ok(((await under.textContent()) ?? "").includes("Code/README.md"));
+      assert.equal(await overflows(), false, "nothing scrolls sideways in a narrow window");
+      assert.equal(await sk.locator('.ctable tr.blk[data-line="115"] .stp').evaluate((p) => p.scrollWidth <= p.clientWidth), true, "the status pill is not cut");
+      await under.scrollIntoViewIfNeeded();
+      await shot(page, "skeleton-5-narrow-window-evidence-under-claim");
+      await bar.getByRole("button", { name: "Clear selection" }).click();
+      await sk.locator(".picked").waitFor({ state: "detached" });
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("a project made from the template shows no claims yet; markup, a javascript: link, and an image in its file run, follow, and load nothing", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = skeletonFile(TEMPLATE_PROJECT);
+    const original = readFileSync(file, "utf8");
+    try {
+      const { sk } = await openSkeleton(TEMPLATE_PROJECT);
+      await sk.getByText("No claims yet: the Claims and Evidence table has no filled row", { exact: true }).waitFor();
+      assert.equal(await sk.locator(".sk-snap .eyebrow .stp").textContent(), "idea / outline / draft / submitted / revised");
+      assert.equal(await sk.locator(".sk-snap h2").textContent(), "not filled in");
+      assert.deepEqual(await sk.locator(".sk-snap p .unfilled").allTextContents(), ["not filled in", "not filled in", "not filled in"]);
+      await shot(page, "skeleton-6-template-project-no-claims-yet");
+
+      // The file rewritten: markup in a claim and a section title, a javascript: link, and an image on another host.
+      const lines = original.split(/\r?\n/);
+      const claimRow = lines.findIndex((l) => l.includes("planned / verified / weak / removed"));
+      lines[claimRow] = `| C1: ${MARKUP_TEXT} | ![x](https://md-image.invalid/a.png) | [x](javascript:window.top.__pwned=6) | r | verified |`;
+      const sourceMap = lines.indexOf("## Source Map");
+      lines[sourceMap] = `## Source Map ${MARKUP_TEXT}`;
+      writeFileSync(file, lines.join("\n"));
+      await sk.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      await sk.locator(".sk-claims .sk-h small").filter({ hasText: "1 claim · 1 verified" }).waitFor();
+      assert.equal(await sk.locator(".ctable td.cl").textContent(), MARKUP_TEXT, "the claim's markup is its text");
+      await sk.locator(".sk-rest summary").filter({ hasText: MARKUP_TEXT }).waitFor();
+      const link = sk.locator(".ctable tr.blk .mdlink");
+      assert.equal(await link.getAttribute("title"), "javascript:window.top.__pwned=6");
+      assert.equal(await link.getAttribute("href"), null);
+      await page.waitForTimeout(1100);
+      await link.click();
+      await page.waitForTimeout(400);
+      assert.equal(sk.url(), `app://skeleton-view/index.html?project=${TEMPLATE_PROJECT}`, "the link is not followed");
+      assert.equal(await sk.locator(".ctable tr.blk .mdimg").textContent(), "x", "the image is its alt text");
+      // The click selected the claim's row, whose evidence names the link's target as text.
+      await sk.locator(".sk-side h4").filter({ hasText: "Claim C1" }).waitFor({ state: "attached" });
+      assert.deepEqual(await sk.locator(".sk-side .files li").allTextContents(), ["javascript:window.top.__pwned=6 (an address, not a file of the project)"]);
+      assert.equal(await sk.evaluate(() => document.querySelectorAll("img, a, iframe, object, embed, script:not([src])").length), 0, "nothing in the frame came from the file as markup");
+      assert.deepEqual(await pwned(sk), [undefined, undefined]);
+      assert.equal(await page.locator('img[src="x"]').count(), 0);
+      const bar = screen(page, "workspace").getByRole("region", { name: "Selection" });
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    } finally {
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
+  test("a missing paper_skeleton.md has its screen; renaming it back and Try again restores the view", SLOW, async () => {
+    const { sk } = await openSkeleton(TEMPLATE_PROJECT);
+    const file = skeletonFile(TEMPLATE_PROJECT);
+    renameSync(file, `${file}.e2e-kept`);
+    try {
+      await sk.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      await sk.getByText("No paper_skeleton.md to show", { exact: true }).waitFor();
+      await sk
+        .getByText(`projects-folder/${TEMPLATE_PROJECT}/paper_skeleton.md is not there, or it is a link the Skeleton view may not follow (one leading outside the project's paper_skeleton.md).`, { exact: true })
+        .waitFor();
+      await shot(page, "skeleton-7-missing-file-screen");
+    } finally {
+      renameSync(`${file}.e2e-kept`, file);
+    }
+    await sk.getByRole("button", { name: "Try again" }).click();
+    await sk.getByText("No claims yet: the Claims and Evidence table has no filled row", { exact: true }).waitFor();
+  });
+
+  test("the Skeleton view's frame is sealed off: no bridge, paper_skeleton.md only, no other origin's endpoints", SLOW, async () => {
+    const { sk } = await openSkeleton();
+    const status = (url: string) => sk.evaluate(async (u) => (await fetch(u)).status, url);
+    const rel = (p: string) => `./_os/files?path=${encodeURIComponent(p)}`;
+    assert.deepEqual(
+      {
+        skeleton: await status(rel(`projects-folder/${PROJECT}/paper_skeleton.md`)),
+        otherProject: await status(rel(`projects-folder/${TEMPLATE_PROJECT}/paper_skeleton.md`)),
+        agents: await status(rel(`projects-folder/${PROJECT}/AGENTS.md`)),
+        code: await status(rel(`projects-folder/${PROJECT}/Code/README.md`)),
+        below: await status(rel(`projects-folder/${PROJECT}/paper_skeleton.md/x`)),
+        dotEnvRoot: await status(rel(".env")),
+        listing: await status(`./_os/list?path=${encodeURIComponent(`projects-folder/${PROJECT}`)}`),
+        listingFile: await status(`./_os/list?path=${encodeURIComponent(`projects-folder/${PROJECT}/paper_skeleton.md`)}`),
+        codeViewGit: await status(`/api/code-view/git/log?project=${PROJECT}`),
+        chat: await status("/api/chat/sessions"),
+        wikiStatus: await status("/api/paper-wiki/status"),
+      },
+      { skeleton: 200, otherProject: 200, agents: 404, code: 404, below: 404, dotEnvRoot: 404, listing: 404, listingFile: 404, codeViewGit: 404, chat: 404, wikiStatus: 404 },
+    );
+    const probe = await sk.evaluate(async () => {
+      const outcome = async (fn: () => Promise<unknown>) => {
+        try {
+          return String(await fn());
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        own: typeof (window as { osDesktop?: unknown }).osDesktop,
+        parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
+        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
+      };
+    });
+    assert.equal(probe.own, "undefined");
+    assert.match(probe.parent, /^blocked: SecurityError/);
+    assert.match(probe.appApi, /^blocked/);
+    assert.match(probe.wikiOrigin, /^blocked/);
+    // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline'), whatever reaches its DOM.
+    const before = logs.length;
+    const inline = await sk.evaluate(() => {
+      const script = document.createElement("script");
+      script.textContent = "window.__inline = 1";
+      document.body.append(script);
+      script.remove();
+      return (window as { __inline?: unknown }).__inline;
+    });
+    assert.equal(inline, undefined, "an inline script ran in the Skeleton view's page");
+    await page.waitForTimeout(300);
+    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
+    await app.evaluate(() => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/skeleton-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
+    });
+    // The frame's CSP reports reach the suite, so the final check sees this frame too.
+    await sk.evaluate(() => {
+      const img = new Image();
+      img.src = "https://csp-canary.invalid/skeleton.png";
+      document.body.append(img);
+      img.remove();
+    });
+    const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/skeleton-view\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
+    for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
+    assert.ok(canary(await consoleLog()), "a CSP violation inside the Skeleton view's frame is seen");
   });
 
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {
