@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chmodSync } from "node:fs";
+import { chmodSync, mkdirSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, test } from "node:test";
 import { BUNDLED_IDS } from "../../frontend/plugins/bundled.ts";
@@ -113,6 +113,16 @@ describe("findGit", () => {
     const env = { PATH: `${join(root, "ws", "bin")}:${join(root, "other", "bin")}` };
     assert.equal(await findGit({ env, dir: join(root, "ws"), probe: tools(0) }), join(root, "other", "bin", "git"));
     assert.equal(await findGit({ env, dir: join(root, "elsewhere"), probe: tools(0) }), join(root, "ws", "bin", "git"), "outside the workspace it is the first");
+  });
+
+  test("a git reached through a link from outside, whose real path lies in the workspace, is passed over too", { skip: process.platform === "win32" ? "POSIX links and file modes" : false }, async () => {
+    const root = tempTree({ "ws/bin/git": "#!/bin/sh\n", "other/bin/git": "#!/bin/sh\n" });
+    for (const dir of ["ws", "other"]) chmodSync(join(root, dir, "bin", "git"), 0o755);
+    mkdirSync(join(root, "outside"));
+    symlinkSync(join(root, "ws", "bin"), join(root, "outside", "bin"));
+    const env = { PATH: `${join(root, "outside", "bin")}:${join(root, "other", "bin")}` };
+    // No `real` given: findGit resolves links itself.
+    assert.equal(await findGit({ env, dir: join(root, "ws"), probe: tools(0) }), join(root, "other", "bin", "git"));
   });
 
   test("none on PATH", async () => {
