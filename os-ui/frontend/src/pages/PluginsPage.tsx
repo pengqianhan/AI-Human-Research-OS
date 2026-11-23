@@ -33,13 +33,6 @@ const PLANNED: Card[] = [
     later: "step 2",
   },
   {
-    name: "Skeleton view",
-    icon: "quote",
-    contributes: ["Project view · Skeleton"],
-    about: "The paper's claims, sources, and figures from paper_skeleton.md, each traced to its evidence.",
-    later: "step 2",
-  },
-  {
     name: "Assets view",
     icon: "folder",
     contributes: ["Project view · Assets"],

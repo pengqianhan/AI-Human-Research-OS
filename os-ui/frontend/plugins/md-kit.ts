@@ -224,7 +224,7 @@ export interface Item {
   last: number;
   lines: string[];
   text: string;
-  children: { first: number; last: number; text: string }[];
+  children: { first: number; last: number; text: string; ordered: boolean }[];
 }
 
 interface Span {
@@ -445,7 +445,7 @@ export function parse(source: string): Doc {
         const item = items[items.length - 1]!;
         const inner = current.trimStart();
         const nested = markerOf(inner);
-        if (nested !== null) item.children.push({ first: j + 1, last: j + 1, text: drawn(inner.slice(nested.width)) });
+        if (nested !== null) item.children.push({ first: j + 1, last: j + 1, text: drawn(inner.slice(nested.width)), ordered: nested.kind === "1." });
         else if (item.children.length > 0) {
           const child = item.children[item.children.length - 1]!;
           child.text = joinText(child.text, drawn(inner));
