@@ -49,6 +49,7 @@ import {
 } from "./logic.ts";
 import type { Dataset, DocRead, FileItem, GroupView, Model, Selection, Words } from "./logic.ts";
 import { ImageQueue } from "./queue.ts";
+import { SVG_CHECK, svgVerdict } from "./svg.ts";
 import type { JobState, Load, LoadOutcome } from "./queue.ts";
 import { walk } from "./walk.ts";
 import type { Entry, ListAnswer } from "./walk.ts";
@@ -155,18 +156,27 @@ async function limited<T, R>(items: readonly T[], limit: number, fn: (item: T) =
  */
 const pictureUrl = (path: string) => `${filesUrl(workspacePath(project!, path))}&v=${state.gen}`;
 
+/** Whether a picture is an SVG, which is checked before it is drawn (svg.ts). */
+const isSvg = (path: string) => /\.svg$/i.test(path);
+
 /**
  * Loads `path` as an <img>, the read channel's URL being its only source; on
  * an error the channel is asked for the status with a HEAD, within the same
  * slot of the queue. `place` puts the drawn image on screen, or says it could not.
+ * An SVG is first read as text in the same slot and checked (svg.ts, review
+ * M2) unless `check` is false (Show): one that would freeze the view is
+ * refused, with the reason, and never given to the <img>.
  */
-function imageLoad(path: string, place: (img: HTMLImageElement) => boolean): Load {
+function imageLoad(path: string, place: (img: HTMLImageElement) => boolean, check = true): Load {
   const url = pictureUrl(path);
   const img = el("img");
   img.alt = "";
   let live = true;
   let settle!: (outcome: LoadOutcome) => void;
   const done = new Promise<LoadOutcome>((resolve) => (settle = resolve));
+  const draw = () => {
+    if (live) img.src = url;
+  };
   img.addEventListener("load", () => {
     if (!live) return;
     live = false;
@@ -183,7 +193,35 @@ function imageLoad(path: string, place: (img: HTMLImageElement) => boolean): Loa
         settle({ kind: "error", status });
       });
   });
-  img.src = url;
+  if (!check || !isSvg(path)) draw();
+  else {
+    // The SVG's text, at most SVG_CHECK.bytes, through the channel; never parsed into a document, never put on the page.
+    void (async () => {
+      let res: Response;
+      try {
+        res = await fetch(url, { cache: "no-store" });
+      } catch {
+        if (live) settle({ kind: "error", status: 0 });
+        live = false;
+        return;
+      }
+      if (!live) return void res.body?.cancel().catch(() => {});
+      if (!res.ok) {
+        void res.body?.cancel().catch(() => {});
+        live = false;
+        return settle({ kind: "error", status: res.status });
+      }
+      const got = await readStart(res, SVG_CHECK.bytes + 1);
+      if (!live) return;
+      const read = readText(got.bytes, got.cut);
+      const verdict = svgVerdict(read.kind === "text" ? read.text : null, got.cut);
+      if (verdict.draw) draw();
+      else {
+        live = false;
+        settle({ kind: "refused", words: verdict.words });
+      }
+    })();
+  }
   return {
     done,
     cancel() {
@@ -286,8 +324,9 @@ const state = {
   previewGen: 0,
   /** Each render of the list: a card's picture goes only into the render it was asked for. */
   renderGen: 0,
-  /** The preview's image job, dropped when another item opens. */
+  /** The preview's image job, dropped when another item opens, and how to start it (Show: without the SVG check). */
   previewJob: null as string | null,
+  previewStart: null as ((check: boolean) => () => Load) | null,
 };
 
 const bar = el("div", "subbar");
@@ -302,6 +341,8 @@ body.append(listBox, side);
 /** Each card's and row's element, and each card's picture box, by the item's key. */
 let nodes = new Map<string, HTMLElement>();
 let thumbs = new Map<string, HTMLElement>();
+/** Each card's place in list order, which its queue job keeps. */
+const orders = new Map<string, number>();
 let observer: IntersectionObserver | null = null;
 
 const queue = new ImageQueue({
@@ -394,17 +435,23 @@ function near(entries: IntersectionObserverEntry[]): void {
   }
 }
 
-function wantThumb(item: FileItem, order: number): void {
+/** `check` false: Show on a card whose SVG the check refused; it draws it anyway, the human's choice. */
+function wantThumb(item: FileItem, order: number, check = true): void {
   // Only into the cards it was asked for: a Show clicked while Reload read is for a card the Reload replaces (review S4).
   const rendered = state.renderGen;
+  orders.set(item.key, order);
   queue.want(item.key, order, () =>
-    imageLoad(item.path, (img) => {
-      const box = thumbs.get(item.key);
-      if (rendered !== state.renderGen || box === undefined) return false;
-      clear(box);
-      box.append(img);
-      return true;
-    }),
+    imageLoad(
+      item.path,
+      (img) => {
+        const box = thumbs.get(item.key);
+        if (rendered !== state.renderGen || box === undefined) return false;
+        clear(box);
+        box.append(img);
+        return true;
+      },
+      check,
+    ),
   );
 }
 
@@ -504,7 +551,19 @@ function thumbState(key: string, job: JobState): void {
   clear(box);
   if (job.state === "waiting" || job.state === "loading") box.append(el("span", "thumb-note", job.state === "loading" ? "Loading…" : ""));
   else if (job.state === "retrying") box.append(el("span", "thumb-note", "Busy; trying again in a moment…"));
-  else {
+  else if (job.state === "refused") {
+    // An SVG the check refused (review M2): why, and Show, which draws it anyway.
+    const note = el("span", "thumb-note");
+    note.append(el("b", "", "Not drawn"), document.createTextNode(job.words));
+    const draw = button("link", "Show");
+    draw.addEventListener("click", (event) => {
+      event.stopPropagation();
+      queue.drop(key);
+      wantThumb(item, orders.get(key) ?? 0, false);
+    });
+    note.append(el("br"), draw);
+    box.append(note);
+  } else {
     const words = imageWords(job.status, visibleName(item.name));
     const note = el("span", "thumb-note");
     note.append(el("b", "", words.title), document.createTextNode(words.text));
@@ -618,14 +677,18 @@ async function fillPreview(item: FileItem, box: HTMLElement, size: HTMLElement, 
     box.append(big);
     const key = `preview:${gen}:${item.path}`;
     state.previewJob = key;
-    queue.want(key, -1, () =>
-      imageLoad(item.path, (img) => {
-        if (!current()) return false;
-        clear(big);
-        big.append(img);
-        return true;
-      }),
-    );
+    state.previewStart = (check: boolean) => () =>
+      imageLoad(
+        item.path,
+        (img) => {
+          if (!current()) return false;
+          clear(big);
+          big.append(img);
+          return true;
+        },
+        check,
+      );
+    queue.want(key, -1, state.previewStart(true));
     return;
   }
   box.append(el("div", "loading", "Loading…"));
@@ -708,6 +771,17 @@ function previewImageState(key: string, job: JobState): void {
         queue.retry(key);
       }),
     );
+  } else if (job.state === "refused") {
+    // An SVG the check refused (review M2): why, and Show, which draws it anyway.
+    const box = screen({ title: "Not drawn", text: job.words, retry: false });
+    const draw = button("btn", "Show");
+    draw.addEventListener("click", () => {
+      if (key !== state.previewJob || state.previewStart === null) return;
+      queue.drop(key);
+      queue.want(key, -1, state.previewStart(false));
+    });
+    box.append(draw);
+    big.append(box);
   } else big.append(el("span", "thumb-note", job.state === "retrying" ? "Busy; trying again in a moment…" : "Loading…"));
 }
 

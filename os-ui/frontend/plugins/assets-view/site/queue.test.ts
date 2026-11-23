@@ -221,6 +221,21 @@ describe("the image queue", () => {
     assert.equal(states.get("p201")?.state, "loaded");
   });
 
+  test("a picture the check refused (an SVG that would freeze the view) frees its slot, is not retried, and says why (review M2)", async () => {
+    const { q, time, load, states, want } = setup();
+    want("bomb", 0);
+    want("plain", 1);
+    await load.end("bomb", { kind: "refused", words: "This SVG repeats its parts 6,802,462 times over; drawing it may freeze the view." });
+    assert.deepEqual(states.get("bomb"), { state: "refused", words: "This SVG repeats its parts 6,802,462 times over; drawing it may freeze the view." });
+    assert.equal(q.inFlight, 1);
+    await time.tick(QUEUE.retryMs * 5);
+    assert.equal(load.started.filter((k) => k === "bomb").length, 1, "not tried again by itself");
+    // Show: the page forgets the job and asks again without the check; a new load starts.
+    q.drop("bomb");
+    want("bomb", 0);
+    assert.equal(load.started.filter((k) => k === "bomb").length, 2);
+  });
+
   test("a load that throws as it starts, or whose promise rejects, fails (status 0) and frees its slot", async () => {
     const { q, states } = setup();
     q.want("throws", 0, () => {

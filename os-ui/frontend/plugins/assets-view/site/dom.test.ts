@@ -30,7 +30,7 @@ const source = (file: string) => strip(sources.find((s) => s.file === file)!.tex
 
 describe("the page's DOM", () => {
   test("no HTML sink anywhere in the page's code, markup, or the kits it bundles", () => {
-    assert.deepEqual(sources.map((s) => s.file).sort(), ["../../md-kit.ts", "../../site-kit.ts", "index.html", "logic.ts", "main.ts", "queue.ts", "style.css", "walk.ts"]);
+    assert.deepEqual(sources.map((s) => s.file).sort(), ["../../md-kit.ts", "../../site-kit.ts", "index.html", "logic.ts", "main.ts", "queue.ts", "style.css", "svg.ts", "walk.ts"]);
     for (const { file, text } of sources) {
       for (const sink of [/\.innerHTML\b/, /\.outerHTML\b/, /insertAdjacentHTML/, /document\.write/, /DOMParser/, /createContextualFragment/, /srcdoc/, /\beval\(/, /new Function\b/, /\son[a-z]+=/i, /\.cssText\b/]) {
         assert.doesNotMatch(strip(text), sink, `${file}: ${sink}`);
@@ -45,9 +45,17 @@ describe("the page's DOM", () => {
     assert.deepEqual([...main.matchAll(/el\("img"/g)].length, 1);
     assert.deepEqual([...main.matchAll(/\.src\s*=\s*([^;]+);/g)].map((m) => m[1]!.trim()), ["url"]);
     assert.match(main, /const pictureUrl = \(path: string\) => `\$\{filesUrl\(workspacePath\(project!, path\)\)\}&v=\$\{state\.gen\}`;/);
-    assert.match(main, /function imageLoad\(path: string, place: \(img: HTMLImageElement\) => boolean\): Load \{\n {2}const url = pictureUrl\(path\);\n {2}const img = el\("img"\);\n {2}img\.alt = "";/);
+    assert.match(main, /function imageLoad\(path: string, place: \(img: HTMLImageElement\) => boolean, check = true\): Load \{\n {2}const url = pictureUrl\(path\);\n {2}const img = el\("img"\);\n {2}img\.alt = "";/);
     assert.deepEqual([...main.matchAll(/pictureUrl\(([^)]*)\)/g)].map((m) => m[1]), ["path"], "used in one place, imageLoad");
     assert.match(main, /void fetch\(url, \{ method: "HEAD", cache: "no-store" \}\)/);
+    // The SVG check (review M2): the same URL read as text, which goes to svgVerdict and nowhere else; the src is set only in draw().
+    assert.deepEqual([...main.matchAll(/fetch\(url, ([^)]*)\)/g)].map((m) => m[1]), ['{ method: "HEAD", cache: "no-store" }', '{ cache: "no-store" }']);
+    assert.match(main, /const verdict = svgVerdict\(read\.kind === "text" \? read\.text : null, got\.cut\);/);
+    const loader = /function imageLoad\([\s\S]*?\n\}\n/.exec(main)![0];
+    assert.equal([...loader.matchAll(/read\.text/g)].length, 1, "in imageLoad, the SVG's text goes to svgVerdict and nowhere else");
+    assert.match(main, /const draw = \(\) => \{\n {4}if \(live\) img\.src = url;\n {2}\};/);
+    // svg.ts is a scanner over text: no document, no parser that builds one, nothing it reads is put on the page.
+    assert.doesNotMatch(source("svg.ts"), /\bdocument\.|\bwindow\.|DOMParser|createElement|innerHTML|adoptNode|importNode|appendChild|\.append\(|fetch\(/);
     // imageLoad is given only a FileItem's path, which the walk found in a listing (never a link or text from a file).
     assert.deepEqual([...main.matchAll(/(?<!function )imageLoad\(([^,]+),/g)].map((m) => m[1]!.trim()), ["item.path", "item.path"]);
     assert.doesNotMatch(main, /setAttribute\("src"|\.srcset\b|\.currentSrc\s*=/);
@@ -96,7 +104,7 @@ describe("what the page reads", () => {
     assert.match(main, /const paths = walks\.flatMap\(\(w\) => w\.readmes\);/);
     assert.match(source("logic.ts"), /export const SKELETON = "paper_skeleton\.md";\nexport const README = "Code\/README\.md";/);
     // No kit fetches or imports anything.
-    for (const file of ["../../md-kit.ts", "logic.ts", "walk.ts", "queue.ts"]) assert.doesNotMatch(source(file), /fetch\(|XMLHttpRequest|import\(/, file);
+    for (const file of ["../../md-kit.ts", "logic.ts", "walk.ts", "queue.ts", "svg.ts"]) assert.doesNotMatch(source(file), /fetch\(|XMLHttpRequest|import\(/, file);
     const kit = source("../../site-kit.ts");
     assert.match(kit, /`\.\/_os\/files\?path=\$\{encodeURIComponent\(rel\)\}`/);
     assert.match(kit, /`\.\/_os\/list\?path=\$\{encodeURIComponent\(rel\)\}`/);

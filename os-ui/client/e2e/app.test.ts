@@ -224,6 +224,14 @@ const ODD_ASSETS = ["a+b.csv", "has#hash.svg", "100%.json", "with space.md"];
 const assetLines = (rel: string) => readFileSync(join(ASSETS_FIXTURES, rel), "utf8").split(/\r?\n/);
 const lineWith = (lines: readonly string[], needle: string) => lines.findIndex((l) => l.includes(needle)) + 1;
 
+const BOMB_PROJECT = "assets_bomb";
+/** The review's SVG bomb: `levels` groups of `fan` <use> elements, each referencing the group below (1.2 KB at 6 × 10). */
+function useBomb(levels: number, fan: number): string {
+  let defs = `<g id="l0"><rect width="1" height="1"/></g>`;
+  for (let l = 1; l <= levels; l++) defs += `<g id="l${l}">${Array.from({ length: fan }, () => `<use href="#l${l - 1}"/>`).join("")}</g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs>${defs}</defs><use href="#l${levels}"/></svg>\n`;
+}
+
 /** A small SVG picture with a caption (the caption is plain words, never a name). */
 const svgPicture = (caption: string, fill: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180"><rect width="320" height="180" fill="${fill}"/><text x="16" y="96" font-family="sans-serif" font-size="22" fill="#1c1a17">${caption}</text></svg>\n`;
@@ -297,6 +305,18 @@ function assetsFixtures(workspace: string): void {
   put("Code/results/binary.dat", Buffer.from([0x89, 0x50, 0x00, 0x00, 0x01, 0x02]));
   put("Code/results/deep/a/b/c/d/past-the-depth.txt", "deep\n");
   put("Code/results/deep/a/b/c/within-the-depth.txt", "within\n");
+  // The reviewer's <use> bombs (review M2), in a project of their own: 6 levels of 10 in Figs/ (a card) and in
+  // Code/results/ (a row), 5 of 10 (refused too, but quick enough to draw with Show), and a plain figure.
+  const bombProject = assetProject(workspace, BOMB_PROJECT, ASSETS_TEMPLATE);
+  const putBomb = (rel: string, content: string) => {
+    mkdirSync(dirname(join(bombProject, rel)), { recursive: true });
+    writeFileSync(join(bombProject, rel), content);
+  };
+  putBomb("Figs/bomb.svg", useBomb(6, 10));
+  putBomb("Figs/five.svg", useBomb(5, 10));
+  putBomb("Figs/plain.svg", svgPicture("plain", "#dcebe8"));
+  putBomb("Code/results/bomb.svg", useBomb(6, 10));
+  putBomb("Code/results/ok.json", "{}\n");
   // Code/README.md: a dataset table with markup and one name twice.
   put(
     "Code/README.md",
@@ -2388,6 +2408,33 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  test("an SVG that repeats its parts millions of times is not drawn without a click: the page answers, says why, and draws the rest (review M2)", SLOW, async () => {
+    const { ws, as } = await openAssets(BOMB_PROJECT);
+    await clearAsk(ws, BOMB_PROJECT);
+    /** The page answers within 5 s, or this says it did not. */
+    const answers = () => Promise.race([as.evaluate(() => "answers"), new Promise((r) => setTimeout(() => r("NO ANSWER in 5 s"), 5000))]);
+    const cardOf = (name: string) => as.locator(".fcard").filter({ has: as.locator(".nm", { hasText: new RegExp(`^${name.replace(/\./g, "\\.")}$`) }) });
+    const refused = "This SVG repeats its parts 6,802,462 times over; drawing it may freeze the view.";
+    await cardOf("plain.svg").locator(".thumb img").waitFor({ timeout: 15_000 });
+    await cardOf("bomb.svg").getByText(refused, { exact: false }).waitFor({ timeout: 15_000 });
+    assert.equal(await answers(), "answers");
+    assert.equal(await cardOf("bomb.svg").locator(".thumb img").count(), 0, "not drawn");
+    await cardOf("bomb.svg").getByRole("button", { name: "Show" }).waitFor();
+    assert.equal(await cardOf("plain.svg").locator(".thumb img").evaluate((i) => (i as HTMLImageElement).naturalWidth), 320);
+    // As a row (Code/results/), it is checked when clicked, for the panel's large picture.
+    await pause();
+    await as.locator(".frow").filter({ has: as.locator(".nm", { hasText: /^bomb\.svg$/ }) }).click();
+    await as.locator(".as-prev").getByText(refused, { exact: false }).waitFor({ timeout: 15_000 });
+    assert.equal(await answers(), "answers");
+    assert.equal(await as.locator(".as-prev .big img").count(), 0);
+    // Show draws a refused SVG anyway: the human's choice. 5 of 10 (680,241 elements) draws in a moment.
+    await cardOf("five.svg").getByRole("button", { name: "Show" }).click();
+    await cardOf("five.svg").locator(".thumb img").waitFor({ timeout: 30_000 });
+    assert.equal(await cardOf("five.svg").locator(".thumb img").evaluate((i) => (i as HTMLImageElement).naturalWidth), 100);
+    const bar = ws.getByRole("region", { name: "Selection" });
+    if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+  });
+
   test("a hostile SVG shown as an <img> runs nothing and requests nothing outside the app", SLOW, async () => {
     const hits: string[] = [];
     const server = createServer((req, res) => {
@@ -2419,7 +2466,15 @@ describe("desktop client on a Research OS folder", () => {
       const { as } = await openAssets(ODD_PROJECT);
       await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
       const card = as.locator(".fcard").filter({ has: as.locator(".nm", { hasText: /^hostile\.svg$/ }) });
-      await card.scrollIntoViewIfNeeded();
+      // The list on screen may be the one the Reload is about to replace: scroll to the card again if it was.
+      for (let k = 0; k < 5; k++) {
+        try {
+          await card.scrollIntoViewIfNeeded({ timeout: 5000 });
+          break;
+        } catch {
+          await page.waitForTimeout(300);
+        }
+      }
       await card.locator(".thumb img").waitFor();
       // Drawn: the image loaded (so its references had their chance), as a card and large in the panel.
       assert.equal(await card.locator(".thumb img").evaluate((i) => (i as HTMLImageElement).naturalWidth), 320);

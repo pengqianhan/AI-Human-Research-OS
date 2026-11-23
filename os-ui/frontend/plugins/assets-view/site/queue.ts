@@ -26,9 +26,11 @@ export const QUEUE = {
 /**
  * How a load ended: drawn; the channel's status for the file (0: the app
  * could not be reached); or loaded but not placed, its card replaced by a
- * Reload meanwhile, so the job is forgotten and the next ask loads it again.
+ * Reload meanwhile, so the job is forgotten and the next ask loads it again;
+ * or refused by the page's check before drawing (an SVG that would freeze
+ * the view, review M2), with the reason in words.
  */
-export type LoadOutcome = { kind: "ok" } | { kind: "error"; status: number } | { kind: "dropped" };
+export type LoadOutcome = { kind: "ok" } | { kind: "error"; status: number } | { kind: "dropped" } | { kind: "refused"; words: string };
 
 /** One load: it ends once, with `done`; `cancel` stops it (its `done` may then never settle). */
 export interface Load {
@@ -37,7 +39,13 @@ export interface Load {
 }
 
 /** What a card shows. `failed` carries the status of the last try, or "timeout". */
-export type JobState = { state: "waiting" } | { state: "loading" } | { state: "retrying" } | { state: "loaded" } | { state: "failed"; status: number | "timeout" };
+export type JobState =
+  | { state: "waiting" }
+  | { state: "loading" }
+  | { state: "retrying" }
+  | { state: "loaded" }
+  | { state: "failed"; status: number | "timeout" }
+  | { state: "refused"; words: string };
 
 export interface QueueOptions {
   loads?: number;
@@ -202,6 +210,7 @@ export class ImageQueue {
       return;
     }
     if (outcome.kind === "ok") this.set(job, { state: "loaded" });
+    else if (outcome.kind === "refused") this.set(job, { state: "refused", words: outcome.words });
     else if ((outcome.status === 503 || outcome.status === 200) && job.tries < 2) {
       // Busy, or failed while the file is there: once more, after a moment.
       this.set(job, { state: "retrying" });
