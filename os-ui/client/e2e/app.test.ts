@@ -283,6 +283,8 @@ function assetsFixtures(workspace: string): void {
     put(`Figs/${MARKUP_NAME.replace(/\.txt$/, ".svg")}`, svgPicture("markup name", "#f3e6cc"));
     put(`Code/results/${MARKUP_NAME}`, `${MARKUP_TEXT}\n`);
   }
+  // A name whose label is not the path: a no-break space (legal on every OS) is a marker in it.
+  put("Code/results/no break.csv", "h\n1\n");
   // One name in two folders: two items.
   put("Figs/a/plot.svg", svgPicture("plot in a", "#e2efe1"));
   put("Figs/b/plot.svg", svgPicture("plot in b", "#f1e5cb"));
@@ -2198,6 +2200,16 @@ describe("desktop client on a Research OS folder", () => {
         await panel.getByText(expect, { exact: false }).first().waitFor();
         await label.filter({ hasText: `${folder}/${name}` }).waitFor();
       }
+      // A label that is not the path: posted exactly, and the panel says what the agent gets (review S1).
+      await pause();
+      // The list draws the name with its no-break space as a marker too.
+      await as.locator(".frow").filter({ hasText: "no⟨U+00A0⟩break.csv" }).click();
+      await label.filter({ hasText: "Code/results/no⟨U+00A0⟩break.csv" }).waitFor();
+      assert.equal(await label.textContent(), "Code/results/no⟨U+00A0⟩break.csv");
+      assert.equal(
+        await panel.locator(".label-note").textContent(),
+        "The agent gets this name: Code/results/no⟨U+00A0⟩break.csv (characters that could be misread are written as ⟨U+…⟩).",
+      );
       // One name in two folders: each opens its own preview and label.
       for (const sub of ["b", "a"]) {
         await pause();

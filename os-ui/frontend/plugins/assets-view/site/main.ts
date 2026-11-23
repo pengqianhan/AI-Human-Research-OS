@@ -29,7 +29,9 @@ import {
   docFrom,
   GROUPS,
   HEADING,
+  datasetNote,
   imageWords,
+  labelNote,
   LIMITS,
   linesPreview,
   markdownPreview,
@@ -565,6 +567,9 @@ function renderPanel(): void {
 function filePanel(item: FileItem, gen: number): void {
   const name = visibleName(item.name);
   side.append(el("h4", "", HEADING[item.kind]), el("p", "pn", visibleName(item.path)));
+  // When the label is not the real path, what the agent gets, and why (review S1).
+  const note = labelNote(item.path, item.selection.label);
+  if (note !== null) side.append(el("p", "label-note", note));
   const preview = el("div", "pv");
   side.append(preview);
   const dl = el("dl");
@@ -708,6 +713,8 @@ function previewImageState(key: string, job: JobState): void {
 
 function datasetPanel(d: Dataset): void {
   side.append(el("h4", "", `Dataset · listed in ${README}`), el("p", "pn", d.name === "" ? "(no name)" : markInvisible(d.name)));
+  const note = datasetNote(d.name, d.selection.label);
+  if (note !== null) side.append(el("p", "label-note", note));
   const dl = el("dl");
   for (const cell of d.cells) {
     const dd = el("dd");

@@ -153,30 +153,91 @@ const NAME_MARKED = /(?! )[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\p{Zs}\u2
 /**
  * A file or folder name as a label shows it: one line of visible characters
  * (the host refuses others), every character of NAME_MARKED as a marker, in
- * one pass. Plain spaces stay: "a  b.csv" and "a b.csv" are two files.
+ * one pass, and a plain space at either end too, so "a.svg " never reads as
+ * "a.svg" (review S1). Plain spaces inside stay: "a  b.csv" and "a b.csv"
+ * are two files.
  */
-export const nameInLabel = (name: string) => name.replace(NAME_MARKED, marker);
+export const nameInLabel = (name: string) => name.replace(NAME_MARKED, marker).replace(/^ +| +$/g, (spaces) => "⟨U+0020⟩".repeat(spaces.length));
 
-/**
- * A file's label: its project path, each segment as nameInLabel shows it,
- * cut to the host's LABEL_MAX ending in "…", never inside a marker or a
- * surrogate pair (site-kit's cutMarked).
- */
-export function fileLabel(path: string): string {
-  return cutMarked(path.split("/").map(nameInLabel).join("/"), LABEL_MAX, "…");
+/** The first characters of `text`, at most `max`, never ending inside a marker or between the halves of a surrogate pair. */
+function takeStart(text: string, max: number): string {
+  if (text.length <= max) return text;
+  let end = Math.max(0, max);
+  const open = text.lastIndexOf("⟨", end - 1);
+  if (open !== -1 && text.indexOf("⟩", open) >= end) end = open;
+  if (end > 0 && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--;
+  return text.slice(0, end);
+}
+
+/** The last characters of `text`, at most `max`, never starting inside a marker or between the halves of a surrogate pair. */
+function takeEnd(text: string, max: number): string {
+  if (text.length <= max) return text;
+  let start = text.length - Math.max(0, max);
+  const open = text.lastIndexOf("⟨", start - 1);
+  if (open !== -1) {
+    const close = text.indexOf("⟩", open);
+    if (close >= start) start = close + 1;
+  }
+  if (start < text.length && text.charCodeAt(start) >= 0xdc00 && text.charCodeAt(start) <= 0xdfff) start++;
+  return text.slice(start);
 }
 
 /**
+ * A file's label: its project path, each segment as nameInLabel shows it.
+ * Over the host's LABEL_MAX it is cut once, in the middle, with one "…": the
+ * file's own name stays whole after the cut when it fits, else its end does,
+ * so two files that differ only at the end keep two labels (review S1);
+ * never inside a marker or a surrogate pair.
+ */
+export function fileLabel(path: string): string {
+  const segments = path.split("/").map(nameInLabel);
+  const whole = segments.join("/");
+  if (whole.length <= LABEL_MAX) return whole;
+  const name = segments[segments.length - 1]!;
+  // At least the group's folder (and a little more) before the cut.
+  const room = LABEL_MAX - 1 - Math.min(whole.length - name.length, 24);
+  const tail = name.length + 1 <= room ? `/${name}` : takeEnd(whole, Math.floor((LABEL_MAX - 1) / 2));
+  return `${takeStart(whole.slice(0, whole.length - tail.length), LABEL_MAX - 1 - tail.length)}…${tail}`;
+}
+
+/** A dataset's name as its label shows it: plain text, blank runs one space, TEXT_MARKED as markers. */
+const datasetShown = (name: string) => trimSpaces(name.replace(/[\p{Zs}\t]+/gu, " ")).replace(TEXT_MARKED, marker);
+
+/**
  * A dataset's label, `Code/README.md:208 · dataset <name>`: its README line
- * and its name as plain text, blank runs one space, invisible characters and
- * separator look-alikes as markers. The name is what is cut, so the line
+ * and its name as datasetShown gives it. The name is what is cut, so the line
  * always shows.
  */
 export function datasetLabel(line: number, name: string): string {
   const base = `${README}:${line} · dataset`;
-  const shown = trimSpaces(name.replace(/[\p{Zs}\t]+/gu, " ")).replace(TEXT_MARKED, marker);
+  const shown = datasetShown(name);
   if (shown === "") return base;
   return `${base} ${cutMarked(shown, LABEL_MAX - base.length - 1, "…")}`;
+}
+
+const MISREAD = "characters that could be misread are written as ⟨U+…⟩";
+
+/**
+ * One sentence for the panel when a file's label is not its real path, so
+ * the human knows what the agent gets (review S1): null when it is.
+ */
+export function labelNote(path: string, label: string): string | null {
+  if (label === path) return null;
+  const whole = path.split("/").map(nameInLabel).join("/");
+  const why = [...(whole !== path ? [MISREAD] : []), ...(label !== whole ? ["the path is shortened"] : [])];
+  return `The agent gets this name: ${label} (${why.join("; ")}).`;
+}
+
+/** The same for a dataset, when its label does not hold its name as written. */
+export function datasetNote(name: string, label: string): string | null {
+  const collapsed = trimSpaces(name.replace(/[\p{Zs}\t]+/gu, " "));
+  const shown = datasetShown(name);
+  const why = [
+    ...(collapsed !== name ? ["runs of blank space are one space"] : []),
+    ...(shown !== collapsed ? [MISREAD] : []),
+    ...(shown !== "" && !label.endsWith(shown) ? ["the name is shortened"] : []),
+  ];
+  return why.length === 0 ? null : `The agent gets this name: ${label} (${why.join("; ")}).`;
 }
 
 // ---- reading a Markdown file the rules need ------------------------------------------
@@ -847,3 +908,4 @@ export function projectWords(search: string): Words {
   if (given === null || given === "") return { title: "No project given", text: "The Assets view opens from a project's workspace, which names the project it shows.", retry: false };
   return { title: "Not a project name", text: `“${clip(given, 80)}” is not a project folder name the Assets view can open (a letter, then letters, digits, _ or -).`, retry: false };
 }
+

@@ -27,6 +27,8 @@ import {
   HEADING,
   imageWords,
   kindOf,
+  labelNote,
+  datasetNote,
   LIMITS,
   linesPreview,
   markdownPreview,
@@ -669,25 +671,65 @@ describe("labels: the project path, one visible line, unforgeable, within the ho
     }
   });
 
-  test("a long label is cut to 200 characters ending in '…', never inside a marker or a surrogate pair", () => {
-    const long = fileLabel(`Figs/${"a".repeat(300)}.png`);
-    assert.equal(long.length, LABEL_MAX);
-    assert.ok(long.startsWith("Figs/aaa") && long.endsWith("a…"), long);
-    // A marker that would be split at the cut is left out whole.
-    for (let pad = 180; pad < 200; pad++) {
-      const label = fileLabel(`Figs/${"b".repeat(pad)}​${"c".repeat(50)}`);
-      assert.ok(label.length <= LABEL_MAX);
-      assert.ok(!/⟨[^⟩]*…$/.test(label), label.slice(-12));
-      assert.equal(host(label)?.kind, "select");
+  test("a long label is cut once, in the middle, to 200 characters, keeping the file's name whole where it fits (review S1)", () => {
+    // The reviewer's sweep: one long folder-less name, five seeds. Each label keeps its end, so the five differ.
+    const seeds = [1, 2, 3, 4, 5].map((k) => fileLabel(`Figs/${"sweep_lr0.001_bs32_".repeat(10)}seed${k}.png`));
+    assert.equal(new Set(seeds).size, 5, seeds.join("\n"));
+    for (const [k, label] of seeds.entries()) {
+      assert.ok(label.length <= LABEL_MAX && label.startsWith("Figs/sweep_lr0.001") && label.endsWith(`seed${k + 1}.png`), label);
+      assert.equal(label.split("…").length, 2, "one …");
     }
-    for (let pad = 190; pad < 200; pad++) {
-      const label = fileLabel(`Figs/${"d".repeat(pad)}😀😀😀😀`);
-      assert.ok(!/[\uD800-\uDBFF]…$/.test(label), "no lone high surrogate before the mark");
-      assert.equal(host(label)?.kind, "select");
+    // Two paths of 207 characters that differ after the 199th.
+    const a = fileLabel(`Figs/${"p".repeat(196)}_a.svg`);
+    const b = fileLabel(`Figs/${"p".repeat(196)}_b.svg`);
+    assert.notEqual(a, b);
+    // A long folder path and a short name: the name whole, after the cut.
+    const deep = fileLabel(`Figs/${"d".repeat(120)}/${"e".repeat(120)}/plot_seed3.png`);
+    assert.ok(deep.length <= LABEL_MAX && deep.startsWith("Figs/ddd") && deep.endsWith("…/plot_seed3.png"), deep);
+    // Never inside a marker or a surrogate pair, on either side of the cut.
+    for (let pad = 80; pad < 130; pad++) {
+      for (const label of [
+        fileLabel(`Figs/${"b".repeat(pad)}\u200B${"c".repeat(260 - pad)}.png`),
+        fileLabel(`Figs/${"d".repeat(pad)}😀😀😀😀${"f".repeat(260 - pad)}.png`),
+        fileLabel(`Figs/${"g".repeat(pad)}/${"h".repeat(300 - pad)}\u00A0x.png`),
+      ]) {
+        assert.ok(label.length <= LABEL_MAX, label);
+        assert.equal(label.split("…").length, 2, label);
+        const [left, right] = label.split("…") as [string, string];
+        assert.ok(!/⟨[^⟩]*$/.test(left) && !/^[^⟨]*⟩/.test(right), `a marker split at ${pad}: ${label}`);
+        assert.ok(!/[\uD800-\uDBFF]$/.test(left) && !/^[\uDC00-\uDFFF]/.test(right), `a pair split at ${pad}`);
+        assert.equal(host(label)?.kind, "select");
+      }
     }
     const dataset = datasetLabel(123, "n".repeat(400));
     assert.equal(dataset.length, LABEL_MAX);
     assert.ok(dataset.startsWith("Code/README.md:123 · dataset nnn") && dataset.endsWith("n…"));
+  });
+
+  test("a space at either end of a name is a marker, so \"a.svg \" never reads as a.svg (review S1)", () => {
+    assert.equal(fileLabel("Figs/a.svg "), "Figs/a.svg⟨U+0020⟩");
+    assert.equal(fileLabel("Figs/ a.svg"), "Figs/⟨U+0020⟩a.svg");
+    assert.equal(fileLabel("Figs/  /a b.svg"), "Figs/⟨U+0020⟩⟨U+0020⟩/a b.svg");
+    assert.equal(fileLabel("Figs/run 1 /a.svg"), "Figs/run 1⟨U+0020⟩/a.svg");
+    assert.notEqual(fileLabel("Figs/a.svg "), fileLabel("Figs/a.svg"));
+    for (const label of [fileLabel("Figs/a.svg "), fileLabel("Figs/  /a b.svg")]) assert.equal(host(label)?.kind, "select");
+  });
+
+  test("when the label is not the real path, the panel says what the agent gets and why (review S1)", () => {
+    assert.equal(labelNote("Figs/a.svg", fileLabel("Figs/a.svg")), null);
+    assert.equal(
+      labelNote("Code/results/eval_2026-11-24T10:30:00.json", fileLabel("Code/results/eval_2026-11-24T10:30:00.json")),
+      "The agent gets this name: Code/results/eval_2026-11-24T10⟨U+003A⟩30⟨U+003A⟩00.json (characters that could be misread are written as ⟨U+…⟩).",
+    );
+    const long = `Figs/${"sweep_lr0.001_bs32_".repeat(10)}seed1.png`;
+    assert.equal(labelNote(long, fileLabel(long)), `The agent gets this name: ${fileLabel(long)} (the path is shortened).`);
+    const both = `Figs/${"x".repeat(220)}:1.png`;
+    assert.match(labelNote(both, fileLabel(both))!, /\(characters that could be misread are written as ⟨U\+…⟩; the path is shortened\)\.$/);
+    // In the model, on each item.
+    assert.equal(datasetNote("karpathy/climbmix", datasetLabel(208, "karpathy/climbmix")), null);
+    assert.equal(datasetNote("x · y", datasetLabel(9, "x · y")), "The agent gets this name: Code/README.md:9 · dataset x ⟨U+00B7⟩ y (characters that could be misread are written as ⟨U+…⟩).");
+    assert.equal(datasetNote("a   b", datasetLabel(9, "a   b")), "The agent gets this name: Code/README.md:9 · dataset a b (runs of blank space are one space).");
+    assert.match(datasetNote("n".repeat(400), datasetLabel(9, "n".repeat(400)))!, /\(the name is shortened\)\.$/);
   });
 });
 
