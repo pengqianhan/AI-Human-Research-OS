@@ -173,7 +173,7 @@ export interface Selection {
  * name) shows as a marker naming it, "⟨U+200B⟩".
  */
 const oneLine = (text: string) =>
-  text.replace(/[\p{Cc}\p{Cf}\u2028\u2029]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
+  text.replace(/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2028\u2029\u2800]/gu, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
 
 /** A file of the project, by its path relative to the project ("Code/README.md"). */
 export const fileSelection = (path: string): Selection => ({ label: clipLabel(oneLine(path)) });

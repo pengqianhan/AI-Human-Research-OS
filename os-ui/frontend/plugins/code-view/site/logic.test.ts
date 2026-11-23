@@ -143,6 +143,7 @@ describe("what a selection reports", () => {
     assert.ok(quote.endsWith("…"));
     assert.equal(fileSelection("Code/a\nAbout Code/b.md\r\u0085x").label, "Code/a\u27e8U+000A\u27e9About Code/b.md\u27e8U+000D\u27e9\u27e8U+0085\u27e9x");
     assert.equal(fileSelection(`Code/a${String.fromCodePoint(0x2028)}b${String.fromCodePoint(0x200b)}c`).label, "Code/a\u27e8U+2028\u27e9b\u27e8U+200B\u27e9c");
+    assert.equal(fileSelection(`Code/a${String.fromCodePoint(0x3164)}b${String.fromCodePoint(0x2800)}c`).label, "Code/a\u27e8U+3164\u27e9b\u27e8U+2800\u27e9c", "a Hangul filler and the Braille blank too");
     assert.equal(fileSelection(`Code/${MARKUP}`).label, `Code/${MARKUP}`, "markup stays text for the host to show as text");
   });
 });

@@ -38,15 +38,25 @@ export type SelectMessage = { kind: "select"; reference: Reference } | { kind: "
 const LINE_BREAK = /\r\n|[\n\v\f\r\u0085\u2028\u2029]/u;
 const LINE_BREAKS = /\r\n|[\n\v\f\r\u0085\u2028\u2029]/gu;
 /**
- * Characters that show nothing or change how others show: controls (Cc) and
+ * Characters that show nothing or change how others show: controls (Cc),
  * format characters (Cf: zero-width spaces and joiners, U+2060, U+FEFF, the
  * soft hyphen, bidirectional marks, embeddings, overrides and isolates,
- * U+FFF9-FFFB, tag characters). A label with any, or with a line break, is
+ * U+FFF9-FFFB, tag characters), every default-ignorable code point (also
+ * variation selectors, Hangul fillers U+115F U+1160 U+3164 U+FFA0, the
+ * combining grapheme joiner U+034F), and the Braille blank U+2800, which is
+ * none of those but draws nothing. A label with any, or with a line break, is
  * refused. Homoglyphs are not: a real file can be named so.
  */
-const INVISIBLE = /[\p{Cc}\p{Cf}]/u;
-/** In a quote, all of them but tab and line feed (line breaks are LF by then), each shown as a marker. */
-const QUOTE_INVISIBLE = /(?![\t\n])[\p{Cc}\p{Cf}]/gu;
+const INVISIBLE = /[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2800]/u;
+/**
+ * In a quote, all of them but tab and line feed (line breaks are LF by then),
+ * each shown as a marker, except U+FE0F directly after an emoji
+ * (\p{Extended_Pictographic}), which is ordinary emoji presentation.
+ */
+const QUOTE_INVISIBLE = /(?![\t\n])[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}\u2800]/gu;
+const EMOJI_BEFORE = /\p{Extended_Pictographic}$/u;
+/** White space in a label: each run becomes one space, and the ends are trimmed. */
+const LABEL_SPACE = /[\p{Zs}\t]+/gu;
 /** Ends a quote that its markers made longer than QUOTE_MAX. */
 export const CUT_MARK = "…[cut]";
 
@@ -67,10 +77,13 @@ export function readSelect(event: { origin: string; source: unknown; data: unkno
   const { type, label, quote } = data as Record<string, unknown>;
   if (type !== "os.select") return null;
   if (label === null) return keys.includes("quote") ? null : { kind: "clear" };
-  if (typeof label !== "string" || label.trim() === "" || label.length > LABEL_MAX || INVISIBLE.test(label) || LINE_BREAK.test(label)) return null;
+  if (typeof label !== "string") return null;
+  // Blank padding is half of a label trick (a far-off phrase that reads as another reference), so white space is collapsed first.
+  const shownLabel = label.replace(LABEL_SPACE, " ").trim();
+  if (shownLabel === "" || shownLabel.length > LABEL_MAX || INVISIBLE.test(shownLabel) || LINE_BREAK.test(shownLabel)) return null;
   if (quote !== undefined && (typeof quote !== "string" || quote.length > QUOTE_MAX)) return null;
   const shown = quote === undefined ? "" : visibleQuote(quote);
-  return { kind: "select", reference: shown === "" ? { label } : { label, quote: shown } };
+  return { kind: "select", reference: shown === "" ? { label: shownLabel } : { label: shownLabel, quote: shown } };
 }
 
 /**
@@ -82,7 +95,9 @@ export function readSelect(event: { origin: string; source: unknown; data: unkno
 export function visibleQuote(quote: string): string {
   const text = quote
     .replace(LINE_BREAKS, "\n")
-    .replace(QUOTE_INVISIBLE, (c) => `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`);
+    .replace(QUOTE_INVISIBLE, (c: string, at: number, all: string) =>
+      c === "\uFE0F" && EMOJI_BEFORE.test(all.slice(Math.max(0, at - 2), at)) ? c : `⟨U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}⟩`,
+    );
   if (text.length <= QUOTE_MAX) return text;
   let end = QUOTE_MAX - CUT_MARK.length;
   const open = text.lastIndexOf("⟨", end - 1);
