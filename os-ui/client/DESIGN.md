@@ -383,7 +383,10 @@ loaded), with the host's invisible characters marked. The page sets no style,
 `href`, or `src` from its code (its `dom.test.ts` scans the site, md-kit, and
 site-kit). It shows mockup alternative B: the Snapshot card, the claims with
 each one's evidence beside them (under the claim when the view is narrower
-than 780 px), and the rest of the file folded by section. A Snapshot line, a
+than 780 px), and everything else in the file folded by section, so nothing is
+hidden without the view saying so (the title and the paragraph under it, left
+out, are named in a muted line). Line numbers are counted by LF, as `grep -n`
+counts them: a lone CR is a character, drawn as a marker. A Snapshot line, a
 claim row, or a paragraph, list item, table row, or code block of an open
 section posts `os.select` with the label `paper_skeleton.md:<lines> · claim
 <ID>` for a claim, or `· section “<title>”` for anything else (the title as
