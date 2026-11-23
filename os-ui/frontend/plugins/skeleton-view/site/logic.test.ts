@@ -20,6 +20,7 @@ import {
   evidenceOf,
   fileVerdict,
   fileWords,
+  openRow,
   projectWords,
   READ_MAX,
   restSections,
@@ -193,6 +194,46 @@ describe("§3.2 claim text; evidence · result; source", () => {
       message: "No claims yet: the Claims and Evidence table has no filled row",
       notes: ["No “Claim”, “Evidence”, “Source file or link”, or “Citation/result” column in the Claims and Evidence table."],
     });
+  });
+});
+
+describe("two claims with one ID (review F1)", () => {
+  const HEAD = "| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|";
+  const TWO = `## Claims and Evidence\n\n${HEAD}\n| C3: first C3 | e1 | [one](Code/one.py) | r1 | verified |\n| C3: second C3 | e2 | [two](Code/two.py) | r2 | removed |\n\n## Experiments\n\n| Study | Claim |\n|---|---|\n| Main | C3 |\n`;
+
+  test("a note under the table names the ID and its lines", () => {
+    const view = claimsView(parse(TWO));
+    assert.ok(view.state === "claims");
+    assert.deepEqual(view.notes, ["C3 is used by 2 rows: lines 5 and 6."]);
+    const three = claimsView(parse(TWO.replace("| C3: second C3", "| C3: second C3 | e | s | r | weak |\n| C3: third C3")));
+    assert.ok(three.state === "claims");
+    assert.deepEqual(three.notes.filter((n) => n.startsWith("C3")), ["C3 is used by 3 rows: lines 5, 6, and 7."]);
+    const nano = claimsView(parse(NANOCHAT));
+    assert.ok(nano.state === "claims" && nano.notes.length === 0, "no note without a repeated ID");
+  });
+
+  test("each row's evidence is its own; Used by lists the studies naming the ID for each", () => {
+    const doc = parse(TWO);
+    const rows = rowsOf(TWO);
+    const [first, second] = [evidenceOf(doc, rows[0]!), evidenceOf(doc, rows[1]!)];
+    assert.deepEqual([first.heading, first.files, first.usedBy], ["Claim C3 · paper_skeleton.md:5", [{ kind: "path", text: "Code/one.py" }], ["Main (paper_skeleton.md:12)"]]);
+    assert.deepEqual([second.heading, second.files, second.usedBy], ["Claim C3 · paper_skeleton.md:6", [{ kind: "path", text: "Code/two.py" }], ["Main (paper_skeleton.md:12)"]]);
+  });
+
+  test("the open claim is kept by its line; across a Reload by its ID only when one row has it", () => {
+    const rows = rowsOf(TWO);
+    assert.equal(openRow(rows, null), null);
+    assert.equal(openRow(rows, { line: 6, id: "C3" })?.line, 6, "the second C3, not the first");
+    assert.equal(openRow(rows, { line: 5, id: "C3" })?.line, 5);
+    // Reload after a line was added above: the ID moves the claim when it is unique.
+    const moved = rowsOf(withLine(114, `${lineAt(NANOCHAT, 114)}\n| C0: new | e | s | r | weak |`));
+    assert.equal(openRow(moved, { line: 116, id: "C2" })?.line, 117);
+    // Not unique: by its line; that line no longer a claim: closed.
+    assert.equal(openRow(rows, { line: 6, id: "C3" })?.text, "second C3");
+    assert.equal(openRow(rows, { line: 9, id: "C3" }), null);
+    // A claim with no ID: by its line.
+    const noId = rowsOf(withLine(117, lineAt(NANOCHAT, 117).replace("C3: ", "")));
+    assert.equal(openRow(noId, { line: 117, id: null })?.line, 117);
   });
 });
 

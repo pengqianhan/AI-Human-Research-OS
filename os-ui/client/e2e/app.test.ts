@@ -1685,6 +1685,38 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  test("two claims with one ID: each row opens its own evidence, and a note names the ID", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = skeletonFile(TEMPLATE_PROJECT);
+    const original = readFileSync(file, "utf8");
+    try {
+      const { ws, sk } = await openSkeleton(TEMPLATE_PROJECT);
+      await clearAsk(ws, TEMPLATE_PROJECT);
+      const lines = original.split(/\r?\n/);
+      const at = lines.findIndex((l) => l.includes("planned / verified / weak / removed"));
+      lines.splice(at, 1, "| C3: first C3 | e1 | [one](Code/one.py) | r1 | verified |", "| C3: second C3 | e2 | [two](Code/two.py) | r2 | removed |");
+      writeFileSync(file, lines.join("\n"));
+      const [first, second] = [at + 1, at + 2];
+      await sk.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      await sk.locator(".sk-claims .sk-h small").filter({ hasText: "2 claims · 1 verified" }).waitFor();
+      await page.waitForTimeout(1100);
+      await sk.locator(`.ctable tr.blk[data-line="${second}"]`).click();
+      await sk.locator(".sk-side h4").filter({ hasText: `Claim C3 · paper_skeleton.md:${second}` }).waitFor({ state: "attached", timeout: 5000 });
+      assert.deepEqual(await sk.locator(".sk-side .files li").allTextContents(), ["Code/two.py"], "the second row's evidence, not the first's");
+      assert.deepEqual(await sk.locator(".ctable tr.on").evaluateAll((trs) => trs.map((tr) => (tr as HTMLElement).dataset.line)), [String(second)]);
+      await page.waitForTimeout(1100);
+      await sk.locator(`.ctable tr.blk[data-line="${first}"]`).click();
+      await sk.locator(".sk-side h4").filter({ hasText: `Claim C3 · paper_skeleton.md:${first}` }).waitFor({ state: "attached" });
+      assert.deepEqual(await sk.locator(".sk-side .files li").allTextContents(), ["Code/one.py"]);
+      await sk.getByText(`C3 is used by 2 rows: lines ${first} and ${second}.`, { exact: true }).waitFor({ timeout: 5000 });
+      const bar = ws.getByRole("region", { name: "Selection" });
+      if ((await bar.count()) > 0) await bar.getByRole("button", { name: "Clear selection" }).click();
+    } finally {
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
   test("a missing paper_skeleton.md has its screen; renaming it back and Try again restores the view", SLOW, async () => {
     const { sk } = await openSkeleton(TEMPLATE_PROJECT);
     const file = skeletonFile(TEMPLATE_PROJECT);

@@ -187,8 +187,42 @@ export function claimsView(doc: Doc): ClaimsView {
     state: "claims",
     summary: `${plural(rows.length, "claim")} · ${n(verified)} verified · ${where(found.table.first, found.table.last)}`,
     rows,
-    notes,
+    notes: [...repeatedIds(rows), ...notes],
   };
+}
+
+/** The claim whose evidence shows: by its line; its ID is kept only to find it again after a Reload. */
+export interface OpenClaim {
+  line: number;
+  id: string | null;
+}
+
+/**
+ * The row whose evidence shows after the file is read again: the one with
+ * the same ID when exactly one row has it (a line added above moves it),
+ * otherwise the row on the same line if it is still a claim, otherwise none.
+ */
+export function openRow(rows: readonly ClaimRow[], previous: OpenClaim | null): ClaimRow | null {
+  if (previous === null) return null;
+  if (previous.id !== null) {
+    const same = rows.filter((r) => r.id === previous.id);
+    if (same.length === 1) return same[0]!;
+  }
+  return rows.find((r) => r.line === previous.line) ?? null;
+}
+
+/** "5 and 6", "5, 6, and 7". */
+function lineList(lines: readonly number[]): string {
+  const shown = lines.map(n);
+  if (shown.length <= 2) return shown.join(" and ");
+  return `${shown.slice(0, -1).join(", ")}, and ${shown[shown.length - 1]}`;
+}
+
+/** A note for each claim ID that more than one row uses: "C3 is used by 2 rows: lines 5 and 6." */
+function repeatedIds(rows: readonly ClaimRow[]): string[] {
+  const byId = new Map<string, number[]>();
+  for (const r of rows) if (r.id !== "—") byId.set(r.id, [...(byId.get(r.id) ?? []), r.line]);
+  return [...byId].filter(([, lines]) => lines.length > 1).map(([id, lines]) => `${id} is used by ${n(lines.length)} rows: lines ${lineList(lines)}.`);
 }
 
 /** A file the Source cell names: a project path, an address as written, or a target that leaves the project. */

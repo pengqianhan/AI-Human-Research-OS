@@ -30,6 +30,7 @@ import {
   filePath,
   fileVerdict,
   fileWords,
+  openRow,
   projectWords,
   READ_MAX,
   restSections,
@@ -37,7 +38,7 @@ import {
   tableNotes,
   topBar,
 } from "./logic.ts";
-import type { ClaimRow, ClaimsView, RestSection, Selection, SnapLine, Words } from "./logic.ts";
+import type { ClaimRow, ClaimsView, OpenClaim, RestSection, Selection, SnapLine, Words } from "./logic.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
 const HOST = "app://research-os";
@@ -125,8 +126,8 @@ function pill(text: string, done: boolean): HTMLElement {
 const state = {
   gen: 0,
   doc: null as Doc | null,
-  /** The claim whose evidence shows, by its ID (or its line when it has none); kept across Reload. */
-  claim: null as string | null,
+  /** The claim whose evidence shows, by its line; across a Reload found again by openRow (its ID when one row has it). */
+  claim: null as OpenClaim | null,
   /** Open sections of the rest of the file, by RestSection.key; kept while the page lives. */
   open: new Set<string>(),
 };
@@ -194,7 +195,7 @@ function render(doc: Doc): void {
   const view = claimsView(doc);
   const rows = view.state === "claims" ? view.rows : [];
   // Reload keeps the open claim if the file still has it.
-  if (state.claim !== null && !rows.some((r) => claimKey(r) === state.claim)) state.claim = null;
+  state.claim = openClaimOf(openRow(rows, state.claim));
   renderClaims(doc, view);
   body.append(claimsBox, side, restSection(doc));
   show(body);
@@ -224,8 +225,8 @@ function snapshotSection(status: string | null, title: SnapLine | null, lines: r
 
 // ---- the claims and their evidence ----------------------------------------------------
 
-/** How a claim is kept open across Reload: its ID, or its line when it has none. */
-const claimKey = (row: ClaimRow) => (row.id === "—" ? `line ${row.line}` : row.id);
+/** A row as the open claim: its line, and its ID to find it again after a Reload. */
+const openClaimOf = (row: ClaimRow | null): OpenClaim | null => (row === null ? null : { line: row.line, id: row.id === "—" ? null : row.id });
 
 function renderClaims(doc: Doc, view: ClaimsView): void {
   clear(claimsBox);
@@ -246,7 +247,8 @@ function renderClaims(doc: Doc, view: ClaimsView): void {
   hrow.append(el("th", "", "Claim"), el("th"), el("th", "", "Evidence and source"));
   thead.append(hrow);
   const tbody = el("tbody");
-  const open = view.rows.find((r) => claimKey(r) === state.claim) ?? null;
+  // By line: two rows may share an ID.
+  const open = view.rows.find((r) => r.line === state.claim?.line) ?? null;
   for (const row of view.rows) {
     const tr = el("tr");
     tr.dataset.line = String(row.line);
@@ -305,8 +307,8 @@ function renderClaims(doc: Doc, view: ClaimsView): void {
 
 /** A claim row was clicked: its evidence opens, beside the table or under the row. */
 function openClaim(doc: Doc, view: ClaimsView, row: ClaimRow): void {
-  if (state.claim === claimKey(row)) return;
-  state.claim = claimKey(row);
+  if (state.claim?.line === row.line) return;
+  state.claim = openClaimOf(row);
   renderClaims(doc, view);
 }
 
