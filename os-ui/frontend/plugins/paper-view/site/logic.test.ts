@@ -305,6 +305,16 @@ describe("what a selection reports, and what the host makes of it", () => {
     const spaced = selectionLabel(1, 1, `Set up${" ".repeat(40)}and${String.fromCodePoint(0x3000)}go\t `);
     assert.equal(spaced, "paper/main.pdf p. 1 · Set up and go");
     assert.deepEqual(host(spaced), { kind: "select", reference: { label: spaced } });
+    // The host refuses (never rewrites) a label with any space but U+0020, and a refused label drops the selection
+    // silently: every other space character in a heading reaches it as a plain space.
+    const others = [0x00a0, 0x1680, 0x2002, 0x2007, 0x2009, 0x200a, 0x202f, 0x205f, 0x3000].map((c) => String.fromCodePoint(c));
+    for (const space of others) {
+      const label = selectionLabel(2, 2, `Results${space}and${space}${space}notes`);
+      assert.equal(label, "paper/main.pdf p. 2 · Results and notes", `U+${space.codePointAt(0)!.toString(16)}`);
+      assert.deepEqual(host(label), { kind: "select", reference: { label } }, `U+${space.codePointAt(0)!.toString(16)}`);
+    }
+    // Unchanged, the host would refuse it.
+    assert.equal(host(`paper/main.pdf p. 2 · Results${others[0]}and`), null);
     const astral = selectionLabel(1, 1, "😀".repeat(200));
     assert.ok(astral.length <= LABEL_MAX && !/[\ud800-\udbff]…$/.test(astral), "a pair is never split");
   });
