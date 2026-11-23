@@ -192,6 +192,11 @@ agent logins or a first open on a real desktop, so on each of your machines:
       - Click a figure: on the right it appears large, with its size and
         where it is used (`Code/README.md:131` or `:150`). The dark bar at
         the bottom names its path, `Figs/…`.
+      - Both figures are drawn without a click, and no panel shows "The
+        agent gets this name: …". That sentence appears only when the name
+        the agent gets differs from the path (a character that could be
+        misread, written as `⟨U+…⟩`, or a path over 200 characters); a
+        picture that would freeze the view shows **Show** and why instead.
       - Click `training_metrics.csv` under **Results**: its first rows, and
         "First 20 of 943 rows"; the size line says how many rows it has.
         Click `summary.json`: its first 40 lines, and the lines of

@@ -410,20 +410,28 @@ group and saying so beside the group, as it says when a listing was cut at
 5,000 names or could not be made. It reads `paper_skeleton.md` and
 `Code/README.md` (1 MiB each) for "Used in" and for the datasets of the Data
 section, and each listed folder's `README.md` for the descriptions of the files
-beside it, at most four at once. A picture is an `<img>` whose only source is
-the channel's URL for a path a listing gave, with an empty `alt` and nothing
-else from the file; at most four load at once (`queue.ts`), a busy one is tried
-once more after a second, and a failed one asks the channel for its status with
-a `HEAD` in the same slot. An SVG is shown only that way: the end-to-end suite
-pins that a hostile one (script, `onload`, external images, `@import`,
+beside it, at most four at once and 8 MiB in all, each reduced to its
+descriptions as soon as it is read. A picture is an `<img>` whose only source is
+the channel's URL for a path a listing gave, with the Reload's generation
+beside it (`&v=<n>`, so Reload draws a changed picture again), an empty `alt`,
+and nothing else from the file; at most four load at once (`queue.ts`), a busy
+one is tried once more after a second, and a failed one asks the channel for
+its status with a `HEAD` in the same slot. An SVG is shown only that way, and
+only after `svg.ts` has read its text (at most 4 MiB, in the same slot) and
+counted what its `<use>` references draw: over 200,000 elements, a cycle, or a
+file it cannot check waits for the human's **Show**. The end-to-end suite pins
+that a hostile SVG (script, `onload`, external images, `@import`,
 `foreignObject`, a `<use>` to an outside URL) runs nothing and that a local
 HTTP listener its URLs name hears no request. Previews: a CSV's first 20 rows
 by 30 columns from its first 2 MiB, read in one pass; a JSON or text file's
 first 40 lines from 256 KiB; Markdown drawn by md-kit as text; no PDF. A card
 or row posts `os.select` with a label and no quote: the file's project path,
-its names' invisible characters and the look-alikes of a label's own
-separators (`·`, curly quotes, `:`, slashes other than `/`) as `⟨U+XXXX⟩`
-markers, or `Code/README.md:<line> · dataset <name>`. Its chip opens by itself.
+its names' invisible characters, the look-alikes of a label's own separators
+(`·`, curly quotes, `:`, slashes other than `/`), `⟨` and `⟩`, and a space at
+either end of a name as `⟨U+XXXX⟩` markers, cut in the middle past 200
+characters, or `Code/README.md:<line> · dataset <name>`; when the label is not
+the item as written, the panel says what the agent gets. Its chip opens by
+itself.
 
 Known limits of the channel, not yet handled:
 

@@ -199,7 +199,8 @@ to edit. The most visited ones:
 - The Code view's page: `plugins/code-view/site/`; the Paper view's:
   `plugins/paper-view/site/`; the Skeleton view's:
   `plugins/skeleton-view/site/`; the Assets view's: `plugins/assets-view/site/`
-  (its folder walk in `walk.ts`, its picture queue in `queue.ts`) (each one's
+  (its folder walk in `walk.ts`, its picture queue in `queue.ts`, its SVG
+  check in `svg.ts`) (each one's
   words in `logic.ts`). Each is
   static files and a TypeScript entry, checked by `npm run typecheck`, tested
   by `npm test`, and bundled by the desktop client's `scripts/build.mjs`; what
