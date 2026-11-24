@@ -1645,6 +1645,14 @@ describe("desktop client on a Research OS folder", () => {
       if (w !== null) win.setSize(w, height!);
       return before!;
     }, width);
+  /** Sets the window's size; returns the size it had. */
+  const windowSize = (size: { width: number; height: number }) =>
+    app.evaluate(({ BrowserWindow }, to) => {
+      const win = BrowserWindow.getAllWindows()[0]!;
+      const [width, height] = win.getSize();
+      win.setSize(to.width, to.height);
+      return { width: width!, height: height! };
+    }, size);
   const skeletonFile = (project: string) => join(workspace, "projects-folder", project, "paper_skeleton.md");
 
   test("the Skeleton view on nanochat_cpu: the Snapshot card, the claims, C2's evidence, and a chip; nothing is sent", SLOW, async () => {
@@ -2283,40 +2291,53 @@ describe("desktop client on a Research OS folder", () => {
   });
 
   test("sixty pictures all load in the end, a few at a time, with no busy card left, also across a Reload and leaving the tab in the middle", SLOW, async () => {
-    const { ws, as } = await openAssets(ODD_PROJECT);
-    // By the name: a card's text starts with its picture box's ("Loading…" while it loads).
-    const cards = as.locator(".fcard").filter({ has: as.locator(".nm", { hasText: /^e2e\/p\d\d\.png$/ }) });
-    assert.equal(await cards.count(), 60);
-    const list = as.locator(".as-list");
-    // Scroll part way, Reload while pictures load, leave the tab and come back, then scroll through all of them.
-    await list.evaluate((l) => (l.scrollTop = l.scrollHeight / 3));
-    await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
-    await page.waitForTimeout(50);
-    await ws.getByRole("tab", { name: "Overview" }).click();
-    await page.waitForTimeout(400);
-    await ws.getByRole("tab", { name: "Assets" }).click();
-    for (let i = 0; i < 300; i++) {
-      const drawn = await as.locator(".fcard .thumb img").count();
-      const loadedAll = await cards.evaluateAll((cs) => cs.every((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth === 48));
-      if (loadedAll) break;
-      await list.evaluate((l, step) => (l.scrollTop = (step % 10) * (l.scrollHeight / 10)), i);
-      await page.waitForTimeout(drawn > 0 ? 100 : 200);
+    // About the window windows-x64 CI opens on its 1024 × 768 screen, a little narrower so that macOS, without a
+    // window border, lays it out alike: the preview above the list, the cards in one column, some 19,000 px of them
+    // seen through a view a few hundred pixels tall.
+    const size = await windowSize({ width: 1000, height: 728 });
+    try {
+      const { ws, as } = await openAssets(ODD_PROJECT);
+      // By the name: a card's text starts with its picture box's ("Loading…" while it loads).
+      const cards = as.locator(".fcard").filter({ has: as.locator(".nm", { hasText: /^e2e\/p\d\d\.png$/ }) });
+      assert.equal(await cards.count(), 60);
+      const list = as.locator(".as-list");
+      // Scroll part way, Reload while pictures load, leave the tab and come back, then scroll through all of them.
+      await list.evaluate((l) => (l.scrollTop = l.scrollHeight / 3));
+      await as.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+      await page.waitForTimeout(50);
+      await ws.getByRole("tab", { name: "Overview" }).click();
+      await page.waitForTimeout(400);
+      await ws.getByRole("tab", { name: "Assets" }).click();
+      for (let i = 0; i < 300; i++) {
+        const drawn = await as.locator(".fcard .thumb img").count();
+        const loadedAll = await cards.evaluateAll((cs) => cs.every((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth === 48));
+        if (loadedAll) break;
+        // One view down from where the list is, back to the top from the bottom: every card passes through the view.
+        // The page asks for a card's picture only once the card comes near the view, so a walk that jumps further than
+        // that leaves the cards between its stops unasked for, and empty: in tenths of the list, as it once went, it
+        // jumped some 1,900 px at a time past a view some 220 px tall here, and on windows-x64 six cards were never
+        // near the view.
+        await list.evaluate((l) => (l.scrollTop = l.scrollTop + l.clientHeight >= l.scrollHeight - 1 ? 0 : l.scrollTop + l.clientHeight));
+        await page.waitForTimeout(drawn > 0 ? 100 : 200);
+      }
+      // Each card left without its picture, its box's words, and where it lies in the list; and where the list's view is.
+      // A card the view never came near was never asked for (its box is empty); one it did shows what its load did.
+      const undrawn = await cards.evaluateAll((cs) =>
+        cs
+          .filter((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth !== 48)
+          .map((c) => {
+            const l = c.closest(".as-list")!;
+            const box = c.getBoundingClientRect();
+            const top = Math.round(box.top - l.getBoundingClientRect().top + l.scrollTop);
+            return `${c.querySelector(".nm")?.textContent}: ${JSON.stringify(c.querySelector(".thumb")?.textContent)} at ${top}–${top + Math.round(box.height)} px`;
+          }),
+      );
+      const view = await list.evaluate((l) => `the list's view is ${l.clientWidth} × ${l.clientHeight} px, at ${Math.round(l.scrollTop)} of ${l.scrollHeight} px`);
+      assert.deepEqual(undrawn, [], `every picture is drawn; ${view}`);
+      assert.equal(await cards.locator(".thumb-note").count(), 0, "no card is left waiting, busy, failed, or loading");
+    } finally {
+      await windowSize(size);
     }
-    // Each card left without its picture, its box's words, and where it lies in the list; and where the list's view is.
-    // A card the view never came near was never asked for (its box is empty); one it did shows what its load did.
-    const undrawn = await cards.evaluateAll((cs) =>
-      cs
-        .filter((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth !== 48)
-        .map((c) => {
-          const l = c.closest(".as-list")!;
-          const box = c.getBoundingClientRect();
-          const top = Math.round(box.top - l.getBoundingClientRect().top + l.scrollTop);
-          return `${c.querySelector(".nm")?.textContent}: ${JSON.stringify(c.querySelector(".thumb")?.textContent)} at ${top}–${top + Math.round(box.height)} px`;
-        }),
-    );
-    const view = await list.evaluate((l) => `the list's view is ${l.clientWidth} × ${l.clientHeight} px, at ${Math.round(l.scrollTop)} of ${l.scrollHeight} px`);
-    assert.deepEqual(undrawn, [], `every picture is drawn; ${view}`);
-    assert.equal(await cards.locator(".thumb-note").count(), 0, "no card is left waiting, busy, failed, or loading");
   });
 
   test("Reload draws each picture as the file is now: two pictures that swapped their contents on disk swap on screen, card and panel", SLOW, async () => {
