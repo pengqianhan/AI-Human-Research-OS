@@ -13,6 +13,7 @@ import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import type { PluginPage } from "../../../src/plugins/pages.ts";
 import { readSelect } from "../../../src/plugins/select.ts";
+import { assertOnePass, growth } from "../../growth.ts";
 import { parse } from "../../md-kit.ts";
 import { LABEL_MAX } from "../../site-kit.ts";
 import {
@@ -104,30 +105,6 @@ async function modelOf(root: string, skeleton: DocRead, readme: DocRead, eol: (t
 const nanochat = (eol: (t: string) => string = (t) => t) => modelOf(PROJECT, read(eol(SKELETON_LF)), read(eol(README_LF)), eol);
 const file = (model: Model, path: string) => model.items.get(`file:${path}`) as FileItem;
 const group = (model: Model, id: string) => model.groups.find((g) => g.group.id === id)!;
-
-/**
- * How the cost of `run` grows when its input grows from `n` to 4n: the best
- * of several timings at 4n over the best at n. One pass gives about 4, a pass
- * per element about 16, whatever the machine's speed (as md-kit.test.ts).
- */
-const GROWTH_MAX = 10;
-function growth(make: (n: number) => string, run: (input: string) => unknown, n: number, tries = 5): number {
-  const small = make(n);
-  const big = make(4 * n);
-  const time = (input: string) => {
-    const start = performance.now();
-    run(input);
-    return performance.now() - start;
-  };
-  // Warm up: both sizes run once, so both are timed in optimised code.
-  time(small);
-  time(big);
-  let s = Infinity;
-  for (let k = 0; k < tries; k++) s = Math.min(s, time(small));
-  let b = Infinity;
-  for (let k = 0; k < tries && b / Math.max(s, 0.05) >= GROWTH_MAX; k++) b = Math.min(b, time(big));
-  return b / Math.max(s, 0.05);
-}
 
 /** The host's own reading of a label (src/plugins/select.ts): taken exactly as posted, or null. */
 const PAGE: PluginPage = { key: "assets-view/assets", plugin: "assets-view", slot: "project", title: "Assets", src: "app://assets-view/index.html", origin: "app://assets-view" };
@@ -514,30 +491,28 @@ describe("previews (§4.2): CSV, JSON, Markdown, other text, PDF, and the size l
   });
 
   test("CSV: hostile input costs one pass (4× the input, well under 16× the time)", (t) => {
-    // Each case at n characters; checked at 200,000 and 800,000 (below about 1 ms a timing is mostly the JIT).
-    const cases: [string, (n: number) => string][] = [
-      ["one field of n characters", (n) => "x".repeat(n)],
-      ["n commas", (n) => ",".repeat(n)],
-      ["n quotes", (n) => '"'.repeat(n)],
-      ["doubled quotes in one field", (n) => `"${'""'.repeat(n / 2)}"`],
-      ["n line breaks", (n) => "\n".repeat(n)],
-      ["n / 2 CRLF", (n) => "\r\n".repeat(n / 2)],
-      ["a quote opening every line", (n) => '"\n'.repeat(n / 2)],
-      ["n lone CRs", (n) => "\r".repeat(n)],
+    // Each case at n characters, checked at n and 4n: 200,000 and 800,000, or more where the C2 regression (every 64th
+    // record walking the records before it) would otherwise stay under four times GROWTH.floorMs at 4n.
+    const cases: [string, (n: number) => string, number][] = [
+      ["one field of n characters", (n) => "x".repeat(n), 200_000],
+      ["n commas", (n) => ",".repeat(n), 200_000],
+      ["n quotes", (n) => '"'.repeat(n), 200_000],
+      ["doubled quotes in one field", (n) => `"${'""'.repeat(n / 2)}"`, 200_000],
+      ["n line breaks", (n) => "\n".repeat(n), 200_000],
+      ["n / 2 CRLF", (n) => "\r\n".repeat(n / 2), 300_000],
+      ["a quote opening every line", (n) => '"\n'.repeat(n / 2), 600_000],
+      ["n lone CRs", (n) => "\r".repeat(n), 200_000],
     ];
-    for (const [name, make] of cases) {
+    for (const [name, make, n] of cases) {
       const p = csvPreview(make(100_000), false);
       assert.ok(p.rows.length <= LIMITS.csvRows && p.header.length <= LIMITS.csvColumns, name);
       for (const row of [p.header, ...p.rows]) for (const cell of row) assert.ok(cell.length <= LIMITS.csvCell + " …[cut]".length, name);
-      const ratio = growth(make, (input) => csvPreview(input, false), 200_000);
-      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
-      t.diagnostic(`csvPreview, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
+      assertOnePass(t, `csvPreview, ${name}`, growth(make, (input) => csvPreview(input, false), n));
     }
-    // The whole read cap, 2 MiB of short rows, and a quarter of it.
+    // Short rows: the whole read cap, 2 MiB, is read; timed at 1 MiB and 4 MiB.
     const rows = (n: number) => "a,b,c\n".repeat(Math.floor(n / 6));
     assert.equal(csvPreview(rows(2 * 1024 * 1024), false).total, Math.floor((2 * 1024 * 1024) / 6) - 1);
-    const ratio = growth(rows, (input) => csvPreview(input, false), 512 * 1024);
-    assert.ok(ratio < GROWTH_MAX, `2 MiB of rows: 4× the input cost ${ratio.toFixed(1)}× the time`);
+    assertOnePass(t, "csvPreview, short rows", growth(rows, (input) => csvPreview(input, false), 1024 * 1024));
   });
 
   test("JSON and other text: the first 40 lines, each cut at 2,000; First 40 of N lines; LF, CRLF, and a lone CR", () => {
@@ -873,6 +848,7 @@ describe("Used in finds the forms a writer uses, says what it could not read, an
   });
 
   test("a line of hostile text costs Used in one pass (4× the input, well under 16× the time)", (t) => {
+    // Each case at n characters; checked at 50,000 and 200,000, so one pass stays far under GROWTH.floorMs on a slow runner.
     const cases: [string, (n: number) => string][] = [
       ["'](<' with no '>'", (n) => "](<".repeat(n / 3)],
       ["'](' again and again", (n) => "](".repeat(n / 2)],
@@ -883,9 +859,7 @@ describe("Used in finds the forms a writer uses, says what it could not read, an
       ["'\\[' and '](' in turn", (n) => "\\[](".repeat(n / 4)],
     ];
     for (const [name, make] of cases) {
-      const ratio = growth(make, (line) => usedInIndex([{ file: SKELETON, doc: parse(line) }]), 100_000);
-      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
-      t.diagnostic(`Used in, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
+      assertOnePass(t, `Used in, ${name}`, growth(make, (line) => usedInIndex([{ file: SKELETON, doc: parse(line) }]), 50_000));
     }
   });
 

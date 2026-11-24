@@ -219,13 +219,20 @@ Status on 2026-11-24:
     `Reflect.set`, `defineProperty`, `as any` and other casts, `.src` outside
     `draw()`, `createElement` outside site-kit, and an `el()` tag outside a fixed
     list; the review's mutations are each caught.
-  - **Timing tests** (after the review): no test asserts milliseconds. md-kit's
-    hostile inputs and Snapshot cases, and the CSV reader's, time the input at n
-    and at 4n, best of five after a warm-up of both, and hold the ratio under 10:
-    one pass measures 3.8 to 6.3 times, a pass per element about 16, on any machine
-    (macOS x64 failed the old 100 ms and 500 ms bounds). Run 10 times each with
-    four busy loops beside them, md-kit's, the CSV reader's, Used in's, and the
-    SVG check's ratios stayed at or under 7.2.
+  - **Timing tests** (after the review; one helper,
+    [frontend/plugins/growth.ts](frontend/plugins/growth.ts)): md-kit's hostile
+    inputs and Snapshot cases, the CSV reader's, Used in's, and the SVG check's time
+    the input at n and at 4n, best of five after a warm-up of both, and a case fails
+    only when the ratio is 10 or more and its best time at 4n is over 500 ms. One
+    pass grows about 4 times, a pass per element about 16; a ratio alone was noise
+    on a few milliseconds (macOS x64 failed the old 100 ms and 500 ms bounds, then a
+    ratio of 13.4 on a 14 ms case). The sizes keep every case at 50 ms or less at 4n
+    here, and each test's quadratic code, put back on a scratch copy (f1bd371's
+    Snapshot split, the CSV reader walking earlier records every 64th record, or a
+    pass over the input every 1st to 128th element), fails it at 2.7 s or more at 4n.
+    Run 20 times each beside four busy loops, no case failed; the worst was 10.6
+    times on 63 ms (the SVG check's entities in an id, passed by the floor) and the
+    longest 70 ms.
   - **The protocol tests** (`client/test/protocol.test.ts`, "the Assets view's
     reads", on the bundled origin): its six roots are read; `AGENTS.md`,
     `PROJECT_MEMORY.md`, `index.md`, `Code/` besides `results/`, `Datasets/` and

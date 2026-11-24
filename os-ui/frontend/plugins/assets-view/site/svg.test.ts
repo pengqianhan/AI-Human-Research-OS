@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { assertOnePass, growth } from "../../growth.ts";
 import { SATURATED, SVG_CHECK, svgExpansion, svgVerdict } from "./svg.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "../../fixtures");
@@ -176,24 +177,8 @@ eJzt3XuMXGd5x/HfM7Prtb3r9XrX6/Xa3ovXu/bG3tjxJXHsOHESx3ESJ7ZJAkmTQEKhpRUUqBBC
     assert.deepEqual(svgVerdict(null, false), { draw: false, words: "This SVG is not UTF-8 text the view can check before drawing; drawing it may freeze the view." });
   });
 
-  test("4 MiB of hostile SVG costs one pass (4× the input, well under 16× the time)", (t) => {
-    const GROWTH_MAX = 10;
-    const growth = (make: (n: number) => string, n: number, tries = 5) => {
-      const small = make(n);
-      const big = make(4 * n);
-      const time = (input: string) => {
-        const start = performance.now();
-        svgExpansion(input);
-        return performance.now() - start;
-      };
-      time(small);
-      time(big);
-      let s = Infinity;
-      for (let k = 0; k < tries; k++) s = Math.min(s, time(small));
-      let b = Infinity;
-      for (let k = 0; k < tries && b / Math.max(s, 0.05) >= GROWTH_MAX; k++) b = Math.min(b, time(big));
-      return b / Math.max(s, 0.05);
-    };
+  test("hostile SVG costs one pass: 256 KiB against 1 MiB (4× the input, well under 16× the time)", (t) => {
+    // 1 MiB at 4n keeps one pass far under GROWTH.floorMs on a slow runner; the 4 MiB cap costs four times that (os-ui/PLUGINS.md).
     const MiB = 1024 * 1024;
     const cases: [string, (n: number) => string][] = [
       ["one target, a <use> of it again and again", (n) => svg(`<g id="a"><rect/></g>${'<use href="#a"/>'.repeat(n / 16)}`)],
@@ -209,10 +194,8 @@ eJzt3XuMXGd5x/HfM7Prtb3r9XrX6/Xa3ovXu/bG3tjxJXHsOHESx3ESJ7ZJAkmTQEKhpRUUqBBC
       ["n / 5 '&#10;' before data:", (n) => svg(`<image href="${"&#10;".repeat(n / 5)}data:image/png,x"/>`)],
     ];
     for (const [name, make] of cases) {
-      assert.ok(make(4 * MiB).length >= 4 * MiB * 0.95, `${name}: ${make(4 * MiB).length}`);
-      const ratio = growth(make, MiB);
-      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
-      t.diagnostic(`svgExpansion, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
+      assert.ok(make(MiB).length >= MiB * 0.95, `${name}: ${make(MiB).length}`);
+      assertOnePass(t, `svgExpansion, ${name}`, growth(make, svgExpansion, MiB / 4));
     }
   });
 });

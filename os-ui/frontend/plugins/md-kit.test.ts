@@ -29,6 +29,7 @@ import {
   usedBy,
 } from "./md-kit.ts";
 import type { Block, Doc, Table } from "./md-kit.ts";
+import { assertOnePass, growth } from "./growth.ts";
 import { markInvisible, readText } from "./site-kit.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
@@ -53,32 +54,6 @@ function assertEveryLineOnce(text: string): void {
   const nonBlank = lines.flatMap((l, k) => (/^[ \t]*$/.test(l) ? [] : [k + 1]));
   for (const no of nonBlank) assert.ok(covered.includes(no), `line ${no} belongs to a block: ${JSON.stringify(lines[no - 1])}`);
   for (const b of doc.blocks) assert.deepEqual(b.lines, lines.slice(b.first - 1, b.last), `block at ${b.first}`);
-}
-
-/**
- * How the cost of `run` grows when its input grows from `n` to 4n: the best
- * of several timings at 4n over the best at n. One pass gives about 4, a pass
- * per element about 16, whatever the machine's speed, so a slow CI runner
- * passes and a quadratic regression fails (GROWTH_MAX leaves room for noise).
- * The larger input is timed again only while the ratio is over the limit.
- */
-const GROWTH_MAX = 10;
-function growth(make: (n: number) => string, run: (input: string) => unknown, n: number, tries = 5): number {
-  const small = make(n);
-  const big = make(4 * n);
-  const time = (input: string) => {
-    const start = performance.now();
-    run(input);
-    return performance.now() - start;
-  };
-  // Warm up: both sizes run once, so both are timed in optimised code.
-  time(small);
-  time(big);
-  let s = Infinity;
-  for (let k = 0; k < tries; k++) s = Math.min(s, time(small));
-  let b = Infinity;
-  for (let k = 0; k < tries && b / Math.max(s, 0.05) >= GROWTH_MAX; k++) b = Math.min(b, time(big));
-  return b / Math.max(s, 0.05);
 }
 
 describe("md-kit on nanochat_cpu's skeleton (a frozen copy)", () => {
@@ -480,14 +455,11 @@ describe("inline tokens", () => {
     for (const [name, make] of cases) {
       assert.ok(make(100_000).length >= 95_000, `${name}: ${make(100_000).length} characters`);
       assert.ok(inline(make(100_000)).length >= 1, name);
-      const ratio = growth(make, inline, 25_000);
-      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
-      t.diagnostic(`inline, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
+      assertOnePass(t, `inline, ${name}`, growth(make, inline, 25_000));
     }
     // The same for a whole file of such lines through parse.
     const file = (n: number) => `${"| [` |\n".repeat(10)}${"[`".repeat(n / 2)}\n`;
-    const ratio = growth(file, parse, 25_000);
-    assert.ok(ratio < GROWTH_MAX, `parse: 4× the input cost ${ratio.toFixed(1)}× the time`);
+    assertOnePass(t, "parse, a file of such lines", growth(file, parse, 25_000));
   });
 });
 
@@ -570,12 +542,11 @@ describe("labels and headers by their plain text (review F7)", () => {
       ["links only", "[x](y)"],
       ["bold only", "**b**"],
     ] as const) {
-      // n characters: n / 1,000 lines of 1,000; checked at 25,000 and 100,000 (the size before).
+      // n characters: n / 1,000 lines of 1,000; checked at 50,000 and 200,000, where f1bd371's regression put back
+      // takes seconds at 4n and the one pass a few milliseconds.
       const text = (n: number) => `## Snapshot\n\n- ${line(unit)}\n${Array.from({ length: n / 1000 - 1 }, () => `  ${line(unit)}`).join("\n")}\n`;
       assert.equal(snapshot(sections(parse(text(100_000))))!.items.length, 1, name);
-      const ratio = growth(text, (input) => snapshot(sections(parse(input))), 25_000);
-      assert.ok(ratio < GROWTH_MAX, `${name}: 4× the input cost ${ratio.toFixed(1)}× the time`);
-      t.diagnostic(`snapshot, ${name}: 4× the input, ${ratio.toFixed(1)}× the time`);
+      assertOnePass(t, `snapshot, ${name}`, growth(text, (input) => snapshot(sections(parse(input))), 50_000));
     }
   });
 

@@ -50,7 +50,7 @@ os-ui/frontend/
 ├── package.json            # npm scripts and dependencies
 ├── vite.config.ts          # Vite dev/build config
 ├── api-plugin.ts           # serves every endpoint on the dev server, from the plugin registry
-├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each (paper-wiki, code-view, paper-view, skeleton-view, assets-view); site-kit.ts is what their sites share, md-kit.ts their Markdown reader, fixtures/ test copies (not shipped)
+├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each (paper-wiki, code-view, paper-view, skeleton-view, assets-view); site-kit.ts is what their sites share, md-kit.ts their Markdown reader, fixtures/ test copies and growth.ts the tests' one-pass check (neither shipped)
 ├── server/                 # the endpoints, shared with the desktop client (os-ui/client)
 ├── tailwind.config.js      # Tailwind names for the colours in src/index.css
 ├── postcss.config.js       # Tailwind/PostCSS config
