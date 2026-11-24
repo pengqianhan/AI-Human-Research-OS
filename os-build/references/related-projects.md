@@ -134,9 +134,6 @@ models improve.
 - [AutoSci](https://github.com/PKU-DAIR/AutoSci): Karpathy's LLM-Wiki vision,
   fully realized — wiki-centric full-lifecycle AI research platform powered by
   Claude Code.
-- [open-webui-tools](https://github.com/Haervwe/open-webui-tools): Open‑WebUI
-  Tools is a modular toolkit designed to extend and enrich your Open WebUI
-  instance, turning it into a powerful AI workstation.
 
 ## Agent runtimes and operating systems
 
