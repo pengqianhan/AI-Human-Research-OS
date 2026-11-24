@@ -608,10 +608,12 @@ export function buildGraph(doc: Doc, skeleton: SkeletonRead): Built {
   const all: Link[] = [];
   for (const node of nodes) {
     const stated = new Set<string>();
+    // Where this row's link problems are: built once a row, not once a link (a hostile cell holds 170,000 links).
+    const at = atLines([node.line]);
     for (const raw of node.linksCell.split(";")) {
       const item = trimSpaces(raw);
       if (item === "") continue;
-      const fail = (why: () => string) => problems.add(atLines([node.line]), node.line, () => `${node.id}'s link “${shown(item)}” is left out: ${why()}.`);
+      const fail = (why: () => string) => problems.add(at, node.line, () => `${node.id}'s link “${shown(item)}” is left out: ${why()}.`);
       const parts = item.split(/[ \t]+/);
       if (parts.length !== 2) {
         fail(() => "it is not a link word and an ID, as “tests Q1”");

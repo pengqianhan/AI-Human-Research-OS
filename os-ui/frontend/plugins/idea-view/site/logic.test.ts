@@ -908,11 +908,37 @@ describe("every screen's words (§5.2, §2)", () => {
 
 describe("hostile input costs one pass: parse, validate, and lay out (§1 fact 6, by growth, not a wall clock)", () => {
   const run = (source: string) => buildGraph(parse(source), SKEL);
+
+  test("50,000 bad links in one row format numbers for the problems listed, not once a link", () => {
+    // Counted, not timed: the first build formatted the row's line number for every bad link, listed or not
+    // (toLocaleString 170,000 times for a 512 KiB cell), which put this file's bad-items case over the growth
+    // floor on the slowest CI runner (macos-x64, 825 ms at 4n).
+    const source = file(Q("Q1"), Q("Q2", "x; ".repeat(50_000)));
+    const format = Number.prototype.toLocaleString;
+    let calls = 0;
+    Number.prototype.toLocaleString = function (this: number, ...args: []) {
+      calls++;
+      return format.apply(this, args);
+    };
+    let g: Graph;
+    try {
+      g = graphOf(source);
+    } finally {
+      Number.prototype.toLocaleString = format;
+    }
+    assert.equal(g.problemCount, 50_000);
+    assert.equal(g.problems.length, LIMITS.problems);
+    assert.ok(calls <= 4 * LIMITS.problems, `${calls} numbers formatted for ${LIMITS.problems} problems listed of 50,000`);
+  });
   const cases: [string, (n: number) => string, number][] = [
     ["one huge statement", (n) => file(row("Q1", "question", "s".repeat(n), "open", "", "", "")), 128 * 1024],
     ["a Links cell of `;` only", (n) => file(Q("Q1", ";".repeat(n))), 128 * 1024],
-    ["a Links cell of bad items", (n) => file(Q("Q1"), Q("Q2", "x; ".repeat(n / 3))), 128 * 1024],
-    ["links all to one node", (n) => file(Q("Q1"), ...Array.from({ length: 199 }, (_, k) => E(`E${k}`, "tests Q1; ".repeat(n / 2200)))), 128 * 1024],
+    // These two at 64 KiB then 256 KiB, not 128 then 512: each bad or repeated link is a problem counted, and on the
+    // slowest CI runner (macos-x64, about ten times this machine) the 512 KiB runs took 825 ms and 496 ms, at and
+    // over growth.ts's floor, most of it the collector's work on large strings. A link that scans its whole cell
+    // again still fails the first at this size (put back on a scratch copy: 21 times the time, 11 s at 4n).
+    ["a Links cell of bad items", (n) => file(Q("Q1"), Q("Q2", "x; ".repeat(n / 3))), 64 * 1024],
+    ["links all to one node", (n) => file(Q("Q1"), ...Array.from({ length: 199 }, (_, k) => E(`E${k}`, "tests Q1; ".repeat(n / 2200)))), 64 * 1024],
     ["a files list of many paths, each its own", (n) => file(E("E1", "", `commit: none; files: ${Array.from({ length: n / 16 }, (_, k) => `a/b${k}.json`).join(", ")}`)), 128 * 1024],
     ["backticks in Points to", (n) => file(E("E1", "", `commit: none; files: ${"`".repeat(n)}`)), 128 * 1024],
     ["a cycle through every node, and rows past the caps", (n) => file(...Array.from({ length: n / 64 }, (_, k) => H(`H${k}`, `motivates H${k + 1}`))), 32 * 1024],

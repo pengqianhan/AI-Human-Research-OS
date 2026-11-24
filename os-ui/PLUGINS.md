@@ -216,7 +216,21 @@ Status on 2026-11-24:
     edges; and hostile files of 128 KiB then 512 KiB (one huge statement, a Links
     cell of 100,000-odd `;`, of bad items, links all to one node, a files list of
     distinct paths, a run of backticks in Points to, a cycle through every node with
-    rows past the caps). Here each takes at most 280 ms at 4n, and the ratios run
+    rows past the caps). After the fix round's CI, two of these, the bad items and
+    the links all to one node, run at 64 KiB then 256 KiB: on the slowest runner
+    (macos-x64, about ten times the machine the view was built on) their 512 KiB
+    runs took 825 ms and 496 ms, the first failing the job, at 12 times the time for
+    4 times the input. A profile showed no pass per element: 39% was the
+    collector's work on large strings, and 29% was the row's line number being
+    formatted again for every bad link, listed or not, which is now done once a
+    row (a test counts the numbers formatted for 50,000 bad links; it was 50,000).
+    That roughly halves the case's time; the smaller size is the margin, and a link
+    that scans its whole cell again still fails the case there (21 times, 11 s).
+    The hostile files' ratios stay above 4 on every runner (8 to 38 for the huge
+    statement, the `;` cell, and the backticks), from the collector, not the
+    code, so those cases pass by the 500 ms floor; the huge statement and the
+    backticks took 247 ms and 371 ms on that runner, and are left at 512 KiB.
+    Here each takes at most 280 ms at 4n, and the ratios run
     from 1 to 17 for 4 times the input (the 17 is the huge statement, md-kit's
     string building, below). Mutation checks put back a line looking itself up among the
     lines (a first draft did), and a files list checked against itself: each fails
