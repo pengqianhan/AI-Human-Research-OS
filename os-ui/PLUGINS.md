@@ -6,17 +6,57 @@ before implementation; Part 3, step 2's Idea, Skeleton, and Assets views, by ano
 design agent on 2026-11-23. Each part is its author's report, kept as written, so "I"
 is that agent and line numbers refer to the code as it was that day.
 
-Status on 2026-11-24:
+Status on 2026-11-25:
 
 - **Step 2's three views are designed** (Part 3, against commit `5874a32`): the
   Skeleton, Assets, and Idea views as the Human Owner chose them in
   [mockups/step2/views.html](mockups/step2/views.html), one pull request each in that
   order, with no new dependency and no change to contract 1.0. **2.1, the Skeleton
   view, is built** on branch `step2-skeleton-view`, **2.2, the Assets view**, on
-  branch `step2-assets-view`, and **2.3, the Idea view**, on branch
-  `step2-idea-view` (all below). 2.4, `nanochat_cpu`'s `idea_graph.md` and the
-  template's, is not.
+  branch `step2-assets-view`, **2.3, the Idea view**, on branch
+  `step2-idea-view`, and **2.4**, `nanochat_cpu`'s `idea_graph.md` and the
+  template's, on branch `step2-idea-graph-files` (all below).
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.4, the idea files** (§6 "2.4"), on branch `step2-idea-graph-files`, which
+  starts from `step2-idea-view`. No code changed.
+  - [projects-folder/nanochat_cpu/idea_graph.md](../projects-folder/nanochat_cpu/idea_graph.md)
+    is the mockup's graph (the fixture `mockup.idea_graph.md`) checked row by row
+    against the project's files as they were on 2026-11-25. Each node's Source names
+    the file and line its statement, status, and links rest on. The Idea view's own
+    `parse` and `buildGraph`, fed the file and the live `paper_skeleton.md`, give 20
+    nodes, 9 links, no problem, and "5 of 5 verified in paper_skeleton.md"; the
+    running app, at 1440 × 900, draws the same with 15 lines. It differs from the
+    fixture in four ways. E3 and E4 also name `Code/results/training_metrics.csv`,
+    whose rows of the runs `probe_lr2x` and `probe_vocab2048` are theirs. E2's
+    statement says it was two fresh runs and a last re-run with the data cached
+    (`Code/README.md:126–129`), which R2's two sources and R4 need. R1 `motivates
+    E2` is kept, with its reason in Source: `Code/README.md:91` gives the spike as
+    why the recipe's SFT uses `--init-lr-frac=0.1`, which E2 runs. Sources are
+    longer, naming the basis of each link and status. The mockup's two inferred
+    links (E1 tests Q1, E5 tests Q4) stay out, as in the fixture. No hypothesis
+    node, and every run says `commit: none` (Decisions, "Idea file format").
+  - [projects-folder/templates/ai_research_template/idea_graph.md](../projects-folder/templates/ai_research_template/idea_graph.md)
+    states §5.1's rules in a short list over the empty table, which is the file's
+    last block so rows added at its end stay in the table, and the template's
+    `AGENTS.md` has a line under Workflow. The list says only that links and
+    `from:` form no cycle, not which way each counts (a default not yet
+    confirmed), so reversing `FIRST` needs no change there. `required_files` is
+    unchanged: the project check passes without the file (§7, I-4).
+  - **What a new project shows.** The template's file is a table with no row, so a
+    project made from it draws "0 nodes · 0 links", "No node is drawn.", "Claims: no
+    claim node is drawn", and the legend alone, every word and kind "· none"; not
+    the empty state (checked in the running app on a copy of the template). The
+    empty state remains for a project with no `idea_graph.md`; none in the
+    repository is such a project now.
+  - The fixtures are unchanged and no test reads the project's file: the
+    end-to-end suite deletes it in its copy before the empty-state check, as
+    before. Its comment, [frontend/plugins/fixtures/README.md](frontend/plugins/fixtures/README.md),
+    and the checklist line in [client/README.md](client/README.md) now say so.
+  - Not done: `nanochat_cpu`'s `AGENTS.md` does not have the template's new line
+    (§6 asks for the template's only); the template has no other change since that
+    file's "last synced 2026-09-29". Not verified: Windows and Linux, and the Human
+    Owner's checklist line.
 
 - **2.3, the Idea view**, is the bundled plugin
   [frontend/plugins/idea-view/](frontend/plugins/idea-view/) (manifest as §6 "2.3",

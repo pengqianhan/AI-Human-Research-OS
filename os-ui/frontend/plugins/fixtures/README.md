@@ -46,8 +46,9 @@ its temporary workspace (`assets_e2e`, and the template project
 
 ## Two idea files for the Idea view
 
-Written on 2026-11-24 for the Idea view (step 2.3); no project has an
-`idea_graph.md` yet (that is step 2.4), so these are not copies.
+Written on 2026-11-24 for the Idea view (step 2.3), before any project had an
+`idea_graph.md`, so these are not copies. `nanochat_cpu`'s own file, written
+from its files in step 2.4, differs from the second, and no test reads it.
 
 | Fixture | What it is |
 |---|---|

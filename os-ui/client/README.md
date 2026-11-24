@@ -209,16 +209,15 @@ agent logins or a first open on a real desktop, so on each of your machines:
         Nothing is sent until you press Send; remove the chip with its **×**.
       - Make the window narrower until the preview column goes: the preview
         then sits above the list.
-- [ ] **The Idea view.** In the `nanochat_cpu` workspace, click the **Idea**
-      tab. The project has no `idea_graph.md` yet (step 2.4 writes it), so
-      the view says **No idea file to draw**, explains that it draws
-      `idea_graph.md` in the project folder (a table with one row per
-      question, hypothesis, experiment, result, or claim, and the links
-      between them), that the project has none or it is a link the view may
-      not follow, and to ask the project agent to write one; under that, the
-      header line an agent writes,
-      `| ID | Kind | Statement | Status | Links | Points to | Source |`. The
-      view writes nothing. **Reload** in its bar reads the file again.
+- [ ] **The Idea view.** In the `nanochat_cpu` workspace, click **Idea**: the
+      questions, experiments, results, and claims of `nanochat_cpu` as boxes
+      in columns, joined by coloured lines. Click a node: its full text, its
+      links, and what it points to appear above the map. Ask about it: a chip
+      appears, and nothing is sent until you press Send. **Reload** in its bar
+      reads `idea_graph.md` again; the view writes nothing. A project made
+      from the template starts with an empty table, drawn as
+      **0 nodes · 0 links**; a project with no `idea_graph.md` says
+      **No idea file to draw** and shows the header line an agent writes.
 - [ ] **The Paper view.** In the `nanochat_cpu` workspace, click the **Paper**
       tab:
       - The paper appears as pages, like a PDF reader, read-only. The bar
