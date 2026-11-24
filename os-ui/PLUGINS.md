@@ -979,7 +979,10 @@ Status on 2026-11-24:
     active view's frame at its own origin, while the workspace is the screen
     shown and that view's tab is selected, not while the Ask button is held
     down, and at most 10 a second per frame (past that the bar is hidden, never
-    left stale). The rule is that what Send passes is exactly what the user can
+    left stale). Since step 2.3's review, the last valid message the active
+    view posts while the workspace is hidden is not lost: it is kept and
+    applied, through the same checks, when the workspace shows again
+    (`heldWhileHidden`; see 2.3's "Selection and Reload"). The rule is that what Send passes is exactly what the user can
     read in the composer ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)):
     the host never rewrites a label: it shows and sends it exactly as the page
     posted it, or ignores the message. A label must be 1 to 200 characters, not
