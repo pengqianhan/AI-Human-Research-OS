@@ -118,6 +118,20 @@ Status on 2026-11-24:
     suite holds the first of two Reloads' bytes for 3 s past the second's render,
     and with the check removed the old file overwrote the new one on screen (the
     test is red then; the first build had no test that noticed).
+    After the review, the page and the ask bar also agree after a Reload that
+    ends while the workspace is hidden (Home shown): the host ignored a
+    selection posted then (`selectGate`'s "only while the screen is shown"), so
+    the bar came back holding the old row, or offering a node the page no longer
+    marked. Switching to another tab during the read was safe, since leaving a
+    tab clears both sides. The fix is the host's (`heldWhileHidden` in
+    `frontend/src/plugins/select.ts`, used by `WorkspacePage.tsx`): the last valid
+    message the active view posted while hidden is kept and applied through the
+    gate when the workspace shows again, so a node still in the file stays
+    selected with its row as it is now, and a node gone leaves no bar. No message
+    is added. It covers every view, so the Assets view's render-time `null` (and
+    the Skeleton view's, when a clicked item is gone) is no longer dropped either
+    (by reading their code; the suite tests the Idea view). The suite reproduces
+    both variants with a 3 s read and Home shown during it.
   - **The panel** for a result shows "from: " and a chip to its experiment, and an
     experiment's files under "Result files, not opened here", each path marked as a
     label is (a no-break space in it showed as a plain space before the review). A

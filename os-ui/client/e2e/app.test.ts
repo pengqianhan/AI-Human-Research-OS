@@ -2946,6 +2946,74 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  test("a Reload that ends while Home is shown: back in the workspace, the ask bar and the page agree, a changed row as it is now, a removed node on neither, a selection cleared on Home on neither", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = ideaFile(IDEA_PROJECT);
+    const original = readFileSync(file, "utf8");
+    const write = (q1: string, gone: boolean) =>
+      writeFileSync(file, [`# Idea graph`, "", IDEA_HEAD, `| Q1 | question | ${q1} | open |  |  |  |`, ...(gone ? [] : ["| GONE1 | question | soon gone | open |  |  |  |"]), ""].join("\n"));
+    /** What the page marks: the picked node's ID, or null (read without waiting: the frame is hidden while Home shows). */
+    const picked = (iv: Frame) => iv.evaluate(() => document.querySelector("button.gnode.picked .kb")?.textContent ?? null);
+    try {
+      write("first words", false);
+      const { ws, iv } = await openIdea(IDEA_PROJECT);
+      await clearAsk(ws, IDEA_PROJECT);
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const label = bar.locator("[data-selection-label]");
+      for (const [what, pick, change] of [
+        ["a changed row", "Q1", () => write("second words", false)],
+        ["a removed node", "GONE1", () => write("first words", true)],
+        ["a changed row, then Escape on Home", "Q1", () => write("second words", false)],
+      ] as const) {
+        write("first words", false);
+        await reloadIdea(iv);
+        await nodeOf(iv, "GONE1").waitFor();
+        await pause();
+        await nodeOf(iv, pick).click();
+        await label.filter({ hasText: `idea_graph.md · ${pick} (question)` }).waitFor();
+        change();
+        // The next read of paper_skeleton.md waits 3 s, so the Reload ends while Home is shown.
+        await iv.evaluate(() => {
+          const real = window.fetch.bind(window);
+          let once = true;
+          window.fetch = async (input, init) => {
+            if (once && String(input).includes("paper_skeleton.md")) {
+              once = false;
+              await new Promise((r) => setTimeout(r, 3000));
+            }
+            return real(input, init);
+          };
+        });
+        await reloadIdea(iv);
+        await page.waitForTimeout(100);
+        await nav(page, "Home").click();
+        await iv.waitForFunction((changed) => (changed ? document.querySelector("button.gnode .gn-tx")?.textContent === "second words" : document.querySelectorAll("button.gnode").length === 1), what !== "a removed node", { polling: 100, timeout: 10_000 });
+        await page.waitForTimeout(300);
+        // The workspace's Escape clears the selection, on Home too: the page's post held meanwhile goes with it.
+        if (what === "a changed row, then Escape on Home") await page.keyboard.press("Escape");
+        await nav(page, "Projects").click();
+        await screen(page, "projects").getByRole("button", { name: `Open workspace: ${IDEA_PROJECT}` }).click();
+        await ws.getByRole("heading", { name: IDEA_PROJECT, exact: true }).waitFor();
+        await page.waitForTimeout(500);
+        if (what === "a changed row") {
+          assert.equal(await picked(iv), "Q1", `${what}: the page still marks Q1`);
+          assert.equal(await bar.count(), 1, `${what}: the ask bar holds the node the page marks`);
+          assert.equal(await label.textContent(), "idea_graph.md · Q1 (question)");
+          assert.equal(await label.getAttribute("title"), "| Q1 | question | second words | open |  |  |  |", `${what}: the ask bar holds the row as it is now`);
+          await bar.getByRole("button", { name: "Clear selection" }).click();
+          await iv.locator(".picked").waitFor({ state: "detached" });
+        } else {
+          await iv.waitForFunction(() => document.querySelector("button.gnode.picked") === null, null, { polling: 100, timeout: 5000 }).catch(() => {});
+          assert.equal(await picked(iv), null, `${what}: the page marks nothing`);
+          assert.equal(await bar.count(), 0, `${what}: the ask bar offers nothing`);
+        }
+      }
+    } finally {
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
   test("two Reloads, the first one's answer held past the second's: the map keeps the second, the file as it is now", SLOW, async () => {
     const width = await windowWidth(1440);
     const file = ideaFile(IDEA_PROJECT);
@@ -2973,7 +3041,7 @@ describe("desktop client on a Research OS folder", () => {
       });
       write("read by the first Reload");
       await reloadIdea(iv);
-      await iv.waitForFunction(() => (window as { __held?: boolean }).__held === true);
+      await iv.waitForFunction(() => (window as { __held?: boolean }).__held === true, null, { polling: 100, timeout: 10_000 });
       write("read by the second Reload");
       await reloadIdea(iv);
       await nodeOf(iv, "Q1").filter({ hasText: "read by the second Reload" }).waitFor();
@@ -3052,7 +3120,8 @@ describe("desktop client on a Research OS folder", () => {
       writeFileSync(file, [`# Idea graph`, "", IDEA_HEAD, "| Q1 | question | A short ID, read again | open |  |  |  |", ...rows.map((r) => r.row), ""].join("\n"));
       await ws.getByRole("tab", { name: "Code", exact: true }).click();
       await iv.evaluate(() => (document.querySelector(".subbar .reload") as HTMLButtonElement).click());
-      await iv.waitForFunction(() => document.querySelector("button.gnode .gn-tx")?.textContent === "A short ID, read again");
+      // A hidden frame runs no animation frames: poll by time.
+      await iv.waitForFunction(() => document.querySelector("button.gnode .gn-tx")?.textContent === "A short ID, read again", null, { polling: 100, timeout: 10_000 });
       await ws.getByRole("tab", { name: "Idea", exact: true }).click();
       await nodeOf(iv, rows[0]!.id).waitFor();
       await page.waitForTimeout(300);

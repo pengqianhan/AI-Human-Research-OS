@@ -8,8 +8,8 @@ import { LIVE } from "../lib/mode";
 import { viewSrc } from "../plugins/pages";
 import type { PluginPage } from "../plugins/pages";
 import { usePlugins } from "../plugins/registry";
-import { addReference, MAX_REFERENCES, quoteGlimpse, readSelect, selectGate } from "../plugins/select";
-import type { Reference } from "../plugins/select";
+import { addReference, heldWhileHidden, MAX_REFERENCES, quoteGlimpse, readSelect, selectGate } from "../plugins/select";
+import type { Reference, SelectMessage } from "../plugins/select";
 import { Icon } from "../shell/icons";
 import { workspaceTabs } from "../shell/layoutState";
 import type { ViewTab } from "../shell/layoutState";
@@ -72,34 +72,56 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
   /** The reference the bar showed when the pointer went down on Ask; what Ask adds. */
   const held = useRef<Reference | null>(null);
 
-  /** Hides the ask bar; `tellView` also clears the highlight in the view that reported it. */
+  // A message the active view posted while this page was hidden (another screen shown), applied when it shows again.
+  const hiddenMessage = useRef(heldWhileHidden()).current;
+
+  /** Hides the ask bar; `tellView` also clears the highlight in the view that reported it. A message held while hidden goes too. */
   function clearSelection(tellView: boolean) {
     setSelection(null);
+    hiddenMessage.drop();
     const page = activeView;
     const frame = page === null ? undefined : frames.current.get(page.key);
     if (tellView && page?.origin && frame?.contentWindow) frame.contentWindow.postMessage({ type: "os.select.clear" }, page.origin);
   }
 
+  /** Applies a valid message from `frameWindow` through the gate: the bar shows its selection, or none. */
+  function apply(frameWindow: Window, message: SelectMessage, viewKey: string) {
+    const verdict = gate(frameWindow, { visible: now.current.visible, tabSelected: now.current.tab === viewKey, held: held.current !== null });
+    if (verdict === "over") setSelection(null);
+    if (verdict !== "accept") return;
+    setSelection(message.kind === "select" ? message.reference : null);
+  }
+
   // Only the active view's frame, at its own origin, may report a selection (src/plugins/select.ts).
   useEffect(() => {
     setSelection(null);
+    hiddenMessage.drop();
     if (activeView === null) return;
     const onMessage = (event: MessageEvent) => {
       const frameWindow = frames.current.get(activeView.key)?.contentWindow ?? null;
       const message = readSelect(event, activeView, frameWindow);
       if (message === null || frameWindow === null) return;
-      const verdict = gate(frameWindow, { visible: now.current.visible, tabSelected: now.current.tab === activeView.key, held: held.current !== null });
-      if (verdict === "over") setSelection(null);
-      if (verdict !== "accept") return;
-      setSelection(message.kind === "select" ? message.reference : null);
+      // Hidden: the bar does not change now, but the page's last word is kept for when it shows (heldWhileHidden).
+      if (hiddenMessage.keep(frameWindow, message, { visible: now.current.visible, tabSelected: now.current.tab === activeView.key, held: held.current !== null })) return;
+      apply(frameWindow, message, activeView.key);
     };
     window.addEventListener("message", onMessage);
     return () => {
       window.removeEventListener("message", onMessage);
+      hiddenMessage.drop();
       // Leaving the view (another tab): its selection goes with the ask bar.
       if (activeView.origin !== null) frames.current.get(activeView.key)?.contentWindow?.postMessage({ type: "os.select.clear" }, activeView.origin);
     };
   }, [activeView]);
+
+  // Shown again: what the active view posted meanwhile is applied, so the bar and the page agree.
+  useEffect(() => {
+    if (!visible || activeView === null) return;
+    const frameWindow = frames.current.get(activeView.key)?.contentWindow ?? null;
+    if (frameWindow === null) return;
+    const message = hiddenMessage.take(frameWindow);
+    if (message !== null) apply(frameWindow, message, activeView.key);
+  }, [visible, activeView]);
 
   useEffect(() => {
     if (selection === null) return;
@@ -296,8 +318,12 @@ export function WorkspacePage({ state, project, tab, onTab, conversationCollapse
                     if (el === null) frames.current.delete(v.key);
                     else frames.current.set(v.key, el);
                   }}
-                  // A reload starts with nothing selected.
-                  onLoad={() => v.key === activeView?.key && setSelection(null)}
+                  // A reload starts with nothing selected, and nothing kept from the page it replaced.
+                  onLoad={() => {
+                    if (v.key !== activeView?.key) return;
+                    setSelection(null);
+                    hiddenMessage.drop();
+                  }}
                 />
               ))}
           </div>
