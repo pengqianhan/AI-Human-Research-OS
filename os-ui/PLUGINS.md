@@ -122,9 +122,13 @@ Status on 2026-11-24:
       path is refused with a leading "/", a "\", an address, an empty segment (a
       trailing "/" too), or a segment starting with ".";
     - a planned experiment may leave Points to empty; one that does not needs both
-      keys; a done, running, or failed one needs both, and `files:` needs a path,
-      so the mockup's E1 ("no result file and no commit") cannot be written as it
-      was (the e2e fixture names `Code/README.md`; for 2.4 to settle);
+      keys; a done, running, or failed one needs both, and `files:` names paths or
+      `none`, the run's "no result file" (the Human Owner, 2026-11-24), as
+      `commit: none` is its "no commit". `none` stands alone: beside paths it is a
+      problem naming what was found; a file named `none` is a code span. The
+      panel says "Result files: none (the row says “files: none”)". The mockup's
+      E1 ("no result file and no commit") is the fixture's E1 again,
+      `commit: none; files: none`;
     - a claim node may leave Points to empty (§5.1 says "required" of `from:` and of
       an experiment's keys only): it is drawn and names no skeleton row;
     - header cells compare exactly but for ASCII case and surrounding spaces
@@ -2041,7 +2045,7 @@ files as the mockup drew them:
 
   | Kind | Points to |
   |---|---|
-  | experiment | `commit: <7 to 64 lower-case hex digits, or none>; files: <path>, <path>`. Both keys are required unless the status is `planned`, which may leave the cell empty. `none` means the run recorded no commit, as `nanochat_cpu`'s did (`HANDOFF.md:610`). A path is project-relative, with no `..` or dot segment, written bare or as a code span; a path containing `, ` must be a code span |
+  | experiment | `commit: <7 to 64 lower-case hex digits, or none>; files: <path>, <path>, or none`. Both keys are required unless the status is `planned`, which may leave the cell empty. `commit: none` means the run recorded no commit, as `nanochat_cpu`'s did (`HANDOFF.md:610`); `files: none` means it left no result file (allowed by the Human Owner on 2026-11-24). `none` stands alone, never beside paths; a file really named `none` is written as a code span. A path is project-relative, with no `..` or dot segment, written bare or as a code span; a path containing `, ` must be a code span |
   | result | `from: <ID of an experiment>`, required. This carries "came from" without a fifth link word (§5.3) |
   | claim | `claim: <claim ID>`: the ID of a row in `paper_skeleton.md`'s Claims and Evidence table (§2's ID rule) |
   | question, hypothesis | empty |

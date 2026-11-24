@@ -132,6 +132,7 @@ describe("§5.1 the design's example, as a fixture, against nanochat_cpu's skele
     assert.deepEqual(listed(g), []);
     assert.deepEqual(g.claims, { checked: true, verified: 5, total: 5 });
     assert.deepEqual(node(g, "E5").points, { kind: "empty" }, "a planned experiment with an empty cell");
+    assert.deepEqual(node(g, "E1").points, { kind: "run", commit: null, files: null }, "E1 left no commit and no result file, as the mockup has it");
   });
 
   test("a CRLF copy gives the same graph and line numbers, and no row keeps a carriage return", () => {
@@ -368,6 +369,40 @@ describe("§5.1 Points to, by kind", () => {
     assert.deepEqual(listed(g), []);
   });
 
+  test("`files: none`: a done, running, or failed run with no result file, as `commit: none` for no commit; none stands alone, and a file named none is a code span", () => {
+    const g = graphOf(
+      file(
+        E("E1", "", "commit: none; files: none"),
+        E("E2", "", "commit: c4d4a85; files: none", "running"),
+        E("E3", "", "files:  none ; commit: none", "failed"),
+        E("E4", "", "commit: none; files: none", "planned"),
+        E("E5", "", "commit: none; files: `none`"),
+        E("E6", "", "commit: none; files: `none`, Code/results/a.json"),
+      ),
+    );
+    assert.deepEqual(
+      g.nodes.map((n) => [n.id, n.points]),
+      [
+        ["E1", { kind: "run", commit: null, files: null }],
+        ["E2", { kind: "run", commit: "c4d4a85", files: null }],
+        ["E3", { kind: "run", commit: null, files: null }],
+        ["E4", { kind: "run", commit: null, files: null }],
+        ["E5", { kind: "run", commit: null, files: ["none"] }],
+        ["E6", { kind: "run", commit: null, files: ["none", "Code/results/a.json"] }],
+      ],
+    );
+    assert.deepEqual(listed(g), []);
+    // The panel says in words that the row names no result file; a file named none is a file.
+    assert.deepEqual(details(g, node(g, "E1")).points, { lines: ["Commit: none recorded by the run", "Result files: none (the row says “files: none”)"], files: [], chip: null, claim: null, problem: null });
+    assert.deepEqual(details(g, node(g, "E5")).points, { lines: ["Commit: none recorded by the run"], files: ["none"], chip: null, claim: null, problem: null });
+    // none mixed with paths is a problem, worded by what was found.
+    const mixed = graphOf(file(E("E1", "", "commit: none; files: none, Code/results/a.json"), E("E2", "", "commit: none; files: a.json, none, `b, c.json`")));
+    assert.deepEqual(listed(mixed), [
+      "line 5: the row is left out: “files:” names none and also 1 path (“Code/results/a.json”); none stands alone (a file named none is written as a code span, `none`).",
+      "line 6: the row is left out: “files:” names none and also 2 paths (“a.json” and “b, c.json”); none stands alone (a file named none is written as a code span, `none`).",
+    ]);
+  });
+
   test("an experiment's Points to problems leave its row out", () => {
     const cases: [string, string, string][] = [
       ["commit: none", "done", "Points to has no “files:”"],
@@ -377,7 +412,7 @@ describe("§5.1 Points to, by kind", () => {
       ["commit: C4D4A85; files: a.json", "done", "“C4D4A85” is not a commit (7 to 64 lower-case hex digits, or none)"],
       ["commit: c4d4a8; files: a.json", "done", "“c4d4a8” is not a commit (7 to 64 lower-case hex digits, or none)"],
       [`commit: ${"a".repeat(65)}; files: a.json`, "done", `“${"a".repeat(59)}…” is not a commit (7 to 64 lower-case hex digits, or none)`],
-      ["commit: none; files:", "done", "“files:” names no path"],
+      ["commit: none; files:", "done", "“files:” names no path (a run with no result file says “files: none”)"],
       ["commit: none; files: a.json; commit: none", "done", "Points to names “commit:” twice"],
       ["commit: none; files: a.json; from: E1", "done", "“from” is not a key an experiment points with (commit, files)"],
       ["commit: none; files a.json", "done", "“files a.json” in Points to is not a “key: value” pair"],

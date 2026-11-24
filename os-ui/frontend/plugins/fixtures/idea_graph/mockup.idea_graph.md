@@ -10,7 +10,7 @@ links the mockup inferred rather than read are left out.
 | Q2 | question | Effect of a doubled Muon matrix LR | answered |  |  | paper_skeleton.md:84 (Experiments table, "Probe 1" row) |
 | Q3 | question | Effect of a 2,048-token vocabulary | answered |  |  | paper_skeleton.md:85 (Experiments table, "Probe 2" row) |
 | Q4 | question | Is the ~3-minute d1 example (0.84M params) the right first-run example for Research OS users, and should it be verified on another machine or OS? | open |  |  | PROJECT_MEMORY.md:18 ("Current question") |
-| E1 | experiment | SFT at the demo's `--init-lr-frac 0.8` | done |  | commit: none; files: Code/README.md | Code/README.md:91 (Recipe table, "SFT steps / LR" row) |
+| E1 | experiment | SFT at the demo's `--init-lr-frac 0.8` | done |  | commit: none; files: none | Code/README.md:91 (Recipe table, "SFT steps / LR" row) |
 | E2 | experiment | Every stage: `bash runs/runcpu_small.sh all`, on 2026-09-26 | done | tests Q1 | commit: none; files: Code/results/summary.json, Code/results/training_metrics.csv | Code/README.md:122 ("Results") |
 | E3 | experiment | Probe 1: the base recipe with `--matrix-lr=0.04` | done | tests Q2 | commit: none; files: Code/results/summary.json | Code/README.md:53 (stage "probe_lr") |
 | E4 | experiment | Probe 2: a 2,048-token tokenizer, then the base recipe | done | tests Q3 | commit: none; files: Code/results/summary.json | Code/README.md:54 (stage "probe_vocab") |

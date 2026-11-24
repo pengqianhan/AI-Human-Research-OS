@@ -92,10 +92,10 @@ const asciiLower = (text: string) => text.replace(/[A-Z]/g, (c) => String.fromCh
 
 // ---- the model ------------------------------------------------------------------------
 
-/** What a node points to, as read from its Points to cell. */
+/** What a node points to, as read from its Points to cell. A run's `commit` and `files` are null for `none`: the run recorded no commit, or left no result file. */
 export type Points =
   | { kind: "empty" }
-  | { kind: "run"; commit: string | null; files: string[] }
+  | { kind: "run"; commit: string | null; files: string[] | null }
   | { kind: "from"; id: string }
   | { kind: "claim"; id: string };
 
@@ -390,18 +390,25 @@ function pointsOf(kind: Kind, status: string, cell: string): { ok: true; points:
   if (commit === undefined) return fail("Points to has no “commit:”");
   if (files === undefined) return fail("Points to has no “files:”");
   if (!COMMIT.test(commit)) return fail(`“${shown(commit)}” is not a commit (7 to 64 lower-case hex digits, or none)`);
-  // Paths are separated by ", " (a comma and a space or tab); a path holding one is a code span.
+  // Paths are separated by ", " (a comma and a space or tab); a path holding one is a code span. `none`, bare, says
+  // the run left no result file (as `commit: none` says it recorded no commit); a file named none is written `none`.
   const paths: string[] = [];
+  let none = false;
   for (const raw of splitOutside(files, (i) => files.charCodeAt(i) === 44 && (files.charCodeAt(i + 1) === 32 || files.charCodeAt(i + 1) === 9))) {
     const piece = trimSpaces(raw);
     if (piece === "") continue;
+    if (piece === "none") {
+      none = true;
+      continue;
+    }
     const path = pathOf(piece);
     if (path === null) return fail(`“${shown(piece)}” is not a path written bare or as one code span`);
     if (!isProjectPath(path)) return fail(`“${shown(path)}” is not a path inside the project (no leading “/”, no “.” or “..” segment or name starting with “.”, no empty segment, no “\\”, no address)`);
     paths.push(path);
   }
-  if (paths.length === 0) return fail("“files:” names no path");
-  return { ok: true, points: { kind: "run", commit: commit === "none" ? null : commit, files: paths } };
+  if (none && paths.length > 0) return fail(`“files:” names none and also ${plural(paths.length, "path")} (${listOf(paths.map((p) => `“${shown(p)}”`), 3)}); none stands alone (a file named none is written as a code span, \`none\`)`);
+  if (!none && paths.length === 0) return fail("“files:” names no path (a run with no result file says “files: none”)");
+  return { ok: true, points: { kind: "run", commit: commit === "none" ? null : commit, files: none ? null : paths } };
 }
 
 // ---- the table and its rows -----------------------------------------------------------
@@ -808,7 +815,8 @@ export function details(g: Graph, node: IdeaNode): Details {
   const pointer = g.pointers.get(node.key);
   if (p.kind === "run") {
     view.lines.push(p.commit === null ? "Commit: none recorded by the run" : `Commit ${p.commit}`);
-    view.files = p.files;
+    if (p.files === null) view.lines.push("Result files: none (the row says “files: none”)");
+    else view.files = p.files;
   } else if (node.kind === "experiment") view.lines.push("No run yet");
   else if (pointer?.kind === "from") {
     view.lines.push(`from: ${pointer.id}`);
