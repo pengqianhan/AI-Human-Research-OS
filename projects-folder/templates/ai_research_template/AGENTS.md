@@ -26,6 +26,9 @@ Read [index.md](index.md) for navigation and the Snapshot in
   in [paper/references.bib](paper/references.bib). Build from `paper/` with
   `latexmk -pdf -interaction=nonstopmode main.tex`; the expected output is
   `paper/main.pdf`.
+- **Idea graph:** keep [idea_graph.md](idea_graph.md) current: one row per
+  question, hypothesis, experiment, result, or claim, with its links, in the
+  format the file states; the desktop app's Idea view draws it.
 - **Evaluation:** store one full report per evaluation under `Evaluations/`
   when that directory is needed; keep only summary state in
   `PROJECT_MEMORY.md`.
