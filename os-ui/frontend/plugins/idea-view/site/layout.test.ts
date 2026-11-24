@@ -473,6 +473,11 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
     }
   });
 
+  // The growth cases are sized by logic.test.ts's rule (honest at most about 17 ms at 4n here; the mistake put back at
+  // least 2 s and failing), with the case run alone on an M1 Pro. This one: honest at most 4.6 ms at 4n in nine
+  // runs. No mistake found that fails it, since the caps bound it: a line looking itself up among the lines
+  // (`const k = lines.indexOf(line)` in layout's lines loop) is 4.4 times the time, 3.3 ms at 4n; a row looking its
+  // ID up among the rows before it, 6.0 times, 6.0 ms.
   test("reading, checking, and laying out 50 then 200 nodes grows as one pass does (the design's 50 ms, by growth)", (t) => {
     const run = (source: string) => {
       const g = graphOf(source);
@@ -481,7 +486,13 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
     assertOnePass(t, "50 and 200 nodes", growth((n) => generated(n, n * 5), run, 50));
   });
 
-  test("routing grows as one pass does: lines that skip two columns, and the words of the node with the most lines, 2,000 then 8,000 nodes", (t) => {
+  // Honest at most 11.6 ms at 4n in eleven runs. No mistake found that fails it at any size the suite can afford:
+  // at 2,000 then 8,000 nodes (its old size; 189 ms at 4n here, and 10.0 times, 1,202 ms on macos-x64, passing by a
+  // hair) neither a line looking itself up among the lines (6.3 times, 337 ms) nor labelsFor checking every word
+  // placed, scanning a column's boxes from the top, or a line looking itself up there (4.3 to 6.2 times, at most
+  // 336 ms) failed it, and at 4,000 the first still did not (9.4 times, 1.2 s). Here they are 3.7 to 5.6 times, at
+  // most 13.0 ms.
+  test("routing grows as one pass does: lines that skip two columns, and the words of the node with the most lines, 200 then 800 nodes", (t) => {
     const make = (n: number) => {
       const rand = rng(11);
       // Questions, two hypotheses, experiments: every line from an experiment to a question skips the hypotheses' column.
@@ -495,11 +506,18 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
       const { kinds, edges } = JSON.parse(input) as { kinds: Kind[]; edges: Edge[] };
       return labelsFor(layout(kinds, edges, 6), 0);
     };
-    assertOnePass(t, "routing and words, 2,000 and 8,000 nodes", growth(make, run, 2000));
+    assertOnePass(t, "routing and words, 200 and 800 nodes", growth(make, run, 200));
   });
 
-  // Sized so that a pass per line (each line looking itself up among the lines, as a first draft did) takes seconds at 4n here.
-  test("the layout alone, with the caps lifted, grows as one pass does: 4,000 nodes and 20,000 edges, then four times as many", (t) => {
+  // Rests on the ratio alone: a pass per line needs thousands of nodes, where one pass is already far over 17 ms.
+  // Honest here 484 to 547 ms at 4n and 5.4 to 6.1 times the time (14 runs; beside four busy loops, 5.3 to 6.5),
+  // so about 2.7 s at 4n on macos-x64, which took 2,158 ms at 4,000 nodes (5.7 times). The mistake, a line looking
+  // itself up among the lines as a first draft did (`const k = lines.indexOf(line)` in layout's lines loop), fails
+  // it by a thin margin: 10.7 to 11.2 times, 2.0 to 2.1 s at 4n, in eight of eight runs. At 4,000 nodes, the old
+  // size, it sat on the line (9.4 to 10.2 times in six runs); at 8,000 it fails by more (11.4 to 11.7 times, 3.5 s), but
+  // one pass's ratio there is less steady (5.8 to 7.3 times loaded) and takes 0.8 s at 4n here. Ten tries in place of
+  // five did not steady the ratio at 4,000 (5.0 to 7.2 times): a lower best at n raises it.
+  test("the layout alone, with the caps lifted, grows as one pass does: 6,000 nodes and 30,000 edges, then four times as many", (t) => {
     const make = (n: number) => {
       const rand = rng(5);
       const kinds = Array.from({ length: n }, (_, k) => KINDS[k % 5]!);
@@ -510,6 +528,6 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
       const { kinds, edges } = JSON.parse(input) as { kinds: Kind[]; edges: Edge[] };
       return layout(kinds, edges, 6);
     };
-    assertOnePass(t, "layout, 4,000 and 16,000 nodes", growth(make, run, 4000));
+    assertOnePass(t, "layout, 6,000 and 24,000 nodes", growth(make, run, 6000));
   });
 });
