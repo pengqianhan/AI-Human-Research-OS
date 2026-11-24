@@ -440,6 +440,20 @@ export function buildGraph(doc: Doc, skeleton: SkeletonRead): Built {
   if (doc.cut && table.last === doc.lines) problems.add(null, 0, () => `${FILE} has more than ${n(doc.lines)} lines; the view reads the first ${n(doc.lines)}.`, true);
   for (const line of table.skipped) problems.add(atLines([line]), line, () => "it holds only invisible characters; the table goes on after it.");
   for (const other of graphTables.slice(1)) problems.add(atLines([other.first]), other.first, () => `another table with the graph's header; only the first, on line ${n(table.first)}, is read.`, true);
+  // Lines that start with "|" after the table ended (a blank line or other text ends a table in md-kit): rows an
+  // agent may have meant, which md-kit read as a paragraph. Said, so no node vanishes without a note.
+  let stray = false;
+  for (const block of doc.blocks) {
+    if (block.kind !== "paragraph" || block.first <= table.last) continue;
+    const pipes = block.lines.map((l, k) => (/^[ \t]*\|/.test(l) ? block.first + k : 0)).filter((l) => l > 0);
+    if (pipes.length === 0) continue;
+    stray = true;
+    const one = pipes.length === 1;
+    const at = pipes[pipes.length - 1]! - pipes[0]! === pipes.length - 1 ? atRange(pipes[0]!, pipes[pipes.length - 1]!) : atLines(pipes);
+    problems.add(at, pipes[0]!, () => `${one ? "this line starts" : "these lines start"} with “|” after the table, which ends on line ${n(table.last)} (a blank line or other text ends it); ${one ? "it is not read as a row" : "they are not read as rows"}.`);
+  }
+  /** Some rows an agent wrote are not read: past md-kit's caps, or after the table ended. */
+  const partial = table.more > 0 || (doc.cut && table.last === doc.lines) || stray;
 
   // Rows: each a node, or left out with every reason.
   const seen = new Map<string, { line: number; id: string }>();
@@ -497,7 +511,7 @@ export function buildGraph(doc: Doc, skeleton: SkeletonRead): Built {
     if (beyond !== undefined) return `${beyond.id} (line ${n(beyond.line)}) is past the first ${n(LIMITS.nodes)} nodes, which are all the view draws`;
     const out = leftOut.get(key);
     if (out !== undefined) return `${out.id} (line ${n(out.line)}) is left out for a problem of its own`;
-    return table.more > 0 ? `no node among the table's first ${n(table.rows.length)} rows, which the view reads, has the ID ${target}` : `no node in the table has the ID ${target}`;
+    return partial ? `no node among the rows the view reads has the ID ${target}` : `no node in the table has the ID ${target}`;
   };
 
   // Links, now that every node is known.

@@ -145,6 +145,14 @@ describe("the page's DOM", () => {
     assert.doesNotMatch(html, /<style|style=|<img|<image|<svg|href="(?!\.\/style\.css")/);
     assert.doesNotMatch(sources.find((s) => s.file === "style.css")!.text, /url\(|@import/, "the style loads nothing");
   });
+
+  test("the map's box keeps its scrollbar's gutter, so the width the scale is fitted to does not change with the scrollbar", () => {
+    // fit() reads canvas.clientWidth and a ResizeObserver on the canvas calls it: without a stable gutter, a classic
+    // scrollbar (Windows, Linux) would narrow the width, shrink the map, drop the scrollbar, and loop.
+    assert.match(sources.find((s) => s.file === "style.css")!.text, /\n\.canvas \{[^}]*scrollbar-gutter: stable;[^}]*\}/);
+    assert.match(source("main.ts"), /const s = fitScale\(canvas\.clientWidth, map\.width\);/);
+    assert.match(source("main.ts"), /new ResizeObserver\(\(\) => fit\(\)\)\.observe\(canvas\);/);
+  });
 });
 
 describe("what the page reads", () => {

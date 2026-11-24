@@ -534,6 +534,22 @@ describe("caps and what md-kit leaves unread, each said (§1 fact 6, §5.2)", ()
     assert.equal(all[1], "line 6: it holds only invisible characters; the table goes on after it.");
     assert.match(all[2]!, new RegExp(`^lines 206–505: 300 nodes past the first ${LIMITS.nodes} are not drawn\\.$`));
     assert.equal(all.length, 3);
+    // A link to a row md-kit did not read is worded by the rows read.
+    const far = graphOf(file(E("E1", `tests X${MD.rows + 1}`), ...rows));
+    assert.equal(listed(far).find((p) => p.startsWith("line 5:")), `line 5: E1's link “tests X${MD.rows + 1}” is left out: no node among the rows the view reads has the ID X${MD.rows + 1}.`);
+  });
+
+  test("rows after a blank line are not rows of the table (md-kit ends it there): the problems say so, and a link to one is worded by the rows read", () => {
+    const g = graphOf(file(Q("Q1"), E("E1", "tests Q2"), "", Q("Q2"), Q("Q3"), "", "Free text.", "", Q("Q4")));
+    assert.deepEqual(ids(g), ["Q1", "E1"]);
+    assert.deepEqual(listed(g), [
+      "line 6: E1's link “tests Q2” is left out: no node among the rows the view reads has the ID Q2.",
+      "lines 8–9: these lines start with “|” after the table, which ends on line 6 (a blank line or other text ends it); they are not read as rows.",
+      "line 13: this line starts with “|” after the table, which ends on line 6 (a blank line or other text ends it); it is not read as a row.",
+    ]);
+    // A table after it with another header is free text, as §5.1 says, and a link to nothing in a whole file is worded so.
+    const other = graphOf(`${file(E("E1", "tests Q9"))}\n| a | b |\n|---|---|\n| 1 | 2 |\n`);
+    assert.deepEqual(listed(other), ["line 5: E1's link “tests Q9” is left out: no node in the table has the ID Q9."]);
   });
 
   test(`the problems listed stop at ${LIMITS.problems}, and the count is every one`, () => {

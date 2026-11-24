@@ -65,7 +65,8 @@ code { font-family: var(--mono); font-size: .92em; }
 .lgroup { display: inline-block; margin-right: 12px; white-space: nowrap; }
 
 /* the map */
-.canvas { flex: 1; min-height: 0; overflow: auto; position: relative; background: var(--paper); scroll-padding-bottom: 116px; scroll-padding-top: 8px; }
+/* The gutter is kept whether or not the map scrolls down, so the width fit() reads never changes with the scrollbar (a classic scrollbar would otherwise narrow it, shrink the map, drop the scrollbar, and start again). */
+.canvas { flex: 1; min-height: 0; overflow: auto; position: relative; background: var(--paper); scroll-padding-bottom: 116px; scroll-padding-top: 8px; scrollbar-gutter: stable; }
 /* the free strip at its foot keeps the last node above the host's ask bar, as the mockup's map */
 .gmap { display: block; margin: 0 auto 104px; overflow: visible; }
 .glines path { fill: none; stroke-width: 1.6; transition: opacity .12s; }

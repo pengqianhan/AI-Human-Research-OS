@@ -36,7 +36,9 @@ Status on 2026-11-24:
     box is the page's HTML (a `<button>`, so Enter and Space work) in a
     `foreignObject`, which keeps the mockup's look and its cut of a statement by the
     box. `dom.test.ts` pins every attribute the page sets, with its value, and every
-    tag it makes.
+    tag it makes. The map's box keeps a stable scrollbar gutter, so the width the
+    scale is fitted to does not change when a classic scrollbar (Windows, Linux)
+    comes and goes, which would otherwise resize the map in a loop.
   - **The legend** takes the top of the last column, whose nodes start under it: the
     mockup's corner was empty only because its nodes were placed by hand, and a rule
     has to guarantee no overlap (the layout tests include the legend). A word with no
@@ -57,13 +59,16 @@ Status on 2026-11-24:
   - **What md-kit leaves unread is said** (the brief's lesson 6): rows past its 500
     a table, lines past its 20,000 when the table reaches them, lines of only
     invisible characters inside the table, a second table with the graph's header
-    (only the first is read), and, on the no-table screen, everything after a code
-    fence never closed. A statement or a source over 2,000 characters is drawn cut
+    (only the first is read), lines starting with "|" after the table ended (a
+    blank line or other text ends a table, and md-kit reads such lines as a
+    paragraph: rows an agent grouped with blank lines), and, on the no-table
+    screen, everything after a code fence never closed. A statement or a source over 2,000 characters is drawn cut
     and the panel says so beside it; the quote holds the row as written.
   - **Absence is worded by what was searched**: "No table with the expected header was
     found in idea_graph.md." with the first header found (or "No table was found");
-    a link to nothing reads "no node in the table has the ID Q9" ("among the table's
-    first 500 rows" when md-kit read no more), and a link to a node not drawn names
+    a link to nothing reads "no node in the table has the ID Q9" ("no node among the
+    rows the view reads" when some were not read: past md-kit's 500 rows or 20,000
+    lines, or after the table ended), and a link to a node not drawn names
     why: "Q2 (line 6) is left out for a problem of its own", "P201 (line 206) is
     past the first 200 nodes". The panel's count says "none is a hypothesis" of the
     nodes drawn, where the mockup said "no hypotheses are recorded".
@@ -94,7 +99,12 @@ Status on 2026-11-24:
     string building, below). Mutation checks put back a line looking itself up among the
     lines (a first draft did), and a files list checked against itself: each fails
     its case (the first sizes, 2,000 nodes and one repeated path, let both pass, and
-    were raised). md-kit's own `splitCells` grows faster than linearly on one 512 KiB
+    were raised). Fourteen more mutations, each on a scratch copy, fail a test: an
+    ID of 17 characters, `tests` reaching a claim, boxes overlapping, ⟨ and ⟩ left
+    unmarked in a label, `toLowerCase` for ASCII case, a duplicate ID kept, a
+    statement as markup, an `<img>`, a class from file text, a `style` or `href`
+    attribute on the map, an unmarked tooltip, rows after a blank line dropped
+    without a note, and no stable gutter. md-kit's own `splitCells` grows faster than linearly on one 512 KiB
     cell (1 ms at 128 KiB, 21 ms at 512 KiB, V8 building the cell's string), well
     under the floor.
   - **Points §5.1 and §5.2 leave open, decided and tested:**
@@ -141,9 +151,10 @@ Status on 2026-11-24:
     and 1440 × 900, and a failure names the view's and the map's geometry.
   - **Limits that stay:** the barycentre order can leave crossings; the detail panel
     is the mockup's 156 px (200 px narrow) and scrolls; result files and commits are
-    shown, never opened or checked (§5.5); a link or a pointer to a row md-kit did
-    not read (past 500 rows or 20,000 lines) is reported as missing among the rows
-    read.
+    shown, never opened or checked (§5.5); a link or a pointer to a row the view did
+    not read (past 500 rows or 20,000 lines, or after the table ended) is reported
+    as missing among the rows read; the scrollbar gutter's fix is checked in the
+    source, not in a window with classic scrollbars (the suite runs on macOS).
   - **Covered by unit tests only, not in the running app:** the caps (200 nodes,
     1,000 links, 500 rows, 20,000 lines, 500 problems listed), cycles, every Points
     to and status error, a claim's pointer missing, ambiguous, or with another
