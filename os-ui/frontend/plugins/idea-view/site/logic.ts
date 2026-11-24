@@ -74,6 +74,18 @@ export const JOINS: Record<Word, { from: readonly Kind[]; to: readonly Kind[] }>
   refutes: { from: ["result"], to: ["hypothesis", "claim"] },
 };
 
+/**
+ * Which way each link counts when a cycle is looked for (§5.1 "A DAG"): from
+ * what must exist first to what follows from it. "row" is the node whose row
+ * states the link (a result, for from:), "target" the node it names. So A
+ * motivates B is A → B; E tests X is X → E; R supports or refutes X is X → R;
+ * R from: E is E → R. A default the directing agent took on 2026-11-24 and
+ * told the Human Owner, not yet confirmed. To reverse it to the first build's
+ * rule (each link from its row to its target, a result's experiment before
+ * the result), set tests, supports, and refutes to "row".
+ */
+export const FIRST: Record<Word | "from", "row" | "target"> = { motivates: "row", tests: "target", supports: "target", refutes: "target", from: "target" };
+
 /** A node's ID: a letter, then at most 15 letters, digits, "_" or "-" (ASCII only). */
 const ID = /^[A-Za-z][A-Za-z0-9_-]{0,15}$/;
 /** A claim's ID in paper_skeleton.md (md-kit's CLAIM_ID without its ": "): compared exactly. */
@@ -619,13 +631,29 @@ export function buildGraph(doc: Doc, skeleton: SkeletonRead): Built {
   const total = nodes.filter((node) => node.kind === "claim").length;
   const claims: ClaimCheck = skeleton.ok ? { checked: true, verified, total } : { checked: false, total, why: skeleton.why };
 
-  // A DAG: each cycle through links (row to target) and from: (experiment to result) is one problem.
+  // A DAG: each link and from: counts from what must exist first to what follows from it (FIRST); each cycle is one
+  // problem, which names its nodes and one loop step by step, each step with the link that makes it.
   const edges: number[][] = nodes.map(() => []);
-  for (const link of links) edges[link.from.index]!.push(link.to.index);
-  for (const c of came) edges[c.experiment.index]!.push(c.result.index);
+  /** Why each edge is there, by its place in `edges`: the link as the file states it. */
+  const why: string[][] = nodes.map(() => []);
+  const edge = (first: IdeaNode, then: IdeaNode, stated: string) => {
+    edges[first.index]!.push(then.index);
+    why[first.index]!.push(stated);
+  };
+  for (const link of links) {
+    const [first, then] = FIRST[link.word] === "row" ? [link.from, link.to] : [link.to, link.from];
+    edge(first, then, `${link.from.id} ${link.word} ${link.to.id}`);
+  }
+  for (const c of came) {
+    const [first, then] = FIRST.from === "row" ? [c.result, c.experiment] : [c.experiment, c.result];
+    edge(first, then, `${c.result.id} from ${c.experiment.id}`);
+  }
   for (const cycle of cycles(edges)) {
     const members = cycle.map((k) => nodes[k]!);
-    problems.add(atLines(members.map((m) => m.line)), members[0]!.line, () => `a cycle runs through ${listOf(members.map((m) => m.id))} (by their links and from:); each node is still drawn.`, true);
+    const loop = loopThrough(cycle, edges);
+    const steps = loop.map(([k, at]) => `${nodes[k]!.id} before ${nodes[edges[k]![at]!]!.id} (${why[k]![at]})`);
+    const head = loop.length === members.length ? ":" : "; one of its loops:";
+    problems.add(atLines(members.map((m) => m.line)), members[0]!.line, () => `a cycle runs through ${listOf(members.map((m) => m.id))}${head} ${listOf(steps)}, counting each link from what must exist first to what follows from it; each node is still drawn.`, true);
   }
 
   // Listed by line, the file's own problems first; the order found is kept within a line.
@@ -638,6 +666,43 @@ export function buildGraph(doc: Doc, skeleton: SkeletonRead): Built {
 
 /** "an experiment", "a question or a hypothesis", "any node". */
 const kindsText = (kinds: readonly Kind[]) => (kinds.length === KINDS.length ? "any node" : either(kinds.map(article)));
+
+/**
+ * One loop through the first node of a strongly connected component
+ * (`component`, in file order), the shortest by breadth-first search inside
+ * it: each step as [node, its edge's place in edges[node]], from the first
+ * node back to it. One pass over the component's nodes and edges.
+ */
+function loopThrough(component: readonly number[], edges: readonly (readonly number[])[]): [number, number][] {
+  const start = component[0]!;
+  const inside = new Set(component);
+  /** How each node was reached: [the node before it, that node's edge]. */
+  const reached = new Map<number, [number, number]>();
+  const queue = [start];
+  let close: [number, number] | null = null;
+  for (let q = 0; q < queue.length && close === null; q++) {
+    const v = queue[q]!;
+    const out = edges[v]!;
+    for (let at = 0; at < out.length; at++) {
+      const w = out[at]!;
+      if (w === start) {
+        close = [v, at];
+        break;
+      }
+      if (!inside.has(w) || reached.has(w)) continue;
+      reached.set(w, [v, at]);
+      queue.push(w);
+    }
+  }
+  // A component of more than one node always has a loop through each of its nodes.
+  const steps: [number, number][] = [close!];
+  for (let v = close![0]; v !== start; ) {
+    const step = reached.get(v)!;
+    steps.push(step);
+    v = step[0];
+  }
+  return steps.reverse();
+}
 
 /**
  * The strongly connected components of more than one node, each in file

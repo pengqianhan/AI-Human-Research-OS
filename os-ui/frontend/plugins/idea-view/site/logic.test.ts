@@ -323,6 +323,8 @@ describe("§5.1 Links: `<word> <ID>` items separated by `;`, from this row's nod
       ["E1", "motivates", "Q1"],
     ]);
     assert.deepEqual(listed(g), [
+      // Two words to one node are two links; these two make a loop (Q1 comes before the experiment that tests it).
+      "lines 5 and 6: a cycle runs through Q1 and E1: Q1 before E1 (E1 tests Q1) and E1 before Q1 (E1 motivates Q1), counting each link from what must exist first to what follows from it; each node is still drawn.",
       "line 6: E1's link “checks Q1” is left out: “checks” is not a link word (motivates, tests, supports, or refutes).",
       "line 6: E1's link “tests” is left out: it is not a link word and an ID, as “tests Q1”.",
       "line 6: E1's link “tests Q1 Q2” is left out: it is not a link word and an ID, as “tests Q1”.",
@@ -518,27 +520,53 @@ describe("§5.2 paper_skeleton.md as the claims' authority", () => {
   });
 });
 
-describe("§5.1 a DAG: a cycle through links and from: is listed, and every node is still drawn", () => {
-  test("a cycle through links, named by its nodes and their lines", () => {
-    const g = graphOf(file(H("H1", "motivates H2"), H("H2", "motivates H3"), H("H3", "motivates H1"), Q("Q1", "motivates H1")));
-    assert.equal(g.nodes.length, 4);
-    assert.equal(g.links.length, 4);
-    assert.deepEqual(listed(g), ["lines 5, 6, and 7: a cycle runs through H1, H2, and H3 (by their links and from:); each node is still drawn."]);
+describe("§5.1 a DAG: each link counts from what must exist first to what follows from it; a cycle is listed, and every node is still drawn", () => {
+  const COUNTED = "counting each link from what must exist first to what follows from it";
+
+  test("the rule's table: A motivates B is A → B; E tests X is X → E; R supports or refutes X is X → R; R from: E is E → R", () => {
+    // The rows are written in the order the members are named, so a cycle's members are listed in file order.
+    const cases: [string, string[], string[] | null][] = [
+      ["E1 tests H1; R1 from E1; R1 supports H1", [H("H1"), E("E1", "tests H1"), R("R1", "E1", "supports H1")], null],
+      ["H1 motivates E1; E1 tests H1", [H("H1", "motivates E1"), E("E1", "tests H1")], null],
+      ["C1 motivates E2; R2 from E2; R2 supports C1", [C("C1", "", "motivates E2"), E("E2"), R("R2", "E2", "supports C1")], null],
+      ["R1 from E1; R1 motivates E2; E2 tests Q1; R2 from E2; R2 supports C1; C1 motivates E3", [Q("Q1"), E("E1"), E("E2", "tests Q1"), E("E3"), R("R1", "E1", "motivates E2"), R("R2", "E2", "supports C1"), C("C1", "", "motivates E3")], null],
+      ["R1 from E1; R1 motivates E1", [E("E1"), R("R1", "E1", "motivates E1")], ["E1", "R1"]],
+      ["R1 motivates H2; R1 supports H2", [R("R1", "E1", "motivates H2; supports H2"), H("H2"), E("E1")], ["R1", "H2"]],
+      ["R1 from E1; R1 motivates Q2; E1 tests Q2", [Q("Q2"), E("E1", "tests Q2"), R("R1", "E1", "motivates Q2")], ["Q2", "E1", "R1"]],
+      ["Q1 motivates Q2; Q2 motivates Q1", [Q("Q1", "motivates Q2"), Q("Q2", "motivates Q1")], ["Q1", "Q2"]],
+    ];
+    for (const [says, rows, cycle] of cases) {
+      const g = graphOf(file(...rows));
+      assert.equal(g.nodes.length, rows.length, says);
+      const found = g.problems.filter((p) => p.text.startsWith("a cycle runs through "));
+      assert.deepEqual(listed(g).filter((p) => !p.includes("a cycle runs through ")), [], says);
+      if (cycle === null) assert.deepEqual(found, [], says);
+      else {
+        assert.equal(found.length, 1, says);
+        const named = /^a cycle runs through (.*?)(?::|; one of its loops:) /.exec(found[0]!.text)?.[1];
+        assert.equal(named, cycle.length === 2 ? cycle.join(" and ") : `${cycle.slice(0, -1).join(", ")}, and ${cycle[cycle.length - 1]}`, says);
+      }
+    }
   });
 
-  test("a link is an edge from its row to its target; from: is an edge from the experiment to its result", () => {
-    // A result that motivates its own experiment closes a loop; one that motivates another experiment does not.
-    assert.deepEqual(listed(graphOf(file(E("E1"), R("R1", "E1", "motivates E1")))), ["lines 5 and 6: a cycle runs through E1 and R1 (by their links and from:); each node is still drawn."]);
-    assert.deepEqual(listed(graphOf(file(E("E1"), E("E2"), R("R1", "E1", "motivates E2")))), []);
-    // A hypothesis that motivates the experiment testing it is a loop as written ("tests" points back to it).
-    assert.deepEqual(listed(graphOf(file(H("H1", "motivates E1"), E("E1", "tests H1")))), ["lines 5 and 6: a cycle runs through H1 and E1 (by their links and from:); each node is still drawn."]);
+  test("the problem says how the cycle was counted, step by step, so it can be checked against the file", () => {
+    assert.deepEqual(listed(graphOf(file(E("E1"), R("R1", "E1", "motivates E1")))), [`lines 5 and 6: a cycle runs through E1 and R1: E1 before R1 (R1 from E1) and R1 before E1 (R1 motivates E1), ${COUNTED}; each node is still drawn.`]);
+    assert.deepEqual(listed(graphOf(file(Q("Q2"), E("E1", "tests Q2"), R("R1", "E1", "motivates Q2")))), [
+      `lines 5, 6, and 7: a cycle runs through Q2, E1, and R1: Q2 before E1 (E1 tests Q2), E1 before R1 (R1 from E1), and R1 before Q2 (R1 motivates Q2), ${COUNTED}; each node is still drawn.`,
+    ]);
+    assert.deepEqual(listed(graphOf(file(R("R1", "E1", "refutes H2; motivates H2"), H("H2"), E("E1")))), [`lines 5 and 6: a cycle runs through R1 and H2: R1 before H2 (R1 motivates H2) and H2 before R1 (R1 refutes H2), ${COUNTED}; each node is still drawn.`]);
+    // Three nodes on loops, one loop shown: named as one of them.
+    const g = graphOf(file(H("H1", "motivates H2; motivates H3"), H("H2", "motivates H1"), H("H3", "motivates H1"), Q("Q1", "motivates H1")));
+    assert.equal(g.links.length, 5);
+    assert.deepEqual(listed(g), [`lines 5, 6, and 7: a cycle runs through H1, H2, and H3; one of its loops: H1 before H2 (H1 motivates H2) and H2 before H1 (H2 motivates H1), ${COUNTED}; each node is still drawn.`]);
   });
 
-  test("a cycle through every node of a full graph is one problem, naming the first ten", () => {
+  test("a cycle through every node of a full graph is one problem, naming the first ten nodes and steps", () => {
     const n = LIMITS.nodes;
     const g = graphOf(file(...Array.from({ length: n }, (_, k) => H(`H${k + 1}`, `motivates H${((k + 1) % n) + 1}`))));
     assert.equal(g.nodes.length, n);
-    assert.deepEqual(listed(g), [`lines 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, and ${n - 10} more: a cycle runs through H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, and ${n - 10} more (by their links and from:); each node is still drawn.`]);
+    const steps = Array.from({ length: 10 }, (_, k) => `H${k + 1} before H${k + 2} (H${k + 1} motivates H${k + 2})`).join(", ");
+    assert.deepEqual(listed(g), [`lines 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, and ${n - 10} more: a cycle runs through H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, and ${n - 10} more: ${steps}, and ${n - 10} more, ${COUNTED}; each node is still drawn.`]);
   });
 });
 

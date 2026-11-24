@@ -140,11 +140,15 @@ Status on 2026-11-24:
     - a `claim:` that two skeleton rows start with is not resolved: the problem names
       both lines; an unreadable skeleton is one problem only when a drawn claim
       node has a `claim:`;
-    - a cycle is found through each link, from its row to its target, and each
-      `from:`, from the experiment to its result: a result that motivates its own
-      experiment closes one. So does a hypothesis that motivates the experiment
-      testing it ("tests" points back to it), a pattern the Human Owner may want
-      allowed: it is listed as a problem, and the nodes are drawn.
+    - a cycle is found with each link counted from what must exist first to what
+      follows from it (§5.1 "A DAG": `A motivates B` is A → B, `E tests X` X → E,
+      `R supports` or `refutes X` X → R, `from: E` E → R), a default the
+      directing agent took on 2026-11-24 and told the Human Owner, not yet
+      confirmed. A result that motivates its own experiment closes a cycle; a
+      hypothesis that motivates the experiment testing it no longer does (the first
+      build counted each link from its row to its target and listed it). The
+      problem names the nodes and one loop, each step with the link that makes it.
+      Reversing the rule is one constant, `FIRST` in `logic.ts`.
   - **Test fixtures:** [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md)
     holds §5.1's example byte for byte and the mockup's graph of nanochat_cpu in the
     confirmed format (its two inferred links left out); the 50- and 200-node graphs
@@ -2052,7 +2056,18 @@ files as the mockup drew them:
 
 - **Source:** free text, optional: where the node comes from, as `file:line`.
 - **A DAG** (`HANDOFF.md:606`): a cycle through links and `from:` is reported as a
-  problem, and the nodes are still drawn, since the layout does not need it.
+  problem, and the nodes are still drawn, since the layout does not need it. Each
+  link counts from what must exist first to what follows from it: `A motivates B`
+  is A → B; `E tests X` is X → E; `R supports X` and `R refutes X` are X → R; a
+  result R with `from: E` is E → R. So "H1 motivates E1; E1 tests H1" is no cycle,
+  and "R1 from E1; R1 motivates E1" is one. The problem names the cycle's nodes and
+  one loop step by step ("E1 before R1 (R1 from E1) and R1 before E1 (R1 motivates
+  E1)"), so it can be checked against the file. *This rule is a default the
+  directing agent took on 2026-11-24 and told the Human Owner; it is not yet
+  confirmed.* It is one constant, `FIRST` in
+  `os-ui/frontend/plugins/idea-view/site/logic.ts`; setting `tests`, `supports`,
+  and `refutes` to `"row"` there reverses it to the first build's rule (each link
+  from its row to its target).
 - **Where an agent learns the format:** the template's own `idea_graph.md` (an
   empty table under a short paragraph that states these rules) and one line in the
   template's `AGENTS.md`, both in change 2.4 (§6). A CLI agent with no app running
