@@ -146,7 +146,13 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       hostile input any more (the largest is 384 KiB), and the layout is
       no longer timed at thousands of nodes (that case could not tell
       right from wrong on macos-x64; the caps of 200 nodes and 1,000
-      links bound it). 2.4, the idea files, is on branch
+      links bound it). macos-x64 moves single timed cases by up to
+      about ten times between runs, cases on `main` included; the one
+      that has come nearest the 500 ms floor is the Assets view's
+      "Used in, '](' again and again" (402.5 ms in one run, 43.4 in the
+      next), so a growth case red there is first compared with its time
+      on the run before
+      ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), status of 2.3). 2.4, the idea files, is on branch
       `step2-idea-graph-files`, which starts from `step2-idea-view` (a
       draft pull request until #54 is merged): `nanochat_cpu`'s
       `idea_graph.md`, written from the project's files with each row's

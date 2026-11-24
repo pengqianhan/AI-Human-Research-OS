@@ -351,6 +351,19 @@ Status on 2026-11-25:
     [logic.test.ts](frontend/plugins/idea-view/site/logic.test.ts) count the caps,
     each failing with its `slice` removed, and a third pins their values; no
     end-to-end test goes past them.
+
+    The rule's "a day twice as slow" understates macos-x64. Over the two runs
+    of the pull request's CI at the final sizes, the slowest of the nine cases
+    took 103.8 and then 165.5 ms at 4n (three times under the floor on the
+    worse run), and single cases moved much more than twice, in both directions:
+    the huge statement from 21.8 to 165.5 ms, the bad items from 103.8 to 26.3.
+    Cases on `main` that this change does not touch moved as much between two
+    earlier runs: the Assets view's "Used in, '](' again and again" from 402.5 to
+    43.4 ms, and md-kit's "inline, '[' then one ']'" from 227.7 to 16.7. Why is
+    not measured. The case that has come nearest the floor is that Assets one,
+    so a macos-x64 failure of a growth case with a time just over 500 ms is
+    first to be read as the runner's slow day, by its time on the run before,
+    and only then as a change in cost.
   - **Points §5.1 and §5.2 leave open, decided and tested:**
     - two rows with one ID ignoring case: the later is left out, naming the earlier's
       line and spelling; a row's ID counts for this even when the row is left out
