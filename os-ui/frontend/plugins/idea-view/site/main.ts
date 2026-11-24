@@ -23,7 +23,7 @@
  */
 import { inline, parse } from "../../md-kit.ts";
 import { button, clear, el, filesUrl, inlineNodes, isHostClear, markInvisible, projectFrom, readStart } from "../../site-kit.ts";
-import { BOX, edgesOf, fitScale, labelPoint, layout } from "./layout.ts";
+import { BOX, edgesOf, fitScale, labelsFor, layout } from "./layout.ts";
 import type { Layout, Rect } from "./layout.ts";
 import {
   barWords,
@@ -462,14 +462,15 @@ function paint(): void {
     b.classList.toggle("picked", node.key === selected);
   }
   clear(labels);
+  // Each of the open node's lines, marked, with its word in the slot layout.ts gives it beside the other node.
+  const slots = open === null ? [] : labelsFor(map, open.index);
   map.lines.forEach((line, k) => {
-    const hot = open !== null && (line.a === open.index || line.b === open.index);
-    lineEls[k]!.classList.toggle("hot", hot);
-    if (!hot) return;
-    const at = labelPoint(line, open.index);
+    const slot = slots[k] ?? null;
+    lineEls[k]!.classList.toggle("hot", slot !== null);
+    if (slot === null) return;
     const holder = el("div", "elabel-box");
     holder.append(el("span", `elabel ${WORD_CLASS.get(line.word)!}`, line.word === "from" ? "came from" : line.word));
-    labels!.append(box({ x: at.x - 60, y: at.y - 10, w: 120, h: 20 }, holder));
+    labels!.append(box(slot, holder));
   });
   renderPanel(graph, open);
 }

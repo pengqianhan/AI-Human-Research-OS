@@ -101,8 +101,10 @@ describe("the page's DOM", () => {
       ],
     );
     assert.equal([...main.matchAll(/setAttribute\(/g)].length, 17, "no other setAttribute");
-    // layout.ts builds a path's `d` from numbers only.
-    assert.match(source("layout.ts"), /line\.d = `M\$\{r1\(line\.x1\)\} \$\{line\.y1\} C\$\{r1\(line\.c1x\)\} \$\{line\.c1y\} \$\{r1\(line\.c2x\)\} \$\{line\.c2y\} \$\{r1\(line\.x2\)\} \$\{line\.y2\}`;/);
+    // layout.ts builds a path's `d` from numbers only: its pieces' coordinates, each through r1.
+    const lay = source("layout.ts");
+    assert.match(lay, /return `M\$\{r1\(s0\.x0\)\} \$\{r1\(s0\.y0\)\}\$\{segs\.map\(\(s\) => ` C\$\{r1\(s\.c1x\)\} \$\{r1\(s\.c1y\)\} \$\{r1\(s\.c2x\)\} \$\{r1\(s\.c2y\)\} \$\{r1\(s\.x1\)\} \$\{r1\(s\.y1\)\}`\)\.join\(""\)\}`;/);
+    assert.deepEqual([...lay.matchAll(/\.d = ([^;]+);/g)].map((m) => m[1]), ["pathOf(line.segs)"]);
     // A class is a literal, a fixed map's value, or statusClass, which looks a validated word up in a fixed map.
     assert.deepEqual(args(main, "svgEl", true), ['"gmap"', '"glines"', '"labels"', "`lg ${WORD_CLASS.get(word)!}`", "`ln ${WORD_CLASS.get(line.word)!}`"].sort());
     const classes = [...args(main, "el", true), ...args(main, "button")];

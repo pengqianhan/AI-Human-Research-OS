@@ -13,10 +13,10 @@ import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { assertOnePass, growth } from "../../growth.ts";
 import { parse } from "../../md-kit.ts";
-import { BOX, edgesOf, fitScale, labelPoint, layout, LEGEND } from "./layout.ts";
-import type { Edge, Layout } from "./layout.ts";
-import { buildGraph, KINDS, LIMITS, skeletonFrom } from "./logic.ts";
-import type { Graph, Kind } from "./logic.ts";
+import { BOX, edgesOf, fitScale, LABEL, labelsFor, LANE, layout, LEGEND, overlaps } from "./layout.ts";
+import type { Edge, Layout, Rect, Seg } from "./layout.ts";
+import { buildGraph, JOINS, KINDS, LIMITS, skeletonFrom, WORDS } from "./logic.ts";
+import type { Graph, Kind, Word } from "./logic.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "../../fixtures");
 const text = (rel: string) => readFileSync(join(FIXTURES, rel), "utf8").split(/\r?\n/).join("\n");
@@ -260,19 +260,192 @@ describe("§5.3 4. and 5. lines: every link and every result's experiment, betwe
     assert.equal(arc.within, true);
     assert.equal(arc.x1, q.x + BOX.w);
     assert.equal(arc.x2, q.x + BOX.w);
-    assert.ok(arc.c1x > arc.x1 && arc.c1x - arc.x1 <= (BOX.gx / 2) / 0.75 + 0.01, `bulge ${arc.c1x - arc.x1}`);
-    // An arc beside the last column gets room in the map.
+    const c1x = arc.segs[0]!.c1x;
+    assert.ok(c1x > arc.x1 && c1x - arc.x1 <= (BOX.gx / 2) / 0.75 + 0.01, `bulge ${c1x - arc.x1}`);
+    // An arc beside the last column gets room in the map, for the arc and for a word beside a box there.
     const last = layout(["question", "question"], [{ a: 0, b: 1, word: "motivates" }], 0);
     assert.ok(last.width >= last.lines[0]!.x1 + BOX.gx / 2 + BOX.pad / 2);
+    assert.equal(last.width, last.boxes[0]!.x + BOX.w + LABEL.reach);
+  });
+});
+
+/** Points along a line's path, `steps` a piece. */
+function along(segs: readonly Seg[], steps = 24): { x: number; y: number }[] {
+  const out: { x: number; y: number }[] = [];
+  for (const s of segs) {
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const u = 1 - t;
+      const at = (p0: number, p1: number, p2: number, p3: number) => u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+      out.push({ x: at(s.x0, s.c1x, s.c2x, s.x1), y: at(s.y0, s.c1y, s.c2y, s.y1) });
+    }
+  }
+  return out;
+}
+/** Whether a point lies inside a rectangle, its edges and a half-pixel margin left out (a line ends on a box's side). */
+const within = (p: { x: number; y: number }, r: Rect) => p.x > r.x + 0.5 && p.x < r.x + r.w - 0.5 && p.y > r.y + 0.5 && p.y < r.y + r.h - 0.5;
+
+/** No line passes under a box it does not join, the legend, or a column head. */
+function assertRouted(l: Layout, what: string): void {
+  l.lines.forEach((line, k) => {
+    for (const p of along(line.segs)) {
+      for (let i = 0; i < l.boxes.length; i++) if (i !== line.a && i !== line.b && within(p, l.boxes[i]!)) assert.fail(`${what}: line ${k} (${line.a}–${line.b}) passes under box ${i} at ${p.x.toFixed(1)},${p.y.toFixed(1)}`);
+      if (within(p, l.legend)) assert.fail(`${what}: line ${k} passes under the legend`);
+      for (const c of l.columns) if (within(p, c.head)) assert.fail(`${what}: line ${k} passes under a column head`);
+    }
+  });
+}
+
+/** With each node open in turn: every line of it has a word, and no other line; no word lies on a box its line does not join, on the legend, a column head, or another word, or outside the map. */
+function assertLabelled(l: Layout, what: string, nodes: Iterable<number> = l.boxes.keys()): { words: number; inside: number } {
+  let words = 0;
+  let inside = 0;
+  for (const open of nodes) {
+    const slots = labelsFor(l, open);
+    const placed: [number, Rect][] = [];
+    l.lines.forEach((line, k) => {
+      const r = slots[k];
+      const mine = line.a === open || line.b === open;
+      assert.equal(r !== null, mine, `${what}: node ${open}, line ${k} ${mine ? "has no word" : "has a word"}`);
+      if (r === null || r === undefined) return;
+      words++;
+      assert.deepEqual([r.w, r.h], [LABEL.w, LABEL.h]);
+      assert.ok(r.x >= 0 && r.y >= 0 && r.x + r.w <= l.width && r.y + r.h <= l.height, `${what}: node ${open}, line ${k}'s word outside the map`);
+      for (let i = 0; i < l.boxes.length; i++) if (i !== line.a && i !== line.b) assert.ok(!overlaps(r, l.boxes[i]!), `${what}: node ${open}, line ${k}'s word on box ${i}, which it does not join`);
+      assert.ok(!overlaps(r, l.legend), `${what}: node ${open}, line ${k}'s word on the legend`);
+      for (const c of l.columns) assert.ok(!overlaps(r, c.head), `${what}: node ${open}, line ${k}'s word on a column head`);
+      for (const [j, other] of placed) assert.ok(!overlaps(r, other), `${what}: node ${open}, the words of lines ${j} and ${k} overlap`);
+      placed.push([k, r]);
+      // On its node's padding only (beside it), or, when nothing beside is free, inside it.
+      const far = l.boxes[line.a === open ? line.b : line.a]!;
+      if (r.x >= far.x && r.x + r.w <= far.x + far.w) inside++;
+      else assert.ok(r.x + r.w <= far.x + (LABEL.w - LABEL.reach) || r.x >= far.x + far.w - (LABEL.w - LABEL.reach), `${what}: a word beside a box reaches past its padding`);
+    });
+  }
+  return { words, inside };
+}
+
+/** A seeded graph that follows §5.1's grammar: each word joins only the kinds it may, a result comes from an experiment, no duplicate; some boxes taller. */
+function grammarGraph(seed: number, count: number, perNode: number, tall = false): { kinds: Kind[]; edges: Edge[]; heights: number[] } {
+  const rand = rng(seed);
+  const kinds = Array.from({ length: count }, () => KINDS[rand(5)]!);
+  const edges: Edge[] = [];
+  const seen = new Set<string>();
+  const experiments = kinds.flatMap((k, i) => (k === "experiment" ? [i] : []));
+  kinds.forEach((kind, a) => {
+    for (let j = 0; j < perNode; j++) {
+      const word = WORDS[rand(WORDS.length)]! as Word;
+      if (!JOINS[word].from.includes(kind)) continue;
+      const targets = kinds.flatMap((k, i) => (i !== a && JOINS[word].to.includes(k) ? [i] : []));
+      if (targets.length === 0) continue;
+      const b = targets[rand(targets.length)]!;
+      if (seen.has(`${a} ${word} ${b}`)) continue;
+      seen.add(`${a} ${word} ${b}`);
+      edges.push({ a, b, word });
+    }
+    if (kind === "result" && experiments.length > 0) edges.push({ a: experiments[rand(experiments.length)]!, b: a, word: "from" });
+  });
+  const heights = kinds.map(() => (tall ? [48, 48, 48, 67, 86][rand(5)]! : BOX.h));
+  return { kinds, edges, heights };
+}
+
+describe("lines and their words go where they read right: a line skipping a column runs through it in a lane; a word sits beside the node it names (departing from §5.3 4 as written)", () => {
+  const P02: Kind[] = ["question", "hypothesis", "hypothesis", "hypothesis", "experiment"];
+
+  test("the review's graph: E1 tests Q1, past three hypotheses it does not join; the line runs straight through their column, which keeps clear of it", () => {
+    const l = layout(P02, [{ a: 4, b: 0, word: "tests" }], 7);
+    const line = l.lines[0]!;
+    const q1 = l.boxes[0]!;
+    assert.equal(line.lane, q1.y + q1.h / 2, "at Q1's middle");
+    assert.equal(line.segs.length, 3);
+    // The straight run spans the hypotheses' column at the lane's height.
+    const run = line.segs[1]!;
+    assert.deepEqual([run.x0, run.y0, run.x1, run.y1], [l.columns[1]!.x, line.lane, l.columns[1]!.x + BOX.w, line.lane]);
+    for (const k of [1, 2, 3]) {
+      const h = l.boxes[k]!;
+      assert.ok(h.y >= line.lane! + LANE || h.y + h.h <= line.lane! - LANE, `H${k} keeps clear of the lane`);
+    }
+    assertRouted(l, "p02");
+    // E1 open: the word sits beside Q1, where the line meets it, on no hypothesis; Q1 open: beside E1.
+    const atE1 = labelsFor(l, 4)[0]!;
+    assert.deepEqual([atE1.x, atE1.y], [q1.x + BOX.w - (LABEL.w - LABEL.reach), q1.y + LABEL.h], "beside Q1's right side, the slot the line meets");
+    const e1 = l.boxes[4]!;
+    assert.equal(labelsFor(l, 0)[0]!.x, e1.x - LABEL.reach, "beside E1's left side");
+    assertLabelled(l, "p02");
+    // With nothing to skip, nothing moves: the mockup's graph keeps every box where the first build put it.
+    const mock = layOut(graphOf(text("idea_graph/mockup.idea_graph.md")));
+    assert.ok(mock.lines.every((x) => x.lane === null && x.segs.length === 1));
   });
 
-  test("a line's label sits nearer the other node (the mockup's 0.34 or 0.66 along it); an arc's at its middle", () => {
-    const l = layout(["question", "experiment"], [{ a: 1, b: 0, word: "tests" }], 0);
-    const line = l.lines[0]!;
-    const fromLeft = labelPoint(line, line.left);
-    const fromRight = labelPoint(line, line.right);
-    assert.ok(fromLeft.x > fromRight.x, "opened on the left node, the label is towards the right");
-    assert.ok(Math.abs(fromLeft.x - (line.x1 + 0.66 * (line.x2 - line.x1))) < 25);
+  test("two words between one pair of nodes: each beside the node it names, apart, and not on the legend", () => {
+    // The review's pair: E1 tests H1 and motivates H1; H1 motivates E1 too, the most two kinds allow (three).
+    const l = layout(["hypothesis", "experiment"], [{ a: 1, b: 0, word: "tests" }, { a: 1, b: 0, word: "motivates" }, { a: 0, b: 1, word: "motivates" }], 7);
+    const { words, inside } = assertLabelled(l, "pair");
+    assert.deepEqual([words, inside], [6, 0]);
+    const atH1 = labelsFor(l, 0).map((r) => r!.y).sort((a, b) => a - b);
+    const e1 = l.boxes[1]!;
+    assert.deepEqual(atH1, [e1.y, e1.y + LABEL.h, e1.y + 2 * LABEL.h], "stacked down E1's side");
+  });
+
+  test("seeded property: on random graphs that follow the grammar, no line passes under a box it does not join, and no word lies where it may not", (t) => {
+    let words = 0;
+    let inside = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const g = grammarGraph(seed, 5 + (seed * 7) % 45, 1 + (seed % 3), seed % 2 === 0);
+      const l = layout(g.kinds, g.edges, 4 + (seed % 6), g.heights);
+      assertNoOverlap(l, `seed ${seed}`);
+      assertRouted(l, `seed ${seed}`);
+      const r = assertLabelled(l, `seed ${seed}`);
+      words += r.words;
+      inside += r.inside;
+    }
+    assert.ok(words > 2000, `${words} words checked`);
+    t.diagnostic(`${inside} of ${words} words fell back inside their node's box`);
+    assert.ok(inside <= words / 100, `${inside} of ${words} words fell back inside their node's box`);
+  });
+
+  test("the shapes the review timed: 200 nodes and 1,000 links, every node in one column, 1,000 links between two columns (and through a third)", (t) => {
+    // 200 nodes of every kind, some boxes taller, 1,000 links by the grammar and each result's experiment.
+    const g200 = grammarGraph(9, 200, 8, true);
+    const links1000 = g200.edges.filter((e) => e.word !== "from").slice(0, 1000);
+    assert.equal(links1000.length, 1000);
+    const big = layout(g200.kinds, [...links1000, ...g200.edges.filter((e) => e.word === "from")], 6, g200.heights);
+    assertNoOverlap(big, "200 nodes");
+    assertRouted(big, "200 nodes");
+    // Every node a question: every line an arc.
+    const rand = rng(3);
+    const one: Edge[] = [];
+    const pairs = new Set<string>();
+    while (one.length < 400) {
+      const a = rand(200);
+      const b = rand(200);
+      if (a === b || pairs.has(`${a} ${b}`)) continue;
+      pairs.add(`${a} ${b}`);
+      one.push({ a, b, word: "motivates" });
+    }
+    const column = layout(Array.from({ length: 200 }, () => "question"), one, 8);
+    assertNoOverlap(column, "one column");
+    assertRouted(column, "one column");
+    // 20 questions and 50 experiments, each experiment testing every question: 1,000 lines between two columns;
+    // then with one hypothesis between them, 1,000 lines through its column.
+    const kinds: Kind[] = [...Array.from({ length: 20 }, () => "question" as const), ...Array.from({ length: 50 }, () => "experiment" as const)];
+    const tests: Edge[] = [];
+    for (let e = 20; e < 70; e++) for (let q = 0; q < 20; q++) tests.push({ a: e, b: q, word: "tests" });
+    for (const [name, ks, es] of [
+      ["two columns", kinds, tests],
+      ["through a third", [...kinds, "hypothesis" as const], tests],
+    ] as const) {
+      const l = layout(ks, es, 6);
+      assert.equal(l.lines.length, 1000);
+      assertNoOverlap(l, name);
+      assertRouted(l, name);
+      const r = assertLabelled(l, name);
+      t.diagnostic(`${name}: ${r.inside} of ${r.words} words inside their node's box`);
+    }
+    for (const [name, l] of [["200 nodes", big], ["one column", column]] as const) {
+      const r = assertLabelled(l, name);
+      t.diagnostic(`${name}: ${r.inside} of ${r.words} words inside their node's box`);
+    }
   });
 });
 
@@ -306,6 +479,23 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
       return layOut(g);
     };
     assertOnePass(t, "50 and 200 nodes", growth((n) => generated(n, n * 5), run, 50));
+  });
+
+  test("routing grows as one pass does: lines that skip two columns, and the words of the node with the most lines, 2,000 then 8,000 nodes", (t) => {
+    const make = (n: number) => {
+      const rand = rng(11);
+      // Questions, two hypotheses, experiments: every line from an experiment to a question skips the hypotheses' column.
+      const kinds: Kind[] = Array.from({ length: n }, (_, k) => (k < n / 2 ? "question" : k < n / 2 + 2 ? "hypothesis" : "experiment"));
+      const edges: Edge[] = Array.from({ length: 4 * n }, () => ({ a: n / 2 + 2 + rand(n / 2 - 2), b: rand(n / 2), word: "tests" as const }));
+      // One question every experiment tests: its words are as many as the experiments.
+      for (let e = n / 2 + 2; e < n; e++) edges.push({ a: e, b: 0, word: "tests" });
+      return JSON.stringify({ kinds, edges });
+    };
+    const run = (input: string) => {
+      const { kinds, edges } = JSON.parse(input) as { kinds: Kind[]; edges: Edge[] };
+      return labelsFor(layout(kinds, edges, 6), 0);
+    };
+    assertOnePass(t, "routing and words, 2,000 and 8,000 nodes", growth(make, run, 2000));
   });
 
   // Sized so that a pass per line (each line looking itself up among the lines, as a first draft did) takes seconds at 4n here.

@@ -2735,6 +2735,19 @@ describe("desktop client on a Research OS folder", () => {
       assert.deepEqual(await panel.locator(".lgroup").evaluateAll((gs) => gs.map((g) => g.textContent)), ["TestsQ1", "Motivated byR1", "Its resultsR2R3R4"]);
       assert.equal(await iv.locator(".glines path.hot").count(), 5, "E2's five lines");
       assert.deepEqual((await iv.locator(".labels .elabel").allTextContents()).sort(), ["came from", "came from", "came from", "motivates", "tests"]);
+      // Each word whole, inside the slot layout.ts gave it (beside the node it names), and on no node's ID, status, or statement.
+      const words = await iv.locator(".labels .elabel").evaluateAll((ls) =>
+        ls.map((l) => {
+          const r = l.getBoundingClientRect();
+          const s = l.closest("foreignObject")!.getBoundingClientRect();
+          const onText = [...document.querySelectorAll("button.gnode .gn-tx, button.gnode .gn-top .kb, button.gnode .gn-top .st")].some((t) => {
+            const q = t.getBoundingClientRect();
+            return Math.min(r.right, q.right) - Math.max(r.left, q.left) > 1 && Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top) > 1;
+          });
+          return { text: l.textContent, cut: l.scrollWidth > l.clientWidth + 1, outside: r.left < s.left - 0.5 || r.right > s.right + 0.5 || r.top < s.top - 0.5 || r.bottom > s.bottom + 0.5, onText };
+        }),
+      );
+      assert.deepEqual(words.filter((w) => w.cut || w.outside || w.onText), [], "a word cut, outside its slot, or on a node's text");
       await shot(page, "idea-3-node-E2-selected-details-and-ask-bar");
 
       // Ask: a chip whose text opens by itself (the quote is the row as written, not what the map draws).

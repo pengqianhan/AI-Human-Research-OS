@@ -72,8 +72,36 @@ Status on 2026-11-24:
     rows, "the result's / experiment / (from Points to)". The suite checks that no
     legend row is cut.
   - **Lines within one column** are arcs on the column's right side, within half the
-    gap; an arc beside the last column widens the map by half a gap. A line that
-    skips a column passes through it, as in the mockup.
+    gap.
+  - **Lines and their words (a departure from §5.3 rule 4, after the review; no
+    mockup shows the case).** Rule 4 drew every line as one curve from side to side,
+    and the word of an open node's line at 0.34 or 0.66 along it. The review found
+    that a line skipping a column passed under that column's boxes (E1 `tests` Q1
+    past three hypotheses ran under H1 and out of H3 and read as two other links),
+    and that the word landed on a box it does not join ("tests" on H2's ID, so the
+    map read "E1 tests H2"): over 12 seeded random graphs, 99 of 570 words lay on
+    node text, 83 of them on a node the line does not join, and two words between
+    one pair of nodes covered the legend and touched. Now a line that skips a
+    column runs straight through it at its left node's middle, in a lane of 20 px
+    that column's boxes keep clear of (they move down past it), curving only inside
+    the gaps; and the word of each of the open node's lines sits in a 64 × 16 slot
+    beside the other node, where the line meets it, in the gap and on that box's
+    padding only, the first free slot down its side nearest the line's end. Free
+    means on no box the line does not join, no other word, the legend, a column
+    head, and inside the map; when none beside the box is free, the slot is inside
+    that box, which only the open node's lines to it can take (three at most, as
+    the link words allow, and a box has three slots), so a place always exists. An
+    arc beside the last column widens the map by 39 px, room for a word there, not
+    by half a gap. Graphs with no line skipping a column (the mockup's) are drawn
+    where they were. `layout.test.ts` checks both rules on 40 seeded graphs that
+    follow §5.1's grammar (some boxes taller), on 200 nodes with 1,000 links, on
+    200 nodes in one column, and on 1,000 lines between two columns and through a
+    third, with each node opened in turn; a growth case covers the lanes and the
+    words of a node with as many lines as the graph has experiments. The review's
+    probes, rerun on this build: the skipping line passes under no box, and over its
+    12 random graphs no word lies on node text, on the legend, or on another word
+    (0, 0, 0, and 0 of 570); the end-to-end suite checks that no word of E2's lines
+    is cut, outside its slot, or on a node's text.
   - **Problems**: every one is counted ("3 problems in idea_graph.md"), and those of
     rows and links are listed up to 500, then "and N more problems are not listed";
     the caps, cycles, a second table, and what md-kit leaves unread are always
