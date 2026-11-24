@@ -122,7 +122,22 @@ function partsByPage(range: Range): { slot: Slot; part: Range }[] {
   return out;
 }
 
-/** Reports the text selected in the pages, or that none is. */
+/**
+ * Whether this page is laid out. The workspace hides its frame with another
+ * screen (Home), and a hidden frame's document has no layout: its selection is
+ * still there, but its text reads as "" (Selection.toString needs layout), so
+ * the page cannot tell what it selects. Its scroller then has no boxes;
+ * innerWidth keeps the last width and cannot tell.
+ */
+function laidOut(): boolean {
+  return scroller.getClientRects().length > 0;
+}
+
+/**
+ * Reports the text selected in the pages, or that none is. While the page is
+ * not laid out, a selection is left as last reported: the workspace applies on
+ * return what was posted while hidden, and "nothing selected" would be wrong.
+ */
 function reportSelection(): void {
   if (view === null) return;
   const s = window.getSelection();
@@ -130,6 +145,7 @@ function reportSelection(): void {
     unreport();
     return;
   }
+  if (!laidOut()) return;
   const parts = partsByPage(s.getRangeAt(0));
   // The label names the pages whose text the quote holds, and the heading that text starts under.
   const pages = quotedPages(parts.map(({ slot, part }) => ({ page: slot.index + 1, text: part.toString() })));

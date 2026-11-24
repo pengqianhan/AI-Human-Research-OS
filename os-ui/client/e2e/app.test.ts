@@ -1066,6 +1066,63 @@ describe("desktop client on a Research OS folder", () => {
     assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
   });
 
+  test("paper text selected just before Home is shown is still in the ask bar back in the workspace, as the page still selects it", SLOW, async () => {
+    const sessionFiles = readdirSync(sessions).length;
+    const size = await windowSize({ width: 1440, height: 900 });
+    const { ws, paper } = await openPaper();
+    const bar = ws.getByRole("region", { name: "Selection" });
+    const label = bar.locator("[data-selection-label]");
+    const title = paper.locator('.sheet[data-page="1"] .textLayer span').filter({ hasText: "nanochat on a Laptop CPU" }).first();
+    type Timed = { __realSetTimeout?: typeof window.setTimeout; __settled: number[] };
+    try {
+      await title.waitFor({ timeout: 60_000 });
+      await clearAsk(ws, PROJECT);
+      // Each run of the page's 400 ms settle timer (main.ts) records whether the page was laid out then (its scroller's boxes).
+      await paper.evaluate(() => {
+        const w = window as unknown as Timed;
+        w.__settled = [];
+        const real = (w.__realSetTimeout ??= window.setTimeout);
+        const settle = (fn: () => void) => () => {
+          w.__settled.push(document.querySelector(".paper-scroll")!.getClientRects().length);
+          fn();
+        };
+        const timed = (fn: () => void, ms?: number, ...rest: unknown[]) => real(ms === 400 ? settle(fn) : fn, ms, ...rest);
+        window.setTimeout = timed as unknown as typeof window.setTimeout;
+      });
+      await page.waitForTimeout(1100); // the workspace takes at most 10 selections a second from a view
+      await dragAcross(title);
+      await label.waitFor();
+      const before = await label.evaluate((l) => ({ label: l.textContent, quote: l.getAttribute("title") }));
+      // Home at once: the settle timer fires while the workspace, and this frame, are hidden.
+      await nav(page, "Home").click();
+      await screen(page, "home").getByRole("heading", { name: "Home", exact: true }).waitFor();
+      await page.waitForTimeout(2000);
+      await nav(page, "Projects").click();
+      await screen(page, "projects").getByRole("button", { name: `Open workspace: ${PROJECT}` }).click();
+      await ws.getByRole("heading", { name: PROJECT, exact: true }).waitFor();
+      await page.waitForTimeout(800);
+      const settled = await paper.evaluate(() => (window as unknown as Timed).__settled);
+      assert.ok(settled.includes(0), `the page's settle timer ran while it was hidden (its scroller's boxes at each run: ${JSON.stringify(settled)})`);
+      const selected = (await paper.evaluate(() => window.getSelection()?.toString() ?? "")).trim();
+      const after = (await bar.count()) === 0 ? null : await label.evaluate((l) => ({ label: l.textContent, quote: l.getAttribute("title") }));
+      const says = `back in the workspace the ask bar holds ${JSON.stringify(after)} and the page selects ${JSON.stringify(selected)}; before Home the bar held ${JSON.stringify(before)}`;
+      assert.ok(selected.length > 10, says);
+      assert.deepEqual(after, before, says);
+      assert.equal(after?.quote, selected, says);
+      assert.equal(readdirSync(sessions).length, sessionFiles, "nothing was sent");
+    } finally {
+      if (await bar.isVisible()) await bar.getByRole("button", { name: "Clear selection" }).click();
+      await paper.evaluate(() => {
+        const w = window as unknown as Timed;
+        if (w.__realSetTimeout !== undefined) window.setTimeout = w.__realSetTimeout;
+        window.getSelection()?.removeAllRanges();
+      });
+      await windowSize(size);
+    }
+    assert.equal(await paper.evaluate(() => window.getSelection()?.isCollapsed ?? true), true, "nothing is selected after");
+    assert.equal(await bar.count(), 0, "and the ask bar is gone");
+  });
+
   test("every state of paper/ has its screen; Reload reads the file again", SLOW, async () => {
     const { ws, paper } = await openPaper();
     const pdf = join(paperDir(), "main.pdf");
