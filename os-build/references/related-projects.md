@@ -260,6 +260,9 @@ README list.
   Build mobile apps, frontend, backend, manages files, deep research, schedule
   tasks and events. Self-improving, self-healing, fully autonomous. TUI, CLI and
   Daemon.
+- [metabot](https://github.com/xvirobotics/metabot): 构建受监督的、自我进化的 Agent 组织的基础设施.
+- [a-evolve](https://github.com/A-EVO-Lab/a-evolve): The official repository of
+  "Position: Agentic Evolution is the Path to Evolving LLMs".
 
 ## Skills and lists
 
@@ -327,6 +330,15 @@ README list.
   AI Scientist and other SoTA Agents just by editing config files. Support
   anthropic skills. An infinite-horizon agent framework designed for
   long-running, complex tasks.
+- [Free-Research-Crew](https://github.com/brycewang-stanford/Free-Research-Crew):
+  Free-Research-Crew (免费助研团): a crew of RA agents that co-writes CS &
+  social-science papers with real experiments and data modeling, built on a
+  curated hub of 6,000+ research skills.
+- [ScienceClaw](https://github.com/beita6969/ScienceClaw): Verifiable
+  program-level self-evolution for AI-for-Science agents: Skills and typed
+  Operators grow from replay-verified executions.
+- [research-skills](https://github.com/luwill/research-skills): Some commonly
+  used research experiences and processes are encapsulated into Agent skills.
 
 ## Articles
 

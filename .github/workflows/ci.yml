@@ -54,6 +54,7 @@ jobs:
           py -m unittest discover -s "$hub/filetree-simple/tests" -p 'test_*.py'
           # test_live skips itself unless OS_HARNESS_LIVE=1; CI never sets it.
           py -m unittest discover -s os-harness/tests
+          py -m unittest discover -s .github/scripts -p 'test_*.py'
 
       # A committed viz.html that lags its notes still validates, so compare it
       # with a fresh render.

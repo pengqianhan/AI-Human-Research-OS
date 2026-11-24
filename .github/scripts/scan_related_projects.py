@@ -39,13 +39,16 @@ SKILLS = "Skills and lists"
 
 # Self-improvement (RSI) and system-level queries route their hits to sections
 # of their own. Bare "RSI" is left out: it also names a trading indicator.
-# "agent OS" also names general-purpose runtimes, so a repo matched only by
-# AGENT_OS_QUERIES must also be about research (is_research). Harness
-# queries stay out: keyword search cannot tell a research harness from noise.
+# Generic self-improving/self-evolving phrases and "agent OS" also match
+# general-purpose tools, so a repo matched only by BROAD_QUERIES must also be
+# about research (is_research). Harness queries stay out: keyword search cannot
+# tell a research harness from noise.
 RSI_QUERIES = ['"recursive self-improvement"', '"self-improving" agent',
                '"self-evolving" agent']
 OS_QUERIES = ['"research OS"', '"research operating system"']
 AGENT_OS_QUERIES = ['"agent OS"', '"agent operating system"']
+BROAD_QUERIES = {*AGENT_OS_QUERIES, '"self-improving" agent',
+                 '"self-evolving" agent'}
 
 # GitHub search syntax; quoted text matches as a phrase in the name,
 # description, or topics.
@@ -179,9 +182,10 @@ def is_research(repo):
 
 
 def admissible(repo, min_skill_stars):
-    if section_for(repo) == SKILLS:
+    section = section_for(repo)
+    if section == SKILLS:
         return repo["stargazers_count"] >= min_skill_stars and is_research(repo)
-    if set(repo["queries"]) <= set(AGENT_OS_QUERIES):
+    if section == RESEARCH or set(repo["queries"]) <= BROAD_QUERIES:
         return is_research(repo)
     return True
 
@@ -240,6 +244,8 @@ def pr_body(added, below, hub, since, min_stars, min_skill_stars, max_skills):
             f"{r['pushed_at'][:10]} | {section_for(r)} | {in_hub(r)} | "
             f"{', '.join(q.replace('|', '/') for q in r['queries'])} |"
             for r in added]
+    skill_req = (f"{min_skill_stars} stars and a research topic"
+                 if min_skill_stars > min_stars else "a research topic")
     body = [
         "Automated weekly keyword scan of GitHub. Review the entries in "
         "`os-build/references/related-projects.md`: edit, move, or delete them "
@@ -247,9 +253,10 @@ def pr_body(added, below, hub, since, min_stars, min_skill_stars, max_skills):
         "PR you close without merging, will not be proposed again.",
         "",
         f"Filter: pushed since {since}, at least {min_stars} stars "
-        f"({min_skill_stars} and a research topic for skill repos, at most "
-        f"{max_skills} of them per run; a research topic also for repos matched "
-        "only by agent-OS queries), not archived or a fork, not "
+        f"({skill_req} for skill repos, at most "
+        f"{max_skills} of them per run; a research topic also for research "
+        "workbenches and repos matched only by broad self-improving or "
+        "agent-OS queries), not archived or a fork, not "
         "already listed; ranked by number of matched query groups "
         "(synonymous queries count once), then stars. "
         "Descriptions are the repos' own GitHub descriptions; "
@@ -274,8 +281,8 @@ def main():
     ap.add_argument("--write", action="store_true", help="edit the target file")
     ap.add_argument("--pr-body", type=Path, help="write the PR body here")
     ap.add_argument("--max", type=int, default=10, help="new entries per run")
-    ap.add_argument("--min-stars", type=int, default=50)
-    ap.add_argument("--min-skill-stars", type=int, default=100,
+    ap.add_argument("--min-stars", type=int, default=500)
+    ap.add_argument("--min-skill-stars", type=int, default=500,
                     help="stars required of skill repos (the Skills section)")
     ap.add_argument("--max-skills", type=int, default=3,
                     help="skill repos per run, within --max; skill collections "
@@ -283,6 +290,7 @@ def main():
     ap.add_argument("--days", type=int, default=60, help="pushed within N days")
     ap.add_argument("--per-query", type=int, default=30)
     args = ap.parse_args()
+    min_skill_stars = max(args.min_stars, args.min_skill_stars)
 
     root = Path.cwd()
     prs = scan_prs()
@@ -304,7 +312,7 @@ def main():
          if k not in skip and not k.startswith(owner + "/")
          and (r["description"] or "").strip()
          and not EXCLUDE.search(f"{r['name']} {r['description']}")
-         and admissible(r, args.min_skill_stars)),
+         and admissible(r, min_skill_stars)),
         key=rank,
     )
     added, below = [], []
@@ -336,7 +344,7 @@ def main():
     if args.pr_body:
         args.pr_body.write_text(
             pr_body(added, below, hub, since, args.min_stars,
-                    args.min_skill_stars, args.max_skills),
+                    min_skill_stars, args.max_skills),
             encoding="utf-8")
 
 
