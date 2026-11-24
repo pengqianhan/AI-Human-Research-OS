@@ -1,0 +1,134 @@
+/* The Idea view's page: alternative A (the drawn graph) of os-ui/mockups/step2/views.html (.subbar .idea-main .ndetail .canvas .gnode .ghead .glegend .elabel .lchip). All styling is here: the page sets no style from its code; the map's geometry is SVG attributes. */
+:root {
+  --bg: #f3eee5; --paper: #faf7f1; --card: #fffdf9; --ink: #1c1a17; --ink2: #4a453d;
+  --muted: #80786b; --faint: #b0a796; --line: rgba(70, 55, 30, .10); --line2: rgba(70, 55, 30, .18);
+  --accent: #1e5a56; --accent-ink: #164542; --accent-soft: #dcebe8; --accent-tint: #eef4f2;
+  --warn: #86581a; --warn-soft: #f3e6cc;
+  /* node kinds */
+  --kq: #3a5a8c; --kh: #7b4f86; --ke: #1e5a56; --kr: #8a6418; --kc: #9a4030;
+  /* link words */
+  --l-mot: #a07a2c; --l-tests: #3a5a8c; --l-sup: #3d7a3a; --l-ref: #b0412e; --l-from: #a89c86;
+  --sh1: 0 1px 2px rgba(60, 44, 20, .07), 0 1px 1px rgba(60, 44, 20, .04);
+  --sh2: 0 1px 3px rgba(60, 44, 20, .06), 0 10px 26px rgba(60, 44, 20, .07);
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { background: var(--card); color: var(--ink); font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+code { font-family: var(--mono); font-size: .92em; }
+#app { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+
+/* the bar, and the problems under it (added to the mockup: a malformed file needs it) */
+.subbar { display: flex; align-items: center; gap: 8px 12px; padding: 9px 14px; flex: none; box-shadow: inset 0 -1px 0 var(--line); min-width: 0; flex-wrap: wrap; }
+.subbar .vt { font: 600 13px var(--sans); color: var(--ink); }
+.subbar .vpath { font: 12px var(--mono); color: var(--muted); overflow-wrap: anywhere; min-width: 0; }
+.subbar .count { font: 12px var(--sans); color: var(--ink2); white-space: nowrap; }
+.subbar .hint { font: 12px var(--sans); color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: auto; }
+.link { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
+.reload { font: 12px var(--sans); text-decoration: none; flex: none; }
+.reload:hover { text-decoration: underline; }
+.problems { flex: none; background: var(--warn-soft); color: var(--warn); box-shadow: inset 0 -1px 0 var(--line); font: 12.5px/1.45 var(--sans); }
+.problems summary { cursor: pointer; padding: 6px 14px; font-weight: 600; list-style: none; }
+.problems summary::-webkit-details-marker { display: none; }
+.problems summary::before { content: "▸ "; }
+.problems[open] summary::before { content: "▾ "; }
+.problems ul { margin: 0; padding: 0 14px 8px 30px; max-height: 38vh; overflow: auto; color: var(--ink2); }
+.problems li { margin: 0 0 2px; overflow-wrap: anywhere; }
+.problems li.more { list-style: none; margin-left: -16px; color: var(--muted); }
+
+/* the view: the detail panel above the map, as the mockup has it, so the ask bar at the foot never covers it */
+.idea-main { flex: 1; min-height: 0; display: flex; flex-direction: column; container-type: inline-size; }
+.ndetail { flex: none; height: 156px; overflow: auto; box-shadow: inset 0 -1px 0 var(--line); padding: 11px 18px 10px; background: var(--card); }
+.ndetail.has { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 4px 26px; align-content: start; }
+.nd-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.nd-kind { font: 600 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.nd-text { font: 16px/1.42 var(--serif); margin: 0 0 6px; color: var(--ink); overflow-wrap: anywhere; }
+.nd-text code { font-size: 13px; background: rgba(60, 45, 20, .06); padding: 1px 4px; border-radius: 4px; }
+.nd-grid { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 12px; font: 12.5px/1.45 var(--sans); margin: 0; align-content: start; }
+.nd-grid dt { font: 600 10px/2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.nd-grid dd { margin: 0; min-width: 0; color: var(--ink2); overflow-wrap: anywhere; }
+.nd-grid code { font-size: 12px; }
+.nd-grid .files { margin: 2px 0 0; padding: 0; list-style: none; }
+.nd-grid .files li { font: 12px/1.5 var(--mono); color: var(--ink); }
+.nd-grid .files .lw { font-family: var(--sans); }
+.nd-note { font: 11.5px/1.4 var(--sans); color: var(--muted); margin: 6px 0 0; }
+.nd-problem { font: 12px/1.4 var(--sans); color: var(--warn); margin: 3px 0 0; }
+.nd-claim { margin: 3px 0 0; font: 14px/1.4 var(--serif); color: var(--ink); }
+.lchip { display: inline-flex; align-items: center; gap: 5px; margin: 0 6px 4px 0; padding: 2px 8px 2px 3px; border-radius: 99px; border: 0; background: rgba(60, 45, 20, .05); font: 12px var(--sans); color: var(--ink2); cursor: pointer; box-shadow: inset 0 0 0 1px var(--line); }
+.lchip:hover { background: var(--accent-tint); }
+.lchip .kb { min-width: 22px; height: 17px; font-size: 10px; line-height: 17px; padding: 0 4px; }
+.lw { font: 600 12px var(--sans); color: var(--ink); margin-right: 4px; }
+.lgroup { display: inline-block; margin-right: 12px; white-space: nowrap; }
+
+/* the map */
+.canvas { flex: 1; min-height: 0; overflow: auto; position: relative; background: var(--paper); scroll-padding-bottom: 116px; scroll-padding-top: 8px; }
+/* the free strip at its foot keeps the last node above the host's ask bar, as the mockup's map */
+.gmap { display: block; margin: 0 auto 104px; overflow: visible; }
+.glines path { fill: none; stroke-width: 1.6; transition: opacity .12s; }
+.ln.motivates { stroke: var(--l-mot); }
+.ln.tests { stroke: var(--l-tests); stroke-dasharray: 5 4; }
+.ln.supports { stroke: var(--l-sup); }
+.ln.refutes { stroke: var(--l-ref); }
+.ln.from { stroke: var(--l-from); stroke-dasharray: 1.5 3.5; stroke-linecap: round; }
+.has-open .glines path { opacity: .16; }
+.has-open .glines path.hot { opacity: 1; stroke-width: 2.4; }
+.kb { display: inline-grid; place-items: center; min-width: 26px; height: 19px; padding: 0 6px; border-radius: 6px; color: #fff; font: 700 11px/19px var(--sans); letter-spacing: .02em; flex: none; }
+.kb.k-q { background: var(--kq); } .kb.k-h { background: var(--kh); } .kb.k-e { background: var(--ke); } .kb.k-r { background: var(--kr); } .kb.k-c { background: var(--kc); }
+.st { display: inline-flex; align-items: center; gap: 4px; font: 600 10.5px/1 var(--sans); color: var(--ink2); white-space: nowrap; min-width: 0; }
+.st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.st.open, .st.planned { color: var(--muted); }
+.st.open::before, .st.planned::before { background: none; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.st.refuted::before, .st.failed::before { background: var(--l-ref); }
+.gnode { display: flex; flex-direction: column; gap: 4px; width: 100%; height: 100%; border: 0; border-radius: 10px; background: var(--card); box-shadow: var(--sh1), inset 0 0 0 1px var(--line2); padding: 6px 9px 6px 11px; text-align: left; cursor: pointer; overflow: hidden; position: relative; transition: opacity .12s, box-shadow .12s; }
+.gnode::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.gnode.k-q::before { background: var(--kq); } .gnode.k-h::before { background: var(--kh); } .gnode.k-e::before { background: var(--ke); } .gnode.k-r::before { background: var(--kr); } .gnode.k-c::before { background: var(--kc); }
+.gnode:hover { box-shadow: var(--sh2), inset 0 0 0 1px var(--line2); }
+.gnode:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.gn-top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.gn-top .kb { min-width: 0; max-width: 92px; overflow: hidden; text-overflow: ellipsis; }
+.gn-top .st { margin-left: auto; overflow: hidden; }
+.gn-tx { font: 12px/1.3 var(--sans); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.has-open .gnode { opacity: .42; }
+.has-open .gnode.on, .has-open .gnode.near { opacity: 1; }
+.gnode.on { box-shadow: 0 0 0 2px var(--accent), var(--sh2); }
+.gnode.picked { background: var(--accent-soft); }
+.ghead { display: flex; align-items: center; gap: 6px; height: 100%; font: 600 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.ghead .kb { min-width: 20px; height: 16px; font-size: 10px; line-height: 16px; padding: 0 4px; }
+/* The legend's box is the layout's (layout.ts LEGEND): 8 px padding, an 18 px title, 15 px rows. */
+.glegend { height: 100%; padding: 8px 10px; border-radius: 10px; background: rgba(255, 253, 249, .92); box-shadow: inset 0 0 0 1px var(--line); font: 11px/1.25 var(--sans); color: var(--ink2); overflow: hidden; }
+.glegend b { display: block; height: 18px; font: 600 10px/14px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.glegend div { display: flex; align-items: center; gap: 6px; height: 15px; white-space: nowrap; overflow: hidden; }
+.glegend svg { width: 26px; height: 8px; flex: none; overflow: visible; }
+.glegend .none { color: var(--faint); }
+.glegend .kb { opacity: .5; min-width: 18px; height: 13px; line-height: 13px; font-size: 9.5px; padding: 0 3px; }
+.lg { fill: none; stroke-width: 1.6; }
+.lg.motivates { stroke: var(--l-mot); } .lg.tests { stroke: var(--l-tests); stroke-dasharray: 5 4; } .lg.supports { stroke: var(--l-sup); } .lg.refutes { stroke: var(--l-ref); } .lg.from { stroke: var(--l-from); stroke-dasharray: 1.5 3.5; stroke-linecap: round; }
+.elabel-box { display: flex; align-items: center; justify-content: center; height: 100%; pointer-events: none; }
+.elabel { font: 700 10px/1 var(--sans); letter-spacing: .02em; padding: 3px 6px; border-radius: 99px; background: var(--card); box-shadow: var(--sh1), inset 0 0 0 1px currentColor; white-space: nowrap; }
+.elabel.motivates { color: var(--l-mot); } .elabel.tests { color: var(--l-tests); } .elabel.supports { color: var(--l-sup); } .elabel.refutes { color: var(--l-ref); } .elabel.from { color: #7d7260; }
+.labels { pointer-events: none; }
+
+/* screens */
+.placeholder { padding: 40px 32px; max-width: 640px; font: 15px/1.6 var(--serif); color: var(--ink2); white-space: normal; overflow-wrap: anywhere; overflow: auto; }
+.placeholder h4 { font: 500 20px var(--serif); margin: 0 0 8px; color: var(--ink); }
+.placeholder p { margin: 0 0 8px; }
+.placeholder .note { font: 12.5px/1.45 var(--sans); color: var(--muted); }
+.placeholder pre { margin: 6px 0 12px; padding: 8px 10px; background: var(--paper); border-radius: 8px; box-shadow: inset 0 0 0 1px var(--line); font: 12px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+.placeholder .btn { margin: 14px 8px 0 0; }
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 9px; border: 0; background: var(--card); box-shadow: var(--sh1), inset 0 0 0 1px var(--line); color: var(--ink); font: 500 13px var(--sans); cursor: pointer; white-space: nowrap; }
+.btn:hover { box-shadow: var(--sh2), inset 0 0 0 1px var(--line2); }
+.loading { font: 13px var(--sans); color: var(--muted); padding: 14px 16px; }
+
+/* a narrow view: the panel in one column and taller (the mockup's container rule) */
+@container (max-width: 700px) {
+  .ndetail { height: 200px; padding-top: 9px; }
+  .ndetail.has { grid-template-columns: minmax(0, 1fr); }
+  /* Only the hint goes; a note on what the panel leaves out stays. */
+  .ndetail .nd-hint { display: none; }
+  .nd-text { font-size: 15px; margin-bottom: 4px; }
+  .nd-grid { grid-template-columns: 84px minmax(0, 1fr); }
+}

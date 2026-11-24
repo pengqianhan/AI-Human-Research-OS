@@ -1,0 +1,11 @@
+{
+  "contract": "^1.0",
+  "id": "idea-view",
+  "name": "Idea view",
+  "version": "0.1.0",
+  "description": "A project's idea_graph.md drawn as a graph, read-only.",
+  "reads": ["projects-folder/*/idea_graph.md", "projects-folder/*/paper_skeleton.md"],
+  "contributes": {
+    "projectViews": [{ "id": "idea", "title": "Idea", "entry": "index.html" }]
+  }
+}

@@ -750,13 +750,19 @@ export interface PointsView {
   problem: string | null;
 }
 
+/** One group of the panel's links: "Tests", "Tested by", …, "Came from", "Its results". */
+export interface LinkGroup {
+  label: string;
+  nodes: IdeaNode[];
+}
+
 export interface Details {
   /** The statement as drawn, cut at md-kit's 2,000 characters. */
   statement: string;
   /** What the panel leaves out, said beside it. */
   notes: string[];
   /** Links by word, out then in, in the mockup's order; then "Came from" and "Its results". */
-  links: { label: string; nodes: IdeaNode[] }[];
+  links: LinkGroup[];
   points: PointsView;
   /** The Source cell as drawn, or null when it is empty. */
   source: string | null;
@@ -771,7 +777,7 @@ const GROUPS: [Word, string, string][] = [
 
 /** The detail panel of a selected node (§5.4). */
 export function details(g: Graph, node: IdeaNode): Details {
-  const links: Details["links"] = [];
+  const links: LinkGroup[] = [];
   for (const [word, out, into] of GROUPS) {
     const from = g.links.filter((l) => l.word === word && l.from === node).map((l) => l.to);
     const to = g.links.filter((l) => l.word === word && l.to === node).map((l) => l.from);
