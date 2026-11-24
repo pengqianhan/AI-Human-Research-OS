@@ -509,26 +509,17 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
     assertOnePass(t, "routing and words, 200 and 800 nodes", growth(make, run, 200));
   });
 
-  // Rests on the ratio alone: a pass per line needs thousands of nodes, where one pass is already far over 17 ms. Honest
-  // here 484 to 547 ms at 4n and 5.4 to 6.1 times the time (14 runs; beside four busy loops, 5.3 to 6.5), so an
-  // estimated 2.7 s at 4n on macos-x64, which took 2,158 ms at 4,000 nodes (5.7 times). The mistake, a line looking
-  // itself up among the lines, which a first draft did (put back as `const k = lines.indexOf(line)` in layout's lines
-  // loop; the draft's own spelling is not recorded), fails it by a thin margin: 10.7 to 11.2 times, 2.0 to 2.1 s at 4n,
-  // in eight of eight runs, and 10.8 and 11.0 times with the whole plugin suite running. At 4,000 nodes, the old size,
-  // it sat on the line (9.4 to 10.2 times in six runs); at 8,000 it fails by more (11.4 to 11.7 times, 3.5 s), but one
-  // pass's ratio there is less steady (5.8 to 7.3 times loaded) and takes 0.8 s at 4n here. Ten tries in place of five
-  // did not steady the ratio at 4,000 (5.0 to 7.2 times): a lower best at n raises it.
-  test("the layout alone, with the caps lifted, grows as one pass does: 6,000 nodes and 30,000 edges, then four times as many", (t) => {
-    const make = (n: number) => {
-      const rand = rng(5);
-      const kinds = Array.from({ length: n }, (_, k) => KINDS[k % 5]!);
-      const edges: Edge[] = Array.from({ length: 5 * n }, () => ({ a: rand(n), b: rand(n), word: "motivates" as const })).filter((e) => e.a !== e.b);
-      return JSON.stringify({ kinds, edges });
-    };
-    const run = (input: string) => {
-      const { kinds, edges } = JSON.parse(input) as { kinds: Kind[]; edges: Edge[] };
-      return layout(kinds, edges, 6);
-    };
-    assertOnePass(t, "layout, 6,000 and 24,000 nodes", growth(make, run, 6000));
-  });
+  // No case times the layout with the caps lifted: it is reached only under them. Its one caller, main.ts's placeMap,
+  // passes graph.nodes (at most LIMITS.nodes, 200) and edgesOf(graph): the links (at most LIMITS.links, 1,000) and a
+  // line for each result whose experiment is drawn, so at most 1,199 lines (a valid file reaches 1,197: 197 results
+  // from one experiment, beside two hypotheses). There a line looking itself up among the lines
+  // (`const k = lines.indexOf(line)` in layout's lines loop) costs 1.8 to 2.0 ms against 1.5 to 1.6 on that file
+  // (2.1 to 2.4 against 2.0 to 2.3 on 200 nodes and 1,199 random lines; best of 15, four runs), and no test fails on
+  // it. The case at 6,000 then 24,000 nodes that guarded it was removed: on macos-x64 its honest ratio (8.3 times,
+  // 2.4 s at 4n) and the mistake's (10.7 to 11.2 times on the machine the view was built on) could not be told apart,
+  // just either side of the 10 times a case fails at. The caps are the guard, tested in logic.test.ts: "past 200
+  // nodes, the first 200 are drawn and the problems and the bar say so" and "past 1000 links, the first 1000 in file
+  // order are drawn" count what buildGraph returns (each fails with its slice removed), and "the problems listed stop
+  // at 500, …" pins their values; the 50- and 200-node case above draws a line for each link and each from:. No
+  // end-to-end test goes past the caps.
 });

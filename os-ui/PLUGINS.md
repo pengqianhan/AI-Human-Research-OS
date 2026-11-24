@@ -234,8 +234,9 @@ Status on 2026-11-24:
     again for every bad link, listed or not; it is now formatted once a row, and a
     test counts the numbers formatted for 50,000 bad links, which was 50,000.)
 
-    Every case is now sized by one rule, with the case run alone on the machine the
-    view was built on (an M1 Pro): 1. the code as it is takes at most about 17 ms at
+    Each of the nine cases, seven in `logic.test.ts` and two in `layout.test.ts`,
+    is now sized by one rule, with the case run alone on the machine the view was
+    built on (an M1 Pro): 1. the code as it is takes at most about 17 ms at
     4n, so a runner 15 times slower on a day twice as slow stays under the floor; 2.
     the mistake the case guards against, put back on a scratch copy, takes at least
     2 s at 4n and fails the case. Most cases now stay under 128 KiB at 4n; the huge
@@ -265,21 +266,6 @@ Status on 2026-11-24:
       then 8,000 it took 1,202 ms at 4n on macos-x64 and passed by a hair at 10.0
       times, and neither a line looking itself up among the lines nor three
       mistakes in `labelsFor` failed it there.
-    - **Resting on the ratio alone.** The layout with the caps lifted, now 6,000
-      nodes and 30,000 edges then four times as many: a pass per line needs
-      thousands of nodes, where one pass takes 484 to 547 ms at 4n here (5.4 to 6.1
-      times), an estimated 2.7 s on macos-x64, which took 2,158 ms (5.7 times) at
-      4,000 nodes. A line looking itself up among the lines, which a first draft did
-      (put back as `const k = lines.indexOf(line)`; the draft's own spelling is not
-      recorded), fails it by a thin margin, in eight runs of eight: 10.7 to 11.2
-      times, 2.0 s, and 10.8 and 11.0 times with the whole plugin suite running. At
-      4,000, the old size, it sat on the line (9.4 to 10.2 times); at 8,000 it
-      fails by more (11.4 to 11.7 times, 3.5 s), but one pass's ratio was less
-      steady there (5.8 to 7.3 times beside four busy loops, against 5.3 to 6.5 at
-      6,000), and ten tries in place of five did not steady it at 4,000 (5.0 to 7.2
-      times: a lower best at n raises the ratio). This
-      machine's ratios do not predict macos-x64's: routing's was about 6 here and
-      10.0 there.
 
     This departs from the design: 512 KiB of hostile input in one pass (§1 fact 6),
     which the first build showed by growth at 128 then 512 KiB, is no longer shown
@@ -301,6 +287,26 @@ Status on 2026-11-24:
     every kind against "Still open"), and each of those mutants fails a test.
     md-kit's own `splitCells` builds each cell a character at a time: that is the
     collector's work in the growth cases above.
+
+    A tenth case, the layout alone with the caps lifted (6,000 then 24,000 nodes),
+    was removed, a departure too: the design's cost claims for the layout (§5.3)
+    are shown by growth only at the sizes the view can reach, and the caps are
+    what bound it. The layout's one caller, `placeMap` in
+    [main.ts](frontend/plugins/idea-view/site/main.ts), passes at most 200 nodes
+    and 1,199 lines (1,000 links and one for each result whose experiment is
+    drawn; a valid file reaches 1,197). There the mistake the case guarded, a line
+    looking itself up among the lines, which a first draft did (put back as
+    `const k = lines.indexOf(line)`), costs 1.8 to 2.0 ms against 1.5 to 1.6 here
+    (best of 15, four runs), and no test fails on it. At 6,000 nodes the case
+    could not tell the two apart: on macos-x64 the code as it is measured 8.3
+    times, 2,429.6 ms at 4n, passing on the ratio alone about 1.2 times short of
+    failing, and the mistake measures 10.7 to 11.2 times here. Resizing did not
+    help: at 4,000 nodes the mistake sat on the line (9.4 to 10.2 times), and at
+    8,000 one pass's ratio was less steady. This machine's ratios do not predict
+    macos-x64's: routing's was about 6 here and 10.0 there. Two tests of
+    [logic.test.ts](frontend/plugins/idea-view/site/logic.test.ts) count the caps,
+    each failing with its `slice` removed, and a third pins their values; no
+    end-to-end test goes past them.
   - **Points §5.1 and §5.2 leave open, decided and tested:**
     - two rows with one ID ignoring case: the later is left out, naming the earlier's
       line and spelling; a row's ID counts for this even when the row is left out
