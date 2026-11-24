@@ -43,7 +43,25 @@ Status on 2026-11-24:
     the bundle, and no member reached by a string. The first build's checks let the
     review's four mutants through (`setHTMLUnsafe` on a problem line and on the
     statement, `classList.add` of Source words, `insertRule` of a Source cell); each
-    now fails this test. The map's box keeps a stable scrollbar gutter, so the width the
+    now fails this test.
+  - **An ID and a status are never cut** (after the review: §5.1 allows 16
+    characters, and the first build capped the badge at 92 px with no ellipsis, so
+    `Experiment_runA1` and `Experiment_runA2` both drew "Experiment_ru", "running"
+    drew "runr", and the tooltip gave only the statement). A long ID wraps inside
+    its badge, and a status that no longer fits beside it takes a row of its own;
+    the box grows by that much. The page measures each box's top row in a hidden
+    box of the column's width, so any font is measured as drawn, and `layout.ts`
+    places boxes, line ends, and the gaps at those heights. A frame laid out while
+    hidden in the same process measures nothing, so its boxes are 48 px until the
+    page shows, when they are measured and placed again (a headless probe checks
+    this; in the app the view's frame is another origin's process and is still laid
+    out while hidden, which the suite's Reload on the Code tab exercises). Boxes with short IDs keep the mockup's 150 × 48.
+    The tooltip names the ID, kind, status, and statement, marked as the box marks
+    them. The suite draws IDs of sixteen W's in every kind and status and checks
+    that no ID or status is cut, no two boxes overlap or draw one ID, and a short
+    ID's box is 48 px; the layout tests cover boxes of other heights. This departs
+    from the mockup's fixed box, which never met a long ID.
+  - **The map's box** keeps a stable scrollbar gutter, so the width the
     scale is fitted to does not change when a classic scrollbar (Windows, Linux)
     comes and goes, which would otherwise resize the map in a loop.
   - **The legend** takes the top of the last column, whose nodes start under it: the

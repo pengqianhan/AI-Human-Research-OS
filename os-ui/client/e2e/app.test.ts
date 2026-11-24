@@ -2987,6 +2987,83 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  test("IDs of sixteen wide characters in every kind and status: each ID and status drawn whole, no two boxes alike or overlapping, the tooltip names all four; a short ID's box is as before", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = ideaFile(IDEA_PROJECT);
+    const original = readFileSync(file, "utf8");
+    // §5.1 allows 16 characters; W is about the widest. Each ID differs from the others only in its last one.
+    const STATUSES: [string, string][] = [
+      ["question", "open"], ["question", "answered"], ["hypothesis", "open"], ["hypothesis", "supported"], ["hypothesis", "refuted"],
+      ["experiment", "planned"], ["experiment", "running"], ["experiment", "done"], ["experiment", "failed"], ["result", "recorded"],
+      ["claim", "planned"], ["claim", "verified"], ["claim", "weak"], ["claim", "removed"],
+    ];
+    const rows = STATUSES.map(([kind, status], k) => {
+      const id = `${"W".repeat(15)}${String.fromCharCode(65 + k)}`;
+      const points = kind === "experiment" && status !== "planned" ? "commit: none; files: none" : kind === "result" ? `from: ${"W".repeat(15)}H` : "";
+      return { id, kind, status, row: `| ${id} | ${kind} | Statement of ${kind} ${status} | ${status} |  | ${points} |  |` };
+    });
+    try {
+      writeFileSync(file, [`# Idea graph`, "", IDEA_HEAD, "| Q1 | question | A short ID | open |  |  |  |", ...rows.map((r) => r.row), ""].join("\n"));
+      const { ws, iv } = await openIdea(IDEA_PROJECT);
+      await clearAsk(ws, IDEA_PROJECT);
+      await reloadIdea(iv);
+      await nodeOf(iv, rows[rows.length - 1]!.id).waitFor();
+      assert.equal(await iv.locator("details.problems").count(), 0, "no problem");
+      const drawn = await iv.locator("button.gnode").evaluateAll((bs) =>
+        bs.map((b) => {
+          const kb = b.querySelector(".gn-top .kb")!;
+          const st = b.querySelector(".gn-top .st")!;
+          const r = b.getBoundingClientRect();
+          const inside = (e: Element) => {
+            const q = e.getBoundingClientRect();
+            return q.left >= r.left - 0.5 && q.right <= r.right + 0.5 && q.top >= r.top - 0.5 && q.bottom <= r.bottom + 0.5;
+          };
+          return {
+            id: kb.textContent!,
+            status: st.textContent!,
+            idCut: kb.scrollWidth > kb.clientWidth + 1 || kb.scrollHeight > kb.clientHeight + 1 || !inside(kb),
+            statusCut: st.scrollWidth > st.clientWidth + 1 || !inside(st),
+            title: (b as HTMLButtonElement).title,
+            box: { x: r.left, y: r.top, w: r.width, h: r.height },
+            height: Number(b.closest("foreignObject")!.getAttribute("height")),
+          };
+        }),
+      );
+      assert.equal(drawn.length, rows.length + 1);
+      for (const r of rows) {
+        const d = drawn.find((x) => x.id === r.id);
+        assert.ok(d !== undefined, `${r.id} is drawn whole: ${drawn.map((x) => x.id).join(", ")}`);
+        assert.equal(d.status, r.status);
+        assert.equal(d.idCut, false, `${r.id}'s ID is cut`);
+        assert.equal(d.statusCut, false, `${r.id}'s status ${r.status} is cut`);
+        assert.equal(d.title, `${r.id} (${r.kind}), ${r.status}: Statement of ${r.kind} ${r.status}`);
+      }
+      assert.equal(new Set(drawn.map((d) => d.id)).size, drawn.length, "no two nodes draw the same ID");
+      for (let i = 0; i < drawn.length; i++) {
+        for (let j = i + 1; j < drawn.length; j++) {
+          const [a, b] = [drawn[i]!.box, drawn[j]!.box];
+          assert.ok(!(a.x < b.x + b.w - 0.5 && b.x < a.x + a.w - 0.5 && a.y < b.y + b.h - 0.5 && b.y < a.y + a.h - 0.5), `${drawn[i]!.id} and ${drawn[j]!.id} overlap`);
+        }
+      }
+      assert.equal(drawn.find((d) => d.id === "Q1")!.height, 48, "a short ID's box is the mockup's 48 px");
+      await shot(page, "idea-8-long-ids");
+      // A Reload that renders while the frame is hidden (another tab shown) measures nothing; back on the tab, the boxes
+      // are measured and placed again, so nothing is cut.
+      writeFileSync(file, [`# Idea graph`, "", IDEA_HEAD, "| Q1 | question | A short ID, read again | open |  |  |  |", ...rows.map((r) => r.row), ""].join("\n"));
+      await ws.getByRole("tab", { name: "Code", exact: true }).click();
+      await iv.evaluate(() => (document.querySelector(".subbar .reload") as HTMLButtonElement).click());
+      await iv.waitForFunction(() => document.querySelector("button.gnode .gn-tx")?.textContent === "A short ID, read again");
+      await ws.getByRole("tab", { name: "Idea", exact: true }).click();
+      await nodeOf(iv, rows[0]!.id).waitFor();
+      await page.waitForTimeout(300);
+      const again = await iv.locator("button.gnode .gn-top .kb").evaluateAll((ks) => ks.filter((k) => k.scrollWidth > k.clientWidth + 1 || k.scrollHeight > k.clientHeight + 1 || k.getBoundingClientRect().bottom > k.closest("button")!.getBoundingClientRect().bottom + 0.5).map((k) => k.textContent));
+      assert.deepEqual(again, [], "IDs cut after a Reload drawn while the frame was hidden");
+    } finally {
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
   test("the Idea view's frame is sealed off: no bridge, idea_graph.md and paper_skeleton.md only, no other origin's endpoints", SLOW, async () => {
     const { iv } = await openIdea();
     const status = (url: string) => iv.evaluate(async (u) => (await fetch(u)).status, url);

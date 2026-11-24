@@ -42,6 +42,7 @@ import {
   skeletonInput,
   STILL_OPEN,
   summary,
+  tooltipOf,
   verdict,
 } from "./logic.ts";
 import type { Built, Graph, SkeletonRead } from "./logic.ts";
@@ -822,6 +823,12 @@ describe("the detail panel and the summary (§5.4)", () => {
     assert.equal(details(g, node(g, "Q3")).statement, "a b ‮evil", "visible words stay as written; the page marks the invisible ones");
     // A path is a name: a no-break or em space in it is a marker, as in a label; a plain space stays.
     assert.deepEqual(details(g, node(g, "E1")).points.files, ["Code/a⟨U+00A0⟩b.json", "Code/c⟨U+2003⟩d.csv", "Code/plain name.json"]);
+  });
+
+  test("a node's tooltip names its ID, kind, status, and statement, marked as everything else from the file", () => {
+    const g = graphOf(file(row("Experiment_runA1", "experiment", "Run \u202Eevil `x`", "running", "", "commit: none; files: none", ""), row("Q1", "question", "\u00A0", "answered", "", "", "")));
+    assert.equal(tooltipOf(node(g, "Experiment_runA1")), "Experiment_runA1 (experiment), running: Run ⟨U+202E⟩evil x");
+    assert.equal(tooltipOf(node(g, "Q1")), "Q1 (question), answered: ⟨U+00A0⟩");
   });
 
   test("a statement or source over 2,000 characters is drawn cut, and the panel says so", () => {

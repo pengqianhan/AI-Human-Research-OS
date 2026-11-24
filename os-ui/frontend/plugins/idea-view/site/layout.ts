@@ -10,7 +10,9 @@
  *    no such neighbour keeps its place.
  * 3. Height in one pass from left to right: each node at the further down of
  *    its column's next free place and the mean height of its neighbours
- *    already placed to its left. Boxes are 150 × 48, as in the mockup.
+ *    already placed to its left. Boxes are 150 × 48, as in the mockup, or
+ *    taller when a node's ID and status need more than one row (main.ts
+ *    measures each box as drawn and passes its height).
  * 4. Lines from the left node's right side to the right node's left side,
  *    each side's ends spread by the other end's height; a line within one
  *    column is an arc beside it, on its right.
@@ -25,8 +27,12 @@
 import { KINDS } from "./logic.ts";
 import type { Graph, Kind, Word } from "./logic.ts";
 
-/** A box, the gaps between columns and between boxes, the map's padding, and the column heads' height (the mockup's GA). */
-export const BOX = { w: 150, h: 48, gx: 56, gy: 10, pad: 16, top: 26 } as const;
+/**
+ * A box, the gaps between columns and between boxes, the map's padding, and
+ * the column heads' height (the mockup's GA); `row` is the height of a box's
+ * top row (its ID badge, style.css's 19 px), which a box of `h` holds once.
+ */
+export const BOX = { w: 150, h: 48, gx: 56, gy: 10, pad: 16, top: 26, row: 19 } as const;
 /** The legend: its width, padding, title, and one row's height (style.css draws it to these). */
 export const LEGEND = { w: 150, pad: 8, title: 18, row: 15 } as const;
 
@@ -96,10 +102,12 @@ const r1 = (v: number) => Math.round(v * 10) / 10;
 
 /**
  * The map of nodes of `kinds` (by index, in file order) and their `edges`,
- * with a legend of `legendRows` rows (none for 0).
+ * with a legend of `legendRows` rows (none for 0). `heights` are the boxes'
+ * heights by node, BOX.h when not given.
  */
-export function layout(kinds: readonly Kind[], edges: readonly Edge[], legendRows: number): Layout {
+export function layout(kinds: readonly Kind[], edges: readonly Edge[], legendRows: number, heights?: readonly number[]): Layout {
   const count = kinds.length;
+  const hOf = (i: number) => heights?.[i] ?? BOX.h;
   const present = KINDS.filter((k) => kinds.includes(k));
   const colOf = new Int32Array(count);
   const order: number[][] = present.map(() => []);
@@ -166,11 +174,11 @@ export function layout(kinds: readonly Kind[], edges: readonly Edge[], legendRow
       }
       const y = seen === 0 ? free : Math.max(free, Math.round(sum / seen));
       ys[node] = y;
-      free = y + BOX.h + BOX.gy;
-      bottom = Math.max(bottom, y + BOX.h);
+      free = y + hOf(node) + BOX.gy;
+      bottom = Math.max(bottom, y + hOf(node));
     }
   });
-  const boxes: Rect[] = Array.from({ length: count }, (_, i) => ({ x: columnX(colOf[i]!), y: ys[i]!, w: BOX.w, h: BOX.h }));
+  const boxes: Rect[] = Array.from({ length: count }, (_, i) => ({ x: columnX(colOf[i]!), y: ys[i]!, w: BOX.w, h: hOf(i) }));
 
   // Lines: each side's ends, spread by the other end's height.
   const sides = new Map<string, { line: number; other: number }[]>();
@@ -192,7 +200,7 @@ export function layout(kinds: readonly Kind[], edges: readonly Edge[], legendRow
     const node = Number(key.slice(0, -1));
     list.sort((p, q) => p.other - q.other || p.line - q.line);
     list.forEach((entry, i) => {
-      const y = ys[node]! + (BOX.h * (i + 1)) / (list.length + 1);
+      const y = ys[node]! + (hOf(node) * (i + 1)) / (list.length + 1);
       // An arc has both ends on the right side; which one this is, by the node.
       ends.set(`${entry.line}:${node}:${key.endsWith("r") ? "r" : "l"}`, y);
     });

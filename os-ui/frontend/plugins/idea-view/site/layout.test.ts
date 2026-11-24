@@ -38,10 +38,10 @@ function assertNoOverlap(l: Layout, what: string): void {
     for (let j = i + 1; j < l.boxes.length; j++) assert.ok(!overlap(l.boxes[i]!, l.boxes[j]!), `${what}: boxes ${i} and ${j} overlap`);
     assert.ok(!overlap(l.boxes[i]!, l.legend), `${what}: box ${i} and the legend overlap`);
     for (const c of l.columns) assert.ok(!overlap(l.boxes[i]!, c.head), `${what}: box ${i} and a column head overlap`);
-    assert.ok(l.boxes[i]!.x >= 0 && l.boxes[i]!.y >= 0 && l.boxes[i]!.x + BOX.w <= l.width && l.boxes[i]!.y + BOX.h <= l.height, `${what}: box ${i} inside the map`);
+    assert.ok(l.boxes[i]!.x >= 0 && l.boxes[i]!.y >= 0 && l.boxes[i]!.x + l.boxes[i]!.w <= l.width && l.boxes[i]!.y + l.boxes[i]!.h <= l.height, `${what}: box ${i} inside the map`);
   }
   for (const column of l.order) {
-    for (let k = 1; k < column.length; k++) assert.ok(l.boxes[column[k]!]!.y >= l.boxes[column[k - 1]!]!.y + BOX.h + BOX.gy, `${what}: column order and gap`);
+    for (let k = 1; k < column.length; k++) assert.ok(l.boxes[column[k]!]!.y >= l.boxes[column[k - 1]!]!.y + l.boxes[column[k - 1]!]!.h + BOX.gy, `${what}: column order and gap`);
   }
 }
 
@@ -182,6 +182,36 @@ describe("§5.3 3. height: the further down of the column's next free place and 
       const l = layout(kinds, edges, rand(10));
       assertNoOverlap(l, `seed ${seed}`);
       assert.ok(l.boxes.every((b) => b.w === BOX.w && b.h === BOX.h));
+    }
+  });
+
+  test("a box taller than 48 (an ID or a status on a second row, measured by the page) is placed at its own height: nothing overlaps, ends spread over its side", () => {
+    // Sixteen wide characters wrap the ID badge, and the status goes to a row of its own: main.ts measures 48 + 38.
+    const kinds: Kind[] = ["question", "question", "hypothesis", "experiment", "experiment", "result", "claim"];
+    const tall = [48, 86, 48, 67, 86, 48, 120];
+    const edges: Edge[] = [
+      { a: 3, b: 0, word: "tests" },
+      { a: 3, b: 1, word: "tests" },
+      { a: 4, b: 2, word: "tests" },
+      { a: 3, b: 5, word: "from" },
+      { a: 5, b: 6, word: "supports" },
+    ];
+    const l = layout(kinds, edges, 6, tall);
+    assert.deepEqual(l.boxes.map((b) => b.h), tall);
+    assertNoOverlap(l, "tall boxes");
+    // Q2, 86 tall, is under Q1 by Q1's 48 and the gap; E1's two ends on its left side split its 67 px in thirds.
+    assert.equal(l.boxes[1]!.y, l.boxes[0]!.y + 48 + BOX.gy);
+    const e1 = l.boxes[3]!;
+    assert.deepEqual(l.lines.slice(0, 2).map((line) => line.y2).sort((a, b) => a - b), [Math.round((e1.y + 67 / 3) * 10) / 10, Math.round((e1.y + (2 * 67) / 3) * 10) / 10]);
+    for (let seed = 1; seed <= 40; seed++) {
+      const rand = rng(seed);
+      const count = 1 + rand(60);
+      const ks = Array.from({ length: count }, () => KINDS[rand(5)]!);
+      const hs = Array.from({ length: count }, () => [48, 48, 48, 67, 86, 105][rand(6)]!);
+      const es: Edge[] = Array.from({ length: rand(3 * count) }, () => ({ a: rand(count), b: rand(count), word: "motivates" as const })).filter((e) => e.a !== e.b);
+      const r = layout(ks, es, rand(10), hs);
+      assertNoOverlap(r, `tall, seed ${seed}`);
+      assert.deepEqual(r.boxes.map((b) => b.h), hs);
     }
   });
 

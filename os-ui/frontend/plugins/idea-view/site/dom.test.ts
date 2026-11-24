@@ -111,8 +111,9 @@ describe("the page's DOM", () => {
     }
     assert.match(main, /const statusClass = \(status: string\) => `st \$\{STATUS_CLASS\.get\(status\) \?\? ""\}`;/);
     // File text reaches an attribute only as a tooltip (title), as marked plain text or the node's validated ID and kind.
-    assert.deepEqual([...main.matchAll(/\.title = ([^;]+);/g)].map((m) => m[1]).sort(), ["`${node.id} (${node.kind})`", "`Read ${FILE} and paper_skeleton.md again, as they are on disk now`", "words"]);
+    assert.deepEqual([...main.matchAll(/\.title = ([^;]+);/g)].map((m) => m[1]).sort(), ["`${node.id} (${node.kind})`", "`Read ${FILE} and paper_skeleton.md again, as they are on disk now`", "tooltipOf(node)"]);
     assert.match(main, /const words = nodeWords\(node\.statement\);/);
+    assert.match(source("logic.ts"), /export const tooltipOf = \(node: IdeaNode\) => `\$\{visibleName\(node\.id\)\} \(\$\{node\.kind\}\), \$\{visibleName\(node\.status\)\}: \$\{nodeWords\(node\.statement\)\}`;/);
     assert.match(source("logic.ts"), /const words = markInvisible\(plain\(inline\(cutText\(statement\)\)\)\);\n  return blankDrawn\(words\) \? visibleName\(cutText\(statement\)\) : words;/);
   });
 
@@ -148,8 +149,8 @@ describe("the page's DOM", () => {
     // The two files that touch the DOM. A new call or property here (setHTMLUnsafe, insertRule, toggleAttribute,
     // dataset, id, hidden, …) fails this test until it is reviewed and added.
     assert.deepEqual(members(source("main.ts")), {
-      calls: ["add", "addEventListener", "all", "append", "cancel", "catch", "createElementNS", "createTextNode", "filter", "floor", "forEach", "get", "getElementById", "has", "includes", "inlineNodes", "insertBefore", "map", "observe", "postMessage", "push", "remove", "scrollIntoView", "set", "setAttribute", "some", "toLocaleString", "toLowerCase", "toggle"],
-      sets: ["className", "graph", "map", "open", "scrollLeft", "scrollTop", "textContent", "title"],
+      calls: ["add", "addEventListener", "all", "append", "cancel", "catch", "ceil", "createElementNS", "createTextNode", "filter", "floor", "forEach", "get", "getBoundingClientRect", "getElementById", "has", "includes", "inlineNodes", "insertBefore", "map", "max", "observe", "postMessage", "push", "remove", "scrollIntoView", "setAttribute", "some", "toLocaleString", "toLowerCase", "toggle"],
+      sets: ["className", "graph", "map", "measured", "open", "scrollLeft", "scrollTop", "textContent", "title"],
     });
     assert.deepEqual(members(source("../../site-kit.ts")), {
       calls: ["append", "cancel", "catch", "charCodeAt", "codePointAt", "createElement", "createElementNS", "createTextNode", "decode", "get", "getReader", "includes", "indexOf", "inlineNodes", "lastIndexOf", "map", "max", "min", "padStart", "push", "read", "replace", "set", "setAttribute", "slice", "subarray", "test", "toString", "toUpperCase"],

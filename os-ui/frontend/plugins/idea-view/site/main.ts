@@ -23,7 +23,7 @@
  */
 import { inline, parse } from "../../md-kit.ts";
 import { button, clear, el, filesUrl, inlineNodes, isHostClear, markInvisible, projectFrom, readStart } from "../../site-kit.ts";
-import { edgesOf, fitScale, labelPoint, layout } from "./layout.ts";
+import { BOX, edgesOf, fitScale, labelPoint, layout } from "./layout.ts";
 import type { Layout, Rect } from "./layout.ts";
 import {
   barWords,
@@ -49,6 +49,7 @@ import {
   skeletonPath,
   STILL_OPEN,
   summary,
+  tooltipOf,
   verdict,
   WORDS,
 } from "./logic.ts";
@@ -158,6 +159,8 @@ const state = {
   gen: 0,
   graph: null as Graph | null,
   map: null as Layout | null,
+  /** Whether the boxes' heights were measured: not while the frame is hidden, where nothing is laid out. */
+  measured: false,
   /** The node whose details show, by key; kept across a Reload while its ID is in the file. */
   open: null as string | null,
 };
@@ -227,11 +230,7 @@ async function load(): Promise<void> {
 function render(graph: Graph): void {
   const [left, top] = [canvas.scrollLeft, canvas.scrollTop];
   state.graph = graph;
-  state.map = layout(
-    graph.nodes.map((node) => node.kind),
-    edgesOf(graph),
-    legendRows(graph),
-  );
+  nodeEls = new Map(graph.nodes.map((node) => [node.key, nodeBox(node)]));
   // The selection, clicked before or during this Reload: kept, and posted again, while its node is in the file.
   if (selected !== null) {
     const node = graph.byKey.get(selected);
@@ -241,7 +240,7 @@ function render(graph: Graph): void {
   if (state.open !== null && !graph.byKey.has(state.open)) state.open = null;
   count.textContent = barWords(graph);
   drawProblems(graph);
-  drawMap(graph, state.map);
+  placeMap(graph);
   paint();
   show(main, graph.problemCount > 0 ? problemsBox : null);
   fit();
@@ -318,13 +317,58 @@ let labels: SVGGElement | null = null;
 let nodeEls = new Map<string, HTMLButtonElement>();
 let lineEls: SVGPathElement[] = [];
 
+/** A node's box: its ID and status whole on the top row (or two), one line of its statement, and a tooltip naming all four. */
+function nodeBox(node: IdeaNode): HTMLButtonElement {
+  const b = button(`gnode ${KIND_CLASS[node.kind]}`);
+  const top = el("span", "gn-top");
+  top.append(el("span", `kb ${KIND_CLASS[node.kind]}`, node.id), el("span", statusClass(node.status), node.status));
+  // One line of the statement's words; the box cuts it, and the panel shows it whole.
+  const words = nodeWords(node.statement);
+  b.append(top, el("span", "gn-tx", words));
+  b.title = tooltipOf(node);
+  b.addEventListener("click", () => clickNode(node.key));
+  return b;
+}
+
+/**
+ * Each box's height as drawn: BOX.h, and more when its ID or status needs
+ * another row (a long ID wraps in its badge, a status that no longer fits
+ * beside it takes a row of its own; style.css). Measured in a hidden box of
+ * the column's width, so any font is measured as it is drawn. Null when the
+ * page is not laid out (its frame hidden): nothing can be measured then.
+ */
+function heightsOf(graph: Graph): number[] | null {
+  const probe = el("div", "gmeasure");
+  const tops = graph.nodes.map((node) => {
+    const b = nodeEls.get(node.key)!;
+    probe.append(b);
+    return b.firstElementChild!;
+  });
+  document.body.append(probe);
+  const heights = probe.offsetWidth > 0 ? tops.map((top) => BOX.h + Math.max(0, Math.ceil(top.getBoundingClientRect().height) - BOX.row)) : null;
+  probe.remove();
+  return heights;
+}
+
+/** Lays the map out at the boxes' measured heights and draws it; until they can be measured, at BOX.h (fit() places it again once the page shows). */
+function placeMap(graph: Graph): void {
+  const heights = heightsOf(graph);
+  state.measured = heights !== null;
+  state.map = layout(
+    graph.nodes.map((node) => node.kind),
+    edgesOf(graph),
+    legendRows(graph),
+    heights ?? undefined,
+  );
+  drawMap(graph, state.map);
+}
+
 const absentKinds = (graph: Graph) => KINDS.filter((k) => !graph.nodes.some((node) => node.kind === k));
 /** The legend's rows: the four words, the result's experiment (three short lines, a fourth when there is none), and each kind with no node. */
 const legendRows = (graph: Graph) => WORDS.length + 3 + (graph.came.length === 0 ? 1 : 0) + absentKinds(graph).length;
 
 function drawMap(graph: Graph, map: Layout): void {
   clear(canvas);
-  nodeEls = new Map();
   lineEls = [];
   const svg = svgEl("svg", "gmap");
   svg.setAttribute("viewBox", `0 0 ${map.width} ${map.height}`);
@@ -344,18 +388,7 @@ function drawMap(graph: Graph, map: Layout): void {
     svg.append(box(column.head, head));
   }
   svg.append(box(map.legend, legend(graph)));
-  for (const node of graph.nodes) {
-    const b = button(`gnode ${KIND_CLASS[node.kind]}`);
-    const top = el("span", "gn-top");
-    top.append(el("span", `kb ${KIND_CLASS[node.kind]}`, node.id), el("span", statusClass(node.status), node.status));
-    // One line of the statement's words; the box cuts it, and the panel shows it whole.
-    const words = nodeWords(node.statement);
-    b.append(top, el("span", "gn-tx", words));
-    b.title = words;
-    b.addEventListener("click", () => clickNode(node.key));
-    nodeEls.set(node.key, b);
-    svg.append(box(map.boxes[node.index]!, b));
-  }
+  for (const node of graph.nodes) svg.append(box(map.boxes[node.index]!, nodeEls.get(node.key)!));
   labels = svgEl("g", "labels");
   svg.append(labels);
   svgRoot = svg;
@@ -395,6 +428,11 @@ function legend(graph: Graph): HTMLElement {
 
 /** The map's size for the view's width: the scale between 0.8 and 1 (§5.3 6); taller maps scroll. */
 function fit(): void {
+  // A map drawn while the frame was hidden is placed again at its measured heights, now that the page is laid out.
+  if (!state.measured && state.graph !== null && canvas.clientWidth > 0) {
+    placeMap(state.graph);
+    paint();
+  }
   const map = state.map;
   if (map === null || svgRoot === null) return;
   const s = fitScale(canvas.clientWidth, map.width);

@@ -80,6 +80,9 @@ export function nodeWords(statement: string): string {
   return blankDrawn(words) ? visibleName(cutText(statement)) : words;
 }
 
+/** A node's tooltip: its ID, kind, status, and statement, each from the file marked as a label or the box marks it. */
+export const tooltipOf = (node: IdeaNode) => `${visibleName(node.id)} (${node.kind}), ${visibleName(node.status)}: ${nodeWords(node.statement)}`;
+
 /** The link words, in the legend's order. */
 export const WORDS = ["motivates", "tests", "supports", "refutes"] as const;
 export type Word = (typeof WORDS)[number];
