@@ -23,6 +23,7 @@ the identity fields of the Snapshot, and the template line in
 * [AGENTS.md](AGENTS.md) - Workflow, integrity, and project-specific rules for agents working here.
 * [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - Durable project state, decisions, progress, and next action.
 * [paper_skeleton.md](paper_skeleton.md) - Claims, sources, experiments, and writing status.
+* [idea_graph.md](idea_graph.md) - Questions, hypotheses, experiments, results, and claims with the links between them, as the desktop app's Idea view draws them.
 * [Code/README.md](Code/README.md) - Setup, run commands, results, and limitations.
 
 ## Project areas
