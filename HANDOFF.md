@@ -113,7 +113,7 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       the reviewer's own probes but not reviewed a second time. 2.3, the
       Idea view, is built on branch `step2-idea-view`, which starts from
       `step2-assets-view` (pull request #54; #52 is merged and `main` is
-      merged in; a draft until its CI is green). Its independent review found four must-fix problems
+      merged in). Its independent review found four must-fix problems
       (a line under boxes it does not join and its word on the wrong node,
       long IDs cut, the ask bar and the page apart after a Reload that ended
       while Home was shown, tests that could not fail) and six smaller ones;
@@ -133,7 +133,20 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       (before and after screenshots were sent). Reload keeps a surviving
       selection in the Idea view and clears it in the Skeleton and Assets
       views; the Human Owner chose to leave that as it is (Decisions:
-      "Reload and the selection"). Next is 2.4.
+      "Reload and the selection"). The view's timed tests (cost at n
+      against 4n) failed the macos-x64 CI job twice on #54. One real cost
+      was found and fixed (a line number formatted for every bad link);
+      the rest was the collector on one line over about 128 KiB, which
+      comes from md-kit's `splitCells` building a cell a character at a
+      time. md-kit is shared and is left as it is: whether to change it,
+      in a pull request of its own, is the Human Owner's call. The Idea
+      view's nine remaining cases are sized by one rule, and two
+      departures from the design are recorded in
+      [os-ui/PLUGINS.md](os-ui/PLUGINS.md): no test times 512 KiB of
+      hostile input any more (the largest is 384 KiB), and the layout is
+      no longer timed at thousands of nodes (that case could not tell
+      right from wrong on macos-x64; the caps of 200 nodes and 1,000
+      links bound it). Next is 2.4.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
