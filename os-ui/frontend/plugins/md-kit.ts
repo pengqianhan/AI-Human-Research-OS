@@ -372,9 +372,10 @@ function markerOf(text: string): { kind: string; width: number } | null {
 /**
  * A table row's cells: split on "|" but not "\|", which becomes "|" (as in
  * GFM, inside code spans too); the leading "|" and a trailing one dropped;
- * each cell trimmed and cut at LIMITS.cell characters.
+ * each cell trimmed and cut at `max` characters (LIMITS.cell; the Idea view
+ * passes Infinity to read a row's Links and Points to whole).
  */
-export function splitCells(line: string): string[] {
+export function splitCells(line: string, max: number = LIMITS.cell): string[] {
   const cells: string[] = [];
   const body = trimSpaces(line);
   let cell = "";
@@ -391,7 +392,7 @@ export function splitCells(line: string): string[] {
   }
   // Text after the last "|" is a cell; nothing (a trailing "|") is none.
   if (trimSpaces(cell) !== "" || !body.endsWith("|") || body.endsWith("\\|")) cells.push(cell);
-  return cells.map((c) => cutText(trimSpaces(c)));
+  return cells.map((c) => cutText(trimSpaces(c), max));
 }
 
 /** A delimiter row: every cell dashes, optionally with a ":" at either end. */
