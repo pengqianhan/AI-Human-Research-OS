@@ -28,7 +28,27 @@ Status on 2026-11-24:
   the cut. site-kit is unchanged; the Skeleton, Assets, and Code views' tests are
   untouched and pass. It is wired in as the Idea tab (`layoutState.ts`), the `spark`
   icon, and the client's policy and read-channel tests; the Plugins page's planned
-  card is gone. Where the code differs from Part 3 or the mockup:
+  card is gone. An independent review (2026-11-24) found 4 must-fix and 6
+  should-fix problems; the fix round, on the same branch, fixed eight of them and
+  records the other two as limits (below), and built two rule changes decided
+  since: `files: none` (the Human Owner) and the cycle rule (a default the
+  directing agent took, not yet confirmed). In short, what the review found and
+  what changed, each detailed in the points marked "after the review":
+  - must-fix 1 and should-fix 9, lines under boxes they do not join and words on
+    the wrong node or each other: lanes and slots ("Lines and their words");
+  - must-fix 2, IDs and statuses cut on the map: never cut, boxes measured ("An
+    ID and a status are never cut");
+  - must-fix 3, the ask bar and the page disagreeing after a Reload that ended
+    while the workspace was hidden: fixed in the host ("Selection and Reload");
+  - must-fix 4, tests that could not fail (four DOM-sink mutants, the caps by
+    name, the generation check): each now fails a test ("The map is the page's
+    own SVG", "The 50 ms bound", "Selection and Reload");
+  - should-fix 5, 6, and 10, rows under a list item dropped silently, a fenced
+    header reported as no table, blank-looking statements and paths: said,
+    named, and marked ("What md-kit leaves unread", "Absence", "The panel");
+  - should-fix 7 and 8: recorded limits, not redesigned ("Limits that stay").
+
+  Where the code differs from Part 3 or the mockup:
   - **The map is the page's own SVG.** The mockup placed nodes with inline styles;
     `PLUGIN_CSP` and the views' source checks allow none, so the geometry is numbers
     from `layout.ts` set as SVG attributes (`x`, `y`, `width`, `height`, `d`,
@@ -54,8 +74,11 @@ Status on 2026-11-24:
     places boxes, line ends, and the gaps at those heights. A frame laid out while
     hidden in the same process measures nothing, so its boxes are 48 px until the
     page shows, when they are measured and placed again (a headless probe checks
-    this; in the app the view's frame is another origin's process and is still laid
-    out while hidden, which the suite's Reload on the Code tab exercises). Boxes with short IDs keep the mockup's 150 × 48.
+    this path). In the app the suite's Reload drawn on the Code tab left no ID cut
+    even with that path removed, so the view's frame, on another origin and so
+    probably in another process, seems to stay laid out while hidden; that is an
+    inference from the test, not read in Chromium's code, and the path stays for
+    the case it is wrong. Boxes with short IDs keep the mockup's 150 × 48.
     The tooltip names the ID, kind, status, and statement, marked as the box marks
     them. The suite draws IDs of sixteen W's in every kind and status and checks
     that no ID or status is cut, no two boxes overlap or draw one ID, and a short
@@ -84,7 +107,8 @@ Status on 2026-11-24:
     one pair of nodes covered the legend and touched. Now a line that skips a
     column runs straight through it at its left node's middle, in a lane of 20 px
     that column's boxes keep clear of (they move down past it), curving only inside
-    the gaps; and the word of each of the open node's lines sits in a 64 × 16 slot
+    the gaps; and the word of each of the open node's lines (a pill of 9.5 px bold,
+    at most 63 px wide even in a face as wide as Verdana) sits in a 64 × 16 slot
     beside the other node, where the line meets it, in the gap and on that box's
     padding only, the first free slot down its side nearest the line's end. Free
     means on no box the line does not join, no other word, the legend, a column
@@ -152,14 +176,17 @@ Status on 2026-11-24:
     the bar came back holding the old row, or offering a node the page no longer
     marked. Switching to another tab during the read was safe, since leaving a
     tab clears both sides. The fix is the host's (`heldWhileHidden` in
-    `frontend/src/plugins/select.ts`, used by `WorkspacePage.tsx`): the last valid
-    message the active view posted while hidden is kept and applied through the
-    gate when the workspace shows again, so a node still in the file stays
-    selected with its row as it is now, and a node gone leaves no bar. No message
-    is added. It covers every view, so the Assets view's render-time `null` (and
+    [frontend/src/plugins/select.ts](frontend/src/plugins/select.ts), used by
+    [frontend/src/pages/WorkspacePage.tsx](frontend/src/pages/WorkspacePage.tsx)):
+    the last valid message the active view posted while hidden is kept and
+    applied through the gate when the workspace shows again, so a node still in
+    the file stays selected with its row as it is now, and a node gone leaves no
+    bar; clearing the selection meanwhile (Escape on Home, which the workspace
+    still hears) drops it too. No message is added. It covers every view, so the Assets view's render-time `null` (and
     the Skeleton view's, when a clicked item is gone) is no longer dropped either
     (by reading their code; the suite tests the Idea view). The suite reproduces
-    both variants with a 3 s read and Home shown during it.
+    both variants with a 3 s read and Home shown during it, and Escape pressed on
+    Home while the page's post is held.
   - **The panel** for a result shows "from: " and a chip to its experiment, and an
     experiment's files under "Result files, not opened here", each path marked as a
     label is (a no-break space in it showed as a plain space before the review). A
@@ -237,7 +264,8 @@ Status on 2026-11-24:
       hypothesis that motivates the experiment testing it no longer does (the first
       build counted each link from its row to its target and listed it). The
       problem names the nodes and one loop, each step with the link that makes it.
-      Reversing the rule is one constant, `FIRST` in `logic.ts`.
+      Reversing the rule is one constant, `FIRST` in
+      [logic.ts](frontend/plugins/idea-view/site/logic.ts).
   - **Test fixtures:** [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md)
     holds §5.1's example byte for byte and the mockup's graph of nanochat_cpu in the
     confirmed format (its two inferred links left out); the 50- and 200-node graphs
@@ -251,7 +279,24 @@ Status on 2026-11-24:
     shown, never opened or checked (§5.5); a link or a pointer to a row the view did
     not read (past 500 rows or 20,000 lines, or after the table ended) is reported
     as missing among the rows read; the scrollbar gutter's fix is checked in the
-    source, not in a window with classic scrollbars (the suite runs on macOS).
+    source, not in a window with classic scrollbars (the suite runs on macOS). A
+    lane moves the boxes of a column a line skips down past it, so a graph with many
+    such lines draws that column taller; a word that finds no free slot beside its
+    node is drawn inside that node's box, over its text (3 of the 4,202 words of the
+    40 seeded graphs; none of the 6,884 in the large ones, none in the review's
+    probes). Two found by the review are recorded, not redesigned:
+    - **review 7, the host's rate gate:** thirteen Enter presses on a focused node
+      within about 0.3 s (each a click: select, unselect, …) pass the host's ten
+      accepted selections a second, and the host then hides the ask bar while the
+      page keeps its mark: the review saw the bar empty and Q2 marked
+      (`selectGate`'s "over", by design rather than showing an older selection than
+      the page marks). A click after the second has passed agrees again;
+    - **review 8, a narrow window with the conversation open:** at about 1000 × 728
+      the map is drawn at its 0.8 floor, 640 px in a box 451 px wide, so the Claims
+      column starts off-screen and the map scrolls sideways (the page itself does
+      not); with a node selected, about 163 px of the map show between the detail
+      panel and the ask bar. Collapsing the conversation, or a wider window, shows
+      the map whole (at 1440 × 900 it is 800 px wide and about 420 px of it show).
   - **Covered by unit tests only, not in the running app:** the caps (200 nodes,
     1,000 links, 500 rows, 20,000 lines, 500 problems listed; each by its literal
     value since the review), cycles, every Points
@@ -259,7 +304,10 @@ Status on 2026-11-24:
     status, the skeleton's unreadable states, the 413, 503, unreachable, binary,
     other-encoding, and over-512 KiB screens, statements over 2,000 characters,
     hostile labels and quotes through the host's `readSelect`, CRLF and lone CRs,
-    and the growth cases.
+    the cycle rule's table, list-item rows and fenced headers, lanes and word slots
+    on random and large graphs, and the growth cases. In the running app since the
+    review: the generation check, IDs of sixteen wide characters, a Reload ending
+    while Home is shown, and the words of E2's lines.
   - Not verified: Windows and Linux (the suite ran on macOS arm64 only), and the
     Human Owner's checklist line.
 
@@ -2155,7 +2203,7 @@ files as the mockup drew them:
   E1)"), so it can be checked against the file. *This rule is a default the
   directing agent took on 2026-11-24 and told the Human Owner; it is not yet
   confirmed.* It is one constant, `FIRST` in
-  `os-ui/frontend/plugins/idea-view/site/logic.ts`; setting `tests`, `supports`,
+  [frontend/plugins/idea-view/site/logic.ts](frontend/plugins/idea-view/site/logic.ts); setting `tests`, `supports`,
   and `refutes` to `"row"` there reverses it to the first build's rule (each link
   from its row to its target).
 - **Where an agent learns the format:** the template's own `idea_graph.md` (an

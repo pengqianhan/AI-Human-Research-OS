@@ -316,7 +316,12 @@ serves. A selection in the page is posted to `app://research-os` as
 `{type: "os.select", label, quote?}`; the workspace accepts it only from the
 active view's frame at that view's origin, shows "Ask the agent about this",
 and answers `{type: "os.select.clear"}` at the view's origin when the user
-clears it there. Asking adds a reference chip to the project's composer; only
+clears it there. While the workspace is hidden (another screen shown) the bar
+does not change, but the last valid message the active view posts meanwhile
+(a Reload that ends then) is kept and applied when the workspace shows again,
+so the bar and the view agree (`heldWhileHidden` in
+[../frontend/src/plugins/select.ts](../frontend/src/plugins/select.ts));
+clearing the selection meanwhile drops it. Asking adds a reference chip to the project's composer; only
 Send sends. What Send passes is exactly what the user can read in the
 composer: the host never rewrites a label (runs of ASCII spaces pass as
 they are, since they are part of a path), and a label with a tab, a space
@@ -450,7 +455,12 @@ row as written as its quote (cut to 2,000 characters by the host's rule, line
 breaks inside it as markers); its chip opens by itself. Reload keeps a selected
 node that is still in the file, open and marked, and posts it again with its
 row as it is now, or posts `null`; every screen that replaces the map posts
-`null` too, so the page and the workspace agree after any Reload.
+`null` too, so the page and the workspace agree after any Reload, whatever
+screen was shown while it read. An ID and a status are drawn whole (each box is
+measured, and taller when they need it); a line that skips a column runs through
+it in a lane its boxes keep clear of, and the word of an open node's line sits
+beside the node it names, on no box the line does not join, no other word, or
+the legend.
 
 Known limits of the channel, not yet handled:
 
