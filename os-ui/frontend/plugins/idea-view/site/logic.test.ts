@@ -933,11 +933,14 @@ describe("hostile input costs one pass: parse, validate, and lay out (§1 fact 6
   // Sized by one rule (os-ui/PLUGINS.md, the Idea view's growth cases). With the case run alone on the machine the
   // view was built on (an M1 Pro): 1. the code as it is takes at most about 17 ms at 4n, so a runner 15 times slower
   // on a day twice as slow stays under growth.ts's 500 ms floor; 2. the mistake the case guards against, put back on
-  // a scratch copy, takes at least 2 s at 4n and fails the case. The sizes are small because above about 128 KiB at
-  // 4n the collector's work makes even one pass grow 9 to 38 times on every runner (it grows 2 times a doubling under
-  // --max-semi-space-size=64; md-kit's splitCells builds each cell a character at a time, and a scratch copy that
-  // slices cells grows about 4 times), so a case sized there passes only by the floor: at 512 KiB, macos-x64 failed two.
-  // "Honest" is the worst of twelve runs at 4n; "mistake" is one run, timed as the test times it (best of five at 4n).
+  // a scratch copy, takes at least 2 s at 4n and fails the case. From 128 to 512 KiB the collector's work (gone under
+  // --max-semi-space-size=64) made one pass grow up to 14 times here and 37 times on macos-x64 (the huge statement;
+  // the `;` cell 8 and 21, the backticks 8 and 14), so those cases passed only by the floor, and macos-x64 failed two.
+  // That work comes from md-kit's splitCells, which builds each cell a character at a time: a scratch copy that
+  // slices cells grows about 4 times. Most cases now stay under 128 KiB at 4n; the huge statement (384 KiB) and the
+  // files list (256 KiB) go over it, where their mistakes are slow enough, and still meet the first rule here
+  // (macos-x64 took 342 ms and 186 ms for them at 512 KiB). "Honest" is the worst of twelve runs at 4n; "mistake" is
+  // one run, timed as the test times it (best of five at 4n).
   const cases: [string, (n: number) => string, number][] = [
     // Both hold: honest 10.5 ms. Mistake: md-kit's splitCells looking for the cell's end again from every character
     // (`if (body.indexOf("|", i) < 0) break;` first in its loop), 17.9 times the time, 3.5 s.

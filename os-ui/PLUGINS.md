@@ -121,7 +121,8 @@ Status on 2026-11-24:
     follow §5.1's grammar (some boxes taller), on 200 nodes with 1,000 links, on
     200 nodes in one column, and on 1,000 lines between two columns and through a
     third, with each node opened in turn; a growth case covers the lanes and the
-    words of a node with as many lines as the graph has experiments. The review's
+    words of a node with as many lines as the graph has experiments, though no
+    mistake tried fails it (the 50 ms bound, below). The review's
     probes, rerun on this build: the skipping line passes under no box, and over its
     12 random graphs no word lies on node text, on the legend, or on another word
     (0, 0, 0, and 0 of 570); the end-to-end suite checks that no word of E2's lines
@@ -217,28 +218,33 @@ Status on 2026-11-24:
     512 KiB: the bad items (12.3 times the time, 825 ms at 4n), then the `;` cell
     (21.2 times, 624 ms). The cause is the collector, not a pass per element:
     `parse` and `buildGraph` of one huge line grow 2 times a doubling up to 128 KiB,
-    about 4 times a doubling to 512 KiB, then 2 times again to 2 MiB, and under
-    `node --max-semi-space-size=64` they grow 2 times a doubling all the way to
-    512 KiB. So from 128 to 512 KiB every hostile case grows 9 to 38 times on every
-    runner, this machine included, and passed only by the 500 ms floor, which
-    macos-x64 (6 to 14 times slower than the machine the view was built on, and
-    about twice as slow on some days as others) crossed. The collector's work comes
-    from md-kit's `splitCells`, which builds each cell a character at a time: on a
-    scratch copy that slices each cell instead, the huge statement, the `;` cell,
-    the bad items, the backticks, and the files list grow 3.7 to 4.3 times here
-    from 128 to 512 KiB, and take 1.5 to 5 times less. md-kit is shared, so that change is
-    left for its own pull request. (The row's line number was also formatted again
-    for every bad link, listed or not; it is now formatted once a row, and a test
-    counts the numbers formatted for 50,000 bad links, which was 50,000.)
+    about 4 times a doubling to 512 KiB (the build 1.1 to 20.6 ms), then 2 times
+    again to 2 MiB, and under `node --max-semi-space-size=64` they grow 2 times a
+    doubling all the way to 512 KiB (the build 1.1 to 4.4 ms). So from 128 to 512
+    KiB the hostile cases grew more than one pass does: the huge statement 14 times
+    on the machine the view was built on and 37 times on macos-x64, the `;` cell 8
+    and 21, the backticks 8 and 14, the files list 4.6 and 7.8. Those over 10 passed
+    only by the 500 ms floor, which macos-x64 (6 to 14 times slower than that
+    machine, and about twice as slow on some days as others) crossed. The
+    collector's work comes from md-kit's `splitCells`, which builds each cell a
+    character at a time: on a scratch copy that slices each cell instead, the huge
+    statement, the `;` cell, the bad items, the backticks, and the files list grow
+    3.7 to 4.3 times here from 128 to 512 KiB, and take 1.5 to 5 times less. md-kit
+    is shared, so it is not changed here. (The row's line number was also formatted
+    again for every bad link, listed or not; it is now formatted once a row, and a
+    test counts the numbers formatted for 50,000 bad links, which was 50,000.)
 
-    Every case is now sized by one rule, with the case run alone on the machine
-    the view was built on (an M1 Pro): 1. the code as it is takes at most about
-    17 ms at 4n, so a runner 15 times slower on a day twice as slow stays under the
-    floor; 2. the mistake the case guards against, put back on a scratch copy,
-    takes at least 2 s at 4n and fails the case. Each case's comment names its
-    mistake, quoted as code, and both numbers; below, the size n (then 4n), the
-    worst honest time at 4n in twelve runs or more, and the mistake's ratio and
-    time at 4n (one run, timed as the test times it):
+    Every case is now sized by one rule, with the case run alone on the machine the
+    view was built on (an M1 Pro): 1. the code as it is takes at most about 17 ms at
+    4n, so a runner 15 times slower on a day twice as slow stays under the floor; 2.
+    the mistake the case guards against, put back on a scratch copy, takes at least
+    2 s at 4n and fails the case. Most cases now stay under 128 KiB at 4n; the huge
+    statement (384 KiB) and the files list (256 KiB) go over it, where their
+    mistakes are slow enough, and still meet the first rule here (macos-x64 took 342
+    ms and 186 ms for them at 512 KiB). Each case's comment names its mistake,
+    quoted as code, and both numbers; below, the size n (then 4n), the worst honest
+    time at 4n in twelve runs or more, and the mistake's ratio and time at 4n (one
+    run, timed as the test times it):
     - **Both hold.** One huge statement, 96 KiB, 10.5 ms; md-kit's `splitCells`
       looking for the cell's end again from every character, 17.9 times, 3.5 s. A
       Links cell of `;` only, 24 KiB, 7.2 ms; a link that scans its whole cell again,
@@ -262,9 +268,11 @@ Status on 2026-11-24:
     - **Resting on the ratio alone.** The layout with the caps lifted, now 6,000
       nodes and 30,000 edges then four times as many: a pass per line needs
       thousands of nodes, where one pass takes 484 to 547 ms at 4n here (5.4 to 6.1
-      times), about 2.7 s on macos-x64, which took 2,158 ms (5.7 times) at 4,000
-      nodes. A line looking itself up among the lines (a first draft did) fails it
-      by a thin margin, in eight runs of eight: 10.7 to 11.2 times, 2.0 s. At
+      times), an estimated 2.7 s on macos-x64, which took 2,158 ms (5.7 times) at
+      4,000 nodes. A line looking itself up among the lines, which a first draft did
+      (put back as `const k = lines.indexOf(line)`; the draft's own spelling is not
+      recorded), fails it by a thin margin, in eight runs of eight: 10.7 to 11.2
+      times, 2.0 s, and 10.8 and 11.0 times with the whole plugin suite running. At
       4,000, the old size, it sat on the line (9.4 to 10.2 times); at 8,000 it
       fails by more (11.4 to 11.7 times, 3.5 s), but one pass's ratio was less
       steady there (5.8 to 7.3 times beside four busy loops, against 5.3 to 6.5 at

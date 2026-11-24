@@ -509,14 +509,15 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
     assertOnePass(t, "routing and words, 200 and 800 nodes", growth(make, run, 200));
   });
 
-  // Rests on the ratio alone: a pass per line needs thousands of nodes, where one pass is already far over 17 ms.
-  // Honest here 484 to 547 ms at 4n and 5.4 to 6.1 times the time (14 runs; beside four busy loops, 5.3 to 6.5),
-  // so about 2.7 s at 4n on macos-x64, which took 2,158 ms at 4,000 nodes (5.7 times). The mistake, a line looking
-  // itself up among the lines as a first draft did (`const k = lines.indexOf(line)` in layout's lines loop), fails
-  // it by a thin margin: 10.7 to 11.2 times, 2.0 to 2.1 s at 4n, in eight of eight runs. At 4,000 nodes, the old
-  // size, it sat on the line (9.4 to 10.2 times in six runs); at 8,000 it fails by more (11.4 to 11.7 times, 3.5 s), but
-  // one pass's ratio there is less steady (5.8 to 7.3 times loaded) and takes 0.8 s at 4n here. Ten tries in place of
-  // five did not steady the ratio at 4,000 (5.0 to 7.2 times): a lower best at n raises it.
+  // Rests on the ratio alone: a pass per line needs thousands of nodes, where one pass is already far over 17 ms. Honest
+  // here 484 to 547 ms at 4n and 5.4 to 6.1 times the time (14 runs; beside four busy loops, 5.3 to 6.5), so an
+  // estimated 2.7 s at 4n on macos-x64, which took 2,158 ms at 4,000 nodes (5.7 times). The mistake, a line looking
+  // itself up among the lines, which a first draft did (put back as `const k = lines.indexOf(line)` in layout's lines
+  // loop; the draft's own spelling is not recorded), fails it by a thin margin: 10.7 to 11.2 times, 2.0 to 2.1 s at 4n,
+  // in eight of eight runs, and 10.8 and 11.0 times with the whole plugin suite running. At 4,000 nodes, the old size,
+  // it sat on the line (9.4 to 10.2 times in six runs); at 8,000 it fails by more (11.4 to 11.7 times, 3.5 s), but one
+  // pass's ratio there is less steady (5.8 to 7.3 times loaded) and takes 0.8 s at 4n here. Ten tries in place of five
+  // did not steady the ratio at 4,000 (5.0 to 7.2 times): a lower best at n raises it.
   test("the layout alone, with the caps lifted, grows as one pass does: 6,000 nodes and 30,000 edges, then four times as many", (t) => {
     const make = (n: number) => {
       const rand = rng(5);
