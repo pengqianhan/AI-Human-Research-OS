@@ -935,7 +935,8 @@ describe("hostile input costs one pass: parse, validate, and lay out (§1 fact 6
   // on a day twice as slow stays under growth.ts's 500 ms floor; 2. the mistake the case guards against, put back on
   // a scratch copy, takes at least 2 s at 4n and fails the case. The sizes are small because above about 128 KiB at
   // 4n the collector's work makes even one pass grow 9 to 38 times on every runner (it grows 2 times a doubling under
-  // --max-semi-space-size=64), so a case sized there passes only by the floor: at 512 KiB, macos-x64 failed two.
+  // --max-semi-space-size=64; md-kit's splitCells builds each cell a character at a time, and a scratch copy that
+  // slices cells grows about 4 times), so a case sized there passes only by the floor: at 512 KiB, macos-x64 failed two.
   // "Honest" is the worst of twelve runs at 4n; "mistake" is one run, timed as the test times it (best of five at 4n).
   const cases: [string, (n: number) => string, number][] = [
     // Both hold: honest 10.5 ms. Mistake: md-kit's splitCells looking for the cell's end again from every character

@@ -209,33 +209,76 @@ Status on 2026-11-24:
     empty Points to says it names no row of paper_skeleton.md. In a narrow view only
     the hint is hidden (the mockup hid every note), so a note on what the panel
     leaves out stays.
-  - **The 50 ms bound** (§5.3, §6) is tested by growth
-    ([frontend/plugins/growth.ts](frontend/plugins/growth.ts)), not a wall clock:
-    reading, checking, and laying out a generated 50-node then 200-node graph; the
-    layout alone with the caps lifted, 4,000 then 16,000 nodes and five times as many
-    edges; and hostile files of 128 KiB then 512 KiB (one huge statement, a Links
-    cell of 100,000-odd `;`, of bad items, links all to one node, a files list of
-    distinct paths, a run of backticks in Points to, a cycle through every node with
-    rows past the caps). After the fix round's CI, two of these, the bad items and
-    the links all to one node, run at 64 KiB then 256 KiB: on the slowest runner
-    (macos-x64, about ten times the machine the view was built on) their 512 KiB
-    runs took 825 ms and 496 ms, the first failing the job, at 12 times the time for
-    4 times the input. A profile showed no pass per element: 39% was the
-    collector's work on large strings, and 29% was the row's line number being
-    formatted again for every bad link, listed or not, which is now done once a
-    row (a test counts the numbers formatted for 50,000 bad links; it was 50,000).
-    That roughly halves the case's time; the smaller size is the margin, and a link
-    that scans its whole cell again still fails the case there (21 times, 11 s).
-    The hostile files' ratios stay above 4 on every runner (8 to 38 for the huge
-    statement, the `;` cell, and the backticks), from the collector, not the
-    code, so those cases pass by the 500 ms floor; the huge statement and the
-    backticks took 247 ms and 371 ms on that runner, and are left at 512 KiB.
-    Here each takes at most 280 ms at 4n, and the ratios run
-    from 1 to 17 for 4 times the input (the 17 is the huge statement, md-kit's
-    string building, below). Mutation checks put back a line looking itself up among the
-    lines (a first draft did), and a files list checked against itself: each fails
-    its case (the first sizes, 2,000 nodes and one repeated path, let both pass, and
-    were raised). Fourteen more mutations, each on a scratch copy, fail a test: an
+  - **The 50 ms bound** (§5.3, §6) and §1 fact 6's hostile input are tested by
+    growth ([frontend/plugins/growth.ts](frontend/plugins/growth.ts)), not a wall
+    clock, in [logic.test.ts](frontend/plugins/idea-view/site/logic.test.ts) and
+    [layout.test.ts](frontend/plugins/idea-view/site/layout.test.ts). The fix
+    round's pull request failed macos-x64 twice, on two hostile cases at 128 then
+    512 KiB: the bad items (12.3 times the time, 825 ms at 4n), then the `;` cell
+    (21.2 times, 624 ms). The cause is the collector, not a pass per element:
+    `parse` and `buildGraph` of one huge line grow 2 times a doubling up to 128 KiB,
+    about 4 times a doubling to 512 KiB, then 2 times again to 2 MiB, and under
+    `node --max-semi-space-size=64` they grow 2 times a doubling all the way to
+    512 KiB. So from 128 to 512 KiB every hostile case grows 9 to 38 times on every
+    runner, this machine included, and passed only by the 500 ms floor, which
+    macos-x64 (6 to 14 times slower than the machine the view was built on, and
+    about twice as slow on some days as others) crossed. The collector's work comes
+    from md-kit's `splitCells`, which builds each cell a character at a time: on a
+    scratch copy that slices each cell instead, the huge statement, the `;` cell,
+    the bad items, the backticks, and the files list grow 3.7 to 4.3 times here
+    from 128 to 512 KiB, and take 1.5 to 5 times less. md-kit is shared, so that change is
+    left for its own pull request. (The row's line number was also formatted again
+    for every bad link, listed or not; it is now formatted once a row, and a test
+    counts the numbers formatted for 50,000 bad links, which was 50,000.)
+
+    Every case is now sized by one rule, with the case run alone on the machine
+    the view was built on (an M1 Pro): 1. the code as it is takes at most about
+    17 ms at 4n, so a runner 15 times slower on a day twice as slow stays under the
+    floor; 2. the mistake the case guards against, put back on a scratch copy,
+    takes at least 2 s at 4n and fails the case. Each case's comment names its
+    mistake, quoted as code, and both numbers; below, the size n (then 4n), the
+    worst honest time at 4n in twelve runs or more, and the mistake's ratio and
+    time at 4n (one run, timed as the test times it):
+    - **Both hold.** One huge statement, 96 KiB, 10.5 ms; md-kit's `splitCells`
+      looking for the cell's end again from every character, 17.9 times, 3.5 s. A
+      Links cell of `;` only, 24 KiB, 7.2 ms; a link that scans its whole cell again,
+      empty items included, 20.1 times, 3.9 s. A Links cell of bad items, 32 KiB,
+      15.5 ms; the same mistake, 23.3 times, 2.8 s. Backticks in Points to, 8 KiB,
+      2.3 ms; a backtick run measured again from each of its backticks, 15.9 times,
+      4.0 s.
+    - **The first holds, the mistake fails under 2 s.** A files list of distinct
+      paths, 64 KiB, 14.8 ms; checked against itself (`paths.includes`), 39.8 times,
+      692 ms (as a search of the files text, 16.8 times, 1.7 s). At 80 KiB the honest
+      time is 18.8 ms and the mistake still 1.6 s, so no size meets both.
+    - **No mistake found that fails it; sized by the first rule.** Links all to one
+      node, 16 KiB, 9.4 ms (a link scanning its cell again, or a row looking its ID
+      up among the rows, stays under 11 ms, since each row is short). The case of
+      rows past the caps, 32 KiB, 3.0 ms (md-kit's 500 rows and the 200 nodes bound
+      it; its rows are a chain, not the cycle its name says). The 50- then 200-node
+      graph, 4.6 ms. Routing and words, now 200 then 800 nodes, 11.6 ms: at 2,000
+      then 8,000 it took 1,202 ms at 4n on macos-x64 and passed by a hair at 10.0
+      times, and neither a line looking itself up among the lines nor three
+      mistakes in `labelsFor` failed it there.
+    - **Resting on the ratio alone.** The layout with the caps lifted, now 6,000
+      nodes and 30,000 edges then four times as many: a pass per line needs
+      thousands of nodes, where one pass takes 484 to 547 ms at 4n here (5.4 to 6.1
+      times), about 2.7 s on macos-x64, which took 2,158 ms (5.7 times) at 4,000
+      nodes. A line looking itself up among the lines (a first draft did) fails it
+      by a thin margin, in eight runs of eight: 10.7 to 11.2 times, 2.0 s. At
+      4,000, the old size, it sat on the line (9.4 to 10.2 times); at 8,000 it
+      fails by more (11.4 to 11.7 times, 3.5 s), but one pass's ratio was less
+      steady there (5.8 to 7.3 times beside four busy loops, against 5.3 to 6.5 at
+      6,000), and ten tries in place of five did not steady it at 4,000 (5.0 to 7.2
+      times: a lower best at n raises the ratio). This
+      machine's ratios do not predict macos-x64's: routing's was about 6 here and
+      10.0 there.
+
+    This departs from the design: 512 KiB of hostile input in one pass (§1 fact 6),
+    which the first build showed by growth at 128 then 512 KiB, is no longer shown
+    at 512 KiB by a test; the largest input timed is now 384 KiB (the huge
+    statement at 4n). What remains for 512 KiB is the review's measurement in the
+    running app: a longest task of 81 ms on a hostile 512 KiB file. Fourteen more
+    mutations, each on a scratch copy, fail a test: an
     ID of 17 characters, `tests` reaching a claim, boxes overlapping, ⟨ and ⟩ left
     unmarked in a label, `toLowerCase` for ASCII case, a duplicate ID kept, a
     statement as markup, an `<img>`, a class from file text passed to `el()`, a
@@ -247,9 +290,9 @@ Status on 2026-11-24:
     524,289 bytes and "larger than 512 KiB"; 1,048,576 and 1,048,577 and "larger
     than 1 MiB", with the skeleton's check moved from `main.ts` into `logic.ts`; 550
     problems, 500 listed, "and 50 more problems are not listed"; every status of
-    every kind against "Still open"), and each of those mutants fails a test. md-kit's own `splitCells` grows faster than linearly on one 512 KiB
-    cell (1 ms at 128 KiB, 21 ms at 512 KiB, V8 building the cell's string), well
-    under the floor.
+    every kind against "Still open"), and each of those mutants fails a test.
+    md-kit's own `splitCells` builds each cell a character at a time: that is the
+    collector's work in the growth cases above.
   - **Points §5.1 and §5.2 leave open, decided and tested:**
     - two rows with one ID ignoring case: the later is left out, naming the earlier's
       line and spelling; a row's ID counts for this even when the row is left out
