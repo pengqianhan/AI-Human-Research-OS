@@ -177,7 +177,8 @@ code{font-family:var(--mono);font-size:.92em}
 .scrim{display:none;position:absolute;inset:0;z-index:20;background:var(--line2)}
 .scrim.open{display:block}
 .drawer{position:absolute;top:0;bottom:0;right:-460px;z-index:30;width:420px;overflow-y:auto;background:var(--card);padding:24px;visibility:hidden;transition:right .22s ease-in-out,visibility .22s ease-in-out}
-.drawer.open{right:0;visibility:visible;box-shadow:var(--sh3)}
+/* visible at once on opening, so Close can take focus in the same click; on closing it stays visible while it slides out */
+.drawer.open{right:0;visibility:visible;box-shadow:var(--sh3);transition:right .22s ease-in-out,visibility 0s}
 /* Today: over the whole window; the window's full width at 900 px or less */
 @media (max-width:900px){
   .drawer.whole{width:100%;right:-100%}
@@ -421,7 +422,7 @@ code{font-family:var(--mono);font-size:.92em}
   const PANELS = {
     today: { t: 'Today', sub: 'cannot be kept', say: 'Today, for comparison only: the shading dims the whole window, left menu included. A framed page cannot draw this.' },
     1: { t: 'Stays open', say: '1: the shading and panel cover only the Skills area (in A, the white card); the left menu stays bright, and the panel is still open when you come back.' },
-    2: { t: 'Closes on a click outside', say: '2: as 1, but a click anywhere outside the panel, the left menu included, closes it.' }
+    2: { t: 'Closes on a click outside', say: '2: as 1, but a click anywhere outside the panel, the left menu included, closes it; so does switching to another program.' }
   };
 
   const S = {
