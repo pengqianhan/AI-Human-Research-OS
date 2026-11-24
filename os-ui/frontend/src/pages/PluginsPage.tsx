@@ -33,13 +33,6 @@ const PLANNED: Card[] = [
     later: "step 2",
   },
   {
-    name: "Assets view",
-    icon: "folder",
-    contributes: ["Project view · Assets"],
-    about: "Figures, tables, and baseline material from Figs/ and Baselines/.",
-    later: "step 2",
-  },
-  {
     name: "Skills Hub",
     icon: "puzzle",
     contributes: ["Page · Skills", "Skills"],

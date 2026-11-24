@@ -1,0 +1,18 @@
+{
+  "contract": "^1.0",
+  "id": "assets-view",
+  "name": "Assets view",
+  "version": "0.1.0",
+  "description": "A project's figures, reference runs, results, and listed datasets, read-only.",
+  "reads": [
+    "projects-folder/*/Figs",
+    "projects-folder/*/Baselines",
+    "projects-folder/*/Code/results",
+    "projects-folder/*/Code/Datasets",
+    "projects-folder/*/Code/README.md",
+    "projects-folder/*/paper_skeleton.md"
+  ],
+  "contributes": {
+    "projectViews": [{ "id": "assets", "title": "Assets", "entry": "index.html" }]
+  }
+}

@@ -39,9 +39,12 @@ the desktop-OS shell of draggable windows and a dock, which stays in
   `paper/` folder, not a PDF, password-protected, too large); **Skeleton**
   (desktop app only) shows the project's `paper_skeleton.md`, read-only: its
   Snapshot, its claims with each one's evidence, and the rest folded by
-  section. In each, "Ask the agent about this" puts what you selected (a
-  line, a commit, text of the paper, a claim) in the conversation's input as
-  a reference; **Idea** and **Assets** come in step 2.
+  section; **Assets** (desktop app only) lists the project's figures
+  (`Figs/`), reference runs (`Baselines/`), results (`Code/results/`), and
+  the datasets `Code/README.md` lists, read-only, with a preview of the one
+  you select and where it is used. In each, "Ask the agent about this" puts
+  what you selected (a line, a commit, text of the paper, a claim, a file)
+  in the conversation's input as a reference; **Idea** comes in step 2.
 - **Paper wiki**: the standalone `paper-wiki/viz.html` graph and timeline
   viewer, embedded by iframe (DESIGN.md §4); a note's Status row saves your
   unread / skimmed / read state into the note's file.

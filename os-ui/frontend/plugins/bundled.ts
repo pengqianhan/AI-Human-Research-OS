@@ -4,4 +4,4 @@
  * Pure, so the renderer can read it too. The list order is the menu and tab
  * order.
  */
-export const BUNDLED_IDS = ["paper-wiki", "code-view", "paper-view", "skeleton-view"] as const;
+export const BUNDLED_IDS = ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view"] as const;

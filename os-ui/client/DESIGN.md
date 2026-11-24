@@ -168,7 +168,7 @@ with the trunk's endpoints only.
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
 | `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`); other `api/` paths are 404 |
 | `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
-| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, and Skeleton views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
+| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, Skeleton, and Assets views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
@@ -290,9 +290,13 @@ Windows spellings.
   by extension (SVG as `image/svg+xml`, which an `<img>` needs).
 - The Code view declares `reads: ["projects-folder/*/Code"]`, the Paper view
   `reads: ["projects-folder/*/paper"]`, the Skeleton view
-  `reads: ["projects-folder/*/paper_skeleton.md"]`. Besides the fixture tests
-  in [test/protocol.test.ts](test/protocol.test.ts), the end-to-end suite reads
-  through all three: `+`, `#`, `%`, a space and Chinese text in names and
+  `reads: ["projects-folder/*/paper_skeleton.md"]`, the Assets view the four
+  folders `Figs`, `Baselines`, `Code/results`, `Code/Datasets` and the two files
+  `Code/README.md` and `paper_skeleton.md` of `projects-folder/*`. Besides the
+  fixture tests in [test/protocol.test.ts](test/protocol.test.ts) (for the Assets
+  view, against its bundled origin: nothing else of a project is read, and a
+  link inside a declared folder that leaves it is 404), the end-to-end suite reads
+  through all four: `+`, `#`, `%`, a space and Chinese text in names and
   files, a 33 MiB `main.pdf` (413), and 404 for `.env`, for a file outside
   each view's root, and for a path below or a listing of the Skeleton view's
   file.
@@ -399,6 +403,37 @@ opens by itself: the quote is the line as written, not what the page draws
 (the Human Owner's decision of 2026-11-23). In a browser the tab says the view
 opens in the desktop app.
 
+**The Assets view** (2.2 of [os-ui/PLUGINS.md](../PLUGINS.md) Part 3). Its page
+lists `Figs/`, `Baselines/`, `Code/results/`, and `Code/Datasets/` through
+`./_os/list`, depth first, stopping at 4 levels, 40 listings, or 500 files a
+group and saying so beside the group, as it says when a listing was cut at
+5,000 names or could not be made. It reads `paper_skeleton.md` and
+`Code/README.md` (1 MiB each) for "Used in" and for the datasets of the Data
+section, and each listed folder's `README.md` for the descriptions of the files
+beside it, at most four at once and 8 MiB in all, each reduced to its
+descriptions as soon as it is read. A picture is an `<img>` whose only source is
+the channel's URL for a path a listing gave, with the Reload's generation
+beside it (`&v=<n>`, so Reload draws a changed picture again), an empty `alt`,
+and nothing else from the file; at most four load at once (`queue.ts`), a busy
+one is tried once more after a second, and a failed one asks the channel for
+its status with a `HEAD` in the same slot. An SVG is shown only that way, and
+only after `svg.ts` has read its text (at most 4 MiB, in the same slot) and
+counted what its `<use>` references draw: over 200,000 elements, a cycle,
+another picture held inside as a `data:` URL other than a PNG, JPEG, GIF, or
+WebP, or a file it cannot check waits for the human's **Show**. The end-to-end suite pins
+that a hostile SVG (script, `onload`, external images, `@import`,
+`foreignObject`, a `<use>` to an outside URL) runs nothing and that a local
+HTTP listener its URLs name hears no request. Previews: a CSV's first 20 rows
+by 30 columns from its first 2 MiB, read in one pass; a JSON or text file's
+first 40 lines from 256 KiB; Markdown drawn by md-kit as text; no PDF. A card
+or row posts `os.select` with a label and no quote: the file's project path,
+its names' invisible characters, the look-alikes of a label's own separators
+(`·`, curly quotes, `:`, slashes other than `/`), `⟨` and `⟩`, and a space at
+either end of a name as `⟨U+XXXX⟩` markers, cut in the middle past 200
+characters, or `Code/README.md:<line> · dataset <name>`; when the label is not
+the item as written, the panel says what the agent gets. Its chip opens by
+itself.
+
 Known limits of the channel, not yet handled:
 
 - A concurrent writer could swap a folder on the path for a link between the
@@ -418,11 +453,11 @@ Known limits of the channel, not yet handled:
   by a manifest. App pages (HTML and the `index.html` fallback), with one
   `frame-src` entry per loaded plugin, in load order (`appCsp` in
   `protocol.ts`; `frame-src 'none'` if none loaded):
-  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
+  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view app://assets-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
   A site served from a workspace folder (the Paper Wiki viewer):
   `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
-  A site in its plugin folder (the Code, Paper, and Skeleton views') gets no inline code
+  A site in its plugin folder (the Code, Paper, Skeleton, and Assets views') gets no inline code
   at all, since it shows untrusted names and text:
   `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   (`PLUGIN_CSP`; styles set through the DOM still apply, which is how PDF.js

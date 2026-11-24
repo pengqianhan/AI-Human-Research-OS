@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1010" height="304" viewBox="0 0 1010 304" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+<rect width="100%" height="100%" fill="#fcfcfb"/>
+<text x="12" y="24" font-size="15" font-weight="600" fill="#0b0b0b">nanochat CPU example: d1, width 64, 0.84M params, vocab 4096</text>
+<text x="62" y="52" font-size="13" font-weight="600" fill="#0b0b0b">Base pretraining: train loss (EMA)</text>
+<line x1="62" x2="288" y1="215.2" y2="215.2" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="219.2" font-size="11" fill="#898781" text-anchor="end">6</text>
+<line x1="62" x2="288" y1="156.5" y2="156.5" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="160.5" font-size="11" fill="#898781" text-anchor="end">7</text>
+<line x1="62" x2="288" y1="97.9" y2="97.9" stroke="#e6e5e0" stroke-width="1"/>
+<text x="56" y="101.9" font-size="11" fill="#898781" text-anchor="end">8</text>
+<text x="62.0" y="274" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<text x="137.6" y="274" font-size="11" fill="#898781" text-anchor="middle">100</text>
+<text x="213.2" y="274" font-size="11" fill="#898781" text-anchor="middle">200</text>
+<line x1="62" x2="288" y1="258" y2="258" stroke="#898781" stroke-width="1"/>
+<text x="175.0" y="290" font-size="11" fill="#52514e" text-anchor="middle">step</text>
+<text transform="translate(23,162.0) rotate(-90)" font-size="11" fill="#52514e" text-anchor="middle">loss (nats/token)</text>
+<path d="M62.0,79.2 L62.8,79.2 L63.5,79.3 L64.3,79.3 L65.0,79.3 L65.8,79.4 L66.5,79.4 L67.3,79.5 L68.0,79.6 L68.8,79.6 L69.6,79.8 L70.3,79.9 L71.1,80.0 L71.8,80.2 L72.6,80.5 L73.3,80.7 L74.1,81.1 L74.8,81.6 L75.6,82.2 L76.4,82.9 L77.1,83.8 L77.9,84.7 L78.6,85.9 L79.4,87.3 L80.1,88.9 L80.9,90.8 L81.7,92.7 L82.4,94.9 L83.2,97.3 L83.9,99.6 L84.7,102.4 L85.4,105.3 L86.2,108.4 L86.9,111.4 L87.7,114.3 L88.5,117.0 L89.2,120.3 L90.0,122.8 L90.7,125.9 L91.5,128.8 L92.2,131.5 L93.0,134.2 L93.7,136.0 L94.5,138.4 L95.3,140.8 L96.0,142.9 L96.8,144.6 L97.5,146.5 L98.3,148.5 L99.0,150.0 L99.8,152.2 L100.5,154.2 L101.3,156.3 L102.1,158.2 L102.8,159.9 L103.6,161.3 L104.3,163.0 L105.1,164.3 L105.8,166.3 L106.6,167.2 L107.4,168.6 L108.1,170.2 L108.9,171.7 L109.6,173.1 L110.4,174.5 L111.1,176.2 L111.9,177.6 L112.6,179.0 L113.4,180.3 L114.2,181.0 L114.9,182.1 L115.7,183.3 L116.4,183.9 L117.2,184.9 L117.9,185.7 L118.7,186.6 L119.4,187.9 L120.2,189.1 L121.0,190.4 L121.7,190.5 L122.5,192.1 L123.2,192.6 L124.0,193.3 L124.7,194.0 L125.5,195.0 L126.2,195.7 L127.0,196.9 L127.8,197.4 L128.5,197.7 L129.3,197.8 L130.0,198.3 L130.8,199.6 L131.5,200.6 L132.3,201.3 L133.1,201.8 L133.8,202.4 L134.6,202.9 L135.3,203.5 L136.1,204.0 L136.8,205.0 L137.6,205.2 L138.3,206.1 L139.1,205.9 L139.9,206.0 L140.6,206.5 L141.4,206.2 L142.1,206.4 L142.9,207.0 L143.6,207.7 L144.4,208.2 L145.1,209.0 L145.9,209.2 L146.7,209.5 L147.4,210.4 L148.2,211.0 L148.9,211.3 L149.7,211.7 L150.4,211.8 L151.2,211.8 L151.9,212.3 L152.7,212.8 L153.5,213.6 L154.2,214.0 L155.0,214.8 L155.7,215.1 L156.5,215.2 L157.2,215.9 L158.0,216.5 L158.7,217.0 L159.5,217.7 L160.3,217.6 L161.0,218.0 L161.8,218.4 L162.5,218.8 L163.3,219.4 L164.0,220.0 L164.8,219.6 L165.6,220.0 L166.3,220.4 L167.1,220.1 L167.8,220.1 L168.6,220.2 L169.3,219.9 L170.1,220.9 L170.8,221.0 L171.6,221.1 L172.4,221.7 L173.1,222.1 L173.9,222.0 L174.6,222.6 L175.4,223.1 L176.1,223.7 L176.9,224.4 L177.6,224.7 L178.4,225.1 L179.2,224.9 L179.9,225.5 L180.7,225.8 L181.4,225.6 L182.2,225.7 L182.9,225.6 L183.7,225.7 L184.4,226.5 L185.2,227.1 L186.0,227.3 L186.7,227.8 L187.5,228.1 L188.2,228.5 L189.0,228.2 L189.7,228.8 L190.5,228.7 L191.3,229.0 L192.0,229.1 L192.8,229.2 L193.5,229.4 L194.3,229.1 L195.0,229.4 L195.8,229.5 L196.5,230.2 L197.3,231.1 L198.1,231.3 L198.8,232.0 L199.6,231.9 L200.3,231.8 L201.1,231.6 L201.8,231.7 L202.6,231.2 L203.3,231.3 L204.1,231.3 L204.9,231.1 L205.6,231.2 L206.4,231.7 L207.1,232.0 L207.9,232.4 L208.6,232.5 L209.4,232.8 L210.1,233.1 L210.9,233.6 L211.7,234.5 L212.4,235.1 L213.2,235.6 L213.9,235.8 L214.7,235.4 L215.4,235.0 L216.2,234.6 L216.9,235.0 L217.7,235.6 L218.5,235.7 L219.2,235.3 L220.0,236.1 L220.7,235.8 L221.5,235.9 L222.2,236.1 L223.0,236.4 L223.8,236.3 L224.5,236.5 L225.3,237.1 L226.0,236.9 L226.8,236.8 L227.5,236.7 L228.3,236.7 L229.0,236.7 L229.8,236.9 L230.6,236.9 L231.3,237.0 L232.1,237.0 L232.8,237.6 L233.6,238.0 L234.3,238.8 L235.1,239.2 L235.8,239.3 L236.6,239.4 L237.4,239.1 L238.1,239.6 L238.9,239.6 L239.6,240.2 L240.4,240.2 L241.1,240.4 L241.9,239.8 L242.6,239.2 L243.4,239.0 L244.2,239.3 L244.9,239.5 L245.7,239.4 L246.4,239.8 L247.2,240.0 L247.9,240.0 L248.7,240.6 L249.5,241.4 L250.2,241.4 L251.0,241.6 L251.7,241.3 L252.5,240.7 L253.2,240.5 L254.0,240.4 L254.7,240.2 L255.5,239.7 L256.3,240.0 L257.0,240.2 L257.8,240.3 L258.5,240.7 L259.3,241.0 L260.0,241.0 L260.8,241.4 L261.5,242.4 L262.3,242.4 L263.1,241.7 L263.8,242.1 L264.6,242.3 L265.3,242.3 L266.1,241.7 L266.8,242.2 L267.6,242.9 L268.3,243.2 L269.1,243.6 L269.9,243.4 L270.6,242.9 L271.4,243.2 L272.1,243.2 L272.9,243.5 L273.6,243.8 L274.4,244.1 L275.2,244.1 L275.9,243.8 L276.7,243.8 L277.4,243.8 L278.2,244.4 L278.9,243.9 L279.7,243.8 L280.4,243.9 L281.2,244.2 L282.0,244.1 L282.7,244.3 L283.5,244.6 L284.2,244.7 L285.0,244.8 L285.7,244.8 L286.5,244.5 L287.2,244.5 L288.0,244.2" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"><title>train loss</title></path>
+<text x="294.0" y="248.2" font-size="11" fill="#0b0b0b">5.506</text>
+<text x="392" y="52" font-size="13" font-weight="600" fill="#0b0b0b">Base pretraining: validation bpb</text>
+<line x1="392" x2="618" y1="214.7" y2="214.7" stroke="#e6e5e0" stroke-width="1"/>
+<text x="386" y="218.7" font-size="11" fill="#898781" text-anchor="end">2.5</text>
+<line x1="392" x2="618" y1="143.9" y2="143.9" stroke="#e6e5e0" stroke-width="1"/>
+<text x="386" y="147.9" font-size="11" fill="#898781" text-anchor="end">3</text>
+<line x1="392" x2="618" y1="73.1" y2="73.1" stroke="#e6e5e0" stroke-width="1"/>
+<text x="386" y="77.1" font-size="11" fill="#898781" text-anchor="end">3.5</text>
+<text x="392.0" y="274" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<text x="467.3" y="274" font-size="11" fill="#898781" text-anchor="middle">100</text>
+<text x="542.7" y="274" font-size="11" fill="#898781" text-anchor="middle">200</text>
+<text x="618.0" y="274" font-size="11" fill="#898781" text-anchor="middle">300</text>
+<line x1="392" x2="618" y1="258" y2="258" stroke="#898781" stroke-width="1"/>
+<text x="505.0" y="290" font-size="11" fill="#52514e" text-anchor="middle">step</text>
+<text transform="translate(353,162.0) rotate(-90)" font-size="11" fill="#52514e" text-anchor="middle">bits per byte</text>
+<path d="M392.0,79.2 L410.8,106.4 L429.7,170.5 L448.5,195.2 L467.3,209.6 L486.2,219.6 L505.0,227.0 L523.8,232.5 L542.7,236.9 L561.5,240.2 L580.3,242.3 L599.2,243.9 L618.0,244.8" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"><title>val bpb</title></path>
+<circle cx="392.0" cy="79.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 0, 3.4564</title></circle>
+<circle cx="410.8" cy="106.4" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 25, 3.2644</title></circle>
+<circle cx="429.7" cy="170.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 50, 2.8124</title></circle>
+<circle cx="448.5" cy="195.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 75, 2.6377</title></circle>
+<circle cx="467.3" cy="209.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 100, 2.5360</title></circle>
+<circle cx="486.2" cy="219.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 125, 2.4657</title></circle>
+<circle cx="505.0" cy="227.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 150, 2.4136</title></circle>
+<circle cx="523.8" cy="232.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 175, 2.3744</title></circle>
+<circle cx="542.7" cy="236.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 200, 2.3436</title></circle>
+<circle cx="561.5" cy="240.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 225, 2.3203</title></circle>
+<circle cx="580.3" cy="242.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 250, 2.3053</title></circle>
+<circle cx="599.2" cy="243.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 275, 2.2941</title></circle>
+<circle cx="618.0" cy="244.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>val bpb: step 300, 2.2882</title></circle>
+<text x="624.0" y="248.8" font-size="11" fill="#0b0b0b">2.288</text>
+<text x="722" y="52" font-size="13" font-weight="600" fill="#0b0b0b">SFT: validation bpb</text>
+<line x1="722" x2="948" y1="239.7" y2="239.7" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="243.7" font-size="11" fill="#898781" text-anchor="end">2.15</text>
+<line x1="722" x2="948" y1="182.1" y2="182.1" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="186.1" font-size="11" fill="#898781" text-anchor="end">2.2</text>
+<line x1="722" x2="948" y1="124.4" y2="124.4" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="128.4" font-size="11" fill="#898781" text-anchor="end">2.25</text>
+<line x1="722" x2="948" y1="66.8" y2="66.8" stroke="#e6e5e0" stroke-width="1"/>
+<text x="716" y="70.8" font-size="11" fill="#898781" text-anchor="end">2.3</text>
+<text x="722.0" y="274" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<text x="779.9" y="274" font-size="11" fill="#898781" text-anchor="middle">10</text>
+<text x="837.9" y="274" font-size="11" fill="#898781" text-anchor="middle">20</text>
+<text x="895.8" y="274" font-size="11" fill="#898781" text-anchor="middle">30</text>
+<line x1="722" x2="948" y1="258" y2="258" stroke="#898781" stroke-width="1"/>
+<text x="835.0" y="290" font-size="11" fill="#52514e" text-anchor="middle">SFT step</text>
+<text transform="translate(683,162.0) rotate(-90)" font-size="11" fill="#52514e" text-anchor="middle">bits per byte</text>
+<path d="M722.0,79.2 L779.9,157.7 L837.9,196.2 L895.8,233.8 L948.0,244.8" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"><title>SFT val bpb</title></path>
+<circle cx="722.0" cy="79.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 0, 2.2892</title></circle>
+<circle cx="779.9" cy="157.7" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 10, 2.2211</title></circle>
+<circle cx="837.9" cy="196.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 20, 2.1877</title></circle>
+<circle cx="895.8" cy="233.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 30, 2.1551</title></circle>
+<circle cx="948.0" cy="244.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>SFT val bpb: step 39, 2.1456</title></circle>
+<text x="954.0" y="248.8" font-size="11" fill="#0b0b0b">2.146</text>
+</svg>

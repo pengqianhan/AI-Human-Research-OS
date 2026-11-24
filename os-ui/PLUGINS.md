@@ -6,14 +6,255 @@ before implementation; Part 3, step 2's Idea, Skeleton, and Assets views, by ano
 design agent on 2026-11-23. Each part is its author's report, kept as written, so "I"
 is that agent and line numbers refer to the code as it was that day.
 
-Status on 2026-11-23:
+Status on 2026-11-24:
 
 - **Step 2's three views are designed** (Part 3, against commit `5874a32`): the
   Skeleton, Assets, and Idea views as the Human Owner chose them in
   [mockups/step2/views.html](mockups/step2/views.html), one pull request each in that
   order, with no new dependency and no change to contract 1.0. **2.1, the Skeleton
-  view, is built** on branch `step2-skeleton-view` (below); Assets and Idea are not.
+  view, is built** on branch `step2-skeleton-view`, and **2.2, the Assets view**, on
+  branch `step2-assets-view` (both below); Idea is not.
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.2, the Assets view**, is the bundled plugin
+  [frontend/plugins/assets-view/](frontend/plugins/assets-view/) (manifest as §4.1,
+  `reads` exactly §1 fact 1's six roots), with `walk.ts` (the folder walk),
+  `queue.ts` (the picture queue), `svg.ts` (the SVG check, after the review), and
+  `logic.ts` (every rule of §4.2, the CSV reader, labels, words) beside `main.ts`.
+  md-kit and site-kit are unchanged (md-kit's timing tests changed, below); the
+  Skeleton view's tests are untouched. An independent review (2026-11-24) found 3
+  must-fix and 7 should-fix problems, and CI failed on Windows and macOS x64; the
+  points marked "after the review" are its fixes. Where the code differs from Part 3
+  or the mockup:
+  - **Labels** (the brief for 2.2 over §1 fact 5's `clipLabel`; after the review): a
+    file's label is its project path, each name with the host's own classes
+    (`visibleName`'s) and the look-alikes of a label's own forms shown as
+    `⟨U+XXXX⟩` markers: the middle dot and its kin and curly quotes (so no name
+    reads as `… · claim C1` or `· section “…”`), `:` (so `x.csv:12` cannot read as a
+    line), a backslash, slashes other than `/` (so no name shows a second, deeper
+    path), `⟨` and `⟩` themselves (so a name that spells a marker, `a⟨U+003A⟩b.svg`,
+    never shares a label with `a:b.svg`), and a space at either end of a name (so
+    `a.svg ` never reads as `a.svg`). All of it is marked in one pass, so a label
+    decodes to exactly one path: a seeded test of 20,000 hostile paths decodes
+    every uncut label back to its path and finds no two paths with one label. A
+    label over the host's 200 characters is cut once, in the middle, with one "…":
+    the file's name stays whole after the cut where it fits, else its last 99
+    characters do, never inside a marker or a surrogate pair (`clipLabel` cut from
+    the left and could split either; the first build cut at the end, so
+    `sweep_…seed1.png` to `seed5.png` shared a label). A dataset's label is
+    `Code/README.md:<line> · dataset <name>`, the name as plain text with blank runs
+    one space and markers as above, marked in one pass too; the name is what is cut.
+    Whenever a label is not the item as written (it holds a marker, it was cut, or
+    a dataset name's blank runs were joined), the panel says so in one sentence
+    under the item's name: "The agent gets this name: `<label>` (characters that could
+    be misread are written as ⟨U+…⟩; the path is shortened)." Every label is
+    checked through the host's own `readSelect` in `logic.test.ts`. No quote is
+    posted.
+  - **Identity**: an item is its project path (`file:Figs/a/plot.svg`) or its
+    README line (`dataset:208`); the open item, the selection, a card's picture,
+    and the panel are found by that key, never by a name shown, so two files of one
+    name in two folders, or two datasets of one name, each open their own detail.
+    Reload keeps the open item (a dataset only while its line has the same name),
+    clears the selection, and keeps the list's scroll. The old list stays clickable
+    while Reload reads (after the review): an item clicked then is open and marked
+    on the new list when it is still there with the same label; otherwise the page
+    posts `null`, so the workspace never holds a selection the page dropped.
+  - **The walk** (§4.2): "depth 4" is four folder levels below the group's folder
+    (`Figs/a/b/c/d/` is listed, `…/d/e/` is not); the 40 listings count the group's
+    own; the walk stops at the 501st file. Beside the group, in words: "No Figs/
+    folder this view can read" (404), "Figs/ is empty" (nothing listed), "Figs/
+    holds only empty folders", "could not be listed" with the reason, and a sentence
+    beginning "More files than shown:" for each stop (depth, listings, files) and
+    for a listing the channel cut at 5,000 names; a subfolder that could not be
+    listed is named. `Code/Datasets/`'s state is said under the dataset rows.
+  - **The bar's count** names a group's folder when it was listed, and "datasets"
+    when `Code/README.md` was read or `Code/Datasets/` listed.
+  - **Descriptions**: a list's top-level items and a table's body rows, in file
+    order; a link inside bold counts, a `<…>` address too, and a link's title is
+    left out (after the review); a link to a file of another folder (a subfolder's) describes nothing; an item
+    with nothing after its link gives no second line. The panel's What adds "from
+    <README.md>:<line>" under the text, and a README.md that could not be read is
+    named beside its group and in the panel. After the review, README.md files are
+    read in walk order while their listed sizes add up to 8 MiB; each is reduced to
+    its descriptions as soon as it is read, and no parsed document is held. The rest
+    are named in one line beside their group ("README.md files past the first 8 MiB
+    are not read for descriptions: …") and in the panel of their files. The
+    review's 160 READMEs of 1 MiB (four groups of 40 folders) took 4.4 s in
+    `buildModel` and held about 0.9 GB; now 8 are read in 0.3 s, `buildModel` takes
+    0.01 s, and 6 MiB is held.
+  - **Used in** (after the review): each line of `paper_skeleton.md` and
+    `Code/README.md` is read for link and image addresses after `](`, outside code
+    spans: a `<…>` address, or one up to white space with balanced parentheses
+    (`loss (1).png`), a title left out, whatever the link's text holds
+    (`[Figure [1]]`). A `](` counts only when its `]` closes an unescaped `[`, on
+    its line or an earlier line of the same paragraph or item, so `\[f](x)` names
+    nothing, as md-kit reads it. A code span whose whole text is the path counts
+    too; a path in plain text does not. Paths are compared in Unicode NFC, never by
+    case. A table row is read as written, so a link in a cell md-kit cut
+    at 2,000 characters, or past the header's cells, is found. The place is the
+    line that names the file (a table row with its first cell, cut at 80
+    characters); a link whose text breaks across a paragraph's or item's lines
+    gives the block's lines; headings and a table's header row are read, code
+    blocks are not. When `paper_skeleton.md` or `Code/README.md` could not be read,
+    or not whole, the panel says so beside the places it found; when both were read
+    whole and nothing names the file, it says "No link or path to this file was
+    found in paper_skeleton.md or Code/README.md.", what was searched, not a fact
+    about the file (the first build's "Not named in …" was said of files named by
+    a link with a title, a `<…>` address, or parentheses). Reference-style links
+    and HTML `<img>` are outside what is read and get that sentence.
+  - **What md-kit leaves unread is said**: past its caps (20,000 lines, 500 rows or
+    30 columns of a table), a sentence names what of `paper_skeleton.md` or
+    `Code/README.md` was not read for Used in, what of `Code/README.md` for the
+    datasets, and what of a folder's `README.md` for descriptions (beside its group,
+    and in the panel of its files without one); a Markdown preview names a table cut
+    to 500 rows or 30 columns. After the review, the Used in, datasets, and
+    descriptions sentences also name everything after a code fence never closed
+    (md-kit reads it as code; a Data section after it is not seen, and the group
+    still reads "Code/README.md has no Data section" above that sentence), and the
+    descriptions one cells cut at 2,000 characters and cells past the header's
+    count.
+  - **Datasets**: a row shows its cells as `<header>: <text>` but an empty one and
+    the one that is just the name (`Source: cais/mmlu all` stays); a row with no
+    name reads "(no name)". Notes say when the dataset table has rows past 500,
+    columns past 30, or rows of another width, and when the Data section goes on
+    after the table (that text is not shown).
+  - **Previews**: a CSV's first record is drawn as its header and N counts the
+    records after it; a record ends at LF or CRLF only (a lone CR is a character),
+    a blank line is a record, a quote not at a field's start is a character; notes
+    name rows of another width, columns past 30, cut cells, and a quote never
+    closed; "All N rows" when there are 20 or fewer. When the 2 MiB read stops
+    inside a record (after the review), that record is neither shown nor counted
+    (the first build blamed a row that is whole in the file), a quoted field still
+    open there is said ("A quoted field opened in row 1 is still open where the
+    preview stops reading, at 2 MiB; that row is not shown."), and with no whole
+    row the preview says "No complete row in the first 2 MiB". A JSON or text file:
+    "N lines" when 40 or fewer. A Markdown preview says it is drawn as text, links
+    not followed and images not loaded. Sizes divide by 1,024, as the mockup's
+    `fmtBytes` does. A PDF's heading is "File", as §4.2's list has it.
+  - **Pictures** (§4.3): the `<img>` has `src` and an empty `alt` only, the name
+    being the card's caption. Every picture's URL carries the Reload's generation
+    beside its path, `…/files?path=…&v=<n>` (after the review: Chromium reuses a
+    picture it already drew for a URL, `no-store` or not, so two files that
+    swapped contents on disk kept each other's picture after Reload); the card,
+    the panel's large picture, a retry, and the `HEAD` after an error use it, and
+    the channel ignores the extra parameter (`protocol.test.ts` pins it). The queue
+    also retries once a load that failed while the channel's `HEAD` answers 200 (a
+    busy moment can fail the load and free its slots before the `HEAD`), ends a
+    load after 30 s with "Try again", and runs the panel's large picture too, first
+    in line, dropping it when another item opens. Reload frees every slot at once
+    and drops the answers of loads it cancelled; each render resets the queue, and
+    a picture is placed only into the render it was asked for, so a **Show**
+    clicked while Reload reads loads again on the new card (after the review; it
+    stayed blank until the next Reload). Leaving the tab cancels nothing (a picture
+    keeps loading while the frame is hidden), and no load holds a slot past its
+    time-out; the end-to-end suite Reloads and leaves the tab while sixty pictures
+    load, and all sixty are drawn. A card past the 200th figure shows **Show**. A
+    card is a `div` with `role="button"` (Enter and Space click it), since its
+    picture box may hold a button and a `<button>` holds none.
+  - **The SVG check** (after the review; a 1.2 KB SVG of `<use>` nested 6 levels of
+    10 froze the page for 80 s and more as Figures opened, and on the click as a
+    row; the time-out runs on the same thread and could not help): before an
+    `.svg` goes to an `<img>`, card or panel, the page reads its text through the
+    channel in the same queue slot, at most 4 MiB, and `svg.ts` counts the elements
+    it draws through `<use>` (every attribute whose local name is `href`, whatever
+    its prefix, and each of them when a `<use>` has several; same-document `#id`,
+    XML escapes and percent-encoding read), with a scanner over the text (no document
+    is built and nothing of it reaches the page; `dom.test.ts` pins both) and one
+    memoised, cycle-safe pass, linear in the file's size. It fails closed: over
+    4 MiB, not UTF-8, not read as it expects (an unclosed or mismatched tag, its own
+    document type entries), a reference cycle, or more than 200,000 elements means
+    no picture, the reason in one sentence ("This SVG repeats its parts 6,802,462
+    times over; drawing it may freeze the view."), and **Show**, which draws it
+    anyway, the human's choice. The card and the panel each read the text before
+    their draw, so an SVG opened in the panel is fetched four times on a Reload
+    (two reads, two picture loads). The bound, measured in headless Chromium on
+    macOS arm64: 68,020 elements (4 levels of 10) draw in 313 ms with the page
+    answering in 5 ms; 680,241 (5 of 10, refused: the review left 5 of 10 to this
+    build's call) block it about 1.1 s; 2.45 million about 5 s; 6 and 7 of 10
+    never finish. nanochat_cpu's two SVGs (91 and 113 elements)
+    and a matplotlib-style figure (glyphs and a marker in `<defs>`, 5,000 `<use>`,
+    an embedded `data:image/png` raster) draw without a click. Another picture held
+    inside is refused too (a recheck after the review wrapped the 6×10 bomb in one
+    `<image href="data:image/svg+xml;base64,…">`, and wrote its `<use>` with
+    `x:href`): an attribute's value on any element, or a `url(` in one (a style, a
+    fill), that is a `data:` URL of any type but `image/png`, `jpeg`, `gif`, or
+    `webp` (XML references read, leading white space and control characters
+    skipped, tabs and line breaks dropped, case ignored) gives "This SVG holds
+    another picture the view cannot check; drawing it may freeze the view." and
+    **Show**. What stays a declared limit: a `data:` URL inside a `<style>` sheet,
+    or written with CSS escapes in a style (`\64 ata:`); HTML inside
+    `foreignObject`; filters and patterns; a file changed between the check and
+    the draw.
+  - **Narrow window**: below 760 px of the frame's width (the mockup's container
+    rule), the preview sits above the list, at most 270 px tall.
+  - **Results' sentence**, "The Code view also lists these files.", shows also when
+    `Code/results/` is not there, under it the folder's state.
+  - **Test fixtures and the end-to-end suite** (the brief for 2.2 over §6): no test
+    reads a live project file. [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md)
+    holds frozen copies of nanochat_cpu's `Figs/`, `Baselines/` (its 6,501-row
+    reference CSV cut to 300 rows), `Code/results/`, `Code/Datasets/`, and
+    `Code/README.md`, and of the template's. The suite checks the view on
+    `assets_e2e`, a project it makes from the template with that copy laid over it,
+    not on nanochat_cpu, whose copy it only photographs; the hostile names and files
+    (the design's, plus a markup-named SVG, one name in two folders, two datasets of
+    one name, binary data, a depth past the cap, a name with a no-break space) are
+    in a third project, `assets_odd`, so they never change what the first checks,
+    and the `<use>` bombs in a fourth, `assets_bomb`. The isolation test asks for
+    files that are there (`AGENTS.md`, `PROJECT_MEMORY.md`, `Code/README_zh.md`,
+    another project's `Code/` file) rather than §6's `Code/tools/…` and
+    `Code/nanochat/…`, which `assets_e2e` has not. The hostile SVG holds a script,
+    `onload`, two external images, `@import`, a `foreignObject` with an image and a
+    frame, a `<use>` to an outside URL, and a `javascript:` link, all aimed at a
+    local HTTP listener; drawn as a card and large (natural width 320), it ran
+    nothing and the listener heard no request (§1 fact 3 is now pinned). That SVG
+    covers fewer vectors than the reviewer's `hostile.mjs`, which found nothing
+    either. After the review the suite also swaps two pictures on disk and Reloads,
+    clicks during a Reload, and opens the bombs in `Figs/` and `Code/results/`.
+  - **Source checks** (`dom.test.ts`, after the review): sources are read with LF
+    line endings, as the Skeleton view's are, so the checks hold on a Windows
+    checkout (two failed there on CRLF). Besides the plain spellings, every site
+    file and kit is scanned for a sink reached the long way round: its name as a
+    quoted string or a piece of one (`"inner" + "HTML"`), a write through a
+    string-indexed bracket, a sink as an object key, `Object.assign`,
+    `Reflect.set`, `defineProperty`, `as any` and other casts, `.src` outside
+    `draw()`, `createElement` outside site-kit, and an `el()` tag outside a fixed
+    list; the review's mutations are each caught.
+  - **Timing tests** (after the review; one helper,
+    [frontend/plugins/growth.ts](frontend/plugins/growth.ts)): md-kit's hostile
+    inputs and Snapshot cases, the CSV reader's, Used in's, and the SVG check's time
+    the input at n and at 4n, best of five after a warm-up of both, and a case fails
+    only when the ratio is 10 or more and its best time at 4n is over 500 ms. One
+    pass grows about 4 times, a pass per element about 16; a ratio alone was noise
+    on a few milliseconds (macOS x64 failed the old 100 ms and 500 ms bounds, then a
+    ratio of 13.4 on a 14 ms case). The sizes keep every case at 50 ms or less at 4n
+    here, and each test's quadratic code, put back on a scratch copy (f1bd371's
+    Snapshot split, the CSV reader walking earlier records every 64th record, or a
+    pass over the input every 1st to 128th element), fails it at 2.7 s or more at 4n.
+    Run 20 times each beside four busy loops, no case failed; the worst was 10.6
+    times on 63 ms (the SVG check's entities in an id, passed by the floor) and the
+    longest 70 ms.
+  - **The protocol tests** (`client/test/protocol.test.ts`, "the Assets view's
+    reads", on the bundled origin): its six roots are read; `AGENTS.md`,
+    `PROJECT_MEMORY.md`, `index.md`, `Code/` besides `results/`, `Datasets/` and
+    `README.md`, `paper/`, and listings of the project, `Code/`, `paper/` and the two
+    file roots are 404; a link inside a declared folder leaving the workspace,
+    reaching `human/private`, or reaching `Code/`, and a project whose `Figs` or
+    `Code/results` is itself such a link, are 404 and left out of listings. Widening
+    a root in `plugin.json` (`Code/results` to `Code`, or `Figs` to the project)
+    fails the first group; dropping `serveRead`'s containment check, or its
+    declared-root check, fails the second.
+  - **The checklist** asks the Human Owner to look at nanochat_cpu and change
+    nothing. §6's "Click `training-metrics.csv`" is `training_metrics.csv` under
+    Results (943 rows); the hyphenated one is the reference run's.
+  - **Limits that stay** (found by the review, not changed): Used in also finds a
+    path inside an HTML comment, a code span broken across lines, and a path with
+    `%2F` used as a separator; a CSV with lone CRs for line ends reads as one row,
+    and a UTF-16 file as binary; a lone surrogate in a name is passed to the host as
+    it is. As §1 fact 3 says, the memory to decode a very large picture is not
+    bounded.
+  - Not verified: Windows and Linux (the suite ran on macOS arm64 only; the
+    Windows and macOS x64 CI failures are fixed locally and not yet rerun in CI),
+    and the Human Owner's checklist line.
 
 - **2.1, the Skeleton view**, is the bundled plugin
   [frontend/plugins/skeleton-view/](frontend/plugins/skeleton-view/) (manifest as

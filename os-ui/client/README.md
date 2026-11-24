@@ -129,8 +129,8 @@ agent logins or a first open on a real desktop, so on each of your machines:
       opens its workspace. **Overview** shows the project; the conversation on
       the left lists that project's sessions under **Conversations**, and
       collapses to a thin strip and back. The tabs are **Overview**, **Idea**,
-      **Code**, **Skeleton**, **Assets**, **Paper**; **Idea** and **Assets**
-      are marked "step 2".
+      **Code**, **Skeleton**, **Assets**, **Paper**; **Idea** is marked
+      "step 2".
 - [ ] **The Code view.** In a project's workspace, click the **Code** tab:
       - **Files** lists the project's `Code/` folder on the left; click a
         folder to open it and a file to read it on the right (it says
@@ -181,6 +181,35 @@ agent logins or a first open on a real desktop, so on each of your machines:
         count says 4 verified. Ask it to change the status back to
         `verified`, click **Reload** again, and check C5 is *verified*, so
         the project is as it was.
+- [ ] **The Assets view.** In the `nanochat_cpu` workspace, click the
+      **Assets** tab. Nothing here changes a file.
+      - **Figures** (`Figs/`) shows the two training-curve pictures as cards;
+        **Reference runs** (`Baselines/`), **Results** (`Code/results/`),
+        and **Datasets** list their files, each with its size, and the four
+        datasets of `Code/README.md`'s Data section, each marked *listed*.
+        The two files of `Baselines/openresearch-demo/` that its `README.md`
+        describes have that description under their name.
+      - Click a figure: on the right it appears large, with its size and
+        where it is used (`Code/README.md:131` or `:150`). The dark bar at
+        the bottom names its path, `Figs/…`.
+      - Both figures are drawn without a click, and no panel shows "The
+        agent gets this name: …". That sentence appears only when the name
+        the agent gets differs from the path (a character that could be
+        misread, written as `⟨U+…⟩`, or a path over 200 characters); a
+        picture that would freeze the view shows **Show** and why instead.
+      - Click `training_metrics.csv` under **Results**: its first rows, and
+        "First 20 of 943 rows"; the size line says how many rows it has.
+        Click `summary.json`: its first 40 lines, and the lines of
+        `paper_skeleton.md` and `Code/README.md` that name it.
+      - Click a dataset (`karpathy/climbmix-400b-shuffle`): what
+        `Code/README.md` says about it, its address as text, and "Listed in
+        `Code/README.md:208`"; the bar names that line and the dataset.
+      - Select any of them and click **Ask the agent about this**: a chip
+        appears above the conversation's input and, under it without a
+        click, the exact text that will be sent, `About <the path or line>`.
+        Nothing is sent until you press Send; remove the chip with its **×**.
+      - Make the window narrower until the preview column goes: the preview
+        then sits above the list.
 - [ ] **The Paper view.** In the `nanochat_cpu` workspace, click the **Paper**
       tab:
       - The paper appears as pages, like a PDF reader, read-only. The bar

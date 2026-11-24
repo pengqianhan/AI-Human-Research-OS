@@ -26,9 +26,11 @@ AI-Human Research OS 的应用界面:呈现仓库的真实状态,并承载与 ag
   显示项目 `Code/` 下的文件与 Git 变更;**Paper**(仅桌面应用)只读显示项目的
   `paper/main.pdf`,可翻页、缩放,打不开时说明原因(尚未编译、没有 `paper/` 文件夹、
   不是 PDF、有密码、文件过大);**Skeleton**(仅桌面应用)只读显示项目的 `paper_skeleton.md`:
-  Snapshot、每条论断及其证据,其余内容按小节折叠。三者中"Ask the agent about this"都把所选
-  内容(一行、一次提交、论文中的一段文字、一条论断)作为引用放进对话输入框;**Idea**、**Assets**
-  标注"step 2"。
+  Snapshot、每条论断及其证据,其余内容按小节折叠;**Assets**(仅桌面应用)只读列出项目的图
+  (`Figs/`)、参照运行(`Baselines/`)、结果(`Code/results/`)以及 `Code/README.md` 列出的
+  数据集,并预览所选的一项、说明它在哪里被引用。四者中"Ask the agent about this"都把所选
+  内容(一行、一次提交、论文中的一段文字、一条论断、一个文件)作为引用放进对话输入框;
+  **Idea** 标注"step 2"。
 - **Paper wiki**:嵌入 `paper-wiki/viz.html` 图谱与时间线查看器;笔记的 Status 按钮
   会把 unread / skimmed / read 写回笔记文件。
 - **Skills**:技能商店,与之前相同。**Plugins**:哪些已内置、哪些即将到来(暂为写死的

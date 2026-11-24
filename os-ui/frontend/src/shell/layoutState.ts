@@ -109,11 +109,11 @@ export interface WorkspaceTab {
 }
 
 /** Where a bundled plugin's project view sits in mockup C's tab row. */
-const PLACED_VIEWS: readonly string[] = ["code-view/code", "skeleton-view/skeleton", "paper-view/paper"];
+const PLACED_VIEWS: readonly string[] = ["code-view/code", "skeleton-view/skeleton", "assets-view/assets", "paper-view/paper"];
 
 /**
  * The workspace's tab row, in mockup C's order: Overview, Idea (step 2), the
- * Code view, the Skeleton view, Assets (step 2), any other plugin project
+ * Code view, the Skeleton view, the Assets view, any other plugin project
  * view, then the Paper view. `views` are the loaded plugins' project views
  * (key and title); a placed view whose plugin is not loaded leaves no tab.
  */
@@ -124,7 +124,7 @@ export function workspaceTabs(views: readonly { key: PluginTab; title: string }[
     { id: null, label: "Idea", later: "The Idea view arrives in step 2." },
     ...tab("code-view/code"),
     ...tab("skeleton-view/skeleton"),
-    { id: null, label: "Assets", later: "The Assets view arrives in step 2." },
+    ...tab("assets-view/assets"),
     ...views.filter((v) => !PLACED_VIEWS.includes(v.key)).map((v) => ({ id: v.key, label: v.title })),
     ...tab("paper-view/paper"),
   ];
