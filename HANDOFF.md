@@ -160,8 +160,15 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       no row, so a new project opens the Idea tab on an empty map. Open
       with the Human Owner: `R1 motivates E2` in `nanochat_cpu`'s file
       rests on one step of inference, stated in its Source cell. Next is
-      2.5, the Skills Hub plugin, which needs a mockup choice first
-      unless it keeps the present page; 2.6 waits on Q-PO1.
+      2.5, the Skills Hub plugin, on branch `step2-skills-hub`, which
+      starts from `step2-idea-graph-files`. Its read-only design
+      ([os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 4) finds that the present
+      page cannot be kept unchanged (its details panel covers the whole
+      window, which a framed page cannot do), so the build waits for the
+      Human Owner's mockup choice and their answers to Part 4 §4.2; Q2
+      there (what the dev server and the Pages copy show) changes what
+      is published and needs an explicit answer, not a default. 2.6
+      waits on Q-PO1.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
