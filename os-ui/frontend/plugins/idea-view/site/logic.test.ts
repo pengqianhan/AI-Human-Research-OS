@@ -160,6 +160,9 @@ describe("§5.1 the table: the first whose header cells are exactly the seven", 
       const b = built(`# Idea graph\n\n${head}\n|---|---|---|---|---|---|---|\n${Q("Q1")}\n`);
       assert.deepEqual(b, { kind: "no-table", first: { line: 3, source: head }, notes: [] }, head);
     }
+    // Case is ASCII case: the Kelvin sign, which toLowerCase() makes "k", does not spell "Kind".
+    const kelvin = `| ID | ${String.fromCharCode(0x212a)}ind | Statement | Status | Links | Points to | Source |`;
+    assert.deepEqual(built(`# Idea graph\n\n${kelvin}\n|---|---|---|---|---|---|---|\n${Q("Q1")}\n`), { kind: "no-table", first: { line: 3, source: kelvin }, notes: [] });
     assert.deepEqual(built("# Idea graph\n\nNo table here.\n"), { kind: "no-table", first: null, notes: [] });
     assert.deepEqual(built(""), { kind: "no-table", first: null, notes: [] });
   });
@@ -582,6 +585,11 @@ describe("labels and quotes (§1 fact 5): `idea_graph.md · E2 (experiment)`, th
       seen.set(label, id);
     }
     assert.equal(labelOf("a⟨U+0020⟩b", "question"), "idea_graph.md · a⟨U+27E8⟩U+0020⟨U+27E9⟩b (question)", "a name that spells a marker is not another's");
+    for (const [one, other] of [
+      ["a\u00A0b", "a⟨U+00A0⟩b"],
+      ["Q1\u200B", "Q1⟨U+200B⟩"],
+      [" Q1", "⟨U+0020⟩Q1"],
+    ]) assert.notEqual(labelOf(one!, "claim"), labelOf(other!, "claim"), `${JSON.stringify(one)} and ${JSON.stringify(other)}`);
     assert.equal(labelOf("Q1", "question"), "idea_graph.md · Q1 (question)", "an ID by the pattern is drawn as written");
   });
 
@@ -727,7 +735,7 @@ describe("hostile input costs one pass: parse, validate, and lay out (§1 fact 6
     ["a Links cell of `;` only", (n) => file(Q("Q1", ";".repeat(n))), 128 * 1024],
     ["a Links cell of bad items", (n) => file(Q("Q1"), Q("Q2", "x; ".repeat(n / 3))), 128 * 1024],
     ["links all to one node", (n) => file(Q("Q1"), ...Array.from({ length: 199 }, (_, k) => E(`E${k}`, "tests Q1; ".repeat(n / 2200)))), 128 * 1024],
-    ["a files list of many paths", (n) => file(E("E1", "", `commit: none; files: ${"a/b.json, ".repeat(n / 10)}z.json`)), 128 * 1024],
+    ["a files list of many paths, each its own", (n) => file(E("E1", "", `commit: none; files: ${Array.from({ length: n / 16 }, (_, k) => `a/b${k}.json`).join(", ")}`)), 128 * 1024],
     ["backticks in Points to", (n) => file(E("E1", "", `commit: none; files: ${"`".repeat(n)}`)), 128 * 1024],
     ["a cycle through every node, and rows past the caps", (n) => file(...Array.from({ length: n / 64 }, (_, k) => H(`H${k}`, `motivates H${k + 1}`))), 32 * 1024],
   ];

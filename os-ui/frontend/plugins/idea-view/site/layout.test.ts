@@ -278,7 +278,8 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
     assertOnePass(t, "50 and 200 nodes", growth((n) => generated(n, n * 5), run, 50));
   });
 
-  test("the layout alone, with the caps lifted, grows as one pass does: 2,000 nodes and 10,000 edges, then four times as many", (t) => {
+  // Sized so that a pass per line (each line looking itself up among the lines, as a first draft did) takes seconds at 4n here.
+  test("the layout alone, with the caps lifted, grows as one pass does: 4,000 nodes and 20,000 edges, then four times as many", (t) => {
     const make = (n: number) => {
       const rand = rng(5);
       const kinds = Array.from({ length: n }, (_, k) => KINDS[k % 5]!);
@@ -289,6 +290,6 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
       const { kinds, edges } = JSON.parse(input) as { kinds: Kind[]; edges: Edge[] };
       return layout(kinds, edges, 6);
     };
-    assertOnePass(t, "layout, 2,000 and 8,000 nodes", growth(make, run, 2000));
+    assertOnePass(t, "layout, 4,000 and 16,000 nodes", growth(make, run, 4000));
   });
 });
