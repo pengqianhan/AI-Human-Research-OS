@@ -2302,10 +2302,20 @@ describe("desktop client on a Research OS folder", () => {
       await list.evaluate((l, step) => (l.scrollTop = (step % 10) * (l.scrollHeight / 10)), i);
       await page.waitForTimeout(drawn > 0 ? 100 : 200);
     }
+    // Each card left without its picture, its box's words, and where it lies in the list; and where the list's view is.
+    // A card the view never came near was never asked for (its box is empty); one it did shows what its load did.
     const undrawn = await cards.evaluateAll((cs) =>
-      cs.filter((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth !== 48).map((c) => `${c.querySelector(".nm")?.textContent}: ${JSON.stringify(c.querySelector(".thumb")?.textContent)}`),
+      cs
+        .filter((c) => (c.querySelector(".thumb img") as HTMLImageElement | null)?.naturalWidth !== 48)
+        .map((c) => {
+          const l = c.closest(".as-list")!;
+          const box = c.getBoundingClientRect();
+          const top = Math.round(box.top - l.getBoundingClientRect().top + l.scrollTop);
+          return `${c.querySelector(".nm")?.textContent}: ${JSON.stringify(c.querySelector(".thumb")?.textContent)} at ${top}–${top + Math.round(box.height)} px`;
+        }),
     );
-    assert.deepEqual(undrawn, [], "every picture is drawn");
+    const view = await list.evaluate((l) => `the list's view is ${l.clientWidth} × ${l.clientHeight} px, at ${Math.round(l.scrollTop)} of ${l.scrollHeight} px`);
+    assert.deepEqual(undrawn, [], `every picture is drawn; ${view}`);
     assert.equal(await cards.locator(".thumb-note").count(), 0, "no card is left waiting, busy, failed, or loading");
   });
 
