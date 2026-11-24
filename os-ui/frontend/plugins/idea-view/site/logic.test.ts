@@ -930,17 +930,37 @@ describe("hostile input costs one pass: parse, validate, and lay out (§1 fact 6
     assert.equal(g.problems.length, LIMITS.problems);
     assert.ok(calls <= 4 * LIMITS.problems, `${calls} numbers formatted for ${LIMITS.problems} problems listed of 50,000`);
   });
+  // Sized by one rule (os-ui/PLUGINS.md, the Idea view's growth cases). With the case run alone on the machine the
+  // view was built on (an M1 Pro): 1. the code as it is takes at most about 17 ms at 4n, so a runner 15 times slower
+  // on a day twice as slow stays under growth.ts's 500 ms floor; 2. the mistake the case guards against, put back on
+  // a scratch copy, takes at least 2 s at 4n and fails the case. The sizes are small because above about 128 KiB at
+  // 4n the collector's work makes even one pass grow 9 to 38 times on every runner (it grows 2 times a doubling under
+  // --max-semi-space-size=64), so a case sized there passes only by the floor: at 512 KiB, macos-x64 failed two.
+  // "Honest" is the worst of twelve runs at 4n; "mistake" is one run, timed as the test times it (best of five at 4n).
   const cases: [string, (n: number) => string, number][] = [
-    ["one huge statement", (n) => file(row("Q1", "question", "s".repeat(n), "open", "", "", "")), 128 * 1024],
-    ["a Links cell of `;` only", (n) => file(Q("Q1", ";".repeat(n))), 128 * 1024],
-    // These two at 64 KiB then 256 KiB, not 128 then 512: each bad or repeated link is a problem counted, and on the
-    // slowest CI runner (macos-x64, about ten times this machine) the 512 KiB runs took 825 ms and 496 ms, at and
-    // over growth.ts's floor, most of it the collector's work on large strings. A link that scans its whole cell
-    // again still fails the first at this size (put back on a scratch copy: 21 times the time, 11 s at 4n).
-    ["a Links cell of bad items", (n) => file(Q("Q1"), Q("Q2", "x; ".repeat(n / 3))), 64 * 1024],
-    ["links all to one node", (n) => file(Q("Q1"), ...Array.from({ length: 199 }, (_, k) => E(`E${k}`, "tests Q1; ".repeat(n / 2200)))), 64 * 1024],
-    ["a files list of many paths, each its own", (n) => file(E("E1", "", `commit: none; files: ${Array.from({ length: n / 16 }, (_, k) => `a/b${k}.json`).join(", ")}`)), 128 * 1024],
-    ["backticks in Points to", (n) => file(E("E1", "", `commit: none; files: ${"`".repeat(n)}`)), 128 * 1024],
+    // Both hold: honest 10.5 ms. Mistake: md-kit's splitCells looking for the cell's end again from every character
+    // (`if (body.indexOf("|", i) < 0) break;` first in its loop), 17.9 times the time, 3.5 s.
+    ["one huge statement", (n) => file(row("Q1", "question", "s".repeat(n), "open", "", "", "")), 96 * 1024],
+    // Both hold: honest 7.2 ms. Mistake: a link that scans its whole cell again, empty items included
+    // (`if (node.linksCell.lastIndexOf("\u0000") >= 0) continue;` first in the links loop), 20.1 times, 3.9 s.
+    ["a Links cell of `;` only", (n) => file(Q("Q1", ";".repeat(n))), 24 * 1024],
+    // Both hold: honest 15.5 ms. Mistake: that same scan of the whole cell for each link, 23.3 times, 2.8 s.
+    ["a Links cell of bad items", (n) => file(Q("Q1"), Q("Q2", "x; ".repeat(n / 3))), 32 * 1024],
+    // No mistake found that fails it, so sized by the first rule only: honest 9.4 ms. Its rows are short, so a link
+    // that scans its cell again (8.6 ms at 4n) or a row looking its ID up among the rows before it (10.1 ms) still
+    // costs about one pass.
+    ["links all to one node", (n) => file(Q("Q1"), ...Array.from({ length: 199 }, (_, k) => E(`E${k}`, "tests Q1; ".repeat(n / 2200)))), 16 * 1024],
+    // The first holds, the second only in part: honest 14.8 ms; the mistake fails the case, but under 2 s. A files
+    // list checked against itself (`if (paths.includes(path)) continue;` before each push): 39.8 times, 692 ms; the
+    // same check as a search of the files text (`files.indexOf(path) !== files.lastIndexOf(path)`): 16.8 times, 1.7 s.
+    // At 80 KiB the honest time is 18.8 ms and the mistake still under 2 s (1.6 s), so no size meets both.
+    ["a files list of many paths, each its own", (n) => file(E("E1", "", `commit: none; files: ${Array.from({ length: n / 16 }, (_, k) => `a/b${k}.json`).join(", ")}`)), 64 * 1024],
+    // Both hold: honest 2.3 ms. Mistake: a backtick run measured again from each of its backticks (codeSpans
+    // stepping `i++`, not `i = j`, past a run), 15.9 times, 4.0 s.
+    ["backticks in Points to", (n) => file(E("E1", "", `commit: none; files: ${"`".repeat(n)}`)), 8 * 1024],
+    // No mistake found that fails it: md-kit reads 500 rows and the view draws 200 nodes whatever the size, so a row
+    // looking its ID up among the rows before it costs 20.2 ms at 4n, 1.0 times. Honest 3.0 ms. Its rows are a chain,
+    // not a cycle: each motivates the next, and H199's link names a row past the cap.
     ["a cycle through every node, and rows past the caps", (n) => file(...Array.from({ length: n / 64 }, (_, k) => H(`H${k}`, `motivates H${k + 1}`))), 32 * 1024],
   ];
   for (const [name, make, n] of cases) {
