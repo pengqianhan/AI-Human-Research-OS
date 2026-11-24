@@ -56,10 +56,10 @@ Status on 2026-11-25:
     end-to-end suite deletes it in its copy before the empty-state check, as
     before. Its comment, [frontend/plugins/fixtures/README.md](frontend/plugins/fixtures/README.md),
     and the checklist line in [client/README.md](client/README.md) now say so.
-  - Not done: `nanochat_cpu`'s `AGENTS.md` does not have the template's new line
-    (§6 asks for the template's only); the template has no other change since that
-    file's "last synced 2026-09-29". Not verified: Windows and Linux, and the Human
-    Owner's checklist line.
+  - `nanochat_cpu`'s `AGENTS.md` has the template's new line too, and its sync
+    date is 2026-11-25: the line was the template's only change since 2026-09-29.
+    Both `index.md` files list the new file. Not verified: Windows and Linux, and
+    the Human Owner's checklist line.
 
 - **2.3, the Idea view**, is the bundled plugin
   [frontend/plugins/idea-view/](frontend/plugins/idea-view/) (manifest as §6 "2.3",

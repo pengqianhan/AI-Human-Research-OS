@@ -146,7 +146,16 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       hostile input any more (the largest is 384 KiB), and the layout is
       no longer timed at thousands of nodes (that case could not tell
       right from wrong on macos-x64; the caps of 200 nodes and 1,000
-      links bound it). Next is 2.4.
+      links bound it). 2.4, the idea files, is on branch
+      `step2-idea-graph-files`, which starts from `step2-idea-view` (a
+      draft pull request until #54 is merged): `nanochat_cpu`'s
+      `idea_graph.md`, written from the project's files with each row's
+      source named (20 nodes, 9 links), and the template's, a table with
+      no row, so a new project opens the Idea tab on an empty map. Open
+      with the Human Owner: `R1 motivates E2` in `nanochat_cpu`'s file
+      rests on one step of inference, stated in its Source cell. Next is
+      2.5, the Skills Hub plugin, which needs a mockup choice first
+      unless it keeps the present page; 2.6 waits on Q-PO1.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
