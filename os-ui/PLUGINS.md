@@ -183,10 +183,23 @@ Status on 2026-11-24:
     the file stays selected with its row as it is now, and a node gone leaves no
     bar; clearing the selection meanwhile (Escape on Home, which the workspace
     still hears) drops it too. No message is added. It covers every view, so the Assets view's render-time `null` (and
-    the Skeleton view's, when a clicked item is gone) is no longer dropped either
-    (by reading their code; the suite tests the Idea view). The suite reproduces
-    both variants with a 3 s read and Home shown during it, and Escape pressed on
-    Home while the page's post is held.
+    the Skeleton view's, when a clicked item is gone) is no longer dropped either.
+    That was checked by reading those two views' code, and the reading missed the
+    Paper view (below). The suite tests the Idea view: it reproduces both variants
+    with a 3 s read and Home shown during it, and Escape pressed on Home while the
+    page's post is held.
+    Since what a view posts while hidden is now applied on return, a view must not
+    post what it merely cannot read while hidden. The Paper view did: its 400 ms
+    settle timer, firing after Home was shown, found the selection still in place
+    but its text empty (a hidden frame is not laid out) and posted "nothing
+    selected", so back in the workspace the bar was gone while the page still
+    showed its text selected. The directing agent's probe found it after the fix
+    round. The fix is the Paper view's: while the page is not laid out (its
+    scroller has no boxes), it leaves its last report as it is (`laidOut` in
+    [frontend/plugins/paper-view/site/main.ts](frontend/plugins/paper-view/site/main.ts));
+    a collapsed selection is still reported as none, and Escape on Home still
+    clears both sides. The suite selects the paper's title, shows Home at once,
+    and checks on return that the bar holds what the page selects.
   - **The panel** for a result shows "from: " and a chip to its experiment, and an
     experiment's files under "Result files, not opened here", each path marked as a
     label is (a no-break space in it showed as a plain space before the review). A
@@ -1669,7 +1682,7 @@ The view never builds the PDF itself, because the Bare-CLI row forbids write act
 
 **Changes to contract 1.0** (it is not frozen yet, see A1):
 - **The manifest schema does not change.**
-- **The page-to-host message changes.** A6's `os.ask` becomes `{ type: "os.select", label: string, quote?: string }`, and `{ type: "os.select", label: null }` clears it. In the mockup (`c-document.html:674-678`, `:1185-1224`), the host owns the "Ask the agent about this" bar and the reference chips in the composer, so the view reports a selection rather than asking. Labels look like "Code/README.md:12", "63ead0b" or "main.pdf p. 2 · §2 Setup", the last taken from the PDF's outline. A quote is at most 2,000 characters.
+- **The page-to-host message changes.** A6's `os.ask` becomes `{ type: "os.select", label: string, quote?: string }`, and `{ type: "os.select", label: null }` clears it. In the mockup (`c-document.html:674-678`, `:1185-1224`), the host owns the "Ask the agent about this" bar and the reference chips in the composer, so the view reports a selection rather than asking. Labels look like "Code/README.md:12", "63ead0b" or "main.pdf p. 2 · §2 Setup", the last taken from the PDF's outline. A quote is at most 2,000 characters. The host applies on return what the active view posts while the workspace is hidden, so a view must not post what it merely cannot read then: a hidden frame is not laid out, and its selected text reads as empty (step 2.3's "Selection and Reload").
 - **`PLUGIN_CSP` gains `worker-src 'self'`**, if PDF.js is used.
 - **From the S1/S2 implementer notes:**
   - The parser should refuse a `reads` root whose first segment is `*`.
