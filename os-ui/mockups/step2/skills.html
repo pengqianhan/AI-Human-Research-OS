@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-Human Research OS · Step 2.5 mockup · Skills page as a plugin</title>
+<link rel="icon" href="data:,"><!-- an empty inline icon, so a static server is not asked for /favicon.ico -->
+<!--
+  Clickable mockup for os-ui/PLUGINS.md Part 4 §4.2, Q1 (the top of the Skills page) and
+  Q3 (the details panel), once the page moves into the bundled plugin skills-hub.
+  Shell: the left menu as built (os-ui/frontend/src/shell/Sidebar.tsx, drawn as
+  os-ui/mockups/step1/c-document.html draws it). Page body: copied in look and words from
+  os-ui/frontend/src/pages/StorePage.tsx, components/SkillCard.tsx, SyncBadge.tsx, Badge.tsx,
+  SkillDrawer.tsx and SkillInstalls.tsx; colours from os-ui/frontend/src/index.css.
+  Top A follows os-ui/frontend/src/pages/PluginScreen.tsx:13-31; top B
+  os-ui/frontend/src/shell/Shell.tsx:179-193; top C c-document.html:684-689.
+  The skills, descriptions, licences and install states are invented for the mockup.
+  Choices are kept in the URL hash, e.g. #top=C&panel=1. No network requests.
+-->
+<style>
+:root{
+  /* app tokens, copied from os-ui/frontend/src/index.css (not from a view plugin's style) */
+  --bg:#f3eee5; --side:#ece5d8; --paper:#faf7f1; --card:#fffdf9;
+  --ink:#1c1a17; --ink2:#4a453d; --muted:#6f675b; --faint:#b0a796;
+  --line:rgba(70,55,30,.10); --line2:rgba(70,55,30,.18); --hover:rgba(60,45,20,.06);
+  --accent:#1e5a56; --accent-ink:#164542; --accent-soft:#dcebe8; --accent-tint:#eef4f2; --on-accent:#f8f4ec;
+  --warn:#86581a; --warn-soft:#f3e6cc; --signal:#a4462c; --signal-soft:#f6e2d9;
+  --danger:#a33a2f; --danger-soft:#f6e3df; --mute-soft:rgba(60,45,20,.06);
+  --night:#22211e; --on-night:#f5efe4;
+  --sh1:0 1px 2px rgba(60,44,20,.07),0 1px 1px rgba(60,44,20,.04);
+  --sh2:0 1px 3px rgba(60,44,20,.06),0 10px 26px rgba(60,44,20,.07);
+  --sh3:0 4px 10px rgba(60,44,20,.08),0 20px 44px rgba(60,44,20,.11);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Noto Sans SC",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --r:14px; --sbw:192px;
+  /* mockup-only chrome (as in os-ui/mockups/step2/views.html) */
+  --mk-ink:#5b4416; --mk-line:#b8955a; --mk-bg:#f6edd6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button,input{font:inherit;color:inherit;line-height:inherit}
+button{background:transparent;border:0;cursor:pointer;text-align:inherit}
+input{border:0}
+input[type=search]{-webkit-appearance:textfield;appearance:textfield}
+input::placeholder{color:var(--faint)}
+code{font-family:var(--mono);font-size:.92em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic.sm{width:14px;height:14px}
+.ic.s15{width:15px;height:15px}
+.mono{font-family:var(--mono)}
+
+/* ================= mockup-only bar (not part of the app) ================= */
+.mock{flex:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 22px;padding:7px 14px 8px;background:repeating-linear-gradient(135deg,#efe2c2 0 9px,#f4ead3 9px 18px);border-bottom:2px dashed var(--mk-line);color:var(--mk-ink);font:12.5px/1.35 var(--sans);position:relative;z-index:40}
+.mock-head{grid-column:1/-1;display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap}
+.mock-head b{font:800 10.5px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase}
+.mock-head span{font-size:12px}
+.mock-sw{min-width:0;display:flex;flex-direction:column;gap:4px}
+.mock-q{font:700 12px/1.3 var(--sans)}
+.mock-q small{font:500 11.5px var(--sans);opacity:.88}
+.mock-opts{display:flex;gap:6px}
+.mock-opt{display:flex;align-items:center;gap:7px;text-align:left;border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:10px;padding:4px 9px 4px 5px;cursor:pointer;flex:1 1 0;min-width:0;color:var(--mk-ink);font:700 12px/1.2 var(--sans)}
+.mock-opt:hover{background:#fffaf0}
+.mock-opt .L{flex:none;min-width:22px;height:22px;padding:0 6px;border-radius:99px;display:grid;place-items:center;font:800 12px var(--sans);background:#efe2c2;color:var(--mk-ink)}
+.mock-opt .t{min-width:0}
+.mock-opt .t small{display:block;font:600 10.5px/1.2 var(--sans);opacity:.85}
+.mock-opt.on{border-style:solid;border-color:var(--mk-ink);background:#fffaf0;box-shadow:0 0 0 2px rgba(91,68,22,.16)}
+.mock-opt.on .L{background:var(--mk-ink);color:#fbf3df}
+.mock-opt.cannot{padding-left:10px;background:repeating-linear-gradient(135deg,#f3e3c6 0 6px,#f8eedb 6px 12px)}
+.mock-opt.cannot.on{background:#fffaf0}
+.mock-say{font:12px/1.35 var(--sans);min-height:calc(2 * 1.35em)}
+.mock-toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;background:var(--mk-bg);color:var(--mk-ink);border:1.5px dashed var(--mk-line);padding:8px 14px;border-radius:10px;font:12.5px var(--sans);box-shadow:var(--sh2);z-index:60;max-width:min(560px,90vw)}
+.mock-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ================= the app (left menu as built, mockup C's look) ================= */
+.app{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:var(--sbw) minmax(0,1fr);transition:grid-template-columns .18s ease}
+.app.sb-collapsed{--sbw:62px}
+.sidebar{background:var(--side);display:flex;flex-direction:column;gap:2px;padding:14px 10px 12px;min-height:0;overflow:hidden auto;box-shadow:inset -1px 0 0 var(--line)}
+.app.sb-collapsed .sidebar{padding:14px 8px 12px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.brand-mark .ic{width:17px;height:17px}
+.brand-text{font:500 15px/1.12 var(--serif);color:var(--ink)}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:9px;color:var(--ink2);font:500 13.5px var(--sans);text-align:left;white-space:nowrap;position:relative}
+.nav-btn:hover{background:var(--hover)}
+.nav-btn.active{background:var(--card);color:var(--ink);box-shadow:var(--sh1)}
+.nav-btn.active>.ic{color:var(--accent)}
+.nav-btn .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.qa-mark{width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-ink);font:700 10px/18px var(--sans);text-align:center;text-transform:uppercase;flex:none}
+.sec-label{font:600 10.5px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:18px 10px 6px}
+.spacer{flex:1;min-height:12px}
+.snap{margin:0 2px 4px;border-radius:10px;background:var(--card);padding:8px 10px;box-shadow:var(--sh1)}
+.snap .row1{display:flex;align-items:center;gap:6px;font:500 12px var(--sans);color:var(--ink2)}
+.snap .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.snap .ln{padding-left:13px;font:11px/1.5 var(--sans);color:var(--muted)}
+.snap .ln.t{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.snap .ln b{font-weight:600;color:var(--signal)}
+.snap .regen{display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;padding:4px 6px;border-radius:8px;font:12px/1.25 var(--sans);color:var(--ink2);text-align:left}
+.snap .regen:hover{background:var(--hover);color:var(--ink)}
+.app.sb-collapsed .sidebar .lbl,.app.sb-collapsed .brand-text,.app.sb-collapsed .sec-label,.app.sb-collapsed .snap{display:none}
+.app.sb-collapsed .nav-btn{justify-content:center;padding:9px 0}
+.app.sb-collapsed .brand{justify-content:center;padding:4px 0 18px}
+.app.sb-collapsed .sec-gap{height:14px}
+.app.sb-collapsed #sbToggle .ic{transform:rotate(180deg)}
+.main{position:relative;min-width:0;min-height:0;overflow:hidden}
+.screen{position:absolute;inset:0}
+
+/* ---------- app pieces (index.css components) ---------- */
+.label{font:600 10.5px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.eyebrow{display:flex;align-items:center;gap:8px;font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.page-title{font:500 31px/1.15 var(--serif);letter-spacing:-.01em;margin:6px 0}
+.lede{font:15.5px/1.55 var(--serif);color:var(--ink2);max-width:64ch}
+.page{max-width:1080px;margin:0 auto;padding:30px 40px 64px}
+.card-flat{background:var(--card);border-radius:11px;box-shadow:var(--sh1),inset 0 0 0 1px var(--line)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border:0;border-radius:9px;background:var(--card);box-shadow:var(--sh1),inset 0 0 0 1px var(--line);color:var(--ink);font:500 13px var(--sans);cursor:pointer;white-space:nowrap}
+.btn:hover{box-shadow:var(--sh2),inset 0 0 0 1px var(--line2)}
+.btn:disabled{color:var(--faint);cursor:not-allowed;background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.btn-sm{padding:4px 9px;font-size:12px;border-radius:7px}
+.btn-primary{background:var(--accent);color:var(--on-accent);box-shadow:var(--sh1)}
+.btn-primary:hover{background:var(--accent-ink);box-shadow:var(--sh2)}
+.btn-ghost{background:none;box-shadow:none;color:var(--accent);padding:6px 8px}
+.btn-ghost:hover{background:var(--accent-tint);box-shadow:none}
+.cmd-block{background:var(--night);color:var(--on-night);font:12px/1.6 var(--mono);border-radius:9px}
+.prose-serif{font:15px/1.55 var(--serif);color:var(--ink2)}
+
+/* ---------- the Skills screen: three tops over one body ---------- */
+/* A: the host's top for plugin pages (PluginScreen.tsx:13-31) */
+.host-top{display:none;flex:none;flex-wrap:wrap;align-items:center;gap:12px;padding:0 6px}
+.host-top h1{font:500 22px/1.25 var(--serif)}
+.band{display:flex;align-items:center;gap:8px;min-width:0;border-radius:10px;background:var(--accent-tint);padding:8px 12px;font-size:12.5px;line-height:1.5;color:var(--accent-ink)}
+.band .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.band b{font-weight:600}
+.host-top .band{flex:1}
+/* C: mockup C's band inside the page (c-document.html:686) */
+.own-band{margin:0 0 22px}
+/* B and C: today's top (PageHeader.tsx) */
+.own-head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:24px}
+.own-head>div{min-width:0;flex:1}
+
+/* the frame: what a framed plugin page can draw in */
+.frame{position:absolute;inset:0;overflow:hidden}
+.frame-scroll{position:absolute;inset:0;overflow-y:auto}
+#skills[data-shown-top="A"]{display:flex;flex-direction:column;gap:12px;padding:14px}
+#skills[data-shown-top="A"] .host-top{display:flex}
+#skills[data-shown-top="A"] .frame{position:relative;inset:auto;flex:1;min-height:0;background:var(--card);border-radius:var(--r);box-shadow:var(--sh2)}
+#skills[data-shown-top="A"] .own-band,#skills[data-shown-top="A"] .own-head{display:none}
+#skills[data-shown-top="B"] .own-band{display:none}
+
+/* ---------- store body (StorePage.tsx) ---------- */
+.store-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px}
+.fpill{border-radius:99px;padding:5px 12px;font-size:12.5px;font-weight:500;background:var(--card);color:var(--ink2);box-shadow:var(--sh1)}
+.fpill:hover{color:var(--ink)}
+.fpill[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.search{margin-left:auto;width:240px;border-radius:10px;background:var(--card);padding:7px 12px;font-size:13px;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.empty{font-size:13.5px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+/* SkillCard.tsx */
+.skill{display:flex;flex-direction:column;gap:8px;padding:16px 18px;text-align:left;transition:transform .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1)}
+.skill:hover{transform:translateY(-2px);box-shadow:var(--sh3)}
+.skill .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.skill .nm{word-break:break-all;font:500 16.5px/1.25 var(--serif);color:var(--ink)}
+.skill .desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font:14px/1.375 var(--serif);color:var(--ink2)}
+.skill .foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tagp{border-radius:99px;background:var(--mute-soft);padding:2px 8px;font-size:11px;color:var(--ink2)}
+.tagp.m{color:var(--muted)}
+.tagp.w{background:var(--warn-soft);color:var(--warn)}
+/* Badge.tsx */
+.badge{display:inline-block;border-radius:5px;padding:1px 6px;font-size:11px;font-weight:600}
+.badge.ok{background:var(--accent-tint);color:var(--accent-ink)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.mute{background:var(--mute-soft);color:var(--muted)}
+
+/* ---------- the details panel (SkillDrawer.tsx, SkillInstalls.tsx) ---------- */
+.scrim{display:none;position:absolute;inset:0;z-index:20;background:var(--line2)}
+.scrim.open{display:block}
+.drawer{position:absolute;top:0;bottom:0;right:-460px;z-index:30;width:420px;overflow-y:auto;background:var(--card);padding:24px;visibility:hidden;transition:right .22s ease-in-out,visibility .22s ease-in-out}
+.drawer.open{right:0;visibility:visible;box-shadow:var(--sh3)}
+/* Today: over the whole window; the window's full width at 900 px or less */
+@media (max-width:900px){
+  .drawer.whole{width:100%;right:-100%}
+  .drawer.whole.open{right:0}
+}
+/* Today, on another page (reached by keyboard under the shading): hidden with the Skills page */
+.app.away>.scrim,.app.away>.drawer{display:none}
+.drawer .close{float:right}
+.d-name{margin-top:4px;word-break:break-all;font:500 22px/1.25 var(--serif)}
+.d-src{margin:4px 0 14px;font:11.5px/1.5 var(--mono);color:var(--muted)}
+.drawer dl{margin:14px 0;font-size:13px}
+.drawer dt{margin-top:12px}
+.drawer dd{margin-top:2px}
+.drawer dd.desc{font-size:14.5px;color:var(--ink)}
+.cmd{margin-top:14px;word-break:break-all;padding:12px 14px;font-size:11.5px}
+.copy-btn{margin-top:8px;width:100%;justify-content:center;padding-top:10px;padding-bottom:10px}
+.note{margin-top:10px;font-size:12px;color:var(--muted)}
+.inst-head{margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.scope{margin-bottom:10px}
+.irow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:6px 0}
+.irow:last-child{border-bottom:0}
+.idot{display:inline-block;width:7px;height:7px;border-radius:50%;flex:none;border:1px solid var(--line2)}
+.idot.ok{background:var(--accent);border-color:transparent}
+.idot.bad{background:var(--warn);border-color:transparent}
+.iname{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11.5px/1.5 var(--mono);color:var(--ink)}
+.iname span{margin-left:6px;color:var(--faint)}
+.irow .btn{flex:none}
+.idetail{margin-top:2px;font-size:11.5px;color:var(--warn)}
+.ierr{margin-top:4px;font-size:11.5px;color:var(--warn)}
+.ilive{margin-top:4px;font-size:11.5px;color:var(--muted)}
+
+/* ---------- mockup-only: the note shown when you leave Skills ---------- */
+.away-note{max-width:560px;margin:48px auto 0;padding:18px 20px;border:2px dashed var(--mk-line);border-radius:12px;background:var(--mk-bg);color:var(--mk-ink);font:13.5px/1.5 var(--sans)}
+.away-note b.tag{display:block;font:800 10.5px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.away-note h2{font:700 15px var(--sans);margin-bottom:4px}
+.away-note p{margin-bottom:10px}
+.mock-btn{border:1.5px solid var(--mk-ink);background:#fffaf0;color:var(--mk-ink);border-radius:9px;padding:6px 11px;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}
+.mock-btn:hover{background:#fff}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-projects" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13.5h8M8 16.5h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5M8 7.5h8M8 11h6"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M9 4h3a2 2 0 1 1 4 0h3v5a2 2 0 1 0 0 4v6h-5a2 2 0 1 0-4 0H5v-5a2 2 0 1 0 0-4V4z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4v4.3h-4.3"/></symbol>
+</svg>
+
+<!-- ================= MOCKUP-ONLY BAR: not part of the app ================= -->
+<div class="mock" id="mock" role="region" aria-label="Mockup controls, not part of the app">
+  <div class="mock-head"><b>Mockup only · not part of the app</b><span>The two switches are independent: any top goes with any panel choice. The skills and install states are invented.</span></div>
+  <div class="mock-sw" role="group" aria-labelledby="q1Label">
+    <div class="mock-q" id="q1Label">Q1 · Top of the page <small>· the skills below are the same in A, B and C</small></div>
+    <div class="mock-opts" id="q1Opts"></div>
+    <div class="mock-say" id="q1Say" aria-live="polite"></div>
+  </div>
+  <div class="mock-sw" role="group" aria-labelledby="q3Label">
+    <div class="mock-q" id="q3Label">Q3 · Details panel <small>· open a skill to see it</small></div>
+    <div class="mock-opts" id="q3Opts"></div>
+    <div class="mock-say" id="q3Say" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div>
+      <div class="brand-text">AI-Human<br>Research OS</div>
+    </div>
+    <button type="button" class="nav-btn" data-nav="home" title="Home"><svg class="ic"><use href="#i-home"/></svg><span class="lbl">Home</span></button>
+    <button type="button" class="nav-btn" data-nav="projects" title="Projects"><svg class="ic"><use href="#i-projects"/></svg><span class="lbl">Projects</span></button>
+    <button type="button" class="nav-btn" data-nav="wiki" title="Paper wiki"><svg class="ic"><use href="#i-book"/></svg><span class="lbl">Paper wiki</span></button>
+    <button type="button" class="nav-btn active" data-nav="skills" title="Skills" aria-current="page"><svg class="ic"><use href="#i-spark"/></svg><span class="lbl">Skills</span></button>
+    <button type="button" class="nav-btn" data-nav="plugins" title="Plugins"><svg class="ic"><use href="#i-puzzle"/></svg><span class="lbl">Plugins</span></button>
+    <div class="sec-label">Quick access</div><div class="sec-gap"></div>
+    <button type="button" class="nav-btn" data-nav="nanochat_cpu" title="nanochat_cpu"><span class="qa-mark" aria-hidden="true">n</span><span class="lbl">nanochat_cpu</span></button>
+    <div class="spacer" aria-hidden="true"></div>
+    <div class="snap">
+      <div class="row1"><span class="dot" aria-hidden="true"></span>Snapshot</div>
+      <div class="ln t">2026-11-25 10:42</div>
+      <div class="ln">Desktop client</div>
+      <div class="ln">agent-led <b>off</b></div>
+      <button type="button" class="regen" data-hint="Regenerating the snapshot is not drawn in this mockup."><svg class="ic s15"><use href="#i-refresh"/></svg><span>Regenerate</span></button>
+    </div>
+    <button type="button" class="nav-btn" data-nav="settings" title="Settings"><svg class="ic"><use href="#i-gear"/></svg><span class="lbl">Settings</span></button>
+    <button type="button" class="nav-btn" id="sbToggle" title="Collapse sidebar" aria-expanded="true"><svg class="ic"><use href="#i-chev-left"/></svg><span class="lbl">Collapse</span></button>
+  </nav>
+
+  <main class="main" id="main">
+    <!-- ================= SKILLS ================= -->
+    <section class="screen" id="skills" data-shown-top="B" aria-label="Skills">
+      <!-- A only: the host's top, outside the frame -->
+      <header class="host-top" id="hostTop">
+        <h1>Skills</h1>
+        <div class="band"><svg class="ic sm"><use href="#i-puzzle"/></svg><span class="txt" title="The research skills hub and where each skill is installed; disable or enable one install."><b>Skills Hub · bundled plugin</b> — The research skills hub and where each skill is installed; disable or enable one install.</span></div>
+      </header>
+      <!-- the frame: a framed plugin page draws only inside this box -->
+      <div class="frame" id="frame">
+        <div class="frame-scroll" id="frameScroll">
+          <div class="page">
+            <!-- C only: mockup C's band, inside the page -->
+            <div class="band own-band" id="ownBand"><svg class="ic sm"><use href="#i-puzzle"/></svg><span class="txt" title="The research skills hub and where each skill is installed; disable or enable one install."><b>Skills Hub · bundled plugin</b> — The research skills hub and where each skill is installed; disable or enable one install.</span></div>
+            <!-- B and C: today's top -->
+            <div class="own-head" id="ownHead">
+              <div>
+                <div class="eyebrow">research-skills-hub/</div>
+                <h1 class="page-title">Skills</h1>
+                <p class="lede">The research skills hub and where each skill is installed. Installing copies a command for a terminal; the one change made here is disabling or enabling a single install.</p>
+              </div>
+            </div>
+            <!-- the body: the same in every alternative -->
+            <section id="store">
+              <div class="store-bar" role="group" aria-label="Filter by collection">
+                <span id="pills" style="display:contents"></span>
+                <input type="search" class="search" id="search" placeholder="Search skills..." aria-label="Search skills">
+              </div>
+              <div id="grid"></div>
+            </section>
+          </div>
+        </div>
+        <div class="scrim" id="scrim" aria-hidden="true"></div>
+        <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Skill details" aria-hidden="true"></aside>
+      </div>
+    </section>
+
+    <!-- ================= mockup-only: another page ================= -->
+    <section class="screen" id="away" hidden aria-label="Another page">
+      <div class="away-note">
+        <b class="tag">Mockup only</b>
+        <h2>You left Skills: <span id="awayName">Home</span></h2>
+        <p>This mockup draws only the Skills page. The skill details panel is now <b id="awayPanel">closed</b>.</p>
+        <button type="button" class="mock-btn" id="backBtn">Back to Skills</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="mock-toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* =================================================================
+     sample data: real skill names from research-skills-hub/, invented
+     descriptions, licences and install states
+     ================================================================= */
+  const TARGETS = [
+    { name: 'repo-claude', path: '.claude/skills', scope: 'repo' },
+    { name: 'repo-codex', path: '.agents/skills', scope: 'repo' },
+    { name: 'global-claude', path: '~/.claude/skills', scope: 'global' },
+    { name: 'global-codex', path: '~/.codex/skills', scope: 'global' },
+    { name: 'global-agents', path: '~/.agents/skills', scope: 'global' },
+    { name: 'project-claude:nanochat_cpu', path: 'projects-folder/nanochat_cpu/.claude/skills', scope: 'project' },
+    { name: 'project-codex:nanochat_cpu', path: 'projects-folder/nanochat_cpu/.agents/skills', scope: 'project' }
+  ];
+  const ORPHAN = 'no hub source';
+  const ok = (target, disabled) => ({ target, ok: true, disabled: !!disabled, detail: '' });
+  const bad = (target, detail) => ({ target, ok: false, disabled: false, detail });
+  const COLLECTIONS = ['open-paper-skills', 'collected-skills', 'science-skills', 'mattpocock-skills'];
+  const SKILLS = [
+    { name: 'paper-search', collection: 'open-paper-skills', license: 'MIT', scripts: true, sync: 'synced', form: 'symlink',
+      description: 'Search and read research papers across several sources, honouring per-source on/off switches and a full-text read order.',
+      installs: [ok('repo-claude'), ok('repo-codex'), ok('global-claude')] },
+    { name: 'paper-wiki-manager', collection: 'open-paper-skills', license: 'MIT', scripts: true, sync: 'synced', form: 'symlink',
+      description: 'Maintain an OKF paper wiki: add papers and sources, update notes and indexes, keep topic and concept pages, and validate the wiki.',
+      installs: [ok('repo-claude'), ok('repo-codex')] },
+    { name: 'research-skill-installer', collection: 'open-paper-skills', license: 'MIT', scripts: true, sync: 'synced', form: 'symlink',
+      description: 'Install, remove, disable, enable, or list hub skills across every registered agent directory.',
+      installs: [ok('repo-claude'), ok('repo-codex'), ok('global-claude'), ok('global-codex', true)] },
+    { name: 'session-handoff', collection: 'open-paper-skills', license: 'MIT', scripts: false, sync: 'synced', form: 'symlink',
+      description: 'Maintain or resume a repository-root HANDOFF.md for work that spans sessions.',
+      installs: [ok('repo-claude'), ok('repo-codex', true)] },
+    { name: 'project-dispatch', collection: 'open-paper-skills', license: 'MIT', scripts: true, sync: 'synced', form: 'symlink',
+      description: 'Hand research tasks to per-project agent sessions, follow them up, and review finished runs.',
+      installs: [ok('repo-claude'), ok('repo-codex')] },
+    { name: 'human-cognition-cache', collection: 'open-paper-skills', license: 'MIT', scripts: true, sync: 'not_installed', form: 'symlink',
+      description: 'Keep a project-local, four-quadrant cache of what the human already understands, to guide when an agent should ask.',
+      installs: [] },
+    { name: 'research-project-manager', collection: 'open-paper-skills', license: 'MIT', scripts: true, sync: 'synced', form: 'symlink',
+      description: 'Create, inspect, validate, update, or archive research projects from a template.',
+      installs: [ok('repo-claude'), ok('repo-codex')] },
+    { name: 'arxiv2md', collection: 'collected-skills', license: null, scripts: false, sync: 'not_installed', form: 'symlink',
+      description: 'Convert arXiv papers to clean Markdown for reading or summarising.',
+      installs: [] },
+    { name: 'humanizer', collection: 'collected-skills', license: 'MIT', scripts: true, sync: 'synced', form: 'symlink',
+      description: 'Revise text so it reads as written by a person: remove filler, vary sentence rhythm, and keep the meaning and every factual claim unchanged.',
+      installs: [ok('repo-claude'), ok('repo-codex'), ok('project-claude:nanochat_cpu')] },
+    { name: 'pyzotero', collection: 'collected-skills', license: 'MIT', scripts: true, sync: 'not_installed', form: 'symlink',
+      description: 'Read and update a Zotero library through its web API.',
+      installs: [] },
+    { name: 'drawio', collection: 'collected-skills', license: 'Apache-2.0', scripts: true, sync: 'synced', form: 'symlink',
+      description: 'Draw and export diagrams as draw.io files.',
+      installs: [ok('repo-claude'), ok('repo-codex')] },
+    { name: 'clinvar_database', collection: 'science-skills', license: 'Apache-2.0', scripts: true, sync: 'not_installed', form: 'copy',
+      description: 'Query ClinVar for the clinical significance of genetic variants.',
+      installs: [] },
+    { name: 'chembl_database', collection: 'science-skills', license: 'Apache-2.0', scripts: true, sync: 'drift', form: 'copy',
+      description: 'Query ChEMBL for bioactive molecules, their targets, and assay results.',
+      installs: [ok('repo-claude'), bad('repo-codex', 'drifted from hub (file set differs)')] },
+    { name: 'tdd', collection: 'mattpocock-skills', license: 'MIT', scripts: false, sync: 'synced', form: 'copy',
+      description: 'Test-driven development: write a failing test, make it pass, then refactor.',
+      installs: [ok('repo-claude'), ok('repo-codex')] },
+    { name: 'grilling', collection: 'mattpocock-skills', license: 'MIT', scripts: false, sync: 'not_installed', form: 'copy',
+      description: 'Question a plan or decision until its weak points show.',
+      installs: [] },
+    { name: 'figure-style-notes', collection: ORPHAN, license: null, scripts: false, sync: 'installed_no_hub_source', form: null,
+      description: 'Notes on figure style for papers, kept from an earlier project.',
+      installs: [ok('global-claude')] }
+  ];
+  SKILLS.forEach(s => { s.key = s.collection + '/' + s.name; });
+
+  const INSTALLER = 'research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py';
+  const installCommand = s => s.sync === 'installed_no_hub_source'
+    ? 'python ' + INSTALLER + ' status ' + s.name
+    : 'python ' + INSTALLER + ' install ' + s.name + ' --collection ' + s.collection;
+  const copyButtonLabel = s => s.sync === 'installed_no_hub_source' ? 'Copy status command' : 'Copy install command';
+  const installAt = (s, t) => 'python ' + INSTALLER + ' install ' + s.name + ' --collection ' + s.collection + ' --target ' + t;
+  const SYNC = {
+    synced: ['ok', 'installed · synced'], drift: ['warn', 'installed · drift ⚠'],
+    not_installed: ['mute', 'not installed'], installed_no_hub_source: ['warn', 'installed · no hub source ⚠']
+  };
+
+  /* =================================================================
+     mockup switches
+     ================================================================= */
+  const TOPS = {
+    A: { t: "Paper wiki's look as built", say: 'A: a smaller title beside a green band; the skills scroll in a white card under a top that stays put.' },
+    B: { t: "Today's top", say: 'B: today’s small line, large title and sentence, scrolling with the skills; no band.' },
+    C: { t: "Mockup C's plugin page", say: 'C: today’s top with a one-line green band above it, all scrolling with the skills.' }
+  };
+  const PANELS = {
+    today: { t: 'Today', sub: 'cannot be kept', say: 'Today, for comparison only: the shading dims the whole window, left menu included. A framed page cannot draw this.' },
+    1: { t: 'Stays open', say: '1: the shading and panel cover only the Skills area (in A, the white card); the left menu stays bright, and the panel is still open when you come back.' },
+    2: { t: 'Closes on a click outside', say: '2: as 1, but a click anywhere outside the panel, the left menu included, closes it.' }
+  };
+
+  const S = {
+    top: 'B', panel: '1', screen: 'skills', awayName: '',
+    filter: 'all', query: '', open: null, trigger: null,
+    busy: null, copied: null, err: null, copyLabel: null
+  };
+
+  function readHash() {
+    const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const top = p.get('top'), panel = p.get('panel');
+    const okTop = Object.prototype.hasOwnProperty.call(TOPS, top);
+    const okPanel = Object.prototype.hasOwnProperty.call(PANELS, panel);
+    S.top = okTop ? top : 'B';
+    S.panel = okPanel ? panel : '1';
+    if (!okTop || !okPanel) writeHash();
+  }
+  function writeHash() {
+    const h = '#top=' + S.top + '&panel=' + S.panel;
+    if (location.hash !== h) history.replaceState(null, '', h);
+  }
+
+  function buildMock() {
+    $('#q1Opts').innerHTML = Object.keys(TOPS).map(k =>
+      '<button type="button" class="mock-opt" data-top="' + k + '" aria-pressed="false">' +
+      '<span class="L">' + k + '</span><span class="t">' + esc(TOPS[k].t) + '</span></button>').join('');
+    $('#q3Opts').innerHTML = ['today', '1', '2'].map(k => {
+      const p = PANELS[k];
+      return '<button type="button" class="mock-opt' + (k === 'today' ? ' cannot' : '') + '" data-panel="' + k + '" aria-pressed="false">' +
+        (k === 'today' ? '' : '<span class="L">' + k + '</span>') + '<span class="t">' + esc(p.t) + (p.sub ? '<small>' + esc(p.sub) + '</small>' : '') + '</span></button>';
+    }).join('');
+  }
+  /* updates in place, so keyboard focus stays on the switch you pressed */
+  function renderMock() {
+    $$('#q1Opts [data-top]').forEach(b => { const on = b.dataset.top === S.top; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    $$('#q3Opts [data-panel]').forEach(b => { const on = b.dataset.panel === S.panel; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    $('#q1Say').textContent = TOPS[S.top].say;
+    $('#q3Say').textContent = PANELS[S.panel].say;
+  }
+
+  /* where the shading and panel live: the frame (1, 2) or the whole window (today) */
+  function placePanel() {
+    const scrim = $('#scrim'), drawer = $('#drawer');
+    const host = S.panel === 'today' ? $('#app') : $('#frame');
+    if (scrim.parentNode !== host) { host.appendChild(scrim); host.appendChild(drawer); }
+    drawer.classList.toggle('whole', S.panel === 'today');
+  }
+
+  function applyTop() { $('#skills').dataset.shownTop = S.top; }
+
+  /* =================================================================
+     store body
+     ================================================================= */
+  function renderPills() {
+    const pill = (v, label) => '<button type="button" class="fpill" data-filter="' + esc(v) + '" aria-pressed="' + (S.filter === v) + '">' + esc(label) + '</button>';
+    $('#pills').innerHTML = pill('all', 'All · ' + SKILLS.length) + COLLECTIONS.map(c => pill(c, c)).join('') + pill(ORPHAN, ORPHAN);
+  }
+  function filtered() {
+    const q = S.query.trim().toLowerCase();
+    return SKILLS.filter(s => (S.filter === 'all' || s.collection === S.filter) &&
+      (q === '' || s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q)));
+  }
+  function renderGrid() {
+    const list = filtered();
+    if (list.length === 0) { $('#grid').innerHTML = '<p class="empty">No matching skills.</p>'; return; }
+    $('#grid').innerHTML = '<div class="cards">' + list.map(s => {
+      const b = SYNC[s.sync];
+      return '<button type="button" class="skill card-flat" data-skill="' + esc(s.key) + '">' +
+        '<span class="top"><span class="nm">' + esc(s.name) + '</span><span class="badge ' + b[0] + '">' + esc(b[1]) + '</span></span>' +
+        '<span class="desc">' + esc(s.description) + '</span>' +
+        '<span class="foot"><span class="tagp">' + esc(s.collection) + '</span><span class="tagp m">' + esc(s.license || 'unknown (see upstream)') + '</span>' +
+        (s.scripts ? '<span class="tagp w">has scripts/ · inspect first</span>' : '') + '</span></button>';
+    }).join('') + '</div>';
+  }
+
+  /* =================================================================
+     details panel
+     ================================================================= */
+  const skillByKey = k => SKILLS.find(s => s.key === k) || null;
+
+  function installsHtml(s) {
+    const by = new Map(s.installs.map(i => [i.target, i]));
+    let h = '<div class="inst-head"><span>' + (s.form ? esc(s.form) + ' → hub' : 'form unknown') + '</span><span>' + s.installs.length + ' of ' + TARGETS.length + ' installed</span></div>';
+    ['repo', 'global', 'project'].forEach(scope => {
+      const rows = TARGETS.filter(t => t.scope === scope);
+      if (!rows.length) return;
+      h += '<div class="scope"><div class="label">' + scope + '</div>';
+      rows.forEach(t => {
+        const i = by.get(t.name), working = S.busy === t.name;
+        h += '<div class="irow"><span class="idot' + (!i ? '' : i.ok ? ' ok' : ' bad') + '" aria-hidden="true"></span>' +
+          '<span class="iname">' + esc(t.name) + '<span>' + esc(t.path) + '</span></span>';
+        if (i) {
+          h += '<button type="button" class="btn btn-sm" data-toggle="' + esc(t.name) + '" aria-pressed="' + !i.disabled + '"' + (working ? ' disabled' : '') + '>' +
+            (working ? 'working...' : i.disabled ? 'enable' : 'disable') + '</button>';
+        } else {
+          h += '<button type="button" class="btn btn-sm btn-ghost" data-install="' + esc(t.name) + '" title="Copy the install command for this target">' + (S.copied === t.name ? 'copied ✓' : 'install ⧉') + '</button>';
+        }
+        h += '</div>';
+      });
+      rows.forEach(t => { const i = by.get(t.name); if (i && !i.ok) h += '<p class="idetail">' + esc(t.name) + ': ' + esc(i.detail) + '</p>'; });
+      h += '</div>';
+    });
+    if (S.err) h += '<p class="ierr">' + esc(S.err) + '</p>';
+    h += '<p class="ilive">Disable never deletes skill content: a linked install moves into the target\'s <code>.disabled/</code>, a copied one renames its SKILL.md. Installing somewhere new is still a copied command.</p>';
+    return h;
+  }
+
+  function renderDrawer() {
+    const s = skillByKey(S.open);
+    const d = $('#drawer');
+    d.innerHTML =
+      '<button type="button" class="close btn btn-sm" id="closeBtn">Close</button>' +
+      '<h3 class="d-name">' + esc(s ? s.name : '—') + '</h3>' +
+      '<div class="d-src">' + esc(s ? 'Research-skills-hub / ' + s.collection : '—') + '</div>' +
+      '<dl>' +
+      '<dt class="label">Description</dt><dd class="prose-serif desc">' + esc(s ? s.description : '—') + '</dd>' +
+      '<dt class="label">Installs</dt><dd id="dInstalls">' + (s ? installsHtml(s) : '—') + '</dd>' +
+      '<dt class="label">license / upstream</dt><dd>' + esc(s && s.license ? s.license : 'unknown (see upstream)') + '</dd>' +
+      '<dt class="label">Scripts</dt><dd>' + (s && s.scripts ? 'Has scripts/ - inspect them before installation' : 'No scripts; documentation-only skill') + '</dd>' +
+      '</dl>' +
+      '<div class="cmd cmd-block">' + esc(s ? installCommand(s) : '—') + '</div>' +
+      '<button type="button" class="copy-btn btn btn-primary" id="copyBtn" aria-live="polite">' + esc(S.copyLabel || (s ? copyButtonLabel(s) : 'Copy install command')) + '</button>' +
+      '<p class="note">This app does not install or delete skills; paste the command into a terminal. Its only write action is the per-location disable/enable above. AGENTS.md requires script review before installing third-party collected skills; this UI applies that warning to every skill with scripts/.</p>';
+  }
+  function renderInstalls() {
+    const s = skillByKey(S.open);
+    if (!s) return;
+    const a = document.activeElement;
+    const keep = a && a.dataset ? (a.dataset.toggle ? '[data-toggle="' + a.dataset.toggle + '"]' : a.dataset.install ? '[data-install="' + a.dataset.install + '"]' : null) : null;
+    $('#dInstalls').innerHTML = installsHtml(s);
+    if (keep) { const b = $(keep, $('#dInstalls')); if (b && !b.disabled) b.focus(); }
+  }
+
+  function setOpenVisual() {
+    const open = S.open !== null;
+    $('#scrim').classList.toggle('open', open);
+    const d = $('#drawer');
+    d.classList.toggle('open', open);
+    d.setAttribute('aria-hidden', String(!open));
+  }
+  function openSkill(key, trigger) {
+    S.open = key; S.trigger = trigger; S.busy = null; S.err = null; S.copied = null; S.copyLabel = null;
+    renderDrawer(); setOpenVisual();
+    $('#closeBtn').focus();
+  }
+  /* returnFocus: Close and the shading return focus to the card; Escape does not (as today). */
+  function closePanel(returnFocus) {
+    if (S.open === null) return;
+    S.open = null; setOpenVisual();
+    if (returnFocus && S.trigger && document.contains(S.trigger)) S.trigger.focus();
+  }
+
+  /* =================================================================
+     screens (mockup: other pages are a one-line note)
+     ================================================================= */
+  function showScreen(name, label) {
+    S.screen = name === 'skills' ? 'skills' : 'away';
+    S.awayName = label || '';
+    $('#skills').hidden = S.screen !== 'skills';
+    $('#away').hidden = S.screen === 'skills';
+    $('#app').classList.toggle('away', S.screen !== 'skills');
+    $$('#sidebar [data-nav]').forEach(b => {
+      const on = b.dataset.nav === name;
+      b.classList.toggle('active', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    if (S.screen !== 'skills') {
+      $('#awayName').textContent = label;
+      $('#awayPanel').textContent = S.open !== null ? 'open (still there when you go back)' : 'closed';
+    }
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  function renderAll() { renderMock(); applyTop(); placePanel(); }
+
+  /* =================================================================
+     events
+     ================================================================= */
+  // Choice 2: a press anywhere outside the panel closes it. The mockup bar is not part of the app.
+  document.addEventListener('pointerdown', e => {
+    if (S.panel !== '2' || S.open === null) return;
+    const t = e.target;
+    // The shading is left to its click, which closes and returns focus to the card, as in 1.
+    if ($('#drawer').contains(t) || $('#scrim') === t || $('#mock').contains(t) || $('#toast').contains(t)) return;
+    closePanel(false);
+  }, true);
+  window.addEventListener('blur', () => { if (S.panel === '2') closePanel(false); });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && S.open !== null && S.screen === 'skills') closePanel(false);
+  });
+
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-top],[data-panel],[data-nav],[data-filter],[data-skill],[data-toggle],[data-install],[data-hint],#closeBtn,#copyBtn,#scrim,#backBtn,#sbToggle');
+    if (!t) return;
+    const d = t.dataset;
+    if (d.top !== undefined) { S.top = d.top; writeHash(); renderAll(); return; }
+    if (d.panel !== undefined) { S.panel = d.panel; writeHash(); renderAll(); return; }
+    if (d.hint !== undefined) { toast(d.hint); return; }
+    if (t.id === 'scrim') { closePanel(true); return; }
+    if (t.id === 'closeBtn') { closePanel(true); return; }
+    if (t.id === 'backBtn') { showScreen('skills'); return; }
+    if (t.id === 'sbToggle') {
+      const c = $('#app').classList.toggle('sb-collapsed');
+      t.setAttribute('aria-expanded', String(!c)); t.title = c ? 'Expand sidebar' : 'Collapse sidebar';
+      $('.lbl', t).textContent = 'Collapse';
+      return;
+    }
+    if (d.nav !== undefined) { showScreen(d.nav, t.title); return; }
+    if (d.filter !== undefined) { S.filter = d.filter; renderPills(); renderGrid(); return; }
+    if (d.skill !== undefined) { openSkill(d.skill, t); return; }
+    if (t.id === 'copyBtn') {
+      const s = skillByKey(S.open); if (!s) return;
+      const done = label => {
+        S.copyLabel = label; $('#copyBtn').textContent = label;
+        setTimeout(() => { S.copyLabel = null; const b = $('#copyBtn'); const s2 = skillByKey(S.open); if (b && s2) b.textContent = copyButtonLabel(s2); }, 1600);
+      };
+      try {
+        navigator.clipboard.writeText(installCommand(s)).then(() => done('Copied ✓'), () => done('Copy failed - select the command manually'));
+      } catch (_) { done('Copy failed - select the command manually'); }
+      return;
+    }
+    if (d.toggle !== undefined) {
+      // The mockup flips the word after a short "working..." (no endpoint is called).
+      const s = skillByKey(S.open); if (!s) return;
+      const inst = s.installs.find(i => i.target === d.toggle); if (!inst) return;
+      S.busy = d.toggle; S.err = null; renderInstalls();
+      setTimeout(() => { inst.disabled = !inst.disabled; S.busy = null; renderInstalls(); const b = $('[data-toggle="' + inst.target + '"]'); if (b && S.open === s.key) b.focus(); }, 600);
+      return;
+    }
+    if (d.install !== undefined) {
+      const s = skillByKey(S.open); if (!s) return;
+      const target = d.install;
+      const ok2 = () => { S.copied = target; renderInstalls(); setTimeout(() => { if (S.copied === target) { S.copied = null; renderInstalls(); } }, 1600); };
+      const fail = () => { S.err = 'clipboard unavailable - copy the command manually'; renderInstalls(); };
+      try { navigator.clipboard.writeText(installAt(s, target)).then(ok2, fail); } catch (_) { fail(); }
+      return;
+    }
+  });
+
+  $('#search').addEventListener('input', e => { S.query = e.target.value; renderGrid(); });
+  window.addEventListener('hashchange', () => { readHash(); renderAll(); });
+
+  readHash();
+  buildMock(); renderPills(); renderGrid(); renderDrawer(); setOpenVisual();
+  renderAll();
+})();
+</script>
+</body>
+</html>
