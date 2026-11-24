@@ -26,14 +26,15 @@ Decisions):
   Work, Recent Activity, Governance, and the policy chips.
 - **A project's workspace**: its conversation on the left (collapsible to a
   thin strip) and its views on the right: Overview, then Idea, Code, Skeleton,
-  Assets, Paper. Code is the bundled `code-view` plugin's page (the project's
+  Assets, Paper. Idea is the bundled `idea-view` plugin's page (the project's
+  `idea_graph.md` drawn as a graph of questions, hypotheses, experiments,
+  results, and claims), Code the bundled `code-view` plugin's (the project's
   `Code/` files and Git changes), Skeleton the bundled `skeleton-view`
   plugin's (the project's `paper_skeleton.md`, claims and evidence first),
   Assets the bundled `assets-view` plugin's (the project's `Figs/`,
   `Baselines/`, `Code/results/`, and the datasets `Code/README.md` lists), and
   Paper the bundled `paper-view` plugin's (the project's `paper/main.pdf`,
-  drawn with a vendored PDF.js), all in the desktop client only; Idea is
-  marked "step 2".
+  drawn with a vendored PDF.js), all in the desktop client only.
 - **Paper wiki**, **Skills**, **Plugins**, and **Settings** pages.
 
 The app remembers, in the browser's local storage, whether the sidebar and the
@@ -50,7 +51,7 @@ os-ui/frontend/
 ├── package.json            # npm scripts and dependencies
 ├── vite.config.ts          # Vite dev/build config
 ├── api-plugin.ts           # serves every endpoint on the dev server, from the plugin registry
-├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each (paper-wiki, code-view, paper-view, skeleton-view, assets-view); site-kit.ts is what their sites share, md-kit.ts their Markdown reader, fixtures/ test copies and growth.ts the tests' one-pass check (neither shipped)
+├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each (paper-wiki, code-view, paper-view, skeleton-view, assets-view, idea-view); site-kit.ts is what their sites share, md-kit.ts their Markdown reader, fixtures/ test copies and growth.ts the tests' one-pass check (neither shipped)
 ├── server/                 # the endpoints, shared with the desktop client (os-ui/client)
 ├── tailwind.config.js      # Tailwind names for the colours in src/index.css
 ├── postcss.config.js       # Tailwind/PostCSS config
@@ -200,7 +201,8 @@ to edit. The most visited ones:
   `plugins/paper-view/site/`; the Skeleton view's:
   `plugins/skeleton-view/site/`; the Assets view's: `plugins/assets-view/site/`
   (its folder walk in `walk.ts`, its picture queue in `queue.ts`, its SVG
-  check in `svg.ts`) (each one's
+  check in `svg.ts`); the Idea view's: `plugins/idea-view/site/` (its
+  map's layout in `layout.ts`) (each one's
   words in `logic.ts`). Each is
   static files and a TypeScript entry, checked by `npm run typecheck`, tested
   by `npm test`, and bundled by the desktop client's `scripts/build.mjs`; what
@@ -208,8 +210,9 @@ to edit. The most visited ones:
   response, the selection limits) is `plugins/site-kit.ts`, and the Markdown
   reader (blocks, inline tokens, a skeleton's claims and Snapshot) is
   `plugins/md-kit.ts`. Its tests read frozen copies of two skeletons in
-  `plugins/fixtures/`, and the Assets view's frozen copies of nanochat_cpu's
-  and the template's asset folders (its README says what they copy). The Paper view's PDF.js is vendored in
+  `plugins/fixtures/`, the Assets view's frozen copies of nanochat_cpu's
+  and the template's asset folders, and the Idea view's two idea files (its
+  README says what each is). The Paper view's PDF.js is vendored in
   `plugins/paper-view/site/vendor/`, never an npm package: its README says
   how to update it, and `npm test` checks the files against it.
 

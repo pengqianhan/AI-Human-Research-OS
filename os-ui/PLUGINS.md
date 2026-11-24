@@ -12,9 +12,147 @@ Status on 2026-11-24:
   Skeleton, Assets, and Idea views as the Human Owner chose them in
   [mockups/step2/views.html](mockups/step2/views.html), one pull request each in that
   order, with no new dependency and no change to contract 1.0. **2.1, the Skeleton
-  view, is built** on branch `step2-skeleton-view`, and **2.2, the Assets view**, on
-  branch `step2-assets-view` (both below); Idea is not.
+  view, is built** on branch `step2-skeleton-view`, **2.2, the Assets view**, on
+  branch `step2-assets-view`, and **2.3, the Idea view**, on branch
+  `step2-idea-view` (all below). 2.4, `nanochat_cpu`'s `idea_graph.md` and the
+  template's, is not.
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.3, the Idea view**, is the bundled plugin
+  [frontend/plugins/idea-view/](frontend/plugins/idea-view/) (manifest as §6 "2.3",
+  `reads` exactly `idea_graph.md` and `paper_skeleton.md`), with `logic.ts` (§5.1's
+  grammar and §5.2's validation over md-kit's table, the labels, every screen's
+  words), `layout.ts` (§5.3), and `main.ts`, which only draws. md-kit gained one
+  additive thing, an optional cut for `splitCells` (default 2,000), so the view reads
+  a row's Links and Points to whole: a long files list would otherwise lose paths at
+  the cut. site-kit is unchanged; the Skeleton, Assets, and Code views' tests are
+  untouched and pass. It is wired in as the Idea tab (`layoutState.ts`), the `spark`
+  icon, and the client's policy and read-channel tests; the Plugins page's planned
+  card is gone. Where the code differs from Part 3 or the mockup:
+  - **The map is the page's own SVG.** The mockup placed nodes with inline styles;
+    `PLUGIN_CSP` and the views' source checks allow none, so the geometry is numbers
+    from `layout.ts` set as SVG attributes (`x`, `y`, `width`, `height`, `d`,
+    `viewBox`), the scale comes from the `viewBox` against the drawn width, and each
+    box is the page's HTML (a `<button>`, so Enter and Space work) in a
+    `foreignObject`, which keeps the mockup's look and its cut of a statement by the
+    box. `dom.test.ts` pins every attribute the page sets, with its value, and every
+    tag it makes.
+  - **The legend** takes the top of the last column, whose nodes start under it: the
+    mockup's corner was empty only because its nodes were placed by hand, and a rule
+    has to guarantee no overlap (the layout tests include the legend). A word with no
+    line reads "motivates · none" (the mockup's "· none here" does not fit a column's
+    150 px for "motivates"), and the result's experiment is named on three short
+    rows, "the result's / experiment / (from Points to)". The suite checks that no
+    legend row is cut.
+  - **Lines within one column** are arcs on the column's right side, within half the
+    gap; an arc beside the last column widens the map by half a gap. A line that
+    skips a column passes through it, as in the mockup.
+  - **Problems**: every one is counted ("3 problems in idea_graph.md"), and those of
+    rows and links are listed up to 500, then "and N more problems are not listed";
+    the caps, cycles, a second table, and what md-kit leaves unread are always
+    listed. A claim's two statuses read "C2 is “planned” here, “verified” in
+    paper_skeleton.md:116." (quotes for §5.2's italics; the page draws text only).
+    File text inside a problem is marked as a label is (invisible characters and
+    spaces other than U+0020) and cut at 60 characters.
+  - **What md-kit leaves unread is said** (the brief's lesson 6): rows past its 500
+    a table, lines past its 20,000 when the table reaches them, lines of only
+    invisible characters inside the table, a second table with the graph's header
+    (only the first is read), and, on the no-table screen, everything after a code
+    fence never closed. A statement or a source over 2,000 characters is drawn cut
+    and the panel says so beside it; the quote holds the row as written.
+  - **Absence is worded by what was searched**: "No table with the expected header was
+    found in idea_graph.md." with the first header found (or "No table was found");
+    a link to nothing reads "no node in the table has the ID Q9" ("among the table's
+    first 500 rows" when md-kit read no more), and a link to a node not drawn names
+    why: "Q2 (line 6) is left out for a problem of its own", "P201 (line 206) is
+    past the first 200 nodes". The panel's count says "none is a hypothesis" of the
+    nodes drawn, where the mockup said "no hypotheses are recorded".
+  - **Selection and Reload** (the brief, over the Skeleton and Assets views, which
+    clear the selection when Reload starts): a node is identified by its ID in ASCII
+    lower case. A click opens and selects it, a second click (or Escape, or the
+    host's clear) ends the selection and leaves it open, as in the mockup, and a link
+    chip in the panel opens and selects the node it names. The old map stays
+    clickable while Reload reads; after its render, a selected node still in the file
+    is open, marked, and posted again with its row as it is now (the label can stay
+    while the quote changes), otherwise `null` is posted, and every screen that
+    replaces the map (empty, no table, too large, not UTF-8, a channel error) posts
+    `null` too. The suite clicks during a slow Reload both ways.
+  - **The panel** for a result shows "from: " and a chip to its experiment, and an
+    experiment's files under "Result files, not opened here"; a claim node with an
+    empty Points to says it names no row of paper_skeleton.md. In a narrow view only
+    the hint is hidden (the mockup hid every note), so a note on what the panel
+    leaves out stays.
+  - **The 50 ms bound** (§5.3, §6) is tested by growth
+    ([frontend/plugins/growth.ts](frontend/plugins/growth.ts)), not a wall clock:
+    reading, checking, and laying out a generated 50-node then 200-node graph; the
+    layout alone with the caps lifted, 4,000 then 16,000 nodes and five times as many
+    edges; and hostile files of 128 KiB then 512 KiB (one huge statement, a Links
+    cell of 100,000-odd `;`, of bad items, links all to one node, a files list of
+    distinct paths, a run of backticks in Points to, a cycle through every node with
+    rows past the caps). Here each takes at most 280 ms at 4n, and the ratios run
+    from 1 to 17 for 4 times the input (the 17 is the huge statement, md-kit's
+    string building, below). Mutation checks put back a line looking itself up among the
+    lines (a first draft did), and a files list checked against itself: each fails
+    its case (the first sizes, 2,000 nodes and one repeated path, let both pass, and
+    were raised). md-kit's own `splitCells` grows faster than linearly on one 512 KiB
+    cell (1 ms at 128 KiB, 21 ms at 512 KiB, V8 building the cell's string), well
+    under the floor.
+  - **Points §5.1 and §5.2 leave open, decided and tested:**
+    - two rows with one ID ignoring case: the later is left out, naming the earlier's
+      line and spelling; a row's ID counts for this even when the row is left out
+      for another problem, or has another number of cells (the rule is about the
+      file), so a node never shows another row's details under its ID;
+    - the 200 are the first 200 valid rows, the 1,000 the first 1,000 valid links in
+      file order; a result's experiment is no link and is not capped apart (one per
+      result at most);
+    - a trailing `;`, and empty items in Links, Points to, and a files list, are
+      ignored: nothing is left out;
+    - `;` and `,` inside a code span do not split Points to; paths are separated by
+      ", " (a comma and a space or tab), so a bare path may hold a comma alone; a
+      path is refused with a leading "/", a "\", an address, an empty segment (a
+      trailing "/" too), or a segment starting with ".";
+    - a planned experiment may leave Points to empty; one that does not needs both
+      keys; a done, running, or failed one needs both, and `files:` needs a path,
+      so the mockup's E1 ("no result file and no commit") cannot be written as it
+      was (the e2e fixture names `Code/README.md`; for 2.4 to settle);
+    - a claim node may leave Points to empty (§5.1 says "required" of `from:` and of
+      an experiment's keys only): it is drawn and names no skeleton row;
+    - header cells compare exactly but for ASCII case and surrounding spaces
+      (`**ID**` is another header, and so is `Kind` spelled with the Kelvin sign);
+      kinds, statuses, link words, and keys are the lower-case words as written;
+      IDs are checked against their ASCII pattern before they are lower-cased;
+      claim IDs compare exactly; a claim's status is compared with the skeleton's
+      ignoring ASCII case and surrounding spaces;
+    - a `claim:` that two skeleton rows start with is not resolved: the problem names
+      both lines; an unreadable skeleton is one problem only when a drawn claim
+      node has a `claim:`;
+    - a cycle is found through each link, from its row to its target, and each
+      `from:`, from the experiment to its result: a result that motivates its own
+      experiment closes one. So does a hypothesis that motivates the experiment
+      testing it ("tests" points back to it), a pattern the Human Owner may want
+      allowed: it is listed as a problem, and the nodes are drawn.
+  - **Test fixtures:** [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md)
+    holds §5.1's example byte for byte and the mockup's graph of nanochat_cpu in the
+    confirmed format (its two inferred links left out); the 50- and 200-node graphs
+    are generated in `layout.test.ts`. The end-to-end suite deletes any
+    `idea_graph.md` in its copy of nanochat_cpu (the empty state), then writes the
+    mockup's graph there; malformed, hostile, and changing files go to a project of
+    its own, `idea_e2e`. It runs the graph at 1000 × 728 (windows-x64 CI's window)
+    and 1440 × 900, and a failure names the view's and the map's geometry.
+  - **Limits that stay:** the barycentre order can leave crossings; the detail panel
+    is the mockup's 156 px (200 px narrow) and scrolls; result files and commits are
+    shown, never opened or checked (§5.5); a link or a pointer to a row md-kit did
+    not read (past 500 rows or 20,000 lines) is reported as missing among the rows
+    read.
+  - **Covered by unit tests only, not in the running app:** the caps (200 nodes,
+    1,000 links, 500 rows, 20,000 lines, 500 problems listed), cycles, every Points
+    to and status error, a claim's pointer missing, ambiguous, or with another
+    status, the skeleton's unreadable states, the 413, 503, unreachable, binary,
+    other-encoding, and over-512 KiB screens, statements over 2,000 characters,
+    hostile labels and quotes through the host's `readSelect`, CRLF and lone CRs,
+    and the growth cases.
+  - Not verified: Windows and Linux (the suite ran on macOS arm64 only), and the
+    Human Owner's checklist line.
 
 - **2.2, the Assets view**, is the bundled plugin
   [frontend/plugins/assets-view/](frontend/plugins/assets-view/) (manifest as §4.1,
