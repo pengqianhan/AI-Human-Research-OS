@@ -120,7 +120,12 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       eight are fixed on the branch and two are recorded as limits in
       [os-ui/PLUGINS.md](os-ui/PLUGINS.md). The fixes were checked against
       the reviewer's own probes but not reviewed a second time. The fix for
-      the ask bar is in the host and so applies to every view. The view
+      the ask bar is in the host and so applies to every view: what a view
+      posts while the workspace is hidden is now applied on return. That
+      broke the Paper view in one race (text selected, Home shown within
+      0.4 s: the bar was gone on return), which the directing agent's probe
+      found after the fix round; the Paper view no longer reports while its
+      page is not laid out, with a test that failed before. The view
       accepts `files: none` (Decisions: "Idea file format") and looks for
       cycles by a default not yet confirmed (Decisions: "Idea graph cycle
       rule"). Still open with the Human Owner: the new drawing of lines and
