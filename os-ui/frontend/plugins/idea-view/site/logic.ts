@@ -16,9 +16,9 @@
  * its ASCII pattern, then compared in ASCII lower case (no Unicode case
  * mapping, so the Kelvin sign is never a k); a claim ID is compared exactly.
  */
-import { claims as skeletonClaims, cutText, LIMITS as MD, parse, sections, splitCells, trimSpaces } from "../../md-kit.ts";
+import { claims as skeletonClaims, cutText, inline, LIMITS as MD, parse, plain, sections, splitCells, trimSpaces } from "../../md-kit.ts";
 import type { Doc, Table } from "../../md-kit.ts";
-import { clip, cutMarked, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
+import { clip, cutMarked, LABEL_MAX, markInvisible, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
 
 // ---- what the view reads --------------------------------------------------------------
 
@@ -64,6 +64,21 @@ export const STATUS: Record<Kind, readonly string[]> = {
 const PENDING = new Set(["open", "planned", "running"]);
 /** The panel's row of the nodes not yet settled (PENDING). */
 export const STILL_OPEN = "Still open";
+
+/** Text that draws nothing visible: only white space and spaces of any width (a no-break space, U+3000, …). */
+const blankDrawn = (text: string) => /^[\s\p{Zs}]*$/u.test(text);
+
+/**
+ * A statement as the map's box and its tooltip draw it: one line of its words
+ * (md-kit's tokens as plain text, cut at 2,000), invisible characters marked.
+ * When that draws nothing visible (a statement of only a no-break space, an
+ * image with no alt text), the statement as written, every space other than
+ * U+0020 a marker, so no box is blank.
+ */
+export function nodeWords(statement: string): string {
+  const words = markInvisible(plain(inline(cutText(statement))));
+  return blankDrawn(words) ? visibleName(cutText(statement)) : words;
+}
 
 /** The link words, in the legend's order. */
 export const WORDS = ["motivates", "tests", "supports", "refutes"] as const;
@@ -185,7 +200,15 @@ export interface Graph {
   table: { first: number; last: number };
 }
 
-export type Built = { kind: "graph"; graph: Graph } | { kind: "no-table"; first: { line: number; source: string } | null; notes: string[] };
+/** The graph's header found where md-kit reads no table: inside a code block, or a list item (lines `first` to `last`). */
+export interface Nested {
+  line: number;
+  where: "code" | "list";
+  first: number;
+  last: number;
+}
+
+export type Built = { kind: "graph"; graph: Graph } | { kind: "no-table"; first: { line: number; source: string } | null; nested: Nested | null; notes: string[] };
 
 // ---- words ----------------------------------------------------------------------------
 
@@ -443,8 +466,32 @@ function pointsOf(kind: Kind, status: string, cell: string): { ok: true; points:
 
 // ---- the table and its rows -----------------------------------------------------------
 
-/** A table whose header cells are exactly HEADER, ignoring ASCII case and the spaces around them (md-kit trims those). */
-const isGraphTable = (t: Table) => !t.columnsCut && t.header.length === HEADER.length && t.header.every((cell, k) => asciiLower(cell) === asciiLower(HEADER[k]!));
+/** Header cells that are exactly HEADER, ignoring ASCII case and the spaces around them (md-kit trims those). */
+const isGraphHeader = (cells: readonly string[]) => cells.length === HEADER.length && cells.every((cell, k) => asciiLower(cell) === asciiLower(HEADER[k]!));
+/** A table whose header cells are exactly HEADER. */
+const isGraphTable = (t: Table) => !t.columnsCut && isGraphHeader(t.header);
+
+/** A list item's marker and the space after it, at a line's start ("- ", "1. "). */
+const ITEM_MARKER = /^[ \t]*(?:[-*+]|[0-9]{1,9}\.)(?:[ \t]+|$)/;
+
+/**
+ * The first line holding the graph's header where md-kit reads no table: in a
+ * code block's body (§5.1 prints its example in a fence), or in a list item's
+ * lines, its marker aside. One pass over those blocks' lines.
+ */
+function nestedHeader(doc: Doc): Nested | null {
+  for (const block of doc.blocks) {
+    if (block.kind !== "code" && block.kind !== "list") continue;
+    // A code block's first line is its fence; its body is the lines after it (to the closing fence, if any).
+    const from = block.kind === "code" ? 1 : 0;
+    const to = block.kind === "code" && block.closed ? block.lines.length - 1 : block.lines.length;
+    for (let k = from; k < to; k++) {
+      const line = trimSpaces(block.kind === "list" ? block.lines[k]!.replace(ITEM_MARKER, "") : block.lines[k]!);
+      if (line.startsWith("|") && isGraphHeader(splitCells(line))) return { line: block.first + k, where: block.kind, first: block.first, last: block.last };
+    }
+  }
+  return null;
+}
 
 /** What md-kit leaves unread that could hide a table: a fence never closed, lines past its cap. */
 function unreadNotes(doc: Doc): string[] {
@@ -468,7 +515,7 @@ export function buildGraph(doc: Doc, skeleton: SkeletonRead): Built {
   const table = graphTables[0];
   if (table === undefined) {
     const first = tables[0];
-    return { kind: "no-table", first: first === undefined ? null : { line: first.first, source: first.lines[0]! }, notes: unreadNotes(doc) };
+    return { kind: "no-table", first: first === undefined ? null : { line: first.first, source: first.lines[0]! }, nested: nestedHeader(doc), notes: unreadNotes(doc) };
   }
   const problems = new Problems();
 
@@ -477,17 +524,20 @@ export function buildGraph(doc: Doc, skeleton: SkeletonRead): Built {
   if (doc.cut && table.last === doc.lines) problems.add(null, 0, () => `${FILE} has more than ${n(doc.lines)} lines; the view reads the first ${n(doc.lines)}.`, true);
   for (const line of table.skipped) problems.add(atLines([line]), line, () => "it holds only invisible characters; the table goes on after it.");
   for (const other of graphTables.slice(1)) problems.add(atLines([other.first]), other.first, () => `another table with the graph's header; only the first, on line ${n(table.first)}, is read.`, true);
-  // Lines that start with "|" after the table ended (a blank line or other text ends a table in md-kit): rows an
-  // agent may have meant, which md-kit read as a paragraph. Said, so no node vanishes without a note.
+  // Lines that start with "|" after the table ended: rows an agent may have meant, which md-kit read as a paragraph
+  // (a blank line or other text ends a table) or as a list item's text (rows indented under an item). Said, so no
+  // node vanishes without a note.
   let stray = false;
   for (const block of doc.blocks) {
-    if (block.kind !== "paragraph" || block.first <= table.last) continue;
+    if ((block.kind !== "paragraph" && block.kind !== "list") || block.first <= table.last) continue;
     const pipes = block.lines.map((l, k) => (/^[ \t]*\|/.test(l) ? block.first + k : 0)).filter((l) => l > 0);
     if (pipes.length === 0) continue;
     stray = true;
     const one = pipes.length === 1;
     const at = pipes[pipes.length - 1]! - pipes[0]! === pipes.length - 1 ? atRange(pipes[0]!, pipes[pipes.length - 1]!) : atLines(pipes);
-    problems.add(at, pipes[0]!, () => `${one ? "this line starts" : "these lines start"} with “|” after the table, which ends on line ${n(table.last)} (a blank line or other text ends it); ${one ? "it is not read as a row" : "they are not read as rows"}.`);
+    const where = block.kind === "list" ? " inside a list item" : "";
+    const why = block.kind === "list" ? "a table inside a list item is read as the item's text" : "a blank line or other text ends it";
+    problems.add(at, pipes[0]!, () => `${one ? "this line starts" : "these lines start"} with “|”${where} after the table, which ends on line ${n(table.last)} (${why}); ${one ? "it is not read as a row" : "they are not read as rows"}.`);
   }
   /** Some rows an agent wrote are not read: past md-kit's caps, or after the table ended. */
   const partial = table.more > 0 || (doc.cut && table.last === doc.lines) || stray;
@@ -899,7 +949,8 @@ export function details(g: Graph, node: IdeaNode): Details {
   if (p.kind === "run") {
     view.lines.push(p.commit === null ? "Commit: none recorded by the run" : `Commit ${p.commit}`);
     if (p.files === null) view.lines.push("Result files: none (the row says “files: none”)");
-    else view.files = p.files;
+    // A path is a name: a space other than U+0020 in it is a marker, as in a label.
+    else view.files = p.files.map(visibleName);
   } else if (node.kind === "experiment") view.lines.push("No run yet");
   else if (pointer?.kind === "from") {
     view.lines.push(`from: ${pointer.id}`);
@@ -919,7 +970,9 @@ export function details(g: Graph, node: IdeaNode): Details {
   const notes: string[] = [];
   if (node.statement.length > MD.cell) notes.push(`The statement is longer than ${n(MD.cell)} characters; the rest is not shown here (the agent gets the row as written, up to ${n(QUOTE_MAX)} characters).`);
   if (node.source.length > MD.cell) notes.push(`The source is longer than ${n(MD.cell)} characters; the rest is not shown here.`);
-  return { statement: cutText(node.statement), notes, links, points: view, source: node.source === "" ? null : cutText(node.source) };
+  // A statement whose words draw nothing visible is given with its spaces marked, as the map's box shows it.
+  const statement = cutText(node.statement);
+  return { statement: blankDrawn(plain(inline(statement))) ? visibleName(statement) : statement, notes, links, points: view, source: node.source === "" ? null : cutText(node.source) };
 }
 
 // ---- reading the file, and every screen's words ---------------------------------------
@@ -948,12 +1001,18 @@ export function emptyWords(): { title: string; text: string; header: string } {
 
 /** The screen for a file with no table of the expected header: what was searched, the first header found beside the expected one. */
 export function noTableWords(b: Extract<Built, { kind: "no-table" }>): { title: string; text: string; expected: string; found: string; notes: string[]; retry: true } {
+  const nested =
+    b.nested === null
+      ? null
+      : `The graph's header is on line ${n(b.nested.line)}, inside the ${b.nested.where === "code" ? "code block" : "list item"} on ${atRange(b.nested.first, b.nested.last)}, ${
+          b.nested.where === "code" ? "which is read as code, not as a table: write the table outside the fence." : "which is read as the item's text, not as a table: start the table at the left margin, outside the list."
+        }`;
   return {
     title: "No idea graph table",
     text: `No table with the expected header was found in ${FILE}.`,
     expected: HEADER_LINE,
-    found: b.first === null ? `No table was found in ${FILE}.` : `The first table's header, on line ${n(b.first.line)}: ${shown(b.first.source, 300)}`,
-    notes: b.notes,
+    found: b.first !== null ? `The first table's header, on line ${n(b.first.line)}: ${shown(b.first.source, 300)}` : (nested ?? `No table was found in ${FILE}.`),
+    notes: b.first !== null && nested !== null ? [nested, ...b.notes] : b.notes,
     retry: true,
   };
 }

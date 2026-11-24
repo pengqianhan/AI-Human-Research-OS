@@ -28,6 +28,7 @@ import {
   labelOf,
   LIMITS,
   moreWords,
+  nodeWords,
   noTableWords,
   problemLine,
   problemsTitle,
@@ -163,20 +164,42 @@ describe("§5.1 the table: the first whose header cells are exactly the seven", 
   test("no table with that header: the first header found is named, or that there is no table; inline marks, 6 or 8 columns are another header", () => {
     for (const head of ["| **ID** | Kind | Statement | Status | Links | Points to | Source |", "| ID | Kind | Statement | Status | Links | Points to |", "| ID | Kind | Statement | Status | Links | Points to | Source | More |", "| ID | Kind | Statement | Status | Links | Points-to | Source |"]) {
       const b = built(`# Idea graph\n\n${head}\n|---|---|---|---|---|---|---|\n${Q("Q1")}\n`);
-      assert.deepEqual(b, { kind: "no-table", first: { line: 3, source: head }, notes: [] }, head);
+      assert.deepEqual(b, { kind: "no-table", first: { line: 3, source: head }, nested: null, notes: [] }, head);
     }
     // Case is ASCII case: the Kelvin sign, which toLowerCase() makes "k", does not spell "Kind".
     const kelvin = `| ID | ${String.fromCharCode(0x212a)}ind | Statement | Status | Links | Points to | Source |`;
-    assert.deepEqual(built(`# Idea graph\n\n${kelvin}\n|---|---|---|---|---|---|---|\n${Q("Q1")}\n`), { kind: "no-table", first: { line: 3, source: kelvin }, notes: [] });
-    assert.deepEqual(built("# Idea graph\n\nNo table here.\n"), { kind: "no-table", first: null, notes: [] });
-    assert.deepEqual(built(""), { kind: "no-table", first: null, notes: [] });
+    assert.deepEqual(built(`# Idea graph\n\n${kelvin}\n|---|---|---|---|---|---|---|\n${Q("Q1")}\n`), { kind: "no-table", first: { line: 3, source: kelvin }, nested: null, notes: [] });
+    assert.deepEqual(built("# Idea graph\n\nNo table here.\n"), { kind: "no-table", first: null, nested: null, notes: [] });
+    assert.deepEqual(built(""), { kind: "no-table", first: null, nested: null, notes: [] });
+  });
+
+  test("the graph's header inside a code block or a list item is named, with where it is and why it is not read: §5.1's own example sits in a fence", () => {
+    // §5.1 prints its example inside a ```markdown fence; an agent that copies it with the fence gets this.
+    const fenced = built(`# Idea graph\n\n\`\`\`markdown\n${EXAMPLE}\`\`\`\n`);
+    assert.deepEqual(fenced, { kind: "no-table", first: null, nested: { line: 6, where: "code", first: 3, last: 12 }, notes: [] });
+    assert.equal(noTableWords(fenced as Extract<Built, { kind: "no-table" }>).found, "The graph's header is on line 6, inside the code block on lines 3–12, which is read as code, not as a table: write the table outside the fence.");
+    const item = built(`# Idea graph\n\n- ${HEAD.split("\n")[0]}\n  ${HEAD.split("\n")[1]}\n  ${Q("Q1")}\n`);
+    assert.deepEqual(item, { kind: "no-table", first: null, nested: { line: 3, where: "list", first: 3, last: 5 }, notes: [] });
+    assert.equal(noTableWords(item as Extract<Built, { kind: "no-table" }>).found, "The graph's header is on line 3, inside the list item on lines 3–5, which is read as the item's text, not as a table: start the table at the left margin, outside the list.");
+    // With another table found first, its header is named, and the nested one is a note.
+    const both = built(`| a | b |\n|---|---|\n\n\`\`\`\n${HEAD}\n${Q("Q1")}\n\`\`\`\n`);
+    assert.deepEqual(noTableWords(both as Extract<Built, { kind: "no-table" }>), {
+      title: "No idea graph table",
+      text: "No table with the expected header was found in idea_graph.md.",
+      expected: HEADER_LINE,
+      found: "The first table's header, on line 1: | a | b |",
+      notes: ["The graph's header is on line 5, inside the code block on lines 4–8, which is read as code, not as a table: write the table outside the fence."],
+      retry: true,
+    });
+    // A fence or list with no such header is nothing to name.
+    assert.deepEqual(built("```\n| a | b |\n|---|---|\n```\n\n- | x |\n"), { kind: "no-table", first: null, nested: null, notes: [] });
   });
 
   test("what md-kit leaves unread before a table is said on that screen: an unclosed code fence, lines past 20,000", () => {
     const fenced = built(`# Idea graph\n\n\`\`\`\nnever closed\n\n${HEAD}\n${Q("Q1")}\n`);
-    assert.deepEqual(fenced, { kind: "no-table", first: null, notes: ["Everything after the code fence opened on line 3 and never closed is read as code, not as a table."] });
+    assert.deepEqual(fenced, { kind: "no-table", first: null, nested: { line: 6, where: "code", first: 3, last: 8 }, notes: ["Everything after the code fence opened on line 3 and never closed is read as code, not as a table."] });
     const long = built(`${"x\n\n".repeat(MD.lines / 2)}${HEAD}\n${Q("Q1")}\n`);
-    assert.deepEqual(long, { kind: "no-table", first: null, notes: [`idea_graph.md has more than ${MD.lines.toLocaleString("en-US")} lines; the view reads the first ${MD.lines.toLocaleString("en-US")}.`] });
+    assert.deepEqual(long, { kind: "no-table", first: null, nested: null, notes: [`idea_graph.md has more than ${MD.lines.toLocaleString("en-US")} lines; the view reads the first ${MD.lines.toLocaleString("en-US")}.`] });
   });
 
   test("a second table with the graph's header is not read, and the problems say so", () => {
@@ -614,6 +637,14 @@ describe("caps and what md-kit leaves unread, each said (§1 fact 6, §5.2)", ()
       "lines 8–9: these lines start with “|” after the table, which ends on line 6 (a blank line or other text ends it); they are not read as rows.",
       "line 13: this line starts with “|” after the table, which ends on line 6 (a blank line or other text ends it); it is not read as a row.",
     ]);
+    // Rows indented under a list item after the table are the item's text: said, and a link to one is worded by the rows read.
+    const listed2 = graphOf(file(Q("Q1"), E("E1", "tests Q2")) + "\n- Rows added later:\n  | Q2 | question | added later | open |  |  |  |\n  | Q3 | question | and another | open |  |  |  |\n\n* one more\n  | Q4 | question | q4 | open |  |  |  |\n");
+    assert.deepEqual(ids(listed2), ["Q1", "E1"]);
+    assert.deepEqual(listed(listed2), [
+      "line 6: E1's link “tests Q2” is left out: no node among the rows the view reads has the ID Q2.",
+      "lines 9–10: these lines start with “|” inside a list item after the table, which ends on line 6 (a table inside a list item is read as the item's text); they are not read as rows.",
+      "line 13: this line starts with “|” inside a list item after the table, which ends on line 6 (a table inside a list item is read as the item's text); it is not read as a row.",
+    ]);
     // A table after it with another header is free text, as §5.1 says, and a link to nothing in a whole file is worded so.
     const other = graphOf(`${file(E("E1", "tests Q9"))}\n| a | b |\n|---|---|\n| 1 | 2 |\n`);
     assert.deepEqual(listed(other), ["line 5: E1's link “tests Q9” is left out: no node in the table has the ID Q9."]);
@@ -782,6 +813,17 @@ describe("the detail panel and the summary (§5.4)", () => {
     assert.deepEqual(details(g, node(g, "C5")).points, { lines: ["This claim names no row of paper_skeleton.md: its Points to is empty."], files: [], chip: null, claim: null, problem: null });
   });
 
+  test("a statement that draws nothing visible, and a space other than U+0020 in a result file's path, are drawn as markers", () => {
+    const g = graphOf(file(row("Q1", "question", " ", "open", "", "", ""), row("Q2", "question", "![](x.png)", "open", "", "", ""), row("Q3", "question", "a b ‮evil", "open", "", "", ""), E("E1", "", "commit: none; files: Code/a b.json, Code/c d.csv, Code/plain name.json")));
+    // The map's box (and its tooltip): a statement of only a no-break space was a blank box.
+    assert.deepEqual(g.nodes.map((n) => nodeWords(n.statement)), ["⟨U+00A0⟩", "![](x.png)", "a b ⟨U+202E⟩evil", "Experiment E1"]);
+    // The panel: drawn through md-kit's tokens, so a blank statement is given marked.
+    assert.equal(details(g, node(g, "Q1")).statement, "⟨U+00A0⟩");
+    assert.equal(details(g, node(g, "Q3")).statement, "a b ‮evil", "visible words stay as written; the page marks the invisible ones");
+    // A path is a name: a no-break or em space in it is a marker, as in a label; a plain space stays.
+    assert.deepEqual(details(g, node(g, "E1")).points.files, ["Code/a⟨U+00A0⟩b.json", "Code/c⟨U+2003⟩d.csv", "Code/plain name.json"]);
+  });
+
   test("a statement or source over 2,000 characters is drawn cut, and the panel says so", () => {
     const g = graphOf(file(row("Q1", "question", "s".repeat(MD.cell + 5), "open", "", "", "x".repeat(MD.cell + 1))));
     const d = details(g, g.nodes[0]!);
@@ -806,7 +848,7 @@ describe("every screen's words (§5.2, §2)", () => {
   });
 
   test("no table with the expected header: worded by what was searched, the first header found beside the expected one", () => {
-    assert.deepEqual(noTableWords({ kind: "no-table", first: { line: 3, source: "| **ID** | Kind |" }, notes: ["n"] }), {
+    assert.deepEqual(noTableWords({ kind: "no-table", first: { line: 3, source: "| **ID** | Kind |" }, nested: null, notes: ["n"] }), {
       title: "No idea graph table",
       text: "No table with the expected header was found in idea_graph.md.",
       expected: HEADER_LINE,
@@ -814,7 +856,7 @@ describe("every screen's words (§5.2, §2)", () => {
       notes: ["n"],
       retry: true,
     });
-    assert.equal(noTableWords({ kind: "no-table", first: null, notes: [] }).found, "No table was found in idea_graph.md.");
+    assert.equal(noTableWords({ kind: "no-table", first: null, nested: null, notes: [] }).found, "No table was found in idea_graph.md.");
   });
 
   test("the read channel's answers and the file's content", () => {

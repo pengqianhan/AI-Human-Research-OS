@@ -68,11 +68,18 @@ Status on 2026-11-24:
     invisible characters inside the table, a second table with the graph's header
     (only the first is read), lines starting with "|" after the table ended (a
     blank line or other text ends a table, and md-kit reads such lines as a
-    paragraph: rows an agent grouped with blank lines), and, on the no-table
+    paragraph: rows an agent grouped with blank lines; after the review, also
+    rows indented under a list item, which md-kit reads as the item's text and
+    the first build dropped with no note), and, on the no-table
     screen, everything after a code fence never closed. A statement or a source over 2,000 characters is drawn cut
     and the panel says so beside it; the quote holds the row as written.
   - **Absence is worded by what was searched**: "No table with the expected header was
     found in idea_graph.md." with the first header found (or "No table was found");
+    after the review, the graph's header inside a code block or a list item, where
+    md-kit reads no table, is named with its line and why ("The graph's header is on
+    line 6, inside the code block on lines 3–12, which is read as code, not as a
+    table: write the table outside the fence."), since §5.1 prints its own example
+    in a fence and an agent copying it got "No table was found";
     a link to nothing reads "no node in the table has the ID Q9" ("no node among the
     rows the view reads" when some were not read: past md-kit's 500 rows or 20,000
     lines, or after the table ended), and a link to a node not drawn names
@@ -94,7 +101,11 @@ Status on 2026-11-24:
     and with the check removed the old file overwrote the new one on screen (the
     test is red then; the first build had no test that noticed).
   - **The panel** for a result shows "from: " and a chip to its experiment, and an
-    experiment's files under "Result files, not opened here"; a claim node with an
+    experiment's files under "Result files, not opened here", each path marked as a
+    label is (a no-break space in it showed as a plain space before the review). A
+    statement whose words draw nothing visible (only a no-break space, or an image
+    with no alt text) is drawn as written with its spaces marked, in the box, its
+    tooltip, and the panel, where the first build drew a blank box; a claim node with an
     empty Points to says it names no row of paper_skeleton.md. In a narrow view only
     the hint is hidden (the mockup hid every note), so a note on what the panel
     leaves out stays.

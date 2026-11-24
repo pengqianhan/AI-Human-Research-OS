@@ -112,7 +112,8 @@ describe("the page's DOM", () => {
     assert.match(main, /const statusClass = \(status: string\) => `st \$\{STATUS_CLASS\.get\(status\) \?\? ""\}`;/);
     // File text reaches an attribute only as a tooltip (title), as marked plain text or the node's validated ID and kind.
     assert.deepEqual([...main.matchAll(/\.title = ([^;]+);/g)].map((m) => m[1]).sort(), ["`${node.id} (${node.kind})`", "`Read ${FILE} and paper_skeleton.md again, as they are on disk now`", "words"]);
-    assert.match(main, /const words = markInvisible\(plain\(inline\(cutText\(node\.statement\)\)\)\);/);
+    assert.match(main, /const words = nodeWords\(node\.statement\);/);
+    assert.match(source("logic.ts"), /const words = markInvisible\(plain\(inline\(cutText\(statement\)\)\)\);\n  return blankDrawn\(words\) \? visibleName\(cutText\(statement\)\) : words;/);
   });
 
   test("no roundabout way to a sink: bracket or object-key forms, a src, a new element, or a cast, in any site file", () => {

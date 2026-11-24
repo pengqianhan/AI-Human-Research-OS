@@ -21,7 +21,7 @@
  * an attribute other than a tooltip, or a URL. Each load carries a generation
  * number, so an answer that arrives after another Reload is dropped.
  */
-import { cutText, inline, parse, plain } from "../../md-kit.ts";
+import { inline, parse } from "../../md-kit.ts";
 import { button, clear, el, filesUrl, inlineNodes, isHostClear, markInvisible, projectFrom, readStart } from "../../site-kit.ts";
 import { edgesOf, fitScale, labelPoint, layout } from "./layout.ts";
 import type { Layout, Rect } from "./layout.ts";
@@ -36,6 +36,7 @@ import {
   fileWords,
   KINDS,
   moreWords,
+  nodeWords,
   noTableWords,
   problemLine,
   problemsTitle,
@@ -348,7 +349,7 @@ function drawMap(graph: Graph, map: Layout): void {
     const top = el("span", "gn-top");
     top.append(el("span", `kb ${KIND_CLASS[node.kind]}`, node.id), el("span", statusClass(node.status), node.status));
     // One line of the statement's words; the box cuts it, and the panel shows it whole.
-    const words = markInvisible(plain(inline(cutText(node.statement))));
+    const words = nodeWords(node.statement);
     b.append(top, el("span", "gn-tx", words));
     b.title = words;
     b.addEventListener("click", () => clickNode(node.key));
@@ -490,7 +491,7 @@ function renderPanel(graph: Graph, open: IdeaNode | null): void {
   } else for (const line of p.lines) points.append(el("div", "", line));
   if (p.files.length > 0) {
     const list = el("ul", "files");
-    for (const file of p.files) list.append(el("li", "", markInvisible(file)));
+    for (const file of p.files) list.append(el("li", "", file));
     points.append(el("span", "lw", "Result files, not opened here"), list);
   }
   if (p.claim !== null) {
