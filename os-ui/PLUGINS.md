@@ -27,15 +27,18 @@ Status on 2026-11-25:
     `parse` and `buildGraph`, fed the file and the live `paper_skeleton.md`, give 20
     nodes, 9 links, no problem, and "5 of 5 verified in paper_skeleton.md"; the
     running app, at 1440 × 900, draws the same with 15 lines. It differs from the
-    fixture in four ways. E3 and E4 also name `Code/results/training_metrics.csv`,
-    whose rows of the runs `probe_lr2x` and `probe_vocab2048` are theirs. E2's
-    statement says it was two fresh runs and a last re-run with the data cached
-    (`Code/README.md:126–129`), which R2's two sources and R4 need. R1 `motivates
-    E2` is kept, with its reason in Source: `Code/README.md:91` gives the spike as
-    why the recipe's SFT uses `--init-lr-frac=0.1`, which E2 runs. Sources are
-    longer, naming the basis of each link and status. The mockup's two inferred
-    links (E1 tests Q1, E5 tests Q4) stay out, as in the fixture. No hypothesis
-    node, and every run says `commit: none` (Decisions, "Idea file format").
+    fixture only in Points to and Source. E3 and E4 also name
+    `Code/results/training_metrics.csv`, whose rows of the runs `probe_lr2x` and
+    `probe_vocab2048` are theirs. The Source cells are longer, naming the basis of
+    each link and status. E2's says the command was run more than once
+    (`Code/README.md:126–129`: two fresh runs, the README's timings from the first,
+    `summary.json`'s from the last, a re-run with the data cached; the files do not
+    say how many runs there were), which R2's two sources and R4 rest on. R1's
+    gives the reason for `motivates E2`: `Code/README.md:91` gives the spike as why
+    the recipe's SFT uses `--init-lr-frac=0.1`, which E2 runs. The mockup's two
+    inferred links (E1 tests Q1, E5 tests Q4) stay out, as in the fixture. No
+    hypothesis node, and every run says `commit: none` (Decisions, "Idea file
+    format").
   - [projects-folder/templates/ai_research_template/idea_graph.md](../projects-folder/templates/ai_research_template/idea_graph.md)
     states §5.1's rules in a short list over the empty table, which is the file's
     last block so rows added at its end stay in the table, and the template's

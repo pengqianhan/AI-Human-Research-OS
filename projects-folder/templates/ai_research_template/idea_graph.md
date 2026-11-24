@@ -28,8 +28,9 @@ it comes from in Source, and leave out what no file supports.
   the cell empty. A result: `from: <ID of an experiment>`. A claim:
   `claim: C1`, the short name its row in `paper_skeleton.md`'s Claims and
   Evidence table starts with (`C1: …`). A question or hypothesis: empty. Paths
-  are relative to the project folder; one holding `, ` is written as a code
-  span.
+  are relative to the project folder, with no `..` segment and no segment
+  starting with `.`; one holding `, ` is written as a code span. `none` stands
+  alone, never beside paths; a file really named `none` is written `` `none` ``.
 - **Source:** optional; where the node comes from, as `file:line`.
 - The view reads at most 512 KiB of this file and draws at most 200 nodes and
   1,000 links.
