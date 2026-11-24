@@ -36,7 +36,14 @@ Status on 2026-11-24:
     box is the page's HTML (a `<button>`, so Enter and Space work) in a
     `foreignObject`, which keeps the mockup's look and its cut of a statement by the
     box. `dom.test.ts` pins every attribute the page sets, with its value, and every
-    tag it makes. The map's box keeps a stable scrollbar gutter, so the width the
+    tag it makes; after the review, also every method `main.ts` and `site-kit.ts`
+    call and every property they set (a new one, such as `setHTMLUnsafe`,
+    `insertRule`, or `dataset`, fails it until it is reviewed), a class only toggled
+    by a literal name, no HTML parser and no style or rule set from code anywhere in
+    the bundle, and no member reached by a string. The first build's checks let the
+    review's four mutants through (`setHTMLUnsafe` on a problem line and on the
+    statement, `classList.add` of Source words, `insertRule` of a Source cell); each
+    now fails this test. The map's box keeps a stable scrollbar gutter, so the width the
     scale is fitted to does not change when a classic scrollbar (Windows, Linux)
     comes and goes, which would otherwise resize the map in a loop.
   - **The legend** takes the top of the last column, whose nodes start under it: the
@@ -81,7 +88,11 @@ Status on 2026-11-24:
     is open, marked, and posted again with its row as it is now (the label can stay
     while the quote changes), otherwise `null` is posted, and every screen that
     replaces the map (empty, no table, too large, not UTF-8, a channel error) posts
-    `null` too. The suite clicks during a slow Reload both ways.
+    `null` too. The suite clicks during a slow Reload both ways. A load carries a
+    generation, and an answer that arrives after a later Reload's is dropped: the
+    suite holds the first of two Reloads' bytes for 3 s past the second's render,
+    and with the check removed the old file overwrote the new one on screen (the
+    test is red then; the first build had no test that noticed).
   - **The panel** for a result shows "from: " and a chip to its experiment, and an
     experiment's files under "Result files, not opened here"; a claim node with an
     empty Points to says it names no row of paper_skeleton.md. In a narrow view only
@@ -102,9 +113,16 @@ Status on 2026-11-24:
     were raised). Fourteen more mutations, each on a scratch copy, fail a test: an
     ID of 17 characters, `tests` reaching a claim, boxes overlapping, ⟨ and ⟩ left
     unmarked in a label, `toLowerCase` for ASCII case, a duplicate ID kept, a
-    statement as markup, an `<img>`, a class from file text, a `style` or `href`
-    attribute on the map, an unmarked tooltip, rows after a blank line dropped
-    without a note, and no stable gutter. md-kit's own `splitCells` grows faster than linearly on one 512 KiB
+    statement as markup, an `<img>`, a class from file text passed to `el()`, a
+    `style` or `href` attribute on the map, an unmarked tooltip, rows after a blank
+    line dropped without a note, and no stable gutter. The review found tests that
+    could not fail: they used the caps by name, so `READ_MAX` at 5 MiB, the skeleton's
+    1 MiB at 32 MiB, 5,000 problems listed, or "Still open" without `running` failed
+    nothing. Each is now pinned with its literal value and its sentence (524,288 and
+    524,289 bytes and "larger than 512 KiB"; 1,048,576 and 1,048,577 and "larger
+    than 1 MiB", with the skeleton's check moved from `main.ts` into `logic.ts`; 550
+    problems, 500 listed, "and 50 more problems are not listed"; every status of
+    every kind against "Still open"), and each of those mutants fails a test. md-kit's own `splitCells` grows faster than linearly on one 512 KiB
     cell (1 ms at 128 KiB, 21 ms at 512 KiB, V8 building the cell's string), well
     under the floor.
   - **Points §5.1 and §5.2 leave open, decided and tested:**
@@ -164,7 +182,8 @@ Status on 2026-11-24:
     as missing among the rows read; the scrollbar gutter's fix is checked in the
     source, not in a window with classic scrollbars (the suite runs on macOS).
   - **Covered by unit tests only, not in the running app:** the caps (200 nodes,
-    1,000 links, 500 rows, 20,000 lines, 500 problems listed), cycles, every Points
+    1,000 links, 500 rows, 20,000 lines, 500 problems listed; each by its literal
+    value since the review), cycles, every Points
     to and status error, a claim's pointer missing, ambiguous, or with another
     status, the skeleton's unreadable states, the 413, 503, unreachable, binary,
     other-encoding, and over-512 KiB screens, statements over 2,000 characters,

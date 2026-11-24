@@ -27,6 +27,7 @@ import {
   HEADER_LINE,
   labelOf,
   LIMITS,
+  moreWords,
   noTableWords,
   problemLine,
   problemsTitle,
@@ -35,7 +36,10 @@ import {
   quoteOf,
   READ_MAX,
   selectionOf,
+  SKELETON_MAX,
   skeletonFrom,
+  skeletonInput,
+  STILL_OPEN,
   summary,
   verdict,
 } from "./logic.ts";
@@ -615,12 +619,17 @@ describe("caps and what md-kit leaves unread, each said (§1 fact 6, §5.2)", ()
     assert.deepEqual(listed(other), ["line 5: E1's link “tests Q9” is left out: no node in the table has the ID Q9."]);
   });
 
-  test(`the problems listed stop at ${LIMITS.problems}, and the count is every one`, () => {
-    const g = graphOf(file(Q("Q1"), Q("Q2", Array.from({ length: LIMITS.problems + 50 }, () => "x").join("; "))));
-    assert.equal(g.problemCount, LIMITS.problems + 50);
-    assert.equal(g.problems.length, LIMITS.problems);
-    assert.equal(problemsTitle(g.problemCount), `${(LIMITS.problems + 50).toLocaleString("en-US")} problems in idea_graph.md`);
+  test("the problems listed stop at 500, the count is every one, and the list ends “and N more problems are not listed”", () => {
+    assert.deepEqual({ ...LIMITS }, { nodes: 200, links: 1000, problems: 500 });
+    const g = graphOf(file(Q("Q1"), Q("Q2", Array.from({ length: 550 }, () => "x").join("; "))));
+    assert.equal(g.problemCount, 550);
+    assert.equal(g.problems.length, 500);
+    assert.equal(problemsTitle(g.problemCount), "550 problems in idea_graph.md");
+    assert.equal(moreWords(g), "and 50 more problems are not listed");
     assert.equal(problemsTitle(1), "1 problem in idea_graph.md");
+    const one = graphOf(file(Q("Q1"), Q("Q2", Array.from({ length: 501 }, () => "x").join("; "))));
+    assert.deepEqual([one.problems.length, moreWords(one)], [500, "and 1 more problem is not listed"]);
+    assert.equal(moreWords(graphOf(file(Q("Q1", "x")))), null, "every problem listed: no such line");
   });
 });
 
@@ -716,6 +725,30 @@ describe("the detail panel and the summary (§5.4)", () => {
     assert.equal(summary(graphOf(file(Q("Q1"), H("H1")))).counts, "2 nodes: 1 question, 1 hypothesis; none is an experiment, a result, or a claim.");
   });
 
+  test("“Still open” lists the nodes whose status is open, planned, or running, and no other", () => {
+    const all = graphOf(
+      file(
+        Q("Q1"),
+        Q("Q2", "", "answered"),
+        H("H1"),
+        H("H2", "", "supported"),
+        H("H3", "", "refuted"),
+        E("E1", "", "", "planned"),
+        E("E2", "", undefined, "running"),
+        E("E3", "", undefined, "done"),
+        E("E4", "", undefined, "failed"),
+        R("R1", "E3"),
+        C("C1", "", "", "planned"),
+        C("C2", "", "", "verified"),
+        C("C3", "", "", "weak"),
+        C("C4", "", "", "removed"),
+      ),
+    );
+    assert.equal(all.nodes.length, 14);
+    assert.deepEqual(summary(all).open.map((n) => `${n.id} ${n.status}`), ["Q1 open", "H1 open", "E1 planned", "E2 running", "C1 planned"]);
+    assert.equal(STILL_OPEN, "Still open");
+  });
+
   test("a selected node: its links by word, both ways, where it came from, its results, what it points to, and its source", () => {
     const g = graphOf(MOCKUP);
     const e2 = details(g, node(g, "E2"));
@@ -797,13 +830,30 @@ describe("every screen's words (§5.2, §2)", () => {
     assert.equal(projectWords("?project=../x").title, "Not a project name");
   });
 
-  test(`the file is read up to ${READ_MAX / 1024} KiB: exactly that is read, one byte more is too large`, () => {
-    const at = new TextEncoder().encode("x".repeat(READ_MAX));
-    assert.deepEqual(verdict(at, false), { kind: "text", text: "x".repeat(READ_MAX) });
-    assert.deepEqual(verdict(new TextEncoder().encode("x".repeat(READ_MAX + 1)), false), { kind: "too-large" });
+  test("idea_graph.md is read up to 512 KiB (524,288 bytes): exactly that is read, one byte more is too large, and the screen says 512 KiB", () => {
+    assert.equal(READ_MAX, 524_288);
+    const at = new TextEncoder().encode("x".repeat(524_288));
+    assert.deepEqual(verdict(at, false), { kind: "text", text: "x".repeat(524_288) });
+    assert.deepEqual(verdict(new TextEncoder().encode("x".repeat(524_289)), false), { kind: "too-large" });
+    assert.equal(contentWords("too-large").text, "idea_graph.md is larger than 512 KiB, the most the Idea view reads.");
     assert.deepEqual(verdict(at, true), { kind: "too-large" }, "readStart stopped at the cap");
     assert.deepEqual(verdict(new Uint8Array([0x61, 0, 0x62]), false), { kind: "binary" });
     assert.deepEqual(verdict(new Uint8Array([0xff, 0xfe, 0x41]), false), { kind: "encoding" });
+  });
+
+  test("paper_skeleton.md is read up to 1 MiB (1,048,576 bytes): one byte more, or a read the cap stopped, is “larger than 1 MiB”", () => {
+    assert.equal(SKELETON_MAX, 1_048_576);
+    const claims = "## Claims and Evidence\n\n| Claim | Evidence | Source file or link | Citation/result | Status |\n|---|---|---|---|---|\n| C1: one | e | s | r | verified |\n";
+    const padded = (size: number) => new TextEncoder().encode(claims + "x".repeat(size - claims.length));
+    const whole = skeletonInput({ ok: true, bytes: padded(1_048_576), cut: false });
+    assert.equal(whole.ok, true, "exactly 1 MiB is read");
+    assert.deepEqual(skeletonFrom(whole).ok, true);
+    assert.deepEqual(skeletonInput({ ok: true, bytes: padded(1_048_577), cut: false }), { ok: false, problem: "too-large" });
+    assert.deepEqual(skeletonInput({ ok: true, bytes: padded(1_000), cut: true }), { ok: false, problem: "too-large" }, "readStart stopped at the cap");
+    assert.deepEqual(skeletonFrom(skeletonInput({ ok: true, bytes: padded(1_048_577), cut: false })), { ok: false, why: "paper_skeleton.md is larger than 1 MiB, the most the Idea view reads of it" });
+    assert.deepEqual(skeletonInput({ ok: false, status: 404 }), { ok: false, status: 404 });
+    assert.deepEqual(skeletonInput({ ok: true, bytes: new Uint8Array([0x61, 0, 0x62]), cut: false }), { ok: false, problem: "binary" });
+    assert.deepEqual(skeletonInput({ ok: true, bytes: new Uint8Array([0xff, 0xfe, 0x41]), cut: false }), { ok: false, problem: "encoding" });
   });
 });
 

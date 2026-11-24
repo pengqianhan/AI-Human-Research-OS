@@ -2946,6 +2946,47 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  test("two Reloads, the first one's answer held past the second's: the map keeps the second, the file as it is now", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = ideaFile(IDEA_PROJECT);
+    const original = readFileSync(file, "utf8");
+    const write = (q1: string) => writeFileSync(file, [`# Idea graph`, "", IDEA_HEAD, `| Q1 | question | ${q1} | open |  |  |  |`, ""].join("\n"));
+    try {
+      write("before both");
+      const { ws, iv } = await openIdea(IDEA_PROJECT);
+      await clearAsk(ws, IDEA_PROJECT);
+      await reloadIdea(iv);
+      await nodeOf(iv, "Q1").filter({ hasText: "before both" }).waitFor();
+      // The next read of idea_graph.md takes the file's bytes at once and hands them to the page 3 s later.
+      await iv.evaluate(() => {
+        const real = window.fetch.bind(window);
+        let once = true;
+        window.fetch = async (input, init) => {
+          const res = await real(input, init);
+          if (!once || !String(input).includes("idea_graph.md")) return res;
+          once = false;
+          const bytes = await res.arrayBuffer();
+          (window as { __held?: boolean }).__held = true;
+          await new Promise((r) => setTimeout(r, 3000));
+          return new Response(bytes, { status: res.status, headers: res.headers });
+        };
+      });
+      write("read by the first Reload");
+      await reloadIdea(iv);
+      await iv.waitForFunction(() => (window as { __held?: boolean }).__held === true);
+      write("read by the second Reload");
+      await reloadIdea(iv);
+      await nodeOf(iv, "Q1").filter({ hasText: "read by the second Reload" }).waitFor();
+      // Past the first Reload's answer: it is dropped, so the map still draws the file as it is now.
+      await page.waitForTimeout(3500);
+      assert.equal(await nodeOf(iv, "Q1").locator(".gn-tx").textContent(), "read by the second Reload");
+      assert.equal(await iv.evaluate(() => (window as { __held?: boolean }).__held), true, "the first read was held");
+    } finally {
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
   test("the Idea view's frame is sealed off: no bridge, idea_graph.md and paper_skeleton.md only, no other origin's endpoints", SLOW, async () => {
     const { iv } = await openIdea();
     const status = (url: string) => iv.evaluate(async (u) => (await fetch(u)).status, url);

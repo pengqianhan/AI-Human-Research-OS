@@ -16,7 +16,7 @@
  * its ASCII pattern, then compared in ASCII lower case (no Unicode case
  * mapping, so the Kelvin sign is never a k); a claim ID is compared exactly.
  */
-import { claims as skeletonClaims, cutText, LIMITS as MD, sections, splitCells, trimSpaces } from "../../md-kit.ts";
+import { claims as skeletonClaims, cutText, LIMITS as MD, parse, sections, splitCells, trimSpaces } from "../../md-kit.ts";
 import type { Doc, Table } from "../../md-kit.ts";
 import { clip, cutMarked, LABEL_MAX, QUOTE_MAX, readText, visibleName } from "../../site-kit.ts";
 
@@ -62,6 +62,8 @@ export const STATUS: Record<Kind, readonly string[]> = {
 };
 /** The statuses "Still open" lists. */
 const PENDING = new Set(["open", "planned", "running"]);
+/** The panel's row of the nodes not yet settled (PENDING). */
+export const STILL_OPEN = "Still open";
 
 /** The link words, in the legend's order. */
 export const WORDS = ["motivates", "tests", "supports", "refutes"] as const;
@@ -220,6 +222,11 @@ const atRange = (first: number, last: number) => (first === last ? `line ${n(fir
 export const problemLine = (p: Problem) => (p.at === null ? p.text : `${p.at}: ${p.text}`);
 /** The bar's problems line. */
 export const problemsTitle = (count: number) => `${plural(count, "problem")} in ${FILE}`;
+/** The list's last line when not every problem is listed, or null. */
+export const moreWords = (g: Graph) => {
+  const more = g.problemCount - g.problems.length;
+  return more > 0 ? `and ${n(more)} more ${more === 1 ? "problem is" : "problems are"} not listed` : null;
+};
 
 /** The problems of one build: every one counted, the first LIMITS.problems of rows and links kept (their words built only then). */
 class Problems {
@@ -240,6 +247,17 @@ class Problems {
 
 /** paper_skeleton.md as the view got it (main.ts reads it as the Skeleton view does). */
 export type SkeletonInput = { ok: true; doc: Doc } | { ok: false; status: number } | { ok: false; problem: "too-large" | "binary" | "encoding" };
+
+/** A file as main.ts read it through the channel: at most `max` + 1 bytes (`cut` when readStart stopped there), or the channel's status. */
+export type Read = { ok: true; bytes: Uint8Array; cut: boolean } | { ok: false; status: number };
+
+/** paper_skeleton.md as the claims' authority takes it: more than SKELETON_MAX bytes is too large. */
+export function skeletonInput(r: Read): SkeletonInput {
+  if (!r.ok) return { ok: false, status: r.status };
+  if (r.cut || r.bytes.length > SKELETON_MAX) return { ok: false, problem: "too-large" };
+  const text = readText(r.bytes);
+  return text.kind === "text" ? { ok: true, doc: parse(text.text) } : { ok: false, problem: text.kind };
+}
 
 interface SkeletonClaim {
   line: number;

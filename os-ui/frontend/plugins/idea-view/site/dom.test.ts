@@ -138,6 +138,38 @@ describe("the page's DOM", () => {
     }
   });
 
+  test("every method the page's DOM code calls and every property it sets is on a pinned list: nothing parses HTML, sets a class, a style, or a rule from file text, or makes another tag or attribute", () => {
+    /** Every `.name(` called and every `.name =` (or `+=`, …) set, in code without comments. */
+    const members = (text: string) => ({
+      calls: [...new Set([...text.matchAll(/\.\s*([A-Za-z_$][\w$]*)\s*(?:<[^>()]*>)?\s*\(/g)].map((m) => m[1]!))].sort(),
+      sets: [...new Set([...text.matchAll(/\.([A-Za-z_$][\w$]*)\s*(?:\+|-|\*|\/|\?\?|\|\||&&)?=(?!=)/g)].map((m) => m[1]!))].sort(),
+    });
+    // The two files that touch the DOM. A new call or property here (setHTMLUnsafe, insertRule, toggleAttribute,
+    // dataset, id, hidden, …) fails this test until it is reviewed and added.
+    assert.deepEqual(members(source("main.ts")), {
+      calls: ["add", "addEventListener", "all", "append", "cancel", "catch", "createElementNS", "createTextNode", "filter", "floor", "forEach", "get", "getElementById", "has", "includes", "inlineNodes", "insertBefore", "map", "observe", "postMessage", "push", "remove", "scrollIntoView", "set", "setAttribute", "some", "toLocaleString", "toLowerCase", "toggle"],
+      sets: ["className", "graph", "map", "open", "scrollLeft", "scrollTop", "textContent", "title"],
+    });
+    assert.deepEqual(members(source("../../site-kit.ts")), {
+      calls: ["append", "cancel", "catch", "charCodeAt", "codePointAt", "createElement", "createElementNS", "createTextNode", "decode", "get", "getReader", "includes", "indexOf", "inlineNodes", "lastIndexOf", "map", "max", "min", "padStart", "push", "read", "replace", "set", "setAttribute", "slice", "subarray", "test", "toString", "toUpperCase"],
+      sets: ["className", "textContent", "title", "type"],
+    });
+    // The pure files never touch the DOM, the window, or the network.
+    for (const file of ["logic.ts", "layout.ts", "../../md-kit.ts"]) assert.doesNotMatch(source(file), /\b(document|window|globalThis|self|navigator|location|fetch|Element|Node)\b/, file);
+    // "add" above is a Set's: a class is only ever toggled, by a literal name; className is only a literal, or el()'s pinned argument.
+    const main = source("main.ts");
+    assert.equal([...main.matchAll(/\bclassList\b/g)].length, [...main.matchAll(/\.classList\.toggle\("[\w-]+", /g)].length, "classList only as .classList.toggle(\"literal\", …)");
+    assert.deepEqual([...main.matchAll(/\.className = ([^;]+);/g)].map((m) => m[1]).sort(), ['"ndetail has"', '"ndetail"']);
+    assert.deepEqual([...source("../../site-kit.ts").matchAll(/\.className = ([^;]+);/g)].map((m) => m[1]), ["cls"]);
+    for (const { file, text } of code()) {
+      // Anything that parses HTML from a string, or styles the page from code.
+      assert.doesNotMatch(text, /\w*HTML\w*\s*\(|\.\w*HTML\b|DOMParser|parseFromString|createContextualFragment|createHTMLDocument|XSLTProcessor|document\.write|srcdoc/, `${file}: an HTML parser`);
+      assert.doesNotMatch(text, /\.style\b|styleSheets|adoptedStyleSheets|CSSStyleSheet|insertRule|replaceSync|\.sheet\b|setProperty|cssText|\bCSS\./, `${file}: a style or a rule from code`);
+      // A member reached by a string (x["setHTMLUnsafe"](…), x["className"] = …) would escape the lists above.
+      assert.doesNotMatch(text, /[\w$)\]!]\[\s*["'`]/, `${file}: a member reached by a string`);
+    }
+  });
+
   test("the page's markup loads its own script and style only, and nothing inline; the style loads nothing", () => {
     const html = sources.find((s) => s.file === "index.html")!.text;
     assert.deepEqual([...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]), ['<script src="./main.js" defer>']);

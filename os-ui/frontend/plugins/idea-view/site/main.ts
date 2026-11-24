@@ -22,7 +22,7 @@
  * number, so an answer that arrives after another Reload is dropped.
  */
 import { cutText, inline, parse, plain } from "../../md-kit.ts";
-import { button, clear, el, filesUrl, inlineNodes, isHostClear, markInvisible, projectFrom, readStart, readText } from "../../site-kit.ts";
+import { button, clear, el, filesUrl, inlineNodes, isHostClear, markInvisible, projectFrom, readStart } from "../../site-kit.ts";
 import { edgesOf, fitScale, labelPoint, layout } from "./layout.ts";
 import type { Layout, Rect } from "./layout.ts";
 import {
@@ -35,6 +35,7 @@ import {
   filePath,
   fileWords,
   KINDS,
+  moreWords,
   noTableWords,
   problemLine,
   problemsTitle,
@@ -43,12 +44,14 @@ import {
   selectionOf,
   SKELETON_MAX,
   skeletonFrom,
+  skeletonInput,
   skeletonPath,
+  STILL_OPEN,
   summary,
   verdict,
   WORDS,
 } from "./logic.ts";
-import type { Built, Graph, IdeaNode, Kind, SkeletonInput, Words } from "./logic.ts";
+import type { Built, Graph, IdeaNode, Kind, Read, Words } from "./logic.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
 const HOST = "app://research-os";
@@ -133,8 +136,6 @@ function openNode(key: string): void {
 
 // ---- reading through the channel ------------------------------------------------------
 
-type Read = { ok: true; bytes: Uint8Array; cut: boolean } | { ok: false; status: number };
-
 /** A file of the project, at most `max` bytes (one more, so the caller can tell a larger one). */
 async function read(path: string, max: number): Promise<Read> {
   try {
@@ -148,14 +149,6 @@ async function read(path: string, max: number): Promise<Read> {
   } catch {
     return { ok: false, status: 0 };
   }
-}
-
-/** paper_skeleton.md as the claims' authority takes it. */
-function skeletonInput(r: Read): SkeletonInput {
-  if (!r.ok) return { ok: false, status: r.status };
-  if (r.cut || r.bytes.length > SKELETON_MAX) return { ok: false, problem: "too-large" };
-  const text = readText(r.bytes);
-  return text.kind === "text" ? { ok: true, doc: parse(text.text) } : { ok: false, problem: text.kind };
 }
 
 // ---- the page -------------------------------------------------------------------------
@@ -293,8 +286,8 @@ function drawProblems(graph: Graph): void {
   clear(problemsBox);
   const list = el("ul");
   for (const p of graph.problems) list.append(el("li", "", problemLine(p)));
-  const more = graph.problemCount - graph.problems.length;
-  if (more > 0) list.append(el("li", "more", `and ${n(more)} more ${more === 1 ? "problem is" : "problems are"} not listed`));
+  const more = moreWords(graph);
+  if (more !== null) list.append(el("li", "more", more));
   problemsBox.append(el("summary", "", problemsTitle(graph.problemCount)), list);
 }
 
@@ -465,7 +458,7 @@ function renderPanel(graph: Graph, open: IdeaNode | null): void {
     if (s.open.length === 0) still.textContent = "—";
     for (const node of s.open) still.append(chip(node, ` ${node.status}`));
     const dl = el("dl", "nd-grid");
-    dl.append(el("dt", "", "Still open"), still, el("dt", "", "Claims"), el("dd", "", s.claims));
+    dl.append(el("dt", "", STILL_OPEN), still, el("dt", "", "Claims"), el("dd", "", s.claims));
     panel.append(head, el("p", "nd-text", s.counts), dl, el("p", "nd-note nd-hint", "Select a node to read it in full, see its links and where it comes from, and ask the agent about it."));
     return;
   }
