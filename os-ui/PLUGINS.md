@@ -289,9 +289,10 @@ Status on 2026-11-24:
     collector's work in the growth cases above.
 
     A tenth case, the layout alone with the caps lifted (6,000 then 24,000 nodes),
-    was removed, a departure too: the design's cost claims for the layout (§5.3)
-    are shown by growth only at the sizes the view can reach, and the caps are
-    what bound it. The layout's one caller, `placeMap` in
+    was removed on 2026-11-25, a departure too: the design's cost claims for the
+    layout (§5.3) are shown by growth only at about the sizes the view can reach
+    (50 then 200 nodes, and routing at 200 then 800), no longer at thousands of
+    nodes, and the caps are what bound it. The layout's one caller, `placeMap` in
     [main.ts](frontend/plugins/idea-view/site/main.ts), passes at most 200 nodes
     and 1,199 lines (1,000 links and one for each result whose experiment is
     drawn; a valid file reaches 1,197). There the mistake the case guarded, a line

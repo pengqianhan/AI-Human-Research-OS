@@ -509,10 +509,10 @@ describe(`the design's 50- and 200-node graphs (§6), and the caps of ${LIMITS.n
     assertOnePass(t, "routing and words, 200 and 800 nodes", growth(make, run, 200));
   });
 
-  // No case times the layout with the caps lifted: it is reached only under them. Its one caller, main.ts's placeMap,
-  // passes graph.nodes (at most LIMITS.nodes, 200) and edgesOf(graph): the links (at most LIMITS.links, 1,000) and a
-  // line for each result whose experiment is drawn, so at most 1,199 lines (a valid file reaches 1,197: 197 results
-  // from one experiment, beside two hypotheses). There a line looking itself up among the lines
+  // No case times the layout at thousands of nodes: the view reaches it only under the caps. Its one caller, main.ts's
+  // placeMap, passes graph.nodes (at most LIMITS.nodes, 200) and edgesOf(graph): the links (at most LIMITS.links,
+  // 1,000) and a line for each result whose experiment is drawn, so at most 1,199 lines (a valid file reaches 1,197:
+  // 197 results from one experiment, beside two hypotheses). There a line looking itself up among the lines
   // (`const k = lines.indexOf(line)` in layout's lines loop) costs 1.8 to 2.0 ms against 1.5 to 1.6 on that file
   // (2.1 to 2.4 against 2.0 to 2.3 on 200 nodes and 1,199 random lines; best of 15, four runs), and no test fails on
   // it. The case at 6,000 then 24,000 nodes that guarded it was removed: on macos-x64 its honest ratio (8.3 times,
