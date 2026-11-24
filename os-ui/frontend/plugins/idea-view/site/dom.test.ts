@@ -107,7 +107,7 @@ describe("the page's DOM", () => {
     assert.deepEqual(args(main, "svgEl", true), ['"gmap"', '"glines"', '"labels"', "`lg ${WORD_CLASS.get(word)!}`", "`ln ${WORD_CLASS.get(line.word)!}`"].sort());
     const classes = [...args(main, "el", true), ...args(main, "button")];
     for (const c of classes) {
-      assert.ok(/^"[\w -]*"$/.test(c) || /^`(kb|gnode|elabel) \$\{(KIND_CLASS\[[\w.]+\]|WORD_CLASS\.get\(line\.word\)!)\}`$/.test(c) || c === "statusClass(node.status)" || c === "statusClass(open.status)" || c === 'none ? "none" : ""', `a class: ${c}`);
+      assert.ok(/^"[\w -]*"$/.test(c) || /^`(kb|gnode|elabel) \$\{(KIND_CLASS\[[\w.]+\]|WORD_CLASS\.get\(line\.word\)!)\}`$/.test(c) || c === "statusClass(node.status)" || c === "statusClass(open.status)" || c === 'none ? "none" : ""' || c === 'noFrom ? "cont none" : "cont"', `a class: ${c}`);
     }
     assert.match(main, /const statusClass = \(status: string\) => `st \$\{STATUS_CLASS\.get\(status\) \?\? ""\}`;/);
     // File text reaches an attribute only as a tooltip (title), as marked plain text or the node's validated ID and kind.

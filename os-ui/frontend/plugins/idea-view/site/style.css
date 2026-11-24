@@ -99,10 +99,11 @@ code { font-family: var(--mono); font-size: .92em; }
 .ghead { display: flex; align-items: center; gap: 6px; height: 100%; font: 600 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; }
 .ghead .kb { min-width: 20px; height: 16px; font-size: 10px; line-height: 16px; padding: 0 4px; }
 /* The legend's box is the layout's (layout.ts LEGEND): 8 px padding, an 18 px title, 15 px rows. */
-.glegend { height: 100%; padding: 8px 10px; border-radius: 10px; background: rgba(255, 253, 249, .92); box-shadow: inset 0 0 0 1px var(--line); font: 11px/1.25 var(--sans); color: var(--ink2); overflow: hidden; }
+.glegend { height: 100%; padding: 8px 6px 8px 8px; border-radius: 10px; background: rgba(255, 253, 249, .92); box-shadow: inset 0 0 0 1px var(--line); font: 11px/1.25 var(--sans); color: var(--ink2); overflow: hidden; }
 .glegend b { display: block; height: 18px; font: 600 10px/14px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.glegend div { display: flex; align-items: center; gap: 6px; height: 15px; white-space: nowrap; overflow: hidden; }
-.glegend svg { width: 26px; height: 8px; flex: none; overflow: visible; }
+.glegend div { display: flex; align-items: center; gap: 5px; height: 15px; white-space: nowrap; overflow: hidden; }
+.glegend div.cont { padding-left: 27px; }
+.glegend svg { width: 22px; height: 8px; flex: none; overflow: visible; }
 .glegend .none { color: var(--faint); }
 .glegend .kb { opacity: .5; min-width: 18px; height: 13px; line-height: 13px; font-size: 9.5px; padding: 0 3px; }
 .lg { fill: none; stroke-width: 1.6; }

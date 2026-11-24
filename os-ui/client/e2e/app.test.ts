@@ -324,6 +324,28 @@ function assetsFixtures(workspace: string): void {
   );
 }
 
+/**
+ * The Idea view's fixtures (os-ui/frontend/plugins/fixtures/README.md): the copy
+ * of nanochat_cpu has no idea_graph.md, so the view first shows its empty state
+ * there (its own file is step 2.4), and the tests then write the mockup's graph
+ * into the copy. Malformed, hostile, and changing files go to a project of their
+ * own, made from the template with the frozen nanochat_cpu skeleton, so they never
+ * change what the first checks.
+ */
+const IDEA_FIXTURES = join(SKELETON_FIXTURES, "idea_graph");
+const IDEA_PROJECT = "idea_e2e";
+/** An idea fixture's lines, whatever line endings the checkout gave it. */
+const ideaLines = (name: string) => readFileSync(join(IDEA_FIXTURES, name), "utf8").split(/\r?\n/);
+const IDEA_HEAD = "| ID | Kind | Statement | Status | Links | Points to | Source |\n|---|---|---|---|---|---|---|";
+
+function ideaFixtures(workspace: string): void {
+  rmSync(join(workspace, "projects-folder", PROJECT, "idea_graph.md"), { force: true });
+  const made = join(workspace, "projects-folder", IDEA_PROJECT);
+  cpSync(join(workspace, "projects-folder", "templates", "ai_research_template"), made, { recursive: true });
+  copyFileSync(join(SKELETON_FIXTURES, "nanochat_cpu.paper_skeleton.md"), join(made, "paper_skeleton.md"));
+  writeFileSync(join(made, "idea_graph.md"), ideaLines("example.idea_graph.md").join("\n"));
+}
+
 /** The home folder the suite's git commands share; removed with the workspace. */
 let gitHome: string | null = null;
 
@@ -382,6 +404,7 @@ describe("desktop client on a Research OS folder", () => {
     codeFixtures(workspace);
     skeletonFixtures(workspace);
     assetsFixtures(workspace);
+    ideaFixtures(workspace);
     userData = tempDir("os-client-data-");
     sessions = tempDir("os-client-sessions-");
     ({ app, page, logs } = await launch({
@@ -485,12 +508,14 @@ describe("desktop client on a Research OS folder", () => {
     await list.click();
     await chat.locator('textarea[placeholder^="Message"]').waitFor();
     assert.equal(await page.locator('input[placeholder="token"]').count(), 0);
-    // Code is the code-view plugin's page on its own origin (Paper, the paper-view plugin's, has its own tests below); Idea, Skeleton, Assets are step 2.
+    // Code is the code-view plugin's page on its own origin (Paper, Idea, Skeleton, and Assets, each its plugin's, have their own tests below).
     await ws.getByRole("tab", { name: "Code" }).click();
     const code = await pluginFrame(page, "app://code-view/");
     assert.equal(code.url(), `app://code-view/index.html?project=${encodeURIComponent(name)}`);
     await code.getByText(`${name}/Code/`, { exact: true }).waitFor();
-    assert.equal(await ws.getByRole("tab", { name: "Idea, step 2" }).getAttribute("aria-disabled"), "true");
+    // No tab is a later step's badge any more: Idea is the idea-view plugin's.
+    assert.equal(await ws.getByRole("tab", { name: "Idea", exact: true }).getAttribute("aria-disabled"), null);
+    assert.equal(await ws.getByRole("tab", { name: /step 2/ }).count(), 0);
     await ws.getByRole("tab", { name: "Overview" }).click();
     // The conversation collapses to a strip and opens again.
     await ws.getByRole("button", { name: "Collapse conversation" }).click();
@@ -2625,6 +2650,370 @@ describe("desktop client on a Research OS folder", () => {
     const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/assets-view\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
     for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
     assert.ok(canary(await consoleLog()), "a CSP violation inside the Assets view's frame is seen");
+  });
+
+  /** A project's workspace with its Idea tab open, and the Idea view's frame once its map or a screen shows. */
+  async function openIdea(project: string = PROJECT): Promise<{ ws: Locator; iv: Frame }> {
+    await nav(page, "Projects").click();
+    await screen(page, "projects").getByRole("button", { name: `Open workspace: ${project}` }).click();
+    const ws = screen(page, "workspace");
+    await ws.getByRole("heading", { name: project, exact: true }).waitFor();
+    await ws.getByRole("tab", { name: "Idea", exact: true }).click();
+    const iv = await pluginFrame(page, `app://idea-view/index.html?project=${project}`);
+    await iv.locator(".idea-main, .placeholder").first().waitFor();
+    return { ws, iv };
+  }
+  const ideaFile = (project: string) => join(workspace, "projects-folder", project, "idea_graph.md");
+  const reloadIdea = (iv: Frame) => iv.locator(".subbar").getByRole("button", { name: "Reload" }).click();
+  /** A node of the map by its ID. */
+  const nodeOf = (iv: Frame, id: string) => iv.locator("button.gnode").filter({ has: iv.locator(".gn-top .kb", { hasText: new RegExp(`^${id}$`) }) });
+  /** Where the map lies in the view and where a node lies on it: a failure on a machine the suite cannot reach names its cause. */
+  const ideaGeometry = (iv: Frame, id?: string) =>
+    iv.evaluate((which) => {
+      const c = document.querySelector(".canvas")!;
+      const svg = document.querySelector("svg.gmap");
+      const node = which === undefined ? null : [...document.querySelectorAll("button.gnode")].find((b) => b.querySelector(".kb")?.textContent === which);
+      const r = node?.getBoundingClientRect();
+      const cr = c.getBoundingClientRect();
+      return `the view is ${innerWidth} × ${innerHeight} px; the map's box ${c.clientWidth} × ${c.clientHeight} px at ${Math.round(cr.left)},${Math.round(cr.top)}, scrolled to ${Math.round(c.scrollLeft)},${Math.round(c.scrollTop)} of ${c.scrollWidth} × ${c.scrollHeight}; the map ${svg?.getAttribute("width")} × ${svg?.getAttribute("height")} for ${svg?.getAttribute("viewBox")}${r === undefined ? "" : `; ${which} at ${Math.round(r.left)},${Math.round(r.top)} (${Math.round(r.width)} × ${Math.round(r.height)})`}`;
+    }, id);
+
+  test("the Idea view on nanochat_cpu: the empty state, then the mockup's graph after Reload; columns, lines, E2's details, and a chip; nothing is sent", SLOW, async () => {
+    const sessionFiles = readdirSync(sessions).length;
+    const width = await windowWidth(1440);
+    const file = ideaFile(PROJECT);
+    try {
+      const { ws, iv } = await openIdea();
+      assert.equal(iv.url(), `app://idea-view/index.html?project=${PROJECT}`);
+      await clearAsk(ws, PROJECT);
+      // No idea_graph.md: the empty state, with the header line an agent writes.
+      assert.ok(!existsSync(file), "the copy has no idea_graph.md");
+      await iv.getByText("No idea file to draw", { exact: true }).waitFor();
+      assert.equal(await iv.locator(".placeholder pre.header").textContent(), "| ID | Kind | Statement | Status | Links | Points to | Source |");
+      assert.equal(await iv.locator(".subbar .vpath").textContent(), `projects-folder/${PROJECT}/idea_graph.md`);
+      await shot(page, "idea-1-empty-state");
+
+      // The mockup's graph written into the copy, and Reload.
+      const lines = ideaLines("mockup.idea_graph.md");
+      writeFileSync(file, lines.join("\n"));
+      await reloadIdea(iv);
+      await iv.locator("button.gnode").nth(19).waitFor();
+      assert.equal(await iv.locator("button.gnode").count(), 20);
+      assert.equal(await iv.locator(".subbar .count").textContent(), "20 nodes · 9 links");
+      assert.equal(await iv.locator("details.problems").count(), 0, "no problem");
+      assert.deepEqual(await iv.locator(".ghead").allTextContents(), ["QQuestions · 4", "EExperiments · 5", "RResults · 6", "CClaims · 5"]);
+      // One line for each link and each result's experiment.
+      assert.equal(await iv.locator(".glines path").count(), 9 + 6);
+      assert.equal(await iv.locator(".glines path.from").count(), 6);
+      const legend = (await iv.locator(".glegend").textContent()) ?? "";
+      assert.ok(legend.includes("refutes · none") && legend.includes("hypotheses · none") && legend.includes("the result'sexperiment(from Points to)"), legend);
+      // Every row of the legend fits its box: none is cut.
+      const cut = await iv.locator(".glegend div").evaluateAll((rows) => rows.filter((r) => r.scrollWidth > r.clientWidth + 1).map((r) => `${r.textContent}: ${r.scrollWidth} > ${r.clientWidth}`));
+      assert.deepEqual(cut, [], "legend rows wider than the legend");
+      // Columns by kind: every question left of every experiment, and so on.
+      const xs = await iv.locator("button.gnode").evaluateAll((bs) => bs.map((b) => [b.querySelector(".kb")!.textContent!, Math.round(b.getBoundingClientRect().left)] as const));
+      for (const [id, x] of xs) assert.equal(x, xs.find(([other]) => other[0] === id[0])![1], `${id} sits in its kind's column`);
+      assert.ok(xs.find(([id]) => id === "Q1")![1] < xs.find(([id]) => id === "E1")![1] && xs.find(([id]) => id === "E1")![1] < xs.find(([id]) => id === "R1")![1] && xs.find(([id]) => id === "R1")![1] < xs.find(([id]) => id === "C1")![1]);
+      const panel = iv.locator(".ndetail");
+      assert.equal(await panel.locator(".nd-text").textContent(), "20 nodes: 4 questions, 5 experiments, 6 results, 5 claims; none is a hypothesis.");
+      assert.ok(((await panel.textContent()) ?? "").includes("5 of 5 verified in paper_skeleton.md"));
+      await shot(page, "idea-2-graph-nothing-selected");
+
+      // E2: its details above the map, its lines labelled, the ask bar.
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const label = bar.locator("[data-selection-label]");
+      await pause();
+      await nodeOf(iv, "E2").click();
+      await label.filter({ hasText: "idea_graph.md · E2 (experiment)" }).waitFor();
+      assert.equal(await label.textContent(), "idea_graph.md · E2 (experiment)");
+      const row = lines.find((l) => l.startsWith("| E2 |"))!;
+      assert.equal(await label.getAttribute("title"), row, "the quote is the row as written");
+      assert.equal(await iv.locator("button.gnode.picked").count(), 1);
+      assert.equal(await nodeOf(iv, "E2").evaluate((b) => b.classList.contains("on") && b.classList.contains("picked")), true);
+      const detail = (await panel.textContent()) ?? "";
+      for (const part of ["experiment", "Every stage:", "Tests", "Motivated by", "Its results", "Commit: none recorded by the run", "Code/results/summary.json", "Code/results/training_metrics.csv", "Code/README.md:122"]) assert.ok(detail.includes(part), `${part} in: ${detail}`);
+      assert.deepEqual(await panel.locator(".lgroup").evaluateAll((gs) => gs.map((g) => g.textContent)), ["TestsQ1", "Motivated byR1", "Its resultsR2R3R4"]);
+      assert.equal(await iv.locator(".glines path.hot").count(), 5, "E2's five lines");
+      assert.deepEqual((await iv.locator(".labels .elabel").allTextContents()).sort(), ["came from", "came from", "came from", "motivates", "tests"]);
+      await shot(page, "idea-3-node-E2-selected-details-and-ask-bar");
+
+      // Ask: a chip whose text opens by itself (the quote is the row as written, not what the map draws).
+      const chat = ws.getByRole("region", { name: `${PROJECT} agent`, exact: true });
+      const chips = chat.getByRole("list", { name: "References" }).getByRole("listitem");
+      await bar.getByRole("button", { name: "Ask the agent about this" }).click();
+      await chips.filter({ hasText: "idea_graph.md · E2 (experiment)" }).waitFor();
+      const preview = chat.locator("[data-reference-preview]");
+      await preview.waitFor({ timeout: 5000 });
+      assert.equal(await preview.textContent(), `About idea_graph.md · E2 (experiment)\n> ${row}`);
+      assert.equal(await bar.count(), 0, "asking clears the selection");
+      await iv.locator(".picked").waitFor({ state: "detached" });
+      await panel.locator(".nd-head .nd-kind", { hasText: "experiment" }).waitFor(); // E2 stays open
+      await chat.getByRole("button", { name: "Remove reference idea_graph.md · E2 (experiment)" }).click();
+      assert.equal(await chips.count(), 0);
+
+      // A chip in the panel opens and selects the node it names; a second click on a node clears the selection, Escape too.
+      await pause();
+      await panel.locator(".lchip", { hasText: "R3" }).click();
+      await label.filter({ hasText: "idea_graph.md · R3 (result)" }).waitFor();
+      assert.equal(await nodeOf(iv, "R3").evaluate((b) => b.classList.contains("on") && b.classList.contains("picked")), true);
+      assert.ok(((await panel.textContent()) ?? "").includes("Supports"));
+      await pause();
+      await nodeOf(iv, "R3").click();
+      await bar.waitFor({ state: "detached" });
+      assert.equal(await iv.locator(".picked").count(), 0);
+      await pause();
+      await nodeOf(iv, "C2").click();
+      await label.filter({ hasText: "idea_graph.md · C2 (claim)" }).waitFor();
+      assert.ok(((await panel.textContent()) ?? "").includes("Row C2 of the Claims and Evidence table, paper_skeleton.md:116"));
+      await iv.locator("body").press("Escape");
+      await bar.waitFor({ state: "detached" });
+      assert.equal(readdirSync(sessions).length, sessionFiles, "no message was sent");
+    } finally {
+      await windowWidth(width);
+    }
+  });
+
+  test("the Idea view in a narrow and a wide window: the map fits at a scale between 0.8 and 1, scrolls inside its box, and a node far right is selected", SLOW, async () => {
+    // About the window windows-x64 CI opens (1024 × 768 screen), then a wide one.
+    const size = await windowSize({ width: 1000, height: 728 });
+    try {
+      const { ws, iv } = await openIdea();
+      await clearAsk(ws, PROJECT);
+      await nodeOf(iv, "C5").waitFor();
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const label = bar.locator("[data-selection-label]");
+      for (const [name, set] of [
+        ["narrow", () => windowSize({ width: 1000, height: 728 })],
+        ["wide", () => windowSize({ width: 1440, height: 900 })],
+      ] as const) {
+        await set();
+        await page.waitForTimeout(400);
+        const scale = await iv.locator("svg.gmap").evaluate((s) => Number(s.getAttribute("width")) / Number(s.getAttribute("viewBox")!.split(" ")[2]));
+        assert.ok(scale >= 0.799 && scale <= 1, `${name}: scale ${scale}; ${await ideaGeometry(iv)}`);
+        // Nothing scrolls sideways but the map's own box.
+        assert.equal(await iv.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1 && document.querySelector(".idea-main")!.scrollWidth <= document.querySelector(".idea-main")!.clientWidth + 1), true, `${name}: ${await ideaGeometry(iv)}`);
+        await pause();
+        await nodeOf(iv, "C5").click();
+        await label.filter({ hasText: "idea_graph.md · C5 (claim)" }).waitFor({ timeout: 5000 }).catch(async (error: Error) => {
+          throw new Error(`${name}: C5 was not selected (${error.message}); ${await ideaGeometry(iv, "C5")}`);
+        });
+        const seen = await nodeOf(iv, "C5").evaluate((b) => {
+          const r = b.getBoundingClientRect();
+          const c = document.querySelector(".canvas")!.getBoundingClientRect();
+          return r.left >= c.left - 1 && r.right <= c.right + 1 && r.top >= c.top - 1 && r.bottom <= c.bottom + 1;
+        });
+        assert.ok(seen, `${name}: C5 is in view after its click; ${await ideaGeometry(iv, "C5")}`);
+        if (name === "narrow") await shot(page, "idea-5-narrow-window-node-selected");
+        else await shot(page, "idea-6-wide-window-node-selected");
+        await iv.locator("body").press("Escape");
+        await bar.waitFor({ state: "detached" });
+      }
+    } finally {
+      await windowSize(size);
+    }
+  });
+
+  test("a file with no graph table has its screen; one with bad rows lists its problems; markup in a statement runs nothing; a missing file is the empty state again", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = ideaFile(IDEA_PROJECT);
+    const original = readFileSync(file, "utf8");
+    try {
+      const { ws, iv } = await openIdea(IDEA_PROJECT);
+      await clearAsk(ws, IDEA_PROJECT);
+      await nodeOf(iv, "C2").waitFor();
+      // A header with inline marks is another header: the screen names what it searched and what it found.
+      writeFileSync(file, `# Idea graph\n\n| **ID** | Kind | Statement | Status | Links | Points to | Source |\n|---|---|---|---|---|---|---|\n| Q1 | question | q | open |  |  |  |\n`);
+      await reloadIdea(iv);
+      await iv.getByText("No idea graph table", { exact: true }).waitFor();
+      await iv.getByText("No table with the expected header was found in idea_graph.md.", { exact: true }).waitFor();
+      assert.equal(await iv.locator(".placeholder .found").textContent(), "The first table's header, on line 3: | **ID** | Kind | Statement | Status | Links | Points to | Source |");
+      await iv.locator(".placeholder").getByRole("button", { name: "Try again" }).waitFor();
+      await shot(page, "idea-7-no-table-screen");
+
+      // The design's example, a row with two problems, a link to nothing, and markup in a statement.
+      const lines = ideaLines("example.idea_graph.md").filter((l) => l !== "");
+      writeFileSync(
+        file,
+        [...lines, "| Q2 | Question | a kind spelled otherwise | done |  |  |  |", "| X1 | question | x | open | tests Q9 |  |  |", `| M1 | question | ${MARKUP_TEXT} | open |  |  | ![x](https://md-image.invalid/a.png) [y](javascript:window.top.__pwned=6) |`, ""].join("\n"),
+      );
+      await reloadIdea(iv);
+      await nodeOf(iv, "M1").waitFor();
+      const problems = iv.locator("details.problems");
+      assert.equal(await problems.locator("summary").textContent(), "2 problems in idea_graph.md");
+      await problems.locator("summary").click();
+      // The example's blank line is left out above, so its rows are on lines 4 to 7, and these on 8 to 10.
+      assert.deepEqual(await problems.locator("li").allTextContents(), [
+        "line 8: the row is left out: its kind “Question” is not question, hypothesis, experiment, result, or claim.",
+        "line 9: X1's link “tests Q9” is left out: no node in the table has the ID Q9.",
+      ]);
+      await shot(page, "idea-4-problems-open");
+      // The longest legend rows ("motivates · none") fit too.
+      const legend = (await iv.locator(".glegend").textContent()) ?? "";
+      assert.ok(legend.includes("motivates · none") && legend.includes("refutes · none"), legend);
+      assert.deepEqual(await iv.locator(".glegend div").evaluateAll((rows) => rows.filter((r) => r.scrollWidth > r.clientWidth + 1).map((r) => r.textContent)), [], "legend rows wider than the legend");
+      assert.equal(await nodeOf(iv, "M1").locator(".gn-tx").textContent(), MARKUP_TEXT, "the statement's markup is its text");
+      await pause();
+      await nodeOf(iv, "M1").click();
+      const panel = iv.locator(".ndetail");
+      await panel.locator(".nd-text").filter({ hasText: MARKUP_TEXT }).waitFor();
+      const link = panel.locator(".mdlink");
+      assert.equal(await link.getAttribute("title"), "javascript:window.top.__pwned=6");
+      assert.equal(await link.getAttribute("href"), null);
+      await link.click();
+      await page.waitForTimeout(400);
+      assert.equal(iv.url(), `app://idea-view/index.html?project=${IDEA_PROJECT}`, "the link is not followed");
+      assert.equal(await panel.locator(".mdimg").textContent(), "x", "the image is its alt text");
+      assert.equal(await iv.evaluate(() => document.querySelectorAll("img, a, iframe, object, embed, script:not([src])").length), 0, "nothing in the frame came from the file as markup");
+      assert.deepEqual(await pwned(iv), [undefined, undefined]);
+      assert.equal(await page.locator('img[src="x"]').count(), 0);
+      await problems.locator("summary").click();
+
+      // The file gone: the empty state, and the selection with it; back, and Reload draws it again.
+      const bar = ws.getByRole("region", { name: "Selection" });
+      await bar.locator("[data-selection-label]").filter({ hasText: "idea_graph.md · M1 (question)" }).waitFor();
+      renameSync(file, `${file}.e2e-kept`);
+      await reloadIdea(iv);
+      await iv.getByText("No idea file to draw", { exact: true }).waitFor();
+      await bar.waitFor({ state: "detached", timeout: 5000 });
+      renameSync(`${file}.e2e-kept`, file);
+      await reloadIdea(iv);
+      await nodeOf(iv, "M1").waitFor();
+      assert.equal(await iv.locator(".picked").count(), 0, "a node gone and back is not selected again");
+    } finally {
+      if (existsSync(`${file}.e2e-kept`)) renameSync(`${file}.e2e-kept`, file);
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
+  test("a click during Reload: after it, the workspace's selection and the page's marked node agree, and a changed row is posted again", SLOW, async () => {
+    const width = await windowWidth(1440);
+    const file = ideaFile(IDEA_PROJECT);
+    const original = readFileSync(file, "utf8");
+    const write = (q1: string, gone: boolean) =>
+      writeFileSync(file, [`# Idea graph`, "", IDEA_HEAD, `| Q1 | question | ${q1} | open |  |  |  |`, "| E1 | experiment | e | planned | tests Q1 |  |  |", ...(gone ? ["| GONE1 | question | soon gone | open |  |  |  |"] : []), ""].join("\n"));
+    try {
+      write("first words", true);
+      const { ws, iv } = await openIdea(IDEA_PROJECT);
+      await clearAsk(ws, IDEA_PROJECT);
+      await reloadIdea(iv);
+      await nodeOf(iv, "GONE1").waitFor();
+      const bar = ws.getByRole("region", { name: "Selection" });
+      const label = bar.locator("[data-selection-label]");
+      /** The next read of paper_skeleton.md waits 3 s, so the old map stays on screen, clickable, while Reload reads. */
+      const slowReload = async () => {
+        await iv.evaluate(() => {
+          const real = window.fetch.bind(window);
+          let once = true;
+          window.fetch = async (input, init) => {
+            if (once && String(input).includes("paper_skeleton.md")) {
+              once = false;
+              await new Promise((r) => setTimeout(r, 3000));
+            }
+            return real(input, init);
+          };
+        });
+        await reloadIdea(iv);
+        await page.waitForTimeout(200);
+      };
+      // A node the Reload no longer finds: clicked while it reads, it is not selected afterwards, on either side.
+      write("first words", false);
+      await slowReload();
+      await pause();
+      await nodeOf(iv, "GONE1").click();
+      await label.filter({ hasText: "idea_graph.md · GONE1 (question)" }).waitFor();
+      await nodeOf(iv, "GONE1").waitFor({ state: "detached", timeout: 10_000 });
+      await bar.waitFor({ state: "detached", timeout: 5000 });
+      assert.equal(await iv.locator(".picked").count(), 0);
+      // A node the Reload finds again, its row changed: clicked while it reads, it is open, marked, and posted again with its new row.
+      write("second words", false);
+      await slowReload();
+      await pause();
+      await nodeOf(iv, "Q1").click();
+      await label.filter({ hasText: "idea_graph.md · Q1 (question)" }).waitFor();
+      assert.equal(await label.getAttribute("title"), "| Q1 | question | first words | open |  |  |  |", "the row as the old file had it");
+      await iv.locator(".ndetail .nd-text").filter({ hasText: "second words" }).waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(300);
+      assert.equal(await nodeOf(iv, "Q1").evaluate((b) => b.classList.contains("picked") && b.classList.contains("on")), true, "marked and open after the Reload");
+      assert.equal(await label.textContent(), "idea_graph.md · Q1 (question)");
+      assert.equal(await label.getAttribute("title"), "| Q1 | question | second words | open |  |  |  |", "posted again with the row as it is now");
+      assert.equal(await iv.locator(".picked").count(), 1);
+      await bar.getByRole("button", { name: "Clear selection" }).click();
+      await iv.locator(".picked").waitFor({ state: "detached" });
+    } finally {
+      writeFileSync(file, original);
+      await windowWidth(width);
+    }
+  });
+
+  test("the Idea view's frame is sealed off: no bridge, idea_graph.md and paper_skeleton.md only, no other origin's endpoints", SLOW, async () => {
+    const { iv } = await openIdea();
+    const status = (url: string) => iv.evaluate(async (u) => (await fetch(u)).status, url);
+    const rel = (p: string) => `./_os/files?path=${encodeURIComponent(p)}`;
+    const P = `projects-folder/${PROJECT}`;
+    for (const there of ["AGENTS.md", "Code/README.md", "idea_graph.md", "paper_skeleton.md"]) assert.ok(existsSync(join(workspace, P, there)), there);
+    assert.deepEqual(
+      {
+        idea: await status(rel(`${P}/idea_graph.md`)),
+        skeleton: await status(rel(`${P}/paper_skeleton.md`)),
+        otherIdea: await status(rel(`projects-folder/${IDEA_PROJECT}/idea_graph.md`)),
+        agents: await status(rel(`${P}/AGENTS.md`)),
+        code: await status(rel(`${P}/Code/README.md`)),
+        below: await status(rel(`${P}/idea_graph.md/x`)),
+        dotEnvRoot: await status(rel(".env")),
+        listing: await status(`./_os/list?path=${encodeURIComponent(P)}`),
+        listingFile: await status(`./_os/list?path=${encodeURIComponent(`${P}/idea_graph.md`)}`),
+        codeViewGit: await status(`/api/code-view/git/log?project=${PROJECT}`),
+        chat: await status("/api/chat/sessions"),
+        wikiStatus: await status("/api/paper-wiki/status"),
+      },
+      { idea: 200, skeleton: 200, otherIdea: 200, agents: 404, code: 404, below: 404, dotEnvRoot: 404, listing: 404, listingFile: 404, codeViewGit: 404, chat: 404, wikiStatus: 404 },
+    );
+    const probe = await iv.evaluate(async () => {
+      const outcome = async (fn: () => Promise<unknown>) => {
+        try {
+          return String(await fn());
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        own: typeof (window as { osDesktop?: unknown }).osDesktop,
+        parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
+        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
+      };
+    });
+    assert.equal(probe.own, "undefined");
+    assert.match(probe.parent, /^blocked: SecurityError/);
+    assert.match(probe.appApi, /^blocked/);
+    assert.match(probe.wikiOrigin, /^blocked/);
+    // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline').
+    const before = logs.length;
+    const inline = await iv.evaluate(() => {
+      const script = document.createElement("script");
+      script.textContent = "window.__inline = 1";
+      document.body.append(script);
+      script.remove();
+      return (window as { __inline?: unknown }).__inline;
+    });
+    assert.equal(inline, undefined, "an inline script ran in the Idea view's page");
+    await page.waitForTimeout(300);
+    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
+    await app.evaluate(() => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/idea-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
+    });
+    // The frame's CSP reports reach the suite, so the final check sees this frame too.
+    await iv.evaluate(() => {
+      const img = new Image();
+      img.src = "https://csp-canary.invalid/idea.png";
+      document.body.append(img);
+      img.remove();
+    });
+    const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/idea-view\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
+    for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
+    assert.ok(canary(await consoleLog()), "a CSP violation inside the Idea view's frame is seen");
   });
 
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {

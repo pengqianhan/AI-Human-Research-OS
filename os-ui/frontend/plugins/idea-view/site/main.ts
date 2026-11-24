@@ -325,8 +325,8 @@ let nodeEls = new Map<string, HTMLButtonElement>();
 let lineEls: SVGPathElement[] = [];
 
 const absentKinds = (graph: Graph) => KINDS.filter((k) => !graph.nodes.some((node) => node.kind === k));
-/** The legend's rows: the four words, the result's experiment (two lines), and each kind with no node. */
-const legendRows = (graph: Graph) => WORDS.length + 2 + absentKinds(graph).length;
+/** The legend's rows: the four words, the result's experiment (three short lines, a fourth when there is none), and each kind with no node. */
+const legendRows = (graph: Graph) => WORDS.length + 3 + (graph.came.length === 0 ? 1 : 0) + absentKinds(graph).length;
 
 function drawMap(graph: Graph, map: Layout): void {
   clear(canvas);
@@ -384,12 +384,13 @@ function legend(graph: Graph): HTMLElement {
   };
   for (const word of WORDS) {
     const none = !graph.links.some((l) => l.word === word);
-    row(word, none ? `${word} · none here` : word, none);
+    // "· none", as the kinds' rows say it: the mockup's "· none here" does not fit one column's width for "motivates".
+    row(word, none ? `${word} · none` : word, none);
   }
-  // §5.3 5: not a fifth link word, named so; on two rows, the legend being one column wide.
+  // §5.3 5: not a fifth link word, and named so, on short rows: the legend is one column wide.
   const noFrom = graph.came.length === 0;
-  row("from", "the result's experiment", noFrom);
-  div.append(el("div", "none", noFrom ? "(from Points to) · none here" : "(from Points to)"));
+  row("from", "the result's", noFrom);
+  for (const text of ["experiment", "(from Points to)", ...(noFrom ? ["· none"] : [])]) div.append(el("div", noFrom ? "cont none" : "cont", text));
   for (const kind of absentKinds(graph)) {
     const r = el("div", "none");
     r.append(el("span", `kb ${KIND_CLASS[kind]}`, KIND_LETTER[kind]), document.createTextNode(`${KIND_TITLE[kind].toLowerCase()} · none`));
