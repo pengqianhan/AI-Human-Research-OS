@@ -165,7 +165,10 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       ([os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 4) finds that the present
       page cannot be kept unchanged (its details panel covers the whole
       window, which a framed page cannot do), so the build waits for the
-      Human Owner's mockup choice and their answers to Part 4 §4.2; Q2
+      Human Owner's choice from the clickable mockup
+      [`os-ui/mockups/step2/skills.html`](os-ui/mockups/step2/skills.html)
+      (the page's top: A, B, or C; the details panel: 1 or 2) and their
+      answers to Part 4 §4.2; Q2
       there (what the dev server and the Pages copy show) changes what
       is published and needs an explicit answer, not a default. 2.6
       waits on Q-PO1.

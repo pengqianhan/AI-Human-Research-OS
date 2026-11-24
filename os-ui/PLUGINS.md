@@ -1364,7 +1364,8 @@ Status on 2026-11-25:
   (§4.2). Part 4, written on 2026-11-25, finds that the Skills page cannot move
   into a plugin with no visible change: its details panel is drawn over the
   whole window, and a framed page draws only inside its frame. So 2.5 waits
-  for a mockup choice (`os-ui/mockups/step2/skills.html`, being drawn) and for
+  for a mockup choice ([mockups/step2/skills.html](mockups/step2/skills.html):
+  three tops, two panel behaviours, and today's panel for comparison) and for
   an answer on what browser builds show. Nothing of 2.5 is built.
 
 ---
@@ -3766,3 +3767,25 @@ without it.
     `skill-organizer` are now hub skills (`.claude/skills` links), so F2 may show only
     with a fixture;
   - whether the Human Owner sees the drawer's full-width rule on any of their screens.
+
+## 8. Found while the mockup was drawn (2026-11-25)
+
+- **The panel's width (corrects §4.1 and Q6 (iv)).** `SkillDrawer.tsx:75` makes the
+  panel as wide as the window at 900 px or less (`max-[900px]:w-screen`). Inside a
+  frame that rule measures the frame, not the window, so a word-for-word port fills the
+  frame whenever the frame is 900 px wide or less; in a 1000 px window the frame is
+  about 808 px. "Stays 420 px" holds only if the port drops that rule. The mockup draws
+  420 px.
+- **Mockup C's plugin page (corrects Q1's facts).** Its band is not held to one line,
+  and the small line under it repeats "Paper Wiki · bundled plugin"; it is not the
+  page's own line (`os-ui/mockups/step1/c-document.html:686-687`). The Skills mockup's
+  alternative C follows Q1 as written: the built one-line band, then today's
+  `research-skills-hub/` line.
+- **Inside alternative A's card** the mockup draws white. The built colour would be the
+  plugin page's own background; a page copying the app's tokens would paint the app's
+  beige there. Not established.
+- **Today's shading does not hold the keyboard**: Tab still reaches the left menu under
+  it, and Enter there leaves the page. The mockup copies this.
+- The mockup shows 16 skills with real names and invented descriptions, licences, and
+  install states; disable and enable flip the word at once, which today's page does
+  not (§1.7, the first fault).
