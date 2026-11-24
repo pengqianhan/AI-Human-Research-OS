@@ -53,7 +53,7 @@ import { tempTree } from "./helpers.ts";
 const PLUGINS = join(import.meta.dirname, "..", "..", "frontend", "plugins");
 const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
 const sites = pluginSites(bundled.plugins);
-const CSP = appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view"]);
+const CSP = appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view"]);
 
 /** A registry as createRegistry builds it, from mounts the tests make. */
 function registryOf(app: Mount[], byPlugin: Record<string, Mount[]>): Registry {
@@ -148,7 +148,7 @@ describe("plugin sites", () => {
 
   test("any other plugin serves the site/ folder beside its plugin.json, in load order", () => {
     assert.deepEqual(demo.problems, []);
-    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "demo"]);
+    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "demo"]);
     assert.deepEqual(twoSites.get("demo"), { id: "demo", source: "bundled", reads: [], files: { kind: "plugin", dir: demoSite } });
   });
 
@@ -208,11 +208,11 @@ describe("workspaceRegistry", () => {
 
 describe("policies", () => {
   test("the app policy frames exactly the loaded plugins' origins", () => {
-    // The bundled plugins: Paper Wiki, the Code view, the Paper view, the Skeleton view, and the Assets view, each framed on its own origin.
-    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view"]);
+    // The bundled plugins: Paper Wiki, the Code view, the Paper view, the Skeleton view, the Assets view, and the Idea view, each framed on its own origin.
+    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view"]);
     assert.equal(
       appCsp([...sites.keys()]),
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view app://assets-view; object-src 'none'; base-uri 'none'; form-action 'none'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view app://assets-view app://idea-view; object-src 'none'; base-uri 'none'; form-action 'none'",
     );
     assert.match(appCsp(["paper-wiki", "demo"]), /; frame-src app:\/\/paper-wiki app:\/\/demo; /);
     assert.match(appCsp(["demo", "paper-wiki"]), /; frame-src app:\/\/demo app:\/\/paper-wiki; /);
@@ -221,7 +221,7 @@ describe("policies", () => {
 
   test("app pages carry the policy for the sites the handler was given, in their order", () => {
     const index = route("app://research-os/", { renderer, workspace }, twoSites);
-    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "demo"]));
+    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "demo"]));
   });
 
   test("a workspace site's policy, and a plugin-folder site's, which adds its own files", () => {
@@ -268,7 +268,7 @@ describe("allowedNavigation", () => {
 
   test("with the bundled plugins, each view's origin is a subframe's only, and a look-alike host is none", () => {
     const bundledHosts = [...sites.keys()];
-    for (const url of ["app://code-view/index.html?project=P", "app://paper-view/index.html?project=P", "app://skeleton-view/index.html?project=P", "app://assets-view/index.html?project=P"]) {
+    for (const url of ["app://code-view/index.html?project=P", "app://paper-view/index.html?project=P", "app://skeleton-view/index.html?project=P", "app://assets-view/index.html?project=P", "app://idea-view/index.html?project=P"]) {
       assert.equal(allowedNavigation(url, false, bundledHosts), true, url);
       assert.equal(allowedNavigation(url, true, bundledHosts), false, `top frame: ${url}`);
     }
@@ -936,6 +936,7 @@ describe("read channel", () => {
             "projects-folder/*/paper_skeleton.md",
           ],
         ],
+        ["idea-view", "bundled", ["projects-folder/*/idea_graph.md", "projects-folder/*/paper_skeleton.md"]],
         ["reads-code", "bundled", ["projects-folder/*/Code"]],
         ["reads-paper", "bundled", ["projects-folder/*/paper"]],
         ["reads-file", "bundled", ["projects-folder/*/paper_skeleton.md"]],
@@ -1792,6 +1793,72 @@ describe("read channel", () => {
       assert.deepEqual((await okList(galleryList(`${G}/Figs`))).entries.map((e) => e.name), ["a.svg", "sub"], "the links out are left out, and so is .env");
       assert.deepEqual((await okList(galleryList(`${G}/Baselines`))).entries.map((e) => e.name), ["run"]);
       assert.deepEqual((await okList(galleryList(`${G}/Code/results`))).entries.map((e) => e.name), ["r.json"]);
+    });
+  });
+
+  /*
+   * The Idea view's reads, as bundled (os-ui/PLUGINS.md Part 3, §1 fact 1 and
+   * §6 "2.3"): two file roots per project, idea_graph.md and paper_skeleton.md.
+   * Nothing else in the project is readable from its origin, neither file can
+   * be listed, and an idea_graph.md that is a link out of its place is 404.
+   */
+  describe("the Idea view's reads", () => {
+    const I = "projects-folder/Ideas";
+    const idea = (raw: string) => files(raw, "idea-view");
+    const ideaList = (raw: string) => list(raw, "idea-view");
+    for (const [rel, text] of Object.entries({
+      "idea_graph.md": "# Idea graph\n",
+      "paper_skeleton.md": "# Ideas skeleton\n",
+      "AGENTS.md": "SECRET agents",
+      "PROJECT_MEMORY.md": "SECRET memory",
+      "Code/README.md": "SECRET code readme",
+      "Figs/a.svg": "<svg/>",
+      "idea_graph.md.bak": "SECRET backup",
+    })) {
+      mkdirSync(path.dirname(join(ws, I, rel)), { recursive: true });
+      writeFileSync(join(ws, I, rel), text);
+    }
+    // A project whose idea_graph.md is a link into human/private, and one whose idea_graph.md is a link to its own AGENTS.md.
+    mkdirSync(join(ws, "projects-folder", "IdeaEvil"), { recursive: true });
+    mkdirSync(join(ws, "projects-folder", "IdeaSide"), { recursive: true });
+    writeFileSync(join(ws, "projects-folder", "IdeaSide", "AGENTS.md"), "SECRET side agents");
+    const ideaLinks = {
+      priv: fileLink(join(ws, "human", "private", "secret.md"), join(ws, "projects-folder", "IdeaEvil", "idea_graph.md")),
+      side: fileLink(join(ws, "projects-folder", "IdeaSide", "AGENTS.md"), join(ws, "projects-folder", "IdeaSide", "idea_graph.md")),
+    };
+
+    test("its two file roots per project are read", async () => {
+      assert.deepEqual(readSites.get("idea-view")?.reads, ["projects-folder/*/idea_graph.md", "projects-folder/*/paper_skeleton.md"]);
+      assert.equal(await okText(idea(`${I}/idea_graph.md`)), "# Idea graph\n");
+      assert.equal(await okText(idea(`${I}/paper_skeleton.md`)), "# Ideas skeleton\n");
+    });
+
+    test("anything else in the project is 404 from its origin, and neither file nor the project can be listed", async () => {
+      for (const method of ["GET", "HEAD"]) {
+        for (const url of [
+          idea(`${I}/AGENTS.md`),
+          idea(`${I}/PROJECT_MEMORY.md`),
+          idea(`${I}/Code/README.md`),
+          idea(`${I}/Figs/a.svg`),
+          idea(`${I}/idea_graph.md.bak`),
+          idea(`${I}/idea_graph.md/x`),
+          ideaList(I),
+          ideaList(`${I}/idea_graph.md`),
+          ideaList(`${I}/paper_skeleton.md`),
+          ideaList("projects-folder"),
+          idea("AGENTS.md"),
+          idea(".env"),
+        ]) {
+          await assertRefused(url, { method });
+        }
+      }
+      // Another plugin's root is not one of these.
+      await assertRefused(idea(`${CODE}/run.py`));
+    });
+
+    test("an idea_graph.md that is a link into human/private, or to another file of its project, is 404", async () => {
+      if (ideaLinks.priv) await assertRefused(idea("projects-folder/IdeaEvil/idea_graph.md"));
+      if (ideaLinks.side) await assertRefused(idea("projects-folder/IdeaSide/idea_graph.md"));
     });
   });
 });

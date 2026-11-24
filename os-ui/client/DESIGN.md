@@ -168,7 +168,7 @@ with the trunk's endpoints only.
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
 | `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`); other `api/` paths are 404 |
 | `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
-| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, Skeleton, and Assets views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
+| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, Skeleton, Assets, and Idea views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
@@ -292,10 +292,12 @@ Windows spellings.
   `reads: ["projects-folder/*/paper"]`, the Skeleton view
   `reads: ["projects-folder/*/paper_skeleton.md"]`, the Assets view the four
   folders `Figs`, `Baselines`, `Code/results`, `Code/Datasets` and the two files
-  `Code/README.md` and `paper_skeleton.md` of `projects-folder/*`. Besides the
-  fixture tests in [test/protocol.test.ts](test/protocol.test.ts) (for the Assets
-  view, against its bundled origin: nothing else of a project is read, and a
-  link inside a declared folder that leaves it is 404), the end-to-end suite reads
+  `Code/README.md` and `paper_skeleton.md` of `projects-folder/*`, the Idea view
+  the two files `idea_graph.md` and `paper_skeleton.md` of `projects-folder/*`.
+  Besides the fixture tests in [test/protocol.test.ts](test/protocol.test.ts)
+  (for the Assets and Idea views, against their bundled origins: nothing else of
+  a project is read, neither of the Idea view's files can be listed, and a link
+  that leaves its root is 404), the end-to-end suite reads
   through all four: `+`, `#`, `%`, a space and Chinese text in names and
   files, a 33 MiB `main.pdf` (413), and 404 for `.env`, for a file outside
   each view's root, and for a path below or a listing of the Skeleton view's
@@ -314,7 +316,12 @@ serves. A selection in the page is posted to `app://research-os` as
 `{type: "os.select", label, quote?}`; the workspace accepts it only from the
 active view's frame at that view's origin, shows "Ask the agent about this",
 and answers `{type: "os.select.clear"}` at the view's origin when the user
-clears it there. Asking adds a reference chip to the project's composer; only
+clears it there. While the workspace is hidden (another screen shown) the bar
+does not change, but the last valid message the active view posts meanwhile
+(a Reload that ends then) is kept and applied when the workspace shows again,
+so the bar and the view agree (`heldWhileHidden` in
+[../frontend/src/plugins/select.ts](../frontend/src/plugins/select.ts));
+clearing the selection meanwhile drops it. Asking adds a reference chip to the project's composer; only
 Send sends. What Send passes is exactly what the user can read in the
 composer: the host never rewrites a label (runs of ASCII spaces pass as
 they are, since they are part of a path), and a label with a tab, a space
@@ -434,6 +441,27 @@ characters, or `Code/README.md:<line> · dataset <name>`; when the label is not
 the item as written, the panel says what the agent gets. Its chip opens by
 itself.
 
+**The Idea view** (2.3 of [os-ui/PLUGINS.md](../PLUGINS.md) Part 3). Its page
+reads `idea_graph.md` (512 KiB) and `paper_skeleton.md` (1 MiB, for the claims
+a claim node points to) through `./_os/files`, and nothing else. A 404 for the
+idea file is the empty state, which shows the header line an agent writes; the
+page writes nothing. The map is the page's own SVG: its geometry is numbers
+from `layout.ts` set as attributes (no `style` anywhere), its boxes the page's
+HTML in `foreignObject`s, every statement and cell put on screen as text with
+invisible characters marked, a link's target only as a tooltip; its
+`dom.test.ts` pins every attribute the page sets and every tag it makes. A
+node posts `os.select` with the label `idea_graph.md · <ID> (<kind>)` and the
+row as written as its quote (cut to 2,000 characters by the host's rule, line
+breaks inside it as markers); its chip opens by itself. Reload keeps a selected
+node that is still in the file, open and marked, and posts it again with its
+row as it is now, or posts `null`; every screen that replaces the map posts
+`null` too, so the page and the workspace agree after any Reload, whatever
+screen was shown while it read. An ID and a status are drawn whole (each box is
+measured, and taller when they need it); a line that skips a column runs through
+it in a lane its boxes keep clear of, and the word of an open node's line sits
+beside the node it names, on no box the line does not join, no other word, or
+the legend.
+
 Known limits of the channel, not yet handled:
 
 - A concurrent writer could swap a folder on the path for a link between the
@@ -453,11 +481,11 @@ Known limits of the channel, not yet handled:
   by a manifest. App pages (HTML and the `index.html` fallback), with one
   `frame-src` entry per loaded plugin, in load order (`appCsp` in
   `protocol.ts`; `frame-src 'none'` if none loaded):
-  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view app://assets-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
+  `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view app://assets-view app://idea-view; object-src 'none'; base-uri 'none'; form-action 'none'`.
   A site served from a workspace folder (the Paper Wiki viewer):
   `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   — its own inline code runs; remote fetches, images, frames, and forms do not.
-  A site in its plugin folder (the Code, Paper, Skeleton, and Assets views') gets no inline code
+  A site in its plugin folder (the Code, Paper, Skeleton, Assets, and Idea views') gets no inline code
   at all, since it shows untrusted names and text:
   `default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'`
   (`PLUGIN_CSP`; styles set through the DOM still apply, which is how PDF.js

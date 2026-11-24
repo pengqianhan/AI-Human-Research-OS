@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { PluginPage } from "./pages.ts";
-import { addReference, CUT_MARK, GLIMPSE_MAX, previewAfter, previewed, QUOTES_AS_DRAWN, quoteGlimpse, referenceKey, togglePreview, scrollNote, textSize, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
+import type { SelectMessage } from "./select.ts";
+import { heldWhileHidden, addReference, CUT_MARK, GLIMPSE_MAX, previewAfter, previewed, QUOTES_AS_DRAWN, quoteGlimpse, referenceKey, togglePreview, scrollNote, textSize, LABEL_MAX, MAX_REFERENCES, messageWithReferences, QUOTE_MAX, readSelect, referenceText, SELECT_PER_SECOND, selectGate, visibleQuote } from "./select.ts";
 
 /** A character by its code point, so this file holds no invisible character itself. */
 const c = (n: number) => String.fromCodePoint(n);
@@ -184,6 +185,39 @@ describe("selectGate", () => {
     now = 1500;
     assert.equal(gate(frameA, { ...shown, held: true }), "ignore");
     assert.equal(gate(frameA, shown), "over", "those accepted at 1000 still count at 1500");
+  });
+});
+
+describe("heldWhileHidden", () => {
+  const hidden = { visible: false, tabSelected: true, held: false };
+  const pick = (label: string): SelectMessage => ({ kind: "select", reference: { label } });
+
+  test("keeps the last message the gate ignored only because the workspace was hidden, and gives it back once, for its frame", () => {
+    const held = heldWhileHidden();
+    const frameA = {};
+    const frameB = {};
+    assert.equal(held.keep(frameA, pick("a1"), hidden), true);
+    assert.equal(held.keep(frameA, { kind: "clear" }, hidden), true);
+    assert.equal(held.keep(frameA, pick("a2"), hidden), true);
+    assert.deepEqual(held.take(frameA), pick("a2"), "the page's last word");
+    assert.equal(held.take(frameA), null, "given back once");
+    assert.equal(held.keep(frameA, { kind: "clear" }, hidden), true);
+    assert.deepEqual(held.take(frameA), { kind: "clear" }, "a clear is kept too: the bar must drop what the page no longer marks");
+    held.keep(frameA, pick("a3"), hidden);
+    assert.equal(held.take(frameB), null, "another frame's");
+    assert.equal(held.take(frameA), null, "taking for another frame dropped it");
+  });
+
+  test("keeps nothing the gate ignores for another reason, or takes; drop forgets", () => {
+    const held = heldWhileHidden();
+    const frameA = {};
+    assert.equal(held.keep(frameA, pick("a"), { visible: true, tabSelected: true, held: false }), false, "shown: the gate decides");
+    assert.equal(held.keep(frameA, pick("a"), { ...hidden, tabSelected: false }), false, "not the selected tab");
+    assert.equal(held.keep(frameA, pick("a"), { ...hidden, held: true }), false, "Ask held down");
+    assert.equal(held.take(frameA), null);
+    held.keep(frameA, pick("a"), hidden);
+    held.drop();
+    assert.equal(held.take(frameA), null, "dropped (the frame reloaded, or another tab was opened)");
   });
 });
 

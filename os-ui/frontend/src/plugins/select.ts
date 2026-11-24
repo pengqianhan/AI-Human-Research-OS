@@ -187,6 +187,39 @@ export function selectGate(now: () => number = Date.now) {
   };
 }
 
+/**
+ * What the workspace does with a valid selection message that selectGate
+ * ignored only because the workspace's screen is hidden (another screen is
+ * shown; the frame's tab is still the selected one and Ask is not held): the
+ * bar the user cannot see does not change, but the page has moved on (a Reload
+ * that ended while Home was shown posts its node's row as it is now, or null
+ * for a node gone), so the last such message is kept and applied, through the
+ * gate, when the screen shows again. Without it the bar would come back
+ * holding what the page no longer marks. No message is added: these are the
+ * page's own os.select messages, applied late.
+ */
+export function heldWhileHidden() {
+  let kept: { frame: object; message: SelectMessage } | null = null;
+  return {
+    /** Keeps `message` when the gate ignores it only for the hidden screen; whether it was kept. */
+    keep(frame: object, message: SelectMessage, state: { visible: boolean; tabSelected: boolean; held: boolean }): boolean {
+      if (state.visible || !state.tabSelected || state.held) return false;
+      kept = { frame, message };
+      return true;
+    },
+    /** The message kept for `frame`, once; null when there is none, or it was another frame's (then dropped). */
+    take(frame: object): SelectMessage | null {
+      const k = kept;
+      kept = null;
+      return k !== null && k.frame === frame ? k.message : null;
+    },
+    /** Forgets the kept message (the view changed, or its frame reloaded). */
+    drop(): void {
+      kept = null;
+    },
+  };
+}
+
 /** One reference's identity among the chips (references are unique by label and quote). */
 export function referenceKey(reference: Reference): string {
   return `${reference.label}\u0000${reference.quote ?? ""}`;

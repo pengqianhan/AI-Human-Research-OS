@@ -397,6 +397,14 @@ describe("limits, each at its boundary", () => {
     assert.equal(cutText(fits), fits, "exactly the limit in code units");
     assert.equal(cutText(`${"x".repeat(LIMITS.cell - 1)}😀`), `${"x".repeat(LIMITS.cell - 1)}${CUT}`, "the pair is left out whole");
   });
+
+  test("splitCells takes another cut: the Idea view reads a row's Links and Points to cells whole (Infinity), by the same rule", () => {
+    const over = "x".repeat(LIMITS.cell + 1);
+    const row = `| ${over} | a \\| b |  c  `;
+    assert.deepEqual(splitCells(row), [over.slice(0, LIMITS.cell) + CUT, "a | b", "c"], "by default, cut as a table's cells are");
+    assert.deepEqual(splitCells(row, Infinity), [over, "a | b", "c"], "whole, and otherwise the same cells");
+    assert.deepEqual(splitCells(row, 3), [`xxx${CUT}`, "a |" + CUT, "c"]);
+  });
 });
 
 describe("inline tokens", () => {

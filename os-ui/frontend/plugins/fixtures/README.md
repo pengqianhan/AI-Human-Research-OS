@@ -44,4 +44,18 @@ end-to-end suite, which lays each over a project it makes from the template in
 its temporary workspace (`assets_e2e`, and the template project
 `skeleton_e2e`).
 
+## Two idea files for the Idea view
+
+Written on 2026-11-24 for the Idea view (step 2.3); no project has an
+`idea_graph.md` yet (that is step 2.4), so these are not copies.
+
+| Fixture | What it is |
+|---|---|
+| `idea_graph/example.idea_graph.md` | The example of [os-ui/PLUGINS.md](../../../PLUGINS.md) Part 3 §5.1, byte for byte: four nodes, two links, one result's experiment, and claim C2 of `nanochat_cpu.paper_skeleton.md` (line 116) |
+| `idea_graph/mockup.idea_graph.md` | The graph the Idea view's mockup drew for `nanochat_cpu` ([mockups/step2/views.html](../../../mockups/step2/views.html), alternative A) in the confirmed format: 20 nodes, 9 links, 6 results with their experiments, claims C1 to C5. The two links the mockup inferred (E1 tests Q1, E5 tests Q4) are left out. E1's run left no commit and no result file, as the mockup has it: `commit: none; files: none` (the Human Owner allowed `files: none` on 2026-11-24) |
+
+Used by `../idea-view/site/logic.test.ts` and `layout.test.ts` (with the
+frozen `nanochat_cpu.paper_skeleton.md`), and by the end-to-end suite, which
+writes the second into its temporary copy of `nanochat_cpu`.
+
 This folder has no `plugin.json`, so the client's build does not ship it.

@@ -42,9 +42,14 @@ the desktop-OS shell of draggable windows and a dock, which stays in
   section; **Assets** (desktop app only) lists the project's figures
   (`Figs/`), reference runs (`Baselines/`), results (`Code/results/`), and
   the datasets `Code/README.md` lists, read-only, with a preview of the one
-  you select and where it is used. In each, "Ask the agent about this" puts
-  what you selected (a line, a commit, text of the paper, a claim, a file)
-  in the conversation's input as a reference; **Idea** comes in step 2.
+  you select and where it is used; **Idea** (desktop app only) draws the
+  project's `idea_graph.md`, read-only: its questions, hypotheses,
+  experiments, results, and claims as boxes in columns, joined by coloured
+  lines, with the full text, links, and pointers of the one you select (with
+  no `idea_graph.md`, it says what the file is and how to start it). In each,
+  "Ask the agent about this" puts what you selected (a line, a commit, text of
+  the paper, a claim, a file, a node) in the conversation's input as a
+  reference.
 - **Paper wiki**: the standalone `paper-wiki/viz.html` graph and timeline
   viewer, embedded by iframe (DESIGN.md §4); a note's Status row saves your
   unread / skimmed / read state into the note's file.

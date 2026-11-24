@@ -128,6 +128,25 @@ describe("the bundled plugins in the renderer", () => {
     assert.equal(viewSrc(assets(desktop)[0]!, "nanochat_cpu"), "app://assets-view/index.html?project=nanochat_cpu");
   });
 
+  test("the Idea view's project tab: on app://idea-view in the desktop client, no frame URL in a browser; it reads the design's two file roots and has no handler", () => {
+    const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
+    const idea = (env: { desktop: boolean }) => pluginPages(plugins, env).filter((p) => p.plugin === "idea-view");
+    assert.deepEqual(
+      idea(desktop).map((p) => [p.key, p.slot, p.title, p.src, p.origin]),
+      [["idea-view/idea", "project", "Idea", "app://idea-view/index.html", "app://idea-view"]],
+    );
+    assert.deepEqual(
+      idea(browser).map((p) => [p.key, p.src, p.origin]),
+      [["idea-view/idea", null, null]],
+    );
+    const manifest = plugins.find((p) => p.id === "idea-view")!;
+    // Exactly the narrowest set of os-ui/PLUGINS.md Part 3, §1 fact 1: two files, never the project.
+    assert.deepEqual(manifest.reads, ["projects-folder/*/idea_graph.md", "projects-folder/*/paper_skeleton.md"]);
+    assert.equal(manifest.contributes.handlers, undefined);
+    assert.equal(manifest.site, undefined, "served from its own site/ folder, not the workspace");
+    assert.equal(viewSrc(idea(desktop)[0]!, "nanochat_cpu"), "app://idea-view/index.html?project=nanochat_cpu");
+  });
+
   test("Paper Wiki's card: its name and description", () => {
     const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
     const wiki = plugins.find((p) => p.id === "paper-wiki")!;

@@ -129,8 +129,7 @@ agent logins or a first open on a real desktop, so on each of your machines:
       opens its workspace. **Overview** shows the project; the conversation on
       the left lists that project's sessions under **Conversations**, and
       collapses to a thin strip and back. The tabs are **Overview**, **Idea**,
-      **Code**, **Skeleton**, **Assets**, **Paper**; **Idea** is marked
-      "step 2".
+      **Code**, **Skeleton**, **Assets**, **Paper**.
 - [ ] **The Code view.** In a project's workspace, click the **Code** tab:
       - **Files** lists the project's `Code/` folder on the left; click a
         folder to open it and a file to read it on the right (it says
@@ -210,6 +209,16 @@ agent logins or a first open on a real desktop, so on each of your machines:
         Nothing is sent until you press Send; remove the chip with its **×**.
       - Make the window narrower until the preview column goes: the preview
         then sits above the list.
+- [ ] **The Idea view.** In the `nanochat_cpu` workspace, click the **Idea**
+      tab. The project has no `idea_graph.md` yet (step 2.4 writes it), so
+      the view says **No idea file to draw**, explains that it draws
+      `idea_graph.md` in the project folder (a table with one row per
+      question, hypothesis, experiment, result, or claim, and the links
+      between them), that the project has none or it is a link the view may
+      not follow, and to ask the project agent to write one; under that, the
+      header line an agent writes,
+      `| ID | Kind | Statement | Status | Links | Points to | Source |`. The
+      view writes nothing. **Reload** in its bar reads the file again.
 - [ ] **The Paper view.** In the `nanochat_cpu` workspace, click the **Paper**
       tab:
       - The paper appears as pages, like a PDF reader, read-only. The bar

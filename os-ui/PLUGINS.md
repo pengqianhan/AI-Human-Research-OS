@@ -12,9 +12,389 @@ Status on 2026-11-24:
   Skeleton, Assets, and Idea views as the Human Owner chose them in
   [mockups/step2/views.html](mockups/step2/views.html), one pull request each in that
   order, with no new dependency and no change to contract 1.0. **2.1, the Skeleton
-  view, is built** on branch `step2-skeleton-view`, and **2.2, the Assets view**, on
-  branch `step2-assets-view` (both below); Idea is not.
+  view, is built** on branch `step2-skeleton-view`, **2.2, the Assets view**, on
+  branch `step2-assets-view`, and **2.3, the Idea view**, on branch
+  `step2-idea-view` (all below). 2.4, `nanochat_cpu`'s `idea_graph.md` and the
+  template's, is not.
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.3, the Idea view**, is the bundled plugin
+  [frontend/plugins/idea-view/](frontend/plugins/idea-view/) (manifest as §6 "2.3",
+  `reads` exactly `idea_graph.md` and `paper_skeleton.md`), with `logic.ts` (§5.1's
+  grammar and §5.2's validation over md-kit's table, the labels, every screen's
+  words), `layout.ts` (§5.3), and `main.ts`, which only draws. md-kit gained one
+  additive thing, an optional cut for `splitCells` (default 2,000), so the view reads
+  a row's Links and Points to whole: a long files list would otherwise lose paths at
+  the cut. site-kit is unchanged; the Skeleton, Assets, and Code views' tests are
+  untouched and pass. It is wired in as the Idea tab (`layoutState.ts`), the `spark`
+  icon, and the client's policy and read-channel tests; the Plugins page's planned
+  card is gone. An independent review (2026-11-24) found 4 must-fix and 6
+  should-fix problems; the fix round, on the same branch, fixed eight of them and
+  records the other two as limits (below), and built two rule changes decided
+  since: `files: none` (the Human Owner) and the cycle rule (a default the
+  directing agent took, not yet confirmed). In short, what the review found and
+  what changed, each detailed in the points marked "after the review":
+  - must-fix 1 and should-fix 9, lines under boxes they do not join and words on
+    the wrong node or each other: lanes and slots ("Lines and their words");
+  - must-fix 2, IDs and statuses cut on the map: never cut, boxes measured ("An
+    ID and a status are never cut");
+  - must-fix 3, the ask bar and the page disagreeing after a Reload that ended
+    while the workspace was hidden: fixed in the host ("Selection and Reload");
+  - must-fix 4, tests that could not fail (four DOM-sink mutants, the caps by
+    name, the generation check): each now fails a test ("The map is the page's
+    own SVG", "The 50 ms bound", "Selection and Reload");
+  - should-fix 5, 6, and 10, rows under a list item dropped silently, a fenced
+    header reported as no table, blank-looking statements and paths: said,
+    named, and marked ("What md-kit leaves unread", "Absence", "The panel");
+  - should-fix 7 and 8: recorded limits, not redesigned ("Limits that stay").
+
+  Where the code differs from Part 3 or the mockup:
+  - **The map is the page's own SVG.** The mockup placed nodes with inline styles;
+    `PLUGIN_CSP` and the views' source checks allow none, so the geometry is numbers
+    from `layout.ts` set as SVG attributes (`x`, `y`, `width`, `height`, `d`,
+    `viewBox`), the scale comes from the `viewBox` against the drawn width, and each
+    box is the page's HTML (a `<button>`, so Enter and Space work) in a
+    `foreignObject`, which keeps the mockup's look and its cut of a statement by the
+    box. `dom.test.ts` pins every attribute the page sets, with its value, and every
+    tag it makes; after the review, also every method `main.ts` and `site-kit.ts`
+    call and every property they set (a new one, such as `setHTMLUnsafe`,
+    `insertRule`, or `dataset`, fails it until it is reviewed), a class only toggled
+    by a literal name, no HTML parser and no style or rule set from code anywhere in
+    the bundle, and no member reached by a string. The first build's checks let the
+    review's four mutants through (`setHTMLUnsafe` on a problem line and on the
+    statement, `classList.add` of Source words, `insertRule` of a Source cell); each
+    now fails this test.
+  - **An ID and a status are never cut** (after the review: §5.1 allows 16
+    characters, and the first build capped the badge at 92 px with no ellipsis, so
+    `Experiment_runA1` and `Experiment_runA2` both drew "Experiment_ru", "running"
+    drew "runr", and the tooltip gave only the statement). A long ID wraps inside
+    its badge, and a status that no longer fits beside it takes a row of its own;
+    the box grows by that much. The page measures each box's top row in a hidden
+    box of the column's width, so any font is measured as drawn, and `layout.ts`
+    places boxes, line ends, and the gaps at those heights. A frame laid out while
+    hidden in the same process measures nothing, so its boxes are 48 px until the
+    page shows, when they are measured and placed again (a headless probe checks
+    this path). In the app the suite's Reload drawn on the Code tab left no ID cut
+    even with that path removed, so the view's frame, on another origin and so
+    probably in another process, seems to stay laid out while hidden; that is an
+    inference from the test, not read in Chromium's code, and the path stays for
+    the case it is wrong. Boxes with short IDs keep the mockup's 150 × 48.
+    The tooltip names the ID, kind, status, and statement, marked as the box marks
+    them. The suite draws IDs of sixteen W's in every kind and status and checks
+    that no ID or status is cut, no two boxes overlap or draw one ID, and a short
+    ID's box is 48 px; the layout tests cover boxes of other heights. This departs
+    from the mockup's fixed box, which never met a long ID.
+  - **The map's box** keeps a stable scrollbar gutter, so the width the
+    scale is fitted to does not change when a classic scrollbar (Windows, Linux)
+    comes and goes, which would otherwise resize the map in a loop.
+  - **The legend** takes the top of the last column, whose nodes start under it: the
+    mockup's corner was empty only because its nodes were placed by hand, and a rule
+    has to guarantee no overlap (the layout tests include the legend). A word with no
+    line reads "motivates · none" (the mockup's "· none here" does not fit a column's
+    150 px for "motivates"), and the result's experiment is named on three short
+    rows, "the result's / experiment / (from Points to)". The suite checks that no
+    legend row is cut.
+  - **Lines within one column** are arcs on the column's right side, within half the
+    gap.
+  - **Lines and their words (a departure from §5.3 rule 4, after the review; no
+    mockup shows the case).** Rule 4 drew every line as one curve from side to side,
+    and the word of an open node's line at 0.34 or 0.66 along it. The review found
+    that a line skipping a column passed under that column's boxes (E1 `tests` Q1
+    past three hypotheses ran under H1 and out of H3 and read as two other links),
+    and that the word landed on a box it does not join ("tests" on H2's ID, so the
+    map read "E1 tests H2"): over 12 seeded random graphs, 99 of 570 words lay on
+    node text, 83 of them on a node the line does not join, and two words between
+    one pair of nodes covered the legend and touched. Now a line that skips a
+    column runs straight through it at its left node's middle, in a lane of 20 px
+    that column's boxes keep clear of (they move down past it), curving only inside
+    the gaps; and the word of each of the open node's lines (a pill of 9.5 px bold,
+    at most 63 px wide even in a face as wide as Verdana) sits in a 64 × 16 slot
+    beside the other node, where the line meets it, in the gap and on that box's
+    padding only, the first free slot down its side nearest the line's end. Free
+    means on no box the line does not join, no other word, the legend, a column
+    head, and inside the map; when none beside the box is free, the slot is inside
+    that box, which only the open node's lines to it can take (three at most, as
+    the link words allow, and a box has three slots), so a place always exists. An
+    arc beside the last column widens the map by 39 px, room for a word there, not
+    by half a gap. Graphs with no line skipping a column (the mockup's) are drawn
+    where they were. `layout.test.ts` checks both rules on 40 seeded graphs that
+    follow §5.1's grammar (some boxes taller), on 200 nodes with 1,000 links, on
+    200 nodes in one column, and on 1,000 lines between two columns and through a
+    third, with each node opened in turn; a growth case covers the lanes and the
+    words of a node with as many lines as the graph has experiments, though no
+    mistake tried fails it (the 50 ms bound, below). The review's
+    probes, rerun on this build: the skipping line passes under no box, and over its
+    12 random graphs no word lies on node text, on the legend, or on another word
+    (0, 0, 0, and 0 of 570); the end-to-end suite checks that no word of E2's lines
+    is cut, outside its slot, or on a node's text.
+  - **Problems**: every one is counted ("3 problems in idea_graph.md"), and those of
+    rows and links are listed up to 500, then "and N more problems are not listed";
+    the caps, cycles, a second table, and what md-kit leaves unread are always
+    listed. A claim's two statuses read "C2 is “planned” here, “verified” in
+    paper_skeleton.md:116." (quotes for §5.2's italics; the page draws text only).
+    File text inside a problem is marked as a label is (invisible characters and
+    spaces other than U+0020) and cut at 60 characters.
+  - **What md-kit leaves unread is said** (the brief's lesson 6): rows past its 500
+    a table, lines past its 20,000 when the table reaches them, lines of only
+    invisible characters inside the table, a second table with the graph's header
+    (only the first is read), lines starting with "|" after the table ended (a
+    blank line or other text ends a table, and md-kit reads such lines as a
+    paragraph: rows an agent grouped with blank lines; after the review, also
+    rows indented under a list item, which md-kit reads as the item's text and
+    the first build dropped with no note), and, on the no-table
+    screen, everything after a code fence never closed. A statement or a source over 2,000 characters is drawn cut
+    and the panel says so beside it; the quote holds the row as written.
+  - **Absence is worded by what was searched**: "No table with the expected header was
+    found in idea_graph.md." with the first header found (or "No table was found");
+    after the review, the graph's header inside a code block or a list item, where
+    md-kit reads no table, is named with its line and why ("The graph's header is on
+    line 6, inside the code block on lines 3–12, which is read as code, not as a
+    table: write the table outside the fence."), since §5.1 prints its own example
+    in a fence and an agent copying it got "No table was found";
+    a link to nothing reads "no node in the table has the ID Q9" ("no node among the
+    rows the view reads" when some were not read: past md-kit's 500 rows or 20,000
+    lines, or after the table ended), and a link to a node not drawn names
+    why: "Q2 (line 6) is left out for a problem of its own", "P201 (line 206) is
+    past the first 200 nodes". The panel's count says "none is a hypothesis" of the
+    nodes drawn, where the mockup said "no hypotheses are recorded".
+  - **Selection and Reload** (the brief, over the Skeleton and Assets views, which
+    clear the selection when Reload starts): a node is identified by its ID in ASCII
+    lower case. A click opens and selects it, a second click (or Escape, or the
+    host's clear) ends the selection and leaves it open, as in the mockup, and a link
+    chip in the panel opens and selects the node it names. The old map stays
+    clickable while Reload reads; after its render, a selected node still in the file
+    is open, marked, and posted again with its row as it is now (the label can stay
+    while the quote changes), otherwise `null` is posted, and every screen that
+    replaces the map (empty, no table, too large, not UTF-8, a channel error) posts
+    `null` too. The suite clicks during a slow Reload both ways. A load carries a
+    generation, and an answer that arrives after a later Reload's is dropped: the
+    suite holds the first of two Reloads' bytes for 3 s past the second's render,
+    and with the check removed the old file overwrote the new one on screen (the
+    test is red then; the first build had no test that noticed).
+    After the review, the page and the ask bar also agree after a Reload that
+    ends while the workspace is hidden (Home shown): the host ignored a
+    selection posted then (`selectGate`'s "only while the screen is shown"), so
+    the bar came back holding the old row, or offering a node the page no longer
+    marked. Switching to another tab during the read was safe, since leaving a
+    tab clears both sides. The fix is the host's (`heldWhileHidden` in
+    [frontend/src/plugins/select.ts](frontend/src/plugins/select.ts), used by
+    [frontend/src/pages/WorkspacePage.tsx](frontend/src/pages/WorkspacePage.tsx)):
+    the last valid message the active view posted while hidden is kept and
+    applied through the gate when the workspace shows again, so a node still in
+    the file stays selected with its row as it is now, and a node gone leaves no
+    bar; clearing the selection meanwhile (Escape on Home, which the workspace
+    still hears) drops it too. No message is added. It covers every view, so the Assets view's render-time `null` (and
+    the Skeleton view's, when a clicked item is gone) is no longer dropped either.
+    That was checked by reading those two views' code, and the reading missed the
+    Paper view (below). The suite tests the Idea view: it reproduces both variants
+    with a 3 s read and Home shown during it, and Escape pressed on Home while the
+    page's post is held.
+    Since what a view posts while hidden is now applied on return, a view must not
+    post what it merely cannot read while hidden. The Paper view did: its 400 ms
+    settle timer, firing after Home was shown, found the selection still in place
+    but its text empty (a hidden frame is not laid out) and posted "nothing
+    selected", so back in the workspace the bar was gone while the page still
+    showed its text selected. The directing agent's probe found it after the fix
+    round. The fix is the Paper view's: while the page is not laid out (its
+    scroller has no boxes), it leaves its last report as it is (`laidOut` in
+    [frontend/plugins/paper-view/site/main.ts](frontend/plugins/paper-view/site/main.ts));
+    a collapsed selection is still reported as none, and Escape on Home still
+    clears both sides. The suite selects the paper's title, shows Home at once,
+    and checks on return that the bar holds what the page selects.
+  - **The panel** for a result shows "from: " and a chip to its experiment, and an
+    experiment's files under "Result files, not opened here", each path marked as a
+    label is (a no-break space in it showed as a plain space before the review). A
+    statement whose words draw nothing visible (only a no-break space, or an image
+    with no alt text) is drawn as written with its spaces marked, in the box, its
+    tooltip, and the panel, where the first build drew a blank box; a claim node with an
+    empty Points to says it names no row of paper_skeleton.md. In a narrow view only
+    the hint is hidden (the mockup hid every note), so a note on what the panel
+    leaves out stays.
+  - **The 50 ms bound** (§5.3, §6) and §1 fact 6's hostile input are tested by
+    growth ([frontend/plugins/growth.ts](frontend/plugins/growth.ts)), not a wall
+    clock, in [logic.test.ts](frontend/plugins/idea-view/site/logic.test.ts) and
+    [layout.test.ts](frontend/plugins/idea-view/site/layout.test.ts). The fix
+    round's pull request failed macos-x64 twice, on two hostile cases at 128 then
+    512 KiB: the bad items (12.3 times the time, 825 ms at 4n), then the `;` cell
+    (21.2 times, 624 ms). The cause is the collector, not a pass per element:
+    `parse` and `buildGraph` of one huge line grow 2 times a doubling up to 128 KiB,
+    about 4 times a doubling to 512 KiB (the build 1.1 to 20.6 ms), then 2 times
+    again to 2 MiB, and under `node --max-semi-space-size=64` they grow 2 times a
+    doubling all the way to 512 KiB (the build 1.1 to 4.4 ms). So from 128 to 512
+    KiB the hostile cases grew more than one pass does: the huge statement 14 times
+    on the machine the view was built on and 37 times on macos-x64, the `;` cell 8
+    and 21, the backticks 8 and 14, the files list 4.6 and 7.8. Those over 10 passed
+    only by the 500 ms floor, which macos-x64 (6 to 14 times slower than that
+    machine, and about twice as slow on some days as others) crossed. The
+    collector's work comes from md-kit's `splitCells`, which builds each cell a
+    character at a time: on a scratch copy that slices each cell instead, the huge
+    statement, the `;` cell, the bad items, the backticks, and the files list grow
+    3.7 to 4.3 times here from 128 to 512 KiB, and take 1.5 to 5 times less. md-kit
+    is shared, so it is not changed here. (The row's line number was also formatted
+    again for every bad link, listed or not; it is now formatted once a row, and a
+    test counts the numbers formatted for 50,000 bad links, which was 50,000.)
+
+    Each of the nine cases, seven in `logic.test.ts` and two in `layout.test.ts`,
+    is now sized by one rule, with the case run alone on the machine the view was
+    built on (an M1 Pro): 1. the code as it is takes at most about 17 ms at
+    4n, so a runner 15 times slower on a day twice as slow stays under the floor; 2.
+    the mistake the case guards against, put back on a scratch copy, takes at least
+    2 s at 4n and fails the case. Most cases now stay under 128 KiB at 4n; the huge
+    statement (384 KiB) and the files list (256 KiB) go over it, where their
+    mistakes are slow enough, and still meet the first rule here (macos-x64 took 342
+    ms and 186 ms for them at 512 KiB). Each case's comment names its mistake,
+    quoted as code, and both numbers; below, the size n (then 4n), the worst honest
+    time at 4n in twelve runs or more, and the mistake's ratio and time at 4n (one
+    run, timed as the test times it):
+    - **Both hold.** One huge statement, 96 KiB, 10.5 ms; md-kit's `splitCells`
+      looking for the cell's end again from every character, 17.9 times, 3.5 s. A
+      Links cell of `;` only, 24 KiB, 7.2 ms; a link that scans its whole cell again,
+      empty items included, 20.1 times, 3.9 s. A Links cell of bad items, 32 KiB,
+      15.5 ms; the same mistake, 23.3 times, 2.8 s. Backticks in Points to, 8 KiB,
+      2.3 ms; a backtick run measured again from each of its backticks, 15.9 times,
+      4.0 s.
+    - **The first holds, the mistake fails under 2 s.** A files list of distinct
+      paths, 64 KiB, 14.8 ms; checked against itself (`paths.includes`), 39.8 times,
+      692 ms (as a search of the files text, 16.8 times, 1.7 s). At 80 KiB the honest
+      time is 18.8 ms and the mistake still 1.6 s, so no size meets both.
+    - **No mistake found that fails it; sized by the first rule.** Links all to one
+      node, 16 KiB, 9.4 ms (a link scanning its cell again, or a row looking its ID
+      up among the rows, stays under 11 ms, since each row is short). The case of
+      rows past the caps, 32 KiB, 3.0 ms (md-kit's 500 rows and the 200 nodes bound
+      it; its rows are a chain, not the cycle its name says). The 50- then 200-node
+      graph, 4.6 ms. Routing and words, now 200 then 800 nodes, 11.6 ms: at 2,000
+      then 8,000 it took 1,202 ms at 4n on macos-x64 and passed by a hair at 10.0
+      times, and neither a line looking itself up among the lines nor three
+      mistakes in `labelsFor` failed it there.
+
+    This departs from the design: 512 KiB of hostile input in one pass (§1 fact 6),
+    which the first build showed by growth at 128 then 512 KiB, is no longer shown
+    at 512 KiB by a test; the largest input timed is now 384 KiB (the huge
+    statement at 4n). What remains for 512 KiB is the review's measurement in the
+    running app: a longest task of 81 ms on a hostile 512 KiB file. Fourteen more
+    mutations, each on a scratch copy, fail a test: an
+    ID of 17 characters, `tests` reaching a claim, boxes overlapping, ⟨ and ⟩ left
+    unmarked in a label, `toLowerCase` for ASCII case, a duplicate ID kept, a
+    statement as markup, an `<img>`, a class from file text passed to `el()`, a
+    `style` or `href` attribute on the map, an unmarked tooltip, rows after a blank
+    line dropped without a note, and no stable gutter. The review found tests that
+    could not fail: they used the caps by name, so `READ_MAX` at 5 MiB, the skeleton's
+    1 MiB at 32 MiB, 5,000 problems listed, or "Still open" without `running` failed
+    nothing. Each is now pinned with its literal value and its sentence (524,288 and
+    524,289 bytes and "larger than 512 KiB"; 1,048,576 and 1,048,577 and "larger
+    than 1 MiB", with the skeleton's check moved from `main.ts` into `logic.ts`; 550
+    problems, 500 listed, "and 50 more problems are not listed"; every status of
+    every kind against "Still open"), and each of those mutants fails a test.
+    md-kit's own `splitCells` builds each cell a character at a time: that is the
+    collector's work in the growth cases above.
+
+    A tenth case, the layout alone with the caps lifted (6,000 then 24,000 nodes),
+    was removed on 2026-11-25, a departure too: the design's cost claims for the
+    layout (§5.3) are shown by growth only at about the sizes the view can reach
+    (50 then 200 nodes, and routing at 200 then 800), no longer at thousands of
+    nodes, and the caps are what bound it. The layout's one caller, `placeMap` in
+    [main.ts](frontend/plugins/idea-view/site/main.ts), passes at most 200 nodes
+    and 1,199 lines (1,000 links and one for each result whose experiment is
+    drawn; a valid file reaches 1,197). There the mistake the case guarded, a line
+    looking itself up among the lines, which a first draft did (put back as
+    `const k = lines.indexOf(line)`), costs 1.8 to 2.0 ms against 1.5 to 1.6 here
+    (best of 15, four runs), and no test fails on it. At 6,000 nodes the case
+    could not tell the two apart: on macos-x64 the code as it is measured 8.3
+    times, 2,429.6 ms at 4n, passing on the ratio alone about 1.2 times short of
+    failing, and the mistake measures 10.7 to 11.2 times here. Resizing did not
+    help: at 4,000 nodes the mistake sat on the line (9.4 to 10.2 times), and at
+    8,000 one pass's ratio was less steady. This machine's ratios do not predict
+    macos-x64's: routing's was about 6 here and 10.0 there. Two tests of
+    [logic.test.ts](frontend/plugins/idea-view/site/logic.test.ts) count the caps,
+    each failing with its `slice` removed, and a third pins their values; no
+    end-to-end test goes past them.
+  - **Points §5.1 and §5.2 leave open, decided and tested:**
+    - two rows with one ID ignoring case: the later is left out, naming the earlier's
+      line and spelling; a row's ID counts for this even when the row is left out
+      for another problem, or has another number of cells (the rule is about the
+      file), so a node never shows another row's details under its ID;
+    - the 200 are the first 200 valid rows, the 1,000 the first 1,000 valid links in
+      file order; a result's experiment is no link and is not capped apart (one per
+      result at most);
+    - a trailing `;`, and empty items in Links, Points to, and a files list, are
+      ignored: nothing is left out;
+    - `;` and `,` inside a code span do not split Points to; paths are separated by
+      ", " (a comma and a space or tab), so a bare path may hold a comma alone; a
+      path is refused with a leading "/", a "\", an address, an empty segment (a
+      trailing "/" too), or a segment starting with ".";
+    - a planned experiment may leave Points to empty; one that does not needs both
+      keys; a done, running, or failed one needs both, and `files:` names paths or
+      `none`, the run's "no result file" (the Human Owner, 2026-11-24), as
+      `commit: none` is its "no commit". `none` stands alone: beside paths it is a
+      problem naming what was found; a file named `none` is a code span. The
+      panel says "Result files: none (the row says “files: none”)". The mockup's
+      E1 ("no result file and no commit") is the fixture's E1 again,
+      `commit: none; files: none`;
+    - a claim node may leave Points to empty (§5.1 says "required" of `from:` and of
+      an experiment's keys only): it is drawn and names no skeleton row;
+    - header cells compare exactly but for ASCII case and surrounding spaces
+      (`**ID**` is another header, and so is `Kind` spelled with the Kelvin sign);
+      kinds, statuses, link words, and keys are the lower-case words as written;
+      IDs are checked against their ASCII pattern before they are lower-cased;
+      claim IDs compare exactly; a claim's status is compared with the skeleton's
+      ignoring ASCII case and surrounding spaces;
+    - a `claim:` that two skeleton rows start with is not resolved: the problem names
+      both lines; an unreadable skeleton is one problem only when a drawn claim
+      node has a `claim:`;
+    - a cycle is found with each link counted from what must exist first to what
+      follows from it (§5.1 "A DAG": `A motivates B` is A → B, `E tests X` X → E,
+      `R supports` or `refutes X` X → R, `from: E` E → R), a default the
+      directing agent took on 2026-11-24 and told the Human Owner, not yet
+      confirmed. A result that motivates its own experiment closes a cycle; a
+      hypothesis that motivates the experiment testing it no longer does (the first
+      build counted each link from its row to its target and listed it). The
+      problem names the nodes and one loop, each step with the link that makes it.
+      Reversing the rule is one constant, `FIRST` in
+      [logic.ts](frontend/plugins/idea-view/site/logic.ts).
+  - **Test fixtures:** [frontend/plugins/fixtures/](frontend/plugins/fixtures/README.md)
+    holds §5.1's example byte for byte and the mockup's graph of nanochat_cpu in the
+    confirmed format (its two inferred links left out); the 50- and 200-node graphs
+    are generated in `layout.test.ts`. The end-to-end suite deletes any
+    `idea_graph.md` in its copy of nanochat_cpu (the empty state), then writes the
+    mockup's graph there; malformed, hostile, and changing files go to a project of
+    its own, `idea_e2e`. It runs the graph at 1000 × 728 (windows-x64 CI's window)
+    and 1440 × 900, and a failure names the view's and the map's geometry.
+  - **Limits that stay:** the barycentre order can leave crossings; the detail panel
+    is the mockup's 156 px (200 px narrow) and scrolls; result files and commits are
+    shown, never opened or checked (§5.5); a link or a pointer to a row the view did
+    not read (past 500 rows or 20,000 lines, or after the table ended) is reported
+    as missing among the rows read; the scrollbar gutter's fix is checked in the
+    source, not in a window with classic scrollbars (the suite runs on macOS). A
+    lane moves the boxes of a column a line skips down past it, so a graph with many
+    such lines draws that column taller; a word that finds no free slot beside its
+    node is drawn inside that node's box, over its text (3 of the 4,202 words of the
+    40 seeded graphs; none of the 6,884 in the large ones, none in the review's
+    probes). Two found by the review are recorded, not redesigned:
+    - **review 7, the host's rate gate:** thirteen Enter presses on a focused node
+      within about 0.3 s (each a click: select, unselect, …) pass the host's ten
+      accepted selections a second, and the host then hides the ask bar while the
+      page keeps its mark: the review saw the bar empty and Q2 marked
+      (`selectGate`'s "over", by design rather than showing an older selection than
+      the page marks). A click after the second has passed agrees again;
+    - **review 8, a narrow window with the conversation open:** at about 1000 × 728
+      the map is drawn at its 0.8 floor, 640 px in a box 451 px wide, so the Claims
+      column starts off-screen and the map scrolls sideways (the page itself does
+      not); with a node selected, about 163 px of the map show between the detail
+      panel and the ask bar. Collapsing the conversation, or a wider window, shows
+      the map whole (at 1440 × 900 it is 800 px wide and about 420 px of it show).
+  - **Covered by unit tests only, not in the running app:** the caps (200 nodes,
+    1,000 links, 500 rows, 20,000 lines, 500 problems listed; each by its literal
+    value since the review), cycles, every Points
+    to and status error, a claim's pointer missing, ambiguous, or with another
+    status, the skeleton's unreadable states, the 413, 503, unreachable, binary,
+    other-encoding, and over-512 KiB screens, statements over 2,000 characters,
+    hostile labels and quotes through the host's `readSelect`, CRLF and lone CRs,
+    the cycle rule's table, list-item rows and fenced headers, lanes and word slots
+    on random and large graphs, and the growth cases. In the running app since the
+    review: the generation check, IDs of sixteen wide characters, a Reload ending
+    while Home is shown, and the words of E2's lines.
+  - Not verified: Windows and Linux (the suite ran on macOS arm64 only), and the
+    Human Owner's checklist line.
 
 - **2.2, the Assets view**, is the bundled plugin
   [frontend/plugins/assets-view/](frontend/plugins/assets-view/) (manifest as §4.1,
@@ -684,7 +1064,10 @@ Status on 2026-11-24:
     active view's frame at its own origin, while the workspace is the screen
     shown and that view's tab is selected, not while the Ask button is held
     down, and at most 10 a second per frame (past that the bar is hidden, never
-    left stale). The rule is that what Send passes is exactly what the user can
+    left stale). Since step 2.3's review, the last valid message the active
+    view posts while the workspace is hidden is not lost: it is kept and
+    applied, through the same checks, when the workspace shows again
+    (`heldWhileHidden`; see 2.3's "Selection and Reload"). The rule is that what Send passes is exactly what the user can
     read in the composer ([frontend/src/plugins/select.ts](frontend/src/plugins/select.ts)):
     the host never rewrites a label: it shows and sends it exactly as the page
     posted it, or ignores the message. A label must be 1 to 200 characters, not
@@ -1371,7 +1754,7 @@ The view never builds the PDF itself, because the Bare-CLI row forbids write act
 
 **Changes to contract 1.0** (it is not frozen yet, see A1):
 - **The manifest schema does not change.**
-- **The page-to-host message changes.** A6's `os.ask` becomes `{ type: "os.select", label: string, quote?: string }`, and `{ type: "os.select", label: null }` clears it. In the mockup (`c-document.html:674-678`, `:1185-1224`), the host owns the "Ask the agent about this" bar and the reference chips in the composer, so the view reports a selection rather than asking. Labels look like "Code/README.md:12", "63ead0b" or "main.pdf p. 2 · §2 Setup", the last taken from the PDF's outline. A quote is at most 2,000 characters.
+- **The page-to-host message changes.** A6's `os.ask` becomes `{ type: "os.select", label: string, quote?: string }`, and `{ type: "os.select", label: null }` clears it. In the mockup (`c-document.html:674-678`, `:1185-1224`), the host owns the "Ask the agent about this" bar and the reference chips in the composer, so the view reports a selection rather than asking. Labels look like "Code/README.md:12", "63ead0b" or "main.pdf p. 2 · §2 Setup", the last taken from the PDF's outline. A quote is at most 2,000 characters. The host applies on return what the active view posts while the workspace is hidden, so a view must not post what it merely cannot read then: a hidden frame is not laid out, and its selected text reads as empty (step 2.3's "Selection and Reload").
 - **`PLUGIN_CSP` gains `worker-src 'self'`**, if PDF.js is used.
 - **From the S1/S2 implementer notes:**
   - The parser should refuse a `reads` root whose first segment is `*`.
@@ -1892,14 +2275,25 @@ files as the mockup drew them:
 
   | Kind | Points to |
   |---|---|
-  | experiment | `commit: <7 to 64 lower-case hex digits, or none>; files: <path>, <path>`. Both keys are required unless the status is `planned`, which may leave the cell empty. `none` means the run recorded no commit, as `nanochat_cpu`'s did (`HANDOFF.md:610`). A path is project-relative, with no `..` or dot segment, written bare or as a code span; a path containing `, ` must be a code span |
+  | experiment | `commit: <7 to 64 lower-case hex digits, or none>; files: <path>, <path>, or none`. Both keys are required unless the status is `planned`, which may leave the cell empty. `commit: none` means the run recorded no commit, as `nanochat_cpu`'s did (`HANDOFF.md:610`); `files: none` means it left no result file (allowed by the Human Owner on 2026-11-24). `none` stands alone, never beside paths; a file really named `none` is written as a code span. A path is project-relative, with no `..` or dot segment, written bare or as a code span; a path containing `, ` must be a code span |
   | result | `from: <ID of an experiment>`, required. This carries "came from" without a fifth link word (§5.3) |
   | claim | `claim: <claim ID>`: the ID of a row in `paper_skeleton.md`'s Claims and Evidence table (§2's ID rule) |
   | question, hypothesis | empty |
 
 - **Source:** free text, optional: where the node comes from, as `file:line`.
 - **A DAG** (`HANDOFF.md:606`): a cycle through links and `from:` is reported as a
-  problem, and the nodes are still drawn, since the layout does not need it.
+  problem, and the nodes are still drawn, since the layout does not need it. Each
+  link counts from what must exist first to what follows from it: `A motivates B`
+  is A → B; `E tests X` is X → E; `R supports X` and `R refutes X` are X → R; a
+  result R with `from: E` is E → R. So "H1 motivates E1; E1 tests H1" is no cycle,
+  and "R1 from E1; R1 motivates E1" is one. The problem names the cycle's nodes and
+  one loop step by step ("E1 before R1 (R1 from E1) and R1 before E1 (R1 motivates
+  E1)"), so it can be checked against the file. *This rule is a default the
+  directing agent took on 2026-11-24 and told the Human Owner; it is not yet
+  confirmed.* It is one constant, `FIRST` in
+  [frontend/plugins/idea-view/site/logic.ts](frontend/plugins/idea-view/site/logic.ts); setting `tests`, `supports`,
+  and `refutes` to `"row"` there reverses it to the first build's rule (each link
+  from its row to its target).
 - **Where an agent learns the format:** the template's own `idea_graph.md` (an
   empty table under a short paragraph that states these rules) and one line in the
   template's `AGENTS.md`, both in change 2.4 (§6). A CLI agent with no app running
