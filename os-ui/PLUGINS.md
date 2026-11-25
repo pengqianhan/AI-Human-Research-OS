@@ -194,8 +194,13 @@ Status on 2026-11-25:
       changed. A mutant that lets Paper wiki's page connect to `app:` on a
       CORS-enabled scheme fails it. All three requests are stopped in the
       frame by Paper wiki's `connect-src 'self'`, before CORS would apply.
-    - What else the review found changed no code: it is in the limits below,
-      and the line on Try again above is corrected.
+    - What else the review found changed no code. Should-fix 2 (the installer
+      follows links, carried over) and note 6 (toggles are neither queued nor
+      timed out, carried over) are in the limits below; note 9 was this
+      document (the line on Try again above is corrected, and
+      [HANDOFF.md](../HANDOFF.md) is brought up to date). The reviewer also
+      ran the checklist's symlink-form toggle in a copy of the workspace on
+      macOS, and each sentence of that step held.
   - **Limits** (recorded after the review; none is changed here):
     - The installer deletes or rewrites content through links, in three cases
       the reviewer ran. A `.disabled` that is a link to a folder: disable
@@ -211,11 +216,26 @@ Status on 2026-11-25:
       every project's install; `-h` as a value, and answers the installer's
       help text; and `enable: "false"`, which it takes as true. The trunk's
       endpoint did the same.
-  - Not verified: Windows and Linux after the fix round (CI's windows-x64
-    run, which failed as above, was of the build before it; the fix round's
-    suite ran on macOS arm64, once with the copy made as on Windows); a
-    symlink-form toggle in the app (the installer and the handler are
-    unchanged, and their tests run); the static build's Skills page
+    - The app's own shell reads the snapshot without checking its shape
+      (`state.projects.find` in
+      [frontend/src/shell/Shell.tsx](frontend/src/shell/Shell.tsx), as on
+      `main`). With a snapshot of `{}` the fix round's rerun of the reviewer's
+      probes saw the shell stop on a TypeError and every frame go, where the
+      review had seen the page's line "The snapshot has no skill list."; why
+      the two runs differ was not investigated. So that line is shown only
+      while the shell still has a snapshot it can draw.
+    - The navigation guard's rule rests on what Electron reports for a
+      navigation (the frame's URL and the initiating frame's), observed on
+      macOS; CI's full end-to-end runs on linux-x64 and windows-x64 are its
+      check there (the linux-arm64 and windows-arm64 jobs run a few named
+      cases only, so they check nothing of this).
+      Whether a note's own content can start such a navigation in Paper wiki's
+      frame was not tested: the reviewer's and the suite's navigation are both
+      run by evaluation from the test.
+  - Not verified: Windows and Linux after the fix round beyond CI (the fix
+    round's suite ran on macOS arm64, once with the copy made as on Windows);
+    a symlink-form toggle in the installed app (the reviewer ran it in a copy,
+    above; the suite does not); the static build's Skills page
     (`pages.test.ts` pins that it has no frame URL there, as on the dev
     server); and the Human Owner's checklist line.
 

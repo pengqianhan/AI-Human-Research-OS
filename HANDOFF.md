@@ -177,12 +177,36 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       from the app, and the dev server no longer offers the toggle. The
       three small faults of the old page are ported as they are; one of
       them differs from the mockup (the open panel keeps the old word
-      after disable or enable until it is reopened), and the Human Owner
-      has been asked whether to fix it. An independent review is under
-      way; the pull request stays a draft until its findings are dealt
-      with. Not verified: Windows and Linux beyond CI, a symlink-form
-      toggle in the running app (the checklist's own step), and the
-      Human Owner's checklist line. 2.6 waits on Q-PO1.
+      after disable or enable until it is reopened). The Human Owner was
+      asked twice whether to fix it and did not answer, so "ported as it
+      is" stands as a default taken; the fix is one line (`shownSkill` in
+      `os-ui/frontend/plugins/skills-hub/site/main.ts`, written out in its
+      comment). An independent review at `bdedf32` found no must-fix, two
+      should-fix, and seven notes, and CI's windows-x64 run failed one
+      end-to-end case; a fix round on the same branch dealt with the
+      failed case (two skills with one collection and name drew as one
+      card), the missing test of which target a project's row sends, a
+      plugin's frame navigating itself to another plugin's origin (the
+      client's navigation guard, for every plugin), names going unquoted
+      into copied commands, invisible characters, and tests that could
+      not fail ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), the 2.5 bullet, with
+      the limits). One default taken there, for the Human Owner to
+      reverse: where a skill's name, its collection, or a target is
+      outside the toggle endpoint's pattern the page shows no command and
+      the new line "No command: a name here has characters a command
+      cannot carry safely." An installed-only skill's rows keep the old
+      page's "install ⧉", whose command carries "no hub source" and is
+      refused by the installer: a fourth small fault ported as it is.
+      Open, outside this pull request: the installer follows links in
+      three cases the reviewer ran, where disable or enable deletes or
+      renames real content, so the panel's "Disable never deletes skill
+      content" does not hold there (put to the Human Owner on 2026-11-25
+      as a pull request of its own; no answer yet); the shell stops on a
+      snapshot of the wrong shape; and macos-x64's timed cases still fail
+      now and then (two of the Assets view's on this branch's run of
+      `90d5bd5`, on `main`'s code). Not verified: Windows and Linux
+      beyond CI, and the Human Owner's checklist line. 2.6 waits on
+      Q-PO1.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
       Acceptance: another person installs the app on a clean machine and completes
