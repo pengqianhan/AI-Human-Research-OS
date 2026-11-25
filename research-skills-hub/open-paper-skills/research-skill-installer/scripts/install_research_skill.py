@@ -214,6 +214,21 @@ def ensure_safe(install: Path, targets: list[Target]) -> None:
         fail(f"refusing to modify a path outside the target table: {install}")
 
 
+def refuse_linked_holding_areas(targets: list[Target]) -> None:
+    """Fail if any selected target's `.disabled/` is itself a symbolic link.
+
+    Every path under it would lead into another folder, where removing or
+    renaming an entry destroys content that is no install of ours.
+    `ensure_safe` cannot see this: it compares resolved paths, and both sides
+    resolve through the same link. Checked for every target before any is
+    changed, whichever path the command is about to touch.
+    """
+    for target in targets:
+        holding = target.path.expanduser() / DISABLED_DIR
+        if holding.is_symlink():
+            fail(f"{holding} is a symbolic link, not a folder of disabled skills; nothing was changed.")
+
+
 def link_value(install: Path, source: Path, root: Path) -> str:
     """Relative inside the repository (committable), absolute outside it."""
     parent = install.parent.resolve()
@@ -446,6 +461,7 @@ def command_install(args: argparse.Namespace) -> None:
     source = resolve_source(root, args.skill, args.collection)
     form = install_form(root, source.collection)
     targets = select_targets(root, args.target, args.all_targets)
+    refuse_linked_holding_areas(targets)
 
     for target in targets:
         found, actual, ok, _detail, disabled = inspect(target.path, source.name, source, form)
@@ -474,6 +490,7 @@ def command_remove(args: argparse.Namespace) -> None:
         fail("remove requires --yes")
     source = resolve_source(root, args.skill, args.collection)
     targets = select_targets(root, args.target, args.all_targets)
+    refuse_linked_holding_areas(targets)
     for target in targets:
         # Remove both variants: a disabled install is still an install.
         removed = False
@@ -493,26 +510,82 @@ def command_remove(args: argparse.Namespace) -> None:
             print(f"missing:  {target.name:26} {target.path / source.name}")
 
 
+def copy_toggle_path(live_dir: Path, off_dir: Path) -> Path:
+    """The folder whose SKILL.md a copy-form toggle renames."""
+    return off_dir if off_dir.is_dir() and not live_dir.is_dir() else live_dir
+
+
+def check_toggle(target: Target, name: str, form: str, enable: bool,
+                 targets: list[Target]) -> None:
+    """Fail, before anything is written, if this toggle would destroy content.
+
+    A link-form toggle recreates a link with `place()`, which first removes
+    whatever is at the destination, so it may only ever replace a link. A
+    copy-form toggle renames SKILL.md inside the install, so the install must
+    not be a link: the rename would land wherever it points, such as the hub.
+    Nor may the rename's destination exist already: a rename replaces it.
+    """
+    live_dir, off_dir = install_paths(target.path, name)
+    ensure_safe(live_dir, targets)
+    if form == "symlink":
+        ensure_safe(off_dir, targets)
+        if enable and off_dir.is_symlink():
+            destination = live_dir
+        elif not enable and live_dir.is_symlink():
+            destination = off_dir
+        else:
+            return
+        if destination.exists() and not destination.is_symlink():
+            kind = "folder" if destination.is_dir() else "file"
+            fail(f"{destination} is a real {kind}, not a symbolic link; nothing was changed.")
+        return
+    install = copy_toggle_path(live_dir, off_dir)
+    ensure_safe(install, targets)
+    if install.is_symlink():
+        fail(f"{install} is a symbolic link, but this skill is installed as a copy; "
+             "nothing was changed.")
+    if not install.is_dir():
+        return
+    live, off = install / "SKILL.md", install / DISABLED_MARKER
+    # The same branches as the copy-form rename in command_toggle.
+    if enable and off.is_file():
+        destination = live
+    elif not enable and live.is_file():
+        destination = off
+    else:
+        return
+    if destination.is_symlink() or destination.exists():
+        fail(f"{destination} already exists, and the rename would replace it; "
+             "nothing was changed.")
+
+
 def command_toggle(args: argparse.Namespace, enable: bool) -> None:
     """Disable or enable one install location without touching the hub.
 
-    A symlinked install is disabled by renaming the link to `<name>.disabled`.
-    It is not deleted: deleting would make "disabled" indistinguishable from
-    "never installed", and re-enabling would then have to create the install —
-    which is a GUI install button, outside the M4 authorization. Renaming
-    SKILL.md inside a symlinked install is never an option either, because that
-    path leads into the hub and would disable every location at once.
+    A symlinked install is disabled by moving its link into the target's
+    `.disabled/` folder (see install_paths). It is not deleted: deleting would
+    make "disabled" indistinguishable from "never installed", and re-enabling
+    would then have to create the install — which is a GUI install button,
+    outside the M4 authorization. Renaming SKILL.md inside a symlinked install
+    is never an option either, because that path leads into the hub and would
+    disable every location at once.
 
     A copied install is the only place its content exists, so it is disabled by
     renaming SKILL.md to SKILL.md.disabled; the files stay put.
 
     Neither form creates or destroys skill content, and both are one rename
-    away from being undone.
+    away from being undone. Where a toggle could only proceed by removing
+    something other than a link, or by renaming through one, it refuses; every
+    target is checked before any is changed, so a refusal changes nothing.
     """
     root = repo_root(args)
     source = resolve_source(root, args.skill, args.collection)
     form = install_form(root, source.collection)
     targets = select_targets(root, args.target, args.all_targets)
+
+    refuse_linked_holding_areas(targets)
+    for target in targets:
+        check_toggle(target, source.name, form, enable, targets)
 
     for target in targets:
         live_dir, off_dir = install_paths(target.path, source.name)
@@ -541,7 +614,7 @@ def command_toggle(args: argparse.Namespace, enable: bool) -> None:
                 print(f"no-op:    {target.name:26} already {'enabled' if enable else 'disabled'}")
             continue
 
-        install = off_dir if off_dir.is_dir() and not live_dir.is_dir() else live_dir
+        install = copy_toggle_path(live_dir, off_dir)
         live, off = install / "SKILL.md", install / DISABLED_MARKER
         if not install.is_dir():
             print(f"missing:  {target.name:26} not installed here")

@@ -197,11 +197,18 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       cannot carry safely." An installed-only skill's rows keep the old
       page's "install ⧉", whose command carries "no hub source" and is
       refused by the installer: a fourth small fault ported as it is.
-      Open, outside this pull request: the installer follows links in
-      three cases the reviewer ran, where disable or enable deletes or
-      renames real content, so the panel's "Disable never deletes skill
-      content" does not hold there (put to the Human Owner on 2026-11-25
-      as a pull request of its own; no answer yet); the shell stops on a
+      The review also showed the installer following links in three
+      cases, where disable or enable deleted or renamed real content; the
+      Human Owner asked for it to be hardened (2026-11-25, 「加固安装器」),
+      and on branch `installer-link-guards`, which starts from
+      `step2-skills-hub`, a toggle now refuses in those cases and in two
+      more found on the way (a real folder in `.disabled/`, and a
+      copy-form rename over a file already there), checks every selected
+      location before changing any, and has its first tests, which CI
+      runs ([research-skills-hub/MANAGING-SKILLS.md](research-skills-hub/MANAGING-SKILLS.md),
+      "Disable, precisely"). `install` replacing what is at an install's
+      path and `remove --yes` deleting a copy are as before. Open,
+      outside these pull requests: the shell stops on a
       snapshot of the wrong shape; and macos-x64's timed cases still fail
       now and then (two of the Assets view's on this branch's run of
       `90d5bd5`, on `main`'s code; all eight CI jobs passed at `ff7f174`,

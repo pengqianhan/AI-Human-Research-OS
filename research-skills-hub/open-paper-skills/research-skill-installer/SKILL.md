@@ -94,6 +94,18 @@ Either way disable is per location: turning a skill off in one project leaves
 every other install untouched, and `status` still lists the location, marked
 `disabled`. Running `install` over a disabled location re-enables it.
 
+A link-form toggle replaces nothing but a link, and a copy-form toggle renames
+only inside a real folder and never over a file. A toggle refuses, exiting
+non-zero with one `error: …; nothing was changed.` line, when a link-form
+toggle's destination (`.disabled/<name>` for disable, the live path for
+enable) holds a real folder or file, when a copy-form install is itself a link
+(the rename would land where it points, such as the hub), or when a copy-form
+rename's destination (`SKILL.md` for enable, `SKILL.md.disabled` for disable)
+already exists. `install`, `remove`, `disable`, and `enable`
+all refuse when a selected target's `.disabled` is itself a link. Every
+selected target is checked before any is changed. On a refusal, report the
+path to the human: what sits there is content this script did not place.
+
 ## Workflow
 
 1. Use `list` or `status` first when the skill name or its current state is uncertain.
