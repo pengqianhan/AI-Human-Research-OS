@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
 /** The app's own pages. "workspace" is one project's page. */
-export type TrunkScreen = "home" | "projects" | "skills" | "plugins" | "settings" | "workspace";
+export type TrunkScreen = "home" | "projects" | "plugins" | "settings" | "workspace";
 /** A plugin's left-navigation page, by its key "<plugin>/<page>" (src/plugins/pages.ts). */
 export type PluginScreen = `${string}/${string}`;
 /** The pages the left navigation switches between. */
@@ -26,9 +26,12 @@ export interface LayoutState {
 }
 
 const KEY = "osui.layout.v1";
-const TRUNK_SCREENS: TrunkScreen[] = ["home", "projects", "skills", "plugins", "settings", "workspace"];
-/** Screens saved before a plugin's page replaced them: the Paper wiki page was "wiki" until S4. */
-const RENAMED: ReadonlyMap<string, PluginScreen> = new Map([["wiki", "paper-wiki/viewer"]]);
+const TRUNK_SCREENS: TrunkScreen[] = ["home", "projects", "plugins", "settings", "workspace"];
+/** Screens saved before a plugin's page replaced them: the Paper wiki page was "wiki" until S4, the Skills page "skills" until step 2.5. */
+const RENAMED: ReadonlyMap<string, PluginScreen> = new Map([
+  ["wiki", "paper-wiki/viewer"],
+  ["skills", "skills-hub/skills"],
+]);
 const TRUNK_TABS: ViewTab[] = ["overview"];
 /** Tabs saved before a plugin's project view replaced them: the trunk's placeholder tabs "code" until S6a-2 and "paper" until S6b. */
 const RENAMED_TABS: ReadonlyMap<string, PluginTab> = new Map([

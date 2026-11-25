@@ -1,0 +1,12 @@
+{
+  "contract": "^1.0",
+  "id": "skills-hub",
+  "name": "Skills Hub",
+  "version": "0.1.0",
+  "description": "The research skills hub and where each skill is installed; disable or enable one install.",
+  "reads": ["os-ui/frontend/public/state.json"],
+  "contributes": {
+    "homePanels": [{ "id": "skills", "title": "Skills", "entry": "index.html", "placement": "nav" }],
+    "handlers": ["toggle"]
+  }
+}

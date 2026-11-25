@@ -36,8 +36,17 @@ describe("the saved layout (localStorage osui.layout.v1)", () => {
     assert.equal(readLayout({ screen: "wiki" }, []).screen, "home");
   });
 
+  test('a screen saved as "skills", before step 2.5, opens Skills Hub\'s page; without its plugin, Home', () => {
+    const keys = navKeys();
+    assert.ok(keys.includes("skills-hub/skills"), `the Skills page is loaded: ${JSON.stringify(keys)}`);
+    assert.equal(readLayout({ screen: "skills" }, keys).screen, "skills-hub/skills");
+    assert.equal(readLayout({ screen: "skills-hub/skills" }, keys).screen, "skills-hub/skills");
+    assert.equal(readLayout({ screen: "skills" }, []).screen, "home");
+    assert.equal(readLayout({ screen: "skills" }, ["paper-wiki/viewer"]).screen, "home");
+  });
+
   test("the app's own pages are kept; anything else opens Home", () => {
-    for (const screen of ["home", "projects", "skills", "plugins", "settings", "workspace"]) {
+    for (const screen of ["home", "projects", "plugins", "settings", "workspace"]) {
       assert.equal(readLayout({ screen }, []).screen, screen);
     }
     for (const screen of ["dash", "", 1, null, "constructor", "paper-wiki"]) {

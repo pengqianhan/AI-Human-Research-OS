@@ -2,12 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { OsState } from "../types";
 import { desktop } from "../lib/desktop";
-import { PageHeader } from "../components/PageHeader";
 import { HomePage } from "../pages/HomePage";
 import { ProjectsPage } from "../pages/ProjectsPage";
 import { WorkspacePage } from "../pages/WorkspacePage";
 import { PluginScreen } from "../pages/PluginScreen";
-import { StorePage } from "../pages/StorePage";
 import { PluginsPage } from "../pages/PluginsPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { pluginIcon, usePlugins } from "../plugins/registry";
@@ -22,13 +20,14 @@ import { ToastProvider } from "./Toast";
  * on the right. It replaces the desktop-OS shell in src/desktop/, which is
  * still in the repository but no longer used.
  *
- * A plugin's left-navigation pages (Paper wiki) come from the plugin
- * registry (src/plugins/registry.ts), each a PluginScreen.
+ * A plugin's left-navigation pages (Paper wiki, and Skills since step 2.5)
+ * come from the plugin registry (src/plugins/registry.ts), each a
+ * PluginScreen.
  *
  * A page stays mounted (hidden) once it has been opened, so leaving and
  * coming back keeps a conversation's draft and selected session, a running
- * turn's polling, and the Paper Wiki viewer where it was — as the old
- * windows did when they stood side by side.
+ * turn's polling, the Paper Wiki viewer where it was, and an open skill's
+ * details on Skills — as the old windows did when they stood side by side.
  */
 export function Shell({ state }: { state: OsState }) {
   const { plugins, pages } = usePlugins();
@@ -136,11 +135,6 @@ export function Shell({ state }: { state: OsState }) {
               )
             );
           })}
-          {mounted("skills") && (
-            <Page id="skills" label="Skills" screen={screen}>
-              <SkillsScreen state={state} />
-            </Page>
-          )}
           {mounted("plugins") && (
             <Page id="plugins" label="Plugins" screen={screen}>
               <PluginsPage />
@@ -173,21 +167,5 @@ function Page({ id, label, screen, fill = false, children }: { id: Screen; label
     >
       {children}
     </section>
-  );
-}
-
-/** Skills: the skill store as it works today, under a page header. */
-function SkillsScreen({ state }: { state: OsState }) {
-  return (
-    <div className="page">
-      <PageHeader
-        eyebrow="research-skills-hub/"
-        title="Skills"
-        lede="The research skills hub and where each skill is installed. Installing copies a command for a terminal; the one change made here is disabling or enabling a single install."
-      />
-      <div className="mt-6">
-        <StorePage state={state} />
-      </div>
-    </div>
   );
 }

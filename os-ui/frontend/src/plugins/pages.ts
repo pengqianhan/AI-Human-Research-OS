@@ -70,6 +70,33 @@ export function pluginInfo(manifest: PluginManifest, source: PluginSource): Plug
 }
 
 /**
+ * Left-navigation pages that draw their own top, as the app's own pages do:
+ * the layout shows only their frame, filling the page area, with no host band
+ * or title above it. Skills Hub's Skills page draws today's Skills header
+ * under mockup C's band itself (os-ui/PLUGINS.md Part 4, Q1, top C). Bundled
+ * pages only; every other page keeps the host's band (Paper wiki).
+ */
+export const OWN_TOP: ReadonlySet<string> = new Set(["skills-hub/skills"]);
+
+/**
+ * Left-navigation pages whose frame may write text to the clipboard: the
+ * Skills page's copy buttons. A cross-origin frame needs
+ * allow="clipboard-write" for navigator.clipboard.writeText (Part 4 §5, C0:
+ * refused by the permissions policy without it). Bundled pages only; never
+ * Paper Wiki's, which runs inline script and draws note HTML.
+ */
+export const CLIPBOARD_WRITE: ReadonlySet<string> = new Set(["skills-hub/skills"]);
+
+/** How the layout frames a left-navigation page here: its own top or the host's band, and its frame's `allow`. */
+export function navFrame(page: PluginPage, plugin: PluginInfo): { ownTop: boolean; allow: string | undefined } {
+  const ours = plugin.source === "bundled" && plugin.id === page.plugin && page.src !== null;
+  return {
+    ownTop: ours && OWN_TOP.has(page.key),
+    allow: ours && CLIPBOARD_WRITE.has(page.key) ? "clipboard-write" : undefined,
+  };
+}
+
+/**
  * A project view's frame URL for one project: its `src` with
  * `?project=<folder name>` (or `&project=` when it has a query already), the
  * name encoded, so `+`, `&`, or `#` stay part of it. null where the page has

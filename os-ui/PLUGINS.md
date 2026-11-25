@@ -15,8 +15,233 @@ Status on 2026-11-25:
   view, is built** on branch `step2-skeleton-view`, **2.2, the Assets view**, on
   branch `step2-assets-view`, **2.3, the Idea view**, on branch
   `step2-idea-view`, and **2.4**, `nanochat_cpu`'s `idea_graph.md` and the
-  template's, on branch `step2-idea-graph-files` (all below).
+  template's, on branch `step2-idea-graph-files`; **2.5, the Skills page** (Part
+  4), on branch `step2-skills-hub` (all below).
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.5, the Skills page**, is the bundled plugin
+  [frontend/plugins/skills-hub/](frontend/plugins/skills-hub/), built on branch
+  `step2-skills-hub` from Part 4 as the Human Owner chose it in
+  [mockups/step2/skills.html](mockups/step2/skills.html) (top C, panel 1, the
+  sentence in browsers; Q4 to Q6 at Part 4's defaults), in Part 4 §5's commits
+  C1 to C3 and this note, then fixed after an independent review (below). Its manifest reads one file root, the generator's
+  `os-ui/frontend/public/state.json` (way R of §2.2), and contributes the
+  left-menu page Skills and the handler `toggle`, which is
+  [frontend/server/skillToggle.ts](frontend/server/skillToggle.ts) unchanged,
+  desktop-only. The trunk's Skills page, its menu item, and `/api/skill/toggle`
+  are gone; a layout saved on `skills` opens the plugin's page. `StorePage.tsx`
+  and its components stay in the tree for the old shell until S8; the layout
+  does not use them and the renderer's bundle no longer holds them.
+  - **C0, copying from a framed page** (§2.5): in the client,
+    `navigator.clipboard.writeText` in a cross-origin plugin frame is refused
+    without `allow="clipboard-write"` on its iframe (`NotAllowedError`, the
+    Clipboard API "blocked because of a permissions policy"), and writes with
+    it. So the Skills page's frame alone gets that `allow`
+    ([src/plugins/pages.ts](frontend/src/plugins/pages.ts) `CLIPBOARD_WRITE`,
+    bundled pages only, never Paper wiki's), and Q7 did not arise. The probe, a
+    throwaway script, clicked a button in the Code view's frame on macOS.
+  - **The page** ([site/main.ts](frontend/plugins/skills-hub/site/main.ts),
+    [site/logic.ts](frontend/plugins/skills-hub/site/logic.ts),
+    [site/style.css](frontend/plugins/skills-hub/site/style.css)) is the
+    trunk's page in plain DOM: the same list, filter, commands, and words
+    (`logic.test.ts` checks them against `src/lib/skills.ts`, `StorePage.tsx`,
+    and each component's literals), the app's tokens copied from
+    `src/index.css`, and every Tailwind class the components used written out.
+    The host shows its frame alone (`OWN_TOP` in `pages.ts`), and the page draws
+    mockup C's band, "Skills Hub · bundled plugin — ⟨description⟩", above
+    today's header.
+  - Where the code differs from Part 4 or the mockup:
+    - **F1 as today, unlike the mockup**: after disable or enable, the open
+      panel keeps the old word until it is opened again; the mockup flips it at
+      once. The fix is one line, in `shownSkill` (`main.ts`).
+    - **F2 reaches fewer orphans than §1.7 says.** An orphan the generator
+      finds in the repository's own `.claude/skills` or `.agents/skills` has no
+      `installs` (`generate.py`'s first orphan loop), so its panel offers no
+      toggle. Only an orphan the installer's scan finds in another target (a
+      global or a project folder) has the button that answers "bad collection
+      name: no hub source". The suite's orphan is therefore in a fixture
+      project's `.claude/skills`, not §5's `.claude/skills/e2e-orphan`.
+    - **The panel** is 420 px and never wider than the frame (§8), and its
+      shading covers the frame only (panel 1). It turns visible at once on
+      opening, as in the mockup, so Close takes the focus in the same click;
+      the trunk's drawer focused it after a render.
+    - **The page scrolls in a box of its own** (`.scroller`), under the panel
+      and its shading, as the mockup's inner scroller does, so they cover that
+      box's scrollbar, as today's window-wide drawer covered the page's. The
+      first build let the frame's document scroll; then, on a long list, both
+      stopped 15 px short of the frame's right edge, at the scrollbar (seen
+      after C4 and fixed in a commit of its own; the suite now opens a card
+      from the whole list, scrolled, at both window sizes).
+    - After a toggle answers 200, the page reads the snapshot again at once,
+      then every 5 s.
+    - A card whose words did not change is kept across snapshots, so the
+      focus and the search survive the 5 s reads, and Close gives the focus
+      back to the card by its id (after the review: not by its collection and
+      name, which two skills can share).
+    - **Before its first snapshot** the page shows "Loading…", or one of four
+      lines, each with Try again under it: "No snapshot to show yet.", "The
+      snapshot is too large to read here.", "The snapshot is not readable
+      JSON.", or "The snapshot has no skill list." These words are the page's
+      own; the app shows its own screens first.
+    - **The 5 s read runs while another page shows.** A frame in a hidden page
+      reports `document.hidden` as false, and a probe that counted the page's
+      reads saw two in 12 s on Skills and two in 12 s on Home. So the page reads
+      `state.json` (216 KB on this checkout) beside the app's own read while
+      the window shows, and pauses only when the window is hidden. (The read
+      channel leaves no resource-timing entries, so the probe counted the
+      page's own `fetch` calls.)
+    - The header's words were `Shell.tsx`'s, removed here, so `logic.test.ts`
+      checks them against the mockup, which copied them.
+    - The Plugins page lists Skills Hub as enabled ("Page · Skills", the spark
+      icon, its description); the empty "Bundled · not yet available" heading
+      is hidden, and the note under the cards loses "the rest is the plan".
+    - The registry test's overlap example `skill` uses a fixture trunk now:
+      with `/api/skill/toggle` gone, the id `skill` is free. The dev server
+      answers a POST to `/api/skill/toggle` with Vite's plain 404.
+  - **Security** (§3): only `app://skills-hub` reaches the toggle; the app's
+    own origin, which holds the bridge, now gets 404, and the dev server
+    mounts none. The handler's guards are unchanged (§3.8). `dom.test.ts`
+    pins every attribute, class, method, and property the page's DOM code
+    uses, its two requests, and its two clipboard calls; 19 sink mutants
+    (`innerHTML`, `setHTMLUnsafe`, `classList.add`, `insertRule`, a class, an
+    attribute, a style, or a tooltip from snapshot text, a bracket write, an
+    `<a>`, a third request, `postMessage`, storage, another clipboard call,
+    inline script or style in the markup, a view's `--muted`, `url()` in the
+    style, `innerHTML` in site-kit) each failed it. After the review it also
+    refuses a value typed `any`, a write through a computed member, and the
+    name `fetch` outside the page's two requests, and a plugin's frame can no
+    longer navigate itself to another plugin's origin (notes 3, 7, and 8
+    below).
+  - **The end-to-end suite** clicks the copy-form fixture `e2e-copied`
+    (collection `e2e-copy`) in the copy's own `.claude/skills` and, after the
+    review, one of two fixture projects' copies of `e2e-in-projects`
+    (collection `e2e-projects`), each after checking that its path is inside
+    the copy; the copy's global targets resolve in the suite's throwaway home.
+    No case clicks a symlink-form, global, or glob install, so §5's POSIX
+    repeat on `filetree-simple` is not in the suite. With
+    `OS_CLIENT_E2E_DEREFERENCE=1` the suite copies the workspace as it does on
+    Windows, links replaced by what they point at.
+  - Not built: Part 4 §3.9's hardening (C5).
+  - On the dev server, seen once in a browser: Skills shows the host's band
+    and "This page opens in the desktop app; this copy cannot serve it.", and
+    a POST to `/api/skills-hub/toggle` or `/api/skill/toggle` is 404.
+  - **The independent review** (2026-11-25, at `bdedf32`) found no must-fix,
+    two should-fix, and seven notes, and CI's windows-x64 run of the branch
+    failed one end-to-end case. The fix round, on the same branch:
+    - **CI's red case: two skills with one collection and name were drawn as
+      one card.** On Windows the suite copies the workspace with links
+      replaced by what they point at, so `claude-science-skills`' links in
+      `agents/operon/.claude/skills` became folders the generator also lists:
+      176 skills, 147 distinct collection and name pairs, and 147 cards, which
+      `OS_CLIENT_E2E_DEREFERENCE=1` reproduced on macOS. The page found its
+      cards, the skill a click opens, and the card Close focuses by that pair.
+      Each card now has an id, its collection, its name, and which repeat of
+      them it is (`cardIds` in `logic.ts`); the fixture collection `e2e-twins`
+      repeats a pair on every platform, and each of its three cards opens its
+      own skill and gets its own focus back. The trunk's React page, keyed by
+      the same pair, drew all 173 skills of the dereferenced snapshot on its
+      first draw, and each card opened its own skill, but a search or a pill
+      left stale cards behind: 203 cards for 173 skills (it was built and run
+      at `7560ac1`).
+    - **Should-fix 1, nothing checked which target a project's row sends.**
+      The handler toggles every project's install when a target lacks its
+      `:project` part. A unit case checks that each row sends its own target,
+      and an end-to-end case disables and enables one fixture project's copy
+      of `e2e-in-projects` and checks that the other project's copy never
+      changes. The mutant that sends `target.split(":")[0]` fails both.
+    - **Note 3, another plugin's frame could become a working Skills page**
+      (introduced by 2.5). The reviewer ran `location.href =
+      "app://skills-hub/index.html"` in Paper wiki's frame from the test
+      harness; Paper wiki's area then showed the page, and a click on disable
+      there wrote to disk. The client's navigation guard
+      ([client/src/main/protocol.ts](client/src/main/protocol.ts)
+      `allowedNavigation`, for every plugin) now gives a subframe another
+      plugin's origin only when the app's own page starts the navigation;
+      otherwise the frame stays on the origin it shows. An end-to-end case
+      tries the reviewer's navigation and finds the frame unchanged. The full
+      suite passed with the change.
+    - **Note 4, names went unquoted into the commands the copy buttons put on
+      the clipboard** (carried over). A folder named `e2e-o;echo
+      INJECTED-$(id -u)` gave `... status e2e-o;echo INJECTED-$(id -u)`. The
+      page now offers a command only when every name it carries (a skill's
+      name, its collection, a row's target) matches the toggle endpoint's
+      pattern. Otherwise it shows no command and no copy button, and one line
+      in their place, the page's own words: "No command: a name here has
+      characters a command cannot carry safely." An orphan's rows keep the
+      trunk's "install ⧉" and its command, which carries the page's own
+      label, "no hub source", as the collection, and which the installer's
+      parser refuses: a fourth small fault, ported as it is (Q4's three are
+      too). The label is the page's, not a name, so it is not tested; only a
+      name (a skill's or a hub collection's) or a target outside the pattern
+      withholds a command, so the orphan `e2e-o;echo INJECTED-$(id -u)` still
+      has none anywhere. `src/lib/skills.ts` is unchanged, and
+      `logic.test.ts` states each divergence from it.
+    - **Note 5, bidi and other invisible characters were drawn raw** (carried
+      over). Text drawn from the snapshot and from the endpoint's refusal now
+      passes through site-kit's `markInvisible`, so U+202E shows as
+      "⟨U+202E⟩". The search, the commands, and the toggle's body use the text
+      as written.
+    - **Notes 7 and 8, tests that could not fail.** `dom.test.ts` let through
+      a write of snapshot text to `innerHTML` by a computed member of a value
+      typed `any` (`n[k] = view.name`, `k = "inn" + "erHTML"`), and a third
+      request through `const send = fetch`; both now fail it (above). Two behaviours were not tested: a failed read after a good
+      one keeps the list, and the 5 s read pauses while the window is hidden.
+      Both are now checked end to end, through a `fetch` wrapped in the frame
+      that counts and answers the page's reads, so each case fails if the
+      behaviour is removed. The hidden window is `document.hidden` set in the
+      frame; the window itself is not hidden. The case "another plugin's frame
+      cannot reach it" sent only a no-cors text POST, which the 415 rule
+      refuses before the origin matters. It now also sends, from Paper wiki's
+      frame, a JSON POST and a no-cors `Blob` typed `application/json`. First,
+      a same-origin control sends the same body and toggles the install off
+      and on; the case then waits three times as long and fails if the install
+      changed. A mutant that lets Paper wiki's page connect to `app:` on a
+      CORS-enabled scheme fails it. All three requests are stopped in the
+      frame by Paper wiki's `connect-src 'self'`, before CORS would apply.
+    - What else the review found changed no code. Should-fix 2 (the installer
+      follows links, carried over) and note 6 (toggles are neither queued nor
+      timed out, carried over) are in the limits below; note 9 was this
+      document (the line on Try again above is corrected, and
+      [HANDOFF.md](../HANDOFF.md) is brought up to date). The reviewer also
+      ran the checklist's symlink-form toggle in a copy of the workspace on
+      macOS, and each sentence of that step held.
+  - **Limits** (recorded after the review; none is changed here):
+    - The installer deletes or rewrites content through links, in three cases
+      the reviewer ran. A `.disabled` that is a link to a folder: disable
+      removed a real file under it. A real folder at an install's path with
+      the link in `.disabled/`: enable deleted the folder's file. A copy-form
+      skill installed as a link into the hub: disable renamed the hub's own
+      `SKILL.md`. So the panel's sentence "Disable never deletes skill
+      content" does not hold in those cases. The installer is a hub skill and
+      is not changed here.
+    - A second toggle can be sent while the first runs, and there is no
+      timeout, as on the trunk's page.
+    - The endpoint accepts a target without its project part, and then toggles
+      every project's install; `-h` as a value, and answers the installer's
+      help text; and `enable: "false"`, which it takes as true. The trunk's
+      endpoint did the same.
+    - The app's own shell reads the snapshot without checking its shape
+      (`state.projects.find` in
+      [frontend/src/shell/Shell.tsx](frontend/src/shell/Shell.tsx), as on
+      `main`). With a snapshot of `{}` the fix round's rerun of the reviewer's
+      probes saw the shell stop on a TypeError and every frame go, where the
+      review had seen the page's line "The snapshot has no skill list."; why
+      the two runs differ was not investigated. So that line is shown only
+      while the shell still has a snapshot it can draw.
+    - The navigation guard's rule rests on what Electron reports for a
+      navigation (the frame's URL and the initiating frame's), observed on
+      macOS; CI's full end-to-end runs on linux-x64 and windows-x64 are its
+      check there (the linux-arm64 and windows-arm64 jobs run a few named
+      cases only, so they check nothing of this).
+      Whether a note's own content can start such a navigation in Paper wiki's
+      frame was not tested: the reviewer's and the suite's navigation are both
+      run by evaluation from the test.
+  - Not verified: Windows and Linux after the fix round beyond CI (the fix
+    round's suite ran on macOS arm64, once with the copy made as on Windows);
+    a symlink-form toggle in the installed app (the reviewer ran it in a copy,
+    above; the suite does not); the static build's Skills page
+    (`pages.test.ts` pins that it has no frame URL there, as on the dev
+    server); and the Human Owner's checklist line.
 
 - **2.4, the idea files** (§6 "2.4"), on branch `step2-idea-graph-files`, which
   starts from `step2-idea-view`. No code changed.
@@ -1395,6 +1620,13 @@ Status on 2026-11-25:
     S6a-2 above) and its own log.
 - **Waiting on the Human Owner:** whether a third-party plugin may add a
   left-navigation item (Part 1, Q-PO1).
+- **2.5, the Skills page as a plugin: designed, chosen, and built** (above).
+  Part 4, written on 2026-11-25, finds that the Skills page cannot move into a
+  plugin with no visible change: its details panel is drawn over the whole
+  window, and a framed page draws only inside its frame. The Human Owner chose
+  the same day from [mockups/step2/skills.html](mockups/step2/skills.html): top
+  C, panel 1, and for Q2 the sentence in browsers ([HANDOFF.md](../HANDOFF.md)
+  Decisions, "Skills page as a plugin"); Q4 to Q6 keep Part 4's defaults.
 
 ---
 
@@ -2811,3 +3043,1009 @@ Still open from Part 1: Q-PO1. It blocks only 2.6.
 9. **The acceptance on `nanochat_cpu`** (`HANDOFF.md:80-82`) can show only the
    Idea view's empty state until 2.4 lands, and 2.4 waits for I-1
    (`HANDOFF.md:610`). This is a dependency, not a contradiction.
+
+---
+
+# Part 4. Step 2.5: the Skills page as the bundled plugin `skills-hub`
+
+Read-only design, written 2026-11-25 against branch `step2-idea-graph-files` at commit
+`c402c00`. Nothing in the repository was changed, built, or run. Paths are relative to
+the repository root, and `path:line` refers to that commit. "Shown" means the code or a
+document says it. "Proposed" means this design chooses it.
+
+## 0. Outcome
+
+- **No contract change.** Contract 1.0 as built carries the step:
+  - the page reads the skill list through its read channel, with a file root
+    `reads: ["os-ui/frontend/public/state.json"]`. File roots are built and tested
+    (`os-ui/client/test/protocol.test.ts:1538`, "a file root");
+  - it toggles through a bundled handler `toggle` on its own origin, as Part 1 §4 names
+    it (`os-ui/PLUGINS.md:1606`).
+- **Not zero visible change.** One fact decides it. A framed page draws only inside its
+  iframe's box (`os-ui/frontend/src/pages/PluginScreen.tsx:53`). Today's skill panel and
+  its shading are `position: fixed` over the whole window, left menu included
+  (`os-ui/frontend/src/components/SkillDrawer.tsx:65-77`).
+  - That the shading covers the left menu is read from the CSS: no ancestor
+    transforms, and the menu has no z-index. It was not seen running.
+  - Putting the panel and shading back over the left menu would need a page-to-host
+    message, and contract 1.0 has only `os.select`
+    (`os-ui/frontend/src/plugins/select.ts:8-9`).
+  - Two more differences can be avoided only by host changes:
+    - the host's top for plugin pages (`PluginScreen.tsx:13-31`);
+    - browser builds, where the page has no frame URL
+      (`os-ui/frontend/src/plugins/pages.ts:96`).
+- **Questions.** Six questions for the Human Owner, plus one that applies only if a probe
+  fails (§4.2).
+  - Defaults are "as today" wherever today can be kept, so if nothing is answered:
+    - on the desktop the Skills page looks and behaves as today, faults included;
+    - the panel's shading stops at the Skills area (cannot be kept);
+    - in browser builds the page says it opens in the desktop app. This is the one
+      default that is not "as today"; Q2 says why.
+  - This design also recommends two opt-ins: mockup C's one-line "bundled plugin" band
+    (Q1, option C), and fixing three small faults (Q4).
+- **Build.** Four commits in one pull request, an optional fifth for hardening that no
+  user can see, and one probe first (§5).
+
+## 1. Today, exactly (shown)
+
+### 1.1 Files
+
+| Role | File |
+|---|---|
+| The page in the layout | `os-ui/frontend/src/shell/Shell.tsx:139-143` (mounted once visited, `:76`), `SkillsScreen` at `:179-193` |
+| Left-menu item | `os-ui/frontend/src/shell/Sidebar.tsx:62` (`spark` icon), after the plugins' items `:59-61`, before Plugins `:63` |
+| Store body | `os-ui/frontend/src/pages/StorePage.tsx` |
+| Card, badge | `os-ui/frontend/src/components/SkillCard.tsx`, `SyncBadge.tsx`, `Badge.tsx` |
+| Panel ("drawer") | `os-ui/frontend/src/components/SkillDrawer.tsx` |
+| Installs and the toggle | `os-ui/frontend/src/components/SkillInstalls.tsx` |
+| Flattening, commands | `os-ui/frontend/src/lib/skills.ts` |
+| Live/static switch | `os-ui/frontend/src/lib/mode.ts:13` (`LIVE = import.meta.env.DEV \|\| DESKTOP`) |
+| Data types | `os-ui/frontend/src/types.ts:156-232` |
+| Endpoint | `os-ui/frontend/server/skillToggle.ts`; mounted as a trunk mount in `os-ui/frontend/server/api.ts:20-24` |
+| What it runs | `research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py` (`enable`/`disable`, `:496-557`), targets in `.../assets/targets.toml` |
+| Also importing `StorePage` | the unused dock shell `os-ui/frontend/src/desktop/apps.tsx:5` (deleted in S8, `os-ui/PLUGINS.md:1649`) |
+
+### 1.2 Where the data comes from
+
+- The generator writes `<workspace>/os-ui/frontend/public/state.json`. It writes a
+  sibling file and renames it into place, so a reader never sees half a file
+  (`os-ui/generator/generate.py:1093-1108`). The skill list is its `store`: collections,
+  orphans, and targets (`generate.py:972-990`; types `types.ts:156-232`).
+- The app reads `./state.json`:
+  - every 5 s, paused while the window is hidden;
+  - again when the window shows;
+  - at once when the desktop client announces a finished run;
+  - after a good load, a failed poll keeps the last good snapshot
+    (`os-ui/frontend/src/useOsState.ts:5-87`).
+- Where `./state.json` comes from:
+  - dev server and static build: the file in `public/`;
+  - desktop: `app://research-os/state.json`, served from the workspace
+    (`os-ui/client/src/main/protocol.ts:287-290`).
+- Before the first good load the whole app shows "Loading…" or the missing-snapshot
+  page (`os-ui/frontend/src/App.tsx:12-22`). The Skills page therefore never shows a
+  missing snapshot itself.
+
+### 1.3 What it shows
+
+| Element | Rule | Where |
+|---|---|---|
+| Top | eyebrow `research-skills-hub/`; title `Skills` (serif 31 px); lede "The research skills hub and where each skill is installed. Installing copies a command for a terminal; the one change made here is disabling or enabling a single install." | `Shell.tsx:182-187`, `PageHeader.tsx:8-20`, `index.css:139-159` |
+| Column | centred, at most 1,080 px, padding 30/40/64 px; the whole page (top included) scrolls; the page section takes focus (tab stop) so arrow keys scroll it | `index.css:162-166`, `Shell.tsx:165-176` |
+| Filter pills | "All · N" (N counts orphans too), one per collection in snapshot order, then "no hub source", always shown; one pressed (`aria-pressed`); group label "Filter by collection" | `StorePage.tsx:48-84` |
+| Search | `type=search`, placeholder "Search skills...", label "Search skills", 240 px, at the right | `StorePage.tsx:86-93` |
+| Empty result | "No matching skills." | `StorePage.tsx:96-97` |
+| Grid | columns of at least 250 px, gap 14 px; collections' skills in snapshot order, then orphans | `StorePage.tsx:99-107`, `skills.ts:52-58` |
+| Card | name (serif 16.5 px, breaks anywhere); sync badge; description cut at 2 lines; pills for collection, license or "unknown (see upstream)", and "has scripts/ · inspect first"; rises on hover | `SkillCard.tsx:10-37` |
+| Sync badge | "installed · synced" (green), "installed · drift ⚠" (amber), "not installed" (grey), "installed · no hub source ⚠" (amber) | `SyncBadge.tsx:4-16`, `Badge.tsx:5-10` |
+| Panel | 420 px from the right, the window's full height, slides in 220 ms; the window's full width when the window is at most 900 px wide; a shading over the whole window; `role=dialog`, `aria-modal`, label "Skill details" | `SkillDrawer.tsx:65-82` |
+| Panel content | Close; name; "Research-skills-hub / ⟨collection⟩"; Description; Installs; "license / upstream"; Scripts ("Has scripts/ - inspect them before installation" or "No scripts; documentation-only skill"); the command; a copy button; a four-sentence note | `SkillDrawer.tsx:83-138` |
+| Command | `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install <name> --collection <collection>`; for an orphan, `... status <name>` | `skills.ts:61-72` |
+| Installs head | "⟨form⟩ → hub" or "form unknown"; "N of M installed" | `SkillInstalls.tsx:74-79` |
+| Installs rows | scopes `repo`, `global`, `project` in that order (another scope is not shown); per target a dot (hollow: not installed, green: ok, amber: not ok), the name, the display path; under the group, "⟨target⟩: ⟨detail⟩" for each not-ok install | `SkillInstalls.tsx:12`, `:81-160` |
+| No targets | "Install locations are unavailable: the generator could not load research-skill-installer." | `SkillInstalls.tsx:32-39` |
+| Live note | "Disable never deletes skill content: …" (live builds only) | `SkillInstalls.tsx:163-169` |
+
+There is no "Read-only" badge on this page. The only one is the lock in a project's tab
+row (`os-ui/frontend/src/pages/WorkspacePage.tsx:293-296`). The app has light colours
+only: `index.css:18-80` defines one palette, with no `prefers-color-scheme` rule.
+Fonts are system fonts (`index.css:62-65`).
+
+### 1.4 What it does
+
+| Action | Rule | Where |
+|---|---|---|
+| Choose a collection, search | client-side filter: the collection, then the trimmed, lower-cased query as a substring of the name or description | `StorePage.tsx:29-39` |
+| Open a card | click, or Enter/Space on the card button; the panel opens and focus moves to Close | `StorePage.tsx:41-44`, `SkillDrawer.tsx:26-31` |
+| Close the panel | Close or a click on the shading closes it and returns focus to the card; Escape closes it **without** returning focus | `SkillDrawer.tsx:33-48`, `:65-71` |
+| Copy the command | `navigator.clipboard.writeText`; label "Copied ✓" or "Copy failed - select the command manually" for 1.6 s | `SkillDrawer.tsx:50-61`, `skills.ts:74-76` |
+| Disable or enable | Shown only where installed, in live builds. The label is "disable" when enabled and "enable" when disabled (`aria-pressed` = enabled). A click sends `POST /api/skill/toggle` `{skill, collection, target, enable}`, with `enable` = the install's `disabled`. The button reads "working..." and is disabled until the response arrives. On failure: the response's `error`, "toggle failed", or the exception text, in amber | `SkillInstalls.tsx:44-60`, `:122-131`, `:162` |
+| "install ⧉" | where not installed, in live builds; copies `... install <name> --collection <c> --target <t>`; "copied ✓" for 1.6 s; on failure "clipboard unavailable - copy the command manually" | `SkillInstalls.tsx:62-70`, `:132-145`, `skills.ts:79-84` |
+| Nothing else | no install, remove, or edit; no link leaves the page | `SkillDrawer.tsx:133-138`; `HANDOFF.md:421` |
+
+The left menu is the only way in: no Home card, Quick-access entry, or other page links
+to Skills (grep of `os-ui/frontend/src`). The app has no URL routing and no history
+entries. The open page is remembered in `localStorage` key `osui.layout.v1`
+(`os-ui/frontend/src/shell/layoutState.ts:28`, `:73-89`), so reopening the app returns
+to Skills (`TRUNK_SCREENS`, `:29`).
+
+### 1.5 States by build
+
+| Build | What the Skills page does |
+|---|---|
+| Desktop client | live (`DESKTOP`); posts to `app://research-os/api/skill/toggle` |
+| Dev server (`start.sh`) | live (`import.meta.env.DEV`); posts to the dev server's `/api/skill/toggle` |
+| Static build, the Pages copy | `LIVE` false: installed rows show the word "enabled" or "disabled", with no button, no "install ⧉", and no live note (`SkillInstalls.tsx:115-121`, `:163`); the left menu says "Public snapshot · view only" (`os-ui/frontend/src/shell/SnapshotStatus.tsx:12`) |
+
+### 1.6 `/api/skill/toggle` (`os-ui/frontend/server/skillToggle.ts`)
+
+- **Accepts:** `POST` only, else 405 `{error: "POST only"}` (`:27`). A JSON body with
+  `skill`, `target`, optional `collection`, and `enable` taken by truthiness (`:29-33`).
+- **Refuses (400):** a `skill`, `target`, or non-empty `collection` that does not match
+  `^[A-Za-z0-9._:-]+$` (`:7`, `:35-39`).
+- **Does:**
+  - runs `<python> install_research_skill.py enable|disable <skill> --target <target>
+    [--collection <c>]` in the repository root, without a shell (`:41-50`;
+    `os-ui/frontend/server/process.ts:112`);
+  - when the installer exits non-zero: 500 with its stderr or stdout, uncut, and no
+    regeneration (`:51-53`);
+  - otherwise it regenerates the snapshot and answers 200
+    `{ok: true, output, snapshotError}`, where `snapshotError` is null or the
+    generator's error (`:55-66`);
+  - any exception: 500 (`:67-69`);
+  - in the client, regeneration goes through the serialized generator and resolves
+    after a run that started after the call (`os-ui/client/src/main/index.ts:163-166`,
+    `generator.ts:30-44`). So on 200 with `snapshotError: null`, `state.json` already
+    reflects the change;
+  - on the dev server it runs `generate.py` directly, with no queue or timeout
+    (`os-ui/frontend/server/dev.ts:28-33`).
+- **What the installer does** (`install_research_skill.py:496-557`):
+  - The skill must be a hub skill (`resolve_source`, `:178-191`). The target must be a
+    row of `targets.toml` (`select_targets`, `:129-146`).
+  - A glob row's bare name, such as `project-claude`, selects **every** expanded
+    `project-claude:<project>` (`:138`).
+  - Paths are checked against the target table (`ensure_safe`, `:206-214`).
+  - Symlink form: disable recreates the link in `<target>/.disabled/<name>` and
+    removes the live one; enable does the reverse (`:518-541`).
+  - Copy form: renames `SKILL.md` ↔ `SKILL.md.disabled` (`:544-557`).
+  - "not installed here" and "already …" exit 0, so they answer 200 with no change.
+- **Transport:**
+  - client: on `app://research-os` only, 503 with no folder, 404, then 415 for a
+    non-JSON write, then 401 for token mounts (`protocol.ts:647-663`);
+  - dev server: no 415, and any body is parsed as JSON
+    (`os-ui/frontend/server/node.ts:11-15`; `devServer.test.ts:79` posts a `text/plain`
+    body and reaches the handler's 400).
+
+### 1.7 Faults in today's page (found while reading)
+
+- **F1. The open panel does not update after a toggle.**
+  - `StorePage` keeps the skill object captured when the card was clicked
+    (`StorePage.tsx:26`, `:43`, `:111`). A new snapshot replaces the list (`:18`) but
+    not that object.
+  - So after "disable" succeeds, the row goes from "working..." back to "disable"
+    (`SkillInstalls.tsx:57-59`, `:130`) until the panel is closed and reopened. The card
+    behind the shading updates.
+  - The comment at `SkillInstalls.tsx:23-25` says the row shows "working..." until the
+    poll brings the new snapshot. The code does not do that.
+- **F2. Orphans' buttons always fail.**
+  - An orphan's collection is the label `no hub source` (`skills.ts:23`, `:42`), and the
+    toggle sends it (`SkillInstalls.tsx:51`). The space fails `SAFE`, so every click
+    answers 400 "bad collection name: no hub source".
+  - Without a collection the installer still refuses, because a skill with no hub
+    source has no source (`install_research_skill.py:178-191`, `:513`).
+- **F3. Escape loses the focus.** It closes the panel through `onClose`
+  (`SkillDrawer.tsx:35-39`). Only Close and the shading call `handleClose`, which
+  returns focus to the card (`:44-48`). The header comment (`:15-18`) promises both.
+
+### 1.8 What pins it today
+
+- `os-ui/frontend/server/skillToggle.test.ts:14-68`: the handler's rules (405, unsafe
+  names, argv, regeneration, its failure, installer failure).
+- Mount lists:
+  - `os-ui/frontend/server/api.test.ts:21-31` (the dev server's four endpoints);
+  - `registry.test.ts:63-72` (id `skill` overlaps `/api/skill/toggle`), `:112-120`,
+    `:226-227`;
+  - `devServer.test.ts:77-81` (the toggle answers its 400 without a token);
+  - `os-ui/client/test/protocol.test.ts:178-191` (trunk equals `TRUNK_MOUNTS`), and
+    `:685` (`app://paper-wiki/api/skill/toggle` is 404);
+  - fixture mounts named `/api/skill/toggle` at `:342`, `:409`, `:420`, `:442-444`,
+    `:450`, `:464`. They are fakes and need no change.
+- The end-to-end suite only probes the endpoint: `os-ui/client/e2e/app.test.ts:3282`
+  (`text/plain` gives 415). **No test opens the Skills page or clicks a toggle.**
+- Layout: `os-ui/frontend/src/shell/layoutState.test.ts:39-46` (`skills` is a kept
+  trunk screen).
+- Checklist: `os-ui/client/README.md:251`, "**Skills**: a disable/enable toggle works and
+  the store updates."
+
+## 2. Can contract 1.0 carry it?
+
+### 2.1 Needs, one by one
+
+| Need | How | As built? |
+|---|---|---|
+| A left-menu page titled "Skills" | `contributes.homePanels: [{id: "skills", title: "Skills", entry: "index.html", placement: "nav"}]` | yes: `placement: "nav"` for bundled plugins (`os-ui/frontend/server/manifest.ts:253-264`); Paper Wiki uses it |
+| Same menu place | Plugin items render between Projects and the trunk items (`Sidebar.tsx:57-63`) in `BUNDLED_IDS` order (`os-ui/frontend/plugins/bundled.ts:7`). Appending `skills-hub` gives Home, Projects, Paper wiki, Skills, Plugins | yes |
+| Same icon | `ICONS` maps a bundled id to an icon (`os-ui/frontend/src/plugins/registry.ts:36-43`); add `["skills-hub", "spark"]` | host change, one line |
+| The skill list | read channel `./_os/files?path=os-ui/frontend/public/state.json` (`site-kit.ts:101`) with that file as a `reads` root (§2.2) | yes: file roots (`protocol.ts:554-620`; tests `protocol.test.ts:1538`) |
+| The toggle | `contributes.handlers: ["toggle"]`, factory `"skills-hub/toggle": skillToggleApi` in `BUNDLED_HANDLERS`; the page posts JSON to `/api/skills-hub/toggle` | yes: `manifest.ts:271-279`, `registry.ts:160-171`, `protocol.ts:314-316`, `:647-663`; `skillToggle.ts` unchanged |
+| The result | the POST's JSON, then a re-read of `state.json` (§2.3) | yes |
+| Freshness | the page re-reads `state.json` every 5 s, as the app does | yes, page code only |
+| Its own CSS | `site/style.css` under `PLUGIN_CSP` (`script-src 'self'; style-src 'self'`, `protocol.ts:107-116`) | yes; framed pages get no app styles (`PLUGINS.md:1673`, Risk 5), so the tokens are copied |
+| Copying text | `navigator.clipboard.writeText` inside `app://skills-hub` | **not established** (§2.5) |
+| A message to the host | none needed: no selection, no navigation, no link out, no theme | — |
+| Saved layout `skills` | `RENAMED` gains `["skills", "skills-hub/skills"]` (`layoutState.ts:31`), as `wiki` was renamed | host change, one line |
+
+### 2.2 The skill list: two ways (proposed: R)
+
+- **R. A file root in `reads`: `["os-ui/frontend/public/state.json"]`.**
+  - The manifest parser accepts it (`manifest.ts:162-183`, `:225`). The channel serves
+    a file root by GET and HEAD and answers 404 for anything below, beside, or a listing
+    (`protocol.ts:554-620`, pinned at `protocol.test.ts:1538`).
+  - A link planted at that path is 404 unless it leads to the same declared root
+    (`declaredRoot`, `protocol.ts:410-414`). The file is read in 64 KiB chunks, with a
+    cap of 32 MiB (`:131`, `:595`) and 16 open files per origin (`:145`).
+  - **Cost:** no host code. The page can read the whole snapshot, not only `store`. That
+    includes projects, governance, and activity, and the absolute paths of install
+    targets in the home folder (`generate.py:976-982`). The app already shows all of it.
+    No key or token is in it (a grep of `generate.py` for `.env`, `token`, `secret`,
+    and `private` finds nothing).
+  - The page depends on the snapshot's location, which the trunk also hard-codes
+    (`protocol.ts:289`, `generate.py:1094`).
+- **H. A second handler, for example `store`, answering `GET` with `{generated_at, store}`.**
+  - It reads `<repoRoot>/os-ui/frontend/public/state.json` on the host.
+  - **Cost:** about 40 lines of new host code with tests: a size cap, a missing file,
+    bad JSON, a link at that path. It is new endpoint code on an origin with no token.
+  - It would be a third place that knows the path.
+  - **Benefit:** least privilege. The page gets only the skill list.
+- Neither works on the dev server: it serves no read channel (A3, `PLUGINS.md:1656`),
+  and the page has no frame there anyway (§4, Q2).
+- **Proposed: R.** It adds no host code and reuses the most-tested part of the boundary,
+  and everything it exposes is already on the app's own pages. Choose H if least
+  privilege is wanted. The page code changes in one function.
+
+### 2.3 Calling the toggle and learning the result
+
+- The page sends
+  `fetch("/api/skills-hub/toggle", {method: "POST", headers: {"Content-Type": "application/json"}, body})`
+  with the same four fields as today.
+- **Where it is routed:**
+  - only `app://skills-hub` reaches `/api/skills-hub/...` (`protocol.ts:314-316`,
+    `mountsFor` `:693-696`);
+  - `PLUGIN_CSP`'s `connect-src 'self'` allows it.
+- **How the page learns the result:**
+  - on 200 the snapshot is already regenerated (§1.6), so the page re-reads `state.json`
+    at once, then keeps its 5 s poll;
+  - on an error it shows `error`, "toggle failed", or the exception text, as today;
+  - every error answer on that origin is JSON: 503 with no folder, 404 for a drifted
+    registry, 405, 415, 400, 500 (`protocol.ts:647-663`).
+- `snapshotError` on a 200 is ignored today and stays ignored (§4.1).
+
+### 2.4 What the page does not need
+
+- No `os.select` and no new page-to-host message.
+- No navigation to another app page; nothing on the page links elsewhere today
+  (§1.4).
+- No theme from the host: light only, system fonts.
+- No bridge, no token, no storage.
+- The host need not tell the page of a new snapshot. A 5 s poll matches today. A push
+  would be contract growth and is not proposed.
+
+### 2.5 Copying from inside the frame (not established)
+
+- No plugin page copies anything today: no `clipboard` in `os-ui/frontend/plugins`
+  except vendored PDF.js.
+- The client allows `clipboard-sanitized-write` for every frame
+  (`os-ui/client/src/main/index.ts:461-466`).
+- The iframe has no `allow` attribute (`PluginScreen.tsx:53`). Whether Chromium's
+  permissions policy blocks `navigator.clipboard.writeText` in a cross-origin frame
+  without `allow="clipboard-write"` was not tried.
+- **Proposed:** the builder checks this first (§5, C0).
+  - If it fails, add `allow="clipboard-write"` to this page's frame only (host change,
+    a few lines in `PluginScreen.tsx`, keyed like the top switch in §2.6).
+  - Not for Paper Wiki's frame. It runs inline script and renders note HTML
+    (`protocol.ts:89-98`), so a note could write to the clipboard.
+  - If even that fails, Q7 applies.
+
+### 2.6 Host changes, size and risk
+
+| Change | Files | Size | Risk to other plugins |
+|---|---|---|---|
+| Register the plugin, its handler, desktop-only | `bundled.ts:7`, `pluginHandlers.ts:15-18`, `:27` | 3 lines | `BUNDLED_IDS` order is the policy's `frame-src` order; the pinned literal `protocol.test.ts:215` changes. Nothing else |
+| Drop the trunk mount | `api.ts:20-24` | 2 lines | none; any origin then gets 404 for `/api/skill/toggle` |
+| Icon | `src/plugins/registry.ts:36-43` | 1 line | none |
+| Saved layout | `layoutState.ts:4`, `:29`, `:31` | 3 lines | none |
+| The trunk page out | `Shell.tsx:5`, `:10`, `:139-143`, `:179-193`; `Sidebar.tsx:62`, comment `:24-30` | about 25 lines removed | none |
+| A page that draws its own top (Q1, options B and C) | `src/plugins/pages.ts`: `export const OWN_TOP: ReadonlySet<string> = new Set(["skills-hub/skills"])`; `PluginScreen.tsx`: when `page.src !== null`, the plugin is bundled, and its key is in `OWN_TOP`, render only `PluginFrame` filling the section | about 10 lines and a test | none: keyed by page key, bundled only. Paper Wiki keeps its band; a test should say so |
+| Clipboard for this frame (if C0 needs it) | `PluginScreen.tsx` | about 3 lines | none if keyed as above |
+| Plugins page (Q5) | `PluginsPage.tsx:27-35`, `:78-84` | about 10 lines | none |
+
+`StorePage.tsx` and the components it uses stay, unused by the layout, because
+`src/desktop/apps.tsx:5` imports `StorePage` and `tsc` checks all of `src`
+(`os-ui/frontend/tsconfig.json`, `"include": ["src", …]`). Deleting them before S8
+breaks `npm run build`. S8 deletes them with the dock shell.
+
+### 2.7 The contract
+
+- Nothing changes. The manifest uses `reads` (a file root), `contributes.homePanels`
+  with `placement: "nav"`, and `contributes.handlers`, all in 1.0.
+- Freezing the contract at 2.6 (A1, `PLUGINS.md:1654`) adds no third-party promise for
+  this plugin. It is bundled, so its `reads` and handlers can change later without a
+  minor version.
+- Step 3's split may move `state.json` out of the workspace. Then this manifest's
+  `reads` line changes, together with the trunk's route at `protocol.ts:287-290`.
+
+## 3. Security
+
+### 3.1 Desktop client (shown, and what the move changes)
+
+- **Who can call the toggle after the move:** only a request on `app://skills-hub` for
+  `/api/skills-hub/toggle`. Every other host's `api/` routing does not reach it:
+  - the app's origin gets 404 (`mountsFor`);
+  - another plugin's origin gets a plain 404 (`protocol.ts:314-320`).
+- **Before the move**, the app's own origin, which runs the renderer and holds the
+  bridge, could call it. After it, the app origin cannot, which narrows the surface.
+- **Writes must be `application/json`** (`protocol.ts:652-655`). A form, or a
+  `no-cors` fetch from another origin, cannot send that type, so it gets 415.
+- **The scheme is not CORS-enabled** (`index.ts:59-61`; `client/DESIGN.md` §3.2), so a
+  cross-origin JSON POST fails its preflight.
+- **The token never reaches a plugin frame** (`index.ts:44-49`, preload
+  `os-ui/client/src/preload/index.ts:20-33`). Plugin handlers are always `token: false`
+  (`registry.ts:164-169`).
+- **Navigation** (`protocol.ts:176-179`):
+  - any plugin frame may navigate itself to another plugin's pages, so a Paper Wiki note
+    could load `app://skills-hub/index.html` in the wiki's frame;
+  - that runs only this page's own code, and a click there still needs the user;
+  - neither `PLUGIN_CSP` nor `WORKSPACE_CSP` lets a page frame another (`frame-src 'none'`)
+    or post a form (`form-action 'none'`), so no page can overlay or drive it.
+- **What the page itself can read:** with R, only `state.json` (§2.2); with H, nothing
+  through the channel.
+- **Untrusted text:** skill names, descriptions, and licences come from `SKILL.md` files,
+  including third-party collected skills. The page must put them on screen as text only.
+  The other sites' source checks (`skeleton-view/site/dom.test.ts`, no HTML sink,
+  `href`, `src`, or `style` set from code) apply unchanged.
+
+### 3.2 Dev server
+
+- **Shown:** the dev server mounts the trunk's toggle with no token (`api-plugin.ts:51-60`).
+  It accepts any body type (`node.ts:11-15`).
+- On the server side, then, a "simple" cross-site `POST text/plain` to
+  `http://localhost:5173/api/skill/toggle`, which needs no CORS preflight, toggles a
+  skill. `devServer.test.ts:79` shows such a body reaching the handler. Anyone with the
+  tunnel URL can send one; `os-ui/README.md:172` names only the tunnel.
+- Whether a web page in the same browser can send one to localhost depends on the
+  browser's rules for public pages reaching local addresses (Chromium's private or
+  local network access checks). Those rules were not read or tried (§7). A page served
+  from another local port is not subject to them.
+- **Proposed (Q2 default):** declare `skills-hub/toggle` desktop-only, so the dev server
+  mounts nothing for skills, as for `code-view/git`. That means
+  `DESKTOP_ONLY_HANDLERS` (`pluginHandlers.ts:27`), passed as `skip` (`api-plugin.ts:54`).
+- The page has no frame URL in a browser anyway (`pages.ts:96`). This closes the
+  exposure.
+- If Q2's alternative is chosen, the exposure stays as today unless the dev server
+  gains the client's 415 rule (`node.ts`, about 5 lines). That would also cover Paper
+  Wiki's status, so its viewer's POST, which already sends JSON, must be checked.
+
+### 3.3 Other origins and plugins
+
+- **Can:** load `app://skills-hub/index.html` as a navigation (above), which shows the
+  page and does nothing else.
+- **Cannot:**
+  - reach `/api/skills-hub/...` from their own origin (404);
+  - send a JSON POST across origins (no CORS);
+  - send a form (415, and `form-action 'none'`);
+  - read the page's DOM (cross-origin);
+  - get the token.
+- **The app's own origin cannot call it either** after C3 (404). Before, it could.
+
+### 3.4 What the toggle may touch
+
+- **Names** (`skillToggle.ts:7`):
+  - letters, digits, and `.`, `_`, `:`, `-`;
+  - no `/`, space, `=`, or quote;
+  - a leading `-` and `..` pass the pattern.
+- **Option-like values are stopped by argparse and the installer, not by the handler.**
+  These outcomes are read from the parser's definition (`install_research_skill.py:563-612`),
+  not run:
+  - a `skill` such as `--all-targets` leaves the required `skill` missing (exit 2,
+    500);
+  - a `target` or `collection` such as `--dry-run` leaves `--target`/`--collection`
+    without its argument (exit 2);
+  - `-h` prints help and exits 0. That is a 200 with help text and a regeneration,
+    which is harmless;
+  - `..` matches no hub skill, target, or collection (`resolve_source :178-191`,
+    `select_targets :129-146`).
+- **Paths:** only `<target>/<name>` and `<target>/.disabled/<name>`
+  (`install_paths :244-257`), for targets in `targets.toml`:
+  - the repository's `.claude/skills` and `.agents/skills`;
+  - `~/.claude/skills`, `~/.codex/skills`, `~/.agents/skills`;
+  - each project's `.claude/skills` and `.agents/skills`.
+- **The parent must resolve to a target or its `.disabled`** (`ensure_safe :206-214`).
+  Global targets are outside the workspace, so the toggle writes in the home folder.
+  That is unchanged by the move.
+- **One request may toggle many locations:** `project-claude` without `:<project>`
+  selects every project (`:138`). The page always sends a full name from the snapshot,
+  and only the page's origin can send. Kept as a recorded limit; tightening it means
+  changing the hub skill.
+- **Symlinks:**
+  - a symlinked target folder is accepted, because `ensure_safe` compares resolved
+    paths;
+  - symlink-form installs are moved, never renamed inside, so the hub is never written
+    (`:520-541`, `HANDOFF.md:422`).
+
+### 3.5 Races with an agent
+
+- The page acts on a snapshot up to about 5 s old. The installer checks, then acts.
+- **Enable, symlink form:** it calls `place(live_dir)` whenever `.disabled/<name>` is a
+  link (`:524-528`). `place` deletes whatever is at `live_dir` first: `unlink`, or
+  `shutil.rmtree` for a real folder (`:225-232`).
+  - If an agent put a real folder at `<target>/<name>` after the snapshot, enable
+    deletes it.
+  - Disable can do the same to a real folder at `.disabled/<name>` (`:533-537`).
+  - The page offers enable only when the snapshot showed no live install
+    (`locate :260-267`), so this needs a change in that window.
+- **Recorded as a carried-over risk.** The move does not change it. It contradicts "no
+  skill content is created or deleted" (`HANDOFF.md:421`, `os-ui/DESIGN.md:335-341`) in
+  that race only. A fix belongs to `research-skill-installer`, through
+  `research-skill-installer`'s own rules, not to 2.5.
+- Two toggles at once on different rows run two installer processes. They touch
+  different paths, except via a glob name (above).
+
+### 3.6 Bounded work
+
+- **Shown:**
+  - no queue (`paperStatus.ts:28`, `:67-73` has one);
+  - no timeout and no output cap: `ctx.run` has none unless given
+    (`process.ts:134-159`, `skillToggle.ts:50`);
+  - the 500 text is the installer's whole stderr (`skillToggle.ts:52`), where Paper
+    Wiki's status cuts it to 500 characters (`failureText`, `process.ts:184-188`).
+- **Each request starts** `uv run … python` (`process.ts:178-181`, `index.ts:139-142`)
+  and then a generator run. In the client the generator is serialized and has 120 s
+  (`generator.ts:4`). On the dev server it has neither (`dev.ts:28-33`).
+- **After the move only the plugin's own page can send.** The page disables the clicked
+  button while it waits. Another row's button stays clickable, as today.
+
+### 3.7 The static published site
+
+- **Shown:** `pages.yml` builds the renderer only (`.github/workflows/pages.yml:58-63`),
+  from `autoreadpaper` (`:14-17`), after running the generator (`:46-50`). The Skills
+  page there is view-only (§1.5).
+- **After 2.5:**
+  - the plugin's `site/` is not built there: only `client/scripts/build.mjs:59-81` builds
+    sites;
+  - the page has no frame URL (`pages.ts:96`), so the Skills item shows "This page
+    opens in the desktop app; this copy cannot serve it." (`PluginScreen.tsx:45-51`);
+  - nothing of the plugin is published.
+- This appears on the public site only when `main` is merged into `autoreadpaper`.
+  The Pages site returns to the Paper Wiki viewer alone when the dock shell goes
+  (`HANDOFF.md:704`).
+
+### 3.8 Today's guards and the move
+
+| Guard | Where | After the move |
+|---|---|---|
+| POST only (405) | `skillToggle.ts:27` | unchanged |
+| Name pattern (400) | `:7`, `:35-39` | unchanged |
+| Fixed installer path, `cwd` = repository root | `:21-24`, `:50` | unchanged |
+| argv, no shell | `:41-50`, `process.ts:112` | unchanged |
+| Installer failure: 500, no regeneration | `:51-53` | unchanged |
+| Regeneration failure reported beside success | `:55-66` | unchanged |
+| Catch-all 500 | `:67-69` | unchanged |
+| JSON-only writes (415), 503 with no folder | `protocol.ts:649-655` | unchanged, now on `app://skills-hub` |
+| No token | `api.ts:21` | unchanged: plugin mounts are always `token: false` |
+| Which origin reaches it | `app://research-os` (and the dev server's one origin) | **narrowed** to `app://skills-hub`; the dev server, none (Q2 default) |
+| Installer's own checks (hub skill, target table, `ensure_safe`, no content created) | installer `:178-214`, `:496-557` | unchanged |
+
+### 3.9 Proposed hardening (optional; no user can see it)
+
+- In a separate commit, which the step does not need, and one test each:
+  - serialize toggles with a queue as `paperStatus.ts:28`, `:67-73` does;
+  - give the installer run `timeoutMs: 60_000`;
+  - answer failures with `failureText(result)`, 500 characters.
+- None changes what a user sees, except that a second quick click on another row waits
+  for the first.
+
+## 4. What stays the same and what cannot
+
+### 4.1 Element by element (with the defaults of §4.2)
+
+| What the user sees or feels | After the move | Why |
+|---|---|---|
+| Left-menu item: "Skills", spark icon, between Paper wiki and Plugins, highlighted when open, its tooltip, collapsed form | identical | §2.1 |
+| Coming back to Skills after quitting | identical with the `RENAMED` entry; without it, Home | `layoutState.ts:31`, `:55-71` |
+| Page top | identical (Q1 default B); with the recommended opt-in C, mockup C's one-line plugin band above it; with A, Paper wiki's look | `PluginScreen.tsx:13-31`; mockup `os-ui/mockups/step1/c-document.html:684-689` |
+| Fonts, colours | identical if `style.css` copies the app's tokens exactly. The view sites' `--muted` (#80786b) is not the app's (#6f675b, `index.css:28`), so do not copy a view's style | §6 |
+| Light and dark | identical: the app has no dark mode | `index.css:18-80` |
+| Filter pills, search, grid, cards, badges, all words | identical (port) | §1.3 |
+| Hover lift, slide-in, reduced motion | identical in CSS (`index.css:377-382`) | — |
+| Scrolling | identical with Q1 B or C (the frame fills the page area and scrolls with the top). With A, the store scrolls inside a card below a fixed top | `Shell.tsx:133` (`fill`) |
+| Panel and shading | Q3: they cover the Skills area only; the left menu stays bright and clickable | §0 |
+| Panel width on a window ≤ 900 px | 420 px (Q6); full width needs the window's width, which the frame does not know | `SkillDrawer.tsx:75` |
+| Toggle: "working...", then a word | as today: the open panel keeps the old word until reopened (F1). With Q4's opt-in, it shows the new word after the re-read | §1.7 |
+| A failed toggle | identical words and place | `SkillInstalls.tsx:53-56`, `:162` |
+| Orphan rows | as today: buttons that fail with "bad collection name: no hub source" (F2). With Q4's opt-in, words | §1.7 |
+| Escape | as today: closes, and the focus is lost (F3). With Q4's opt-in, focus returns to the card. Either way it works only with focus inside the page (Q6) | — |
+| Copy buttons | identical if C0 passes; otherwise Q7 | §2.5 |
+| First paint | the cards appear a moment after the page (the page reads the snapshot itself) (Q6) | — |
+| Keyboard Tab | enters the page's first control; the page area itself is no longer a tab stop (Q6) | `Shell.tsx:171` |
+| Read-only badge | none before, none after | §1.3 |
+| Deep links, back button | none before, none after | §1.4 |
+| Home and Quick-access links | none before, none after | §1.4 |
+| Dev server, Pages copy | Q2: "This page opens in the desktop app; this copy cannot serve it." | `pages.ts:96`, `PluginScreen.tsx:45-51` |
+| Plugins page | Q5 | `PluginsPage.tsx:27-35`, `:71-84` |
+| `snapshotError` after a successful toggle | not shown, as today | `skillToggle.ts:66` |
+
+### 4.2 Questions for the Human Owner
+
+Each question has a default, the alternatives, the file fact it rests on, and the cost
+of reversing. Defaults hold if unanswered. A default is "as today" wherever today can be
+kept; where this design recommends something else, it is marked **recommended opt-in**.
+Q2's default is the one that is not "as today", and it says why.
+
+**Q1. The top of the Skills page.**
+- **Facts:**
+  - today: a small `research-skills-hub/` line, a large "Skills" title, a sentence, then
+    the skills, all scrolling as one page (`Shell.tsx:182-187`);
+  - the app draws every plugin's menu page as Paper wiki looks: a smaller title beside a
+    green band "⟨plugin⟩ · bundled plugin — ⟨description⟩", and the page in a white
+    card that scrolls on its own (`PluginScreen.tsx:13-31`);
+  - mockup C, which you chose, draws a plugin page as the band on one line, then the
+    page's own small line, large title, and sentence, all scrolling together
+    (`c-document.html:684-689`).
+- **Options:**
+  - **B. Default (as today).** Exactly today's top, no band. A small app change lets
+    this one page draw its own top.
+  - **C. Recommended opt-in.** Today's top with mockup C's band above it, "Skills Hub ·
+    bundled plugin — …". Same app change as B. It follows mockup C for a plugin page,
+    so the page says where it comes from, as Paper wiki's does.
+  - **A.** Paper wiki's look as built. No app change.
+- **Reversing:** B and C differ by one element in the page. Either to A is removing one
+  entry from a list (`OWN_TOP`).
+
+**Q2. The Skills page outside the desktop app.**
+- **Facts:**
+  - today it works on the dev server (`start.sh`) with toggles, and on the public Pages
+    copy read-only (§1.5);
+  - a plugin page has no address in a browser (`pages.ts:96`), as the Code, Paper,
+    Skeleton, Assets, and Idea views already show.
+- **Options:**
+  - **Default:** the Skills item stays in the menu and its page says "This page opens
+    in the desktop app; this copy cannot serve it." The dev server stops offering the
+    toggle.
+  - **Why this default is not "as today":** keeping today's browser page costs a second
+    copy of the page and of the endpoint until S8. You accept in the desktop app, and
+    the dev server's toggle is the exposure in §3.2. Your Decisions already say the
+    Pages copy goes back to the wiki alone when the old shell is removed
+    (`HANDOFF.md:704`).
+  - **Alternative (as today):** keep a working Skills page in browsers. Either keep
+    today's page for browser builds until S8 (two copies of the page and of the
+    endpoint), or teach the dev server and the static build to serve plugin pages (an
+    app-wide change, without the isolation the desktop app has).
+- **Reversing the default:** that alternative work.
+
+**Q3. The details panel.**
+- **Facts:** today the panel slides over the right of the window and a shading dims the
+  whole window, left menu included. Clicking the menu closes the panel first
+  (`SkillDrawer.tsx:65-77`). A framed page cannot draw over the left menu.
+- **Options:**
+  - **Default (today cannot be kept):** accept that the shading and panel cover the
+    Skills area only. The left menu stays bright and clickable while a skill is open,
+    and the panel is still open when you come back.
+  - **Alternative:** the page closes the panel whenever you click outside it. That also
+    happens when you switch to another program.
+- **Cost:** a few lines in the page either way. Making it identical needs a new kind of
+  message from a page to the app, which is a change to the plugin contract and is not
+  proposed.
+
+**Q4. Three small faults of today's page. Fix them in the move?**
+- **(a)** After **disable** or **enable**, the open panel keeps the old word until you
+  close and reopen it (`StorePage.tsx:26`, `:43`, `:111`).
+- **(b)** A skill with no hub source shows **disable**/**enable** buttons that always
+  fail with "bad collection name: no hub source" (`skills.ts:23`; `skillToggle.ts:7`).
+  - The fix shows the words "enabled"/"disabled" there, as the public copy does.
+  - But for such a skill the snapshot always says "enabled", even for one parked in
+    `.disabled/` (`install_research_skill.py:381` sets `"disabled": False`). So the fix
+    would show the word "enabled" for a disabled orphan. Showing the installer's
+    detail line alone avoids that.
+- **(c)** **Escape** closes the panel but leaves the keyboard focus nowhere
+  (`SkillDrawer.tsx:35-39`). The fix returns it to the card, as Close does.
+- **Default (as today):** port all three as they are.
+- **Recommended opt-in:** fix (a) and (c), and fix (b) by showing the detail line
+  without a button. The page is rewritten anyway, and each fix is a few lines with a
+  test.
+- **Reversing:** a few lines per fault.
+
+**Q5. The Plugins page.**
+- **Default (today cannot be kept, since the plugin now exists):**
+  - Skills Hub's card moves from "Bundled · not yet available" to "Bundled · enabled".
+    It gets the Skills spark icon, which the Idea view's card also uses
+    (`registry.ts:42`), and one chip, "Page · Skills". Handlers get no chip
+    (`PLUGINS.md:866-867`). Its text becomes the plugin's description.
+  - The then-empty "Bundled · not yet available" heading is removed, and the note under
+    the cards loses "the rest is the plan" (`PluginsPage.tsx:78-84`).
+- **Alternatives:** keep the empty heading with "None yet"; or give Skills Hub another
+  icon on this page (then the left menu changes too).
+- **Reversing:** a few lines.
+
+**Q6. Small differences of a framed page. Accept them together?**
+- **(i)** On first opening Skills, the cards appear a moment after the page.
+- **(ii)** The page refreshes itself every 5 s as today, but it can be up to 5 s apart
+  from the snapshot time in the left menu.
+- **(iii)** Escape and the arrow keys act on Skills only once you have clicked inside
+  it, and the Skills area is no longer a tab stop of its own.
+- **(iv)** On a screen narrower than about 900 px the panel stays 420 px wide, where
+  today it takes the whole window.
+- **Default (today cannot be kept):** accept. No cheap alternative exists.
+
+**Q7 (only if the builder's check C0 fails).**
+- If copying cannot work inside the framed page even with permission given to that
+  frame:
+  - the copy buttons say "Copy failed - select the command manually";
+  - "install ⧉" says "clipboard unavailable - copy the command manually";
+  - the command stays selectable on screen.
+- **Default in that case:** accept. The alternative is a new page-to-app "copy"
+  message, which is a contract change.
+
+## 5. Build sequence (proposed)
+
+One topic branch from `main` and one pull request (`AGENTS.md`, `CONTRIBUTING.md`).
+Each commit passes:
+- `npm test` and `npm run build` in `os-ui/frontend` (required CI, `PLUGINS.md:1416`);
+- the client's tests, run locally (`desktop.yml` is advisory, Risk 7,
+  `PLUGINS.md:1675`).
+
+Open the pull request as a draft until it is reviewed.
+
+**C0. Probe (not committed).**
+- Build the client. In a throwaway e2e case, click a button in a framed plugin page that
+  calls `navigator.clipboard.writeText("x")`, then read `clipboard.readText()` in the
+  main process (`app.evaluate`). Try with and without `allow="clipboard-write"` on the
+  frame.
+- Record the result in the PLUGINS.md status.
+- **Noticed by:** the read-back text.
+- **Can go wrong:** Playwright's `evaluate` is not a user gesture. Click a real button.
+
+**C1. The handler on its own origin, beside the trunk's (additive).**
+- **Files:**
+  - new `os-ui/frontend/plugins/skills-hub/plugin.json`, without `homePanels` yet:
+    ```json
+    { "contract": "^1.0", "id": "skills-hub", "name": "Skills Hub", "version": "0.1.0",
+      "description": "The research skills hub and where each skill is installed; disable or enable one install.",
+      "reads": ["os-ui/frontend/public/state.json"],
+      "contributes": { "handlers": ["toggle"] } }
+    ```
+  - `bundled.ts:7` appends `"skills-hub"`;
+  - `pluginHandlers.ts` adds `"skills-hub/toggle": skillToggleApi`, and, for Q2's
+    default, `"skills-hub/toggle"` to `DESKTOP_ONLY_HANDLERS`;
+  - the trunk mount stays, so today's page keeps working.
+- **Tests first** (each fails before its line exists):
+  - `server/registry.test.ts:112-120`: `all` gains `["/api/skills-hub/toggle", false]`.
+    `:122-127`: `DESKTOP_ONLY_HANDLERS` is `["code-view/git", "skills-hub/toggle"]`,
+    and the dev registry mounts nothing for `skills-hub`. `:129-134`: `byPlugin`
+    `skills-hub`.
+  - `server/api.test.ts:21-31`: the dev server's list is unchanged (skipped). It passes
+    before and after; it guards the skip.
+  - `server/devServer.test.ts`, a case like `:66-75`: `/api/skills-hub/toggle` (GET and
+    POST, with and without token) never answers the handler's JSON.
+  - `src/plugins/pages.test.ts`: the manifest loads in `BUNDLED_IDS` order. Its `reads`
+    is exactly the one file and its handlers `["toggle"]`. It has no page yet.
+  - `client/test/protocol.test.ts`:
+    - the site lists at `:145`, `:151`, `:212`, `:224`, the policy literal `:215`
+      (`app://skills-hub` appended), and the reads table in the test at `:918`;
+    - in the real-registry block (`:671`), `app://skills-hub/api/skills-hub/toggle`
+      POST JSON reaches the fake runner with the installer's argv;
+    - `text/plain` is 415, GET is 405;
+    - `app://research-os/api/skills-hub/toggle` is 404 JSON;
+    - `app://paper-wiki/api/skills-hub/toggle` and `app://skills-hub/api/skill/toggle`
+      are plain 404;
+    - `app://skills-hub/_os/files?path=os-ui/frontend/public/state.json` is 200;
+      `os-ui/frontend/public/other.json`, `os-ui/frontend/index.html`, and a listing
+      of `os-ui/frontend/public` are 404; `state.json` as a link to `AGENTS.md` is 404.
+- **Can go wrong:**
+  - handler drift (a declared handler with no factory, or a skipped key not declared)
+    makes `createRegistry` throw (`registry.ts:148-158`), and the client then serves the
+    trunk alone (`protocol.ts:671-686`). The registry tests catch it;
+  - forgetting the `skip` leaves the dev server exposed. The devServer test catches it.
+
+**C2. The page, and the trunk page out.**
+- **Files:**
+  - `plugin.json` gains `"homePanels": [{"id": "skills", "title": "Skills", "entry": "index.html", "placement": "nav"}]`.
+  - New `os-ui/frontend/plugins/skills-hub/site/`:
+    - `index.html`, as the other sites: own script and style only;
+    - `style.css`: the app's tokens copied exactly from `index.css:18-80`, plus
+      hand-written rules for every utility the four components use;
+    - `logic.ts`: pure. The flattening, filter, labels, commands, grouping, counts,
+      the orphan rule (only if Q4's opt-in is taken), and the parse of `state.json`
+      with its errors;
+    - `main.ts`: DOM with `site-kit.ts`'s `el`/`button`/`clear` only. It reads the
+      snapshot, polls every 5 s while `!document.hidden`, and re-reads after a toggle
+      answer. It draws the top per Q1 (default B: eyebrow, title, lede; C adds the
+      band). The panel's full-width rule becomes `max-width: 480px` of the frame.
+    - What Q4 changes in `main.ts`:
+      - default: the open panel keeps the skill object captured at the click (F1),
+        orphans get the buttons (F2), and Escape only closes (F3);
+      - opt-in: the panel re-renders from the latest snapshot by `collection/name`,
+        orphans get the detail line without a button, and Escape returns focus to the
+        card.
+  - Its first-load and failure screens. These are rare, because the app shows its own
+    missing-snapshot page first:
+    - 404: "No snapshot to show yet." with **Try again**;
+    - 413, or unreadable JSON, or no `store`: one plain line each;
+    - after a good load, a failed read keeps the last good list (`useOsState.ts:47-52`).
+  - Host:
+    - `src/plugins/registry.ts:36-43` gains `["skills-hub", "spark"]`;
+    - `src/plugins/pages.ts` exports `OWN_TOP`;
+    - `PluginScreen.tsx` gets the bare-frame branch, plus `allow="clipboard-write"`
+      only if C0 needed it;
+    - `layoutState.ts`: drop `"skills"` from `TrunkScreen` (`:4`) and `TRUNK_SCREENS`
+      (`:29`), and add `["skills", "skills-hub/skills"]` to `RENAMED` (`:31`);
+    - `Shell.tsx`: remove `SkillsScreen`, its `Page`, and the `StorePage` and
+      `PageHeader` imports (`noUnusedLocals`);
+    - `Sidebar.tsx:62`: remove the trunk item and update the comment at `:24-30`;
+    - `PluginsPage.tsx`: empty `PLANNED`; hide the empty section (Q5).
+  - Keep `StorePage.tsx`, `SkillCard.tsx`, `SkillDrawer.tsx`, `SkillInstalls.tsx`,
+    `SyncBadge.tsx`, and `lib/skills.ts` until S8 (§2.6).
+- **Tests first:**
+  - `src/shell/layoutState.test.ts:39-46`: `skills` is no longer a trunk screen. A new
+    case: a saved `skills` opens `skills-hub/skills` when that page is loaded, and Home
+    when it is not. Fails before `RENAMED`.
+  - `src/plugins/pages.test.ts`:
+    - the nav page is `["skills-hub/skills", "Skills", "app://skills-hub/index.html", "app://skills-hub"]`
+      on the desktop and `src: null` in a browser;
+    - `OWN_TOP` holds exactly that key;
+    - Paper wiki is not in it.
+  - `site/logic.test.ts`:
+    - equivalence with today. It imports `src/lib/skills.ts` and the site's logic and
+      compares, over a fixture store with two collections, orphans, and every sync
+      state: the flattening, the filter results for several queries, `installCommand`,
+      `copyButtonLabel`, and `installAtTargetCommand`;
+    - the badge words and tones as literals from `SyncBadge.tsx:4-16`;
+    - every sentence of §1.3 as literals from their files;
+    - the orphan rule;
+    - state.json parse errors.
+  - `site/dom.test.ts`, modelled on `skeleton-view/site/dom.test.ts`:
+    - no HTML sink;
+    - no `href`/`src`/`style` from code;
+    - exactly two fetch targets, `filesUrl(STATE)` and `"/api/skills-hub/toggle"`;
+    - no `postMessage`, bridge, or storage;
+    - clipboard only through `navigator.clipboard.writeText`;
+    - markup loads its own script and style only;
+    - every token in `style.css` equals its value in `src/index.css`, which fails on the
+      views' `--muted`.
+  - `client/e2e/app.test.ts`:
+    - the `screen` helper type (`:145`) uses `skills-hub/skills`;
+    - the CSP filter (`:3362-3376`) also ignores `skills-hub/api`.
+    - New cases, each failing before the page exists:
+      1. **Skills** loads `app://skills-hub/index.html`. The top shows per Q1.
+         "All · N" equals the count the test computes from the workspace's
+         `state.json` (collections' skills plus orphans). There is one pill per
+         collection, and the cards are counted.
+      2. Search narrows the list; nonsense shows "No matching skills.".
+      3. Open `filetree-simple` (in `.claude/skills`):
+         "Research-skills-hub / open-paper-skills", and the command text exact. Close
+         returns focus to the card. Escape closes the panel; whether focus is then on
+         the card follows Q4(c).
+      4. **The toggle, on every OS, on a copy-form fixture.**
+         - Why a fixture: the suite's copy dereferences links on Windows
+           (`app.test.ts:53-56`). There `filetree-simple` is a folder of a symlink-form
+           collection, the installer answers "not installed here" with exit 0, and
+           neither the label nor the disk would change.
+         - Before launch, in the temporary workspace only, write a collection
+           `research-skills-hub/e2e-copy/` whose `SOURCE.md` says
+           ``Install form: `copy` `` (`install_research_skill.py:152-159`), a skill
+           `e2e-copied` in it, and a copied install `.claude/skills/e2e-copied/`.
+           Check first how `build_store` discovers collections (`generate.py:805`
+           onward) and add an `index.md` if it needs one.
+         - Under Installs, `repo-claude` **disable** shows "working...". On disk,
+           `SKILL.md` becomes `SKILL.md.disabled`.
+           - Q4 default: close and reopen the panel to see **enable**.
+           - Q4 opt-in: **enable** shows without reopening.
+         - **enable** restores it.
+         - On POSIX only, repeat with `filetree-simple`. The link moves to
+           `.claude/skills/.disabled/filetree-simple` and back.
+      5. A fixture orphan `.claude/skills/e2e-orphan/SKILL.md`, written before launch:
+         - Q4 default: a click answers "bad collection name: no hub source";
+         - Q4 opt-in: the detail line and no button.
+      6. A fixture hub skill whose description is `MARKUP_TEXT` (`:168`) shows as text,
+         and `__pwned` stays undefined.
+      7. **Copy install command**: Electron's clipboard holds the command, and the
+         label says "Copied ✓". If C0 failed, use Q7's words instead.
+      8. Isolation, from the frame:
+         - `window.osDesktop` is undefined, and the parent's is a `SecurityError`;
+         - `/api/skills-hub/toggle` with `text/plain` is 415 and GET is 405;
+         - `/api/skill/toggle`, `/api/chat/sessions`, `/api/paper-wiki/status`, and
+           `/api/code-view/git` are 404;
+         - `app://research-os/...` is blocked;
+         - `_os/files?path=AGENTS.md` is 404 and `?path=os-ui/frontend/public/state.json`
+           is 200;
+         - an inline script does not run;
+         - a CSP canary is seen.
+         - From the Paper wiki frame, a `no-cors` POST to
+           `app://skills-hub/api/skills-hub/toggle` changes nothing on disk.
+      9. Reopen with the saved layout `skills`: the plugin page shows.
+- **Can go wrong:**
+  - **Two "Skills" items** if `Sidebar.tsx:62` stays: `nav(page, "Skills")` fails in
+    strict mode.
+  - **The frame is 404** if the entry is not `site/main.ts` (`build.mjs:70`): case 1
+    fails.
+  - **An inline style or script** is refused by `PLUGIN_CSP`: the CSP test fails.
+  - **Token drift**: `dom.test.ts` fails.
+  - **A reused helper** from `src/` that reads `import.meta.env` (`mode.ts:13`) throws
+    in the IIFE bundle: case 1 fails. The site must not import `src/lib/mode.ts`.
+  - **A forgotten import** of `StorePage` in `Shell.tsx`: `tsc` fails.
+
+**C3. The trunk mount out.**
+- **Files:** `api.ts:1-4`, `:20-24` drop `skillToggleApi` and `/api/skill/toggle`.
+- **Tests:**
+  - `api.test.ts:21-31`: three dev endpoints;
+  - `registry.test.ts`:
+    - `:63-72`: drop the `skill` example, or use another trunk prefix;
+    - `:112-120`: the list without it;
+    - `:226-227`: use `chat`;
+  - `devServer.test.ts:77-81`: the toggle line becomes "`/api/skill/toggle` is not an
+    endpoint". Check whether Vite answers a POST to an unknown path with 404 or its
+    HTML fallback, and assert accordingly;
+  - `protocol.test.ts:685` stays (still 404);
+  - e2e `:3282`: `plain` moves to `/api/paper-sources` (`text/plain` without the token
+    is 415 before 401, `protocol.ts:652-656`).
+- **Can go wrong:** an e2e expectation pinned to 415 on the old path now reads 404.
+
+**C4. Documents and the checklist.**
+- **Checklist:** replace `os-ui/client/README.md:251`. With the defaults:
+  "- [ ] **Skills** (left menu, between **Paper wiki** and **Plugins**): the page looks
+  as before. Click the card **filetree-simple**: its details slide in from the right,
+  and the shading covers the Skills area but not the left menu. Under **Installs**,
+  click **disable** beside `repo-claude`: it says *working...*. Close the details and
+  open them again: the button now says *enable*. Click **enable** to put it back. Click
+  **Copy install command** and paste into a text editor: the command shown. Quit and
+  reopen while on Skills: the app comes back on Skills."
+  - With Q1 option C, add "with a green 'Skills Hub · bundled plugin' line above the
+    title".
+  - With Q4's opt-in, the second toggle sentence becomes "it says *working...*, then
+    *enable*, without closing the details".
+- **Documents:**
+  - `os-ui/PLUGINS.md` status section, a 2.5 entry with any departure, and the one line
+    in Part 3 §6;
+  - `HANDOFF.md` Active Work (`:162-164`), and Decisions:
+    - the M4 row (`:421`) names a Vite dev-server middleware as the toggle's write
+      channel; under Q2's default only the desktop client serves it, on
+      `app://skills-hub`;
+    - a new row records the answers to Q1–Q6;
+  - `os-ui/README.md` (`:56`, `:117-120`, `:172`, `:187-192`) and `os-ui/README_zh.md`
+    (`:15`, `:38`), together;
+  - `os-ui/DESIGN.md` (`:246-255`, `:335-341`);
+  - `os-ui/client/DESIGN.md` (`:5`, `:27-30`, `:142`, the §3.2 table at `:165-170`,
+    `:606`);
+  - `os-ui/frontend/README.md` (`:20`, `:38`, `:81`, `:100`, `:224-226`);
+  - `os-ui/client/README.md:5`.
+- No `./verify.sh` trigger applies: no change under `paper-wiki/`,
+  `projects-folder/`, installed skills, top-level `index.md`, or `FILETREE.md`.
+
+**H. Optional hardening (§3.9).** A separate commit, with one test each that fails
+without it.
+
+**Done when:**
+- the required CI and `desktop.yml` pass on macOS, Windows, and Linux;
+- the checklist line is in;
+- the Human Owner ticks it.
+
+## 6. Contradictions and impossibilities
+
+1. **"Keeps today's Skills page unchanged" is not possible in full** without contract
+   growth:
+   - the panel's shading cannot cover the left menu from a frame (§0);
+   - in browser builds the page has no frame URL (`pages.ts:96`).
+   So Part 3 §6's condition for skipping a mockup (`PLUGINS.md:2682-2683`) cannot be
+   met to the letter. The questions in §4.2 stand in for that choice.
+2. **No mockup ever drew this page.**
+   - Mockup C drew Skills as a disabled "step 2" item (`c-document.html:386`).
+   - Part 1 kept `StorePage` unchanged as an interim (`PLUGINS.md:1602`).
+   - Mockup C draws plugin pages with a band above the page's own top
+     (`c-document.html:684-689`). The built `PluginScreen` draws a smaller title beside
+     the band and frames the page in a card (`PluginScreen.tsx:13-31`), which differs
+     from that mockup.
+3. **Stale reference.** `PLUGINS.md:2682` cites `HANDOFF.md:106-108` for the standing
+   rules; they are at `HANDOFF.md:178-180`.
+4. **Tokens drift.** Five view sites use `--muted: #80786b` (each `site/style.css:4`).
+   The app uses `#6f675b`, noted as the 4.5:1 contrast value (`index.css:28`).
+5. **Toggle comments promise more than the code does:**
+   - `SkillInstalls.tsx:23-25` describes "working..." lasting until the new snapshot.
+     The code ends it when the POST returns, and the open panel stays stale (F1);
+   - `SkillDrawer.tsx:15-18` promises focus back on close. Escape does not do it (F3).
+6. **"A single install location"** (`skillToggle.ts:9-11`, `HANDOFF.md:421`): a glob
+   row's bare name toggles every project's install (`install_research_skill.py:138`).
+7. **"No skill content is created or deleted"** (`HANDOFF.md:421`,
+   `os-ui/DESIGN.md:335-341`): `place()` deletes a real folder in the destination
+   (`install_research_skill.py:225-232`) in the race of §3.5.
+8. **Stale installer docstring.** It says a symlink is disabled by renaming it to
+   `<name>.disabled` (`install_research_skill.py:499`). The code moves it into
+   `.disabled/` (`:518-537`), as `HANDOFF.md:422` records.
+9. **Orphans** are offered a toggle that the endpoint always refuses (F2).
+10. **"JSON-only writes" protect a no-token handler in the client only**
+    (`protocol.ts:652-655`). The dev server parses any body (`node.ts:11-15`). So its
+    toggle answers a cross-site simple POST: through the tunnel that
+    `os-ui/README.md:172` names, from another local page, and possibly from a public
+    page, depending on browser rules not checked here (§3.2).
+11. **The Plugins page's planned card** says Skills Hub will "install skills where you
+    ask" (`PluginsPage.tsx:32`, mockup `c-document.html:738`). The narrow M4 slice
+    allows only disable/enable (`HANDOFF.md:421`), and 2.5 keeps it so.
+12. **`os-ui/DESIGN.md:251-255`** still says the Plugins page lists "today Paper Wiki"
+    and the views as later.
+13. **The checklist line** "the store updates" (`os-ui/client/README.md:251`) passes
+    while the open panel shows the old word (F1).
+14. **An orphan's install is always reported "enabled".** The installer's scan of
+    installs with no hub source sets `"disabled": False`, even for an entry it found
+    in `.disabled/` (`install_research_skill.py:367-385`, `:381`). Today's static
+    build would therefore show "enabled" for a disabled orphan, as would Q4(b)'s
+    first fix.
+
+## 7. Not read or not established
+
+- **Not tried:**
+  - clipboard writing from a cross-origin plugin frame in this Electron, with or without
+    `allow`, or `execCommand("copy")` as a fallback (C0);
+  - whether a `display: none` frame's document reports itself hidden (it decides
+    whether the page can pause its poll while another page is shown; the proposal polls
+    regardless);
+  - how Vite's dev server answers a POST to a path no longer mounted;
+  - reusing the trunk's React components in the site bundle. esbuild may read
+    `tsconfig.json`'s `jsx`; but `mode.ts` reads `import.meta.env`, the site would need
+    its own Tailwind build in `build.mjs`, and React differs from the other five sites'
+    plain DOM, so it is not proposed;
+  - on Windows and Linux, any of the above. The installer's behaviour on the suite's
+    dereferenced copy (§5, case 4) is read from `app.test.ts:53-56` and the installer's
+    code, not run;
+  - the argparse outcomes for option-like names (§3.4), which are read from the
+    parser's definition;
+  - whether a public web page can reach the dev server's toggle on localhost. That
+    depends on Chromium's private or local network access rules, which were not read
+    (§3.2);
+  - the shading over the left menu, which is read from the CSS and not seen running
+    (§0). The yes/no outcome rests on it.
+- **Not measured:** the size of a real `state.json`. It is gitignored and absent in this
+  checkout, so the cost of the page's 5 s re-read beside the app's own is not known.
+- **Not read in full:**
+  - `os-ui/PLUGINS.md`'s status section (read S1–S6 and the 2.1 file-root notes; 2.2 to
+    2.4 skimmed);
+  - `os-ui/client/e2e/app.test.ts` (read the setup, `:1-330`, `:440-475`, and
+    `:3277-3400`);
+  - `os-ui/client/test/protocol.test.ts` (the blocks cited);
+  - `os-ui/generator/generate.py` (`build_store`'s output, `:940-990`, and the writer);
+  - the installer's `inspect`/`scan` (`:270-316`);
+  - `os-ui/DESIGN.md`, `os-ui/client/DESIGN.md` beyond the cited sections;
+  - `os-ui/README_zh.md` beyond a grep;
+  - `docs/adr/0006-desktop-workspace-trunk-and-plugins.md` beyond a grep (`:20-22`,
+    `:133-135`);
+  - `os-ui/frontend/server/codeGit.ts`: not opened; its guards are known from
+    `os-ui/PLUGINS.md`'s S6a-1 status only. It is the model for a hardened handler,
+    and §3.9 takes only the queue and timeout ideas from `paperStatus.ts` and
+    `process.ts`;
+  - the Code view's site: `main.ts` and `logic.ts` were grepped for their fetches and
+    `postMessage`, and only `skeleton-view/site/dom.test.ts` was read as a model;
+  - `CONTRIBUTING.md`, which §5 cites for the pull-request flow, not opened;
+  - `os-ui/frontend/src/pages/HomePage.tsx`, grepped only (no `skills` in it).
+- **Not established:**
+  - whether any orphan exists in this workspace today. `session-handoff` and
+    `skill-organizer` are now hub skills (`.claude/skills` links), so F2 may show only
+    with a fixture;
+  - whether the Human Owner sees the drawer's full-width rule on any of their screens.
+
+## 8. Found while the mockup was drawn (2026-11-25)
+
+- **The panel's width (corrects §4.1 and Q6 (iv)).** `SkillDrawer.tsx:75` makes the
+  panel as wide as the window at 900 px or less (`max-[900px]:w-screen`). Inside a
+  frame that rule measures the frame, not the window, so a word-for-word port fills the
+  frame whenever the frame is 900 px wide or less; in a 1000 px window the frame is
+  about 808 px. "Stays 420 px" holds only if the port drops that rule. The mockup draws
+  420 px.
+- **Mockup C's plugin page (corrects Q1's facts).** Its band is not held to one line,
+  and the small line under it repeats "Paper Wiki · bundled plugin"; it is not the
+  page's own line (`os-ui/mockups/step1/c-document.html:686-687`). The Skills mockup's
+  alternative C follows Q1 as written: the built one-line band, then today's
+  `research-skills-hub/` line.
+- **Inside alternative A's card** the mockup draws white. The built colour would be the
+  plugin page's own background; a page copying the app's tokens would paint the app's
+  beige there. Not established.
+- **Today's shading does not hold the keyboard**: Tab still reaches the left menu under
+  it, and Enter there leaves the page. The mockup copies this.
+- The mockup shows 16 skills with real names and invented descriptions, licences, and
+  install states; disable and enable flip the word at once, which today's page does
+  not (§1.7, the first fault).

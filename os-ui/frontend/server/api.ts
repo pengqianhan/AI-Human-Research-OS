@@ -1,7 +1,6 @@
 import { chatApi } from "./chat.ts";
 import { paperSourcesApi } from "./paperSources.ts";
 import type { TrunkMount } from "./registry.ts";
-import { skillToggleApi } from "./skillToggle.ts";
 import type { ApiHandler } from "./types.ts";
 
 export interface Mount {
@@ -16,9 +15,10 @@ export interface Mount {
  * listed here: the registry (registry.ts) adds them from each bundled
  * plugin's plugin.json. The dev server mounts the registry on its one
  * origin; the desktop client serves it per origin (client/src/main/protocol.ts).
+ * The skill toggle was one until step 2.5; it is Skills Hub's handler now,
+ * reached from app://skills-hub only (pluginHandlers.ts).
  */
 export const TRUNK_MOUNTS: readonly TrunkMount[] = [
-  { prefix: "/api/skill/toggle", factory: skillToggleApi, token: false },
   { prefix: "/api/paper-sources", factory: paperSourcesApi, token: true },
   { prefix: "/api/chat", factory: chatApi, token: true },
 ];

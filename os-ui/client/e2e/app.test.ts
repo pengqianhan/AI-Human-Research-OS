@@ -6,6 +6,7 @@
  *   npm run build && npm run test:e2e          (Linux: under xvfb-run)
  *   OS_CLIENT_E2E_EXECUTABLE=release npm run test:e2e   (the unpacked app electron-builder left in release/)
  *   OS_CLIENT_E2E_EXECUTABLE=<path to an app binary> npm run test:e2e
+ *   OS_CLIENT_E2E_DEREFERENCE=1 npm run test:e2e        (copy the workspace as on Windows: links replaced by what they point at)
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -16,7 +17,7 @@ import type { AddressInfo } from "node:net";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { crc32, deflateSync } from "node:zlib";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
@@ -46,6 +47,9 @@ function tempDir(prefix: string): string {
   return realpathSync.native(mkdtempSync(join(tmpdir(), prefix)));
 }
 
+/** The workspace is copied as on Windows, links replaced by what they point at: there, or anywhere with OS_CLIENT_E2E_DEREFERENCE=1. */
+const DEREFERENCE = process.platform === "win32" || process.env.OS_CLIENT_E2E_DEREFERENCE === "1";
+
 function copyWorkspace(): string {
   const dest = tempDir("os-client-ws-");
   cpSync(REPO, dest, {
@@ -53,7 +57,10 @@ function copyWorkspace(): string {
     // Windows: a copied relative link to a folder can come out as a file
     // symlink, which Python cannot stat (WinError 5), so copy what the links
     // point at. Elsewhere keep the links as they are, as a checkout has them.
-    ...(process.platform === "win32" ? { dereference: true } : { verbatimSymlinks: true }),
+    // A copy made this way lists some hub skills twice (a collection's links
+    // to its own skills become folders the generator finds), so the switch
+    // lets another OS run the suite on the copy Windows gets.
+    ...(DEREFERENCE ? { dereference: true } : { verbatimSymlinks: true }),
     filter: (src) => {
       const rel = relative(REPO, src).split("\\").join("/");
       return !SKIP_NAMES.has(basename(src)) && !SKIP_PATHS.has(rel);
@@ -76,8 +83,12 @@ function findPython(): string {
  * profile or global skill folders (~/.claude/skills, ...) and never touches
  * them; uv keeps its real Python and cache folders so nothing is downloaded.
  */
+/** The throwaway home of the last launch, where its global skill targets resolve. */
+let throwawayHome: string | null = null;
+
 function isolatedHome(): Record<string, string> {
   const home = tempDir("os-client-home-");
+  throwawayHome = home;
   const env: Record<string, string> = { HOME: home };
   if (process.platform === "win32") env.USERPROFILE = home;
   for (const [name, args] of [
@@ -142,7 +153,7 @@ function nav(page: Page, name: string): Locator {
 }
 
 /** One page of the layout. Pages stay mounted, hidden, once opened, so scope locators to the one in view. */
-function screen(page: Page, id: "home" | "projects" | "workspace" | "wiki" | "skills" | "plugins" | "settings"): Locator {
+function screen(page: Page, id: "home" | "projects" | "workspace" | "wiki" | "skills-hub/skills" | "plugins" | "settings"): Locator {
   return page.locator(`[data-screen="${id}"]`);
 }
 
@@ -347,6 +358,81 @@ function ideaFixtures(workspace: string): void {
   writeFileSync(join(made, "idea_graph.md"), ideaLines("example.idea_graph.md").join("\n"));
 }
 
+/**
+ * Skills Hub's fixtures (os-ui/PLUGINS.md Part 4, §5 C2), in the temporary
+ * workspace only. The toggle cases click copy-form skills' copies, so the
+ * installer renames a SKILL.md on every OS (the copy of the workspace
+ * dereferences links on Windows, which would make a symlink-form skill's
+ * install a folder the installer does not toggle): one in the copy's own
+ * .claude/skills, and one of two projects' copies of another skill (its own
+ * collection, e2e-projects), the other project's copy left as it is. The orphan is in a fixture project's .claude/skills: the generator
+ * lists an orphan of the repository's own folders without installs, so only
+ * one found in another target has the toggle the handler refuses (F2); a
+ * second one there has a folder name of shell syntax (HOSTILE_ORPHAN). A hub
+ * skill's description carries markup. A collection of its own holds three
+ * skills with one name (TWINS), two of them byte for byte the same, as a copy
+ * made the Windows way lists a collection's links to its own skills.
+ */
+const SKILLS_COLLECTION = "e2e-copy";
+const COPIED_SKILL = "e2e-copied";
+const MARKUP_SKILL = "e2e-markup";
+const ORPHAN_SKILL = "e2e-orphan";
+/** A second orphan beside it, whose folder name is shell syntax (review, note 4): no command may carry it. */
+const HOSTILE_ORPHAN = "e2e-o;echo INJECTED-$(id -u)";
+/** The page's line where it offers no command (skills-hub site/logic.ts UNSAFE_COMMAND). */
+const NO_COMMAND = "No command: a name here has characters a command cannot carry safely.";
+/** A copy-form skill with a copy in each of two fixture projects: the suite disables and enables one project's install. */
+const PROJECTS_COLLECTION = "e2e-projects";
+const PROJECTS_SKILL = "e2e-in-projects";
+/** A hub skill beside it whose description holds a bidi control (review, note 5), drawn as a marker. */
+const BIDI_SKILL = "e2e-bidi";
+const BIDI_TEXT = "Looks like \u202Eevil.exe\u202C text.";
+const TWINS_COLLECTION = "e2e-twins";
+const TWIN_SKILL = "e2e-twin";
+/** The twins' folders under the collection, in the generator's order, and each one's description. */
+const TWINS = [
+  ["a", "One of two identical skills named e2e-twin."],
+  ["b", "One of two identical skills named e2e-twin."],
+  ["c", "A third skill named e2e-twin, with words of its own."],
+] as const;
+const skillMd = (name: string, description: string) => `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n\nAn end-to-end fixture.\n`;
+
+function skillsFixtures(workspace: string): void {
+  const hub = join(workspace, "research-skills-hub", SKILLS_COLLECTION);
+  mkdirSync(join(hub, COPIED_SKILL), { recursive: true });
+  mkdirSync(join(hub, MARKUP_SKILL), { recursive: true });
+  // research-skill-installer's install_form reads this line (install_research_skill.py install_form).
+  writeFileSync(join(hub, "SOURCE.md"), "# e2e-copy\n\nInstall form: `copy`\n");
+  writeFileSync(join(hub, COPIED_SKILL, "SKILL.md"), skillMd(COPIED_SKILL, "A copy-form skill the end-to-end suite disables and enables again."));
+  writeFileSync(join(hub, MARKUP_SKILL, "SKILL.md"), skillMd(MARKUP_SKILL, MARKUP_TEXT));
+  // Its one install: a byte-for-byte copy, in the workspace's .claude/skills (target repo-claude).
+  const installed = join(workspace, ".claude", "skills", COPIED_SKILL);
+  mkdirSync(installed, { recursive: true });
+  copyFileSync(join(hub, COPIED_SKILL, "SKILL.md"), join(installed, "SKILL.md"));
+  const orphan = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", ORPHAN_SKILL);
+  mkdirSync(orphan, { recursive: true });
+  writeFileSync(join(orphan, "SKILL.md"), skillMd(ORPHAN_SKILL, "An install with no hub source."));
+  const hostile = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", HOSTILE_ORPHAN);
+  mkdirSync(hostile, { recursive: true });
+  writeFileSync(join(hostile, "SKILL.md"), skillMd("hostile-orphan", "An orphan whose folder name is shell syntax."));
+  const projects = join(workspace, "research-skills-hub", PROJECTS_COLLECTION);
+  mkdirSync(join(projects, PROJECTS_SKILL), { recursive: true });
+  writeFileSync(join(projects, "SOURCE.md"), `# ${PROJECTS_COLLECTION}\n\nInstall form: \`copy\`\n`);
+  writeFileSync(join(projects, PROJECTS_SKILL, "SKILL.md"), skillMd(PROJECTS_SKILL, "A copy-form skill installed in two projects; the suite toggles one project's install."));
+  mkdirSync(join(projects, BIDI_SKILL), { recursive: true });
+  writeFileSync(join(projects, BIDI_SKILL, "SKILL.md"), skillMd(BIDI_SKILL, BIDI_TEXT));
+  for (const project of [TEMPLATE_PROJECT, IDEA_PROJECT]) {
+    const there = join(workspace, "projects-folder", project, ".claude", "skills", PROJECTS_SKILL);
+    mkdirSync(there, { recursive: true });
+    copyFileSync(join(projects, PROJECTS_SKILL, "SKILL.md"), join(there, "SKILL.md"));
+  }
+  for (const [folder, description] of TWINS) {
+    const twin = join(workspace, "research-skills-hub", TWINS_COLLECTION, folder, TWIN_SKILL);
+    mkdirSync(twin, { recursive: true });
+    writeFileSync(join(twin, "SKILL.md"), skillMd(TWIN_SKILL, description));
+  }
+}
+
 /** The home folder the suite's git commands share; removed with the workspace. */
 let gitHome: string | null = null;
 
@@ -406,6 +492,7 @@ describe("desktop client on a Research OS folder", () => {
     skeletonFixtures(workspace);
     assetsFixtures(workspace);
     ideaFixtures(workspace);
+    skillsFixtures(workspace);
     userData = tempDir("os-client-data-");
     sessions = tempDir("os-client-sessions-");
     ({ app, page, logs } = await launch({
@@ -3274,12 +3361,690 @@ describe("desktop client on a Research OS folder", () => {
     assert.ok(canary(await consoleLog()), "a CSP violation inside the Idea view's frame is seen");
   });
 
+  /*
+   * Skills (os-ui/PLUGINS.md Part 4): the bundled plugin skills-hub's page on
+   * app://skills-hub, as the Human Owner chose it from
+   * os-ui/mockups/step2/skills.html: top C, panel 1, and today's three small
+   * faults kept (Q4). Its toggle clicks are on copy-form fixtures' installs
+   * (skillsFixtures): one in this copy's .claude/skills and one in a fixture
+   * project's, each checked to be inside the copy first; no test clicks any
+   * other install.
+   */
+  interface SnapInstall {
+    target: string;
+    path: string;
+    form: string;
+    disabled: boolean;
+  }
+  interface Snap {
+    store: {
+      collections: { name: string; skills: { name: string; installs?: SnapInstall[] }[] }[];
+      orphans: { name: string; installs?: SnapInstall[] }[];
+      targets: { name: string; path: string; display_path?: string; scope: string }[];
+    };
+  }
+  /** The workspace's snapshot, as the generator last wrote it: the file the page reads. */
+  const snapshot = () => JSON.parse(readFileSync(join(workspace, "os-ui", "frontend", "public", "state.json"), "utf8")) as Snap;
+  const reEscape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  /** The Skills page, opened from the left menu, and its frame once its cards (or a screen) show. */
+  async function openSkills(): Promise<{ section: Locator; sh: Frame }> {
+    await nav(page, "Skills").click();
+    const section = screen(page, "skills-hub/skills");
+    await section.waitFor();
+    const sh = await pluginFrame(page, "app://skills-hub/");
+    await sh.locator(".cards .skill, .status").first().waitFor({ timeout: 30_000 });
+    // A panel a failed test left open would cover the cards; close it, so one failure does not fail the next tests.
+    const left = sh.getByRole("dialog", { name: "Skill details" });
+    if (await left.isVisible()) await left.getByRole("button", { name: "Close", exact: true }).click();
+    return { section, sh };
+  }
+  /** A card by its skill's exact name. */
+  const skillCard = (sh: Frame, name: string) => sh.locator(".cards .skill").filter({ has: sh.locator(".nm", { hasText: new RegExp(`^${reEscape(name)}$`) }) });
+  const detailsPanel = (sh: Frame) => sh.getByRole("dialog", { name: "Skill details" });
+  /** The open panel's row of one target, by its name and shown path exactly. */
+  const installRow = (sh: Frame, target: string) => {
+    const t = snapshot().store.targets.find((x) => x.name === target)!;
+    return sh.locator(".drawer .irow").filter({ has: sh.locator(".iname", { hasText: new RegExp(`^${reEscape(target + (t.display_path ?? t.path))}$`) }) });
+  };
+  /** Opens a skill's details from the search, which narrows the cards to it. */
+  async function openSkill(sh: Frame, name: string): Promise<Locator> {
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill(name);
+    await skillCard(sh, name).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    return panel;
+  }
+  async function closeSkill(sh: Frame): Promise<void> {
+    await detailsPanel(sh).getByRole("button", { name: "Close", exact: true }).click();
+    await detailsPanel(sh).waitFor({ state: "hidden" });
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("");
+  }
+  /** The text of the frame's focused element and whether it is a card. */
+  const focused = (sh: Frame) => sh.evaluate(() => ({ text: document.activeElement?.textContent ?? "", card: document.activeElement?.classList.contains("skill") ?? false }));
+  const copiedInstall = () => join(workspace, ".claude", "skills", COPIED_SKILL);
+
+  test("Skills is Skills Hub's page on app://skills-hub: the band above today's header, and the workspace's skills as state.json has them", SLOW, async () => {
+    // One Skills item, the plugin's, after Paper wiki and before Plugins.
+    const titles = await page.getByRole("navigation", { name: "Main navigation" }).getByRole("button").evaluateAll((bs) => bs.map((b) => b.getAttribute("title")));
+    assert.deepEqual(titles.slice(0, 5), ["Home", "Projects", "Paper wiki", "Skills", "Plugins"]);
+    const { section, sh } = await openSkills();
+    assert.equal(sh.url(), "app://skills-hub/index.html");
+    assert.equal(await nav(page, "Skills").getAttribute("aria-current"), "page");
+    // The host shows the bare frame here (pages.ts OWN_TOP): no title or band of its own, the frame filling the page area.
+    assert.equal(await section.locator("h1").count(), 0);
+    const iframe = section.locator("iframe");
+    assert.equal(await iframe.count(), 1);
+    assert.equal(await iframe.getAttribute("title"), "Skills Hub");
+    assert.equal(await iframe.getAttribute("allow"), "clipboard-write");
+    assert.deepEqual(await iframe.boundingBox(), await section.boundingBox());
+    // No other frame may write the clipboard: the views' and, when opened, Paper wiki's.
+    assert.deepEqual(await page.locator("iframe").evaluateAll((fs) => fs.filter((f) => f.hasAttribute("allow")).map((f) => (f as HTMLIFrameElement).src)), ["app://skills-hub/index.html"]);
+    // Top C: mockup C's one-line band, then today's small line, title, and sentence.
+    assert.equal(await sh.locator(".band").textContent(), "Skills Hub · bundled plugin — The research skills hub and where each skill is installed; disable or enable one install.");
+    assert.equal(await sh.locator(".eyebrow").textContent(), "research-skills-hub/");
+    assert.equal(await sh.getByRole("heading", { level: 1 }).textContent(), "Skills");
+    assert.equal(
+      await sh.locator(".lede").textContent(),
+      "The research skills hub and where each skill is installed. Installing copies a command for a terminal; the one change made here is disabling or enabling a single install.",
+    );
+    // The skills of this workspace, as its state.json has them: All counts the orphans too.
+    const { store } = snapshot();
+    const total = store.collections.reduce((n, c) => n + c.skills.length, 0) + store.orphans.length;
+    assert.ok(store.collections.some((c) => c.name === SKILLS_COLLECTION), "the fixture collection is in the snapshot");
+    const bar = sh.getByRole("group", { name: "Filter by collection" });
+    assert.deepEqual(await bar.getByRole("button").allTextContents(), [`All · ${total}`, ...store.collections.map((c) => c.name), "no hub source"]);
+    assert.equal(await bar.getByRole("button", { name: `All · ${total}` }).getAttribute("aria-pressed"), "true");
+    await sh.locator(".cards .skill").nth(total - 1).waitFor();
+    assert.equal(await sh.locator(".cards .skill").count(), total);
+    assert.equal(await skillCard(sh, COPIED_SKILL).locator(".badge").textContent(), "installed · drift ⚠", "one of the two repository folders");
+    assert.equal(await skillCard(sh, ORPHAN_SKILL).locator(".badge").textContent(), "installed · no hub source ⚠");
+    await shot(page, "skills-1-top-c");
+  });
+
+  test("Skills: the search and the pills narrow the cards; nonsense shows today's words", SLOW, async () => {
+    const { sh } = await openSkills();
+    const search = sh.getByRole("searchbox", { name: "Search skills" });
+    assert.equal(await search.getAttribute("placeholder"), "Search skills...");
+    await search.fill("  E2E-COP  ");
+    assert.deepEqual(await sh.locator(".cards .skill .nm").allTextContents(), [COPIED_SKILL]);
+    await search.fill("zzz-no-such-skill");
+    await sh.getByText("No matching skills.", { exact: true }).waitFor();
+    await search.fill("");
+    const bar = sh.getByRole("group", { name: "Filter by collection" });
+    await bar.getByRole("button", { name: SKILLS_COLLECTION, exact: true }).click();
+    assert.deepEqual(await sh.locator(".cards .skill .nm").allTextContents(), [COPIED_SKILL, MARKUP_SKILL]);
+    assert.equal(await bar.getByRole("button", { name: SKILLS_COLLECTION, exact: true }).getAttribute("aria-pressed"), "true");
+    await bar.getByRole("button", { name: /^All · / }).click();
+  });
+
+  test("Skills: three skills with one collection and name are three cards; each opens its own skill and gets its own focus back", SLOW, async () => {
+    const twins = snapshot().store.collections.find((c) => c.name === TWINS_COLLECTION)!.skills;
+    assert.deepEqual(twins.map((s) => s.name), TWINS.map(() => TWIN_SKILL), "the snapshot lists the three");
+    const { sh } = await openSkills();
+    const bar = sh.getByRole("group", { name: "Filter by collection" });
+    await bar.getByRole("button", { name: TWINS_COLLECTION, exact: true }).click();
+    try {
+      const cards = sh.locator(".cards .skill");
+      await cards.nth(TWINS.length - 1).waitFor({ timeout: 10_000 });
+      assert.deepEqual(await cards.locator(".desc").allTextContents(), TWINS.map(([, words]) => words));
+      const panel = detailsPanel(sh);
+      for (let i = 0; i < TWINS.length; i++) {
+        await cards.nth(i).click();
+        await panel.getByRole("heading", { name: TWIN_SKILL, exact: true }).waitFor();
+        assert.equal(await panel.locator(".d-desc").textContent(), TWINS[i]![1], `card ${i} opens its own skill`);
+        await panel.getByRole("button", { name: "Close", exact: true }).click();
+        await panel.waitFor({ state: "hidden" });
+        assert.equal(await sh.evaluate(() => [...document.querySelectorAll(".cards .skill")].indexOf(document.activeElement!)), i, `card ${i} gets the focus back`);
+      }
+    } finally {
+      await bar.getByRole("button", { name: /^All · / }).click();
+    }
+  });
+
+  test("Skills: a card's details slide in over the Skills area only; the left menu stays bright and clickable, and the panel is still open on return", SLOW, async () => {
+    const { section, sh } = await openSkills();
+    const name = "filetree-simple";
+    const collection = snapshot().store.collections.find((c) => c.skills.some((s) => s.name === name))!.name;
+    const panel = await openSkill(sh, name);
+    assert.equal((await focused(sh)).text, "Close", "the focus moves to Close");
+    assert.equal(await panel.locator(".d-src").textContent(), `Research-skills-hub / ${collection}`);
+    assert.equal(await panel.locator(".cmd").textContent(), `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${name} --collection ${collection}`);
+    // Panel 1: the panel and its shading cover the frame, which is the Skills area; the left menu is beside it.
+    const area = (await section.boundingBox())!;
+    // The panel slides in over 220 ms: measured once it has arrived.
+    await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
+    const drawer = (await sh.locator(".drawer").boundingBox())!;
+    const scrim = (await sh.locator(".scrim").boundingBox())!;
+    assert.deepEqual(scrim, area);
+    assert.equal(drawer.width, 420);
+    assert.ok(Math.abs(drawer.x + drawer.width - (area.x + area.width)) < 1 && Math.abs(drawer.y - area.y) < 1 && Math.abs(drawer.height - area.height) < 1, JSON.stringify({ drawer, area }));
+    const menu = (await page.getByRole("navigation", { name: "Main navigation" }).boundingBox())!;
+    assert.ok(menu.x + menu.width <= area.x, JSON.stringify({ menu, area }));
+    // The menu works with the panel open: Home, then back to Skills, where the panel is as it was.
+    await nav(page, "Home").click();
+    await screen(page, "home").getByRole("heading", { name: "Home", exact: true }).waitFor();
+    await nav(page, "Skills").click();
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    assert.equal(await sh.locator(".drawer").getAttribute("aria-hidden"), "false");
+    // Close gives the focus back to the card.
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
+    await panel.waitFor({ state: "hidden" });
+    assert.deepEqual(await focused(sh), { text: (await skillCard(sh, name).textContent())!, card: true });
+    // Escape closes it too, and, as today, leaves the focus off the card (F3 of Part 4 §1.7).
+    await skillCard(sh, name).click();
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    await page.keyboard.press("Escape");
+    await panel.waitFor({ state: "hidden" });
+    assert.equal((await focused(sh)).card, false);
+    // A click on the shading closes it and gives the focus back.
+    await skillCard(sh, name).click();
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    await sh.locator(".scrim").click({ position: { x: 20, y: 20 } });
+    await panel.waitFor({ state: "hidden" });
+    assert.equal((await focused(sh)).card, true);
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("");
+  });
+
+  test("Skills: disable then enable the copy-form fixture's one install through app://skills-hub's handler; the files change, and the page shows it as today's did", SLOW, async () => {
+    // The one install this suite clicks: repo-claude, copy form, in this copy's own .claude/skills.
+    const { store } = snapshot();
+    const repoClaude = store.targets.find((t) => t.name === "repo-claude")!;
+    assert.equal(repoClaude.path, join(workspace, ".claude", "skills"));
+    const install = store.collections.find((c) => c.name === SKILLS_COLLECTION)!.skills.find((s) => s.name === COPIED_SKILL)!.installs!;
+    assert.deepEqual(install.map((i) => [i.target, i.path, i.form, i.disabled]), [["repo-claude", copiedInstall(), "copy", false]]);
+    assert.ok(copiedInstall().startsWith(workspace + sep), "inside the copy");
+    // The global targets resolve in the suite's throwaway home, not the real one (isolatedHome); none is clicked.
+    const globals = store.targets.filter((x) => x.scope === "global");
+    assert.equal(globals.length, 3);
+    for (const t of globals) assert.ok(throwawayHome !== null && t.path.startsWith(throwawayHome + sep), `${t.name}: ${t.path}`);
+    const { sh } = await openSkills();
+    const panel = await openSkill(sh, COPIED_SKILL);
+    assert.equal(await panel.locator(".inst-head").textContent(), `copy → hub1 of ${store.targets.length} installed`);
+    const row = installRow(sh, "repo-claude");
+    assert.equal(await row.getByRole("button").getAttribute("aria-pressed"), "true");
+    await row.getByRole("button", { name: "disable", exact: true }).click();
+    await row.getByRole("button", { name: "working...", exact: true }).waitFor();
+    assert.equal(await row.getByRole("button").isDisabled(), true);
+    // Done: the copy's SKILL.md is renamed, the snapshot was regenerated first, and the open panel keeps its word (F1).
+    await row.locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false, (await sh.locator(".drawer .ierr").textContent()) ?? "");
+    assert.ok(existsSync(join(copiedInstall(), "SKILL.md.disabled")) && !existsSync(join(copiedInstall(), "SKILL.md")), "disabled on disk");
+    assert.equal(snapshot().store.collections.find((c) => c.name === SKILLS_COLLECTION)!.skills.find((s) => s.name === COPIED_SKILL)!.installs![0]!.disabled, true);
+    assert.equal(await row.getByRole("button").textContent(), "disable", "the open panel still says disable, as today (F1)");
+    // Closed and opened again, it says enable; the card's focus came back after the page read the snapshot again.
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
+    await panel.waitFor({ state: "hidden" });
+    assert.equal((await focused(sh)).card, true);
+    await skillCard(sh, COPIED_SKILL).click();
+    await row.getByRole("button", { name: "enable", exact: true }).waitFor();
+    assert.equal(await row.getByRole("button").getAttribute("aria-pressed"), "false");
+    await row.getByRole("button", { name: "enable", exact: true }).click();
+    await row.getByRole("button", { name: "working...", exact: true }).waitFor();
+    await row.locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.ok(existsSync(join(copiedInstall(), "SKILL.md")) && !existsSync(join(copiedInstall(), "SKILL.md.disabled")), "enabled on disk");
+    assert.equal(await row.getByRole("button").textContent(), "enable", "F1 again");
+    await closeSkill(sh);
+    await openSkill(sh, COPIED_SKILL);
+    await installRow(sh, "repo-claude").getByRole("button", { name: "disable", exact: true }).waitFor();
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false);
+    await closeSkill(sh);
+  });
+
+  test("Skills: disable then enable one project's install of a skill two projects have; the other project's install never changes", SLOW, async () => {
+    const at = (project: string) => join(workspace, "projects-folder", project, ".claude", "skills", PROJECTS_SKILL);
+    const [mine, other] = [TEMPLATE_PROJECT, IDEA_PROJECT];
+    const installs = snapshot().store.collections.find((c) => c.name === PROJECTS_COLLECTION)!.skills.find((s) => s.name === PROJECTS_SKILL)!.installs!;
+    assert.deepEqual(
+      installs.map((i) => [i.target, i.path, i.form, i.disabled]).sort(),
+      [
+        [`project-claude:${other}`, at(other), "copy", false],
+        [`project-claude:${mine}`, at(mine), "copy", false],
+      ].sort(),
+    );
+    for (const project of [mine, other]) assert.ok(at(project).startsWith(join(workspace, "projects-folder") + sep), `inside the copy: ${at(project)}`);
+    const theirs = readFileSync(join(at(other), "SKILL.md"), "utf8");
+    const untouched = () => {
+      assert.equal(readFileSync(join(at(other), "SKILL.md"), "utf8"), theirs, `${other}'s install is as it was`);
+      assert.ok(!existsSync(join(at(other), "SKILL.md.disabled")), `${other}'s install has no SKILL.md.disabled`);
+    };
+    const { sh } = await openSkills();
+    await openSkill(sh, PROJECTS_SKILL);
+    const row = installRow(sh, `project-claude:${mine}`);
+    await row.getByRole("button", { name: "disable", exact: true }).click();
+    await row.locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false, (await sh.locator(".drawer .ierr").textContent()) ?? "");
+    assert.ok(existsSync(join(at(mine), "SKILL.md.disabled")) && !existsSync(join(at(mine), "SKILL.md")), `${mine}'s install is disabled on disk`);
+    untouched();
+    await closeSkill(sh);
+    await openSkill(sh, PROJECTS_SKILL);
+    await installRow(sh, `project-claude:${mine}`).getByRole("button", { name: "enable", exact: true }).click();
+    await installRow(sh, `project-claude:${mine}`).locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false, (await sh.locator(".drawer .ierr").textContent()) ?? "");
+    assert.ok(existsSync(join(at(mine), "SKILL.md")) && !existsSync(join(at(mine), "SKILL.md.disabled")), `${mine}'s install is enabled again`);
+    untouched();
+    await closeSkill(sh);
+  });
+
+  test("Skills: an orphan's toggle is refused with today's words, and nothing changes on disk (F2)", SLOW, async () => {
+    const orphan = snapshot().store.orphans.find((o) => o.name === ORPHAN_SKILL)!;
+    const target = `project-claude:${TEMPLATE_PROJECT}`;
+    const file = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", ORPHAN_SKILL, "SKILL.md");
+    assert.deepEqual(orphan.installs!.map((i) => [i.target, i.path]), [[target, dirname(file)]]);
+    const before = readFileSync(file, "utf8");
+    const { sh } = await openSkills();
+    await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: "no hub source", exact: true }).click();
+    await skillCard(sh, ORPHAN_SKILL).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name: ORPHAN_SKILL, exact: true }).waitFor();
+    assert.equal(await panel.locator(".d-src").textContent(), "Research-skills-hub / no hub source");
+    assert.equal(await panel.getByRole("button", { name: "Copy status command" }).count(), 1);
+    await installRow(sh, target).getByRole("button", { name: "disable", exact: true }).click();
+    await sh.locator(".drawer .ierr").filter({ hasText: "bad collection name: no hub source" }).waitFor({ timeout: 30_000 });
+    await installRow(sh, target).getByRole("button", { name: "disable", exact: true }).waitFor();
+    assert.equal(readFileSync(file, "utf8"), before);
+    assert.ok(!existsSync(join(dirname(file), "SKILL.md.disabled")));
+    await closeSkill(sh);
+    await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: /^All · / }).click();
+  });
+
+  test("Skills: a name a command cannot carry safely gets no command and no copy button but one line, and the clipboard is never written", SLOW, async () => {
+    const orphan = snapshot().store.orphans.find((o) => o.name === HOSTILE_ORPHAN)!;
+    assert.deepEqual(orphan.installs!.map((i) => i.target), [`project-claude:${TEMPLATE_PROJECT}`]);
+    const saved = await app.evaluate(({ clipboard }) => clipboard.readText());
+    try {
+      await app.evaluate(({ clipboard }) => clipboard.writeText("before"));
+      const { sh } = await openSkills();
+      await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: "no hub source", exact: true }).click();
+      await skillCard(sh, HOSTILE_ORPHAN).click();
+      const panel = detailsPanel(sh);
+      await panel.getByRole("heading", { name: HOSTILE_ORPHAN, exact: true }).waitFor();
+      // In the panel and under the installs, the line; no command on screen and no copy button.
+      assert.deepEqual([await sh.locator(".drawer > .nocmd").textContent(), await sh.locator(".drawer .inst .nocmd").textContent()], [NO_COMMAND, NO_COMMAND]);
+      assert.equal(await panel.getByText(NO_COMMAND, { exact: true }).count(), 2);
+      for (const line of await panel.getByText(NO_COMMAND, { exact: true }).all()) assert.equal(await line.isVisible(), true);
+      assert.equal(await panel.locator(".cmd").isVisible(), false);
+      assert.equal(await panel.locator(".copy-btn").isVisible(), false);
+      assert.ok(!(await panel.innerText()).includes("install_research_skill.py"), "no command anywhere in the panel");
+      // The one button left in the installs is the toggle where it is installed (F2's, which the handler refuses).
+      assert.deepEqual(await panel.locator(".irow button").allTextContents(), ["disable"]);
+      // Even the hidden copy button, clicked from code, writes nothing.
+      await sh.evaluate(() => (document.querySelector(".copy-btn") as HTMLButtonElement).click());
+      await page.waitForTimeout(500);
+      assert.equal(await app.evaluate(({ clipboard }) => clipboard.readText()), "before");
+      await closeSkill(sh);
+      // A safe name's panel still has its command and copy button, and no line.
+      const safe = await openSkill(sh, ORPHAN_SKILL);
+      assert.equal(await safe.locator(".cmd").textContent(), `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status ${ORPHAN_SKILL}`);
+      assert.equal(await safe.getByRole("button", { name: "Copy status command" }).isVisible(), true);
+      assert.equal(await sh.locator(".drawer > .nocmd").isVisible(), false);
+      // Nor under its installs: each row where it is not installed offers "install ⧉", the trunk's command, which carries
+      // the page's own label, "no hub source" (not a name, so not tested). Every target's name here is one a command can carry.
+      const { targets } = snapshot().store;
+      assert.ok(targets.every((t) => /^[A-Za-z0-9._:-]+$/.test(t.name)), JSON.stringify(targets.map((t) => t.name)));
+      assert.equal(await sh.locator(".drawer .nocmd:visible").count(), 0);
+      const shown = ["repo", "global", "project"].flatMap((scope) => targets.filter((t) => t.scope === scope));
+      assert.deepEqual(await safe.locator(".irow button").allTextContents(), shown.map((t) => (t.name === `project-claude:${TEMPLATE_PROJECT}` ? "disable" : "install ⧉")));
+      assert.equal(await installRow(sh, "repo-codex").getByRole("button").textContent(), "install ⧉");
+      await closeSkill(sh);
+      await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: /^All · / }).click();
+    } finally {
+      await app.evaluate(({ clipboard }, text) => clipboard.writeText(text), saved);
+    }
+  });
+
+  test("Skills: a bidi control in a description is drawn as a marker on the card and in the panel", SLOW, async () => {
+    const skill = snapshot().store.collections.find((c) => c.name === PROJECTS_COLLECTION)!.skills.find((s) => s.name === BIDI_SKILL) as { description?: string } | undefined;
+    assert.equal(skill?.description, BIDI_TEXT, "the snapshot has the text as written");
+    const { sh } = await openSkills();
+    const shown = "Looks like ⟨U+202E⟩evil.exe⟨U+202C⟩ text.";
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill(BIDI_SKILL);
+    assert.equal(await skillCard(sh, BIDI_SKILL).locator(".desc").textContent(), shown);
+    await skillCard(sh, BIDI_SKILL).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name: BIDI_SKILL, exact: true }).waitFor();
+    assert.equal(await panel.locator(".d-desc").textContent(), shown);
+    assert.equal(await sh.evaluate(() => /[\u202A-\u202E\u2066-\u2069]/.test(document.body.textContent ?? "")), false, "no bidi control in the page's text");
+    await closeSkill(sh);
+    // The search reads the description as written, control and all.
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("\u202Eevil");
+    assert.deepEqual(await sh.locator(".cards .skill .nm").allTextContents(), [BIDI_SKILL]);
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("");
+  });
+
+  test("Skills: markup in a skill's description is text on the card and in the panel, and runs nothing", SLOW, async () => {
+    const { sh } = await openSkills();
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill(MARKUP_SKILL);
+    assert.equal(await skillCard(sh, MARKUP_SKILL).locator(".desc").textContent(), MARKUP_TEXT);
+    await skillCard(sh, MARKUP_SKILL).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name: MARKUP_SKILL, exact: true }).waitFor();
+    assert.equal(await panel.locator(".d-desc").textContent(), MARKUP_TEXT);
+    assert.equal(await sh.locator("img, script:not([src])").count(), 0);
+    assert.deepEqual([await page.evaluate(() => (window as { __pwned?: unknown }).__pwned), await sh.evaluate(() => (window as { __pwned?: unknown }).__pwned)], [undefined, undefined]);
+    await closeSkill(sh);
+  });
+
+  test("Skills: the copy buttons put the command on the clipboard from inside the frame", SLOW, async () => {
+    const saved = await app.evaluate(({ clipboard }) => clipboard.readText());
+    try {
+      const { sh } = await openSkills();
+      const panel = await openSkill(sh, COPIED_SKILL);
+      await app.evaluate(({ clipboard }) => clipboard.writeText("before"));
+      await panel.getByRole("button", { name: "Copy install command" }).click();
+      await panel.getByRole("button", { name: "Copied ✓" }).waitFor();
+      assert.equal(await app.evaluate(({ clipboard }) => clipboard.readText()), `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${COPIED_SKILL} --collection ${SKILLS_COLLECTION}`);
+      // After 1.6 s the button says its own word again.
+      await panel.getByRole("button", { name: "Copy install command" }).waitFor();
+      // Where nothing is installed, "install ⧉" copies the command for that target.
+      const row = installRow(sh, "repo-codex");
+      await row.getByRole("button", { name: "install ⧉" }).click();
+      await row.getByRole("button", { name: "copied ✓" }).waitFor();
+      assert.equal(await row.getByRole("button").getAttribute("title"), "Copy the install command for this target");
+      assert.equal(
+        await app.evaluate(({ clipboard }) => clipboard.readText()),
+        `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${COPIED_SKILL} --collection ${SKILLS_COLLECTION} --target repo-codex`,
+      );
+      await closeSkill(sh);
+      // An orphan's row copies the trunk's command, the page's label "no hub source" and all (ported as it is: the installer's parser refuses it).
+      await openSkill(sh, ORPHAN_SKILL);
+      const orphanRow = installRow(sh, "repo-codex");
+      await orphanRow.getByRole("button", { name: "install ⧉" }).click({ timeout: 10_000 });
+      await orphanRow.getByRole("button", { name: "copied ✓" }).waitFor();
+      assert.equal(
+        await app.evaluate(({ clipboard }) => clipboard.readText()),
+        `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${ORPHAN_SKILL} --collection no hub source --target repo-codex`,
+      );
+      await closeSkill(sh);
+    } finally {
+      await app.evaluate(({ clipboard }, text) => clipboard.writeText(text), saved);
+    }
+  });
+
+  test("Skills: a failed read after a good one keeps the list, and the 5 s read pauses while the window is hidden", SLOW, async () => {
+    const { sh } = await openSkills();
+    const cards = sh.locator(".cards .skill");
+    const shown = await cards.count();
+    assert.ok(shown > 0);
+    // The page's reads of the snapshot, counted, and answered badly on demand, in the frame only: the file is not touched.
+    await sh.evaluate(() => {
+      const w = window as unknown as { __reads: number; __answer: "as is" | "404" | "not json"; __fetch: typeof fetch };
+      w.__reads = 0;
+      w.__answer = "as is";
+      w.__fetch = window.fetch;
+      window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+        if (!String(input).includes("_os/files")) return w.__fetch(input, init);
+        w.__reads++;
+        if (w.__answer === "404") return Promise.resolve(new Response("", { status: 404 }));
+        if (w.__answer === "not json") return Promise.resolve(new Response("not json", { status: 200 }));
+        return w.__fetch(input, init);
+      }) as typeof fetch;
+    });
+    const reads = () => sh.evaluate(() => (window as unknown as { __reads: number }).__reads);
+    const nextRead = async () => {
+      const before = await reads();
+      for (let i = 0; i < 80 && (await reads()) === before; i++) await page.waitForTimeout(100);
+      assert.ok((await reads()) > before, "the page read the snapshot again within 8 s");
+      await page.waitForTimeout(300);
+    };
+    try {
+      for (const answer of ["404", "not json"] as const) {
+        await sh.evaluate((a) => ((window as unknown as { __answer: string }).__answer = a), answer);
+        await nextRead();
+        assert.equal(await cards.count(), shown, `after a read answered ${answer}, the list stays (src/useOsState.ts)`);
+        assert.equal(await sh.locator(".status").count(), 0, `no first-load line after ${answer}`);
+      }
+      await sh.evaluate(() => ((window as unknown as { __answer: string }).__answer = "as is"));
+      await nextRead();
+      // The window hidden, as the frame sees it: no read for two of the page's 5 s rounds; shown again, they resume.
+      await sh.evaluate(() => Object.defineProperty(document, "hidden", { configurable: true, get: () => true }));
+      const hiddenFrom = await reads();
+      await page.waitForTimeout(11_000);
+      assert.equal(await reads(), hiddenFrom, "no read while the window is hidden");
+      await sh.evaluate(() => delete (document as unknown as { hidden?: boolean }).hidden);
+      assert.equal(await sh.evaluate(() => document.hidden), false);
+      await nextRead();
+      assert.equal(await cards.count(), shown);
+    } finally {
+      await sh.evaluate(() => {
+        const w = window as unknown as { __fetch: typeof fetch };
+        window.fetch = w.__fetch;
+        delete (document as unknown as { hidden?: boolean }).hidden;
+      });
+    }
+  });
+
+  test("Skills at 1440 × 900 and 1000 × 720: the panel is 420 px inside the frame, open or with the menu collapsed", SLOW, async () => {
+    const size = await windowSize({ width: 1440, height: 900 });
+    try {
+      for (const [w, h] of [[1440, 900], [1000, 720]] as const) {
+        await windowSize({ width: w, height: h });
+        const { section, sh } = await openSkills();
+        await page.waitForTimeout(300);
+        await shot(page, `skills-${w}-top-c`);
+        // Opened from the whole list, whose box scrolls: the panel and its shading cover that box's scrollbar too.
+        const scroller = sh.locator(".scroller");
+        assert.ok(await scroller.evaluate((b) => b.scrollHeight > b.clientHeight), `${w}: the list scrolls`);
+        await scroller.evaluate((b) => b.scrollBy(0, 400));
+        await sh.locator(".cards .skill").nth(8).click();
+        await detailsPanel(sh).waitFor();
+        await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
+        const whole = (await section.boundingBox())!;
+        const open = (await sh.locator(".drawer").boundingBox())!;
+        assert.deepEqual(await sh.locator(".scrim").boundingBox(), whole, `${w}: the shading covers the whole frame`);
+        assert.ok(open.width === 420 && Math.abs(open.x + open.width - (whole.x + whole.width)) < 1, `${w}: ${JSON.stringify({ open, whole })}`);
+        await shot(page, `skills-${w}-panel-open-scrolled-list`);
+        await closeSkill(sh);
+        assert.ok(await scroller.evaluate((b) => b.scrollTop > 0), `${w}: the list kept its place`);
+        const panel = await openSkill(sh, "filetree-simple");
+        await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
+        const area = (await section.boundingBox())!;
+        const drawer = (await sh.locator(".drawer").boundingBox())!;
+        assert.equal(drawer.width, 420, `${w}: the panel is 420 px`);
+        assert.ok(drawer.x >= area.x && Math.abs(drawer.x + drawer.width - (area.x + area.width)) < 1, `${w}: inside the frame`);
+        await shot(page, `skills-${w}-panel-open`);
+        await page.getByRole("button", { name: "Collapse sidebar" }).click();
+        await page.waitForTimeout(400);
+        assert.equal(await panel.isVisible(), true);
+        assert.equal((await sh.locator(".drawer").boundingBox())!.width, 420);
+        await shot(page, `skills-${w}-panel-open-menu-collapsed`);
+        await page.getByRole("button", { name: "Expand sidebar" }).click();
+        await closeSkill(sh);
+        await nav(page, "Plugins").click();
+        await screen(page, "plugins").getByRole("heading", { name: "Plugins", exact: true }).waitFor();
+        await shot(page, `skills-${w}-plugins-page`);
+      }
+    } finally {
+      await windowSize(size);
+    }
+  });
+
+  test("the Plugins page lists Skills Hub as enabled, with its page, and nothing as not yet available", SLOW, async () => {
+    await nav(page, "Plugins").click();
+    const plugins = screen(page, "plugins");
+    await plugins.getByRole("heading", { name: "Bundled · enabled" }).waitFor();
+    const card = plugins.locator("article").filter({ has: page.getByRole("heading", { name: /^Skills Hub/ }) });
+    assert.equal(await card.count(), 1);
+    assert.equal(await card.locator(".pill").textContent(), "Enabled");
+    assert.deepEqual(await card.locator(".rounded-full").allTextContents(), ["Page · Skills"]);
+    assert.ok((await card.textContent())!.includes("The research skills hub and where each skill is installed; disable or enable one install."));
+    assert.equal(await plugins.getByRole("heading", { name: "Bundled · not yet available" }).count(), 0);
+    assert.equal(await plugins.getByText("The enabled list is read from the plugins themselves.", { exact: true }).count(), 1);
+  });
+
+  test("Skills Hub's frame is sealed off: no bridge, the snapshot only, its own toggle only; another plugin's frame cannot reach it", SLOW, async () => {
+    const { sh } = await openSkills();
+    const status = (url: string, init?: RequestInit) => sh.evaluate(async ([u, i]) => (await fetch(u, i)).status, [url, init] as const);
+    const rel = (p: string) => `./_os/files?path=${encodeURIComponent(p)}`;
+    assert.deepEqual(
+      {
+        snapshot: await status(rel("os-ui/frontend/public/state.json")),
+        agents: await status(rel("AGENTS.md")),
+        index: await status(rel("os-ui/frontend/index.html")),
+        listing: await status(`./_os/list?path=${encodeURIComponent("os-ui/frontend/public")}`),
+        plain: await status("/api/skills-hub/toggle", { method: "POST", headers: { "Content-Type": "text/plain" }, body: "{}" }),
+        get: await status("/api/skills-hub/toggle"),
+        trunkToggle: await status("/api/skill/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }),
+        chat: await status("/api/chat/sessions"),
+        wikiStatus: await status("/api/paper-wiki/status"),
+        codeViewGit: await status(`/api/code-view/git/log?project=${PROJECT}`),
+      },
+      { snapshot: 200, agents: 404, index: 404, listing: 404, plain: 415, get: 405, trunkToggle: 404, chat: 404, wikiStatus: 404, codeViewGit: 404 },
+    );
+    const probe = await sh.evaluate(async () => {
+      const outcome = async (fn: () => Promise<unknown>) => {
+        try {
+          return String(await fn());
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        own: typeof (window as { osDesktop?: unknown }).osDesktop,
+        parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
+        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+      };
+    });
+    assert.equal(probe.own, "undefined");
+    assert.match(probe.parent, /^blocked: SecurityError/);
+    assert.match(probe.appApi, /^blocked/);
+    // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline').
+    const before = logs.length;
+    const inline = await sh.evaluate(() => {
+      const script = document.createElement("script");
+      script.textContent = "window.__inline = 1";
+      document.body.append(script);
+      script.remove();
+      return (window as { __inline?: unknown }).__inline;
+    });
+    assert.equal(inline, undefined, "an inline script ran in Skills Hub's page");
+    await page.waitForTimeout(300);
+    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
+    await app.evaluate(() => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/skills-hub\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
+    });
+    await sh.evaluate(() => {
+      const img = new Image();
+      img.src = "https://csp-canary.invalid/skills.png";
+      document.body.append(img);
+      img.remove();
+    });
+    const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/skills-hub\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
+    for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
+    assert.ok(canary(await consoleLog()), "a CSP violation inside Skills Hub's frame is seen");
+    // Another origin's POST to the toggle never reaches the handler. The request it sends is a real one: from
+    // Skills Hub's own frame, the same body disables the copy's install (inside the copy), and it is enabled again.
+    // That answer's time bounds how long the handler would take, so the wait below cannot end before it would act.
+    const skillFile = join(copiedInstall(), "SKILL.md");
+    assert.ok(skillFile.startsWith(join(workspace, ".claude", "skills") + sep), "inside the copy");
+    const body = JSON.stringify({ skill: COPIED_SKILL, collection: SKILLS_COLLECTION, target: "repo-claude", enable: false });
+    const own = async (enable: boolean) =>
+      sh.evaluate(
+        async ([b, on]) => {
+          const t0 = performance.now();
+          const res = await fetch("/api/skills-hub/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...JSON.parse(b), enable: on }) });
+          return { status: res.status, ms: performance.now() - t0 };
+        },
+        [body, enable] as const,
+      );
+    const off = await own(false);
+    assert.equal(off.status, 200);
+    assert.ok(existsSync(join(copiedInstall(), "SKILL.md.disabled")) && !existsSync(skillFile), "the same body, sent by Skills Hub's page, disables the install");
+    const on = await own(true);
+    assert.equal(on.status, 200);
+    assert.ok(existsSync(skillFile) && !existsSync(join(copiedInstall(), "SKILL.md.disabled")), "and enables it again");
+    const disk = readFileSync(skillFile, "utf8");
+    await nav(page, "Paper wiki").click();
+    const wiki = await wikiFrame(page);
+    const sent = await wiki.evaluate(async (b) => {
+      const U = "app://skills-hub/api/skills-hub/toggle";
+      const outcome = async (send: () => Promise<Response>) => {
+        try {
+          const res = await send();
+          return `answered ${res.type} ${res.status}`;
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        // A JSON POST, which a CORS-enabled scheme would preflight; this one is not.
+        corsJson: await outcome(() => fetch(U, { method: "POST", headers: { "Content-Type": "application/json" }, body: b })),
+        // A body typed as JSON, without CORS: a no-cors request cannot carry that type (the handler would answer 415).
+        noCorsJsonBlob: await outcome(() => fetch(U, { method: "POST", mode: "no-cors", body: new Blob([b], { type: "application/json" }) })),
+        noCorsPlain: await outcome(() => fetch(U, { method: "POST", mode: "no-cors", body: b })),
+      };
+    }, body);
+    await page.waitForTimeout(Math.max(3000, 3 * Math.max(off.ms, on.ms)));
+    assert.ok(existsSync(skillFile) && !existsSync(join(copiedInstall(), "SKILL.md.disabled")), `another origin's POST reached the toggle: ${JSON.stringify(sent)}`);
+    assert.equal(readFileSync(skillFile, "utf8"), disk);
+    // Each was stopped in the frame: Paper wiki's page may connect to its own origin only (connect-src 'self').
+    assert.match(sent.corsJson, /^blocked: TypeError/);
+    assert.match(sent.noCorsJsonBlob, /^blocked: TypeError/);
+    assert.match(sent.noCorsPlain, /^blocked: TypeError/);
+  });
+
+  test("another plugin's frame cannot become Skills Hub's page: Paper wiki's frame sent to app://skills-hub/ stays Paper wiki's, and nothing changes on disk", SLOW, async () => {
+    const skillFile = join(copiedInstall(), "SKILL.md");
+    const disk = readFileSync(skillFile, "utf8");
+    await nav(page, "Paper wiki").click();
+    await wikiFrame(page);
+    const wikiArea = page.locator('[data-screen="paper-wiki/viewer"] iframe');
+    const inWikiArea = async () => (await (await wikiArea.elementHandle())!.contentFrame())!.url();
+    const before = await inWikiArea();
+    assert.match(before, /^app:\/\/paper-wiki\//);
+    const skillsFrames = () => page.frames().filter((f) => f.url().startsWith("app://skills-hub/")).length;
+    const frames = skillsFrames();
+    // Each frame navigation the main process is asked for, so the check below runs after the attempt reached it.
+    await app.evaluate(({ BrowserWindow }) => {
+      const seen: string[] = [];
+      const listener = (event: Electron.Event<Electron.WebContentsWillFrameNavigateEventParams>) => seen.push(event.url);
+      Object.assign(globalThis, { __navigations: seen, __navigationListener: listener });
+      BrowserWindow.getAllWindows()[0]!.webContents.on("will-frame-navigate", listener);
+    });
+    try {
+      // The reviewer's script, run in the frame by evaluation from the suite.
+      await (await wikiFrame(page)).evaluate(() => {
+        location.href = "app://skills-hub/index.html";
+      });
+      const asked = () => app.evaluate(() => (globalThis as unknown as { __navigations: string[] }).__navigations.includes("app://skills-hub/index.html"));
+      for (let i = 0; i < 100 && !(await asked()); i++) await page.waitForTimeout(100);
+      assert.ok(await asked(), "the navigation reached the main process");
+      await page.waitForTimeout(1500);
+      assert.equal(await inWikiArea(), before, "Paper wiki's area still shows Paper wiki");
+      assert.equal(skillsFrames(), frames, "no second Skills Hub page");
+      assert.equal(await page.locator('[data-screen="paper-wiki/viewer"]').locator("iframe").count(), 1);
+    } finally {
+      await app.evaluate(({ BrowserWindow }) => {
+        const { __navigationListener: listener } = globalThis as unknown as { __navigationListener: (...args: unknown[]) => void };
+        BrowserWindow.getAllWindows()[0]!.webContents.removeListener("will-frame-navigate", listener);
+      });
+    }
+    assert.equal(readFileSync(skillFile, "utf8"), disk);
+    assert.ok(!existsSync(join(copiedInstall(), "SKILL.md.disabled")));
+  });
+
+  test("a layout saved on the trunk's old Skills page reopens on Skills Hub's page", SLOW, async () => {
+    await page.evaluate(() => {
+      localStorage.setItem("osui.layout.v1", JSON.stringify({ screen: "skills" }));
+      location.reload();
+    });
+    await page.getByText("Desktop client", { exact: true }).waitFor({ timeout: 60_000 });
+    await screen(page, "skills-hub/skills").waitFor();
+    assert.equal(await nav(page, "Skills").getAttribute("aria-current"), "page");
+    const sh = await pluginFrame(page, "app://skills-hub/");
+    await sh.locator(".cards .skill").first().waitFor({ timeout: 30_000 });
+    assert.equal(await sh.getByRole("heading", { level: 1 }).textContent(), "Skills");
+  });
+
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {
     const results = await page.evaluate(async () => {
       const status = async (url: string, init?: RequestInit) => (await fetch(url, init)).status;
       return {
         form: await status("/api/chat/send", { method: "POST", body: new URLSearchParams({ text: "x" }) }),
-        plain: await status("/api/skill/toggle", { method: "POST", headers: { "Content-Type": "text/plain" }, body: "{}" }),
+        // Before the token: a write that is not JSON is 415 on a token mount too (protocol.ts serveApi).
+        plain: await status("/api/paper-sources", { method: "POST", headers: { "Content-Type": "text/plain" }, body: "{}" }),
+        // The trunk's skill toggle went with step 2.5: Skills Hub's own origin alone reaches its toggle.
+        skillToggle: await status("/api/skill/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }),
         noToken: await status("/api/chat/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"text":"x"}' }),
         withToken: await status("/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": window.osDesktop!.token } }),
         state: await status("/state.json"),
@@ -3288,7 +4053,7 @@ describe("desktop client on a Research OS folder", () => {
         wikiHere: await status("/paper-wiki/viz.html"),
       };
     });
-    assert.deepEqual(results, { form: 415, plain: 415, noToken: 401, withToken: 200, state: 200, traversal: 404, wikiHere: 404 });
+    assert.deepEqual(results, { form: 415, plain: 415, skillToggle: 404, noToken: 401, withToken: 200, state: 200, traversal: 404, wikiHere: 404 });
     const body = await page.evaluate(async () => (await fetch("/..%2f..%2fpackage.json")).text());
     assert.ok(!body.includes("research-os-desktop"), "a file outside the renderer must not be served");
   });
@@ -3368,6 +4133,7 @@ describe("desktop client on a Research OS folder", () => {
         !l.includes("research-os/api") &&
         !l.includes("paper-wiki/api") &&
         !l.includes("code-view/api") &&
+        !l.includes("skills-hub/api") &&
         !l.includes("csp-canary.invalid"),
     );
     assert.deepEqual(violations, []);

@@ -63,12 +63,15 @@ describe("loadPlugins", () => {
   test("an /api/<id> that overlaps a trunk prefix is reported", () => {
     const root = folder(manifest("chat"), manifest("skill"), manifest("paper-sources"), manifest("paper"));
     const result = loadPlugins(root, ["chat", "skill", "paper-sources", "paper"], "bundled", none);
-    assert.deepEqual(result.plugins.map((p) => p.manifest.id), ["paper"], "/api/paper is not a segment of /api/paper-sources");
+    // The trunk's /api/skill/toggle went with step 2.5 (Skills Hub's /api/skills-hub/toggle), so "skill" is free.
+    assert.deepEqual(result.plugins.map((p) => p.manifest.id), ["skill", "paper"], "/api/paper is not a segment of /api/paper-sources");
     assert.deepEqual(result.problems, [
       "chat: /api/chat overlaps the app's endpoint /api/chat",
-      "skill: /api/skill overlaps the app's endpoint /api/skill/toggle",
       "paper-sources: /api/paper-sources overlaps the app's endpoint /api/paper-sources",
     ]);
+    // An id whose /api/<id> is a parent of a trunk prefix overlaps it too.
+    const parent = loadPlugins(root, ["skill"], "bundled", { trunk: [{ prefix: "/api/skill/toggle", factory: fake("t"), token: false }], plugins: [] });
+    assert.deepEqual(parent.problems, ["skill: /api/skill overlaps the app's endpoint /api/skill/toggle"]);
   });
 
   test("a repeated id, or a local plugin taking a bundled id, is reported", () => {
@@ -109,21 +112,23 @@ describe("createRegistry", () => {
   const real = () =>
     createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins, factories: BUNDLED_HANDLERS });
 
-  test("all has the app's three endpoints, then Paper Wiki's status and the Code view's Git history, with their token flags", () => {
+  test("all has the app's two endpoints, then Paper Wiki's status, the Code view's Git history, and Skills Hub's toggle, with their token flags", () => {
     assert.deepEqual(flags(real().all), [
-      ["/api/skill/toggle", false],
       ["/api/paper-sources", true],
       ["/api/chat", true],
       ["/api/paper-wiki/status", false],
       ["/api/code-view/git", false],
+      ["/api/skills-hub/toggle", false],
     ]);
   });
 
-  test("with the dev server's skip set, the Code view's Git history is declared but mounted nowhere", () => {
-    assert.deepEqual([...DESKTOP_ONLY_HANDLERS], ["code-view/git"]);
+  test("with the dev server's skip set, the Code view's Git history and Skills Hub's toggle are declared but mounted nowhere", () => {
+    assert.deepEqual([...DESKTOP_ONLY_HANDLERS], ["code-view/git", "skills-hub/toggle"]);
     const dev = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins, factories: BUNDLED_HANDLERS, skip: DESKTOP_ONLY_HANDLERS });
     assert.deepEqual(flags(dev.byPlugin.get("code-view")!), []);
+    assert.deepEqual(flags(dev.byPlugin.get("skills-hub")!), []);
     assert.ok(!dev.all.some((m) => m.prefix.startsWith("/api/code-view")));
+    assert.ok(!dev.all.some((m) => m.prefix.startsWith("/api/skills-hub")));
   });
 
   test("the trunk on the app origin, each plugin's handlers on its own, never with the token", () => {
@@ -132,6 +137,7 @@ describe("createRegistry", () => {
     assert.deepEqual([...registry.byPlugin.keys()], [...BUNDLED_IDS]);
     assert.deepEqual(flags(registry.byPlugin.get("paper-wiki")!), [["/api/paper-wiki/status", false]]);
     assert.deepEqual(flags(registry.byPlugin.get("code-view")!), [["/api/code-view/git", false]]);
+    assert.deepEqual(flags(registry.byPlugin.get("skills-hub")!), [["/api/skills-hub/toggle", false]]);
     const app = new Set(registry.app.map((m) => m.prefix));
     for (const [id, mounts] of registry.byPlugin) {
       for (const mount of mounts) {
@@ -223,8 +229,8 @@ describe("createRegistry", () => {
       /^Error: plugin registry: \/api\/chat overlaps the app's endpoint \/api\/chat$/,
     );
     assert.throws(
-      () => createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: [loaded(manifest("skill"), "local")], factories: {} }),
-      /\/api\/skill overlaps the app's endpoint \/api\/skill\/toggle$/,
+      () => createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: [loaded(manifest("paper-sources"), "local")], factories: {} }),
+      /\/api\/paper-sources overlaps the app's endpoint \/api\/paper-sources$/,
     );
     const paper = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: [loaded(manifest("paper"))], factories: {} });
     assert.deepEqual(flags(paper.all), flags(paper.app), "/api/paper is not a segment of /api/paper-sources");

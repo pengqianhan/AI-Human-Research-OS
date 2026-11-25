@@ -23,9 +23,10 @@ interface Props {
 
 /**
  * The left navigation of mockup C: the main pages, with the plugins' pages
- * (Paper wiki) between Projects and Skills, Quick access to each registered
- * project, then the snapshot status, Settings, and the collapse control at
- * the bottom. Collapsed, it keeps only the icons; every button keeps its
+ * (Paper wiki, then Skills, from the skills-hub plugin since step 2.5)
+ * between Projects and Plugins, Quick access to each registered project,
+ * then the snapshot status, Settings, and the collapse control at the
+ * bottom. Collapsed, it keeps only the icons; every button keeps its
  * name through aria-label, and the current page is marked with aria-current.
  */
 export function Sidebar({ meta, policy, screen, openProject, projects, pluginItems, collapsed, onNavigate, onToggleCollapsed }: Props) {
@@ -59,7 +60,6 @@ export function Sidebar({ meta, policy, screen, openProject, projects, pluginIte
       {pluginItems.map((p) => (
         <Fragment key={p.screen}>{item(p.screen, p.label, p.icon)}</Fragment>
       ))}
-      {item("skills", "Skills", "spark")}
       {item("plugins", "Plugins", "puzzle")}
 
       {collapsed ? <div className="h-3.5" aria-hidden="true" /> : <div className="label px-2.5 pb-1.5 pt-[18px]">Quick access</div>}

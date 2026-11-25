@@ -26,8 +26,9 @@ decision record is [ADR-0005](../../docs/adr/0005-desktop-client.md).
   Human Owner to confirm.
 - **Scope:** the client exposes exactly the execution surface os-ui already
   has on its dev server: the agent conversations (2026-09-26), the skill toggle
-  (2026-07-22), the paper reading status (2026-09-30), and the paper-source
-  switches and keys (2026-09-30). It adds no new write action on repository
+  (2026-07-22; since step 2.5 the client's alone, on `app://skills-hub`), the
+  paper reading status (2026-09-30), and the paper-source switches and keys
+  (2026-09-30). It adds no new write action on repository
   content. Its own additions run only while the app runs and touch nothing but
   the generator's cache and the app's own settings: choosing a folder,
   regenerating `state.json` (on start, on change, on request), the
@@ -166,9 +167,9 @@ with the trunk's endpoints only.
 | `app://research-os/api/...` | the trunk's endpoints (`TRUNK_MOUNTS`) |
 | `app://research-os/state.json` | `<workspace>/os-ui/frontend/public/state.json` |
 | `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
-| `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`); other `api/` paths are 404 |
+| `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`; Skills Hub: `/api/skills-hub/toggle`, the skill toggle, the trunk's `/api/skill/toggle` until step 2.5); other `api/` paths are 404 |
 | `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
-| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, Skeleton, Assets, and Idea views: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
+| `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, Skeleton, Assets, and Idea views and Skills Hub: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
 | any other host | 404 |
 
 - Paths are decoded once; `..`, `\`, `:`, NUL, and Windows device names (CON,
@@ -521,7 +522,10 @@ Known limits of the channel, not yet handled:
   needs `OS_UI_TOKEN`.
 - **Navigation:** `will-frame-navigate` and `will-redirect` keep the top frame
   on `app://research-os/` and subframes on a loaded plugin's origin (or
-  `about:blank`, `about:srcdoc`); an http(s) or mailto link opens in the
+  `about:blank`, `about:srcdoc`): another plugin's origin only when the app's
+  own page starts the navigation, so a plugin's frame stays on the origin the
+  app gave it and cannot turn itself into another plugin's page
+  ([PLUGINS.md](../PLUGINS.md), 2.5's review, note 3); an http(s) or mailto link opens in the
   default browser only after a dialog naming the URL is confirmed, one dialog
   at a time (Electron cannot tell which frame asked, and the viewer runs note
   HTML); every `window.open` is denied.
