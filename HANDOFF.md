@@ -170,8 +170,8 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       [`os-ui/mockups/step2/skills.html`](os-ui/mockups/step2/skills.html):
       top C, panel 1, and in browsers a sentence in place of the page
       (Decisions: "Skills page as a plugin", "Browser builds and
-      GitHub Pages"). It is built on that branch (pull request #56, a
-      draft): the bundled plugin `skills-hub` with its page on
+      GitHub Pages"). It is built on that branch (pull request #56):
+      the bundled plugin `skills-hub` with its page on
       `app://skills-hub` and the handler `toggle`, which only that origin
       reaches; the trunk's Skills page and `/api/skill/toggle` are gone
       from the app, and the dev server no longer offers the toggle. The
@@ -204,8 +204,9 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       as a pull request of its own; no answer yet); the shell stops on a
       snapshot of the wrong shape; and macos-x64's timed cases still fail
       now and then (two of the Assets view's on this branch's run of
-      `90d5bd5`, on `main`'s code). Not verified: Windows and Linux
-      beyond CI, and the Human Owner's checklist line. 2.6 waits on
+      `90d5bd5`, on `main`'s code; all eight CI jobs passed at `ff7f174`,
+      windows-x64 with 78 of 78 end-to-end cases). Not verified: Windows
+      and Linux beyond CI, and the Human Owner's checklist line. 2.6 waits on
       Q-PO1.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
       workspace**, each project its own Git repository, runs record their commit.
