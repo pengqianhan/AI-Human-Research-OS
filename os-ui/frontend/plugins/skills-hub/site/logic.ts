@@ -234,6 +234,27 @@ export function installAtTargetCommand(skill: DisplaySkill, target: string): str
   return `python ${INSTALLER_PATH} install ${skill.name} ` + `--collection ${skill.collection} --target ${target}`;
 }
 
+/** The toggle endpoint's pattern for a skill, target, or collection name (server/skillToggle.ts SAFE). */
+export const SAFE_NAME = /^[A-Za-z0-9._:-]+$/;
+/** Where the page offers no command: the page's own words (review of step 2.5, note 4). */
+export const UNSAFE_COMMAND = "No command: a name here has characters a command cannot carry safely.";
+
+/**
+ * The panel's command as the page offers it: installCommand, or null when a name it carries (the name for
+ * an orphan's status command; the name and the collection for an install command) is outside SAFE_NAME, so
+ * no name goes unquoted into a command a user pastes into a terminal. Here the page leaves the trunk's,
+ * which showed and copied any name.
+ */
+export function offeredCommand(skill: DisplaySkill): string | null {
+  const carried = skill.sync === "installed_no_hub_source" ? [skill.name] : [skill.name, skill.collection];
+  return carried.every((name) => SAFE_NAME.test(name)) ? installCommand(skill) : null;
+}
+
+/** A row's install command as the page offers it: installAtTargetCommand, or null when the name, the collection (an orphan's is "no hub source"), or the target is outside SAFE_NAME. */
+export function offeredCommandAt(skill: DisplaySkill, target: string): string | null {
+  return [skill.name, skill.collection, target].every((name) => SAFE_NAME.test(name)) ? installAtTargetCommand(skill, target) : null;
+}
+
 // ---- a card (src/components/SkillCard.tsx, SyncBadge.tsx, Badge.tsx) -----------------------
 
 export type Tone = "ok" | "warn" | "mute";
@@ -288,7 +309,7 @@ export const PANEL_NOTE =
 /** How long a copy button's answer shows (SkillDrawer.tsx, SkillInstalls.tsx). */
 export const ANSWER_MS = 1600;
 
-/** What the panel draws for a skill, or for none (closed: every field a dash, as the trunk's drawer did). */
+/** What the panel draws for a skill, or for none (closed: every field a dash, as the trunk's drawer did); a command of null is one the page does not offer (offeredCommand). */
 export function panelView(skill: DisplaySkill | null, copyLabel: string | null) {
   return {
     name: skill?.name ?? NONE,
@@ -296,7 +317,7 @@ export function panelView(skill: DisplaySkill | null, copyLabel: string | null) 
     description: skill?.description ?? NONE,
     license: skill?.license ?? UNKNOWN_LICENSE,
     scripts: skill?.hasScripts ? HAS_SCRIPTS : NO_SCRIPTS,
-    command: skill ? installCommand(skill) : NONE,
+    command: skill ? offeredCommand(skill) : NONE,
     copy: copyLabel ?? (skill ? copyButtonLabel(skill) : DEFAULT_COPY),
   };
 }
@@ -354,9 +375,9 @@ export function installsView(skill: DisplaySkill, targets: readonly StoreTarget[
   };
 }
 
-/** A row's button: the toggle where installed (its word, and aria-pressed = enabled), else the copy of an install command. */
-export function rowAction(install: SkillInstall | null, working: boolean, copied: boolean): { kind: "toggle"; label: string; pressed: boolean; enable: boolean } | { kind: "copy"; label: string } {
-  if (install === null) return { kind: "copy", label: copied ? INSTALL_COPIED : INSTALL_COPY };
+/** A row's button: the toggle where installed (its word, and aria-pressed = enabled), else the copy of an install command when the page offers one (`offered`), else none. */
+export function rowAction(install: SkillInstall | null, working: boolean, copied: boolean, offered: boolean): { kind: "toggle"; label: string; pressed: boolean; enable: boolean } | { kind: "copy"; label: string } | { kind: "none" } {
+  if (install === null) return offered ? { kind: "copy", label: copied ? INSTALL_COPIED : INSTALL_COPY } : { kind: "none" };
   return { kind: "toggle", label: working ? WORKING : install.disabled ? ENABLE : DISABLE, pressed: !install.disabled, enable: install.disabled };
 }
 

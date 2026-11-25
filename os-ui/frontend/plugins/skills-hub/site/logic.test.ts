@@ -54,6 +54,8 @@ import {
   NO_SCRIPTS,
   NO_TARGETS,
   NONE,
+  offeredCommand,
+  offeredCommandAt,
   ORPHAN_COLLECTION_LABEL,
   PANEL_LABEL,
   PANEL_NOTE,
@@ -62,6 +64,7 @@ import {
   POLL_MS,
   problemWords,
   rowAction,
+  SAFE_NAME,
   SCOPE_ORDER,
   SCRIPTS,
   SEARCH_LABEL,
@@ -74,6 +77,7 @@ import {
   toggleError,
   TOGGLE_FAILED,
   UNKNOWN_LICENSE,
+  UNSAFE_COMMAND,
   WORKING,
 } from "./logic.ts";
 import type { DisplaySkill, Store } from "./logic.ts";
@@ -220,7 +224,7 @@ describe("the same list, filter, and commands as the trunk's page", () => {
     assert.deepEqual(filterSkills(list, ALL, "nonsense").length, 0);
   });
 
-  test("the commands and the copy button's word, for every skill and target", () => {
+  test("the commands as ported and the copy button's word, for every skill and target (what the page offers is below)", () => {
     const list = flattenStore(parsed());
     const old = today.flattenStore(RAW as unknown as TodayStore);
     list.forEach((s, i) => {
@@ -231,6 +235,63 @@ describe("the same list, filter, and commands as the trunk's page", () => {
     });
     assert.equal(installCommand(skill("e2e-orphan")), "python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status e2e-orphan");
     assert.equal(installCommand(skill("e2e-copied")), "python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install e2e-copied --collection beta-copy");
+  });
+
+  test("where the page leaves the trunk: a command that would carry a name outside the toggle endpoint's pattern is not offered, shown, or copied (review, note 4)", () => {
+    // The endpoint's own pattern for a skill, target, or collection name (server/skillToggle.ts SAFE).
+    const endpoint = /const SAFE = (\/.*\/);/.exec(readFileSync(join(FRONTEND, "server/skillToggle.ts"), "utf8"))![1];
+    assert.equal(String(SAFE_NAME), endpoint);
+    const INSTALLER = "python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py";
+    const HOSTILE = "e2e-o;echo INJECTED-$(id -u)";
+    const store = {
+      ...RAW,
+      collections: [
+        ...RAW.collections,
+        // A hub skill's name is its SKILL.md's frontmatter `name:`, so a hostile name needs no hostile folder.
+        { name: "gamma", skills: [{ name: "x;rm -rf ~", description: "A frontmatter name.", sync: "not_installed" }] },
+        { name: "c$(id)", skills: [{ name: "plain", sync: "not_installed" }] },
+      ],
+      orphans: [...RAW.orphans, { name: HOSTILE, description: "", sync: "installed_no_hub_source", installs: [{ target: "project-claude:demo", ok: true, disabled: false, detail: "" }] }],
+      targets: [...RAW.targets, { name: "project-claude:a b", path: "/w/projects-folder/a b/.claude/skills", scope: "project" }],
+    };
+    const list = flattenStore(parsed(store));
+    const old = today.flattenStore(store as unknown as TodayStore);
+    const safe = (...names: string[]) => names.every((n) => SAFE_NAME.test(n));
+    list.forEach((s, i) => {
+      const t = old[i]!;
+      // The status command carries the name; the install command, the name and the collection; at a target, the target too.
+      const carried = s.sync === "installed_no_hub_source" ? [s.name] : [s.name, s.collection];
+      assert.equal(offeredCommand(s), safe(...carried) ? today.installCommand(t) : null, s.name);
+      for (const target of store.targets) {
+        assert.equal(offeredCommandAt(s, target.name), safe(s.name, s.collection, target.name) ? today.installAtTargetCommand(t, target.name) : null, `${s.name} at ${target.name}`);
+      }
+    });
+    // The divergences, one by one: the trunk's command, then the page's none.
+    const by = (name: string) => list.find((s) => s.name === name)!;
+    const oldBy = (name: string) => old.find((s) => s.name === name)!;
+    assert.equal(today.installCommand(oldBy(HOSTILE)), `${INSTALLER} status e2e-o;echo INJECTED-$(id -u)`);
+    assert.equal(offeredCommand(by(HOSTILE)), null);
+    assert.equal(today.installCommand(oldBy("x;rm -rf ~")), `${INSTALLER} install x;rm -rf ~ --collection gamma`);
+    assert.equal(offeredCommand(by("x;rm -rf ~")), null);
+    assert.equal(today.installCommand(oldBy("plain")), `${INSTALLER} install plain --collection c$(id)`);
+    assert.equal(offeredCommand(by("plain")), null);
+    assert.equal(today.installAtTargetCommand(oldBy("e2e-copied"), "project-claude:a b"), `${INSTALLER} install e2e-copied --collection beta-copy --target project-claude:a b`);
+    assert.equal(offeredCommandAt(by("e2e-copied"), "project-claude:a b"), null);
+    assert.equal(offeredCommandAt(by("e2e-copied"), "repo-codex"), today.installAtTargetCommand(oldBy("e2e-copied"), "repo-codex"));
+    // An orphan's command at a target carries its label, "no hub source", spaces and all: the trunk's is a command
+    // the installer's parser refuses; the page offers none. Its status command carries the name alone and stays.
+    assert.equal(today.installAtTargetCommand(oldBy("e2e-orphan"), "repo-codex"), `${INSTALLER} install e2e-orphan --collection no hub source --target repo-codex`);
+    assert.equal(offeredCommandAt(by("e2e-orphan"), "repo-codex"), null);
+    assert.equal(offeredCommand(by("e2e-orphan")), today.installCommand(oldBy("e2e-orphan")));
+    // Every skill of the store the other tests use is offered its panel command, as the trunk's page showed it.
+    for (const s of flattenStore(parsed())) assert.ok(offeredCommand(s) !== null, s.name);
+    // What the panel and a row make of it.
+    assert.equal(panelView(by(HOSTILE), null).command, null);
+    assert.equal(panelView(by("e2e-copied"), null).command, installCommand(by("e2e-copied")));
+    assert.deepEqual(rowAction(null, false, false, false), { kind: "none" });
+    assert.deepEqual(rowAction(null, false, false, true), { kind: "copy", label: INSTALL_COPY });
+    // The toggle still sends the name as it is; the endpoint refuses it (400) before running anything, as today.
+    assert.equal(JSON.parse(toggleBody(by(HOSTILE), "project-claude:demo", false)).skill, HOSTILE);
   });
 
   test("the filter pills: All counts the orphans too, one per collection in snapshot order, then no hub source", () => {
@@ -303,11 +364,11 @@ describe("the panel and its installs", () => {
 
   test("a row's button: disable where enabled, enable where disabled, working... while it waits, install ⧉ where nothing is installed", () => {
     const rows = installsView(skill("paper-search"), parsed().targets)!.groups[0]!.rows;
-    assert.deepEqual(rowAction(rows[0]!.install, false, false), { kind: "toggle", label: DISABLE, pressed: true, enable: false });
-    assert.deepEqual(rowAction(rows[1]!.install, false, false), { kind: "toggle", label: ENABLE, pressed: false, enable: true });
-    assert.deepEqual(rowAction(rows[1]!.install, true, false), { kind: "toggle", label: WORKING, pressed: false, enable: true });
-    assert.deepEqual(rowAction(null, false, false), { kind: "copy", label: INSTALL_COPY });
-    assert.deepEqual(rowAction(null, false, true), { kind: "copy", label: INSTALL_COPIED });
+    assert.deepEqual(rowAction(rows[0]!.install, false, false, false), { kind: "toggle", label: DISABLE, pressed: true, enable: false });
+    assert.deepEqual(rowAction(rows[1]!.install, false, false, false), { kind: "toggle", label: ENABLE, pressed: false, enable: true });
+    assert.deepEqual(rowAction(rows[1]!.install, true, false, false), { kind: "toggle", label: WORKING, pressed: false, enable: true });
+    assert.deepEqual(rowAction(null, false, false, true), { kind: "copy", label: INSTALL_COPY });
+    assert.deepEqual(rowAction(null, false, true, true), { kind: "copy", label: INSTALL_COPIED });
   });
 
   test("the toggle sends today's four fields; a refusal shows its error or 'toggle failed'", () => {
@@ -328,9 +389,11 @@ describe("the panel and its installs", () => {
 
   test("an orphan's row offers the toggle, which the handler refuses before running anything (F2, kept as it is)", async () => {
     const orphanRow = installsView(skill("e2e-orphan"), parsed().targets)!.groups.find((g) => g.scope === "project")!.rows[0]!;
-    assert.deepEqual(rowAction(orphanRow.install, false, false), { kind: "toggle", label: DISABLE, pressed: true, enable: false });
+    assert.deepEqual(rowAction(orphanRow.install, false, false, false), { kind: "toggle", label: DISABLE, pressed: true, enable: false });
     // The orphan found in the repository's own folders has no installs: no toggle anywhere (generate.py's first orphan loop).
-    assert.deepEqual(installsView(skill("repo-orphan"), parsed().targets)!.groups.flatMap((g) => g.rows.map((r) => rowAction(r.install, false, false).kind)), ["copy", "copy", "copy", "copy"]);
+    // Nor, unlike the trunk's page, an install command: it would carry the label "no hub source" (review, note 4; above).
+    const orphan = skill("repo-orphan");
+    assert.deepEqual(installsView(orphan, parsed().targets)!.groups.flatMap((g) => g.rows.map((r) => rowAction(r.install, false, false, offeredCommandAt(orphan, r.target) !== null).kind)), ["none", "none", "none", "none"]);
     const { run, calls } = fakeRunner();
     const answer = await skillToggleApi(context(tempTree(), { run }))(request("POST", "/", JSON.parse(toggleBody(skill("e2e-orphan"), orphanRow.target, false))));
     assert.equal(answer.status, 400);
@@ -432,6 +495,8 @@ describe("every word on the page, from the file it comes from", () => {
       "src/lib/skills.ts": ['"Copy status command"', '"Copy install command"', `"${ORPHAN_COLLECTION_LABEL}"`],
       "src/App.tsx": [LOADING],
     };
+    // The page's own words, new with the review's note 4: no file of the trunk has them.
+    assert.equal(UNSAFE_COMMAND, "No command: a name here has characters a command cannot carry safely.");
     for (const [file, list] of Object.entries(words)) {
       const text = source(file);
       for (const word of list) assert.ok(text.includes(String(word)), `${file}: ${word}`);

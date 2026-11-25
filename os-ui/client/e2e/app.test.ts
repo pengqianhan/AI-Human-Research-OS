@@ -367,7 +367,8 @@ function ideaFixtures(workspace: string): void {
  * .claude/skills, and one of two projects' copies of another skill (its own
  * collection, e2e-projects), the other project's copy left as it is. The orphan is in a fixture project's .claude/skills: the generator
  * lists an orphan of the repository's own folders without installs, so only
- * one found in another target has the toggle the handler refuses (F2). A hub
+ * one found in another target has the toggle the handler refuses (F2); a
+ * second one there has a folder name of shell syntax (HOSTILE_ORPHAN). A hub
  * skill's description carries markup. A collection of its own holds three
  * skills with one name (TWINS), two of them byte for byte the same, as a copy
  * made the Windows way lists a collection's links to its own skills.
@@ -376,6 +377,10 @@ const SKILLS_COLLECTION = "e2e-copy";
 const COPIED_SKILL = "e2e-copied";
 const MARKUP_SKILL = "e2e-markup";
 const ORPHAN_SKILL = "e2e-orphan";
+/** A second orphan beside it, whose folder name is shell syntax (review, note 4): no command may carry it. */
+const HOSTILE_ORPHAN = "e2e-o;echo INJECTED-$(id -u)";
+/** The page's line where it offers no command (skills-hub site/logic.ts UNSAFE_COMMAND). */
+const NO_COMMAND = "No command: a name here has characters a command cannot carry safely.";
 /** A copy-form skill with a copy in each of two fixture projects: the suite disables and enables one project's install. */
 const PROJECTS_COLLECTION = "e2e-projects";
 const PROJECTS_SKILL = "e2e-in-projects";
@@ -404,6 +409,9 @@ function skillsFixtures(workspace: string): void {
   const orphan = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", ORPHAN_SKILL);
   mkdirSync(orphan, { recursive: true });
   writeFileSync(join(orphan, "SKILL.md"), skillMd(ORPHAN_SKILL, "An install with no hub source."));
+  const hostile = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", HOSTILE_ORPHAN);
+  mkdirSync(hostile, { recursive: true });
+  writeFileSync(join(hostile, "SKILL.md"), skillMd("hostile-orphan", "An orphan whose folder name is shell syntax."));
   const projects = join(workspace, "research-skills-hub", PROJECTS_COLLECTION);
   mkdirSync(join(projects, PROJECTS_SKILL), { recursive: true });
   writeFileSync(join(projects, "SOURCE.md"), `# ${PROJECTS_COLLECTION}\n\nInstall form: \`copy\`\n`);
@@ -3632,6 +3640,46 @@ describe("desktop client on a Research OS folder", () => {
     assert.ok(!existsSync(join(dirname(file), "SKILL.md.disabled")));
     await closeSkill(sh);
     await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: /^All · / }).click();
+  });
+
+  test("Skills: a name a command cannot carry safely gets no command and no copy button but one line, and the clipboard is never written", SLOW, async () => {
+    const orphan = snapshot().store.orphans.find((o) => o.name === HOSTILE_ORPHAN)!;
+    assert.deepEqual(orphan.installs!.map((i) => i.target), [`project-claude:${TEMPLATE_PROJECT}`]);
+    const saved = await app.evaluate(({ clipboard }) => clipboard.readText());
+    try {
+      await app.evaluate(({ clipboard }) => clipboard.writeText("before"));
+      const { sh } = await openSkills();
+      await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: "no hub source", exact: true }).click();
+      await skillCard(sh, HOSTILE_ORPHAN).click();
+      const panel = detailsPanel(sh);
+      await panel.getByRole("heading", { name: HOSTILE_ORPHAN, exact: true }).waitFor();
+      // In the panel and under the installs, the line; no command on screen and no copy button.
+      assert.deepEqual([await sh.locator(".drawer > .nocmd").textContent(), await sh.locator(".drawer .inst .nocmd").textContent()], [NO_COMMAND, NO_COMMAND]);
+      assert.equal(await panel.getByText(NO_COMMAND, { exact: true }).count(), 2);
+      for (const line of await panel.getByText(NO_COMMAND, { exact: true }).all()) assert.equal(await line.isVisible(), true);
+      assert.equal(await panel.locator(".cmd").isVisible(), false);
+      assert.equal(await panel.locator(".copy-btn").isVisible(), false);
+      assert.ok(!(await panel.innerText()).includes("install_research_skill.py"), "no command anywhere in the panel");
+      // The one button left in the installs is the toggle where it is installed (F2's, which the handler refuses).
+      assert.deepEqual(await panel.locator(".irow button").allTextContents(), ["disable"]);
+      // Even the hidden copy button, clicked from code, writes nothing.
+      await sh.evaluate(() => (document.querySelector(".copy-btn") as HTMLButtonElement).click());
+      await page.waitForTimeout(500);
+      assert.equal(await app.evaluate(({ clipboard }) => clipboard.readText()), "before");
+      await closeSkill(sh);
+      // A safe name's panel still has its command and copy button, and no line.
+      const safe = await openSkill(sh, ORPHAN_SKILL);
+      assert.equal(await safe.locator(".cmd").textContent(), `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status ${ORPHAN_SKILL}`);
+      assert.equal(await safe.getByRole("button", { name: "Copy status command" }).isVisible(), true);
+      assert.equal(await sh.locator(".drawer > .nocmd").isVisible(), false);
+      // Its rows offer no install command either: one would carry its label, "no hub source", spaces and all.
+      assert.equal(await sh.locator(".drawer .inst .nocmd").textContent(), NO_COMMAND);
+      assert.deepEqual(await safe.locator(".irow button").allTextContents(), ["disable"]);
+      await closeSkill(sh);
+      await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: /^All · / }).click();
+    } finally {
+      await app.evaluate(({ clipboard }, text) => clipboard.writeText(text), saved);
+    }
   });
 
   test("Skills: markup in a skill's description is text on the card and in the panel, and runs nothing", SLOW, async () => {

@@ -240,10 +240,17 @@ describe("what the page reads and writes", () => {
     assert.match(source("../../site-kit.ts"), /`\.\/_os\/files\?path=\$\{encodeURIComponent\(rel\)\}`/);
   });
 
-  test("the clipboard only through navigator.clipboard.writeText, for the two commands", () => {
+  test("the clipboard only through navigator.clipboard.writeText, for the two commands, and only a command the page offers (review, note 4)", () => {
     const main = source("main.ts");
-    assert.deepEqual([...main.matchAll(/navigator\.clipboard\.writeText\(([^)]*\))\)/g)].map((m) => m[1]).sort(), ["installAtTargetCommand(skill, target)", "installCommand(skill)"]);
+    assert.deepEqual([...main.matchAll(/navigator\.clipboard\.writeText\(([^)]*)\)/g)].map((m) => m[1]), ["command", "command"]);
     assert.equal([...main.matchAll(/clipboard/g)].length, 2);
+    // The panel's command and a row's: offeredCommand and offeredCommandAt, null for a name a command cannot carry safely.
+    assert.match(main, /const skill = shownSkill\(\);\n\s*if \(skill === null\) return;\n\s*const command = offeredCommand\(skill\);\n\s*if \(command === null\) return;\n\s*try \{\n\s*await navigator\.clipboard\.writeText\(command\);/);
+    assert.match(main, /const command = row\.install === null \? offeredCommandAt\(skill, row\.target\) : null;/);
+    assert.match(main, /async function copyAt\(command: string, target: string\): Promise<void> \{\n(?:.*\n){3}\s*await navigator\.clipboard\.writeText\(command\);/);
+    assert.deepEqual(args(main, "copyAt"), ["command"]);
+    // No other command reaches the screen or the clipboard.
+    assert.doesNotMatch(main, /\binstallCommand\b|\binstallAtTargetCommand\b/);
     for (const { file, text } of code()) assert.doesNotMatch(text, /execCommand|clipboard\.readText|clipboard\.write\(|clipboard\.read\(/, file);
   });
 

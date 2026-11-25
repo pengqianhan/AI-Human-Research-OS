@@ -134,6 +134,8 @@ svg { display: block; vertical-align: middle; }
 .cmd { margin-top: 14px; word-break: break-all; padding: 12px 14px; font-size: 11.5px; }
 .copy-btn { margin-top: 8px; width: 100%; justify-content: center; padding-top: 10px; padding-bottom: 10px; }
 .note { margin-top: 10px; font-size: 12px; color: var(--muted); }
+/* In place of a command a name makes unsafe (the page's own; review of step 2.5, note 4). */
+.nocmd { margin-top: 14px; font-size: 12px; color: var(--muted); }
 
 /* ---- the installs (SkillInstalls.tsx) ---- */
 .inst { margin-top: 4px; }
@@ -151,6 +153,7 @@ svg { display: block; vertical-align: middle; }
 .idetail { margin-top: 2px; font-size: 11.5px; color: var(--warn); }
 .ierr { margin-top: 4px; font-size: 11.5px; color: var(--warn); }
 .ilive { margin-top: 4px; font-size: 11.5px; color: var(--muted); }
+.inst .nocmd { margin-top: 4px; font-size: 11.5px; }
 .inone { font-size: 12px; color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {

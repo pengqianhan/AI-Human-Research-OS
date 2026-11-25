@@ -41,8 +41,6 @@ import {
   filterSkills,
   flattenStore,
   HAS_SCRIPTS_TAG,
-  installAtTargetCommand,
-  installCommand,
   INSTALL_TITLE,
   INSTALLS,
   installsView,
@@ -52,6 +50,8 @@ import {
   LOADING,
   NO_MATCH,
   NO_TARGETS,
+  offeredCommand,
+  offeredCommandAt,
   PANEL_LABEL,
   PANEL_NOTE,
   panelView,
@@ -67,6 +67,7 @@ import {
   toggleBody,
   toggleError,
   TRY_AGAIN,
+  UNSAFE_COMMAND,
 } from "./logic.ts";
 import type { DisplaySkill, Dot, InstallRow, Store, Tone } from "./logic.ts";
 
@@ -163,7 +164,9 @@ dList.append(el("dt", "label", DESCRIPTION), dDescription, el("dt", "label", INS
 const dCommand = el("div", "cmd cmd-block");
 const copyButton = button("copy-btn btn btn-primary");
 copyButton.setAttribute("aria-live", "polite");
-drawer.append(closeButton, dName, dSource, dList, dCommand, copyButton, el("p", "note", PANEL_NOTE));
+/** In place of the command and its copy button, when a name it would carry is not safe in a command (offeredCommand). */
+const noCommand = el("p", "nocmd", UNSAFE_COMMAND);
+drawer.append(closeButton, dName, dSource, dList, dCommand, copyButton, noCommand, el("p", "note", PANEL_NOTE));
 // The page scrolls in a box of its own, under the panel and its shading, as the mockup draws it: fixed to the
 // frame, they then cover the scrollbar too, as the trunk's drawer covered the page's.
 const scroller = el("div", "scroller");
@@ -355,16 +358,21 @@ function renderPanel(): void {
   dDescription.textContent = view.description;
   dLicense.textContent = view.license;
   dScripts.textContent = view.scripts;
-  dCommand.textContent = view.command;
+  dCommand.textContent = view.command ?? "";
   copyButton.textContent = view.copy;
+  dCommand.hidden = view.command === null;
+  copyButton.hidden = view.command === null;
+  noCommand.hidden = view.command !== null;
   renderInstalls();
 }
 
 copyButton.addEventListener("click", async () => {
   const skill = shownSkill();
   if (skill === null) return;
+  const command = offeredCommand(skill);
+  if (command === null) return;
   try {
-    await navigator.clipboard.writeText(installCommand(skill));
+    await navigator.clipboard.writeText(command);
     copyLabel = COPIED;
   } catch {
     copyLabel = COPY_FAILED;
@@ -381,7 +389,7 @@ copyButton.addEventListener("click", async () => {
 
 /** What the installs block was drawn for: a new skill or new targets draw it again. */
 let installsFor: { skill: DisplaySkill | null; targets: string } = { skill: null, targets: "" };
-const rowButtons = new Map<string, { row: InstallRow; node: HTMLButtonElement }>();
+const rowButtons = new Map<string, { row: InstallRow; node: HTMLButtonElement; offered: boolean }>();
 const errorLine = el("p", "ierr");
 
 function renderInstalls(): void {
@@ -408,6 +416,7 @@ function drawInstalls(skill: DisplaySkill | null): void {
     return;
   }
   const box = el("div", "inst");
+  let withheld = false;
   const headRow = el("div", "inst-head");
   headRow.append(el("span", "", view.form), el("span", "", view.count));
   box.append(headRow);
@@ -420,16 +429,27 @@ function drawInstalls(skill: DisplaySkill | null): void {
       dot.setAttribute("aria-hidden", "true");
       const name = el("span", "iname", row.target);
       name.append(el("span", "ipath", row.path));
+      line.append(dot, name);
+      scope.append(line);
+      // Where nothing is installed, the row copies the command for its target, if the page offers one.
+      const command = row.install === null ? offeredCommandAt(skill, row.target) : null;
+      if (row.install === null && command === null) {
+        withheld = true;
+        continue;
+      }
       const action = button(row.install === null ? "btn btn-sm btn-ghost" : "btn btn-sm");
       if (row.install === null) action.title = INSTALL_TITLE;
-      action.addEventListener("click", () => (row.install === null ? void copyAt(skill, row.target) : void toggle(skill, row.target, row.install.disabled)));
-      rowButtons.set(row.target, { row, node: action });
-      line.append(dot, name, action);
-      scope.append(line);
+      action.addEventListener("click", () => {
+        if (row.install !== null) void toggle(skill, row.target, row.install.disabled);
+        else if (command !== null) void copyAt(command, row.target);
+      });
+      rowButtons.set(row.target, { row, node: action, offered: command !== null });
+      line.append(action);
     }
     for (const detail of group.details) scope.append(el("p", "idetail", detail));
     box.append(scope);
   }
+  if (withheld) box.append(el("p", "nocmd", UNSAFE_COMMAND));
   const live = el("p", "ilive", LIVE_NOTE[0]);
   live.append(el("code", "", LIVE_NOTE[1]), LIVE_NOTE[2]);
   box.append(errorLine, live);
@@ -438,8 +458,9 @@ function drawInstalls(skill: DisplaySkill | null): void {
 
 /** Each row's word and state, and the error line, from busy, copied, and error. */
 function updateInstalls(): void {
-  for (const { row, node } of rowButtons.values()) {
-    const action = rowAction(row.install, busy === row.target, copied === row.target);
+  for (const { row, node, offered } of rowButtons.values()) {
+    const action = rowAction(row.install, busy === row.target, copied === row.target, offered);
+    if (action.kind === "none") continue;
     if (node.textContent !== action.label) node.textContent = action.label;
     if (action.kind === "toggle") {
       node.disabled = busy === row.target;
@@ -472,11 +493,11 @@ async function toggle(skill: DisplaySkill, target: string, enable: boolean): Pro
   if (open !== null) updateInstalls();
 }
 
-async function copyAt(skill: DisplaySkill, target: string): Promise<void> {
+async function copyAt(command: string, target: string): Promise<void> {
   const gen = openGen;
   let ok = true;
   try {
-    await navigator.clipboard.writeText(installAtTargetCommand(skill, target));
+    await navigator.clipboard.writeText(command);
   } catch {
     ok = false;
   }
