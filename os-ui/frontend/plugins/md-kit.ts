@@ -373,24 +373,38 @@ function markerOf(text: string): { kind: string; width: number } | null {
  * A table row's cells: split on "|" but not "\|", which becomes "|" (as in
  * GFM, inside code spans too); the leading "|" and a trailing one dropped;
  * each cell trimmed and cut at `max` characters (LIMITS.cell; the Idea view
- * passes Infinity to read a row's Links and Points to whole).
+ * passes Infinity to read a row's Links and Points to whole). Each cell is
+ * one slice of the line, never built a character at a time (which made a
+ * line over about 128 KiB the collector's work); a cell holding "\|" keeps
+ * the runs between its escapes and joins them with "|" once, at its end.
  */
 export function splitCells(line: string, max: number = LIMITS.cell): string[] {
   const cells: string[] = [];
   const body = trimSpaces(line);
-  let cell = "";
+  let from = 1;
+  let runs: string[] = [];
+  /** The cell from `from` up to `to`: one slice, or its runs joined. */
+  const cellTo = (to: number): string => {
+    if (runs.length === 0) return body.slice(from, to);
+    runs.push(body.slice(from, to));
+    const cell = runs.join("|");
+    runs = [];
+    return cell;
+  };
   // body starts with "|": skip it.
   for (let i = 1; i < body.length; i++) {
     const c = body.charCodeAt(i);
     if (c === BACKSLASH && body.charCodeAt(i + 1) === 124) {
-      cell += "|";
+      runs.push(body.slice(from, i));
       i++;
+      from = i + 1;
     } else if (c === 124) {
-      cells.push(cell);
-      cell = "";
-    } else cell += body[i];
+      cells.push(cellTo(i));
+      from = i + 1;
+    }
   }
   // Text after the last "|" is a cell; nothing (a trailing "|") is none.
+  const cell = cellTo(body.length);
   if (trimSpaces(cell) !== "" || !body.endsWith("|") || body.endsWith("\\|")) cells.push(cell);
   return cells.map((c) => cutText(trimSpaces(c), max));
 }

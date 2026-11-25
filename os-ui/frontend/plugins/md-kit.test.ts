@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { Worker } from "node:worker_threads";
 import {
   claims,
   CUT,
@@ -26,6 +27,7 @@ import {
   splitCells,
   splitLines,
   studies,
+  trimSpaces,
   usedBy,
 } from "./md-kit.ts";
 import type { Block, Doc, Table } from "./md-kit.ts";
@@ -404,6 +406,138 @@ describe("limits, each at its boundary", () => {
     assert.deepEqual(splitCells(row), [over.slice(0, LIMITS.cell) + CUT, "a | b", "c"], "by default, cut as a table's cells are");
     assert.deepEqual(splitCells(row, Infinity), [over, "a | b", "c"], "whole, and otherwise the same cells");
     assert.deepEqual(splitCells(row, 3), [`xxx${CUT}`, "a |" + CUT, "c"]);
+  });
+});
+
+describe("splitCells takes each cell as a slice of the line, not a character at a time", () => {
+  /**
+   * splitCells as it was before 2026-11-25 (dacc480), kept as the reference: it built each cell a character at
+   * a time. Its trimming and cut are md-kit's trimSpaces and cutText, which did not change.
+   */
+  function charByChar(line: string, max: number = LIMITS.cell): string[] {
+    const cells: string[] = [];
+    const body = trimSpaces(line);
+    let cell = "";
+    for (let i = 1; i < body.length; i++) {
+      const c = body.charCodeAt(i);
+      if (c === 92 && body.charCodeAt(i + 1) === 124) {
+        cell += "|";
+        i++;
+      } else if (c === 124) {
+        cells.push(cell);
+        cell = "";
+      } else cell += body[i];
+    }
+    if (trimSpaces(cell) !== "" || !body.endsWith("|") || body.endsWith("\\|")) cells.push(cell);
+    return cells.map((c) => cutText(trimSpaces(c), max));
+  }
+
+  /** mulberry32: the same lines on every run, so a failure names a line that fails again. */
+  function seeded(seed: number): () => number {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Pipes, escaped pipes, a backslash before something else, doubled backslashes, spaces, tabs, no-break spaces,
+  // letters, a surrogate pair, and each half of one alone; now and then a run around LIMITS.cell, so the default cut
+  // falls inside it (once right before a pair).
+  const TOKENS = ["|", "|", "|", "\\|", "\\|", "\\", "\\\\", " ", "  ", "\t", " ", "a", "bc", "-", ":", "😀", "\uD83D", "\uDE00"];
+  const LONG = ["y".repeat(LIMITS.cell + 1), `${"y".repeat(LIMITS.cell - 1)}😀`, `${"y".repeat(LIMITS.cell - 3)}\\|z`];
+  function generated(count: number, seed: number): string[] {
+    const r = seeded(seed);
+    const pick = <T>(xs: readonly T[]) => xs[Math.floor(r() * xs.length)]!;
+    return Array.from({ length: count }, () => {
+      // One line in fifty of spaces and tabs only, and one in fifty of pipes only.
+      const odd = r();
+      if (odd < 0.02) return pick(["", " ", "\t", " \t "]);
+      if (odd < 0.04) return `${pick(["", " "])}${"|".repeat(1 + Math.floor(r() * 5))}${pick(["", "\t"])}`;
+      let line = pick(["", "", " ", "\t", " \t "]);
+      line += r() < 0.9 ? "|" : pick(TOKENS);
+      const tokens = Math.floor(r() * 24);
+      for (let k = 0; k < tokens; k++) line += r() < 0.01 ? pick(LONG) : pick(TOKENS);
+      line += pick(["", "", "|", "|", "\\|", " |", "| ", "\\", "\\\\|", "||"]);
+      return line + pick(["", "", " ", "\t", "  "]);
+    });
+  }
+
+  test("the same cells as building each a character at a time, for 4,000 generated lines and the edge cases, at every cut", (t) => {
+    const lines = generated(4_000, 20261125);
+    // The generator reaches the shapes a slice boundary could get wrong, so no seed passes by missing them.
+    const shapes: [string, (line: string) => boolean][] = [
+      ["an escaped pipe right after a pipe (one at a cell's start)", (l) => l.includes("|\\|")],
+      ["an escaped pipe right before a pipe (one at a cell's end)", (l) => l.includes("\\||")],
+      ["a doubled backslash before a pipe", (l) => l.includes("\\\\|")],
+      ["an escaped pipe ending the line", (l) => trimSpaces(l).endsWith("\\|")],
+      ["a trailing pipe", (l) => trimSpaces(l).endsWith("|") && !trimSpaces(l).endsWith("\\|")],
+      ["no trailing pipe", (l) => !trimSpaces(l).endsWith("|")],
+      ["no leading pipe", (l) => trimSpaces(l) !== "" && !trimSpaces(l).startsWith("|")],
+      ["only pipes", (l) => /^\|+$/.test(trimSpaces(l))],
+      ["only spaces and tabs, or nothing", (l) => trimSpaces(l) === ""],
+      ["a no-break space", (l) => l.includes(" ")],
+      ["a surrogate pair", (l) => l.includes("😀")],
+      ["a lone surrogate", (l) => /\uD83D(?!\uDE00)|(?<!\uD83D)\uDE00/.test(l)],
+      ["a run past LIMITS.cell", (l) => l.includes("y".repeat(LIMITS.cell - 3))],
+    ];
+    for (const [name, has] of shapes) {
+      const found = lines.filter(has).length;
+      t.diagnostic(`${name}: ${found} lines`);
+      assert.ok(found >= 5, `${name}: ${found} of the generated lines`);
+    }
+    const edges = [
+      ...["", " ", " \t ", "a", "abc", "\\", "\\|", "\\\\|", "|\\", "|a", "| a | b", "| a \\|", "| a \\\\|", "| a \\\\\\|", "| \\|", "|\\||", "|  |  ", "|   |"],
+      ...Array.from({ length: 7 }, (_, k) => "|".repeat(k)),
+      // Thousands of escapes in one cell, and cells of escapes only.
+      `| ${"\\|".repeat(3_000)} | a\\|b |`,
+      `|${"\\|".repeat(2_000)}|${"x\\|".repeat(1_000)}`,
+    ];
+    let compared = 0;
+    for (const line of [...edges, ...lines]) {
+      for (const max of [undefined, Infinity, 0, 1, 3, LIMITS.cell]) {
+        assert.deepEqual(splitCells(line, max), charByChar(line, max), `${JSON.stringify(line)}, cut at ${max}`);
+        compared++;
+      }
+    }
+    assert.equal(compared, (edges.length + 4_000) * 6);
+  });
+
+  // Counted in memory, not timed. Building a cell a character at a time keeps a string object for each character
+  // alive until the cell ends (one more string joined onto the cell so far, about 32 bytes a character), so a 1 MiB
+  // cell held more than 40 MiB of heap: in a worker capped at 40 MiB it ran out, at 44 it did not. Slices hold none:
+  // with them the worker gets through at 10 MiB, nearly all of it the worker's own start-up, and runs out at 8. The
+  // cap sits at twice the one and half the other. This bounds what one call holds; it says nothing of its time.
+  const CAP_MB = 20;
+  /** What `code` (a module) posts from a worker whose heap is capped at CAP_MB, or why it posted nothing. */
+  function inCappedWorker(code: string): Promise<{ posted: unknown } | { failed: string }> {
+    return new Promise((resolve) => {
+      // No preload (execArgv: []): npm test's --import would add to the heap the cap is set by, and run node:test hooks here.
+      const worker = new Worker(new URL(`data:text/javascript,${encodeURIComponent(code)}`), { execArgv: [], resourceLimits: { maxOldGenerationSizeMb: CAP_MB } });
+      let result: { posted: unknown } | { failed: string } | null = null;
+      worker.once("message", (posted: unknown) => {
+        if (result === null) result = { posted };
+      });
+      worker.once("error", (error: Error & { code?: string }) => {
+        if (result === null) result = { failed: `${error.code ?? "no code"}: ${error.message}` };
+      });
+      worker.once("exit", (exitCode) => resolve(result ?? { failed: `exited with ${exitCode}, posting nothing` }));
+    });
+  }
+  const MD_KIT = new URL("./md-kit.ts", import.meta.url).href;
+  const MiB = 1024 * 1024;
+
+  test(`a 1 MiB cell is read whole in a worker whose heap is capped at ${CAP_MB} MiB`, async () => {
+    const read = await inCappedWorker(`
+      import { parentPort } from "node:worker_threads";
+      import { splitCells } from ${JSON.stringify(MD_KIT)};
+      const cells = splitCells("| " + "s".repeat(${MiB}) + " |", Infinity);
+      parentPort.postMessage([cells.length, cells[0].length]);
+    `);
+    assert.deepEqual(read, { posted: [1, MiB] }, "one cell of 1 MiB, read whole as the Idea view reads Links and Points to");
   });
 });
 

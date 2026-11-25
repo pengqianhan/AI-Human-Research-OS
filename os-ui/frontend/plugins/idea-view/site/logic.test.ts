@@ -936,8 +936,9 @@ describe("hostile input costs one pass: parse, validate, and lay out (§1 fact 6
   // a scratch copy, takes at least 2 s at 4n and fails the case. From 128 to 512 KiB the collector's work (gone under
   // --max-semi-space-size=64) made one pass grow up to 14 times here and 37 times on macos-x64 (the huge statement;
   // the `;` cell 8 and 21, the backticks 8 and 14), so those cases passed only by the floor, and macos-x64 failed two.
-  // That work comes from md-kit's splitCells, which builds each cell a character at a time: a scratch copy that
-  // slices cells grows about 4 times. Most cases now stay under 128 KiB at 4n; the huge statement (384 KiB) and the
+  // That work came from md-kit's splitCells building each cell a character at a time; since 2026-11-25 it takes each
+  // cell as a slice of the line and grows about 4 times, and these sizes, set before, are kept (os-ui/PLUGINS.md says
+  // what was measured). Most cases now stay under 128 KiB at 4n; the huge statement (384 KiB) and the
   // files list (256 KiB) go over it, where their mistakes are slow enough, and still meet the first rule here
   // (macos-x64 took 342 ms and 186 ms for them at 512 KiB). "Honest" is the worst of twelve runs at 4n; "mistake" is
   // one run, timed as the test times it (best of five at 4n).
