@@ -19,6 +19,7 @@ import {
   ANSWER_MS,
   BAND_DESCRIPTION,
   BAND_NAME,
+  cardIds,
   cardView,
   CLIPBOARD_UNAVAILABLE,
   CLOSE,
@@ -167,6 +168,27 @@ describe("the same list, filter, and commands as the trunk's page", () => {
     assert.deepEqual(flattenStore(parsed()), todayList());
     assert.deepEqual(flattenStore(parsed()).map(keyOf), ["alpha-skills/paper-search", "alpha-skills/Drifted", "alpha-skills/unplaced", "beta-copy/e2e-copied", "no hub source/repo-orphan", "no hub source/e2e-orphan"]);
     assert.equal(ORPHAN_COLLECTION_LABEL, today.ORPHAN_COLLECTION_LABEL);
+  });
+
+  test("two skills with one key are two cards: each card's id is its skill's place among the skills with that collection and name", () => {
+    // A collection can hold two skills with one name: two folders at different depths (the end-to-end fixture e2e-twins),
+    // or, on a copy that replaced links by what they point at, a collection's links to its own skills (Windows CI, step 2.5).
+    const raw = {
+      collections: [
+        { name: "c", skills: [{ name: "x", description: "one" }, { name: "x", description: "one" }, { name: "y" }, { name: "x", description: "two" }, { name: "x/y" }] },
+        { name: "c/x", skills: [{ name: "y" }] },
+      ],
+      orphans: [{ name: "x" }, { name: "x" }],
+    };
+    const list = flattenStore(parsed(raw));
+    assert.deepEqual(list.map(keyOf), ["c/x", "c/x", "c/y", "c/x", "c/x/y", "c/x/y", "no hub source/x", "no hub source/x"], "the trunk's key repeats");
+    const ids = cardIds(list);
+    assert.equal(ids.length, list.length);
+    assert.equal(new Set(ids).size, list.length, "one id per skill");
+    assert.deepEqual(ids.map((id) => JSON.parse(id)), [["c", "x", 1], ["c", "x", 2], ["c", "y", 1], ["c", "x", 3], ["c", "x/y", 1], ["c/x", "y", 1], ["no hub source", "x", 1], ["no hub source", "x", 2]]);
+    // The same snapshot gives the same ids, so a card is kept across the 5 s reads.
+    assert.deepEqual(cardIds(flattenStore(parsed(raw))), ids);
+    assert.deepEqual(cardIds([]), []);
   });
 
   test("filterSkills is StorePage's filter: a collection, then the trimmed, lower-cased query in the name or description", () => {

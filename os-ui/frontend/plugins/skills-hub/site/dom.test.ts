@@ -185,6 +185,20 @@ describe("the page's DOM", () => {
     }
   });
 
+  test("a card is its own skill's: drawn, opened, and given the focus back by its id, never by the key two skills can share", () => {
+    const main = source("main.ts");
+    assert.doesNotMatch(main, /\bkeyOf\b/, "no card, current skill, or focus is found by collection/name");
+    // The ids come from the whole list once per snapshot, in its order, so a filter or a search never renumbers them.
+    assert.deepEqual([...main.matchAll(/cardIds\(([^)]*)\)/g)].map((m) => m[1]), ["skills"]);
+    assert.match(main, /current = new Map\(skills\.map\(\(s, i\) => \[ids\[i\]!, s\]\)\);/);
+    assert.match(main, /idOf = new Map\(skills\.map\(\(s, i\) => \[s, ids\[i\]!\]\)\);/);
+    assert.match(main, /function card\(skill: DisplaySkill\): HTMLButtonElement \{\n\s*const id = idOf\.get\(skill\)!;/);
+    // The cards drawn and the skills they open are looked up by a card's id alone.
+    assert.deepEqual([...new Set([...main.matchAll(/\b(?:cards|current)\.(?:get|set|has|delete)\(([^,)]+)/g)].map((m) => m[1]))].sort(), ["id", "triggerId"]);
+    assert.match(main, /const now = current\.get\(id\);\n\s*if \(now !== undefined\) openPanel\(now, id\);/);
+    assert.match(main, /cards\.get\(triggerId\)\?\.node\.focus\(\)/);
+  });
+
   test("the page's markup loads its own script and style only, and nothing inline; the style loads nothing", () => {
     const html = raw("index.html");
     assert.deepEqual([...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]), ['<script src="./main.js" defer>']);

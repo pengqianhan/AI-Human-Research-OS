@@ -28,6 +28,7 @@ import {
   ANSWER_MS,
   BAND_DESCRIPTION,
   BAND_NAME,
+  cardIds,
   cardView,
   CLIPBOARD_UNAVAILABLE,
   CLOSE,
@@ -45,7 +46,6 @@ import {
   INSTALL_TITLE,
   INSTALLS,
   installsView,
-  keyOf,
   LEDE,
   LICENSE,
   LIVE_NOTE,
@@ -82,14 +82,19 @@ const app = document.getElementById("app")!;
 let store: Store | null = null;
 let storeText = "";
 let skills: DisplaySkill[] = [];
-/** Each card's skill as the list has it now, by key: a click opens the skill as it is now (StorePage's onOpen). */
+/**
+ * Each card's skill as the list has it now, by the card's id (cardIds): a click opens the skill as it is
+ * now (StorePage's onOpen). Two skills can share a collection and name, so a card is never found by them.
+ */
 let current = new Map<string, DisplaySkill>();
+/** Each skill of the list's card id. */
+let idOf = new Map<DisplaySkill, string>();
 let activeFilter = ALL;
 let query = "";
 
-/** The panel: the skill captured when its card was clicked, and the card's key, to give it the focus back. */
+/** The panel: the skill captured when its card was clicked, and the card's id, to give it the focus back. */
 let open: DisplaySkill | null = null;
-let triggerKey: string | null = null;
+let triggerId: string | null = null;
 /** Bumped at each opening, so an answer for a panel since closed changes nothing on it. */
 let openGen = 0;
 let busy: string | null = null;
@@ -102,7 +107,7 @@ let copyTimer: number | undefined;
  * The skill the open panel shows. F1 is kept: the object captured at the
  * click, whatever the snapshot says since. The fix, if the Human Owner asks
  * for it, is this line alone:
- *   return open === null ? null : (current.get(keyOf(open)) ?? open);
+ *   return open === null ? null : (current.get(triggerId!) ?? open);
  */
 function shownSkill(): DisplaySkill | null {
   return open;
@@ -225,7 +230,9 @@ function poll(): void {
 
 function showStore(): void {
   skills = flattenStore(store!);
-  current = new Map(skills.map((s) => [keyOf(s), s]));
+  const ids = cardIds(skills);
+  idOf = new Map(skills.map((s, i) => [s, ids[i]!]));
+  current = new Map(skills.map((s, i) => [ids[i]!, s]));
   if (bar.parentNode !== body) body.replaceChildren(bar, grid);
   renderPills();
   renderGrid();
@@ -257,14 +264,14 @@ function renderPills(): void {
   for (const [value, pill] of pillButtons) pill.setAttribute("aria-pressed", String(activeFilter === value));
 }
 
-/** Each card drawn, by key, with the words it shows: a card whose words did not change is kept, focus and all. */
+/** Each card drawn, by id, with the words it shows: a card whose words did not change is kept, focus and all. */
 const cards = new Map<string, { words: string; node: HTMLButtonElement }>();
 
 function card(skill: DisplaySkill): HTMLButtonElement {
-  const key = keyOf(skill);
+  const id = idOf.get(skill)!;
   const view = cardView(skill);
   const words = JSON.stringify(view);
-  const kept = cards.get(key);
+  const kept = cards.get(id);
   if (kept !== undefined && kept.words === words) return kept.node;
   const node = button("skill card-flat");
   const top = el("span", "top");
@@ -274,10 +281,10 @@ function card(skill: DisplaySkill): HTMLButtonElement {
   if (view.scripts) foot.append(el("span", "tag w", HAS_SCRIPTS_TAG));
   node.append(top, el("span", "desc", view.description), foot);
   node.addEventListener("click", () => {
-    const now = current.get(key);
-    if (now !== undefined) openPanel(now, key);
+    const now = current.get(id);
+    if (now !== undefined) openPanel(now, id);
   });
-  cards.set(key, { words, node });
+  cards.set(id, { words, node });
   return node;
 }
 
@@ -294,8 +301,8 @@ function renderGrid(): void {
     if (grid.children[i] !== node) grid.insertBefore(node, grid.children[i] ?? null);
   });
   while (grid.children.length > nodes.length) grid.lastElementChild!.remove();
-  const keys = new Set(shown.map(keyOf));
-  for (const key of [...cards.keys()]) if (!keys.has(key) && !current.has(key)) cards.delete(key);
+  const ids = new Set(shown.map((s) => idOf.get(s)));
+  for (const id of [...cards.keys()]) if (!ids.has(id) && !current.has(id)) cards.delete(id);
 }
 
 search.addEventListener("input", () => {
@@ -305,10 +312,10 @@ search.addEventListener("input", () => {
 
 // ---- the panel --------------------------------------------------------------------------------
 
-function openPanel(skill: DisplaySkill, key: string): void {
+function openPanel(skill: DisplaySkill, id: string): void {
   const wasOpen = open !== null;
   open = skill;
-  triggerKey = key;
+  triggerId = id;
   if (!wasOpen) {
     openGen++;
     busy = null;
@@ -331,7 +338,7 @@ function closePanel(returnFocus: boolean): void {
   scrim.hidden = true;
   drawer.className = "drawer";
   drawer.setAttribute("aria-hidden", "true");
-  if (returnFocus && triggerKey !== null) cards.get(triggerKey)?.node.focus();
+  if (returnFocus && triggerId !== null) cards.get(triggerId)?.node.focus();
 }
 
 closeButton.addEventListener("click", () => closePanel(true));

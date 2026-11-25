@@ -173,8 +173,27 @@ export function flattenStore(store: Store): DisplaySkill[] {
   return [...fromCollections, ...fromOrphans];
 }
 
-/** A card's key, unique across collections (StorePage.tsx). */
+/**
+ * The trunk's card key (StorePage.tsx), which is not unique: a collection can hold two skills with one
+ * name (two folders at different depths, or, on a copy that replaced links by what they point at, a
+ * collection's links to its own skills). The page finds a card by cardIds instead.
+ */
 export const keyOf = (skill: DisplaySkill) => `${skill.collection}/${skill.name}`;
+
+/**
+ * Each skill's card id, in the list's order: its collection, its name, and which of the skills with that
+ * collection and name it is (1, 2, ...), as JSON, so no two skills share one and no name can spell
+ * another's. Taken over the whole list, so a filter or a search never renumbers a card.
+ */
+export function cardIds(skills: readonly DisplaySkill[]): string[] {
+  const seen = new Map<string, number>();
+  return skills.map((s) => {
+    const key = JSON.stringify([s.collection, s.name]);
+    const n = (seen.get(key) ?? 0) + 1;
+    seen.set(key, n);
+    return JSON.stringify([s.collection, s.name, n]);
+  });
+}
 
 export const ALL = "all";
 

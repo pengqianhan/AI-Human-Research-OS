@@ -6,6 +6,7 @@
  *   npm run build && npm run test:e2e          (Linux: under xvfb-run)
  *   OS_CLIENT_E2E_EXECUTABLE=release npm run test:e2e   (the unpacked app electron-builder left in release/)
  *   OS_CLIENT_E2E_EXECUTABLE=<path to an app binary> npm run test:e2e
+ *   OS_CLIENT_E2E_DEREFERENCE=1 npm run test:e2e        (copy the workspace as on Windows: links replaced by what they point at)
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -46,6 +47,9 @@ function tempDir(prefix: string): string {
   return realpathSync.native(mkdtempSync(join(tmpdir(), prefix)));
 }
 
+/** The workspace is copied as on Windows, links replaced by what they point at: there, or anywhere with OS_CLIENT_E2E_DEREFERENCE=1. */
+const DEREFERENCE = process.platform === "win32" || process.env.OS_CLIENT_E2E_DEREFERENCE === "1";
+
 function copyWorkspace(): string {
   const dest = tempDir("os-client-ws-");
   cpSync(REPO, dest, {
@@ -53,7 +57,10 @@ function copyWorkspace(): string {
     // Windows: a copied relative link to a folder can come out as a file
     // symlink, which Python cannot stat (WinError 5), so copy what the links
     // point at. Elsewhere keep the links as they are, as a checkout has them.
-    ...(process.platform === "win32" ? { dereference: true } : { verbatimSymlinks: true }),
+    // A copy made this way lists some hub skills twice (a collection's links
+    // to its own skills become folders the generator finds), so the switch
+    // lets another OS run the suite on the copy Windows gets.
+    ...(DEREFERENCE ? { dereference: true } : { verbatimSymlinks: true }),
     filter: (src) => {
       const rel = relative(REPO, src).split("\\").join("/");
       return !SKIP_NAMES.has(basename(src)) && !SKIP_PATHS.has(rel);
@@ -360,12 +367,22 @@ function ideaFixtures(workspace: string): void {
  * toggle). The orphan is in a fixture project's .claude/skills: the generator
  * lists an orphan of the repository's own folders without installs, so only
  * one found in another target has the toggle the handler refuses (F2). A hub
- * skill's description carries markup.
+ * skill's description carries markup. A collection of its own holds three
+ * skills with one name (TWINS), two of them byte for byte the same, as a copy
+ * made the Windows way lists a collection's links to its own skills.
  */
 const SKILLS_COLLECTION = "e2e-copy";
 const COPIED_SKILL = "e2e-copied";
 const MARKUP_SKILL = "e2e-markup";
 const ORPHAN_SKILL = "e2e-orphan";
+const TWINS_COLLECTION = "e2e-twins";
+const TWIN_SKILL = "e2e-twin";
+/** The twins' folders under the collection, in the generator's order, and each one's description. */
+const TWINS = [
+  ["a", "One of two identical skills named e2e-twin."],
+  ["b", "One of two identical skills named e2e-twin."],
+  ["c", "A third skill named e2e-twin, with words of its own."],
+] as const;
 const skillMd = (name: string, description: string) => `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n\nAn end-to-end fixture.\n`;
 
 function skillsFixtures(workspace: string): void {
@@ -383,6 +400,11 @@ function skillsFixtures(workspace: string): void {
   const orphan = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", ORPHAN_SKILL);
   mkdirSync(orphan, { recursive: true });
   writeFileSync(join(orphan, "SKILL.md"), skillMd(ORPHAN_SKILL, "An install with no hub source."));
+  for (const [folder, description] of TWINS) {
+    const twin = join(workspace, "research-skills-hub", TWINS_COLLECTION, folder, TWIN_SKILL);
+    mkdirSync(twin, { recursive: true });
+    writeFileSync(join(twin, "SKILL.md"), skillMd(TWIN_SKILL, description));
+  }
 }
 
 /** The home folder the suite's git commands share; removed with the workspace. */
@@ -3426,6 +3448,30 @@ describe("desktop client on a Research OS folder", () => {
     assert.deepEqual(await sh.locator(".cards .skill .nm").allTextContents(), [COPIED_SKILL, MARKUP_SKILL]);
     assert.equal(await bar.getByRole("button", { name: SKILLS_COLLECTION, exact: true }).getAttribute("aria-pressed"), "true");
     await bar.getByRole("button", { name: /^All · / }).click();
+  });
+
+  test("Skills: three skills with one collection and name are three cards; each opens its own skill and gets its own focus back", SLOW, async () => {
+    const twins = snapshot().store.collections.find((c) => c.name === TWINS_COLLECTION)!.skills;
+    assert.deepEqual(twins.map((s) => s.name), TWINS.map(() => TWIN_SKILL), "the snapshot lists the three");
+    const { sh } = await openSkills();
+    const bar = sh.getByRole("group", { name: "Filter by collection" });
+    await bar.getByRole("button", { name: TWINS_COLLECTION, exact: true }).click();
+    try {
+      const cards = sh.locator(".cards .skill");
+      await cards.nth(TWINS.length - 1).waitFor({ timeout: 10_000 });
+      assert.deepEqual(await cards.locator(".desc").allTextContents(), TWINS.map(([, words]) => words));
+      const panel = detailsPanel(sh);
+      for (let i = 0; i < TWINS.length; i++) {
+        await cards.nth(i).click();
+        await panel.getByRole("heading", { name: TWIN_SKILL, exact: true }).waitFor();
+        assert.equal(await panel.locator(".d-desc").textContent(), TWINS[i]![1], `card ${i} opens its own skill`);
+        await panel.getByRole("button", { name: "Close", exact: true }).click();
+        await panel.waitFor({ state: "hidden" });
+        assert.equal(await sh.evaluate(() => [...document.querySelectorAll(".cards .skill")].indexOf(document.activeElement!)), i, `card ${i} gets the focus back`);
+      }
+    } finally {
+      await bar.getByRole("button", { name: /^All · / }).click();
+    }
   });
 
   test("Skills: a card's details slide in over the Skills area only; the left menu stays bright and clickable, and the panel is still open on return", SLOW, async () => {
