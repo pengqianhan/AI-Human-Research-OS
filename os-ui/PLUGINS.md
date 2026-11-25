@@ -15,8 +15,103 @@ Status on 2026-11-25:
   view, is built** on branch `step2-skeleton-view`, **2.2, the Assets view**, on
   branch `step2-assets-view`, **2.3, the Idea view**, on branch
   `step2-idea-view`, and **2.4**, `nanochat_cpu`'s `idea_graph.md` and the
-  template's, on branch `step2-idea-graph-files` (all below).
+  template's, on branch `step2-idea-graph-files`; **2.5, the Skills page** (Part
+  4), on branch `step2-skills-hub` (all below).
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.5, the Skills page**, is the bundled plugin
+  [frontend/plugins/skills-hub/](frontend/plugins/skills-hub/), built on branch
+  `step2-skills-hub` from Part 4 as the Human Owner chose it in
+  [mockups/step2/skills.html](mockups/step2/skills.html) (top C, panel 1, the
+  sentence in browsers; Q4 to Q6 at Part 4's defaults), in Part 4 §5's commits
+  C1 to C3 and this note. Its manifest reads one file root, the generator's
+  `os-ui/frontend/public/state.json` (way R of §2.2), and contributes the
+  left-menu page Skills and the handler `toggle`, which is
+  [frontend/server/skillToggle.ts](frontend/server/skillToggle.ts) unchanged,
+  desktop-only. The trunk's Skills page, its menu item, and `/api/skill/toggle`
+  are gone; a layout saved on `skills` opens the plugin's page. `StorePage.tsx`
+  and its components stay in the tree for the old shell until S8; the layout
+  does not use them and the renderer's bundle no longer holds them.
+  - **C0, copying from a framed page** (§2.5): in the client,
+    `navigator.clipboard.writeText` in a cross-origin plugin frame is refused
+    without `allow="clipboard-write"` on its iframe (`NotAllowedError`, the
+    Clipboard API "blocked because of a permissions policy"), and writes with
+    it. So the Skills page's frame alone gets that `allow`
+    ([src/plugins/pages.ts](frontend/src/plugins/pages.ts) `CLIPBOARD_WRITE`,
+    bundled pages only, never Paper wiki's), and Q7 did not arise. The probe, a
+    throwaway script, clicked a button in the Code view's frame on macOS.
+  - **The page** ([site/main.ts](frontend/plugins/skills-hub/site/main.ts),
+    [site/logic.ts](frontend/plugins/skills-hub/site/logic.ts),
+    [site/style.css](frontend/plugins/skills-hub/site/style.css)) is the
+    trunk's page in plain DOM: the same list, filter, commands, and words
+    (`logic.test.ts` checks them against `src/lib/skills.ts`, `StorePage.tsx`,
+    and each component's literals), the app's tokens copied from
+    `src/index.css`, and every Tailwind class the components used written out.
+    The host shows its frame alone (`OWN_TOP` in `pages.ts`), and the page draws
+    mockup C's band, "Skills Hub · bundled plugin — ⟨description⟩", above
+    today's header.
+  - Where the code differs from Part 4 or the mockup:
+    - **F1 as today, unlike the mockup**: after disable or enable, the open
+      panel keeps the old word until it is opened again; the mockup flips it at
+      once. The fix is one line, in `shownSkill` (`main.ts`).
+    - **F2 reaches fewer orphans than §1.7 says.** An orphan the generator
+      finds in the repository's own `.claude/skills` or `.agents/skills` has no
+      `installs` (`generate.py`'s first orphan loop), so its panel offers no
+      toggle. Only an orphan the installer's scan finds in another target (a
+      global or a project folder) has the button that answers "bad collection
+      name: no hub source". The suite's orphan is therefore in a fixture
+      project's `.claude/skills`, not §5's `.claude/skills/e2e-orphan`.
+    - **The panel** is 420 px and never wider than the frame (§8), and its
+      shading covers the frame only (panel 1). It turns visible at once on
+      opening, as in the mockup, so Close takes the focus in the same click;
+      the trunk's drawer focused it after a render.
+    - After a toggle answers 200, the page reads the snapshot again at once,
+      then every 5 s.
+    - A card whose words did not change is kept across snapshots, so the
+      focus and the search survive the 5 s reads, and Close gives the focus
+      back to the card by its key.
+    - **Before its first snapshot** the page shows "Loading…", or one line:
+      "No snapshot to show yet." (with Try again), "The snapshot is too large
+      to read here.", "The snapshot is not readable JSON.", or "The snapshot
+      has no skill list." These words are the page's own; the app shows its own
+      screens first.
+    - **The 5 s read runs while another page shows.** A frame in a hidden page
+      reports `document.hidden` as false (probed with C0), so the page reads
+      `state.json` (216 KB on this checkout) beside the app's own read while
+      the window shows, and pauses only when the window is hidden.
+    - The header's words were `Shell.tsx`'s, removed here, so `logic.test.ts`
+      checks them against the mockup, which copied them.
+    - The Plugins page lists Skills Hub as enabled ("Page · Skills", the spark
+      icon, its description); the empty "Bundled · not yet available" heading
+      is hidden, and the note under the cards loses "the rest is the plan".
+    - The registry test's overlap example `skill` uses a fixture trunk now:
+      with `/api/skill/toggle` gone, the id `skill` is free. The dev server
+      answers a POST to `/api/skill/toggle` with Vite's plain 404.
+  - **Security** (§3): only `app://skills-hub` reaches the toggle; the app's
+    own origin, which holds the bridge, now gets 404, and the dev server
+    mounts none. The handler's guards are unchanged (§3.8). `dom.test.ts`
+    pins every attribute, class, method, and property the page's DOM code
+    uses, its two requests, and its two clipboard calls; 19 sink mutants
+    (`innerHTML`, `setHTMLUnsafe`, `classList.add`, `insertRule`, a class, an
+    attribute, a style, or a tooltip from snapshot text, a bracket write, an
+    `<a>`, a third request, `postMessage`, storage, another clipboard call,
+    inline script or style in the markup, a view's `--muted`, `url()` in the
+    style, `innerHTML` in site-kit) each failed it.
+  - **The end-to-end suite** clicks one install: the copy-form fixture
+    `e2e-copied` (collection `e2e-copy`) in the copy's own `.claude/skills`,
+    after checking that its path is inside the copy; the copy's global targets
+    resolve in the suite's throwaway home. No case clicks a symlink-form,
+    global, or glob install, so §5's POSIX repeat on `filetree-simple` is not
+    in the suite.
+  - Not built: Part 4 §3.9's hardening (C5).
+  - On the dev server, seen once in a browser: Skills shows the host's band
+    and "This page opens in the desktop app; this copy cannot serve it.", and
+    a POST to `/api/skills-hub/toggle` or `/api/skill/toggle` is 404.
+  - Not verified: Windows and Linux (the suite ran on macOS arm64 only); a
+    symlink-form toggle in the app (the installer and the handler are
+    unchanged, and their tests run); the static build's Skills page
+    (`pages.test.ts` pins that it has no frame URL there, as on the dev
+    server); and the Human Owner's checklist line.
 
 - **2.4, the idea files** (§6 "2.4"), on branch `step2-idea-graph-files`, which
   starts from `step2-idea-view`. No code changed.
@@ -1362,13 +1457,13 @@ Status on 2026-11-25:
     S6a-2 above) and its own log.
 - **Waiting on the Human Owner:** whether a third-party plugin may add a
   left-navigation item (Part 1, Q-PO1).
-- **2.5, the Skills page as a plugin: designed and chosen, not built.** Part 4,
-  written on 2026-11-25, finds that the Skills page cannot move into a plugin
-  with no visible change: its details panel is drawn over the whole window, and
-  a framed page draws only inside its frame. The Human Owner chose the same day
-  from [mockups/step2/skills.html](mockups/step2/skills.html): top C, panel 1,
-  and for Q2 the sentence in browsers ([HANDOFF.md](../HANDOFF.md) Decisions,
-  "Skills page as a plugin"); Q4 to Q6 keep Part 4's defaults.
+- **2.5, the Skills page as a plugin: designed, chosen, and built** (above).
+  Part 4, written on 2026-11-25, finds that the Skills page cannot move into a
+  plugin with no visible change: its details panel is drawn over the whole
+  window, and a framed page draws only inside its frame. The Human Owner chose
+  the same day from [mockups/step2/skills.html](mockups/step2/skills.html): top
+  C, panel 1, and for Q2 the sentence in browsers ([HANDOFF.md](../HANDOFF.md)
+  Decisions, "Skills page as a plugin"); Q4 to Q6 keep Part 4's defaults.
 
 ---
 

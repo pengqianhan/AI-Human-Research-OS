@@ -2,9 +2,10 @@
 
 A desktop app for macOS, Windows, and Linux that opens the
 [os-ui](../README.md) app on your Research OS folder, with everything the
-dev server offers — the root agent and project agent conversations, skill
-toggles, the Paper Wiki's reading status, and the Papers panel — without a
-terminal, `bash`, or `./os-ui/start.sh`. It keeps the snapshot fresh by itself
+dev server offers — the root agent and project agent conversations, the
+Paper Wiki's reading status, and the Papers panel — and the Skills page's
+disable and enable, which only the desktop app offers, without a terminal,
+`bash`, or `./os-ui/start.sh`. It keeps the snapshot fresh by itself
 and notifies you when an agent turn ends.
 
 The plan and settled design are in [DESIGN.md](DESIGN.md); the decision record
@@ -248,7 +249,19 @@ agent logins or a first open on a real desktop, so on each of your machines:
         the paper is back.
 - [ ] **Paper wiki**: a paper's Status buttons appear and change the note's
       `status:` line.
-- [ ] **Skills**: a disable/enable toggle works and the store updates.
+- [ ] **Skills** (left menu, between **Paper wiki** and **Plugins**): the page
+      looks as before, with a green "Skills Hub · bundled plugin" line above the
+      title. Type `filetree` in the search box and click the card
+      **filetree-simple**: its details slide in from the right, and the
+      shading covers the Skills area but not the left menu.
+      Click **Home** in the left menu, then **Skills** again: the details are
+      still open. Under **Installs**, click **disable** beside `repo-claude`:
+      it says *working...*, then *disable* again (the open details keep the old
+      word, as before; the mockup showed *enable* at once). Close the details
+      and open them again: the button now says *enable*. Click **enable** to put
+      it back. Click **Copy install command** and paste into a text editor: the
+      command shown. Quit and reopen while on Skills: the app comes back on
+      Skills.
 - [ ] **Regenerate** at the bottom of the left navigation ends with "Snapshot
       updated".
 - [ ] **Collapse** shrinks the navigation to icons. Quit and reopen: the app

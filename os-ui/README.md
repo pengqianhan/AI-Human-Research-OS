@@ -53,7 +53,8 @@ the desktop-OS shell of draggable windows and a dock, which stays in
 - **Paper wiki**: the standalone `paper-wiki/viz.html` graph and timeline
   viewer, embedded by iframe (DESIGN.md §4); a note's Status row saves your
   unread / skimmed / read state into the note's file.
-- **Skills**: the skill store. **Plugins**: what is built in and what is
+- **Skills**: the skill store, the bundled Skills Hub plugin's page (step
+  2.5), in the desktop app only. **Plugins**: what is built in and what is
   coming. **Settings**: in the desktop client, the folder, the snapshot, and
   the prerequisites and logins.
 
@@ -169,8 +170,9 @@ cloudflared tunnel --url http://localhost:5173 --http-host-header localhost:5173
 ```
 
 `--http-host-header` is required: Vite rejects requests whose Host header is
-not a local one. The tunnel also exposes the skill enable/disable endpoint;
-the Root Agent endpoints stay behind their token.
+not a local one. The Root Agent endpoints stay behind their token; the skill
+enable/disable is not on the dev server since step 2.5 (the desktop app's
+Skills page alone offers it).
 
 Build a static bundle:
 

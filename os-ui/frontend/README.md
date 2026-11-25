@@ -35,7 +35,11 @@ Decisions):
   `Baselines/`, `Code/results/`, and the datasets `Code/README.md` lists), and
   Paper the bundled `paper-view` plugin's (the project's `paper/main.pdf`,
   drawn with a vendored PDF.js), all in the desktop client only.
-- **Paper wiki**, **Skills**, **Plugins**, and **Settings** pages.
+- **Paper wiki**, **Skills**, **Plugins**, and **Settings** pages. Skills is
+  the bundled `skills-hub` plugin's page since step 2.5 (the research skills
+  hub, where each skill is installed, and disable or enable one install), in
+  the desktop client only; in a browser its page says it opens in the desktop
+  app.
 
 The app remembers, in the browser's local storage, whether the sidebar and the
 conversation panes are collapsed and which page and project were open. The
@@ -51,7 +55,7 @@ os-ui/frontend/
 ├── package.json            # npm scripts and dependencies
 ├── vite.config.ts          # Vite dev/build config
 ├── api-plugin.ts           # serves every endpoint on the dev server, from the plugin registry
-├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each (paper-wiki, code-view, paper-view, skeleton-view, assets-view, idea-view); site-kit.ts is what their sites share, md-kit.ts their Markdown reader, fixtures/ test copies and growth.ts the tests' one-pass check (neither shipped)
+├── plugins/                # the bundled plugins: bundled.ts lists them, one <id>/plugin.json each (paper-wiki, code-view, paper-view, skeleton-view, assets-view, idea-view, skills-hub); site-kit.ts is what their sites share, md-kit.ts their Markdown reader, fixtures/ test copies and growth.ts the tests' one-pass check (neither shipped)
 ├── server/                 # the endpoints, shared with the desktop client (os-ui/client)
 ├── tailwind.config.js      # Tailwind names for the colours in src/index.css
 ├── postcss.config.js       # Tailwind/PostCSS config
@@ -77,9 +81,9 @@ os-ui/frontend/
     │   ├── HomePage.tsx        # Home
     │   ├── ProjectsPage.tsx    # Projects list
     │   ├── WorkspacePage.tsx   # one project: conversation and view tabs
-    │   ├── PluginScreen.tsx    # a plugin's page (Paper wiki): its band, then its framed page
-    │   ├── StorePage.tsx       # Skills (the skill store)
-    │   ├── PluginsPage.tsx     # Plugins: the loaded plugins, then the plan
+    │   ├── PluginScreen.tsx    # a plugin's left-menu page: Paper wiki's band, then its framed page; Skills' frame alone
+    │   ├── StorePage.tsx       # the skill store the old desktop shell (src/desktop/) shows; Skills is now the skills-hub plugin's page
+    │   ├── PluginsPage.tsx     # Plugins: the loaded plugins, then any not yet available
     │   ├── SettingsPage.tsx    # Settings; SystemPage.tsx holds the desktop-only part
     │   └── DashboardPage.tsx, ProjectPage.tsx, RootAgentPage.tsx, PaperWikiPage.tsx  # used only by src/desktop/
     ├── plugins/
@@ -97,7 +101,7 @@ os-ui/frontend/
     │   ├── format.ts       # date and inline-Markdown formatting helpers
     │   ├── projects.ts     # joins the portfolio table with each project's snapshot
     │   ├── agentCopy.ts    # what an empty conversation says, and its examples
-    │   ├── skills.ts       # store flattening and install-command builders
+    │   ├── skills.ts       # store flattening and install-command builders, for the old shell (the Skills page's are in plugins/skills-hub/site/logic.ts)
     │   ├── mode.ts         # LIVE (dev server or desktop client) and DESKTOP
     │   └── desktop.ts      # the desktop client's window.osDesktop bridge
     ├── dev-fixtures/
@@ -187,8 +191,11 @@ to edit. The most visited ones:
 - Page titles and the line under them: the `PageHeader` call at the top of
   each file in `src/pages/` (for example `title="Home"` and `lede="..."`).
 - The left navigation labels: `src/shell/Sidebar.tsx`, except a plugin's
-  page (Paper wiki), whose label is its panel's `title` in
+  page (Paper wiki, Skills), whose label is its panel's `title` in
   `plugins/<id>/plugin.json`.
+- The Skills page: `plugins/skills-hub/site/` (its words, list, filter, and
+  commands in `logic.ts`, which its tests check against the trunk's
+  `src/lib/skills.ts` and components, still in the tree for the old shell).
 - The root agent's and a project agent's opening text and example requests:
   `src/lib/agentCopy.ts`.
 - The Plugins page: an enabled plugin's card shows its manifest's `name` and
@@ -221,17 +228,21 @@ rewritten in the frontend.
 
 ### Other changes
 
-- Skill install command construction: edit `src/lib/skills.ts`. The
-  per-location enable/disable toggle lives in `src/components/SkillInstalls.tsx`
-  and posts to `/api/skill/toggle` (`server/skillToggle.ts`).
+- Skill install command construction, the per-location enable/disable
+  toggle, and the rest of the Skills page: `plugins/skills-hub/site/`. The
+  toggle posts to Skills Hub's own `/api/skills-hub/toggle`, the handler
+  `server/skillToggle.ts`, mounted in the desktop client only and reached
+  only from `app://skills-hub`. The trunk's `src/lib/skills.ts` and
+  `src/components/Skill*.tsx` serve the old shell until S8 (os-ui/PLUGINS.md)
+  and the site's tests compare against them; change both together.
 - `state.json` shape: update `src/types.ts`, `os-ui/DESIGN.md`, and the
   generator together.
 - Endpoints: the app's own are listed in `TRUNK_MOUNTS` in `server/api.ts`.
   A bundled plugin's endpoints are named in its `plugins/<id>/plugin.json`
   (`contributes.handlers`, served at `/api/<id>/<handler>`), and their code is
   listed in `server/pluginHandlers.ts`; the tests fail if the two disagree.
-  `DESKTOP_ONLY_HANDLERS` there (the Code view's `code-view/git`) are declared
-  but never mounted on the dev server.
+  `DESKTOP_ONLY_HANDLERS` there (the Code view's `code-view/git`, Skills Hub's
+  `skills-hub/toggle`) are declared but never mounted on the dev server.
   The registry (`server/registry.ts`) joins both lists. `api-plugin.ts`
   serves the result on the dev server's one origin; the desktop client
   serves the same registry split by origin, the trunk's endpoints on
@@ -250,15 +261,18 @@ rewritten in the frontend.
   `src/plugins/pages.ts` turns the manifests into pages: a home panel with
   `"placement": "nav"` becomes a left-navigation item after Projects, which
   opens `src/pages/PluginScreen.tsx` (the band with the plugin's name and
-  description, then the page in a frame), and every loaded plugin gets a
+  description, then the page in a frame; a page in `OWN_TOP`, Skills, draws
+  that band and its top itself, so its frame fills the page, and a page in
+  `CLIPBOARD_WRITE`, Skills, gets `allow="clipboard-write"` for its copy
+  buttons), and every loaded plugin gets a
   card on the Plugins page with one chip per page. The frame loads
   `app://<id>/<entry>` in the desktop client and `./<site.workspace>/<entry>`
   in a browser (Paper wiki: `./paper-wiki/viz.html`, the cache copy
   `start.sh` makes); a plugin without `site.workspace` says it opens in the
   desktop app. The manifest has no icon, so `pluginIcon` in `registry.ts`
   holds one per bundled plugin (the puzzle piece otherwise).
-  `src/plugins/pages.test.ts` pins Paper wiki's label and both frame URLs
-  against the real `plugins/` folder.
+  `src/plugins/pages.test.ts` pins Paper wiki's and Skills' labels and frame
+  URLs against the real `plugins/` folder.
 - What the layout remembers: `src/shell/layoutState.ts` (one `localStorage`
   key, `osui.layout.v1`; clearing it returns to Home with everything open).
   A plugin's page is remembered by its key, `<plugin>/<page>`; a saved page

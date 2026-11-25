@@ -248,11 +248,18 @@ app shows the real snapshot or nothing (list below).
   enable/disable toggle; installing elsewhere stays a copied command. How this
   splits between the human and the agent is documented in
   [research-skills-hub/MANAGING-SKILLS.md](../research-skills-hub/MANAGING-SKILLS.md).
+  Since step 2.5 it is the bundled `skills-hub` plugin's page
+  ([frontend/plugins/skills-hub/](frontend/plugins/skills-hub/plugin.json)),
+  framed on its own origin in the desktop client: it reads `state.json`
+  through its read channel and toggles through its own handler
+  `/api/skills-hub/toggle`, so the dev server and the static build show only
+  a sentence saying it opens in the desktop app. Its details panel and
+  shading cover the Skills area, not the left menu
+  ([PLUGINS.md](PLUGINS.md) Part 4).
 - **Plugins**: the enabled plugins as the renderer's plugin registry loads
-  them from their manifests (`frontend/src/plugins/`; today Paper Wiki),
-  then the plan, written into the page: the Code and Paper views later in
-  step 1; the Idea, Skeleton, and Assets views and the Skills Hub in step 2;
-  "Load from folder" disabled until step 2.
+  them from their manifests (`frontend/src/plugins/`: Paper Wiki, the Code,
+  Paper, Skeleton, Assets, and Idea views, and Skills Hub), each with the
+  pages it contributes; "Load from folder" disabled until step 2.
 - **Settings**: in the desktop client, the workspace folder, the snapshot
   generator's last run, the prerequisites and agent logins, and "About this
   client"; the client's Help → System and Prerequisites opens it. In a
@@ -332,8 +339,9 @@ names them, and components use the names rather than hex codes.
 
 ## 8. Non-goals
 
-- No write operations beyond the skill enable/disable toggle, the paper
-  reading-status buttons, and the paper-source switches and keys. The toggle: a
+- No write operations beyond the skill enable/disable toggle (in the desktop
+  client only, from Skills Hub's page), the paper reading-status buttons, and
+  the paper-source switches and keys. The toggle: a
   symlinked install moves into the
   target's `.disabled/` directory, a copied one renames its `SKILL.md` to
   `SKILL.md.disabled`. No skill content is created or deleted, and installing
