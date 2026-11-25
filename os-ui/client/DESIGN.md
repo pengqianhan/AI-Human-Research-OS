@@ -522,7 +522,10 @@ Known limits of the channel, not yet handled:
   needs `OS_UI_TOKEN`.
 - **Navigation:** `will-frame-navigate` and `will-redirect` keep the top frame
   on `app://research-os/` and subframes on a loaded plugin's origin (or
-  `about:blank`, `about:srcdoc`); an http(s) or mailto link opens in the
+  `about:blank`, `about:srcdoc`): another plugin's origin only when the app's
+  own page starts the navigation, so a plugin's frame stays on the origin the
+  app gave it and cannot turn itself into another plugin's page
+  ([PLUGINS.md](../PLUGINS.md), 2.5's review, note 3); an http(s) or mailto link opens in the
   default browser only after a dialog naming the URL is confirmed, one dialog
   at a time (Electron cannot tell which frame asked, and the viewer runs note
   HTML); every `window.open` is denied.

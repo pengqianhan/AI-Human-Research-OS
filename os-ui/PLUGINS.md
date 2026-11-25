@@ -24,7 +24,7 @@ Status on 2026-11-25:
   `step2-skills-hub` from Part 4 as the Human Owner chose it in
   [mockups/step2/skills.html](mockups/step2/skills.html) (top C, panel 1, the
   sentence in browsers; Q4 to Q6 at Part 4's defaults), in Part 4 §5's commits
-  C1 to C3 and this note. Its manifest reads one file root, the generator's
+  C1 to C3 and this note, then fixed after an independent review (below). Its manifest reads one file root, the generator's
   `os-ui/frontend/public/state.json` (way R of §2.2), and contributes the
   left-menu page Skills and the handler `toggle`, which is
   [frontend/server/skillToggle.ts](frontend/server/skillToggle.ts) unchanged,
@@ -76,12 +76,13 @@ Status on 2026-11-25:
       then every 5 s.
     - A card whose words did not change is kept across snapshots, so the
       focus and the search survive the 5 s reads, and Close gives the focus
-      back to the card by its key.
-    - **Before its first snapshot** the page shows "Loading…", or one line:
-      "No snapshot to show yet." (with Try again), "The snapshot is too large
-      to read here.", "The snapshot is not readable JSON.", or "The snapshot
-      has no skill list." These words are the page's own; the app shows its own
-      screens first.
+      back to the card by its id (after the review: not by its collection and
+      name, which two skills can share).
+    - **Before its first snapshot** the page shows "Loading…", or one of four
+      lines, each with Try again under it: "No snapshot to show yet.", "The
+      snapshot is too large to read here.", "The snapshot is not readable
+      JSON.", or "The snapshot has no skill list." These words are the page's
+      own; the app shows its own screens first.
     - **The 5 s read runs while another page shows.** A frame in a hidden page
       reports `document.hidden` as false, and a probe that counted the page's
       reads saw two in 12 s on Skills and two in 12 s on Home. So the page reads
@@ -106,18 +107,113 @@ Status on 2026-11-25:
     attribute, a style, or a tooltip from snapshot text, a bracket write, an
     `<a>`, a third request, `postMessage`, storage, another clipboard call,
     inline script or style in the markup, a view's `--muted`, `url()` in the
-    style, `innerHTML` in site-kit) each failed it.
-  - **The end-to-end suite** clicks one install: the copy-form fixture
-    `e2e-copied` (collection `e2e-copy`) in the copy's own `.claude/skills`,
-    after checking that its path is inside the copy; the copy's global targets
-    resolve in the suite's throwaway home. No case clicks a symlink-form,
-    global, or glob install, so §5's POSIX repeat on `filetree-simple` is not
-    in the suite.
+    style, `innerHTML` in site-kit) each failed it. After the review it also
+    refuses a value typed `any`, a write through a computed member, and the
+    name `fetch` outside the page's two requests, and a plugin's frame can no
+    longer navigate itself to another plugin's origin (notes 3, 7, and 8
+    below).
+  - **The end-to-end suite** clicks the copy-form fixture `e2e-copied`
+    (collection `e2e-copy`) in the copy's own `.claude/skills` and, after the
+    review, one of two fixture projects' copies of `e2e-in-projects`
+    (collection `e2e-projects`), each after checking that its path is inside
+    the copy; the copy's global targets resolve in the suite's throwaway home.
+    No case clicks a symlink-form, global, or glob install, so §5's POSIX
+    repeat on `filetree-simple` is not in the suite. With
+    `OS_CLIENT_E2E_DEREFERENCE=1` the suite copies the workspace as it does on
+    Windows, links replaced by what they point at.
   - Not built: Part 4 §3.9's hardening (C5).
   - On the dev server, seen once in a browser: Skills shows the host's band
     and "This page opens in the desktop app; this copy cannot serve it.", and
     a POST to `/api/skills-hub/toggle` or `/api/skill/toggle` is 404.
-  - Not verified: Windows and Linux (the suite ran on macOS arm64 only); a
+  - **The independent review** (2026-11-25, at `bdedf32`) found no must-fix,
+    two should-fix, and seven notes, and CI's windows-x64 run of the branch
+    failed one end-to-end case. The fix round, on the same branch:
+    - **CI's red case: two skills with one collection and name were drawn as
+      one card.** On Windows the suite copies the workspace with links
+      replaced by what they point at, so `claude-science-skills`' links in
+      `agents/operon/.claude/skills` became folders the generator also lists:
+      176 skills, 147 distinct collection and name pairs, and 147 cards, which
+      `OS_CLIENT_E2E_DEREFERENCE=1` reproduced on macOS. The page found its
+      cards, the skill a click opens, and the card Close focuses by that pair.
+      Each card now has an id, its collection, its name, and which repeat of
+      them it is (`cardIds` in `logic.ts`); the fixture collection `e2e-twins`
+      repeats a pair on every platform, and each of its three cards opens its
+      own skill and gets its own focus back. The trunk's React page, keyed by
+      the same pair, drew all 173 skills of the dereferenced snapshot on its
+      first draw, and each card opened its own skill, but a search or a pill
+      left stale cards behind: 203 cards for 173 skills (it was built and run
+      at `7560ac1`).
+    - **Should-fix 1, nothing checked which target a project's row sends.**
+      The handler toggles every project's install when a target lacks its
+      `:project` part. A unit case checks that each row sends its own target,
+      and an end-to-end case disables and enables one fixture project's copy
+      of `e2e-in-projects` and checks that the other project's copy never
+      changes. The mutant that sends `target.split(":")[0]` fails both.
+    - **Note 3, another plugin's frame could become a working Skills page**
+      (introduced by 2.5). The reviewer ran `location.href =
+      "app://skills-hub/index.html"` in Paper wiki's frame from the test
+      harness; Paper wiki's area then showed the page, and a click on disable
+      there wrote to disk. The client's navigation guard
+      ([client/src/main/protocol.ts](client/src/main/protocol.ts)
+      `allowedNavigation`, for every plugin) now gives a subframe another
+      plugin's origin only when the app's own page starts the navigation;
+      otherwise the frame stays on the origin it shows. An end-to-end case
+      tries the reviewer's navigation and finds the frame unchanged. The full
+      suite passed with the change.
+    - **Note 4, names went unquoted into the commands the copy buttons put on
+      the clipboard** (carried over). A folder named `e2e-o;echo
+      INJECTED-$(id -u)` gave `... status e2e-o;echo INJECTED-$(id -u)`. The
+      page now offers a command only when every name it carries (a skill's
+      name, its collection, a row's target) matches the toggle endpoint's
+      pattern. Otherwise it shows no command and no copy button, and one line
+      in their place, the page's own words: "No command: a name here has
+      characters a command cannot carry safely." An orphan's command at a
+      target carries its label, "no hub source", so orphans' rows no longer
+      offer "install ⧉"; the trunk's command there was one the installer's
+      parser refuses. Their status command stays. `src/lib/skills.ts` is
+      unchanged, and `logic.test.ts` states each divergence from it.
+    - **Note 5, bidi and other invisible characters were drawn raw** (carried
+      over). Text drawn from the snapshot and from the endpoint's refusal now
+      passes through site-kit's `markInvisible`, so U+202E shows as
+      "⟨U+202E⟩". The search, the commands, and the toggle's body use the text
+      as written.
+    - **Notes 7 and 8, tests that could not fail.** `dom.test.ts` let through
+      a write of snapshot text to `innerHTML` by a computed member of a value
+      typed `any` (`n[k] = view.name`, `k = "inn" + "erHTML"`), and a third
+      request through `const send = fetch`; both now fail it (above). Two behaviours were not tested: a failed read after a good
+      one keeps the list, and the 5 s read pauses while the window is hidden.
+      Both are now checked end to end, through a `fetch` wrapped in the frame
+      that counts and answers the page's reads, so each case fails if the
+      behaviour is removed. The hidden window is `document.hidden` set in the
+      frame; the window itself is not hidden. The case "another plugin's frame
+      cannot reach it" sent only a no-cors text POST, which the 415 rule
+      refuses before the origin matters. It now also sends, from Paper wiki's
+      frame, a JSON POST and a no-cors `Blob` typed `application/json`. First,
+      a same-origin control sends the same body and toggles the install off
+      and on; the case then waits three times as long and fails if the install
+      changed. A mutant that lets Paper wiki's page connect to `app:` on a
+      CORS-enabled scheme fails it. All three requests are stopped in the
+      frame by Paper wiki's `connect-src 'self'`, before CORS would apply.
+    - What else the review found changed no code: it is in the limits below,
+      and the line on Try again above is corrected.
+  - **Limits** (recorded after the review; none is changed here):
+    - The installer deletes or rewrites content through links, in three cases
+      the reviewer ran. A `.disabled` that is a link to a folder: disable
+      removed a real file under it. A real folder at an install's path with
+      the link in `.disabled/`: enable deleted the folder's file. A copy-form
+      skill installed as a link into the hub: disable renamed the hub's own
+      `SKILL.md`. So the panel's sentence "Disable never deletes skill
+      content" does not hold in those cases. The installer is a hub skill and
+      is not changed here.
+    - A second toggle can be sent while the first runs, and there is no
+      timeout, as on the trunk's page.
+    - The endpoint accepts a target without its project part, and then toggles
+      every project's install; `-h` as a value, and answers the installer's
+      help text; and `enable: "false"`, which it takes as true. The trunk's
+      endpoint did the same.
+  - Not verified: Windows and Linux after the fix round (CI's windows-x64
+    run, which failed as above, was of the build before it; the fix round's
+    suite ran on macOS arm64, once with the copy made as on Windows); a
     symlink-form toggle in the app (the installer and the handler are
     unchanged, and their tests run); the static build's Skills page
     (`pages.test.ts` pins that it has no frame URL there, as on the dev
