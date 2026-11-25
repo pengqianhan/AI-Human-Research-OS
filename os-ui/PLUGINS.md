@@ -198,22 +198,32 @@ Status on 2026-11-25:
       changed. A mutant that lets Paper wiki's page connect to `app:` on a
       CORS-enabled scheme fails it. All three requests are stopped in the
       frame by Paper wiki's `connect-src 'self'`, before CORS would apply.
-    - What else the review found changed no code. Should-fix 2 (the installer
-      follows links, carried over) and note 6 (toggles are neither queued nor
-      timed out, carried over) are in the limits below; note 9 was this
-      document (the line on Try again above is corrected, and
+    - What else the review found changed no code in this round. Should-fix 2
+      (the installer follows links, carried over) was fixed afterwards in the
+      installer itself (the first entry of the limits below); note 6 (toggles
+      are neither queued nor timed out, carried over) is in the limits below;
+      note 9 was this document (the line on Try again above is corrected, and
       [HANDOFF.md](../HANDOFF.md) is brought up to date). The reviewer also
       ran the checklist's symlink-form toggle in a copy of the workspace on
       macOS, and each sentence of that step held.
-  - **Limits** (recorded after the review; none is changed here):
-    - The installer deletes or rewrites content through links, in three cases
-      the reviewer ran. A `.disabled` that is a link to a folder: disable
-      removed a real file under it. A real folder at an install's path with
-      the link in `.disabled/`: enable deleted the folder's file. A copy-form
-      skill installed as a link into the hub: disable renamed the hub's own
-      `SKILL.md`. So the panel's sentence "Disable never deletes skill
-      content" does not hold in those cases. The installer is a hub skill and
-      is not changed here.
+  - **Limits** (recorded after the review; only the first has changed since):
+    - The installer no longer deletes or rewrites content through links: the
+      three cases the reviewer ran are refused (commit `f12fd86`, in
+      [install_research_skill.py](../research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py),
+      with the script's first tests beside it). A toggle replaces nothing but
+      a link, so enable over a real folder at an install's path and disable
+      over a real folder in `.disabled/` are refused; a copy-form install that
+      is itself a link is refused; and `install`, `remove`, `disable`, and
+      `enable` refuse when a selected target's `.disabled` is a link. Every
+      selected target is checked before any is changed, and the panel shows
+      the refusal's one line, which ends "nothing was changed." The
+      reviewer's probe, rerun on the built app in a copy of the workspace,
+      got each refusal from the panel's endpoint, and the files it had lost
+      before were intact. So the panel's sentence "Disable never deletes
+      skill content" now holds. What remains is not through links and is as
+      before: `install` replaces a real folder at an install's path or in
+      `.disabled/`, `remove --yes` deletes a copy, and a copy-form toggle
+      renames over a `SKILL.md` or `SKILL.md.disabled` already there.
     - A second toggle can be sent while the first runs, and there is no
       timeout, as on the trunk's page.
     - The endpoint accepts a target without its project part, and then toggles

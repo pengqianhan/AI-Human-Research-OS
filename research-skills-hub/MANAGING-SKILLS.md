@@ -88,6 +88,12 @@ it never deletes skill content. The mechanism differs by form:
 `status` still lists a disabled location, marked `disabled`, so it can be
 re-enabled. Running `install` over a disabled location re-enables it.
 
+A toggle moves or replaces only links. Where it would have to remove a real
+folder or file, rename a file through a link, or write through a `.disabled`
+that is itself a link, it refuses and changes nothing at any selected target;
+the [installer's skill](open-paper-skills/research-skill-installer/SKILL.md)
+lists the cases.
+
 Whether an agent skips a `.disabled/` directory is undocumented behaviour, like
 symlink following; both were verified on Claude Code and Codex on 2026-07-23 and
 should be re-checked after an agent upgrade. If an agent lists `.disabled/`
