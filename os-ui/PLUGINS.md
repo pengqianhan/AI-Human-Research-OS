@@ -260,11 +260,11 @@ Status on 2026-11-24:
     ms, and the files list from 5.2 times and 14.5 ms to 4.8 times and 10.1 ms; the
     other five were under 9 ms at 4n before and after. The huge statement's mistake,
     put back into the new loop, still fails it: 18.1 times, 3.5 s. So the departure
-    below stands: no test times 512 KiB of hostile input. The one new test at that
-    size reads a 1 MiB cell through `splitCells` alone, not `parse` or
-    `buildGraph`, in a worker whose heap is capped at 20 MiB: the old code held more
-    than 40 MiB for it and ran out, and the new code gets through at 10 MiB. It
-    bounds the memory one call holds, not its time.
+    below stands: no test times 512 KiB of hostile input. One new test reads more,
+    untimed: a 1 MiB cell, through `splitCells` alone, not `parse` or `buildGraph`,
+    in a worker whose heap is capped at 20 MiB. The old code held more than 40 MiB
+    for it and ran out, and the new code gets through at 10 MiB. It bounds the
+    memory one call holds, not its time.
 
     Each of the nine cases, seven in `logic.test.ts` and two in `layout.test.ts`,
     is now sized by one rule, with the case run alone on the machine the view was
