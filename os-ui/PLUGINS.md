@@ -993,18 +993,24 @@ Status on 2026-11-25:
     (under a second a round). A reading is never cut short, so a case can end one
     pause and one round past 30 s, and never ends before its warm-up and one
     round: a pass per element of 2 s at 4n here, on a runner 30 times slower, fails
-    in about 2 minutes, where the old order took about 6.4.
+    in about 2 minutes, where the old order took about 6.4. The caps bound rounds,
+    not a reading: f1bd371's Snapshot split, 34 s at 4n here, needs 72 s for its
+    warm-up and one round, so on a runner more than about 8 times slower than an
+    M1 Pro (macos-x64 has measured 6 to 14) its red comes from the 10 minutes
+    `npm test` gives a test, with no reading printed; the old order, about 217 s
+    here, crossed that at about 3 times slower.
 
     Measured on an M1 Pro (Node 22.23.1), not on any CI runner: a passing case now
     reads 4n five times where it read it once. The five files with growth cases,
     each run alone, took about 4.0 s together before and 6.1 s after; the whole
     suite, which runs its files in parallel, took 20.5 to 21.6 s before and 20.5 to
     20.7 s after. Each file alone, three runs, no case reached 7 times (the highest
-    were the SVG check's entities in an id and '&#10;' before data:, 5.3 to 5.9
-    times on 32 to 38 ms). In three runs of the whole suite, 14 cases reached 7
-    times or more with the old order (6 of them 10 or more, up to 18.3 times on
-    18 ms), and with the new order one: entities in an id, 7.6, 6.4, and 7.1 times
-    on 46, 43, and 43 ms. The mistakes put back, one at a time on a scratch copy,
+    were the SVG check's entities in an id and '&#10;' before data:, 5.3 to 5.8
+    times on 32 to 38 ms). Under the whole suite, 14 cases reached 7 times or more
+    in three runs with the old order (6 of them 10 or more, up to 18.3 times on
+    18 ms), and two in five runs with the new: entities in an id, 6.4 to 8.1 times
+    on 43 to 57 ms, and '&#10;' before data:, 5.9 to 7.0 times on 44 to 56 ms.
+    The mistakes put back, one at a time on a scratch copy,
     each running its one test under `timeout`, all fail under the new order (the
     passes over the input rebuilt from what 6ed52f7's message says): f1bd371's
     Snapshot split, 18.4 times, 34.3 s at 4n, red in 80 s (its warm-up and one

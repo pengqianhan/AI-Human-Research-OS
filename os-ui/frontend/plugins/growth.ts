@@ -32,7 +32,11 @@
  * A reading is never cut short, so a case ends at most one pause and one round
  * past the wall cap, and never before its warm-up and one round: a pass per
  * element of 2 s at 4n here, 60 s on that runner, fails there in about 2
- * minutes (reading every n first, then 4n until a pass, took about 6.4). Here
+ * minutes (reading every n first, then 4n until a pass, took about 6.4). The
+ * caps bound rounds, not a reading: f1bd371's Snapshot split, 34 s at 4n here,
+ * needs 72 s for its warm-up and one round, so on a runner more than about 8
+ * times slower it ends at the 10 minutes `npm test` gives a test, with no
+ * reading printed (about 3 times slower, in the old order). Here
  * the recorded mistakes of 1 to 5 s at 4n fail in 30 to 37 s. A failure prints
  * every reading in order, so a red shows whether the machine slowed partway
  * (some rounds fast at both sizes) or 4n was slow out of proportion in every
