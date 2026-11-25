@@ -215,16 +215,17 @@ Status on 2026-11-25:
       and disable over a real folder in `.disabled/` are refused; a copy-form
       install that is itself a link is refused; and `install`, `remove`,
       `disable`, and `enable` refuse when a selected target's `.disabled` is a
-      link. Every selected target is checked before any is changed, and the
-      panel shows the refusal's one line, which ends "nothing was changed."
-      The reviewer's probe, rerun on the built app in a copy of the
-      workspace, got each refusal from the panel's endpoint, and the files it
-      had lost before were intact. So the panel's sentence "Disable never
-      deletes skill content" now holds in those three cases. What remains is
-      not through links and is as before: `install` replaces a real folder at
-      an install's path or in `.disabled/`, `remove --yes` deletes a copy, and
-      a copy-form toggle renames over a `SKILL.md` or `SKILL.md.disabled`
-      already there.
+      link. A copy-form toggle whose rename would replace a file already
+      there (`SKILL.md` for enable, `SKILL.md.disabled` for disable) is
+      refused too (commit `22b15cb`). Every selected target is checked before
+      any is changed, and the panel shows the refusal's one line, which ends
+      "nothing was changed." The reviewer's probe, rerun on the built app in a
+      copy of the workspace at `f12fd86`, got each refusal from the panel's
+      endpoint, and the files it had lost before were intact. So the panel's
+      sentence "Disable never deletes skill content" now holds in those
+      cases. What remains is outside the toggle and is as before: `install`
+      replaces a real folder at an install's path or in `.disabled/`, and
+      `remove --yes` deletes a copy.
     - A second toggle can be sent while the first runs, and there is no
       timeout, as on the trunk's page.
     - The endpoint accepts a target without its project part, and then toggles
