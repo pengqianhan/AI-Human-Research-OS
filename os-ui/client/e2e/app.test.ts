@@ -3811,6 +3811,46 @@ describe("desktop client on a Research OS folder", () => {
     assert.ok(!existsSync(join(copiedInstall(), "SKILL.md.disabled")));
   });
 
+  test("another plugin's frame cannot become Skills Hub's page: Paper wiki's frame sent to app://skills-hub/ stays Paper wiki's, and nothing changes on disk", SLOW, async () => {
+    const skillFile = join(copiedInstall(), "SKILL.md");
+    const disk = readFileSync(skillFile, "utf8");
+    await nav(page, "Paper wiki").click();
+    await wikiFrame(page);
+    const wikiArea = page.locator('[data-screen="paper-wiki/viewer"] iframe');
+    const inWikiArea = async () => (await (await wikiArea.elementHandle())!.contentFrame())!.url();
+    const before = await inWikiArea();
+    assert.match(before, /^app:\/\/paper-wiki\//);
+    const skillsFrames = () => page.frames().filter((f) => f.url().startsWith("app://skills-hub/")).length;
+    const frames = skillsFrames();
+    // Each frame navigation the main process is asked for, so the check below runs after the attempt reached it.
+    await app.evaluate(({ BrowserWindow }) => {
+      const seen: string[] = [];
+      const listener = (event: Electron.Event<Electron.WebContentsWillFrameNavigateEventParams>) => seen.push(event.url);
+      Object.assign(globalThis, { __navigations: seen, __navigationListener: listener });
+      BrowserWindow.getAllWindows()[0]!.webContents.on("will-frame-navigate", listener);
+    });
+    try {
+      // The reviewer's script, run in the frame as a note's own code would run there.
+      await (await wikiFrame(page)).evaluate(() => {
+        location.href = "app://skills-hub/index.html";
+      });
+      const asked = () => app.evaluate(() => (globalThis as unknown as { __navigations: string[] }).__navigations.includes("app://skills-hub/index.html"));
+      for (let i = 0; i < 100 && !(await asked()); i++) await page.waitForTimeout(100);
+      assert.ok(await asked(), "the navigation reached the main process");
+      await page.waitForTimeout(1500);
+      assert.equal(await inWikiArea(), before, "Paper wiki's area still shows Paper wiki");
+      assert.equal(skillsFrames(), frames, "no second Skills Hub page");
+      assert.equal(await page.locator('[data-screen="paper-wiki/viewer"]').locator("iframe").count(), 1);
+    } finally {
+      await app.evaluate(({ BrowserWindow }) => {
+        const { __navigationListener: listener } = globalThis as unknown as { __navigationListener: (...args: unknown[]) => void };
+        BrowserWindow.getAllWindows()[0]!.webContents.removeListener("will-frame-navigate", listener);
+      });
+    }
+    assert.equal(readFileSync(skillFile, "utf8"), disk);
+    assert.ok(!existsSync(join(copiedInstall(), "SKILL.md.disabled")));
+  });
+
   test("a layout saved on the trunk's old Skills page reopens on Skills Hub's page", SLOW, async () => {
     await page.evaluate(() => {
       localStorage.setItem("osui.layout.v1", JSON.stringify({ screen: "skills" }));

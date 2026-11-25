@@ -168,14 +168,29 @@ export function streamLimit(max = READ_MAX_STREAMS): { acquire(id: string): (() 
   };
 }
 
+/** Who asks for a subframe's navigation, as the main process sees it: the frame's URL now ("" before its first load) and the initiating frame's, if any. */
+export interface NavigationFrom {
+  frame: string;
+  initiator: string | null;
+}
+
 /**
  * Whether a frame may navigate to `url`: the top frame stays on the app's
  * origin; a subframe may load a loaded plugin's origin (`hosts`) or a blank
- * document, and nothing else.
+ * document, and nothing else. With `from`, a subframe goes to another
+ * plugin's origin only when the app's own page starts the navigation (the
+ * host gives a frame its plugin); started by the frame itself, another
+ * plugin's frame, or nothing, it stays on the host it already shows, so no
+ * plugin's frame can turn itself into another plugin's page (os-ui/PLUGINS.md
+ * Part 4, the step 2.5 review's note 3).
  */
-export function allowedNavigation(url: string, isMainFrame: boolean, hosts: readonly string[]): boolean {
+export function allowedNavigation(url: string, isMainFrame: boolean, hosts: readonly string[], from?: NavigationFrom): boolean {
   if (isMainFrame) return url.startsWith(`${ORIGIN}/`);
-  return hosts.some((h) => url.startsWith(`${SCHEME}://${h}/`)) || url === "about:blank" || url === "about:srcdoc";
+  if (url === "about:blank" || url === "about:srcdoc") return true;
+  const host = hosts.find((h) => url.startsWith(`${SCHEME}://${h}/`));
+  if (host === undefined) return false;
+  if (from === undefined || (from.initiator !== null && from.initiator.startsWith(`${ORIGIN}/`))) return true;
+  return from.frame.startsWith(`${SCHEME}://${host}/`);
 }
 
 const TYPES: Record<string, string> = {

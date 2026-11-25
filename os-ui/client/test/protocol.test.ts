@@ -276,6 +276,40 @@ describe("allowedNavigation", () => {
       assert.equal(allowedNavigation(url, false, bundledHosts), false, url);
     }
   });
+
+  test("a subframe stays on the plugin host the app gave it: another plugin's host only when the app's own page starts the navigation", () => {
+    const hosts = ["paper-wiki", "skills-hub", "code-view", "paper-view"];
+    // What the main process saw (will-frame-navigate): the app loads a new frame, "" so far, on a plugin's origin.
+    const byApp = (frame: string) => ({ frame, initiator: "app://research-os/" });
+    assert.equal(allowedNavigation("app://skills-hub/index.html", false, hosts, byApp("")), true, "the app's first load");
+    assert.equal(allowedNavigation("app://code-view/index.html?project=P", false, hosts, byApp("")), true);
+    assert.equal(allowedNavigation("app://paper-view/index.html?project=P", false, hosts, byApp("app://code-view/index.html?project=P")), true, "the app may point a frame elsewhere");
+    // A frame on its own host, by itself (a link, location.href, a reload), or with no initiator.
+    const wiki = "app://paper-wiki/viz.html";
+    for (const initiator of [wiki, null]) {
+      for (const url of ["app://paper-wiki/viz.html", "app://paper-wiki/index.html?note=x", "about:blank", "about:srcdoc"]) {
+        assert.equal(allowedNavigation(url, false, hosts, { frame: wiki, initiator }), true, `${url} from ${initiator}`);
+      }
+      // Never to another plugin's host: Paper wiki's frame would otherwise become a working Skills page (review, note 3).
+      for (const url of ["app://skills-hub/index.html", "app://skills-hub/", "app://code-view/index.html?project=P", "app://research-os/", "https://example.com/"]) {
+        assert.equal(allowedNavigation(url, false, hosts, { frame: wiki, initiator }), false, `${url} from ${initiator}`);
+      }
+    }
+    // A sibling cannot point the Skills page's frame at its own host; the frame's own host is its own.
+    assert.equal(allowedNavigation("app://paper-wiki/viz.html", false, hosts, { frame: "app://skills-hub/index.html", initiator: wiki }), false);
+    assert.equal(allowedNavigation("app://skills-hub/index.html", false, hosts, { frame: "app://skills-hub/index.html", initiator: wiki }), true);
+    // A frame with no URL yet, started by no frame or by a plugin's, gets no plugin's host.
+    for (const initiator of [null, wiki, "app://research-os.evil/", "app://research-osx/"]) {
+      assert.equal(allowedNavigation("app://skills-hub/index.html", false, hosts, { frame: "", initiator }), false, `from ${initiator}`);
+    }
+    // A host that is not loaded stays refused, even the frame's own; a look-alike of the frame's host is another host.
+    assert.equal(allowedNavigation("app://demo/x.html", false, hosts, { frame: "app://demo/index.html", initiator: null }), false);
+    assert.equal(allowedNavigation("app://paper-wiki.evil/", false, [...hosts, "paper-wiki.evil"], { frame: wiki, initiator: wiki }), false);
+    assert.equal(allowedNavigation("app://paper-wikix/", false, [...hosts, "paper-wikix"], { frame: wiki, initiator: wiki }), false);
+    // The top frame's rule is unchanged.
+    assert.equal(allowedNavigation("app://research-os/", true, hosts, { frame: "app://research-os/", initiator: null }), true);
+    assert.equal(allowedNavigation("app://skills-hub/index.html", true, hosts, byApp("app://research-os/")), false);
+  });
 });
 
 describe("route", () => {

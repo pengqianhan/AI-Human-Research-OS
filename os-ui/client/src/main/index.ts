@@ -374,15 +374,17 @@ function createWindow(): void {
     void openOutside(url);
     return { action: "deny" };
   });
-  // The window stays on the app's origin and frames on the loaded plugins'; any
-  // other navigation is cancelled, and a web link may open in the browser instead.
-  const guard = (event: Electron.Event, url: string, isMainFrame: boolean) => {
-    if (allowedNavigation(url, isMainFrame, pluginHosts)) return;
+  // The window stays on the app's origin and frames on the loaded plugins',
+  // each on the one the app gave it; any other navigation is cancelled, and a
+  // web link may open in the browser instead.
+  const guard = (event: Electron.Event<Electron.WebContentsWillFrameNavigateEventParams | Electron.WebContentsWillRedirectEventParams>) => {
+    const from = { frame: event.frame?.url ?? "", initiator: event.initiator?.url ?? null };
+    if (allowedNavigation(event.url, event.isMainFrame, pluginHosts, from)) return;
     event.preventDefault();
-    void openOutside(url);
+    void openOutside(event.url);
   };
-  contents.on("will-frame-navigate", (event) => guard(event, event.url, event.isMainFrame));
-  contents.on("will-redirect", (event) => guard(event, event.url, event.isMainFrame));
+  contents.on("will-frame-navigate", guard);
+  contents.on("will-redirect", guard);
   contents.on("render-process-gone", (_event, details) => log(`renderer gone: ${details.reason}`));
 
   w.on("focus", () => {
