@@ -130,6 +130,16 @@ describe("growth reads n and 4n in turn and judges by the two bests (a scripted 
     assert.match(failure, /ended by the cap of 30 s on the case's time, 4 rounds in 34\.0 s/);
   });
 
+  test("a case slower than the cap ends after its warm-up and one round, the least any case costs", () => {
+    // 2 s at n and 32 s at 4n: the warm-up ends at 34 s, round 1 at 68 s. A reading is never cut short.
+    const m = machine((size) => (size === "n" ? 2000 : 32_000));
+    const { g, failure } = judged(m);
+    assert.ok(failure !== null);
+    assert.deepEqual(m.runs, ["n", "4n", "n", "4n"]);
+    assert.equal(g.rounds.length, 1);
+    assert.match(failure, /ended by the cap of 30 s on the case's time, 1 round in 68\.0 s/);
+  });
+
   test("a case the 30 s cap ends before five rounds fails, though its two bests would pass", () => {
     // One pass, but 2 s at n and 8 s at 4n: the warm-up and two rounds take 30 s.
     const m = machine((size) => (size === "n" ? 2000 : 8000));

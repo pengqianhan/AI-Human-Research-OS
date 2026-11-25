@@ -20,17 +20,23 @@
  * The time at n is the ratio's denominator, and one slow reading there makes a
  * pass per element look like one pass, so no case passes before GROWTH.rounds
  * rounds: each best is the least of at least that many readings. A case that
- * fails after them reads on, pausing GROWTH.pauseMs before each extra round,
- * until it passes, or GROWTH.maxRounds rounds are read, or the case has taken
- * GROWTH.wallMs (warm-up and pauses included). A reading is never cut short,
- * so a case ends at most one pause and one round past that cap, and never
- * before its warm-up and one round, two readings of each size: a pass per
- * element that takes 2 s at 4n here takes 60 s on a runner 30 times slower,
- * and fails there in about 2 minutes (reading every n first, then 4n until a
- * pass, took about 6.4). Here such a mistake fails in about 30 s. A failure
- * prints every reading in order, so a red shows whether the machine slowed
- * partway (some rounds fast at both sizes) or 4n was slow out of proportion
- * on every round.
+ * fails after them reads on, pausing GROWTH.pauseMs before each extra round
+ * (without returning to the event loop, so the callers stay synchronous) so
+ * that a slow spell of the machine can pass, until it passes, or
+ * GROWTH.maxRounds rounds are read, or the case has taken GROWTH.wallMs,
+ * warm-up and pauses included. The wall cap leaves room for extra rounds past
+ * the 11 s that the warm-up and five rounds take, on a runner 30 times slower
+ * than an M1 Pro, for the heaviest case the sizing allows (50 ms at 4n here),
+ * and is far under the runner's 10 minutes a file; the round cap, four times
+ * the five, ends sooner a case just over the floor (under a second a round).
+ * A reading is never cut short, so a case ends at most one pause and one round
+ * past the wall cap, and never before its warm-up and one round: a pass per
+ * element of 2 s at 4n here, 60 s on that runner, fails there in about 2
+ * minutes (reading every n first, then 4n until a pass, took about 6.4). Here
+ * the recorded mistakes of 1 to 5 s at 4n fail in 30 to 37 s. A failure prints
+ * every reading in order, so a red shows whether the machine slowed partway
+ * (some rounds fast at both sizes) or 4n was slow out of proportion in every
+ * round.
  *
  * Each test picks its sizes so that its code stays far under the floor on any
  * runner, and the quadratic code it guards against, put back on a scratch copy,
@@ -136,9 +142,10 @@ export function assertOnePass(t: { diagnostic(message: string): void }, label: s
     : `a case fails at ${GROWTH.ratio}× or more with over ${GROWTH.floorMs} ms at 4n`;
   const cap = g.rounds.length >= GROWTH.maxRounds ? `the cap of ${GROWTH.maxRounds} rounds` : `the cap of ${GROWTH.wallMs / 1000} s on the case's time`;
   const ms = (r: Reading) => `${r.smallMs.toFixed(1)} ms, ${r.bigMs.toFixed(1)} ms`;
+  const rounds = `${g.rounds.length} ${g.rounds.length === 1 ? "round" : "rounds"}`;
   assert.fail(
     [
-      `${line} (${rule}); ended by ${cap}, ${g.rounds.length} rounds in ${(g.ms / 1000).toFixed(1)} s. Every reading in order, at n and at 4n:`,
+      `${line} (${rule}); ended by ${cap}, ${rounds} in ${(g.ms / 1000).toFixed(1)} s. Every reading in order, at n and at 4n:`,
       `warm-up: ${ms(g.warmUp)}`,
       ...g.rounds.map((r, k) => `round ${k + 1}: ${ms(r)}`),
     ].join("\n"),
