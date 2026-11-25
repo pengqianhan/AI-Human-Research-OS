@@ -53,7 +53,7 @@ import { tempTree } from "./helpers.ts";
 const PLUGINS = join(import.meta.dirname, "..", "..", "frontend", "plugins");
 const bundled = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
 const sites = pluginSites(bundled.plugins);
-const CSP = appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view"]);
+const CSP = appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "skills-hub"]);
 
 /** A registry as createRegistry builds it, from mounts the tests make. */
 function registryOf(app: Mount[], byPlugin: Record<string, Mount[]>): Registry {
@@ -148,7 +148,7 @@ describe("plugin sites", () => {
 
   test("any other plugin serves the site/ folder beside its plugin.json, in load order", () => {
     assert.deepEqual(demo.problems, []);
-    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "demo"]);
+    assert.deepEqual([...twoSites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "skills-hub", "demo"]);
     assert.deepEqual(twoSites.get("demo"), { id: "demo", source: "bundled", reads: [], files: { kind: "plugin", dir: demoSite } });
   });
 
@@ -208,11 +208,11 @@ describe("workspaceRegistry", () => {
 
 describe("policies", () => {
   test("the app policy frames exactly the loaded plugins' origins", () => {
-    // The bundled plugins: Paper Wiki, the Code view, the Paper view, the Skeleton view, the Assets view, and the Idea view, each framed on its own origin.
-    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view"]);
+    // The bundled plugins: Paper Wiki, the Code view, the Paper view, the Skeleton view, the Assets view, the Idea view, and Skills Hub, each framed on its own origin.
+    assert.deepEqual([...sites.keys()], ["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "skills-hub"]);
     assert.equal(
       appCsp([...sites.keys()]),
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view app://assets-view app://idea-view; object-src 'none'; base-uri 'none'; form-action 'none'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src app://paper-wiki app://code-view app://paper-view app://skeleton-view app://assets-view app://idea-view app://skills-hub; object-src 'none'; base-uri 'none'; form-action 'none'",
     );
     assert.match(appCsp(["paper-wiki", "demo"]), /; frame-src app:\/\/paper-wiki app:\/\/demo; /);
     assert.match(appCsp(["demo", "paper-wiki"]), /; frame-src app:\/\/demo app:\/\/paper-wiki; /);
@@ -221,7 +221,7 @@ describe("policies", () => {
 
   test("app pages carry the policy for the sites the handler was given, in their order", () => {
     const index = route("app://research-os/", { renderer, workspace }, twoSites);
-    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "demo"]));
+    assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "skills-hub", "demo"]));
   });
 
   test("a workspace site's policy, and a plugin-folder site's, which adds its own files", () => {
@@ -268,7 +268,7 @@ describe("allowedNavigation", () => {
 
   test("with the bundled plugins, each view's origin is a subframe's only, and a look-alike host is none", () => {
     const bundledHosts = [...sites.keys()];
-    for (const url of ["app://code-view/index.html?project=P", "app://paper-view/index.html?project=P", "app://skeleton-view/index.html?project=P", "app://assets-view/index.html?project=P", "app://idea-view/index.html?project=P"]) {
+    for (const url of ["app://code-view/index.html?project=P", "app://paper-view/index.html?project=P", "app://skeleton-view/index.html?project=P", "app://assets-view/index.html?project=P", "app://idea-view/index.html?project=P", "app://skills-hub/index.html"]) {
       assert.equal(allowedNavigation(url, false, bundledHosts), true, url);
       assert.equal(allowedNavigation(url, true, bundledHosts), false, `top frame: ${url}`);
     }
@@ -700,6 +700,119 @@ describe("the real bundled plugins, registry, and handler together", () => {
   });
 });
 
+/*
+ * Skills Hub (os-ui/PLUGINS.md Part 4, §2 and §3): the trunk's skill toggle as
+ * the bundled handler `toggle`, reached only from app://skills-hub, and the
+ * generator's snapshot as its one read root (way R, a file root).
+ */
+describe("Skills Hub's toggle and snapshot, on its own origin", () => {
+  const SNAPSHOT = "os-ui/frontend/public/state.json";
+  const ws = tempTree({
+    "AGENTS.md": "SECRET agents",
+    [SNAPSHOT]: '{"store":{"collections":[],"orphans":[]}}',
+    "os-ui/frontend/public/other.json": "SECRET other",
+    "os-ui/frontend/index.html": "SECRET index",
+  });
+  const installer = join(ws, "research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py");
+  const runner = fakeRunner(() => ({ code: 0, stdout: "disable:  repo-claude  SKILL.md -> SKILL.md.disabled\n", stderr: "" }));
+  let regenerated = 0;
+  const ctx = context(ws, { run: runner.run, regenerate: async () => (regenerated++, null) });
+  const registry = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: bundled.plugins, factories: BUNDLED_HANDLERS });
+  const handler = createHandler(() => ({ renderer, workspace: ws, sites, registry, token: "t0k" }));
+  const fetchHub = (url: string, init?: RequestInit) => handler(new Request(url, init));
+  const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+  test("a JSON POST on app://skills-hub reaches the installer with today's argv, then regenerates the snapshot", async () => {
+    const res = await fetchHub("app://skills-hub/api/skills-hub/toggle", json({ skill: "e2e-copied", collection: "e2e-copy", target: "repo-claude", enable: false }));
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { ok: true, output: "disable:  repo-claude  SKILL.md -> SKILL.md.disabled", snapshotError: null });
+    assert.deepEqual(runner.calls.map((c) => [c.command, c.cwd]), [[["py", installer, "disable", "e2e-copied", "--target", "repo-claude", "--collection", "e2e-copy"], ws]]);
+    assert.equal(regenerated, 1);
+  });
+
+  test("text/plain is 415 and GET is 405, as JSON, and neither runs anything", async () => {
+    const before = runner.calls.length;
+    const plain = await fetchHub("app://skills-hub/api/skills-hub/toggle", { method: "POST", headers: { "Content-Type": "text/plain" }, body: '{"skill":"a","target":"repo-claude"}' });
+    assert.equal(plain.status, 415);
+    assert.deepEqual(await plain.json(), { error: "writes must be application/json" });
+    const form = await fetchHub("app://skills-hub/api/skills-hub/toggle", { method: "POST", body: new URLSearchParams({ skill: "a", target: "repo-claude" }) });
+    assert.equal(form.status, 415);
+    const get = await fetchHub("app://skills-hub/api/skills-hub/toggle");
+    assert.equal(get.status, 405);
+    assert.deepEqual(await get.json(), { error: "POST only" });
+    assert.equal(runner.calls.length, before);
+  });
+
+  test("no other origin reaches it, and Skills Hub's origin reaches nothing else", async () => {
+    const before = runner.calls.length;
+    const app = await fetchHub("app://research-os/api/skills-hub/toggle", json({ skill: "s", target: "repo-claude" }));
+    assert.equal(app.status, 404);
+    assert.deepEqual(await app.json(), { error: "no endpoint /api/skills-hub/toggle" });
+    for (const [url, init] of [
+      ["app://paper-wiki/api/skills-hub/toggle", json({ skill: "s", target: "repo-claude" })],
+      ["app://code-view/api/skills-hub/toggle", json({ skill: "s", target: "repo-claude" })],
+      ["app://skills-hub/api/skill/toggle", json({ skill: "s", target: "repo-claude" })],
+      ["app://skills-hub/api/chat/sessions", { headers: { "X-OS-UI-Token": "t0k" } }],
+      ["app://skills-hub/api/paper-wiki/status", {}],
+      ["app://skills-hub/api/skills-hub", json({ skill: "s", target: "repo-claude" })],
+    ] as const) {
+      const res = await fetchHub(url, init);
+      if (url === "app://skills-hub/api/skills-hub") {
+        // Its own prefix with no handler below it: the registry's 404, as JSON.
+        assert.equal(res.status, 404, url);
+        assert.deepEqual(await res.json(), { error: "no endpoint /api/skills-hub" });
+        continue;
+      }
+      assert.equal(res.status, 404, url);
+      assert.equal(await res.text(), "Not found", `${url} reached no handler`);
+    }
+    assert.equal(runner.calls.length, before, "nothing ran");
+  });
+
+  test("its read channel serves the snapshot file and nothing beside, above, or below it", async () => {
+    const files = (rel: string) => `app://skills-hub/_os/files?path=${encodeURIComponent(rel)}`;
+    const list = (rel: string) => `app://skills-hub/_os/list?path=${encodeURIComponent(rel)}`;
+    const ok = await fetchHub(files(SNAPSHOT));
+    assert.equal(ok.status, 200);
+    assert.equal(ok.headers.get("content-security-policy"), READ_CSP);
+    assert.equal(await ok.text(), '{"store":{"collections":[],"orphans":[]}}');
+    assert.equal((await fetchHub(files(SNAPSHOT), { method: "HEAD" })).status, 200);
+    for (const method of ["GET", "HEAD"]) {
+      for (const url of [
+        files("os-ui/frontend/public/other.json"),
+        files("os-ui/frontend/index.html"),
+        files(`${SNAPSHOT}/x`),
+        files("AGENTS.md"),
+        files("os-ui/frontend/public"),
+        list("os-ui/frontend/public"),
+        list(SNAPSHOT),
+        list("os-ui/frontend"),
+      ]) {
+        const res = await fetchHub(url, { method });
+        assert.equal(res.status, 404, `${method} ${url}`);
+        assert.ok(!(await res.text()).includes("SECRET"), url);
+      }
+    }
+    // Another plugin's origin does not read it.
+    assert.equal((await fetchHub(`app://skeleton-view/_os/files?path=${encodeURIComponent(SNAPSHOT)}`)).status, 404);
+  });
+
+  test("a snapshot that is a link to another file of the workspace is 404", async (t) => {
+    const linked = tempTree({ "AGENTS.md": "SECRET agents", "os-ui/frontend/public/.keep": "" });
+    try {
+      symlinkSync(join(linked, "AGENTS.md"), join(linked, SNAPSHOT), "file");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EPERM") throw error;
+      t.skip("Windows without the symlink privilege");
+      return;
+    }
+    const linkedHandler = createHandler(() => ({ renderer, workspace: linked, sites, registry, token: "t0k" }));
+    const res = await linkedHandler(new Request(`app://skills-hub/_os/files?path=${encodeURIComponent(SNAPSHOT)}`));
+    assert.equal(res.status, 404);
+    assert.ok(!(await res.text()).includes("SECRET"));
+  });
+});
+
 describe("read channel", () => {
   const posix = process.platform !== "win32";
   /** A link at `at` to the folder `to`: a junction on Windows, which needs no privilege. */
@@ -937,6 +1050,7 @@ describe("read channel", () => {
           ],
         ],
         ["idea-view", "bundled", ["projects-folder/*/idea_graph.md", "projects-folder/*/paper_skeleton.md"]],
+        ["skills-hub", "bundled", ["os-ui/frontend/public/state.json"]],
         ["reads-code", "bundled", ["projects-folder/*/Code"]],
         ["reads-paper", "bundled", ["projects-folder/*/paper"]],
         ["reads-file", "bundled", ["projects-folder/*/paper_skeleton.md"]],

@@ -147,6 +147,26 @@ describe("the bundled plugins in the renderer", () => {
     assert.equal(viewSrc(idea(desktop)[0]!, "nanochat_cpu"), "app://idea-view/index.html?project=nanochat_cpu");
   });
 
+  test("Skills Hub: bundled last, reads the snapshot file only, and declares its toggle handler", () => {
+    const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
+    assert.equal(BUNDLED_IDS[BUNDLED_IDS.length - 1], "skills-hub", "appended, so the other plugins' menu, tab, and frame-src order is unchanged");
+    const manifest = plugins.find((p) => p.id === "skills-hub")!;
+    assert.equal(manifest.name, "Skills Hub");
+    // Way R of os-ui/PLUGINS.md Part 4, §2.2: one file root, the generator's snapshot.
+    assert.deepEqual(manifest.reads, ["os-ui/frontend/public/state.json"]);
+    assert.deepEqual(manifest.contributes.handlers, ["toggle"]);
+    assert.equal(manifest.site, undefined, "served from its own site/ folder, not the workspace");
+    // Its page comes with the site (C2 of Part 4 §5); until then the trunk's Skills page stays.
+    assert.deepEqual(pluginPages(plugins, desktop).filter((p) => p.plugin === "skills-hub"), []);
+    assert.deepEqual(pluginInfo(manifest, "bundled"), {
+      id: "skills-hub",
+      name: "Skills Hub",
+      version: "0.1.0",
+      description: "The research skills hub and where each skill is installed; disable or enable one install.",
+      source: "bundled",
+    });
+  });
+
   test("Paper Wiki's card: its name and description", () => {
     const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
     const wiki = plugins.find((p) => p.id === "paper-wiki")!;

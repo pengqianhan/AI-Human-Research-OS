@@ -50,7 +50,7 @@ export function apiPlugin(): Plugin {
       });
       const loaded = loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", { trunk: TRUNK_MOUNTS, plugins: [] });
       for (const problem of loaded.problems) server.config.logger.warn(`  os-ui plugin not loaded: ${problem}`);
-      // Desktop-only handlers (the Code view's Git history) are declared but not mounted here.
+      // Desktop-only handlers (the Code view's Git history, Skills Hub's toggle) are declared but not mounted here.
       const registry = createRegistry({ ctx: devContext(), trunk: TRUNK_MOUNTS, plugins: loaded.plugins, factories: BUNDLED_HANDLERS, skip: DESKTOP_ONLY_HANDLERS });
       for (const mount of registry.all) {
         server.middlewares.use(mount.prefix, (req, res) => {

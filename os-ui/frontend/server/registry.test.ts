@@ -109,21 +109,24 @@ describe("createRegistry", () => {
   const real = () =>
     createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins, factories: BUNDLED_HANDLERS });
 
-  test("all has the app's three endpoints, then Paper Wiki's status and the Code view's Git history, with their token flags", () => {
+  test("all has the app's three endpoints, then Paper Wiki's status, the Code view's Git history, and Skills Hub's toggle, with their token flags", () => {
     assert.deepEqual(flags(real().all), [
       ["/api/skill/toggle", false],
       ["/api/paper-sources", true],
       ["/api/chat", true],
       ["/api/paper-wiki/status", false],
       ["/api/code-view/git", false],
+      ["/api/skills-hub/toggle", false],
     ]);
   });
 
-  test("with the dev server's skip set, the Code view's Git history is declared but mounted nowhere", () => {
-    assert.deepEqual([...DESKTOP_ONLY_HANDLERS], ["code-view/git"]);
+  test("with the dev server's skip set, the Code view's Git history and Skills Hub's toggle are declared but mounted nowhere", () => {
+    assert.deepEqual([...DESKTOP_ONLY_HANDLERS], ["code-view/git", "skills-hub/toggle"]);
     const dev = createRegistry({ ctx, trunk: TRUNK_MOUNTS, plugins: loadPlugins(PLUGINS, BUNDLED_IDS, "bundled", none).plugins, factories: BUNDLED_HANDLERS, skip: DESKTOP_ONLY_HANDLERS });
     assert.deepEqual(flags(dev.byPlugin.get("code-view")!), []);
+    assert.deepEqual(flags(dev.byPlugin.get("skills-hub")!), []);
     assert.ok(!dev.all.some((m) => m.prefix.startsWith("/api/code-view")));
+    assert.ok(!dev.all.some((m) => m.prefix.startsWith("/api/skills-hub")));
   });
 
   test("the trunk on the app origin, each plugin's handlers on its own, never with the token", () => {
@@ -132,6 +135,7 @@ describe("createRegistry", () => {
     assert.deepEqual([...registry.byPlugin.keys()], [...BUNDLED_IDS]);
     assert.deepEqual(flags(registry.byPlugin.get("paper-wiki")!), [["/api/paper-wiki/status", false]]);
     assert.deepEqual(flags(registry.byPlugin.get("code-view")!), [["/api/code-view/git", false]]);
+    assert.deepEqual(flags(registry.byPlugin.get("skills-hub")!), [["/api/skills-hub/toggle", false]]);
     const app = new Set(registry.app.map((m) => m.prefix));
     for (const [id, mounts] of registry.byPlugin) {
       for (const mount of mounts) {
