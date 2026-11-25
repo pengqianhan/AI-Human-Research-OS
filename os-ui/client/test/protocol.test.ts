@@ -691,10 +691,17 @@ describe("the real bundled plugins, registry, and handler together", () => {
     assert.equal(runner.calls.length, 0, "no handler ran a command");
   });
 
-  test("the app's origin reaches the trunk, and not Paper Wiki's status", async () => {
+  test("the app's origin reaches the trunk, and not Paper Wiki's status nor a skill toggle", async () => {
     const here = await fetchReal("app://research-os/api/paper-wiki/status");
     assert.equal(here.status, 404);
     assert.deepEqual(await here.json(), { error: "no endpoint /api/paper-wiki/status" });
+    // The trunk's toggle went with step 2.5: the app's origin, which holds the bridge, reaches no skill toggle.
+    for (const path of ["/api/skill/toggle", "/api/skills-hub/toggle"]) {
+      const toggle = await fetchReal(`app://research-os${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"skill":"s","target":"repo-claude"}' });
+      assert.equal(toggle.status, 404, path);
+      assert.deepEqual(await toggle.json(), { error: `no endpoint ${path}` });
+    }
+    assert.equal(runner.calls.length, 0);
     const sessions = await fetchReal("app://research-os/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": "t0k" } });
     assert.equal(sessions.status, 200);
   });

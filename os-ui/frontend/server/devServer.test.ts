@@ -87,9 +87,14 @@ describe("Vite dev server adapters", () => {
     }
   });
 
-  test("the viewer's status probe and the toggle's validation need no token", async () => {
+  test("the viewer's status probe needs no token; /api/skill/toggle, the trunk's toggle until step 2.5, is no endpoint", async () => {
     assert.deepEqual(await (await call("/api/paper-wiki/status", {}, false)).json(), { writable: true, values: ["unread", "skimmed", "read"] });
-    const toggle = await call("/api/skill/toggle", { method: "POST", body: '{"skill":"a b"}' }, false);
-    assert.equal(toggle.status, 400);
+    for (const token of [false, true]) {
+      const toggle = await call("/api/skill/toggle", { method: "POST", body: '{"skill":"a b","target":"repo-claude"}', headers: { "Content-Type": "application/json" } }, token);
+      const text = await toggle.text();
+      assert.equal(toggle.status, 404, text.slice(0, 200));
+      assert.notEqual(toggle.headers.get("content-type"), "application/json");
+      assert.ok(!/"(error|ok|snapshotError)"/.test(text), text.slice(0, 200));
+    }
   });
 });

@@ -29,9 +29,10 @@ function hasToken(req: Connect.IncomingMessage): boolean {
 /**
  * Every os-ui endpoint on the dev server, from the plugin registry
  * (server/registry.ts): the app's own endpoints (server/api.ts TRUNK_MOUNTS:
- * the skill toggle, the Papers button's switches and keys, and the agent
- * conversations, GOAL.md H2) and each bundled plugin's handlers (Paper Wiki's
- * reading status). The logic lives in server/, shared with the desktop
+ * the Papers button's switches and keys, and the agent conversations, GOAL.md
+ * H2) and each bundled plugin's handlers but the desktop-only ones (Paper
+ * Wiki's reading status; not the Code view's Git history or Skills Hub's
+ * skill toggle). The logic lives in server/, shared with the desktop
  * client, which serves the same handlers in-process.
  *
  * Each endpoint is its own Connect mount, so the handler sees the path below

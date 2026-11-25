@@ -18,11 +18,10 @@ describe("mounts", () => {
   // As the dev server builds them (api-plugin.ts): desktop-only handlers declared, not mounted.
   const mounts = createRegistry({ ctx: context(tempTree()), trunk: TRUNK_MOUNTS, plugins, factories: BUNDLED_HANDLERS, skip: DESKTOP_ONLY_HANDLERS }).all;
 
-  test("the dev server's four endpoints and which need its token; the Code view's Git history and Skills Hub's toggle are not among them", () => {
+  test("the dev server's three endpoints and which need its token; the Code view's Git history and Skills Hub's toggle are not among them", () => {
     assert.deepEqual(
       mounts.map((m) => [m.prefix, m.token]),
       [
-        ["/api/skill/toggle", false],
         ["/api/paper-sources", true],
         ["/api/chat", true],
         ["/api/paper-wiki/status", false],

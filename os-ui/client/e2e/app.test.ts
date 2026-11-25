@@ -3714,7 +3714,10 @@ describe("desktop client on a Research OS folder", () => {
       const status = async (url: string, init?: RequestInit) => (await fetch(url, init)).status;
       return {
         form: await status("/api/chat/send", { method: "POST", body: new URLSearchParams({ text: "x" }) }),
-        plain: await status("/api/skill/toggle", { method: "POST", headers: { "Content-Type": "text/plain" }, body: "{}" }),
+        // Before the token: a write that is not JSON is 415 on a token mount too (protocol.ts serveApi).
+        plain: await status("/api/paper-sources", { method: "POST", headers: { "Content-Type": "text/plain" }, body: "{}" }),
+        // The trunk's skill toggle went with step 2.5: Skills Hub's own origin alone reaches its toggle.
+        skillToggle: await status("/api/skill/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }),
         noToken: await status("/api/chat/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"text":"x"}' }),
         withToken: await status("/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": window.osDesktop!.token } }),
         state: await status("/state.json"),
@@ -3723,7 +3726,7 @@ describe("desktop client on a Research OS folder", () => {
         wikiHere: await status("/paper-wiki/viz.html"),
       };
     });
-    assert.deepEqual(results, { form: 415, plain: 415, noToken: 401, withToken: 200, state: 200, traversal: 404, wikiHere: 404 });
+    assert.deepEqual(results, { form: 415, plain: 415, skillToggle: 404, noToken: 401, withToken: 200, state: 200, traversal: 404, wikiHere: 404 });
     const body = await page.evaluate(async () => (await fetch("/..%2f..%2fpackage.json")).text());
     assert.ok(!body.includes("research-os-desktop"), "a file outside the renderer must not be served");
   });
