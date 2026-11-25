@@ -384,6 +384,9 @@ const NO_COMMAND = "No command: a name here has characters a command cannot carr
 /** A copy-form skill with a copy in each of two fixture projects: the suite disables and enables one project's install. */
 const PROJECTS_COLLECTION = "e2e-projects";
 const PROJECTS_SKILL = "e2e-in-projects";
+/** A hub skill beside it whose description holds a bidi control (review, note 5), drawn as a marker. */
+const BIDI_SKILL = "e2e-bidi";
+const BIDI_TEXT = "Looks like \u202Eevil.exe\u202C text.";
 const TWINS_COLLECTION = "e2e-twins";
 const TWIN_SKILL = "e2e-twin";
 /** The twins' folders under the collection, in the generator's order, and each one's description. */
@@ -416,6 +419,8 @@ function skillsFixtures(workspace: string): void {
   mkdirSync(join(projects, PROJECTS_SKILL), { recursive: true });
   writeFileSync(join(projects, "SOURCE.md"), `# ${PROJECTS_COLLECTION}\n\nInstall form: \`copy\`\n`);
   writeFileSync(join(projects, PROJECTS_SKILL, "SKILL.md"), skillMd(PROJECTS_SKILL, "A copy-form skill installed in two projects; the suite toggles one project's install."));
+  mkdirSync(join(projects, BIDI_SKILL), { recursive: true });
+  writeFileSync(join(projects, BIDI_SKILL, "SKILL.md"), skillMd(BIDI_SKILL, BIDI_TEXT));
   for (const project of [TEMPLATE_PROJECT, IDEA_PROJECT]) {
     const there = join(workspace, "projects-folder", project, ".claude", "skills", PROJECTS_SKILL);
     mkdirSync(there, { recursive: true });
@@ -3680,6 +3685,25 @@ describe("desktop client on a Research OS folder", () => {
     } finally {
       await app.evaluate(({ clipboard }, text) => clipboard.writeText(text), saved);
     }
+  });
+
+  test("Skills: a bidi control in a description is drawn as a marker on the card and in the panel", SLOW, async () => {
+    const skill = snapshot().store.collections.find((c) => c.name === PROJECTS_COLLECTION)!.skills.find((s) => s.name === BIDI_SKILL) as { description?: string } | undefined;
+    assert.equal(skill?.description, BIDI_TEXT, "the snapshot has the text as written");
+    const { sh } = await openSkills();
+    const shown = "Looks like ⟨U+202E⟩evil.exe⟨U+202C⟩ text.";
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill(BIDI_SKILL);
+    assert.equal(await skillCard(sh, BIDI_SKILL).locator(".desc").textContent(), shown);
+    await skillCard(sh, BIDI_SKILL).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name: BIDI_SKILL, exact: true }).waitFor();
+    assert.equal(await panel.locator(".d-desc").textContent(), shown);
+    assert.equal(await sh.evaluate(() => /[\u202A-\u202E\u2066-\u2069]/.test(document.body.textContent ?? "")), false, "no bidi control in the page's text");
+    await closeSkill(sh);
+    // The search reads the description as written, control and all.
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("\u202Eevil");
+    assert.deepEqual(await sh.locator(".cards .skill .nm").allTextContents(), [BIDI_SKILL]);
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("");
   });
 
   test("Skills: markup in a skill's description is text on the card and in the panel, and runs nothing", SLOW, async () => {

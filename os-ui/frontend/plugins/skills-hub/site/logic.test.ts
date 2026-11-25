@@ -403,6 +403,68 @@ describe("the panel and its installs", () => {
   });
 });
 
+describe("invisible characters (review, note 5)", () => {
+  // U+202E reverses what follows it on screen; U+200B is a blank. Each is drawn as a marker, as the other sites draw them
+  // (site-kit's markInvisible), in the text the page draws only: what it searches, copies, and sends stays as written.
+  const RLO = "\u202E";
+  const ZW = "\u200B";
+  const raw = {
+    collections: [
+      {
+        name: `col${ZW}`,
+        skills: [
+          {
+            name: `bidi${RLO}exe.md`,
+            description: `Looks like ${RLO}evil.exe text`,
+            license: `MIT${RLO}`,
+            sync: "drift",
+            install_form: `copy${RLO}`,
+            installs: [{ target: `project-claude:p${RLO}`, ok: false, disabled: false, detail: `should be${RLO} a copy` }],
+          },
+        ],
+      },
+    ],
+    orphans: [],
+    targets: [{ name: `project-claude:p${RLO}`, path: `/w/p${RLO}/.claude/skills`, display_path: `projects-folder/p${RLO}/.claude/skills`, scope: "project" }],
+  };
+  const store = parsed(raw);
+  const bidi = flattenStore(store)[0]!;
+  const marked = (text: string) => !/[\u202E\u200B]/.test(text) && /⟨U\+(202E|200B)⟩/.test(text);
+
+  test("a card, the panel, the pills, and the installs draw them as markers", () => {
+    const card = cardView(bidi);
+    for (const field of ["name", "description", "collection", "license"] as const) assert.ok(marked(card[field]), `card ${field}: ${card[field]}`);
+    assert.equal(card.name, "bidi⟨U+202E⟩exe.md");
+    const panel = panelView(bidi, null);
+    for (const field of ["name", "source", "description", "license"] as const) assert.ok(marked(panel[field]), `panel ${field}: ${panel[field]}`);
+    assert.deepEqual(filterPills(store, 1).map((p) => p.label), ["All · 1", "col⟨U+200B⟩", ORPHAN_COLLECTION_LABEL]);
+    const view = installsView(bidi, store.targets)!;
+    assert.equal(view.form, "copy⟨U+202E⟩ → hub");
+    const row = view.groups[0]!.rows[0]!;
+    assert.deepEqual([row.name, row.path], ["project-claude:p⟨U+202E⟩", "projects-folder/p⟨U+202E⟩/.claude/skills"]);
+    assert.deepEqual(view.groups[0]!.details, ["project-claude:p⟨U+202E⟩: should be⟨U+202E⟩ a copy"]);
+  });
+
+  test("the endpoint's refusal is drawn with markers too", () => {
+    assert.equal(toggleError({ error: `bad skill name: x${RLO}y` }), "bad skill name: x⟨U+202E⟩y");
+  });
+
+  test("what is searched, copied, and sent stays as written", () => {
+    const view = installsView(bidi, store.targets)!;
+    const row = view.groups[0]!.rows[0]!;
+    assert.equal(row.target, `project-claude:p${RLO}`, "a row's target, as the toggle and the commands use it");
+    assert.deepEqual(JSON.parse(toggleBody(bidi, row.target, false)), { skill: `bidi${RLO}exe.md`, collection: `col${ZW}`, target: `project-claude:p${RLO}`, enable: false });
+    assert.equal(filterSkills([bidi], ALL, `${RLO}evil`).length, 1, "the search reads the text as written");
+    assert.equal(filterSkills([bidi], ALL, "⟨U+202E⟩").length, 0);
+    assert.equal(filterPills(store, 1)[1]!.value, `col${ZW}`, "a pill filters by the collection as written");
+    assert.equal(filterSkills([bidi], filterPills(store, 1)[1]!.value, "").length, 1);
+    assert.deepEqual(JSON.parse(cardIds([bidi])[0]!), [`col${ZW}`, `bidi${RLO}exe.md`, 1]);
+    // Such names are outside the endpoint's pattern, so there is no command to copy (note 4); the raw text is never in one.
+    assert.equal(offeredCommand(bidi), null);
+    assert.equal(panelView(bidi, null).command, null);
+  });
+});
+
 describe("the snapshot", () => {
   test("unreadable JSON, or JSON with no skill list, is said, not drawn", () => {
     assert.deepEqual(parseSnapshot("{"), { ok: false, problem: "json" });

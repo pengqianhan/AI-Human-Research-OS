@@ -27,8 +27,8 @@ const sources = [
 const source = (file: string) => strip(sources.find((s) => s.file === file)!.text);
 const raw = (file: string) => sources.find((s) => s.file === file)!.text;
 const code = () => sources.filter((s) => s.file.endsWith(".ts")).map((s) => ({ file: s.file, text: strip(s.text) }));
-/** Every distinct first argument (or, with `second`, second argument) of `name(` calls in `text`. */
-function args(text: string, name: string, second = false): string[] {
+/** Every distinct first argument (or, with `second`, second argument; with `index`, that one) of `name(` calls in `text`. */
+function args(text: string, name: string, second = false, index = second ? 1 : 0): string[] {
   const found = new Set<string>();
   const re = new RegExp(`(?<![\\w.])(?<!function )${name}\\(`, "g");
   for (const m of text.matchAll(re)) {
@@ -51,7 +51,7 @@ function args(text: string, name: string, second = false): string[] {
       arg += c;
     }
     parts.push(arg.trim());
-    const want = second ? parts[1] : parts[0];
+    const want = parts[index];
     if (want !== undefined && want !== "") found.add(want);
   }
   return [...found].sort();
@@ -197,6 +197,46 @@ describe("the page's DOM", () => {
     assert.deepEqual([...new Set([...main.matchAll(/\b(?:cards|current)\.(?:get|set|has|delete)\(([^,)]+)/g)].map((m) => m[1]))].sort(), ["id", "triggerId"]);
     assert.match(main, /const now = current\.get\(id\);\n\s*if \(now !== undefined\) openPanel\(now, id\);/);
     assert.match(main, /cards\.get\(triggerId\)\?\.node\.focus\(\)/);
+  });
+
+  test("the text the page draws is its own words or a field of the logic's views, which mark invisible characters (review, note 5)", () => {
+    const main = source("main.ts");
+    // Every text an element is made with, every button's word, and every textContent the page sets.
+    assert.deepEqual(args(main, "el", false, 2), [
+      "BAND_NAME", "DESCRIPTION", "EYEBROW", "HAS_SCRIPTS_TAG", "INSTALLS", "LEDE", "LICENSE", "LIVE_NOTE[0]", "LIVE_NOTE[1]", "LOADING", "NO_MATCH", "NO_TARGETS", "PANEL_NOTE", "SCRIPTS", "TITLE", "UNSAFE_COMMAND",
+      "detail", "group.scope", "problemWords(problem)", "row.name", "row.path", "view.badge", "view.collection", "view.count", "view.description", "view.form", "view.license", "view.name",
+    ].sort());
+    assert.deepEqual(args(main, "button", false, 1), ["CLOSE", "TRY_AGAIN", "label"]);
+    assert.deepEqual([...new Set([...main.matchAll(/\.textContent = ([^;]+);/g)].map((m) => m[1]))].sort(), [
+      '"—"', "action.label", 'error ?? ""', "panelView(shownSkill(), copyLabel).copy", "view.copy", 'view.command ?? ""', "view.description", "view.license", "view.name", "view.scripts", "view.source",
+    ].sort());
+    // Where those come from: the views (marked in logic.ts), the pills' labels, a group's details, and the error line's words.
+    assert.match(main, /const view = cardView\(skill\);/);
+    assert.match(main, /const view = panelView\(skill, copyLabel\);/);
+    assert.match(main, /const view = installsView\(skill, store\?\.targets \?\? \[\]\);/);
+    assert.match(main, /for \(const \{ value, label \} of wanted\)/);
+    assert.match(main, /for \(const detail of group\.details\)/);
+    assert.match(main, /if \(!res\.ok\) failure = toggleError\(answer\);/);
+    // The logic marks every field it takes from the snapshot or the endpoint's answer.
+    const logic = source("logic.ts");
+    for (const marked of [
+      "name: markInvisible(skill.name)",
+      'description: markInvisible(skill.description ?? "")',
+      "collection: markInvisible(skill.collection)",
+      "license: markInvisible(skill.license ?? UNKNOWN_LICENSE)",
+      "name: markInvisible(skill?.name ?? NONE)",
+      "source: skill ? markInvisible(`Research-skills-hub / ${skill.collection}`) : NONE",
+      "description: markInvisible(skill?.description ?? NONE)",
+      "license: markInvisible(skill?.license ?? UNKNOWN_LICENSE)",
+      "command: command === null ? null : markInvisible(command)",
+      "label: markInvisible(c.name)",
+      "form: skill.installForm ? markInvisible(`${skill.installForm} → hub`) : FORM_UNKNOWN",
+      "name: markInvisible(t.name), path: markInvisible(t.display_path ?? t.path)",
+      "[markInvisible(`${t.name}: ${found.detail}`)]",
+      ": markInvisible(String(error))",
+    ]) {
+      assert.ok(logic.includes(marked), marked);
+    }
   });
 
   test("the page's markup loads its own script and style only, and nothing inline; the style loads nothing", () => {

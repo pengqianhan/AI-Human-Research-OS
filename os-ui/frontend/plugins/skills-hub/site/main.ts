@@ -427,7 +427,7 @@ function drawInstalls(skill: DisplaySkill | null): void {
       const line = el("div", "irow");
       const dot = el("span", DOT_CLASS[row.dot]);
       dot.setAttribute("aria-hidden", "true");
-      const name = el("span", "iname", row.target);
+      const name = el("span", "iname", row.name);
       name.append(el("span", "ipath", row.path));
       line.append(dot, name);
       scope.append(line);

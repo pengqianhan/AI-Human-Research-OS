@@ -9,7 +9,12 @@
  * Pure: no DOM, no window, no network, so `npm test` runs it in Node. The
  * snapshot is untrusted text: parseSnapshot keeps only the fields the page
  * draws, each of the type it draws, and main.ts puts them on screen as text.
+ * The views it draws from (cardView, panelView, filterPills, installsView,
+ * toggleError) pass that text through site-kit's markInvisible, so a bidi
+ * control or a blank shows as a marker; what the page searches, copies, and
+ * sends stays as written.
  */
+import { markInvisible } from "../../site-kit.ts";
 
 // ---- what the page reads and calls -------------------------------------------------------
 
@@ -212,7 +217,7 @@ export function filterSkills(skills: readonly DisplaySkill[], activeFilter: stri
 export function filterPills(store: Store, total: number): { value: string; label: string }[] {
   return [
     { value: ALL, label: `All · ${total}` },
-    ...store.collections.map((c) => ({ value: c.name, label: c.name })),
+    ...store.collections.map((c) => ({ value: c.name, label: markInvisible(c.name) })),
     { value: ORPHAN_COLLECTION_LABEL, label: ORPHAN_COLLECTION_LABEL },
   ];
 }
@@ -279,12 +284,12 @@ export const HAS_SCRIPTS_TAG = "has scripts/ · inspect first";
 /** What a card draws, as text. */
 export function cardView(skill: DisplaySkill): { name: string; badge: string; tone: Tone; description: string; collection: string; license: string; scripts: boolean } {
   return {
-    name: skill.name,
+    name: markInvisible(skill.name),
     badge: SYNC_LABELS.get(skill.sync) ?? "",
     tone: SYNC_TONES.get(skill.sync) ?? "mute",
-    description: skill.description ?? "",
-    collection: skill.collection,
-    license: skill.license ?? UNKNOWN_LICENSE,
+    description: markInvisible(skill.description ?? ""),
+    collection: markInvisible(skill.collection),
+    license: markInvisible(skill.license ?? UNKNOWN_LICENSE),
     scripts: skill.hasScripts,
   };
 }
@@ -311,13 +316,14 @@ export const ANSWER_MS = 1600;
 
 /** What the panel draws for a skill, or for none (closed: every field a dash, as the trunk's drawer did); a command of null is one the page does not offer (offeredCommand). */
 export function panelView(skill: DisplaySkill | null, copyLabel: string | null) {
+  const command = skill ? offeredCommand(skill) : NONE;
   return {
-    name: skill?.name ?? NONE,
-    source: skill ? `Research-skills-hub / ${skill.collection}` : NONE,
-    description: skill?.description ?? NONE,
-    license: skill?.license ?? UNKNOWN_LICENSE,
+    name: markInvisible(skill?.name ?? NONE),
+    source: skill ? markInvisible(`Research-skills-hub / ${skill.collection}`) : NONE,
+    description: markInvisible(skill?.description ?? NONE),
+    license: markInvisible(skill?.license ?? UNKNOWN_LICENSE),
     scripts: skill?.hasScripts ? HAS_SCRIPTS : NO_SCRIPTS,
-    command: skill ? offeredCommand(skill) : NONE,
+    command: command === null ? null : markInvisible(command),
     copy: copyLabel ?? (skill ? copyButtonLabel(skill) : DEFAULT_COPY),
   };
 }
@@ -340,9 +346,10 @@ export const LIVE_NOTE = ["Disable never deletes skill content: a linked install
 
 export type Dot = "none" | "ok" | "bad";
 
-/** One target's row: its dot, name, shown path, and the install there, if any. */
+/** One target's row: its dot, name (as written, for the toggle and the commands), the name and path it draws, and the install there, if any. */
 export interface InstallRow {
   target: string;
+  name: string;
   path: string;
   dot: Dot;
   install: SkillInstall | null;
@@ -353,7 +360,7 @@ export function installsView(skill: DisplaySkill, targets: readonly StoreTarget[
   if (targets.length === 0) return null;
   const byTarget = new Map<string, SkillInstall>(skill.installs.map((i) => [i.target, i]));
   return {
-    form: skill.installForm ? `${skill.installForm} → hub` : FORM_UNKNOWN,
+    form: skill.installForm ? markInvisible(`${skill.installForm} → hub`) : FORM_UNKNOWN,
     count: `${skill.installs.length} of ${targets.length} installed`,
     groups: SCOPE_ORDER.flatMap((scope) => {
       const rows = targets.filter((t) => t.scope === scope);
@@ -363,11 +370,11 @@ export function installsView(skill: DisplaySkill, targets: readonly StoreTarget[
           scope,
           rows: rows.map((t) => {
             const found = byTarget.get(t.name) ?? null;
-            return { target: t.name, path: t.display_path ?? t.path, dot: found === null ? "none" : found.ok ? "ok" : "bad", install: found };
+            return { target: t.name, name: markInvisible(t.name), path: markInvisible(t.display_path ?? t.path), dot: found === null ? "none" : found.ok ? "ok" : "bad", install: found };
           }),
           details: rows.flatMap((t) => {
             const found = byTarget.get(t.name);
-            return found && !found.ok ? [`${t.name}: ${found.detail}`] : [];
+            return found && !found.ok ? [markInvisible(`${t.name}: ${found.detail}`)] : [];
           }),
         },
       ];
@@ -388,10 +395,10 @@ export function rowAction(install: SkillInstall | null, working: boolean, copied
  */
 export const toggleBody = (skill: DisplaySkill, target: string, enable: boolean) => JSON.stringify({ skill: skill.name, collection: skill.collection, target, enable });
 
-/** The words a refused toggle shows: the answer's `error`, or "toggle failed". */
+/** The words a refused toggle shows: the answer's `error`, invisible characters marked, or "toggle failed". */
 export function toggleError(body: unknown): string {
   const error = isObject(body) ? body.error : undefined;
-  return error === undefined || error === null ? TOGGLE_FAILED : String(error);
+  return error === undefined || error === null ? TOGGLE_FAILED : markInvisible(String(error));
 }
 
 // ---- the top: today's (Shell.tsx SkillsScreen) under mockup C's band (Q1, top C) ---------------
