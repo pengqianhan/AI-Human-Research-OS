@@ -255,9 +255,17 @@ export function offeredCommand(skill: DisplaySkill): string | null {
   return carried.every((name) => SAFE_NAME.test(name)) ? installCommand(skill) : null;
 }
 
-/** A row's install command as the page offers it: installAtTargetCommand, or null when the name, the collection (an orphan's is "no hub source"), or the target is outside SAFE_NAME. */
+/**
+ * A row's install command as the page offers it: installAtTargetCommand, or null when the name, the collection, or
+ * the target is outside SAFE_NAME. An orphan's collection is the page's own label, "no hub source" (flattenStore),
+ * not a name, so it is not tested: its rows offer the trunk's command, one the installer's parser refuses (a fourth
+ * small fault, ported as it is). Only that label goes untested, and only for a skill whose sync says orphan (as in
+ * offeredCommand); a hub collection named with the label's words, or a hub skill whose sync says orphan, is tested.
+ */
 export function offeredCommandAt(skill: DisplaySkill, target: string): string | null {
-  return [skill.name, skill.collection, target].every((name) => SAFE_NAME.test(name)) ? installAtTargetCommand(skill, target) : null;
+  const orphan = skill.sync === "installed_no_hub_source" && skill.collection === ORPHAN_COLLECTION_LABEL;
+  const carried = orphan ? [skill.name, target] : [skill.name, skill.collection, target];
+  return carried.every((name) => SAFE_NAME.test(name)) ? installAtTargetCommand(skill, target) : null;
 }
 
 // ---- a card (src/components/SkillCard.tsx, SyncBadge.tsx, Badge.tsx) -----------------------

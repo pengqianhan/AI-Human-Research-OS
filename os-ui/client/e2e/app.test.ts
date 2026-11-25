@@ -3677,9 +3677,14 @@ describe("desktop client on a Research OS folder", () => {
       assert.equal(await safe.locator(".cmd").textContent(), `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py status ${ORPHAN_SKILL}`);
       assert.equal(await safe.getByRole("button", { name: "Copy status command" }).isVisible(), true);
       assert.equal(await sh.locator(".drawer > .nocmd").isVisible(), false);
-      // Its rows offer no install command either: one would carry its label, "no hub source", spaces and all.
-      assert.equal(await sh.locator(".drawer .inst .nocmd").textContent(), NO_COMMAND);
-      assert.deepEqual(await safe.locator(".irow button").allTextContents(), ["disable"]);
+      // Nor under its installs: each row where it is not installed offers "install ⧉", the trunk's command, which carries
+      // the page's own label, "no hub source" (not a name, so not tested). Every target's name here is one a command can carry.
+      const { targets } = snapshot().store;
+      assert.ok(targets.every((t) => /^[A-Za-z0-9._:-]+$/.test(t.name)), JSON.stringify(targets.map((t) => t.name)));
+      assert.equal(await sh.locator(".drawer .nocmd:visible").count(), 0);
+      const shown = ["repo", "global", "project"].flatMap((scope) => targets.filter((t) => t.scope === scope));
+      assert.deepEqual(await safe.locator(".irow button").allTextContents(), shown.map((t) => (t.name === `project-claude:${TEMPLATE_PROJECT}` ? "disable" : "install ⧉")));
+      assert.equal(await installRow(sh, "repo-codex").getByRole("button").textContent(), "install ⧉");
       await closeSkill(sh);
       await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: /^All · / }).click();
     } finally {
@@ -3738,6 +3743,16 @@ describe("desktop client on a Research OS folder", () => {
       assert.equal(
         await app.evaluate(({ clipboard }) => clipboard.readText()),
         `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${COPIED_SKILL} --collection ${SKILLS_COLLECTION} --target repo-codex`,
+      );
+      await closeSkill(sh);
+      // An orphan's row copies the trunk's command, the page's label "no hub source" and all (ported as it is: the installer's parser refuses it).
+      await openSkill(sh, ORPHAN_SKILL);
+      const orphanRow = installRow(sh, "repo-codex");
+      await orphanRow.getByRole("button", { name: "install ⧉" }).click({ timeout: 10_000 });
+      await orphanRow.getByRole("button", { name: "copied ✓" }).waitFor();
+      assert.equal(
+        await app.evaluate(({ clipboard }) => clipboard.readText()),
+        `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${ORPHAN_SKILL} --collection no hub source --target repo-codex`,
       );
       await closeSkill(sh);
     } finally {

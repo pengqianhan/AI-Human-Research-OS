@@ -167,11 +167,15 @@ Status on 2026-11-25:
       name, its collection, a row's target) matches the toggle endpoint's
       pattern. Otherwise it shows no command and no copy button, and one line
       in their place, the page's own words: "No command: a name here has
-      characters a command cannot carry safely." An orphan's command at a
-      target carries its label, "no hub source", so orphans' rows no longer
-      offer "install ⧉"; the trunk's command there was one the installer's
-      parser refuses. Their status command stays. `src/lib/skills.ts` is
-      unchanged, and `logic.test.ts` states each divergence from it.
+      characters a command cannot carry safely." An orphan's rows keep the
+      trunk's "install ⧉" and its command, which carries the page's own
+      label, "no hub source", as the collection, and which the installer's
+      parser refuses: a fourth small fault, ported as it is (Q4's three are
+      too). The label is the page's, not a name, so it is not tested; only a
+      name (a skill's or a hub collection's) or a target outside the pattern
+      withholds a command, so the orphan `e2e-o;echo INJECTED-$(id -u)` still
+      has none anywhere. `src/lib/skills.ts` is unchanged, and
+      `logic.test.ts` states each divergence from it.
     - **Note 5, bidi and other invisible characters were drawn raw** (carried
       over). Text drawn from the snapshot and from the endpoint's refusal now
       passes through site-kit's `markInvisible`, so U+202E shows as

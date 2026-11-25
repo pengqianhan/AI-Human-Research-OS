@@ -250,6 +250,9 @@ describe("the same list, filter, and commands as the trunk's page", () => {
         // A hub skill's name is its SKILL.md's frontmatter `name:`, so a hostile name needs no hostile folder.
         { name: "gamma", skills: [{ name: "x;rm -rf ~", description: "A frontmatter name.", sync: "not_installed" }] },
         { name: "c$(id)", skills: [{ name: "plain", sync: "not_installed" }] },
+        // An orphan's label as a hub collection's name, and a hub skill whose sync says orphan: neither is an orphan's row.
+        { name: "no hub source", skills: [{ name: "labelled", sync: "not_installed" }] },
+        { name: "d$(id)", skills: [{ name: "posing", sync: "installed_no_hub_source" }] },
       ],
       orphans: [...RAW.orphans, { name: HOSTILE, description: "", sync: "installed_no_hub_source", installs: [{ target: "project-claude:demo", ok: true, disabled: false, detail: "" }] }],
       targets: [...RAW.targets, { name: "project-claude:a b", path: "/w/projects-folder/a b/.claude/skills", scope: "project" }],
@@ -259,11 +262,14 @@ describe("the same list, filter, and commands as the trunk's page", () => {
     const safe = (...names: string[]) => names.every((n) => SAFE_NAME.test(n));
     list.forEach((s, i) => {
       const t = old[i]!;
-      // The status command carries the name; the install command, the name and the collection; at a target, the target too.
+      // The status command carries the name; the install command, the name and the collection; at a target, the target
+      // too, except that an orphan's collection there is the page's own label, "no hub source", which is not tested.
       const carried = s.sync === "installed_no_hub_source" ? [s.name] : [s.name, s.collection];
       assert.equal(offeredCommand(s), safe(...carried) ? today.installCommand(t) : null, s.name);
+      const orphan = s.sync === "installed_no_hub_source" && s.collection === ORPHAN_COLLECTION_LABEL;
       for (const target of store.targets) {
-        assert.equal(offeredCommandAt(s, target.name), safe(s.name, s.collection, target.name) ? today.installAtTargetCommand(t, target.name) : null, `${s.name} at ${target.name}`);
+        const at = orphan ? [s.name, target.name] : [s.name, s.collection, target.name];
+        assert.equal(offeredCommandAt(s, target.name), safe(...at) ? today.installAtTargetCommand(t, target.name) : null, `${s.name} at ${target.name}`);
       }
     });
     // The divergences, one by one: the trunk's command, then the page's none.
@@ -278,13 +284,28 @@ describe("the same list, filter, and commands as the trunk's page", () => {
     assert.equal(today.installAtTargetCommand(oldBy("e2e-copied"), "project-claude:a b"), `${INSTALLER} install e2e-copied --collection beta-copy --target project-claude:a b`);
     assert.equal(offeredCommandAt(by("e2e-copied"), "project-claude:a b"), null);
     assert.equal(offeredCommandAt(by("e2e-copied"), "repo-codex"), today.installAtTargetCommand(oldBy("e2e-copied"), "repo-codex"));
-    // An orphan's command at a target carries its label, "no hub source", spaces and all: the trunk's is a command
-    // the installer's parser refuses; the page offers none. Its status command carries the name alone and stays.
+    // An orphan's command at a target carries the page's own label, "no hub source", spaces and all: not a name, so
+    // not tested. The page offers the trunk's command, one the installer's parser refuses (a fourth small fault, ported
+    // as it is). Its name and the target are tested, as its status command's name is.
     assert.equal(today.installAtTargetCommand(oldBy("e2e-orphan"), "repo-codex"), `${INSTALLER} install e2e-orphan --collection no hub source --target repo-codex`);
-    assert.equal(offeredCommandAt(by("e2e-orphan"), "repo-codex"), null);
+    assert.equal(offeredCommandAt(by("e2e-orphan"), "repo-codex"), today.installAtTargetCommand(oldBy("e2e-orphan"), "repo-codex"));
+    assert.equal(offeredCommandAt(by("repo-orphan"), "project-claude:demo"), today.installAtTargetCommand(oldBy("repo-orphan"), "project-claude:demo"));
+    assert.equal(offeredCommandAt(by("e2e-orphan"), "project-claude:a b"), null);
+    assert.equal(offeredCommandAt(by(HOSTILE), "repo-codex"), null);
     assert.equal(offeredCommand(by("e2e-orphan")), today.installCommand(oldBy("e2e-orphan")));
-    // Every skill of the store the other tests use is offered its panel command, as the trunk's page showed it.
-    for (const s of flattenStore(parsed())) assert.ok(offeredCommand(s) !== null, s.name);
+    // The exemption is the orphan's, not the label's text: a hub collection named "no hub source" is tested, and so is a
+    // hub skill whose sync says orphan.
+    assert.equal(today.installAtTargetCommand(oldBy("labelled"), "repo-codex"), `${INSTALLER} install labelled --collection no hub source --target repo-codex`);
+    assert.equal(offeredCommandAt(by("labelled"), "repo-codex"), null);
+    assert.equal(offeredCommand(by("labelled")), null);
+    assert.equal(today.installAtTargetCommand(oldBy("posing"), "repo-codex"), `${INSTALLER} install posing --collection d$(id) --target repo-codex`);
+    assert.equal(offeredCommandAt(by("posing"), "repo-codex"), null);
+    // Every skill of the store the other tests use is offered its panel command, and its command at every target, as the
+    // trunk's page showed them.
+    for (const s of flattenStore(parsed())) {
+      assert.ok(offeredCommand(s) !== null, s.name);
+      for (const target of RAW.targets) assert.equal(offeredCommandAt(s, target.name), installAtTargetCommand(s, target.name), `${s.name} at ${target.name}`);
+    }
     // What the panel and a row make of it.
     assert.equal(panelView(by(HOSTILE), null).command, null);
     assert.equal(panelView(by("e2e-copied"), null).command, installCommand(by("e2e-copied")));
@@ -391,9 +412,9 @@ describe("the panel and its installs", () => {
     const orphanRow = installsView(skill("e2e-orphan"), parsed().targets)!.groups.find((g) => g.scope === "project")!.rows[0]!;
     assert.deepEqual(rowAction(orphanRow.install, false, false, false), { kind: "toggle", label: DISABLE, pressed: true, enable: false });
     // The orphan found in the repository's own folders has no installs: no toggle anywhere (generate.py's first orphan loop).
-    // Nor, unlike the trunk's page, an install command: it would carry the label "no hub source" (review, note 4; above).
+    // Its rows offer the trunk's install command, which carries the page's label "no hub source" (above).
     const orphan = skill("repo-orphan");
-    assert.deepEqual(installsView(orphan, parsed().targets)!.groups.flatMap((g) => g.rows.map((r) => rowAction(r.install, false, false, offeredCommandAt(orphan, r.target) !== null).kind)), ["none", "none", "none", "none"]);
+    assert.deepEqual(installsView(orphan, parsed().targets)!.groups.flatMap((g) => g.rows.map((r) => rowAction(r.install, false, false, offeredCommandAt(orphan, r.target) !== null).kind)), ["copy", "copy", "copy", "copy"]);
     const { run, calls } = fakeRunner();
     const answer = await skillToggleApi(context(tempTree(), { run }))(request("POST", "/", JSON.parse(toggleBody(skill("e2e-orphan"), orphanRow.target, false))));
     assert.equal(answer.status, 400);
