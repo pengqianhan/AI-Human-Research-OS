@@ -159,7 +159,11 @@ const dCommand = el("div", "cmd cmd-block");
 const copyButton = button("copy-btn btn btn-primary");
 copyButton.setAttribute("aria-live", "polite");
 drawer.append(closeButton, dName, dSource, dList, dCommand, copyButton, el("p", "note", PANEL_NOTE));
-app.append(page, scrim, drawer);
+// The page scrolls in a box of its own, under the panel and its shading, as the mockup draws it: fixed to the
+// frame, they then cover the scrollbar too, as the trunk's drawer covered the page's.
+const scroller = el("div", "scroller");
+scroller.append(page);
+app.append(scroller, scrim, drawer);
 
 // ---- the snapshot -------------------------------------------------------------------------------
 

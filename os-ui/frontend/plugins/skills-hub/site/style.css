@@ -49,6 +49,9 @@
 *, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid var(--line); }
 [hidden] { display: none !important; }
 html { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; -webkit-tap-highlight-color: transparent; }
+/* The document itself never scrolls: the page scrolls inside .scroller, so the panel and its shading, fixed to the frame, cover its scrollbar. */
+html, body, #app { height: 100%; overflow: hidden; }
+.scroller { height: 100%; overflow-y: auto; }
 body { font-family: var(--sans); color: var(--ink); background: var(--bg); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 h1, h3 { font-size: inherit; font-weight: inherit; }
 button, input { font: inherit; color: inherit; letter-spacing: inherit; }

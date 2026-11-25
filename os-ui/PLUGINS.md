@@ -65,6 +65,13 @@ Status on 2026-11-25:
       shading covers the frame only (panel 1). It turns visible at once on
       opening, as in the mockup, so Close takes the focus in the same click;
       the trunk's drawer focused it after a render.
+    - **The page scrolls in a box of its own** (`.scroller`), under the panel
+      and its shading, as the mockup's inner scroller does, so they cover that
+      box's scrollbar, as today's window-wide drawer covered the page's. The
+      first build let the frame's document scroll; then, on a long list, both
+      stopped 15 px short of the frame's right edge, at the scrollbar (seen
+      after C4 and fixed in a commit of its own; the suite now opens a card
+      from the whole list, scrolled, at both window sizes).
     - After a toggle answers 200, the page reads the snapshot again at once,
       then every 5 s.
     - A card whose words did not change is kept across snapshots, so the
@@ -76,9 +83,12 @@ Status on 2026-11-25:
       has no skill list." These words are the page's own; the app shows its own
       screens first.
     - **The 5 s read runs while another page shows.** A frame in a hidden page
-      reports `document.hidden` as false (probed with C0), so the page reads
+      reports `document.hidden` as false, and a probe that counted the page's
+      reads saw two in 12 s on Skills and two in 12 s on Home. So the page reads
       `state.json` (216 KB on this checkout) beside the app's own read while
-      the window shows, and pauses only when the window is hidden.
+      the window shows, and pauses only when the window is hidden. (The read
+      channel leaves no resource-timing entries, so the probe counted the
+      page's own `fetch` calls.)
     - The header's words were `Shell.tsx`'s, removed here, so `logic.test.ts`
       checks them against the mockup, which copied them.
     - The Plugins page lists Skills Hub as enabled ("Page · Skills", the spark

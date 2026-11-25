@@ -14,9 +14,9 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, 
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createRequire } from "node:module";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { crc32, deflateSync } from "node:zlib";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { _electron as electron } from "playwright-core";
@@ -76,8 +76,12 @@ function findPython(): string {
  * profile or global skill folders (~/.claude/skills, ...) and never touches
  * them; uv keeps its real Python and cache folders so nothing is downloaded.
  */
+/** The throwaway home of the last launch, where its global skill targets resolve. */
+let throwawayHome: string | null = null;
+
 function isolatedHome(): Record<string, string> {
   const home = tempDir("os-client-home-");
+  throwawayHome = home;
   const env: Record<string, string> = { HOME: home };
   if (process.platform === "win32") env.USERPROFILE = home;
   for (const [name, args] of [
@@ -3475,9 +3479,11 @@ describe("desktop client on a Research OS folder", () => {
     assert.equal(repoClaude.path, join(workspace, ".claude", "skills"));
     const install = store.collections.find((c) => c.name === SKILLS_COLLECTION)!.skills.find((s) => s.name === COPIED_SKILL)!.installs!;
     assert.deepEqual(install.map((i) => [i.target, i.path, i.form, i.disabled]), [["repo-claude", copiedInstall(), "copy", false]]);
-    assert.ok(copiedInstall().startsWith(workspace + (process.platform === "win32" ? "\\" : "/")), "inside the copy");
+    assert.ok(copiedInstall().startsWith(workspace + sep), "inside the copy");
     // The global targets resolve in the suite's throwaway home, not the real one (isolatedHome); none is clicked.
-    for (const t of store.targets.filter((x) => x.scope === "global")) assert.ok(!t.path.startsWith(homedir()), `${t.name}: ${t.path}`);
+    const globals = store.targets.filter((x) => x.scope === "global");
+    assert.equal(globals.length, 3);
+    for (const t of globals) assert.ok(throwawayHome !== null && t.path.startsWith(throwawayHome + sep), `${t.name}: ${t.path}`);
     const { sh } = await openSkills();
     const panel = await openSkill(sh, COPIED_SKILL);
     assert.equal(await panel.locator(".inst-head").textContent(), `copy → hub1 of ${store.targets.length} installed`);
@@ -3580,6 +3586,20 @@ describe("desktop client on a Research OS folder", () => {
         const { section, sh } = await openSkills();
         await page.waitForTimeout(300);
         await shot(page, `skills-${w}-top-c`);
+        // Opened from the whole list, whose box scrolls: the panel and its shading cover that box's scrollbar too.
+        const scroller = sh.locator(".scroller");
+        assert.ok(await scroller.evaluate((b) => b.scrollHeight > b.clientHeight), `${w}: the list scrolls`);
+        await scroller.evaluate((b) => b.scrollBy(0, 400));
+        await sh.locator(".cards .skill").nth(8).click();
+        await detailsPanel(sh).waitFor();
+        await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
+        const whole = (await section.boundingBox())!;
+        const open = (await sh.locator(".drawer").boundingBox())!;
+        assert.deepEqual(await sh.locator(".scrim").boundingBox(), whole, `${w}: the shading covers the whole frame`);
+        assert.ok(open.width === 420 && Math.abs(open.x + open.width - (whole.x + whole.width)) < 1, `${w}: ${JSON.stringify({ open, whole })}`);
+        await shot(page, `skills-${w}-panel-open-scrolled-list`);
+        await closeSkill(sh);
+        assert.ok(await scroller.evaluate((b) => b.scrollTop > 0), `${w}: the list kept its place`);
         const panel = await openSkill(sh, "filetree-simple");
         await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
         const area = (await section.boundingBox())!;
