@@ -35,7 +35,8 @@ Status on 2026-11-25:
     `summary.json`'s from the last, a re-run with the data cached; the files do not
     say how many runs there were), which R2's two sources and R4 rest on. R1's
     gives the reason for `motivates E2`: `Code/README.md:91` gives the spike as why
-    the recipe's SFT uses `--init-lr-frac=0.1`, which E2 runs. The mockup's two
+    the recipe's SFT uses `--init-lr-frac=0.1`, which E2 runs (one step of
+    inference; the Human Owner chose on 2026-11-25 to keep the link). The mockup's two
     inferred links (E1 tests Q1, E5 tests Q4) stay out, as in the fixture. No
     hypothesis node, and every run says `commit: none` (Decisions, "Idea file
     format").
@@ -43,8 +44,8 @@ Status on 2026-11-25:
     states §5.1's rules in a short list over the empty table, which is the file's
     last block so rows added at its end stay in the table, and the template's
     `AGENTS.md` has a line under Workflow. The list says only that links and
-    `from:` form no cycle, not which way each counts (a default not yet
-    confirmed), so reversing `FIRST` needs no change there. `required_files` is
+    `from:` form no cycle, not which way each counts, so reversing `FIRST`
+    needs no change there. `required_files` is
     unchanged: the project check passes without the file (§7, I-4).
   - **What a new project shows.** The template's file is a table with no row, so a
     project made from it draws "0 nodes · 0 links", "No node is drawn.", "Claims: no
@@ -75,7 +76,7 @@ Status on 2026-11-25:
   should-fix problems; the fix round, on the same branch, fixed eight of them and
   records the other two as limits (below), and built two rule changes decided
   since: `files: none` (the Human Owner) and the cycle rule (a default the
-  directing agent took, not yet confirmed). In short, what the review found and
+  directing agent took, confirmed by the Human Owner on 2026-11-25). In short, what the review found and
   what changed, each detailed in the points marked "after the review":
   - must-fix 1 and should-fix 9, lines under boxes they do not join and words on
     the wrong node or each other: lanes and slots ("Lines and their words");
@@ -400,8 +401,8 @@ Status on 2026-11-25:
     - a cycle is found with each link counted from what must exist first to what
       follows from it (§5.1 "A DAG": `A motivates B` is A → B, `E tests X` X → E,
       `R supports` or `refutes X` X → R, `from: E` E → R), a default the
-      directing agent took on 2026-11-24 and told the Human Owner, not yet
-      confirmed. A result that motivates its own experiment closes a cycle; a
+      directing agent took on 2026-11-24, confirmed by the Human Owner on
+      2026-11-25. A result that motivates its own experiment closes a cycle; a
       hypothesis that motivates the experiment testing it no longer does (the first
       build counted each link from its row to its target and listed it). The
       problem names the nodes and one loop, each step with the link that makes it.
@@ -2344,9 +2345,9 @@ files as the mockup drew them:
   result R with `from: E` is E → R. So "H1 motivates E1; E1 tests H1" is no cycle,
   and "R1 from E1; R1 motivates E1" is one. The problem names the cycle's nodes and
   one loop step by step ("E1 before R1 (R1 from E1) and R1 before E1 (R1 motivates
-  E1)"), so it can be checked against the file. *This rule is a default the
-  directing agent took on 2026-11-24 and told the Human Owner; it is not yet
-  confirmed.* It is one constant, `FIRST` in
+  E1)"), so it can be checked against the file. This rule is a default the
+  directing agent took on 2026-11-24; the Human Owner confirmed it on
+  2026-11-25. It is one constant, `FIRST` in
   [frontend/plugins/idea-view/site/logic.ts](frontend/plugins/idea-view/site/logic.ts); setting `tests`, `supports`,
   and `refutes` to `"row"` there reverses it to the first build's rule (each link
   from its row to its target).

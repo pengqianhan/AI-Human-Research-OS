@@ -127,8 +127,7 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       found after the fix round; the Paper view no longer reports while its
       page is not laid out, with a test that failed before. The view
       accepts `files: none` (Decisions: "Idea file format") and looks for
-      cycles by a default not yet confirmed (Decisions: "Idea graph cycle
-      rule"). Still open with the Human Owner: the new drawing of lines and
+      cycles by the rule in Decisions, "Idea graph cycle rule". Still open with the Human Owner: the new drawing of lines and
       their words departs from Part 3 §5.3 rule 4 and no mockup shows it
       (before and after screenshots were sent). Reload keeps a surviving
       selection in the Idea view and clears it in the Skeleton and Assets
@@ -138,8 +137,9 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       was found and fixed (a line number formatted for every bad link);
       the rest was the collector on one line over about 128 KiB, which
       comes from md-kit's `splitCells` building a cell a character at a
-      time. md-kit is shared and is left as it is: whether to change it,
-      in a pull request of its own, is the Human Owner's call. The Idea
+      time. md-kit is shared and was left as it is there; the Human
+      Owner asked on 2026-11-25 for it to be fixed in a pull request of
+      its own (branch `md-kit-splitcells`). The Idea
       view's nine remaining cases are sized by one rule, and two
       departures from the design are recorded in
       [os-ui/PLUGINS.md](os-ui/PLUGINS.md): no test times 512 KiB of
@@ -157,9 +157,10 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       draft pull request until #54 is merged): `nanochat_cpu`'s
       `idea_graph.md`, written from the project's files with each row's
       source named (20 nodes, 9 links), and the template's, a table with
-      no row, so a new project opens the Idea tab on an empty map. Open
-      with the Human Owner: `R1 motivates E2` in `nanochat_cpu`'s file
-      rests on one step of inference, stated in its Source cell. Next is
+      no row, so a new project opens the Idea tab on an empty map.
+      `R1 motivates E2` in `nanochat_cpu`'s file rests on one step of
+      inference, stated in its Source cell; the Human Owner chose on
+      2026-11-25 to keep it (「留着」). Next is
       2.5, the Skills Hub plugin, which needs a mockup choice first
       unless it keeps the present page; 2.6 waits on Q-PO1.
 - [ ] Step 3, split and Git binding: product separated from the workspace, **New
@@ -680,7 +681,7 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 | Step 2 view designs | Chosen 2026-11-23 from the clickable mockup [`os-ui/mockups/step2/views.html`](os-ui/mockups/step2/views.html), two alternatives a view, by accepting the agent's three recommendations (「全按推荐」): **Idea** as A, a drawn graph with small nodes and every link always shown as a line, full text in a detail panel on selection; **Skeleton** as B, the claims table with each claim's evidence beside it and the rest of `paper_skeleton.md` folded; **Assets** as B (next row). All three are read-only with the same ask bar and reference chip as the Code and Paper views | Build the other alternative of that view from the same mockup |
 | Assets view | Holds a project's `Figs/`, `Baselines/`, `Code/results/`, and the list of datasets its code downloads (Human Owner, 2026-11-23, alternative B of the mockup). Nothing defined the view before; `Code/results/` also stays visible in the Code view | Alternative A: `Figs/` and `Baselines/` only |
 | Idea file format | Confirmed by the Human Owner on 2026-11-23 (「按提议」): one file `idea_graph.md` at the project root beside `paper_skeleton.md`; one Markdown table, one row a node, with the columns ID, Kind, Statement, Status, Links, Points to, Source; a claim node uses the status words of `paper_skeleton.md`'s claims table (planned, verified, weak, removed); a claim is pointed to by the short name its skeleton row starts with (`C1:`). The full grammar is [os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 3 §5.1. New projects get an empty `idea_graph.md` from the template, and the project check does not require the file (「带，但不强制」). `nanochat_cpu` records no hypotheses and its 2026-09-26 run recorded no commit, so its graph has no hypothesis node and its experiments say `commit: none`. On 2026-11-24 the Human Owner allowed `files: none` (「允许」) for a done, running, or failed experiment that has no result file, as `commit: none` does for a run with no commit; the Idea view accepts it since the fix round of its pull request (#54) | Rename the file or change the columns before the first project other than `nanochat_cpu` has one; drop the template's file |
-| Idea graph cycle rule | **A default the directing agent took on 2026-11-24 and told the Human Owner; not yet confirmed.** The idea file must be a DAG ([os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 3 §5.1); when the Idea view looks for a cycle it counts each link from what must exist first to what follows from it: `A motivates B` is A → B, `E tests X` is X → E, `R supports` or `refutes X` is X → R, and a result's `from: E` is E → R. So a hypothesis that motivates the experiment testing it is no cycle, and a result that motivates its own experiment is one. The first build counted each link from its row to its target and listed the first case as a cycle | Set `tests`, `supports`, and `refutes` to `"row"` in `FIRST` in [os-ui/frontend/plugins/idea-view/site/logic.ts](os-ui/frontend/plugins/idea-view/site/logic.ts) and update the eight pinned cases in its test and §5.1 |
+| Idea graph cycle rule | Taken as a default by the directing agent on 2026-11-24 and confirmed by the Human Owner on 2026-11-25 (「保持默认」). The idea file must be a DAG ([os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 3 §5.1); when the Idea view looks for a cycle it counts each link from what must exist first to what follows from it: `A motivates B` is A → B, `E tests X` is X → E, `R supports` or `refutes X` is X → R, and a result's `from: E` is E → R. So a hypothesis that motivates the experiment testing it is no cycle, and a result that motivates its own experiment is one. The first build counted each link from its row to its target and listed the first case as a cycle | Set `tests`, `supports`, and `refutes` to `"row"` in `FIRST` in [os-ui/frontend/plugins/idea-view/site/logic.ts](os-ui/frontend/plugins/idea-view/site/logic.ts) and update the eight pinned cases in its test and §5.1 |
 | Reload and the selection | Decided by the Human Owner on 2026-11-24 (「先保持现状」): the three step 2 views stay as built. In the Idea view a selected node that is still in the file stays selected after Reload, with its row as it is now; the Skeleton and Assets views clear the selection when Reload starts | Make the Skeleton and Assets views keep a surviving selection as the Idea view does (its "Selection and Reload" point in [os-ui/PLUGINS.md](os-ui/PLUGINS.md)), each with an end-to-end test |
 | Step 2 views, first version | Human Owner, 2026-11-23, on the design's questions ([os-ui/PLUGINS.md](os-ui/PLUGINS.md) Part 3 §7): the Skeleton view leaves out the cited file's own text next to a claim, which the mockup showed and no general rule can produce, and lists the files the claim names (「先不显示」); a reference chip from the Idea, Skeleton, or Assets view opens by itself, since the quote is the line as written in the file and not what the page draws (「自动展开」). The other departures from the mockup stand on the agent's defaults there (N-4 to N-7): no "Committed" line and no "Made by" in Assets, no jumps between Skeleton and Idea, a result's experiment drawn as a dotted line | Add the source excerpt as its own change with a wider `reads`; add a view to `QUOTES_AS_DRAWN` once its quote is what it draws |
 | Bare-CLI use | A workspace stays fully usable from Claude Code or Codex with no app running; the app adds no write action that exists only in the GUI | Allow GUI-only features |
