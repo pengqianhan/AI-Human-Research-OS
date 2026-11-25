@@ -210,20 +210,21 @@ Status on 2026-11-25:
     - The installer no longer deletes or rewrites content through links: the
       three cases the reviewer ran are refused (commit `f12fd86`, in
       [install_research_skill.py](../research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py),
-      with the script's first tests beside it). A toggle replaces nothing but
-      a link, so enable over a real folder at an install's path and disable
-      over a real folder in `.disabled/` are refused; a copy-form install that
-      is itself a link is refused; and `install`, `remove`, `disable`, and
-      `enable` refuse when a selected target's `.disabled` is a link. Every
-      selected target is checked before any is changed, and the panel shows
-      the refusal's one line, which ends "nothing was changed." The
-      reviewer's probe, rerun on the built app in a copy of the workspace,
-      got each refusal from the panel's endpoint, and the files it had lost
-      before were intact. So the panel's sentence "Disable never deletes
-      skill content" now holds. What remains is not through links and is as
-      before: `install` replaces a real folder at an install's path or in
-      `.disabled/`, `remove --yes` deletes a copy, and a copy-form toggle
-      renames over a `SKILL.md` or `SKILL.md.disabled` already there.
+      with the script's first tests beside it). A link-form toggle replaces
+      nothing but a link, so enable over a real folder at an install's path
+      and disable over a real folder in `.disabled/` are refused; a copy-form
+      install that is itself a link is refused; and `install`, `remove`,
+      `disable`, and `enable` refuse when a selected target's `.disabled` is a
+      link. Every selected target is checked before any is changed, and the
+      panel shows the refusal's one line, which ends "nothing was changed."
+      The reviewer's probe, rerun on the built app in a copy of the
+      workspace, got each refusal from the panel's endpoint, and the files it
+      had lost before were intact. So the panel's sentence "Disable never
+      deletes skill content" now holds in those three cases. What remains is
+      not through links and is as before: `install` replaces a real folder at
+      an install's path or in `.disabled/`, `remove --yes` deletes a copy, and
+      a copy-form toggle renames over a `SKILL.md` or `SKILL.md.disabled`
+      already there.
     - A second toggle can be sent while the first runs, and there is no
       timeout, as on the trunk's page.
     - The endpoint accepts a target without its project part, and then toggles

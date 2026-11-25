@@ -94,7 +94,8 @@ Either way disable is per location: turning a skill off in one project leaves
 every other install untouched, and `status` still lists the location, marked
 `disabled`. Running `install` over a disabled location re-enables it.
 
-A toggle replaces nothing but a link. It refuses, exiting non-zero with one
+A link-form toggle replaces nothing but a link, and a copy-form toggle renames
+only inside a real folder. A toggle refuses, exiting non-zero with one
 `error: …; nothing was changed.` line, when a link-form toggle's destination
 (`.disabled/<name>` for disable, the live path for enable) holds a real folder
 or file, or when a copy-form install is itself a link (the rename would land
