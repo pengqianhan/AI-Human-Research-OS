@@ -317,6 +317,15 @@ describe("the panel and its installs", () => {
     assert.equal(toggleError({ error: 3 }), "3");
   });
 
+  test("a project's row sends its own target, project part and all: a target without it makes the installer toggle every project's install", () => {
+    const rows = installsView(skill("e2e-copied"), parsed().targets)!.groups.flatMap((g) => g.rows);
+    const project = rows.find((r) => r.target.startsWith("project-claude"))!;
+    assert.equal(project.target, "project-claude:demo");
+    assert.deepEqual(JSON.parse(toggleBody(skill("e2e-copied"), project.target, true)), { skill: "e2e-copied", collection: "beta-copy", target: "project-claude:demo", enable: true });
+    // Every row sends the target it is drawn for, word for word.
+    for (const row of rows) assert.equal(JSON.parse(toggleBody(skill("e2e-copied"), row.target, false)).target, row.target);
+  });
+
   test("an orphan's row offers the toggle, which the handler refuses before running anything (F2, kept as it is)", async () => {
     const orphanRow = installsView(skill("e2e-orphan"), parsed().targets)!.groups.find((g) => g.scope === "project")!.rows[0]!;
     assert.deepEqual(rowAction(orphanRow.install, false, false), { kind: "toggle", label: DISABLE, pressed: true, enable: false });

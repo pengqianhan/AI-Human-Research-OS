@@ -360,11 +360,12 @@ function ideaFixtures(workspace: string): void {
 
 /**
  * Skills Hub's fixtures (os-ui/PLUGINS.md Part 4, §5 C2), in the temporary
- * workspace only. The toggle case clicks one install: a copy-form skill's
- * copy in the copy's own .claude/skills, so the installer renames its SKILL.md
- * on every OS (the copy of the workspace dereferences links on Windows, which
- * would make a symlink-form skill's install a folder the installer does not
- * toggle). The orphan is in a fixture project's .claude/skills: the generator
+ * workspace only. The toggle cases click copy-form skills' copies, so the
+ * installer renames a SKILL.md on every OS (the copy of the workspace
+ * dereferences links on Windows, which would make a symlink-form skill's
+ * install a folder the installer does not toggle): one in the copy's own
+ * .claude/skills, and one of two projects' copies of another skill (its own
+ * collection, e2e-projects), the other project's copy left as it is. The orphan is in a fixture project's .claude/skills: the generator
  * lists an orphan of the repository's own folders without installs, so only
  * one found in another target has the toggle the handler refuses (F2). A hub
  * skill's description carries markup. A collection of its own holds three
@@ -375,6 +376,9 @@ const SKILLS_COLLECTION = "e2e-copy";
 const COPIED_SKILL = "e2e-copied";
 const MARKUP_SKILL = "e2e-markup";
 const ORPHAN_SKILL = "e2e-orphan";
+/** A copy-form skill with a copy in each of two fixture projects: the suite disables and enables one project's install. */
+const PROJECTS_COLLECTION = "e2e-projects";
+const PROJECTS_SKILL = "e2e-in-projects";
 const TWINS_COLLECTION = "e2e-twins";
 const TWIN_SKILL = "e2e-twin";
 /** The twins' folders under the collection, in the generator's order, and each one's description. */
@@ -400,6 +404,15 @@ function skillsFixtures(workspace: string): void {
   const orphan = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", ORPHAN_SKILL);
   mkdirSync(orphan, { recursive: true });
   writeFileSync(join(orphan, "SKILL.md"), skillMd(ORPHAN_SKILL, "An install with no hub source."));
+  const projects = join(workspace, "research-skills-hub", PROJECTS_COLLECTION);
+  mkdirSync(join(projects, PROJECTS_SKILL), { recursive: true });
+  writeFileSync(join(projects, "SOURCE.md"), `# ${PROJECTS_COLLECTION}\n\nInstall form: \`copy\`\n`);
+  writeFileSync(join(projects, PROJECTS_SKILL, "SKILL.md"), skillMd(PROJECTS_SKILL, "A copy-form skill installed in two projects; the suite toggles one project's install."));
+  for (const project of [TEMPLATE_PROJECT, IDEA_PROJECT]) {
+    const there = join(workspace, "projects-folder", project, ".claude", "skills", PROJECTS_SKILL);
+    mkdirSync(there, { recursive: true });
+    copyFileSync(join(projects, PROJECTS_SKILL, "SKILL.md"), join(there, "SKILL.md"));
+  }
   for (const [folder, description] of TWINS) {
     const twin = join(workspace, "research-skills-hub", TWINS_COLLECTION, folder, TWIN_SKILL);
     mkdirSync(twin, { recursive: true });
@@ -3339,9 +3352,10 @@ describe("desktop client on a Research OS folder", () => {
    * Skills (os-ui/PLUGINS.md Part 4): the bundled plugin skills-hub's page on
    * app://skills-hub, as the Human Owner chose it from
    * os-ui/mockups/step2/skills.html: top C, panel 1, and today's three small
-   * faults kept (Q4). Its one toggle click is on the copy-form fixture's
-   * install in this copy's .claude/skills (skillsFixtures), checked to be
-   * inside the copy first; no test clicks any other install.
+   * faults kept (Q4). Its toggle clicks are on copy-form fixtures' installs
+   * (skillsFixtures): one in this copy's .claude/skills and one in a fixture
+   * project's, each checked to be inside the copy first; no test clicks any
+   * other install.
    */
   interface SnapInstall {
     target: string;
@@ -3560,6 +3574,41 @@ describe("desktop client on a Research OS folder", () => {
     await openSkill(sh, COPIED_SKILL);
     await installRow(sh, "repo-claude").getByRole("button", { name: "disable", exact: true }).waitFor();
     assert.equal(await sh.locator(".drawer .ierr").isVisible(), false);
+    await closeSkill(sh);
+  });
+
+  test("Skills: disable then enable one project's install of a skill two projects have; the other project's install never changes", SLOW, async () => {
+    const at = (project: string) => join(workspace, "projects-folder", project, ".claude", "skills", PROJECTS_SKILL);
+    const [mine, other] = [TEMPLATE_PROJECT, IDEA_PROJECT];
+    const installs = snapshot().store.collections.find((c) => c.name === PROJECTS_COLLECTION)!.skills.find((s) => s.name === PROJECTS_SKILL)!.installs!;
+    assert.deepEqual(
+      installs.map((i) => [i.target, i.path, i.form, i.disabled]).sort(),
+      [
+        [`project-claude:${other}`, at(other), "copy", false],
+        [`project-claude:${mine}`, at(mine), "copy", false],
+      ].sort(),
+    );
+    for (const project of [mine, other]) assert.ok(at(project).startsWith(join(workspace, "projects-folder") + sep), `inside the copy: ${at(project)}`);
+    const theirs = readFileSync(join(at(other), "SKILL.md"), "utf8");
+    const untouched = () => {
+      assert.equal(readFileSync(join(at(other), "SKILL.md"), "utf8"), theirs, `${other}'s install is as it was`);
+      assert.ok(!existsSync(join(at(other), "SKILL.md.disabled")), `${other}'s install has no SKILL.md.disabled`);
+    };
+    const { sh } = await openSkills();
+    await openSkill(sh, PROJECTS_SKILL);
+    const row = installRow(sh, `project-claude:${mine}`);
+    await row.getByRole("button", { name: "disable", exact: true }).click();
+    await row.locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false, (await sh.locator(".drawer .ierr").textContent()) ?? "");
+    assert.ok(existsSync(join(at(mine), "SKILL.md.disabled")) && !existsSync(join(at(mine), "SKILL.md")), `${mine}'s install is disabled on disk`);
+    untouched();
+    await closeSkill(sh);
+    await openSkill(sh, PROJECTS_SKILL);
+    await installRow(sh, `project-claude:${mine}`).getByRole("button", { name: "enable", exact: true }).click();
+    await installRow(sh, `project-claude:${mine}`).locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false, (await sh.locator(".drawer .ierr").textContent()) ?? "");
+    assert.ok(existsSync(join(at(mine), "SKILL.md")) && !existsSync(join(at(mine), "SKILL.md.disabled")), `${mine}'s install is enabled again`);
+    untouched();
     await closeSkill(sh);
   });
 
