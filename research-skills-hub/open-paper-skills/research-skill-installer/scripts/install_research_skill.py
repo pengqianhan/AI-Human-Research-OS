@@ -523,6 +523,7 @@ def check_toggle(target: Target, name: str, form: str, enable: bool,
     whatever is at the destination, so it may only ever replace a link. A
     copy-form toggle renames SKILL.md inside the install, so the install must
     not be a link: the rename would land wherever it points, such as the hub.
+    Nor may the rename's destination exist already: a rename replaces it.
     """
     live_dir, off_dir = install_paths(target.path, name)
     ensure_safe(live_dir, targets)
@@ -542,6 +543,19 @@ def check_toggle(target: Target, name: str, form: str, enable: bool,
     ensure_safe(install, targets)
     if install.is_symlink():
         fail(f"{install} is a symbolic link, but this skill is installed as a copy; "
+             "nothing was changed.")
+    if not install.is_dir():
+        return
+    live, off = install / "SKILL.md", install / DISABLED_MARKER
+    # The same branches as the copy-form rename in command_toggle.
+    if enable and off.is_file():
+        destination = live
+    elif not enable and live.is_file():
+        destination = off
+    else:
+        return
+    if destination.is_symlink() or destination.exists():
+        fail(f"{destination} already exists, and the rename would replace it; "
              "nothing was changed.")
 
 

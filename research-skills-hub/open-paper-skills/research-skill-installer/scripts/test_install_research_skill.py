@@ -190,6 +190,9 @@ class InstallerCase(unittest.TestCase):
     def link_for_copy(self, path: Path) -> str:
         return f"{path} is a symbolic link, but this skill is installed as a copy"
 
+    def rename_target_exists(self, path: Path) -> str:
+        return f"{path} already exists, and the rename would replace it"
+
 
 class GreenBeforeAndAfter(InstallerCase):
     """What the installer already does right; the hardening must not change it."""
@@ -379,6 +382,39 @@ class RefusedAfterHardening(InstallerCase):
                            self.link_for_copy(second / "beta"))
         self.assertTrue((first / "beta" / "SKILL.md").is_file(), "the first project's copy is still enabled")
         self.assertEqual((self.beta_hub / "SKILL.md").read_bytes(), hub_skill)
+
+    def both_files(self, install: Path) -> None:
+        """A copy holding SKILL.md and an older SKILL.md.disabled side by side."""
+        self.write(install / "SKILL.md", "the current SKILL.md\n")
+        self.write(install / "SKILL.md.disabled", "an older SKILL.md someone kept\n")
+
+    def test_copy_form_enable_over_an_existing_skill_md(self) -> None:
+        install = self.claude / "beta"
+        self.ok("install", "beta", "--target", "repo-claude")
+        self.both_files(install)
+        before = self.snapshot()
+        self.assertRefused(self.run_installer("enable", "beta", "--target", "repo-claude"), before,
+                           self.rename_target_exists(install / "SKILL.md"))
+        self.assertEqual((install / "SKILL.md").read_bytes(), b"the current SKILL.md\n")
+
+    def test_copy_form_disable_over_an_existing_disabled_marker(self) -> None:
+        install = self.claude / "beta"
+        self.ok("install", "beta", "--target", "repo-claude")
+        self.both_files(install)
+        before = self.snapshot()
+        self.assertRefused(self.run_installer("disable", "beta", "--target", "repo-claude"), before,
+                           self.rename_target_exists(install / "SKILL.md.disabled"))
+        self.assertEqual((install / "SKILL.md.disabled").read_bytes(), b"an older SKILL.md someone kept\n")
+
+    def test_copy_form_rename_refusal_on_the_second_target_leaves_the_first_unchanged(self) -> None:
+        first, second = self.projects("p1", "p2")
+        self.ok("install", "beta", "--target", "project-claude")
+        self.both_files(second / "beta")
+        before = self.snapshot()
+        self.assertRefused(self.run_installer("disable", "beta", "--target", "project-claude"), before,
+                           self.rename_target_exists(second / "beta" / "SKILL.md.disabled"))
+        self.assertTrue((first / "beta" / "SKILL.md").is_file(), "the first project's copy is still enabled")
+        self.assertEqual((second / "beta" / "SKILL.md.disabled").read_bytes(), b"an older SKILL.md someone kept\n")
 
 
 if __name__ == "__main__":
