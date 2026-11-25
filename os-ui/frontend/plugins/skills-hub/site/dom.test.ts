@@ -121,6 +121,10 @@ describe("the page's DOM", () => {
       assert.doesNotMatch(text, /\[[^\]\n]*["'`][^\]\n]*\]\s*=(?!=)/, `${file}: a write through a string-indexed bracket`);
       assert.doesNotMatch(text, /[{,]\s*["'`]?(innerHTML|outerHTML|srcdoc|srcset|src|href|style|action|formAction)["'`]?\s*:/, `${file}: a sink as an object key`);
       assert.doesNotMatch(text, /Object\.assign\(|Reflect\.set\(|defineProperty\(|\bas any\b|\bas unknown as\b|\bas [^;,)]*Record</, `${file}: a way around the types or a computed write`);
+      // No value typed `any` (through which a member is reached unchecked), and no write through a computed member:
+      // `n[k] = text` with k = "inn" + "erHTML" names no sink a pattern can see (review, notes 7 and 8).
+      assert.doesNotMatch(text, /:\s*any\b|<any\b|\bany\s*[[\]>|&,)]|\bany;/, `${file}: an any type`);
+      assert.doesNotMatch(text, /[\w$)\]!]\s*\[[^\]\n]+\]\s*(?:[-+*/%&|^]|\*\*|<<|>>>?|\?\?|\|\||&&)?=(?!=)/, `${file}: a write through a computed member`);
       for (const sink of [/\.src\b/, /\.href\b/, /\.style\b/, /\.action\b/, /\.formAction\b/, /\.data\s*=/, /setAttributeNS/, /\.location\b/, /window\.open/, /\.poster\b/, /new Image\b/, /\.srcset\b/]) {
         assert.doesNotMatch(text, sink, `${file}: ${sink}`);
       }
@@ -271,6 +275,10 @@ describe("what the page reads and writes", () => {
     const main = source("main.ts");
     assert.deepEqual(args(main, "fetch"), ['"/api/skills-hub/toggle"', "filesUrl(STATE)"]);
     assert.equal([...main.matchAll(/\bfetch\(/g)].length, 2);
+    // The name `fetch` appears in those two calls and nowhere else in the page's code, so no alias of it
+    // (`const send = fetch`, `window.fetch`, a destructuring) makes a third request (review, notes 7 and 8).
+    assert.equal([...main.matchAll(/\bfetch\b/g)].length, 2, "main.ts: fetch outside its two calls");
+    for (const { file, text } of code()) if (file !== "main.ts") assert.doesNotMatch(text.replace(/"(?:[^"\\\n]|\\.)*"/g, '""'), /\bfetch\b/, `${file}: fetch`);
     assert.match(main, /res = await fetch\(filesUrl\(STATE\), \{ cache: "no-store" \}\);/);
     assert.match(main, /await fetch\("\/api\/skills-hub\/toggle", \{ method: "POST", headers: \{ "Content-Type": "application\/json" \}, body: toggleBody\(skill, target, enable\) \}\);/);
     assert.doesNotMatch(main, /listUrl|XMLHttpRequest/);

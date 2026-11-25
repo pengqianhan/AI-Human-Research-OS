@@ -3745,6 +3745,59 @@ describe("desktop client on a Research OS folder", () => {
     }
   });
 
+  test("Skills: a failed read after a good one keeps the list, and the 5 s read pauses while the window is hidden", SLOW, async () => {
+    const { sh } = await openSkills();
+    const cards = sh.locator(".cards .skill");
+    const shown = await cards.count();
+    assert.ok(shown > 0);
+    // The page's reads of the snapshot, counted, and answered badly on demand, in the frame only: the file is not touched.
+    await sh.evaluate(() => {
+      const w = window as unknown as { __reads: number; __answer: "as is" | "404" | "not json"; __fetch: typeof fetch };
+      w.__reads = 0;
+      w.__answer = "as is";
+      w.__fetch = window.fetch;
+      window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+        if (!String(input).includes("_os/files")) return w.__fetch(input, init);
+        w.__reads++;
+        if (w.__answer === "404") return Promise.resolve(new Response("", { status: 404 }));
+        if (w.__answer === "not json") return Promise.resolve(new Response("not json", { status: 200 }));
+        return w.__fetch(input, init);
+      }) as typeof fetch;
+    });
+    const reads = () => sh.evaluate(() => (window as unknown as { __reads: number }).__reads);
+    const nextRead = async () => {
+      const before = await reads();
+      for (let i = 0; i < 80 && (await reads()) === before; i++) await page.waitForTimeout(100);
+      assert.ok((await reads()) > before, "the page read the snapshot again within 8 s");
+      await page.waitForTimeout(300);
+    };
+    try {
+      for (const answer of ["404", "not json"] as const) {
+        await sh.evaluate((a) => ((window as unknown as { __answer: string }).__answer = a), answer);
+        await nextRead();
+        assert.equal(await cards.count(), shown, `after a read answered ${answer}, the list stays (src/useOsState.ts)`);
+        assert.equal(await sh.locator(".status").count(), 0, `no first-load line after ${answer}`);
+      }
+      await sh.evaluate(() => ((window as unknown as { __answer: string }).__answer = "as is"));
+      await nextRead();
+      // The window hidden, as the frame sees it: no read for two of the page's 5 s rounds; shown again, they resume.
+      await sh.evaluate(() => Object.defineProperty(document, "hidden", { configurable: true, get: () => true }));
+      const hiddenFrom = await reads();
+      await page.waitForTimeout(11_000);
+      assert.equal(await reads(), hiddenFrom, "no read while the window is hidden");
+      await sh.evaluate(() => delete (document as unknown as { hidden?: boolean }).hidden);
+      assert.equal(await sh.evaluate(() => document.hidden), false);
+      await nextRead();
+      assert.equal(await cards.count(), shown);
+    } finally {
+      await sh.evaluate(() => {
+        const w = window as unknown as { __fetch: typeof fetch };
+        window.fetch = w.__fetch;
+        delete (document as unknown as { hidden?: boolean }).hidden;
+      });
+    }
+  });
+
   test("Skills at 1440 × 900 and 1000 × 720: the panel is 420 px inside the frame, open or with the menu collapsed", SLOW, async () => {
     const size = await windowSize({ width: 1440, height: 900 });
     try {
@@ -3864,23 +3917,55 @@ describe("desktop client on a Research OS folder", () => {
     const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/skills-hub\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
     for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
     assert.ok(canary(await consoleLog()), "a CSP violation inside Skills Hub's frame is seen");
-    // From Paper wiki's frame, a no-cors POST to the toggle (all a cross-origin page could send) changes nothing.
+    // Another origin's POST to the toggle never reaches the handler. The request it sends is a real one: from
+    // Skills Hub's own frame, the same body disables the copy's install (inside the copy), and it is enabled again.
+    // That answer's time bounds how long the handler would take, so the wait below cannot end before it would act.
     const skillFile = join(copiedInstall(), "SKILL.md");
+    assert.ok(skillFile.startsWith(join(workspace, ".claude", "skills") + sep), "inside the copy");
+    const body = JSON.stringify({ skill: COPIED_SKILL, collection: SKILLS_COLLECTION, target: "repo-claude", enable: false });
+    const own = async (enable: boolean) =>
+      sh.evaluate(
+        async ([b, on]) => {
+          const t0 = performance.now();
+          const res = await fetch("/api/skills-hub/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...JSON.parse(b), enable: on }) });
+          return { status: res.status, ms: performance.now() - t0 };
+        },
+        [body, enable] as const,
+      );
+    const off = await own(false);
+    assert.equal(off.status, 200);
+    assert.ok(existsSync(join(copiedInstall(), "SKILL.md.disabled")) && !existsSync(skillFile), "the same body, sent by Skills Hub's page, disables the install");
+    const on = await own(true);
+    assert.equal(on.status, 200);
+    assert.ok(existsSync(skillFile) && !existsSync(join(copiedInstall(), "SKILL.md.disabled")), "and enables it again");
     const disk = readFileSync(skillFile, "utf8");
     await nav(page, "Paper wiki").click();
     const wiki = await wikiFrame(page);
-    const sent = await wiki.evaluate(async () => {
-      try {
-        const res = await fetch("app://skills-hub/api/skills-hub/toggle", { method: "POST", mode: "no-cors", body: JSON.stringify({ skill: "e2e-copied", collection: "e2e-copy", target: "repo-claude", enable: false }) });
-        return `answered ${res.type}`;
-      } catch (error) {
-        return `blocked: ${(error as Error).name}`;
-      }
-    });
-    assert.match(sent, /^blocked|^answered opaque/);
-    await page.waitForTimeout(1500);
+    const sent = await wiki.evaluate(async (b) => {
+      const U = "app://skills-hub/api/skills-hub/toggle";
+      const outcome = async (send: () => Promise<Response>) => {
+        try {
+          const res = await send();
+          return `answered ${res.type} ${res.status}`;
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        // A JSON POST, which a CORS-enabled scheme would preflight; this one is not.
+        corsJson: await outcome(() => fetch(U, { method: "POST", headers: { "Content-Type": "application/json" }, body: b })),
+        // A body typed as JSON, without CORS: a no-cors request cannot carry that type (the handler would answer 415).
+        noCorsJsonBlob: await outcome(() => fetch(U, { method: "POST", mode: "no-cors", body: new Blob([b], { type: "application/json" }) })),
+        noCorsPlain: await outcome(() => fetch(U, { method: "POST", mode: "no-cors", body: b })),
+      };
+    }, body);
+    await page.waitForTimeout(Math.max(3000, 3 * Math.max(off.ms, on.ms)));
+    assert.ok(existsSync(skillFile) && !existsSync(join(copiedInstall(), "SKILL.md.disabled")), `another origin's POST reached the toggle: ${JSON.stringify(sent)}`);
     assert.equal(readFileSync(skillFile, "utf8"), disk);
-    assert.ok(!existsSync(join(copiedInstall(), "SKILL.md.disabled")));
+    // Each was stopped in the frame: Paper wiki's page may connect to its own origin only (connect-src 'self').
+    assert.match(sent.corsJson, /^blocked: TypeError/);
+    assert.match(sent.noCorsJsonBlob, /^blocked: TypeError/);
+    assert.match(sent.noCorsPlain, /^blocked: TypeError/);
   });
 
   test("another plugin's frame cannot become Skills Hub's page: Paper wiki's frame sent to app://skills-hub/ stays Paper wiki's, and nothing changes on disk", SLOW, async () => {

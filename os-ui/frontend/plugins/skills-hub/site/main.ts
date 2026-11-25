@@ -20,7 +20,11 @@
  * Escape closes the panel without returning the focus to the card (F3).
  *
  * Snapshot text (names, descriptions, licences, paths) goes on screen as text
- * only, through site-kit's el and button; a class comes from a fixed map.
+ * only, through site-kit's el and button, with invisible characters marked by
+ * the logic's views; a class comes from a fixed map. A command is shown and
+ * copied only when every name it carries is one the toggle's endpoint would
+ * accept (offeredCommand). A card is found by its id (cardIds), never by its
+ * collection and name, which two skills can share.
  */
 import { button, clear, el, filesUrl, icon } from "../../site-kit.ts";
 import {
