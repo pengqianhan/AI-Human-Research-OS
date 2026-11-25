@@ -1,0 +1,155 @@
+/*
+ * Skills Hub's page: the app's Skills page as the trunk drew it
+ * (src/pages/StorePage.tsx, components/SkillCard.tsx, SyncBadge.tsx,
+ * Badge.tsx, SkillDrawer.tsx, SkillInstalls.tsx, PageHeader.tsx), under
+ * mockup C's band (os-ui/mockups/step2/skills.html, top C). Each rule below
+ * is the Tailwind utilities or index.css component classes those files used,
+ * written out, since a framed page gets none of the app's styles. All
+ * styling is here: the page sets no style from its code.
+ *
+ * The tokens are the app's own, copied exactly from src/index.css (not from a
+ * view plugin's style, whose --muted differs); dom.test.ts compares them.
+ */
+:root {
+  --bg: #f3eee5;
+  --side: #ece5d8;
+  --paper: #faf7f1;
+  --card: #fffdf9;
+  --ink: #1c1a17;
+  --ink2: #4a453d;
+  --muted: #6f675b;
+  --faint: #b0a796;
+  --line: rgba(70, 55, 30, .10);
+  --line2: rgba(70, 55, 30, .18);
+  --hover: rgba(60, 45, 20, .06);
+  --accent: #1e5a56;
+  --accent-ink: #164542;
+  --accent-soft: #dcebe8;
+  --accent-tint: #eef4f2;
+  --on-accent: #f8f4ec;
+  --warn: #86581a;
+  --warn-soft: #f3e6cc;
+  --signal: #a4462c;
+  --signal-soft: #f6e2d9;
+  --danger: #a33a2f;
+  --danger-soft: #f6e3df;
+  --mute-soft: rgba(60, 45, 20, .06);
+  --night: #22211e;
+  --on-night: #f5efe4;
+  --sh1: 0 1px 2px rgba(60, 44, 20, .07), 0 1px 1px rgba(60, 44, 20, .04);
+  --sh2: 0 1px 3px rgba(60, 44, 20, .06), 0 10px 26px rgba(60, 44, 20, .07);
+  --sh3: 0 4px 10px rgba(60, 44, 20, .08), 0 20px 44px rgba(60, 44, 20, .11);
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Noto Sans SC", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --r: 14px;
+}
+
+/* ---- the base: Tailwind's preflight as the app gets it, then index.css's own ---- */
+*, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid var(--line); }
+[hidden] { display: none !important; }
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; -webkit-tap-highlight-color: transparent; }
+body { font-family: var(--sans); color: var(--ink); background: var(--bg); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h3 { font-size: inherit; font-weight: inherit; }
+button, input { font: inherit; color: inherit; letter-spacing: inherit; }
+button { text-transform: none; -webkit-appearance: button; background-color: transparent; background-image: none; cursor: pointer; }
+:disabled { cursor: default; }
+input::placeholder { opacity: 1; color: var(--faint); }
+[type="search"] { -webkit-appearance: textfield; outline-offset: -2px; }
+::-webkit-search-decoration { -webkit-appearance: none; }
+code { font-family: var(--mono); font-size: .92em; }
+svg { display: block; vertical-align: middle; }
+.sprite { position: absolute; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- index.css components the page used ---- */
+.label { font: 600 10.5px/1.4 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.eyebrow { display: flex; align-items: center; gap: 8px; font: 600 11px var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.page-title { font: 500 31px/1.15 var(--serif); letter-spacing: -.01em; margin: 6px 0; }
+.lede { font: 15.5px/1.55 var(--serif); color: var(--ink2); max-width: 64ch; }
+.page { max-width: 1080px; margin: 0 auto; padding: 30px 40px 64px; }
+.card-flat { background: var(--card); border-radius: 11px; box-shadow: var(--sh1), inset 0 0 0 1px var(--line); }
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border: 0; border-radius: 9px; background: var(--card); box-shadow: var(--sh1), inset 0 0 0 1px var(--line); color: var(--ink); font: 500 13px var(--sans); cursor: pointer; white-space: nowrap; }
+.btn:hover { box-shadow: var(--sh2), inset 0 0 0 1px var(--line2); }
+.btn:disabled { color: var(--faint); cursor: not-allowed; background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.btn-sm { padding: 4px 9px; font-size: 12px; border-radius: 7px; }
+.btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: var(--sh1); }
+.btn-primary:hover { background: var(--accent-ink); box-shadow: var(--sh2); }
+.btn-ghost { background: none; box-shadow: none; color: var(--accent); padding: 6px 8px; }
+.btn-ghost:hover { background: var(--accent-tint); box-shadow: none; }
+.cmd-block { background: var(--night); color: var(--on-night); font: 12px/1.6 var(--mono); border-radius: 9px; }
+.prose-serif { font: 15px/1.55 var(--serif); color: var(--ink2); }
+
+/* ---- the top: mockup C's band (PluginScreen.tsx's words, mockup .own-band), then PageHeader ---- */
+.band { display: flex; min-width: 0; align-items: center; gap: 8px; margin: 0 0 22px; border-radius: 10px; background: var(--accent-tint); padding: 8px 12px; font-size: 12.5px; color: var(--accent-ink); }
+.band .txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.band b { font-weight: 600; }
+.ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ic.sm { width: 14px; height: 14px; }
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+.head > div { min-width: 0; flex: 1 1 0%; }
+.store { margin-top: 24px; }
+
+/* ---- the bar and the grid (StorePage.tsx) ---- */
+.store-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pills { display: contents; }
+.fpill { border-radius: 9999px; padding: 5px 12px; font-size: 12.5px; font-weight: 500; background: var(--card); color: var(--ink2); box-shadow: var(--sh1); }
+.fpill:hover { color: var(--ink); }
+.fpill[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: var(--sh1); }
+.search { margin-left: auto; width: 240px; border-radius: 10px; background: var(--card); padding: 7px 12px; font-size: 13px; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2); }
+.empty { font-size: 13.5px; color: var(--muted); }
+.status .btn { margin-top: 10px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+
+/* ---- a card (SkillCard.tsx, Badge.tsx) ---- */
+.skill { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; text-align: left; transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; transition-timing-function: cubic-bezier(.4, 0, .2, 1); transition-duration: 150ms; }
+.skill:hover { transform: translateY(-2px); box-shadow: var(--sh3); }
+.skill .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.skill .nm { word-break: break-all; font-family: var(--serif); font-size: 16.5px; font-weight: 500; line-height: 1.25; color: var(--ink); }
+.skill .desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-family: var(--serif); font-size: 14px; line-height: 1.375; color: var(--ink2); }
+.skill .foot { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tag { border-radius: 9999px; background: var(--mute-soft); padding: 2px 8px; font-size: 11px; color: var(--ink2); }
+.tag.m { color: var(--muted); }
+.tag.w { background: var(--warn-soft); color: var(--warn); }
+.badge { display: inline-block; border-radius: 5px; padding: 1px 6px; font-size: 11px; font-weight: 600; }
+.badge.ok { background: var(--accent-tint); color: var(--accent-ink); }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.mute { background: var(--mute-soft); color: var(--muted); }
+
+/* ---- the panel and its shading (SkillDrawer.tsx): this page only, 420 px, never wider than the frame ---- */
+.scrim { position: fixed; inset: 0; z-index: 20; background: var(--line2); }
+.drawer { position: fixed; top: 0; right: -460px; z-index: 30; height: 100vh; width: 420px; max-width: 100%; overflow-y: auto; background: var(--card); padding: 24px; visibility: hidden; transition-property: right, visibility; transition-duration: 220ms; transition-timing-function: cubic-bezier(.4, 0, .2, 1); }
+/* Visible at once on opening, so Close takes the focus in the same click (as the mockup does); on closing it stays visible while it slides out. */
+.drawer.open { right: 0; visibility: visible; box-shadow: var(--sh3); transition-property: right, visibility; transition-duration: 220ms, 0s; }
+.close { float: right; }
+.d-name { margin-top: 4px; word-break: break-all; font-family: var(--serif); font-size: 22px; font-weight: 500; line-height: 1.25; }
+.d-src { margin-top: 4px; margin-bottom: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.d-list { margin: 14px 0; font-size: 13px; }
+.d-list dt { margin-top: 12px; }
+.d-list dd { margin-top: 2px; }
+.d-list .d-desc { font: 15px/1.55 var(--serif); font-size: 14.5px; color: var(--ink); }
+.cmd { margin-top: 14px; word-break: break-all; padding: 12px 14px; font-size: 11.5px; }
+.copy-btn { margin-top: 8px; width: 100%; justify-content: center; padding-top: 10px; padding-bottom: 10px; }
+.note { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+/* ---- the installs (SkillInstalls.tsx) ---- */
+.inst { margin-top: 4px; }
+.inst-head { margin-bottom: 8px; display: flex; align-items: baseline; justify-content: space-between; font-size: 11.5px; color: var(--muted); }
+.scope { margin-bottom: 10px; }
+.irow { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding: 6px 0; }
+.irow:last-child { border-bottom-width: 0; }
+.idot { display: inline-block; height: 7px; width: 7px; flex-shrink: 0; border-radius: 9999px; }
+.idot.none { border: 1px solid var(--line2); }
+.idot.ok { background: var(--accent); }
+.idot.bad { background: var(--warn); }
+.iname { min-width: 0; flex: 1 1 0%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+.iname .ipath { margin-left: 6px; color: var(--faint); }
+.irow .btn { flex-shrink: 0; }
+.idetail { margin-top: 2px; font-size: 11.5px; color: var(--warn); }
+.ierr { margin-top: 4px; font-size: 11.5px; color: var(--warn); }
+.ilive { margin-top: 4px; font-size: 11.5px; color: var(--muted); }
+.inone { font-size: 12px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

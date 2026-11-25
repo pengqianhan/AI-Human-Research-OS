@@ -22,19 +22,12 @@ const SLOT_LABEL: Record<Slot, string> = { nav: "Page", home: "Home panel", proj
  * The plan: the bundled plugins not built yet, written into the app. The
  * enabled ones are not listed here; they are read from the plugin registry
  * (src/plugins/registry.ts). Remove a plugin from this list when its
- * manifest is bundled.
+ * manifest is bundled; with none left, the page shows no such section.
+ * Skills Hub, the last, was bundled in step 2.5.
  */
-const PLANNED: Card[] = [
-  {
-    name: "Skills Hub",
-    icon: "puzzle",
-    contributes: ["Page · Skills", "Skills"],
-    about: "Browse the research skills hub and install skills where you ask. The Skills page works today, built into the app; it moves into this plugin in step 2.",
-    later: "step 2",
-  },
-];
+const PLANNED: Card[] = [];
 
-/** Plugins (mockup C): the bundled plugins that are loaded, and what is not available yet. */
+/** Plugins (mockup C): the bundled plugins that are loaded, and any not available yet. */
 export function PluginsPage() {
   const toast = useToast();
   const { plugins, pages } = usePlugins();
@@ -75,13 +68,21 @@ export function PluginsPage() {
         ))}
       </div>
 
-      <h2 className="mb-3 mt-[30px] flex items-center gap-2.5 font-serif text-[19px] font-medium">Bundled · not yet available</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {PLANNED.map((p) => (
-          <PluginCard key={p.name} plugin={p} />
-        ))}
-      </div>
-      <p className="src-note mt-4">The enabled list is read from the plugins themselves; the rest is the plan, written into the app.</p>
+      {PLANNED.length > 0 && (
+        <>
+          <h2 className="mb-3 mt-[30px] flex items-center gap-2.5 font-serif text-[19px] font-medium">Bundled · not yet available</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {PLANNED.map((p) => (
+              <PluginCard key={p.name} plugin={p} />
+            ))}
+          </div>
+        </>
+      )}
+      <p className="src-note mt-4">
+        {PLANNED.length > 0
+          ? "The enabled list is read from the plugins themselves; the rest is the plan, written into the app."
+          : "The enabled list is read from the plugins themselves."}
+      </p>
     </div>
   );
 }

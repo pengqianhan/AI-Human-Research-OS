@@ -5,7 +5,7 @@ import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { BUNDLED_IDS } from "../../plugins/bundled.ts";
 import type { PluginManifest } from "../../server/manifest.ts";
-import { bundledManifests, pluginInfo, pluginPages, viewSrc } from "./pages.ts";
+import { bundledManifests, CLIPBOARD_WRITE, navFrame, OWN_TOP, pluginInfo, pluginPages, viewSrc } from "./pages.ts";
 
 const PLUGINS = resolve(dirname(fileURLToPath(import.meta.url)), "../../plugins");
 
@@ -156,8 +156,6 @@ describe("the bundled plugins in the renderer", () => {
     assert.deepEqual(manifest.reads, ["os-ui/frontend/public/state.json"]);
     assert.deepEqual(manifest.contributes.handlers, ["toggle"]);
     assert.equal(manifest.site, undefined, "served from its own site/ folder, not the workspace");
-    // Its page comes with the site (C2 of Part 4 §5); until then the trunk's Skills page stays.
-    assert.deepEqual(pluginPages(plugins, desktop).filter((p) => p.plugin === "skills-hub"), []);
     assert.deepEqual(pluginInfo(manifest, "bundled"), {
       id: "skills-hub",
       name: "Skills Hub",
@@ -165,6 +163,42 @@ describe("the bundled plugins in the renderer", () => {
       description: "The research skills hub and where each skill is installed; disable or enable one install.",
       source: "bundled",
     });
+  });
+
+  test("Skills Hub's left-navigation page, Skills: on app://skills-hub in the desktop client, no frame URL in a browser", () => {
+    const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
+    const skills = (env: { desktop: boolean }) => pluginPages(plugins, env).filter((p) => p.plugin === "skills-hub");
+    // The end-to-end suite clicks the navigation button by this exact name; a saved "skills" screen opens this key.
+    assert.deepEqual(
+      skills(desktop).map((p) => [p.key, p.slot, p.title, p.src, p.origin]),
+      [["skills-hub/skills", "nav", "Skills", "app://skills-hub/index.html", "app://skills-hub"]],
+    );
+    // In a browser the host says it opens in the desktop app (the Human Owner's Q2 of Part 4 §4.2).
+    assert.deepEqual(
+      skills(browser).map((p) => [p.key, p.src, p.origin]),
+      [["skills-hub/skills", null, null]],
+    );
+    // In the menu after Paper wiki: BUNDLED_IDS order, Skills Hub last.
+    assert.deepEqual(pluginPages(plugins, desktop).filter((p) => p.slot === "nav").map((p) => p.key), ["paper-wiki/viewer", "skills-hub/skills"]);
+  });
+
+  test("only Skills draws its own top, and only its frame may write the clipboard; Paper wiki keeps the host's band", () => {
+    assert.deepEqual([...OWN_TOP], ["skills-hub/skills"]);
+    assert.deepEqual([...CLIPBOARD_WRITE], ["skills-hub/skills"]);
+    const { plugins } = bundledManifests(realRaw(), BUNDLED_IDS);
+    const info = (id: string, source: "bundled" | "local" = "bundled") => pluginInfo(plugins.find((p) => p.id === id)!, source);
+    const page = (key: string, env: { desktop: boolean }) => pluginPages(plugins, env).find((p) => p.key === key)!;
+    assert.deepEqual(navFrame(page("skills-hub/skills", desktop), info("skills-hub")), { ownTop: true, allow: "clipboard-write" });
+    // No frame URL in a browser: the host's band and its sentence, as for any plugin page it cannot serve.
+    assert.deepEqual(navFrame(page("skills-hub/skills", browser), info("skills-hub")), { ownTop: false, allow: undefined });
+    assert.deepEqual(navFrame(page("paper-wiki/viewer", desktop), info("paper-wiki")), { ownTop: false, allow: undefined });
+    assert.deepEqual(navFrame(page("paper-wiki/viewer", browser), info("paper-wiki")), { ownTop: false, allow: undefined });
+    // Keyed by bundled page: a local plugin, or another plugin's page under that key, gets neither.
+    assert.deepEqual(navFrame(page("skills-hub/skills", desktop), info("skills-hub", "local")), { ownTop: false, allow: undefined });
+    assert.deepEqual(navFrame(page("skills-hub/skills", desktop), info("paper-wiki")), { ownTop: false, allow: undefined });
+    for (const p of pluginPages(plugins, desktop).filter((x) => x.slot !== "nav")) {
+      assert.ok(!OWN_TOP.has(p.key) && !CLIPBOARD_WRITE.has(p.key), p.key);
+    }
   });
 
   test("Paper Wiki's card: its name and description", () => {

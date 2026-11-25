@@ -1,14 +1,21 @@
+import { navFrame } from "../plugins/pages";
 import type { PluginInfo, PluginPage } from "../plugins/pages";
 import { Icon } from "../shell/icons";
 
 /**
- * A plugin's left-navigation page in the layout (Paper wiki, from the
- * bundled paper-wiki plugin): mockup C's plugin band, saying which plugin
- * the page comes from in its manifest's words, then the plugin's own page
- * (PluginFrame) filling the rest. Paper Wiki's reading-status buttons live
- * inside its viewer.
+ * A plugin's left-navigation page in the layout. Paper wiki, from the bundled
+ * paper-wiki plugin: mockup C's plugin band, saying which plugin the page
+ * comes from in its manifest's words, then the plugin's own page
+ * (PluginFrame) filling the rest; Paper Wiki's reading-status buttons live
+ * inside its viewer. Skills, from the bundled skills-hub plugin, draws that
+ * band and its own top itself (pages.ts OWN_TOP), so here it is the frame
+ * alone, filling the page area, and its frame may write the clipboard for its
+ * copy buttons (CLIPBOARD_WRITE). Where the page has no frame URL (a
+ * browser), every plugin page has the band and the sentence below.
  */
 export function PluginScreen({ page, plugin }: { page: PluginPage; plugin: PluginInfo }) {
+  const frame = navFrame(page, plugin);
+  if (frame.ownTop) return <PluginFrame src={page.src} title={plugin.name} allow={frame.allow} />;
   return (
     <div className="flex h-full flex-col gap-3 p-3.5">
       <header className="flex shrink-0 flex-wrap items-center gap-3 px-1.5">
@@ -27,7 +34,7 @@ export function PluginScreen({ page, plugin }: { page: PluginPage; plugin: Plugi
         </div>
       </header>
       <div className="card min-h-0 flex-1 overflow-hidden">
-        <PluginFrame src={page.src} title={plugin.name} />
+        <PluginFrame src={page.src} title={plugin.name} allow={frame.allow} />
       </div>
     </div>
   );
@@ -39,9 +46,10 @@ export function PluginScreen({ page, plugin }: { page: PluginPage; plugin: Plugi
  * paper-wiki-manager skill (os-ui/DESIGN.md says why it is an iframe). In
  * the desktop client the frame runs on the plugin's own origin, away from
  * the app's endpoints and bridge (os-ui/client/DESIGN.md §3.2). `src` is
- * null where this build cannot serve the page.
+ * null where this build cannot serve the page. `allow` is the frame's
+ * permissions policy, given to bundled pages only (pages.ts CLIPBOARD_WRITE).
  */
-export function PluginFrame({ src, title }: { src: string | null; title: string }) {
+export function PluginFrame({ src, title, allow }: { src: string | null; title: string; allow?: string }) {
   if (src === null) {
     return (
       <div className="max-w-[520px] px-8 py-10">
@@ -50,5 +58,5 @@ export function PluginFrame({ src, title }: { src: string | null; title: string 
       </div>
     );
   }
-  return <iframe src={src} title={title} className="h-full w-full border-0" />;
+  return <iframe src={src} title={title} allow={allow} className="h-full w-full border-0" />;
 }

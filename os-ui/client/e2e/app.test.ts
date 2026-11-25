@@ -14,7 +14,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, 
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { crc32, deflateSync } from "node:zlib";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { after, before, describe, test } from "node:test";
@@ -142,7 +142,7 @@ function nav(page: Page, name: string): Locator {
 }
 
 /** One page of the layout. Pages stay mounted, hidden, once opened, so scope locators to the one in view. */
-function screen(page: Page, id: "home" | "projects" | "workspace" | "wiki" | "skills" | "plugins" | "settings"): Locator {
+function screen(page: Page, id: "home" | "projects" | "workspace" | "wiki" | "skills-hub/skills" | "plugins" | "settings"): Locator {
   return page.locator(`[data-screen="${id}"]`);
 }
 
@@ -347,6 +347,40 @@ function ideaFixtures(workspace: string): void {
   writeFileSync(join(made, "idea_graph.md"), ideaLines("example.idea_graph.md").join("\n"));
 }
 
+/**
+ * Skills Hub's fixtures (os-ui/PLUGINS.md Part 4, §5 C2), in the temporary
+ * workspace only. The toggle case clicks one install: a copy-form skill's
+ * copy in the copy's own .claude/skills, so the installer renames its SKILL.md
+ * on every OS (the copy of the workspace dereferences links on Windows, which
+ * would make a symlink-form skill's install a folder the installer does not
+ * toggle). The orphan is in a fixture project's .claude/skills: the generator
+ * lists an orphan of the repository's own folders without installs, so only
+ * one found in another target has the toggle the handler refuses (F2). A hub
+ * skill's description carries markup.
+ */
+const SKILLS_COLLECTION = "e2e-copy";
+const COPIED_SKILL = "e2e-copied";
+const MARKUP_SKILL = "e2e-markup";
+const ORPHAN_SKILL = "e2e-orphan";
+const skillMd = (name: string, description: string) => `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n\nAn end-to-end fixture.\n`;
+
+function skillsFixtures(workspace: string): void {
+  const hub = join(workspace, "research-skills-hub", SKILLS_COLLECTION);
+  mkdirSync(join(hub, COPIED_SKILL), { recursive: true });
+  mkdirSync(join(hub, MARKUP_SKILL), { recursive: true });
+  // research-skill-installer's install_form reads this line (install_research_skill.py install_form).
+  writeFileSync(join(hub, "SOURCE.md"), "# e2e-copy\n\nInstall form: `copy`\n");
+  writeFileSync(join(hub, COPIED_SKILL, "SKILL.md"), skillMd(COPIED_SKILL, "A copy-form skill the end-to-end suite disables and enables again."));
+  writeFileSync(join(hub, MARKUP_SKILL, "SKILL.md"), skillMd(MARKUP_SKILL, MARKUP_TEXT));
+  // Its one install: a byte-for-byte copy, in the workspace's .claude/skills (target repo-claude).
+  const installed = join(workspace, ".claude", "skills", COPIED_SKILL);
+  mkdirSync(installed, { recursive: true });
+  copyFileSync(join(hub, COPIED_SKILL, "SKILL.md"), join(installed, "SKILL.md"));
+  const orphan = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", ORPHAN_SKILL);
+  mkdirSync(orphan, { recursive: true });
+  writeFileSync(join(orphan, "SKILL.md"), skillMd(ORPHAN_SKILL, "An install with no hub source."));
+}
+
 /** The home folder the suite's git commands share; removed with the workspace. */
 let gitHome: string | null = null;
 
@@ -406,6 +440,7 @@ describe("desktop client on a Research OS folder", () => {
     skeletonFixtures(workspace);
     assetsFixtures(workspace);
     ideaFixtures(workspace);
+    skillsFixtures(workspace);
     userData = tempDir("os-client-data-");
     sessions = tempDir("os-client-sessions-");
     ({ app, page, logs } = await launch({
@@ -3274,6 +3309,406 @@ describe("desktop client on a Research OS folder", () => {
     assert.ok(canary(await consoleLog()), "a CSP violation inside the Idea view's frame is seen");
   });
 
+  /*
+   * Skills (os-ui/PLUGINS.md Part 4): the bundled plugin skills-hub's page on
+   * app://skills-hub, as the Human Owner chose it from
+   * os-ui/mockups/step2/skills.html: top C, panel 1, and today's three small
+   * faults kept (Q4). Its one toggle click is on the copy-form fixture's
+   * install in this copy's .claude/skills (skillsFixtures), checked to be
+   * inside the copy first; no test clicks any other install.
+   */
+  interface SnapInstall {
+    target: string;
+    path: string;
+    form: string;
+    disabled: boolean;
+  }
+  interface Snap {
+    store: {
+      collections: { name: string; skills: { name: string; installs?: SnapInstall[] }[] }[];
+      orphans: { name: string; installs?: SnapInstall[] }[];
+      targets: { name: string; path: string; display_path?: string; scope: string }[];
+    };
+  }
+  /** The workspace's snapshot, as the generator last wrote it: the file the page reads. */
+  const snapshot = () => JSON.parse(readFileSync(join(workspace, "os-ui", "frontend", "public", "state.json"), "utf8")) as Snap;
+  const reEscape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  /** The Skills page, opened from the left menu, and its frame once its cards (or a screen) show. */
+  async function openSkills(): Promise<{ section: Locator; sh: Frame }> {
+    await nav(page, "Skills").click();
+    const section = screen(page, "skills-hub/skills");
+    await section.waitFor();
+    const sh = await pluginFrame(page, "app://skills-hub/");
+    await sh.locator(".cards .skill, .status").first().waitFor({ timeout: 30_000 });
+    // A panel a failed test left open would cover the cards; close it, so one failure does not fail the next tests.
+    const left = sh.getByRole("dialog", { name: "Skill details" });
+    if (await left.isVisible()) await left.getByRole("button", { name: "Close", exact: true }).click();
+    return { section, sh };
+  }
+  /** A card by its skill's exact name. */
+  const skillCard = (sh: Frame, name: string) => sh.locator(".cards .skill").filter({ has: sh.locator(".nm", { hasText: new RegExp(`^${reEscape(name)}$`) }) });
+  const detailsPanel = (sh: Frame) => sh.getByRole("dialog", { name: "Skill details" });
+  /** The open panel's row of one target, by its name and shown path exactly. */
+  const installRow = (sh: Frame, target: string) => {
+    const t = snapshot().store.targets.find((x) => x.name === target)!;
+    return sh.locator(".drawer .irow").filter({ has: sh.locator(".iname", { hasText: new RegExp(`^${reEscape(target + (t.display_path ?? t.path))}$`) }) });
+  };
+  /** Opens a skill's details from the search, which narrows the cards to it. */
+  async function openSkill(sh: Frame, name: string): Promise<Locator> {
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill(name);
+    await skillCard(sh, name).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    return panel;
+  }
+  async function closeSkill(sh: Frame): Promise<void> {
+    await detailsPanel(sh).getByRole("button", { name: "Close", exact: true }).click();
+    await detailsPanel(sh).waitFor({ state: "hidden" });
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("");
+  }
+  /** The text of the frame's focused element and whether it is a card. */
+  const focused = (sh: Frame) => sh.evaluate(() => ({ text: document.activeElement?.textContent ?? "", card: document.activeElement?.classList.contains("skill") ?? false }));
+  const copiedInstall = () => join(workspace, ".claude", "skills", COPIED_SKILL);
+
+  test("Skills is Skills Hub's page on app://skills-hub: the band above today's header, and the workspace's skills as state.json has them", SLOW, async () => {
+    // One Skills item, the plugin's, after Paper wiki and before Plugins.
+    const titles = await page.getByRole("navigation", { name: "Main navigation" }).getByRole("button").evaluateAll((bs) => bs.map((b) => b.getAttribute("title")));
+    assert.deepEqual(titles.slice(0, 5), ["Home", "Projects", "Paper wiki", "Skills", "Plugins"]);
+    const { section, sh } = await openSkills();
+    assert.equal(sh.url(), "app://skills-hub/index.html");
+    assert.equal(await nav(page, "Skills").getAttribute("aria-current"), "page");
+    // The host shows the bare frame here (pages.ts OWN_TOP): no title or band of its own, the frame filling the page area.
+    assert.equal(await section.locator("h1").count(), 0);
+    const iframe = section.locator("iframe");
+    assert.equal(await iframe.count(), 1);
+    assert.equal(await iframe.getAttribute("title"), "Skills Hub");
+    assert.equal(await iframe.getAttribute("allow"), "clipboard-write");
+    assert.deepEqual(await iframe.boundingBox(), await section.boundingBox());
+    // No other frame may write the clipboard: the views' and, when opened, Paper wiki's.
+    assert.deepEqual(await page.locator("iframe").evaluateAll((fs) => fs.filter((f) => f.hasAttribute("allow")).map((f) => (f as HTMLIFrameElement).src)), ["app://skills-hub/index.html"]);
+    // Top C: mockup C's one-line band, then today's small line, title, and sentence.
+    assert.equal(await sh.locator(".band").textContent(), "Skills Hub · bundled plugin — The research skills hub and where each skill is installed; disable or enable one install.");
+    assert.equal(await sh.locator(".eyebrow").textContent(), "research-skills-hub/");
+    assert.equal(await sh.getByRole("heading", { level: 1 }).textContent(), "Skills");
+    assert.equal(
+      await sh.locator(".lede").textContent(),
+      "The research skills hub and where each skill is installed. Installing copies a command for a terminal; the one change made here is disabling or enabling a single install.",
+    );
+    // The skills of this workspace, as its state.json has them: All counts the orphans too.
+    const { store } = snapshot();
+    const total = store.collections.reduce((n, c) => n + c.skills.length, 0) + store.orphans.length;
+    assert.ok(store.collections.some((c) => c.name === SKILLS_COLLECTION), "the fixture collection is in the snapshot");
+    const bar = sh.getByRole("group", { name: "Filter by collection" });
+    assert.deepEqual(await bar.getByRole("button").allTextContents(), [`All · ${total}`, ...store.collections.map((c) => c.name), "no hub source"]);
+    assert.equal(await bar.getByRole("button", { name: `All · ${total}` }).getAttribute("aria-pressed"), "true");
+    await sh.locator(".cards .skill").nth(total - 1).waitFor();
+    assert.equal(await sh.locator(".cards .skill").count(), total);
+    assert.equal(await skillCard(sh, COPIED_SKILL).locator(".badge").textContent(), "installed · drift ⚠", "one of the two repository folders");
+    assert.equal(await skillCard(sh, ORPHAN_SKILL).locator(".badge").textContent(), "installed · no hub source ⚠");
+    await shot(page, "skills-1-top-c");
+  });
+
+  test("Skills: the search and the pills narrow the cards; nonsense shows today's words", SLOW, async () => {
+    const { sh } = await openSkills();
+    const search = sh.getByRole("searchbox", { name: "Search skills" });
+    assert.equal(await search.getAttribute("placeholder"), "Search skills...");
+    await search.fill("  E2E-COP  ");
+    assert.deepEqual(await sh.locator(".cards .skill .nm").allTextContents(), [COPIED_SKILL]);
+    await search.fill("zzz-no-such-skill");
+    await sh.getByText("No matching skills.", { exact: true }).waitFor();
+    await search.fill("");
+    const bar = sh.getByRole("group", { name: "Filter by collection" });
+    await bar.getByRole("button", { name: SKILLS_COLLECTION, exact: true }).click();
+    assert.deepEqual(await sh.locator(".cards .skill .nm").allTextContents(), [COPIED_SKILL, MARKUP_SKILL]);
+    assert.equal(await bar.getByRole("button", { name: SKILLS_COLLECTION, exact: true }).getAttribute("aria-pressed"), "true");
+    await bar.getByRole("button", { name: /^All · / }).click();
+  });
+
+  test("Skills: a card's details slide in over the Skills area only; the left menu stays bright and clickable, and the panel is still open on return", SLOW, async () => {
+    const { section, sh } = await openSkills();
+    const name = "filetree-simple";
+    const collection = snapshot().store.collections.find((c) => c.skills.some((s) => s.name === name))!.name;
+    const panel = await openSkill(sh, name);
+    assert.equal((await focused(sh)).text, "Close", "the focus moves to Close");
+    assert.equal(await panel.locator(".d-src").textContent(), `Research-skills-hub / ${collection}`);
+    assert.equal(await panel.locator(".cmd").textContent(), `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${name} --collection ${collection}`);
+    // Panel 1: the panel and its shading cover the frame, which is the Skills area; the left menu is beside it.
+    const area = (await section.boundingBox())!;
+    // The panel slides in over 220 ms: measured once it has arrived.
+    await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
+    const drawer = (await sh.locator(".drawer").boundingBox())!;
+    const scrim = (await sh.locator(".scrim").boundingBox())!;
+    assert.deepEqual(scrim, area);
+    assert.equal(drawer.width, 420);
+    assert.ok(Math.abs(drawer.x + drawer.width - (area.x + area.width)) < 1 && Math.abs(drawer.y - area.y) < 1 && Math.abs(drawer.height - area.height) < 1, JSON.stringify({ drawer, area }));
+    const menu = (await page.getByRole("navigation", { name: "Main navigation" }).boundingBox())!;
+    assert.ok(menu.x + menu.width <= area.x, JSON.stringify({ menu, area }));
+    // The menu works with the panel open: Home, then back to Skills, where the panel is as it was.
+    await nav(page, "Home").click();
+    await screen(page, "home").getByRole("heading", { name: "Home", exact: true }).waitFor();
+    await nav(page, "Skills").click();
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    assert.equal(await sh.locator(".drawer").getAttribute("aria-hidden"), "false");
+    // Close gives the focus back to the card.
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
+    await panel.waitFor({ state: "hidden" });
+    assert.deepEqual(await focused(sh), { text: (await skillCard(sh, name).textContent())!, card: true });
+    // Escape closes it too, and, as today, leaves the focus off the card (F3 of Part 4 §1.7).
+    await skillCard(sh, name).click();
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    await page.keyboard.press("Escape");
+    await panel.waitFor({ state: "hidden" });
+    assert.equal((await focused(sh)).card, false);
+    // A click on the shading closes it and gives the focus back.
+    await skillCard(sh, name).click();
+    await panel.getByRole("heading", { name, exact: true }).waitFor();
+    await sh.locator(".scrim").click({ position: { x: 20, y: 20 } });
+    await panel.waitFor({ state: "hidden" });
+    assert.equal((await focused(sh)).card, true);
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill("");
+  });
+
+  test("Skills: disable then enable the copy-form fixture's one install through app://skills-hub's handler; the files change, and the page shows it as today's did", SLOW, async () => {
+    // The one install this suite clicks: repo-claude, copy form, in this copy's own .claude/skills.
+    const { store } = snapshot();
+    const repoClaude = store.targets.find((t) => t.name === "repo-claude")!;
+    assert.equal(repoClaude.path, join(workspace, ".claude", "skills"));
+    const install = store.collections.find((c) => c.name === SKILLS_COLLECTION)!.skills.find((s) => s.name === COPIED_SKILL)!.installs!;
+    assert.deepEqual(install.map((i) => [i.target, i.path, i.form, i.disabled]), [["repo-claude", copiedInstall(), "copy", false]]);
+    assert.ok(copiedInstall().startsWith(workspace + (process.platform === "win32" ? "\\" : "/")), "inside the copy");
+    // The global targets resolve in the suite's throwaway home, not the real one (isolatedHome); none is clicked.
+    for (const t of store.targets.filter((x) => x.scope === "global")) assert.ok(!t.path.startsWith(homedir()), `${t.name}: ${t.path}`);
+    const { sh } = await openSkills();
+    const panel = await openSkill(sh, COPIED_SKILL);
+    assert.equal(await panel.locator(".inst-head").textContent(), `copy → hub1 of ${store.targets.length} installed`);
+    const row = installRow(sh, "repo-claude");
+    assert.equal(await row.getByRole("button").getAttribute("aria-pressed"), "true");
+    await row.getByRole("button", { name: "disable", exact: true }).click();
+    await row.getByRole("button", { name: "working...", exact: true }).waitFor();
+    assert.equal(await row.getByRole("button").isDisabled(), true);
+    // Done: the copy's SKILL.md is renamed, the snapshot was regenerated first, and the open panel keeps its word (F1).
+    await row.locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false, (await sh.locator(".drawer .ierr").textContent()) ?? "");
+    assert.ok(existsSync(join(copiedInstall(), "SKILL.md.disabled")) && !existsSync(join(copiedInstall(), "SKILL.md")), "disabled on disk");
+    assert.equal(snapshot().store.collections.find((c) => c.name === SKILLS_COLLECTION)!.skills.find((s) => s.name === COPIED_SKILL)!.installs![0]!.disabled, true);
+    assert.equal(await row.getByRole("button").textContent(), "disable", "the open panel still says disable, as today (F1)");
+    // Closed and opened again, it says enable; the card's focus came back after the page read the snapshot again.
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
+    await panel.waitFor({ state: "hidden" });
+    assert.equal((await focused(sh)).card, true);
+    await skillCard(sh, COPIED_SKILL).click();
+    await row.getByRole("button", { name: "enable", exact: true }).waitFor();
+    assert.equal(await row.getByRole("button").getAttribute("aria-pressed"), "false");
+    await row.getByRole("button", { name: "enable", exact: true }).click();
+    await row.getByRole("button", { name: "working...", exact: true }).waitFor();
+    await row.locator("button:not([disabled])").waitFor({ timeout: 150_000 });
+    assert.ok(existsSync(join(copiedInstall(), "SKILL.md")) && !existsSync(join(copiedInstall(), "SKILL.md.disabled")), "enabled on disk");
+    assert.equal(await row.getByRole("button").textContent(), "enable", "F1 again");
+    await closeSkill(sh);
+    await openSkill(sh, COPIED_SKILL);
+    await installRow(sh, "repo-claude").getByRole("button", { name: "disable", exact: true }).waitFor();
+    assert.equal(await sh.locator(".drawer .ierr").isVisible(), false);
+    await closeSkill(sh);
+  });
+
+  test("Skills: an orphan's toggle is refused with today's words, and nothing changes on disk (F2)", SLOW, async () => {
+    const orphan = snapshot().store.orphans.find((o) => o.name === ORPHAN_SKILL)!;
+    const target = `project-claude:${TEMPLATE_PROJECT}`;
+    const file = join(workspace, "projects-folder", TEMPLATE_PROJECT, ".claude", "skills", ORPHAN_SKILL, "SKILL.md");
+    assert.deepEqual(orphan.installs!.map((i) => [i.target, i.path]), [[target, dirname(file)]]);
+    const before = readFileSync(file, "utf8");
+    const { sh } = await openSkills();
+    await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: "no hub source", exact: true }).click();
+    await skillCard(sh, ORPHAN_SKILL).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name: ORPHAN_SKILL, exact: true }).waitFor();
+    assert.equal(await panel.locator(".d-src").textContent(), "Research-skills-hub / no hub source");
+    assert.equal(await panel.getByRole("button", { name: "Copy status command" }).count(), 1);
+    await installRow(sh, target).getByRole("button", { name: "disable", exact: true }).click();
+    await sh.locator(".drawer .ierr").filter({ hasText: "bad collection name: no hub source" }).waitFor({ timeout: 30_000 });
+    await installRow(sh, target).getByRole("button", { name: "disable", exact: true }).waitFor();
+    assert.equal(readFileSync(file, "utf8"), before);
+    assert.ok(!existsSync(join(dirname(file), "SKILL.md.disabled")));
+    await closeSkill(sh);
+    await sh.getByRole("group", { name: "Filter by collection" }).getByRole("button", { name: /^All · / }).click();
+  });
+
+  test("Skills: markup in a skill's description is text on the card and in the panel, and runs nothing", SLOW, async () => {
+    const { sh } = await openSkills();
+    await sh.getByRole("searchbox", { name: "Search skills" }).fill(MARKUP_SKILL);
+    assert.equal(await skillCard(sh, MARKUP_SKILL).locator(".desc").textContent(), MARKUP_TEXT);
+    await skillCard(sh, MARKUP_SKILL).click();
+    const panel = detailsPanel(sh);
+    await panel.getByRole("heading", { name: MARKUP_SKILL, exact: true }).waitFor();
+    assert.equal(await panel.locator(".d-desc").textContent(), MARKUP_TEXT);
+    assert.equal(await sh.locator("img, script:not([src])").count(), 0);
+    assert.deepEqual([await page.evaluate(() => (window as { __pwned?: unknown }).__pwned), await sh.evaluate(() => (window as { __pwned?: unknown }).__pwned)], [undefined, undefined]);
+    await closeSkill(sh);
+  });
+
+  test("Skills: the copy buttons put the command on the clipboard from inside the frame", SLOW, async () => {
+    const saved = await app.evaluate(({ clipboard }) => clipboard.readText());
+    try {
+      const { sh } = await openSkills();
+      const panel = await openSkill(sh, COPIED_SKILL);
+      await app.evaluate(({ clipboard }) => clipboard.writeText("before"));
+      await panel.getByRole("button", { name: "Copy install command" }).click();
+      await panel.getByRole("button", { name: "Copied ✓" }).waitFor();
+      assert.equal(await app.evaluate(({ clipboard }) => clipboard.readText()), `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${COPIED_SKILL} --collection ${SKILLS_COLLECTION}`);
+      // After 1.6 s the button says its own word again.
+      await panel.getByRole("button", { name: "Copy install command" }).waitFor();
+      // Where nothing is installed, "install ⧉" copies the command for that target.
+      const row = installRow(sh, "repo-codex");
+      await row.getByRole("button", { name: "install ⧉" }).click();
+      await row.getByRole("button", { name: "copied ✓" }).waitFor();
+      assert.equal(await row.getByRole("button").getAttribute("title"), "Copy the install command for this target");
+      assert.equal(
+        await app.evaluate(({ clipboard }) => clipboard.readText()),
+        `python research-skills-hub/open-paper-skills/research-skill-installer/scripts/install_research_skill.py install ${COPIED_SKILL} --collection ${SKILLS_COLLECTION} --target repo-codex`,
+      );
+      await closeSkill(sh);
+    } finally {
+      await app.evaluate(({ clipboard }, text) => clipboard.writeText(text), saved);
+    }
+  });
+
+  test("Skills at 1440 × 900 and 1000 × 720: the panel is 420 px inside the frame, open or with the menu collapsed", SLOW, async () => {
+    const size = await windowSize({ width: 1440, height: 900 });
+    try {
+      for (const [w, h] of [[1440, 900], [1000, 720]] as const) {
+        await windowSize({ width: w, height: h });
+        const { section, sh } = await openSkills();
+        await page.waitForTimeout(300);
+        await shot(page, `skills-${w}-top-c`);
+        const panel = await openSkill(sh, "filetree-simple");
+        await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
+        const area = (await section.boundingBox())!;
+        const drawer = (await sh.locator(".drawer").boundingBox())!;
+        assert.equal(drawer.width, 420, `${w}: the panel is 420 px`);
+        assert.ok(drawer.x >= area.x && Math.abs(drawer.x + drawer.width - (area.x + area.width)) < 1, `${w}: inside the frame`);
+        await shot(page, `skills-${w}-panel-open`);
+        await page.getByRole("button", { name: "Collapse sidebar" }).click();
+        await page.waitForTimeout(400);
+        assert.equal(await panel.isVisible(), true);
+        assert.equal((await sh.locator(".drawer").boundingBox())!.width, 420);
+        await shot(page, `skills-${w}-panel-open-menu-collapsed`);
+        await page.getByRole("button", { name: "Expand sidebar" }).click();
+        await closeSkill(sh);
+        await nav(page, "Plugins").click();
+        await screen(page, "plugins").getByRole("heading", { name: "Plugins", exact: true }).waitFor();
+        await shot(page, `skills-${w}-plugins-page`);
+      }
+    } finally {
+      await windowSize(size);
+    }
+  });
+
+  test("the Plugins page lists Skills Hub as enabled, with its page, and nothing as not yet available", SLOW, async () => {
+    await nav(page, "Plugins").click();
+    const plugins = screen(page, "plugins");
+    await plugins.getByRole("heading", { name: "Bundled · enabled" }).waitFor();
+    const card = plugins.locator("article").filter({ has: page.getByRole("heading", { name: /^Skills Hub/ }) });
+    assert.equal(await card.count(), 1);
+    assert.equal(await card.locator(".pill").textContent(), "Enabled");
+    assert.deepEqual(await card.locator(".rounded-full").allTextContents(), ["Page · Skills"]);
+    assert.ok((await card.textContent())!.includes("The research skills hub and where each skill is installed; disable or enable one install."));
+    assert.equal(await plugins.getByRole("heading", { name: "Bundled · not yet available" }).count(), 0);
+    assert.equal(await plugins.getByText("The enabled list is read from the plugins themselves.", { exact: true }).count(), 1);
+  });
+
+  test("Skills Hub's frame is sealed off: no bridge, the snapshot only, its own toggle only; another plugin's frame cannot reach it", SLOW, async () => {
+    const { sh } = await openSkills();
+    const status = (url: string, init?: RequestInit) => sh.evaluate(async ([u, i]) => (await fetch(u, i)).status, [url, init] as const);
+    const rel = (p: string) => `./_os/files?path=${encodeURIComponent(p)}`;
+    assert.deepEqual(
+      {
+        snapshot: await status(rel("os-ui/frontend/public/state.json")),
+        agents: await status(rel("AGENTS.md")),
+        index: await status(rel("os-ui/frontend/index.html")),
+        listing: await status(`./_os/list?path=${encodeURIComponent("os-ui/frontend/public")}`),
+        plain: await status("/api/skills-hub/toggle", { method: "POST", headers: { "Content-Type": "text/plain" }, body: "{}" }),
+        get: await status("/api/skills-hub/toggle"),
+        trunkToggle: await status("/api/skill/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }),
+        chat: await status("/api/chat/sessions"),
+        wikiStatus: await status("/api/paper-wiki/status"),
+        codeViewGit: await status(`/api/code-view/git/log?project=${PROJECT}`),
+      },
+      { snapshot: 200, agents: 404, index: 404, listing: 404, plain: 415, get: 405, trunkToggle: 404, chat: 404, wikiStatus: 404, codeViewGit: 404 },
+    );
+    const probe = await sh.evaluate(async () => {
+      const outcome = async (fn: () => Promise<unknown>) => {
+        try {
+          return String(await fn());
+        } catch (error) {
+          return `blocked: ${(error as Error).name}`;
+        }
+      };
+      return {
+        own: typeof (window as { osDesktop?: unknown }).osDesktop,
+        parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
+        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+      };
+    });
+    assert.equal(probe.own, "undefined");
+    assert.match(probe.parent, /^blocked: SecurityError/);
+    assert.match(probe.appApi, /^blocked/);
+    // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline').
+    const before = logs.length;
+    const inline = await sh.evaluate(() => {
+      const script = document.createElement("script");
+      script.textContent = "window.__inline = 1";
+      document.body.append(script);
+      script.remove();
+      return (window as { __inline?: unknown }).__inline;
+    });
+    assert.equal(inline, undefined, "an inline script ran in Skills Hub's page");
+    await page.waitForTimeout(300);
+    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
+    await app.evaluate(() => {
+      const seen = (globalThis as { __console?: string[] }).__console!;
+      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/skills-hub\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
+    });
+    await sh.evaluate(() => {
+      const img = new Image();
+      img.src = "https://csp-canary.invalid/skills.png";
+      document.body.append(img);
+      img.remove();
+    });
+    const canary = (lines: string[]) => lines.some((l) => /^frame app:\/\/skills-hub\/.*csp-canary\.invalid.*Content Security Policy/.test(l));
+    for (let i = 0; i < 50 && !canary(await consoleLog()); i++) await page.waitForTimeout(100);
+    assert.ok(canary(await consoleLog()), "a CSP violation inside Skills Hub's frame is seen");
+    // From Paper wiki's frame, a no-cors POST to the toggle (all a cross-origin page could send) changes nothing.
+    const skillFile = join(copiedInstall(), "SKILL.md");
+    const disk = readFileSync(skillFile, "utf8");
+    await nav(page, "Paper wiki").click();
+    const wiki = await wikiFrame(page);
+    const sent = await wiki.evaluate(async () => {
+      try {
+        const res = await fetch("app://skills-hub/api/skills-hub/toggle", { method: "POST", mode: "no-cors", body: JSON.stringify({ skill: "e2e-copied", collection: "e2e-copy", target: "repo-claude", enable: false }) });
+        return `answered ${res.type}`;
+      } catch (error) {
+        return `blocked: ${(error as Error).name}`;
+      }
+    });
+    assert.match(sent, /^blocked|^answered opaque/);
+    await page.waitForTimeout(1500);
+    assert.equal(readFileSync(skillFile, "utf8"), disk);
+    assert.ok(!existsSync(join(copiedInstall(), "SKILL.md.disabled")));
+  });
+
+  test("a layout saved on the trunk's old Skills page reopens on Skills Hub's page", SLOW, async () => {
+    await page.evaluate(() => {
+      localStorage.setItem("osui.layout.v1", JSON.stringify({ screen: "skills" }));
+      location.reload();
+    });
+    await page.getByText("Desktop client", { exact: true }).waitFor({ timeout: 60_000 });
+    await screen(page, "skills-hub/skills").waitFor();
+    assert.equal(await nav(page, "Skills").getAttribute("aria-current"), "page");
+    const sh = await pluginFrame(page, "app://skills-hub/");
+    await sh.locator(".cards .skill").first().waitFor({ timeout: 30_000 });
+    assert.equal(await sh.getByRole("heading", { level: 1 }).textContent(), "Skills");
+  });
+
   test("the app's endpoints refuse forms, a missing token, and traversal", async () => {
     const results = await page.evaluate(async () => {
       const status = async (url: string, init?: RequestInit) => (await fetch(url, init)).status;
@@ -3368,6 +3803,7 @@ describe("desktop client on a Research OS folder", () => {
         !l.includes("research-os/api") &&
         !l.includes("paper-wiki/api") &&
         !l.includes("code-view/api") &&
+        !l.includes("skills-hub/api") &&
         !l.includes("csp-canary.invalid"),
     );
     assert.deepEqual(violations, []);

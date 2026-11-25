@@ -40,6 +40,8 @@ const ICONS: ReadonlyMap<string, IconName> = new Map<string, IconName>([
   ["skeleton-view", "quote"],
   ["assets-view", "folder"],
   ["idea-view", "spark"],
+  // The Skills page's icon since it was the app's own page.
+  ["skills-hub", "spark"],
 ]);
 
 export function pluginIcon(id: string): IconName {
