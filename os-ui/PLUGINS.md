@@ -234,6 +234,38 @@ Status on 2026-11-24:
     again for every bad link, listed or not; it is now formatted once a row, and a
     test counts the numbers formatted for 50,000 bad links, which was 50,000.)
 
+    **Changed on 2026-11-25, in a pull request of its own:** `splitCells` in
+    [md-kit.ts](frontend/plugins/md-kit.ts) now takes each cell as one slice of the
+    line, and a cell holding `\|` keeps the runs between its escapes and joins them
+    with "|" once. Its cells are the same for every input: a test in
+    [md-kit.test.ts](frontend/plugins/md-kit.test.ts) keeps the old code and compares
+    the two over 4,000 seeded lines and the edge cases, at six cuts. Measured on an
+    M1 Pro (Node 22.23.1, best of five), `parse` of a one-row table whose row is
+    one huge cell took 1.4, 6.1, 16.5, and 38.3 ms at 128 KiB, 256 KiB, 512 KiB, and
+    1 MiB before (12 times from 128 to 512 KiB) and takes 0.8, 1.6, 3.1, and 6.2 ms
+    now (4 times); `splitCells` alone on that cell, 1.0 to 16.4 ms at 128 and 512
+    KiB before, 0.45 to 1.8 now. Each shape measured (one huge cell, cells of 50
+    characters, `|` only, `x|`, `\|` again and again, `ab\|`) now grows about 2
+    times a doubling from 64 KiB to 1 MiB, with or without
+    `--max-semi-space-size=64`; before, the huge cell, the 50-character cells, and
+    both shapes of escapes grew up to 5.3 times a doubling past 128 KiB (`parse` of
+    the huge cell 4.4, 2.7, and 2.3 times from 128 KiB on). Some shapes are slower
+    than before: cells of escaped pipes (`\|` again and again, `ab\|`) up to about
+    twice below 512 KiB (`\|` alone, 0.53 ms before and 1.08 now at 128 KiB; at
+    1 MiB, 15.3 before and 9.1 now), and rows of empty or one-character cells (`|`
+    only, `x|`) about 1.2 times at every size, one pass either way.
+
+    The Idea view's timed cases keep their sizes. Run alone here, worst of three,
+    the huge statement went from 6.1 times and 11.0 ms at 4n to 4.2 times and 3.2
+    ms, and the files list from 5.2 times and 14.5 ms to 4.8 times and 10.1 ms; the
+    other five were under 9 ms at 4n before and after. The huge statement's mistake,
+    put back into the new loop, still fails it: 18.1 times, 3.5 s. So the departure
+    below stands: no test times 512 KiB of hostile input. The one new test at that
+    size reads a 1 MiB cell through `splitCells` alone, not `parse` or
+    `buildGraph`, in a worker whose heap is capped at 20 MiB: the old code held more
+    than 40 MiB for it and ran out, and the new code gets through at 10 MiB. It
+    bounds the memory one call holds, not its time.
+
     Each of the nine cases, seven in `logic.test.ts` and two in `layout.test.ts`,
     is now sized by one rule, with the case run alone on the machine the view was
     built on (an M1 Pro): 1. the code as it is takes at most about 17 ms at
@@ -285,8 +317,9 @@ Status on 2026-11-24:
     than 1 MiB", with the skeleton's check moved from `main.ts` into `logic.ts`; 550
     problems, 500 listed, "and 50 more problems are not listed"; every status of
     every kind against "Still open"), and each of those mutants fails a test.
-    md-kit's own `splitCells` builds each cell a character at a time: that is the
-    collector's work in the growth cases above.
+    md-kit's own `splitCells` built each cell a character at a time: that was the
+    collector's work in the growth cases above, until the change of 2026-11-25
+    above.
 
     A tenth case, the layout alone with the caps lifted (6,000 then 24,000 nodes),
     was removed on 2026-11-25, a departure too: the design's cost claims for the
