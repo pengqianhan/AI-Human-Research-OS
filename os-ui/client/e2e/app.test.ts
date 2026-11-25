@@ -3987,7 +3987,7 @@ describe("desktop client on a Research OS folder", () => {
       BrowserWindow.getAllWindows()[0]!.webContents.on("will-frame-navigate", listener);
     });
     try {
-      // The reviewer's script, run in the frame as a note's own code would run there.
+      // The reviewer's script, run in the frame by evaluation from the suite.
       await (await wikiFrame(page)).evaluate(() => {
         location.href = "app://skills-hub/index.html";
       });
