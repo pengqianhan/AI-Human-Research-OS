@@ -7,6 +7,7 @@ Reproduce OpenResearch's default nanochat demo at a CPU-sized scale: an end-to-e
 * [AGENTS.md](AGENTS.md) - Workflow, integrity, and project-specific rules for agents working here.
 * [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - Durable project state, decisions, progress, and next action.
 * [paper_skeleton.md](paper_skeleton.md) - Claims, sources, and figures of the short paper, each traced to its evidence.
+* [idea_graph.md](idea_graph.md) - Questions, experiments, results, and claims with the links between them, as the desktop app's Idea view draws them.
 * [Code/README.md](Code/README.md) - One-command CPU run, expected results, changes from the demo, and limitations.
 * [Code/README_zh.md](Code/README_zh.md) - Chinese version of the code README.
 

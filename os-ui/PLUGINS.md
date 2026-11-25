@@ -6,17 +6,61 @@ before implementation; Part 3, step 2's Idea, Skeleton, and Assets views, by ano
 design agent on 2026-11-23. Each part is its author's report, kept as written, so "I"
 is that agent and line numbers refer to the code as it was that day.
 
-Status on 2026-11-24:
+Status on 2026-11-25:
 
 - **Step 2's three views are designed** (Part 3, against commit `5874a32`): the
   Skeleton, Assets, and Idea views as the Human Owner chose them in
   [mockups/step2/views.html](mockups/step2/views.html), one pull request each in that
   order, with no new dependency and no change to contract 1.0. **2.1, the Skeleton
   view, is built** on branch `step2-skeleton-view`, **2.2, the Assets view**, on
-  branch `step2-assets-view`, and **2.3, the Idea view**, on branch
-  `step2-idea-view` (all below). 2.4, `nanochat_cpu`'s `idea_graph.md` and the
-  template's, is not.
+  branch `step2-assets-view`, **2.3, the Idea view**, on branch
+  `step2-idea-view`, and **2.4**, `nanochat_cpu`'s `idea_graph.md` and the
+  template's, on branch `step2-idea-graph-files` (all below).
   The Human Owner answered Part 3 §7 on 2026-11-23 (§7's head says how).
+
+- **2.4, the idea files** (§6 "2.4"), on branch `step2-idea-graph-files`, which
+  starts from `step2-idea-view`. No code changed.
+  - [projects-folder/nanochat_cpu/idea_graph.md](../projects-folder/nanochat_cpu/idea_graph.md)
+    is the mockup's graph (the fixture `mockup.idea_graph.md`) checked row by row
+    against the project's files as they were on 2026-11-25. Each node's Source names
+    the file and line its statement, status, and links rest on. The Idea view's own
+    `parse` and `buildGraph`, fed the file and the live `paper_skeleton.md`, give 20
+    nodes, 9 links, no problem, and "5 of 5 verified in paper_skeleton.md"; the
+    running app, at 1440 × 900, draws the same with 15 lines. It differs from the
+    fixture only in Points to and Source. E3 and E4 also name
+    `Code/results/training_metrics.csv`, whose rows of the runs `probe_lr2x` and
+    `probe_vocab2048` are theirs. The Source cells are longer, naming the basis of
+    each link and status. E2's says the command was run more than once
+    (`Code/README.md:126–129`: two fresh runs, the README's timings from the first,
+    `summary.json`'s from the last, a re-run with the data cached; the files do not
+    say how many runs there were), which R2's two sources and R4 rest on. R1's
+    gives the reason for `motivates E2`: `Code/README.md:91` gives the spike as why
+    the recipe's SFT uses `--init-lr-frac=0.1`, which E2 runs (one step of
+    inference; the Human Owner chose on 2026-11-25 to keep the link). The mockup's two
+    inferred links (E1 tests Q1, E5 tests Q4) stay out, as in the fixture. No
+    hypothesis node, and every run says `commit: none` (Decisions, "Idea file
+    format").
+  - [projects-folder/templates/ai_research_template/idea_graph.md](../projects-folder/templates/ai_research_template/idea_graph.md)
+    states §5.1's rules in a short list over the empty table, which is the file's
+    last block so rows added at its end stay in the table, and the template's
+    `AGENTS.md` has a line under Workflow. The list says only that links and
+    `from:` form no cycle, not which way each counts, so reversing `FIRST`
+    needs no change there. `required_files` is
+    unchanged: the project check passes without the file (§7, I-4).
+  - **What a new project shows.** The template's file is a table with no row, so a
+    project made from it draws "0 nodes · 0 links", "No node is drawn.", "Claims: no
+    claim node is drawn", and the legend alone, every word and kind "· none"; not
+    the empty state (checked in the running app on a copy of the template). The
+    empty state remains for a project with no `idea_graph.md`; none in the
+    repository is such a project now.
+  - The fixtures are unchanged and no test reads the project's file: the
+    end-to-end suite deletes it in its copy before the empty-state check, as
+    before. Its comment, [frontend/plugins/fixtures/README.md](frontend/plugins/fixtures/README.md),
+    and the checklist line in [client/README.md](client/README.md) now say so.
+  - `nanochat_cpu`'s `AGENTS.md` has the template's new line too, and its sync
+    date is 2026-11-25: the line was the template's only change since 2026-09-29.
+    Both `index.md` files list the new file. Not verified: Windows and Linux, and
+    the Human Owner's checklist line.
 
 - **2.3, the Idea view**, is the bundled plugin
   [frontend/plugins/idea-view/](frontend/plugins/idea-view/) (manifest as §6 "2.3",
@@ -32,7 +76,7 @@ Status on 2026-11-24:
   should-fix problems; the fix round, on the same branch, fixed eight of them and
   records the other two as limits (below), and built two rule changes decided
   since: `files: none` (the Human Owner) and the cycle rule (a default the
-  directing agent took, not yet confirmed). In short, what the review found and
+  directing agent took, confirmed by the Human Owner on 2026-11-25). In short, what the review found and
   what changed, each detailed in the points marked "after the review":
   - must-fix 1 and should-fix 9, lines under boxes they do not join and words on
     the wrong node or each other: lanes and slots ("Lines and their words");
@@ -308,6 +352,19 @@ Status on 2026-11-24:
     [logic.test.ts](frontend/plugins/idea-view/site/logic.test.ts) count the caps,
     each failing with its `slice` removed, and a third pins their values; no
     end-to-end test goes past them.
+
+    The rule's "a day twice as slow" understates macos-x64. Over the two runs
+    of the pull request's CI at the final sizes, the slowest of the nine cases
+    took 103.8 and then 165.5 ms at 4n (three times under the floor on the
+    worse run), and single cases moved much more than twice, in both directions:
+    the huge statement from 21.8 to 165.5 ms, the bad items from 103.8 to 26.3.
+    Cases on `main` that this change does not touch moved as much between two
+    earlier runs: the Assets view's "Used in, '](' again and again" from 402.5 to
+    43.4 ms, and md-kit's "inline, '[' then one ']'" from 227.7 to 16.7. Why is
+    not measured. The case that has come nearest the floor is that Assets one,
+    so a macos-x64 failure of a growth case with a time just over 500 ms is
+    first to be read as the runner's slow day, by its time on the run before,
+    and only then as a change in cost.
   - **Points §5.1 and §5.2 leave open, decided and tested:**
     - two rows with one ID ignoring case: the later is left out, naming the earlier's
       line and spelling; a row's ID counts for this even when the row is left out
@@ -344,8 +401,8 @@ Status on 2026-11-24:
     - a cycle is found with each link counted from what must exist first to what
       follows from it (§5.1 "A DAG": `A motivates B` is A → B, `E tests X` X → E,
       `R supports` or `refutes X` X → R, `from: E` E → R), a default the
-      directing agent took on 2026-11-24 and told the Human Owner, not yet
-      confirmed. A result that motivates its own experiment closes a cycle; a
+      directing agent took on 2026-11-24, confirmed by the Human Owner on
+      2026-11-25. A result that motivates its own experiment closes a cycle; a
       hypothesis that motivates the experiment testing it no longer does (the first
       build counted each link from its row to its target and listed it). The
       problem names the nodes and one loop, each step with the link that makes it.
@@ -2288,9 +2345,9 @@ files as the mockup drew them:
   result R with `from: E` is E → R. So "H1 motivates E1; E1 tests H1" is no cycle,
   and "R1 from E1; R1 motivates E1" is one. The problem names the cycle's nodes and
   one loop step by step ("E1 before R1 (R1 from E1) and R1 before E1 (R1 motivates
-  E1)"), so it can be checked against the file. *This rule is a default the
-  directing agent took on 2026-11-24 and told the Human Owner; it is not yet
-  confirmed.* It is one constant, `FIRST` in
+  E1)"), so it can be checked against the file. This rule is a default the
+  directing agent took on 2026-11-24; the Human Owner confirmed it on
+  2026-11-25. It is one constant, `FIRST` in
   [frontend/plugins/idea-view/site/logic.ts](frontend/plugins/idea-view/site/logic.ts); setting `tests`, `supports`,
   and `refutes` to `"row"` there reverses it to the first build's rule (each link
   from its row to its target).

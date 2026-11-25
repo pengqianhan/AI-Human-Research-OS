@@ -325,12 +325,13 @@ function assetsFixtures(workspace: string): void {
 }
 
 /**
- * The Idea view's fixtures (os-ui/frontend/plugins/fixtures/README.md): the copy
- * of nanochat_cpu has no idea_graph.md, so the view first shows its empty state
- * there (its own file is step 2.4), and the tests then write the mockup's graph
- * into the copy. Malformed, hostile, and changing files go to a project of their
- * own, made from the template with the frozen nanochat_cpu skeleton, so they never
- * change what the first checks.
+ * The Idea view's fixtures (os-ui/frontend/plugins/fixtures/README.md): the
+ * project's own idea_graph.md is deleted in the copy of nanochat_cpu, so the view
+ * first shows its empty state there, and the tests then write the mockup's graph
+ * into the copy; what they pin is the fixture's, never the live file's.
+ * Malformed, hostile, and changing files go to a project of their own, made from
+ * the template (its empty idea_graph.md overwritten) with the frozen nanochat_cpu
+ * skeleton, so they never change what the first checks.
  */
 const IDEA_FIXTURES = join(SKELETON_FIXTURES, "idea_graph");
 const IDEA_PROJECT = "idea_e2e";
