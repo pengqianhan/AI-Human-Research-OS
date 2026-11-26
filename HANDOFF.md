@@ -307,8 +307,8 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       step 3 is built here first and imported after; the app is renamed
       "SuperResearch OS". That reverses the design's order (§7) and its
       classes R and Dv (§4). The kit's manifest is rewritten to that rule, and
-      the export has two modes: the real import (415 files, no workspace at
-      the root) and a rehearsal that adds a placeholder workspace (439 files).
+      the export has two modes: the real import (416 files, no workspace at
+      the root) and a rehearsal that adds a placeholder workspace (440 files).
       **The import's condition** is the command sequence in
       [os-build/import/README.md](os-build/import/README.md), run on the real
       import. On 2026-11-27 it stops at the product's `verify.sh`: its

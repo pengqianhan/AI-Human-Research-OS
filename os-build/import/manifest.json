@@ -1,7 +1,7 @@
 {
   "format": 2,
   "about": "What the product repository, SuperResearch-OS, takes from one commit of this repository, by the rule in HANDOFF.md Decisions, row 'Product repository: contents and timing': only what a person who clones it alone needs to build, test, and run the app and to understand its architecture. Every tracked file is in exactly one class. 'named' gives M, B, S, R, or Dv; W is every tracked file no entry names, so no workspace path is listed here. Prefix entries end with '/'. 'count' pins the number of tracked files an entry matches at derived_from's commit; a different count fails the check, so a file added under a prefix is classed again by hand, not shipped or kept silently. A null count is not pinned.",
-  "derived_from": {"commit": "015278209eb227d1dffc83324752cdbb035de454", "tracked_files": 1913},
+  "derived_from": {"commit": "015278209eb227d1dffc83324752cdbb035de454", "tracked_files": 1914},
   "classes": {
     "M": "Product: goes as a byte-for-byte copy.",
     "B": "Product and workspace: goes as a copy; every workspace, this one included, keeps one too.",
