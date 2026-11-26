@@ -387,7 +387,7 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
 /* ---------- S3: the File menu and S2 as a dialog ---------- */
 #overlay{display:contents}/* its children are placed over the app, not in the app's grid */
 .ovl-catch{position:absolute;inset:0;z-index:28;background:rgba(30,25,15,.06)}
-.menubar{position:absolute;left:0;right:0;top:0;height:26px;z-index:29;display:flex;align-items:center;gap:2px;padding:0 10px;background:rgba(238,236,233,.97);box-shadow:0 1px 0 rgba(0,0,0,.12);font:13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d1d1f}
+.menubar{pointer-events:none;/* drawn only: a click falls through and closes the menu */position:absolute;left:0;right:0;top:0;height:26px;z-index:29;display:flex;align-items:center;gap:2px;padding:0 10px;background:rgba(238,236,233,.97);box-shadow:0 1px 0 rgba(0,0,0,.12);font:13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d1d1f}
 .menubar span{padding:5px 9px;border-radius:5px}
 .menubar span.app-n{font-weight:700}
 .menubar span.on{background:rgba(0,0,0,.12)}
@@ -477,7 +477,7 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         <li>The striped strip is not part of the app. <b>Path</b> walks §2's tester path in order; on each app screen the obvious button also takes you to the next one. <b>Other places</b> opens S3 (the File menu), S4 (the Settings rows), and S6 (Home with no projects; also reached by unticking the example on S2).</li>
         <li>The strip's second row shows the alternatives for the screen you are on, labelled A and B, with the recommended one marked. <b>States</b> switches one failure state at a time; a line under the strip then names it and the screens it changes. On a conversation, the first row also picks which S5 line values the project run shows (every value §6 gives) and whether the run is done or still running.</li>
         <li>Choices are kept in the address after <code>#</code>, so a link reopens the same view.</li>
-        <li>Conversations are samples, not from a real session. Hashes are made up: <code>e81c4f7</code> stands for the example's one commit, <code>5a2d9e3</code> for a commit an agent makes. Nothing reads or writes Git, and no message is sent.</li>
+        <li>Conversations are samples, not from a real session. Hashes are made up: <code>e81c4f7</code> stands for the example's one commit, <code>5a2d9e3</code> for a commit an agent makes. The tiles' versions and paths, the model id, the login text, the session ids, and the turn durations are illustrative too. Nothing reads or writes Git, and no message is sent.</li>
       </ul>
 
       <h3>What each screen is drawn from</h3>
@@ -487,7 +487,7 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         <li><b>S3 File menu</b>: §6 S3 over today's File menu (<code>menu.ts:54-59</code>), drawn as the macOS menu bar.</li>
         <li><b>S4 Settings rows</b>: §6 S4 inside today's Settings page (<code>SystemPage.tsx</code>) and prerequisite tiles (<code>DesktopStatus.tsx:62-114</code>; labels and details from <code>doctor.ts</code>).</li>
         <li><b>S5 turn lines</b>: §6 S5 inside today's turn rows (<code>AgentChat.tsx:714-725</code>): under "model · login" and after "done · … s". The short hash is a button that copies the full one, in both alternatives: §6 leaves that to the mockup, and the mockup keeps it.</li>
-        <li><b>S6 Home with no projects</b>: §6 S6 in place of today's empty Projects text (<code>HomePage.tsx:53-57</code>).</li>
+        <li><b>S6 Home with no projects</b>: §6 S6 in place of today's empty Projects text (<code>HomePage.tsx:54-58</code>).</li>
         <li><b>Home's card</b>: today's project card (<code>ProjectCard.tsx</code>) filled from nanochat_cpu's <code>PROJECT_MEMORY.md</code> as it would ship (§8 Q2 default). The run command, its 2 min 57 s, and the 0.2 GB of data plus 0.2 GB of wheels are from <code>Code/README.md</code>.</li>
         <li><b>The root agent's turns</b>: §2 rows 8 and 9, with the harness command in its uv form (§2 row 9).</li>
       </ul>
@@ -511,8 +511,11 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         <li>The two changed prerequisite tiles open by default and carry a striped "changed in step 3" tag, which is mockup chrome; in the app they open on a click like the others.</li>
         <li>The Git row's "download link" keeps today's link text, "How to install".</li>
         <li>The tiles' "ready" also needs Git, because §6 makes Git required. Today's rule (<code>doctor.ts</code>) needs only the folder, Python, and one agent.</li>
-        <li>Home's draft "Run the nanochat_cpu example and report" (§2 row 8's example) is typed in for you; the app starts with an empty box.</li>
+        <li>Home's draft "Run the nanochat_cpu example and report" (§2 row 8's example), and then "Yes, dispatch it.", are typed in for you; the app starts with an empty box.</li>
         <li>S2 opened from the File menu is drawn as a dialog over the open workspace, and Cancel returns there. §6 says neither.</li>
+        <li>In B, the form inside the Welcome card has no Cancel, because there is nothing to go back to.</li>
+        <li>The identity row's button is labelled "Copy the two lines"; §6 says only that the lines can be copied.</li>
+        <li>Opening nanochat_cpu before the root agent has dispatched shows its empty conversation, as the app would; the strip then offers to dispatch for you.</li>
       </ol>
 
       <h3>Where it departs from mockup C</h3>
@@ -530,13 +533,13 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         <li>§6's sentences have no final full stop ("…on your own plan", "…Choose an empty or new folder", "…Install it, then Check again"); the app's other sentences have one.</li>
         <li>With no uv or Python, today's link goes to python.org (<code>doctor.ts</code> <code>HELP.python</code>), while the tester sheet asks for uv; uv's installation page would match.</li>
         <li>The two copy lines keep §6's <code>"…"</code> placeholders; <code>"Your Name"</code> and <code>"you@example.com"</code> would show what to type.</li>
-        <li>"Check again" renames today's "re-check" on the tiles' header (§6 S1 and S4); the e2e cases that press it would change.</li>
+        <li>"Check again" renames today's "re-check" on the tiles' header (§6 S1 and S4; <code>DesktopStatus.tsx:78</code>).</li>
       </ul>
 
       <h3>What §6 leaves open, or gets wrong</h3>
       <ul>
         <li>S4 says its rows appear inside S1 and S2, but S2's "Shows" does not list them. The mockup puts the tiles in S2 as well.</li>
-        <li>On a first start no folder is open, so today's tiles show the folder as "missing", Claude Code and Codex as "error" ("Needs a Research OS folder and Python to check.", <code>doctor.ts:112-114</code>), and the header as "not ready". §6 does not say whether S1 hides or rewords these rows.</li>
+        <li>On a first start no folder is open, so today's tiles show the folder as "missing", Claude Code and Codex as "error" ("Needs a Research OS folder and Python to check.", <code>doctor.ts:108-111</code>), and the header as "not ready". §6 does not say whether S1 hides or rewords these rows.</li>
         <li>"Cannot write there": §6 does not say whether it comes before or after Create, or whether Show log comes with it.</li>
         <li>The end line has no "new" count, though the start line does, and no words for no commit, no repository, or no Git.</li>
         <li>No keyboard shortcut is given for New Workspace…; today Open has ⌘O (Ctrl+O on Windows and Linux).</li>
@@ -642,16 +645,16 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
   const Q = {
     s12: { q: 'S1 with S2 · how New workspace is offered', recommended: 'A',
       rec: 'Recommended: A, because File → New Workspace… needs S2 on its own anyway, so one S2 serves both ways in.',
-      A: { t: 'Separate step.', d: 'Welcome offers New workspace… and Open a workspace…; S2 replaces the card. Costs one more click before Create.' },
-      B: { t: 'One page.', d: "Welcome holds S2's form. Saves a click, but the first page is longer, and S2 is laid out twice: the File menu needs it alone." } },
+      A: { t: 'Separate step.', d: 'Welcome offers New workspace… and Open a workspace…, and S2 replaces the card; it costs one more click before Create.' },
+      B: { t: 'One page.', d: "Welcome holds S2's form, which saves a click but makes the first page longer and lays S2 out twice, since the File menu needs it alone." } },
     s5: { q: 'S5 · how a turn shows its commit', recommended: 'A',
       rec: "Recommended: A, §6's proposal: one more fact of the turn, in the type of the lines around it.",
-      A: { t: 'Text line.', d: 'A line under "model · login" and one after "done · … s", in their small type. Nothing new to build, but quiet and easy to pass over.' },
-      B: { t: 'Chip.', d: 'The same words in a small tinted chip with a Git mark. Seen at a glance, but a new element, and long values wrap in a narrow conversation.' } },
+      A: { t: 'Text line.', d: 'A line under "model · login" and one after "done · … s", in their small type; nothing new to build, but quiet and easy to pass over.' },
+      B: { t: 'Chip.', d: 'The same words in a small tinted chip with a Git mark; seen at a glance, but a new element whose long values wrap in a narrow conversation.' } },
     s3: { q: "S3 · the Open item's label (§6 leaves it to the mockup)", recommended: 'B',
       rec: 'Recommended: B, so the menu and the Welcome page name the same thing the same way.',
-      A: { t: 'Open Research OS Folder…', d: "Today's label, kept. Nothing else changes, but the menu then says \"Folder\" under \"New Workspace…\"." },
-      B: { t: 'Open Workspace…', d: 'Matches New Workspace… and the Welcome page. Costs a change to menu.ts, its test, and the client README and DESIGN that quote the old label.' } }
+      A: { t: 'Open Research OS Folder…', d: "Today's label, kept; nothing else changes, but the menu then says \"Folder\" under \"New Workspace…\"." },
+      B: { t: 'Open Workspace…', d: 'Matches New Workspace… and the Welcome page; it costs a change to menu.ts, its test, and the client README and DESIGN that quote the old label.' } }
   };
   /* One failure state at a time. `on`: the screens it changes (§6). */
   const STATES = {
@@ -766,7 +769,7 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
       : st === 'noident'
         ? { id: 'ident', label: W.identRow, req: false, state: 'notset', cmds: true, changed: true }
         : { id: 'ident', label: W.identRow, req: false, state: 'ok', det: 'Your Name\nyou@example.com', changed: true });
-    // doctor.ts:112-114: with no folder open (or no Python) the agents cannot be checked
+    // doctor.ts:108-111: with no folder open (or no Python) the agents cannot be checked
     const agentsKnown = open && st !== 'nopy';
     rows.push(agentsKnown
       ? { id: 'claude', label: 'Claude Code', req: false, state: 'ok', ver: '2.1.4', det: 'logged in: claude.ai, pro' }
@@ -981,6 +984,13 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
       '</div>' + composerHtml('root', S.draftRoot, started, false) + '</section></div>';
     return h + '</section>';
   }
+  /* The card's facts, from nanochat_cpu's PROJECT_MEMORY.md Snapshot as it would ship; clamped as built, full text on hover */
+  const CARD_FACTS = [
+    ['Status', 'clamp2', 'runnable example with a short paper, 2026-09-29. bash runs/runcpu_small.sh all runs every stage in ~3 min on the i7-12700 CPU (see Code/README.md); paper in paper/main.pdf; awaiting Human Owner review'],
+    ['Next action', 'clamp3', 'Human Owner reviews the README, figures, and short paper, then accepts or revises; accepting the 2026-09-26 dispatch run also completes GOAL.md H2'],
+    ['Evaluator', 'clamp2', "nanochat's own val bpb (base and SFT) from the logged runs, in Code/results/summary.json; no separate evaluator. Success criterion: every stage completes and base val bpb falls (3.456 → 2.288)"],
+    ['Owner', 'clamp1', 'mixed']
+  ];
   function homeHtml() {
     let h = '<section class="screen" aria-label="Home"><div class="page">' +
       '<div class="eyebrow">Workspace · my-workspace</div><h1 class="title" tabindex="-1" data-focus>Home</h1>' +
@@ -991,14 +1001,10 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
       h += '<p class="card-flat empty-card">' + esc(W.s6) + '</p>';
     } else {
       h += '<div class="grid"><article class="card pcard">' +
-        '<div class="top"><span class="path">projects-folder/nanochat_cpu</span><span class="pill">Stage · probe</span><span class="pill neutral">P1</span></div>' +
+        '<div class="top"><span class="path" title="projects-folder/nanochat_cpu">projects-folder/nanochat_cpu</span><span class="pill">Stage · probe</span><span class="pill neutral">P1</span></div>' +
         '<h3>nanochat_cpu</h3><div class="rule"></div>' +
         '<p class="purpose">Is the ~3-minute d1 example (0.84M params) the right first-run example for Research OS users, and should it be verified on another machine or OS?</p>' +
-        '<dl class="facts">' +
-          '<dt>Status</dt><dd class="clamp2">runnable example with a short paper, 2026-09-29. bash runs/runcpu_small.sh all runs every stage in ~3 min on the i7-12700 CPU (see Code/README.md); paper in paper/main.pdf; awaiting Human Owner review</dd>' +
-          '<dt>Next action</dt><dd class="clamp3">Human Owner reviews the README, figures, and short paper, then accepts or revises; accepting the 2026-09-26 dispatch run also completes GOAL.md H2</dd>' +
-          '<dt>Evaluator</dt><dd class="clamp2">nanochat\'s own val bpb (base and SFT) from the logged runs, in Code/results/summary.json; no separate evaluator. Success criterion: every stage completes and base val bpb falls (3.456 → 2.288)</dd>' +
-          '<dt>Owner</dt><dd class="clamp1">mixed</dd>' +
+        '<dl class="facts">' + CARD_FACTS.map(([dt, cls, dd]) => '<dt>' + dt + '</dt><dd class="' + cls + '" title="' + esc(dd) + '">' + esc(dd) + '</dd>').join('') +
         '</dl><div class="foot"><button type="button" class="open" data-act="openProject" aria-label="Open workspace: nanochat_cpu"' + k('openProject') + '>Open workspace ' + icon('arrow', 'sm') + '</button>' +
         '<span class="src-note">from PROJECT_MEMORY.md · just now</span></div></article></div>';
     }
@@ -1425,7 +1431,9 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
   function trapFocus(e) {
     const box = !$('#notes').hidden ? $('#notes .mock-panel') : S.dialog ? $('.dlg') : null;
     if (!box) return;
-    const f = $$('button:not([disabled]),input:not([disabled]),select,textarea,summary,[tabindex="0"]', box).filter(el => el.offsetParent !== null);
+    // what Tab can reach: shown, enabled, and not inside a closed tile (its summary is reachable)
+    const f = $$('button:not([disabled]),input:not([disabled]),select,textarea,summary,[tabindex="0"]', box)
+      .filter(el => el.offsetParent !== null && (el.tagName === 'SUMMARY' || !el.closest('details:not([open])')));
     if (!f.length) return;
     const first = f[0], last = f[f.length - 1];
     if (e.shiftKey && (document.activeElement === first || !box.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
