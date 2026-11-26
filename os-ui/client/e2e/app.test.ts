@@ -3882,6 +3882,9 @@ describe("desktop client on a Research OS folder", () => {
         assert.equal((await sh.locator(".drawer").boundingBox())!.width, 420);
         await shot(page, `skills-${w}-panel-open-menu-collapsed`);
         await page.getByRole("button", { name: "Expand sidebar" }).click();
+        // The menu widens over 200 ms (Shell.tsx), narrowing the frame under the panel; a click on Close while the frame
+        // still moves can press Close and release beside it, which closes nothing. Act once the layout has arrived.
+        await page.getByRole("navigation", { name: "Main navigation" }).locator("..").evaluate((g) => Promise.all(g.getAnimations().map((a) => a.finished)).then(() => true));
         await closeSkill(sh);
         await nav(page, "Plugins").click();
         await screen(page, "plugins").getByRole("heading", { name: "Plugins", exact: true }).waitFor();
