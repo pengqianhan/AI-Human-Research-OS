@@ -160,7 +160,39 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       five at n against one reading at 4n); why macos-x64's two Assets
       cases went red is not established, so the next red there is read
       by its rounds before any choice between smaller sizes and skipping
-      the timed cases on that runner, which is the Human Owner's. 2.4, the idea files, is on branch
+      the timed cases on that runner, which is the Human Owner's. A
+      second kind of red, also on unchanged code: on #59 the client's
+      end-to-end case "no Content-Security-Policy violations in the app
+      or its plugins' frames" failed once on macos-arm64 and passed on a
+      rerun, and failed the same way on `main` at `21d3072`, after #59
+      merged. The line it printed carries the hash of the suite's own
+      inline-script probe, so it was a probe's report that arrived after
+      the probe's fixed 300 ms wait; which of the six probes, and why it
+      was late, is not established. Since 2026-11-26 (branch
+      `e2e-csp-probe`, asked for by the Human Owner, 「修 CSP 用例」) the
+      final check knows those reports by that hash and the six waits are
+      gone; the suite is 83 cases. One wait of the same shape stays, the
+      Paper view's WebAssembly probe: on macOS arm64 its trims removed
+      nothing in one scratch run, other platforms were not checked. The
+      full end-to-end suite runs on three CI jobs (linux-x64,
+      macos-arm64, windows-x64); the other three run three named cases
+      against the packaged app. A third red, on the same branch: the
+      case "Skills at 1440 × 900 and 1000 × 720…" failed macos-arm64
+      twice in a row at `50e7337`, after 10 passes there. One failure
+      was the skill's panel staying open after Close was clicked; that
+      error was made to happen on a Mac with the Skills frame's renderer
+      slowed 15 times and 60 ms between press and release: the menu's
+      200 ms widening moves the frame under the pointer, the press lands
+      on Close and the release beside it, so nothing closes. The same
+      happened with `main`'s test file, so the race is not new on the
+      branch. The case now waits for the menu's widening to end before
+      it clicks Close (no fixed wait; 0 of 50 presses came while the
+      menu moved, against 21 of 47 before). Not established: that CI
+      took this path, and why two runs in a row went red at that commit.
+      The other failure, the Plugins page not opening after its button
+      was clicked, was not made to happen and the change does not claim
+      to cover it; if it comes back, the case should first be made to
+      print what was under the pointer. 2.4, the idea files, is on branch
       `step2-idea-graph-files`, which starts from `step2-idea-view` (a
       draft pull request until #54 is merged): `nanochat_cpu`'s
       `idea_graph.md`, written from the project's files with each row's

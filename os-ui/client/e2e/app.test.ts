@@ -478,6 +478,75 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: join(dir, `${name}.png`) });
 }
 
+/** A script's hash as Chromium names it when it refuses the script inline ("a hash ('sha256-…')"). */
+function scriptHash(text: string): string {
+  return `'sha256-${createHash("sha256").update(text).digest("base64")}'`;
+}
+
+/** The script each plugin frame's inline-script probe appends; the frame's policy (no 'unsafe-inline') must refuse it. */
+const INLINE_PROBE = "window.__inline = 1";
+const INLINE_PROBE_HASH = scriptHash(INLINE_PROBE);
+
+/**
+ * A console or log line the final policy check fails on: a Content-Security-Policy
+ * report none of the suite's own probes caused. A probe's report is known by what
+ * it names, not by when it arrives.
+ */
+function unexpectedCspReport(line: string): boolean {
+  return (
+    /Refused to|Content Security Policy/.test(line) &&
+    // The isolation probes, which the policies are meant to refuse.
+    !line.includes("example.com") &&
+    !line.includes("research-os/api") &&
+    !line.includes("paper-wiki/api") &&
+    !line.includes("code-view/api") &&
+    !line.includes("skills-hub/api") &&
+    !line.includes("csp-canary.invalid") &&
+    // The inline-script probes, by their script's hash: another inline script has another.
+    !line.includes(INLINE_PROBE_HASH)
+  );
+}
+
+describe("the final policy check's filter, without the app", () => {
+  // An inline-script probe's own report, verbatim as case 76 failed on it once on CI (it arrived after the probe's trim).
+  const CI_LINE =
+    "console.error: Executing inline script violates the following Content Security Policy directive 'script-src 'self''. Either the 'unsafe-inline' keyword, a hash ('sha256-SlHSUXvpUrZZqHBPWfdJaR/1l5NR39l5yPTcF2NGT3I='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.";
+
+  test("an inline-script probe's report is exempt, whenever it arrives", () => {
+    assert.equal(unexpectedCspReport(CI_LINE), false);
+  });
+
+  test("the same report as the main process sees it, from a plugin's frame, is exempt", () => {
+    assert.equal(unexpectedCspReport(CI_LINE.replace("console.error: ", "frame app://code-view/index.html?project=nanochat_cpu: ")), false);
+  });
+
+  test("the same refusal of another inline script, with its own hash, is flagged", () => {
+    const other = CI_LINE.replace("'sha256-SlHSUXvpUrZZqHBPWfdJaR/1l5NR39l5yPTcF2NGT3I='", scriptHash("window.__inline = 2"));
+    assert.notEqual(other, CI_LINE);
+    assert.equal(unexpectedCspReport(other), true);
+  });
+
+  test("the isolation probes' reports stay exempt", () => {
+    for (const line of [
+      "frame app://paper-wiki/viz.html: Fetch API cannot load https://example.com/. Refused to connect because it violates the document's Content Security Policy.",
+      `console.error: Connecting to 'app://research-os/api/chat/sessions?cwd=' violates the following Content Security Policy directive: "connect-src 'self'". The action has been blocked.`,
+      `frame app://code-view/index.html?project=nanochat_cpu: Connecting to 'app://paper-wiki/api/paper-wiki/status' violates the following Content Security Policy directive: "connect-src 'self'". The action has been blocked.`,
+      "console.error: Fetch API cannot load app://code-view/api/code-view/git/log?project=nanochat_cpu. Refused to connect because it violates the document's Content Security Policy.",
+      `frame app://paper-wiki/viz.html: Connecting to 'app://skills-hub/api/skills-hub/toggle' violates the following Content Security Policy directive: "connect-src 'self'". The action has been blocked.`,
+      `console.error: Loading the image 'https://csp-canary.invalid/x.png' violates the following Content Security Policy directive: "img-src 'self' data:". The action has been blocked.`,
+    ]) {
+      assert.equal(unexpectedCspReport(line), false, line);
+    }
+  });
+
+  test("an ordinary refusal is flagged", () => {
+    assert.equal(
+      unexpectedCspReport(`console.error: Refused to load the stylesheet 'https://fonts.invalid/a.css' because it violates the following Content Security Policy directive: "style-src 'self'".`),
+      true,
+    );
+  });
+});
+
 describe("desktop client on a Research OS folder", () => {
   let workspace: string;
   let userData: string;
@@ -703,21 +772,14 @@ describe("desktop client on a Research OS folder", () => {
     assert.match(probe.appApi, /^blocked/);
     assert.match(probe.wikiOrigin, /^blocked/);
     // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline'), whatever reaches its DOM.
-    const before = logs.length;
-    const inline = await code.evaluate(() => {
+    const inline = await code.evaluate((text) => {
       const script = document.createElement("script");
-      script.textContent = "window.__inline = 1";
+      script.textContent = text;
       document.body.append(script);
       script.remove();
       return (window as { __inline?: unknown }).__inline;
-    });
+    }, INLINE_PROBE);
     assert.equal(inline, undefined, "an inline script ran in the Code view's page");
-    await page.waitForTimeout(300);
-    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
-    await app.evaluate(() => {
-      const seen = (globalThis as { __console?: string[] }).__console!;
-      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/code-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
-    });
     // The frame's CSP reports reach the suite, so the final check sees this frame too.
     await code.evaluate(() => {
       const img = new Image();
@@ -1760,21 +1822,14 @@ describe("desktop client on a Research OS folder", () => {
     }, marked);
     for (let i = logs.length - 1; i >= 0; i--) if (/WebAssembly module violates/.test(logs[i]!)) logs.splice(i, 1);
     // No inline script runs in the page, whatever reaches its DOM.
-    const before = logs.length;
-    const inline = await paper.evaluate(() => {
+    const inline = await paper.evaluate((text) => {
       const script = document.createElement("script");
-      script.textContent = "window.__inline = 1";
+      script.textContent = text;
       document.body.append(script);
       script.remove();
       return (window as { __inline?: unknown }).__inline;
-    });
+    }, INLINE_PROBE);
     assert.equal(inline, undefined, "an inline script ran in the Paper view's page");
-    await page.waitForTimeout(300);
-    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
-    await app.evaluate(() => {
-      const seen = (globalThis as { __console?: string[] }).__console!;
-      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/paper-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
-    });
     // The frame's CSP reports reach the suite, so the final check sees this frame too.
     await paper.evaluate(() => {
       const img = new Image();
@@ -2094,21 +2149,14 @@ describe("desktop client on a Research OS folder", () => {
     assert.match(probe.appApi, /^blocked/);
     assert.match(probe.wikiOrigin, /^blocked/);
     // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline'), whatever reaches its DOM.
-    const before = logs.length;
-    const inline = await sk.evaluate(() => {
+    const inline = await sk.evaluate((text) => {
       const script = document.createElement("script");
-      script.textContent = "window.__inline = 1";
+      script.textContent = text;
       document.body.append(script);
       script.remove();
       return (window as { __inline?: unknown }).__inline;
-    });
+    }, INLINE_PROBE);
     assert.equal(inline, undefined, "an inline script ran in the Skeleton view's page");
-    await page.waitForTimeout(300);
-    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
-    await app.evaluate(() => {
-      const seen = (globalThis as { __console?: string[] }).__console!;
-      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/skeleton-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
-    });
     // The frame's CSP reports reach the suite, so the final check sees this frame too.
     await sk.evaluate(() => {
       const img = new Image();
@@ -2770,21 +2818,14 @@ describe("desktop client on a Research OS folder", () => {
     assert.match(probe.appApi, /^blocked/);
     assert.match(probe.wikiOrigin, /^blocked/);
     // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline').
-    const before = logs.length;
-    const inline = await as.evaluate(() => {
+    const inline = await as.evaluate((text) => {
       const script = document.createElement("script");
-      script.textContent = "window.__inline = 1";
+      script.textContent = text;
       document.body.append(script);
       script.remove();
       return (window as { __inline?: unknown }).__inline;
-    });
+    }, INLINE_PROBE);
     assert.equal(inline, undefined, "an inline script ran in the Assets view's page");
-    await page.waitForTimeout(300);
-    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
-    await app.evaluate(() => {
-      const seen = (globalThis as { __console?: string[] }).__console!;
-      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/assets-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
-    });
     // The frame's CSP reports reach the suite, so the final check sees this frame too.
     await as.evaluate(() => {
       const img = new Image();
@@ -3334,21 +3375,14 @@ describe("desktop client on a Research OS folder", () => {
     assert.match(probe.appApi, /^blocked/);
     assert.match(probe.wikiOrigin, /^blocked/);
     // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline').
-    const before = logs.length;
-    const inline = await iv.evaluate(() => {
+    const inline = await iv.evaluate((text) => {
       const script = document.createElement("script");
-      script.textContent = "window.__inline = 1";
+      script.textContent = text;
       document.body.append(script);
       script.remove();
       return (window as { __inline?: unknown }).__inline;
-    });
+    }, INLINE_PROBE);
     assert.equal(inline, undefined, "an inline script ran in the Idea view's page");
-    await page.waitForTimeout(300);
-    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
-    await app.evaluate(() => {
-      const seen = (globalThis as { __console?: string[] }).__console!;
-      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/idea-view\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
-    });
     // The frame's CSP reports reach the suite, so the final check sees this frame too.
     await iv.evaluate(() => {
       const img = new Image();
@@ -3848,6 +3882,9 @@ describe("desktop client on a Research OS folder", () => {
         assert.equal((await sh.locator(".drawer").boundingBox())!.width, 420);
         await shot(page, `skills-${w}-panel-open-menu-collapsed`);
         await page.getByRole("button", { name: "Expand sidebar" }).click();
+        // The menu widens over 200 ms (Shell.tsx), narrowing the frame under the panel; a click on Close while the frame
+        // still moves can press Close and release beside it, which closes nothing. Act once the layout has arrived.
+        await page.getByRole("navigation", { name: "Main navigation" }).locator("..").evaluate((g) => Promise.all(g.getAnimations().map((a) => a.finished)).then(() => true));
         await closeSkill(sh);
         await nav(page, "Plugins").click();
         await screen(page, "plugins").getByRole("heading", { name: "Plugins", exact: true }).waitFor();
@@ -3908,21 +3945,14 @@ describe("desktop client on a Research OS folder", () => {
     assert.match(probe.parent, /^blocked: SecurityError/);
     assert.match(probe.appApi, /^blocked/);
     // No inline script runs in the page (PLUGIN_CSP has no 'unsafe-inline').
-    const before = logs.length;
-    const inline = await sh.evaluate(() => {
+    const inline = await sh.evaluate((text) => {
       const script = document.createElement("script");
-      script.textContent = "window.__inline = 1";
+      script.textContent = text;
       document.body.append(script);
       script.remove();
       return (window as { __inline?: unknown }).__inline;
-    });
+    }, INLINE_PROBE);
     assert.equal(inline, undefined, "an inline script ran in Skills Hub's page");
-    await page.waitForTimeout(300);
-    for (let i = logs.length - 1; i >= before; i--) if (/inline script/.test(logs[i]!)) logs.splice(i, 1);
-    await app.evaluate(() => {
-      const seen = (globalThis as { __console?: string[] }).__console!;
-      for (let i = seen.length - 1; i >= 0; i--) if (/^frame app:\/\/skills-hub\/.*inline script/.test(seen[i]!)) seen.splice(i, 1);
-    });
     await sh.evaluate(() => {
       const img = new Image();
       img.src = "https://csp-canary.invalid/skills.png";
@@ -4125,17 +4155,7 @@ describe("desktop client on a Research OS folder", () => {
   });
 
   test("no Content-Security-Policy violations in the app or its plugins' frames", async () => {
-    const violations = [...logs, ...(await consoleLog())].filter(
-      (l) =>
-        /Refused to|Content Security Policy/.test(l) &&
-        // The isolation probes above, which the policies are meant to refuse.
-        !l.includes("example.com") &&
-        !l.includes("research-os/api") &&
-        !l.includes("paper-wiki/api") &&
-        !l.includes("code-view/api") &&
-        !l.includes("skills-hub/api") &&
-        !l.includes("csp-canary.invalid"),
-    );
+    const violations = [...logs, ...(await consoleLog())].filter(unexpectedCspReport);
     assert.deepEqual(violations, []);
   });
 
