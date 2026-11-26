@@ -152,7 +152,15 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       "Used in, '](' again and again" (402.5 ms in one run, 43.4 in the
       next), so a growth case red there is first compared with its time
       on the run before
-      ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), status of 2.3). 2.4, the idea files, is on branch
+      ([os-ui/PLUGINS.md](os-ui/PLUGINS.md), status of 2.3). Since
+      2026-11-25 (branch `growth-interleaved`, asked for by the Human
+      Owner, 「修计时测试」) the timing helper reads n and 4n in turn,
+      five rounds before any pass, and a failure prints every reading.
+      That removes a bias the CI logs show on every runner (the best of
+      five at n against one reading at 4n); why macos-x64's two Assets
+      cases went red is not established, so the next red there is read
+      by its rounds before any choice between smaller sizes and skipping
+      the timed cases on that runner, which is the Human Owner's. 2.4, the idea files, is on branch
       `step2-idea-graph-files`, which starts from `step2-idea-view` (a
       draft pull request until #54 is merged): `nanochat_cpu`'s
       `idea_graph.md`, written from the project's files with each row's

@@ -635,6 +635,29 @@ Status on 2026-11-25:
     so a macos-x64 failure of a growth case with a time just over 500 ms is
     first to be read as the runner's slow day, by its time on the run before,
     and only then as a change in cost.
+
+    **Changed on 2026-11-25, how growth.ts reads:** the times above were taken
+    with every n read before any 4n. macos-x64 then failed two Assets cases
+    by the ratio alone, over the floor, and the CI logs cannot tell whether
+    the runner slowed between the two blocks or 4n was slower out of proportion
+    there; the cause is not established (the Assets view's timing tests, below,
+    give the numbers). The helper now reads n and 4n in turn, passes no case
+    before five rounds, and reads on while a case fails, to 20 rounds or 30 s.
+    The ratio, the floor, and the sizes stand, so the two rules above are
+    unchanged; the mistakes' numbers were taken as a failing case was timed
+    then, the best of five at 4n. Put back again, one at a time, each fails
+    under the new order: md-kit's `splitCells` looking for the cell's end again
+    from every character, 18.1 times, 3.5 s at 4n, red in 30 s; a link that
+    scans its whole cell again, on the `;` cell, 20.3 times, 3.9 s, 31 s; a
+    backtick run measured again from each of its backticks, 15.9 times, 4.0 s,
+    30 s; and the files list checked against itself, 41.6 times, 679 ms, 20 s
+    (at the cap of 20 rounds). In `layout.test.ts`, a line looking itself up
+    among the lines (4.0 times, 2.3 ms at 4n; on routing, 4.8 times, 9.9 ms) and
+    a row looking its ID up among the rows before it (8.7 times, 7.2 ms) still
+    pass, as before: the caps bound them. A failure now prints every reading in
+    order, so a macos-x64 red is read by its own rounds first: rounds fast at
+    both sizes mean the runner slowed partway; 4n slow in every round means it
+    did not.
   - **Points §5.1 and §5.2 leave open, decided and tested:**
     - two rows with one ID ignoring case: the later is left out, naming the earlier's
       line and spelling; a row's ID counts for this even when the row is left out
@@ -929,8 +952,9 @@ Status on 2026-11-25:
   - **Timing tests** (after the review; one helper,
     [frontend/plugins/growth.ts](frontend/plugins/growth.ts)): md-kit's hostile
     inputs and Snapshot cases, the CSV reader's, Used in's, and the SVG check's time
-    the input at n and at 4n, best of five after a warm-up of both, and a case fails
-    only when the ratio is 10 or more and its best time at 4n is over 500 ms. One
+    the input at n and at 4n after a warm-up of both, and a case fails only when
+    the ratio of the best times is 10 or more and its best time at 4n is over
+    500 ms. One
     pass grows about 4 times, a pass per element about 16; a ratio alone was noise
     on a few milliseconds (macOS x64 failed the old 100 ms and 500 ms bounds, then a
     ratio of 13.4 on a 14 ms case). The sizes keep every case at 50 ms or less at 4n
@@ -940,6 +964,77 @@ Status on 2026-11-25:
     Run 20 times each beside four busy loops, no case failed; the worst was 10.6
     times on 63 ms (the SVG check's entities in an id, passed by the floor) and the
     longest 70 ms.
+
+    **Changed on 2026-11-25: n and 4n are read in turn.** Until then the helper
+    timed n five times, then 4n up to five times, stopping at the first reading
+    that passed, which for nearly every case was the first (under 500 ms). So the
+    ratio it printed was usually the best of five at n against one reading at 4n,
+    taken after all of n's, and it read high on every runner: in one green CI run
+    it was 10 or more in 1 of the 48 cases on linux-x64, 4 on windows-x64, 9 on
+    macos-arm64, and 12 on macos-x64, each passed by the floor. macos-x64 is the
+    slow runner: on a green run several of the heaviest cases took 200 to 500 ms
+    at 4n there (no case on another runner took 200), and on a slow run they went
+    past 500, where the ratio alone decides. It failed twice so: "csvPreview, n
+    commas", 15.8 times with 948.0 ms at 4n (32.9 and 95.7 ms in two other runs),
+    and "svgExpansion, n / 5 '&#10;' before data:", 18.3 times with 556.1 ms (9.8
+    times twice elsewhere on that runner, 8.1 on linux-x64). In both reds 4n's
+    time was a best of five, as n's was, the two read one block after the other.
+    The logs cannot tell whether the machine got slower between the two blocks,
+    which reading them in turn cures, or whether 4n is slower out of proportion on
+    that machine in that state, which no order cures: the cause is not
+    established.
+
+    Now the helper reads n, then 4n, round after round, and judges by the best at
+    n and the best at 4n over all rounds so far. No case passes before five rounds,
+    since the time at n is the denominator and one slow reading there makes a pass
+    per element look like one pass. A case that still fails after five reads on,
+    with a 250 ms pause before each extra round (`Atomics.wait`, so the tests stay
+    synchronous), until it passes, 20 rounds are read, or it has taken 30 s with
+    its warm-up. A failure says which cap ended it and prints every reading in
+    order (the warm-up, then each round's n and 4n), so the next red shows which of
+    the two causes it was: rounds fast at both sizes mean the machine slowed
+    partway; 4n slow in every round means it did not. A pass prints the same line
+    as before, from the two bests. The ratio (10), the floor (500 ms), and every
+    case's size are unchanged, and no call site changed (the clock is an optional
+    last parameter, in place of the unused number of tries);
+    [growth.test.ts](frontend/plugins/growth.test.ts) tests the rule with a
+    scripted clock. The caps: 30 s leaves room for extra rounds past the 11 s that
+    the warm-up and five rounds take, on a runner 30 times slower than an M1 Pro,
+    for a case of 50 ms at 4n here, and is far under the 10 minutes each test file
+    has; 20 rounds, four times the five, end sooner a case just over the floor
+    (under a second a round). A reading is never cut short, so a case can end one
+    pause and one round past 30 s, and never ends before its warm-up and one
+    round: a pass per element of 2 s at 4n here, on a runner 30 times slower, fails
+    in about 2 minutes, where the old order took about 6.4. The caps bound rounds,
+    not a reading: f1bd371's Snapshot split, 34 s at 4n here, needs 72 s for its
+    warm-up and one round, so on a runner more than about 8 times slower than an
+    M1 Pro (macos-x64 has measured 6 to 14) its red comes from the 10 minutes
+    `npm test` gives a test, with no reading printed; the old order, about 217 s
+    here, crossed that at about 3 times slower.
+
+    Measured on an M1 Pro (Node 22.23.1), not on any CI runner: a passing case now
+    reads 4n five times where it read it once. The five files with growth cases,
+    each run alone, took about 4.0 s together before and 6.1 s after; the whole
+    suite, which runs its files in parallel, took 20.5 to 21.6 s before and 20.5 to
+    20.7 s after. Each file alone, three runs, no case reached 7 times (the highest
+    were the SVG check's entities in an id and '&#10;' before data:, 5.3 to 5.8
+    times on 32 to 38 ms). Under the whole suite, 14 cases reached 7 times or more
+    in three runs with the old order (6 of them 10 or more, up to 18.3 times on
+    18 ms), and two in five runs with the new: entities in an id, 6.4 to 8.1 times
+    on 43 to 57 ms, and '&#10;' before data:, 5.9 to 7.0 times on 44 to 56 ms.
+    The mistakes put back, one at a time on a scratch copy,
+    each running its one test under `timeout`, all fail under the new order (the
+    passes over the input rebuilt from what 6ed52f7's message says): f1bd371's
+    Snapshot split, 18.4 times, 34.3 s at 4n, red in 80 s (its warm-up and one
+    round); a pass over the input at every character of md-kit's `inline`, 16.4
+    times, 3.2 s, red in 37 s; the CSV reader walking back over the text every
+    64th record, 16.6 times, 2.4 s, 32 s (on n line breaks); Used in passing over
+    the line every 4th character, 24.3 times, 4.8 s, 30 s; and the SVG check
+    passing over the input every 128th start tag, 29.0 times, 1.4 s, 31 s, or every
+    128th closing tag, 15.4 times, 1.5 s, 34 s (on the nested elements: the chain,
+    14.0 times on 283 ms, passes by the floor). With the pass as a native
+    `lastIndexOf`, every 128th start tag cost only 280 ms at 4n on the first case,
+    which passed by the floor; the nested case failed at 608 ms.
   - **The protocol tests** (`client/test/protocol.test.ts`, "the Assets view's
     reads", on the bundled origin): its six roots are read; `AGENTS.md`,
     `PROJECT_MEMORY.md`, `index.md`, `Code/` besides `results/`, `Datasets/` and
