@@ -3,8 +3,13 @@
 The source repository is read only through Git, at one commit: `git ls-tree`
 for paths, modes, and blob ids, and `git cat-file` for the content of the
 paths the manifest names. No folder of the source checkout is walked, and no
-W file is opened: the check compares Git blob ids (SHA-1 of the content), so
-it knows a W file's content only by its id.
+W, R, or Dv file is opened: the check compares Git blob ids (SHA-1 of the
+content), so it knows such a file's content only by its id.
+
+Two modes. The default is the real import: the product's files only, with no
+workspace at the root. `rehearsal=True` adds the placeholder workspace of the
+manifest's `rehearsal_workspace` section, so the product's checks that still
+read a workspace at the root can run before step 3 gives the product its own.
 """
 
 from __future__ import annotations
@@ -17,12 +22,14 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import quote, unquote, urlsplit
+from urllib.parse import unquote, urlsplit
 
 KIT = "os-build/import"
 EMPTY_BLOB = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
-SHIP_CLASSES = ("M", "B", "R", "Dv-product", "Dv-both")
-CLASS_ORDER = ("W", "M", "B", "R", "Dv-product", "Dv-both", "S")
+SHIP_CLASSES = ("M", "B")
+STAY_CLASSES = ("R", "Dv")
+CLASS_ORDER = ("M", "B", "S", "R", "Dv", "W")
+FORMAT = 2
 
 
 class KitError(SystemExit):
@@ -31,6 +38,10 @@ class KitError(SystemExit):
 
 def fail(message: str) -> None:
     raise KitError(f"error: {message}")
+
+
+def mode_name(rehearsal: bool) -> str:
+    return "rehearsal workspace" if rehearsal else "real import"
 
 
 # ---------------------------------------------------------------- git, read only
@@ -120,39 +131,60 @@ def origin_web_url(repo: Path) -> str | None:
 # ---------------------------------------------------------------- manifest
 
 
+def _matches(path: str, spec: dict) -> bool:
+    return path in spec.get("paths", ()) or any(path.startswith(p) for p in spec.get("prefixes", ()))
+
+
 @dataclass
 class Manifest:
     data: dict
 
     @property
-    def allowlist(self) -> list[dict]:
-        return self.data["allowlist"]
+    def named(self) -> list[dict]:
+        return self.data["named"]
 
     def entry_key(self, e: dict) -> str:
         return e.get("path") or e["prefix"]
 
-    def class_of(self, e: dict) -> str:
-        return f"Dv-{e['side']}" if e["class"] == "Dv" else e["class"]
-
     def matches(self, e: dict, path: str) -> bool:
         return path == e["path"] if "path" in e else path.startswith(e["prefix"])
 
-    def named_paths(self) -> list[str]:
-        """Everything export.py lists from the source: the allowlist and the example."""
-        return [self.entry_key(e) for e in self.allowlist] + list(self.data["example"]["files"])
+    def example(self, rehearsal: bool) -> list[str]:
+        only = self.data["example"].get("rehearsal_only", {})
+        return [p for p in self.data["example"]["files"] if rehearsal or p not in only]
 
     @property
-    def example(self) -> list[str]:
+    def example_all(self) -> list[str]:
         return list(self.data["example"]["files"])
 
-    def section(self, name: str) -> dict:
-        return {k: v for k, v in self.data[name].items() if k != "about"}
+    @property
+    def rehearsal_only(self) -> dict[str, str]:
+        return dict(self.data["example"].get("rehearsal_only", {}))
+
+    def section(self, *names: str) -> dict:
+        d = self.data
+        for n in names:
+            d = d[n]
+        return {k: v for k, v in d.items() if k != "about"}
+
+    def must_be_absent(self, path: str) -> bool:
+        """The rule's list: absent from every export, in both modes."""
+        return _matches(path, self.data["absent"])
+
+    def workspace_root(self, path: str) -> bool:
+        """What a workspace owns at its root; the real import holds none of it."""
+        return _matches(path, self.data["workspace_roots"])
 
 
 def load_manifest(text: str) -> Manifest:
     m = Manifest(json.loads(text))
-    if m.data.get("format") != 1:
-        fail("manifest format is not 1")
+    if m.data.get("format") != FORMAT:
+        fail(f"manifest format is not {FORMAT}")
+    for e in m.named:
+        if e["class"] not in CLASS_ORDER or e["class"] == "W":
+            fail(f"{m.entry_key(e)}: class {e['class']!r} cannot be named (W is what no entry names)")
+    if set(m.rehearsal_only) - set(m.example_all):
+        fail("example.rehearsal_only names a file that is not in example.files")
     return m
 
 
@@ -160,171 +192,34 @@ def classify(m: Manifest, tree: dict[str, Entry]) -> tuple[dict[str, str], list[
     """Class of every tracked path (W when no entry names it), problems, and each entry's count."""
     classes: dict[str, str] = {}
     problems: list[str] = []
-    counts = [0] * len(m.allowlist)
+    counts = [0] * len(m.named)
     for path in tree:
-        hits = [i for i, e in enumerate(m.allowlist) if m.matches(e, path)]
+        hits = [i for i, e in enumerate(m.named) if m.matches(e, path)]
         if len(hits) > 1:
-            problems.append(f"{path}: named by {len(hits)} allowlist entries")
+            problems.append(f"{path}: named by {len(hits)} entries")
         for i in hits:
             counts[i] += 1
-        classes[path] = m.class_of(m.allowlist[hits[0]]) if hits else "W"
-    for e, n in zip(m.allowlist, counts):
+        classes[path] = m.named[hits[0]]["class"] if hits else "W"
+    for e, n in zip(m.named, counts):
         if e.get("count") is not None and n != e["count"]:
-            problems.append(f"{m.entry_key(e)}: {n} tracked file(s), the manifest pins {e['count']}; class the difference by §4's rules")
-    for path in m.example:
+            problems.append(f"{m.entry_key(e)}: {n} tracked file(s), the manifest pins {e['count']}; class the difference by the rule")
+    for path in m.example_all:
         if path not in tree:
             problems.append(f"{path}: example file not tracked")
         elif classes[path] != "W":
-            problems.append(f"{path}: example file is on the allowlist ({classes[path]})")
-    for path, e in tree.items():
-        if classes[path] in SHIP_CLASSES and e.kind != "blob":
-            problems.append(f"{path}: a {e.kind} (mode {e.mode}) cannot be copied")
-    return classes, problems, list(zip(m.allowlist, counts))
-
-
-# ---------------------------------------------------------------- editions
-
-DIRECTIVE = re.compile(r'^<!-- import:(section|heading|group|bullet|stays-section|stays-group|stays-bullet|cover-sections|cover-groups|cover-bullets) "(.+)" -->\s*$')
-GROUP_HEAD = re.compile(r"^\*\*.+:\*\*")
-HEADING = re.compile(r"^(#{1,6}) ")
-
-
-def _level(line: str) -> int | None:
-    h = HEADING.match(line)
-    return len(h.group(1)) if h else None
-
-
-def _scope(lines: list[str], heading: str) -> tuple[int, int]:
-    hits = [i for i, l in enumerate(lines) if l.startswith(heading) and _level(l) is not None]
-    if len(hits) != 1:
-        fail(f"heading {heading!r}: {len(hits)} matches in the source")
-    start = hits[0]
-    level = _level(lines[start])
-    end = next((j for j in range(start + 1, len(lines)) if (_level(lines[j]) or 99) <= level), len(lines))
-    return start, end
-
-
-def _extent(lines: list[str], kind: str, start: int) -> int:
-    if kind == "heading":
-        return start + 1
-    if kind == "section":
-        return _scope(lines, lines[start])[1]
-    j = start + 1
-    while j < len(lines):
-        l = lines[j]
-        if kind == "group" and (GROUP_HEAD.match(l) or (_level(l) or 99) <= 2):
-            break
-        if kind == "bullet" and (l.strip() == "" or l.startswith("- ") or _level(l) is not None):
-            break
-        j += 1
-    return j
-
-
-def _locate(lines: list[str], kind: str, prefix: str) -> tuple[int, int]:
-    hits = [i for i, l in enumerate(lines) if l.startswith(prefix)]
-    if kind in ("section", "heading"):
-        hits = [i for i in hits if _level(lines[i]) is not None]
-    if len(hits) != 1:
-        fail(f"import:{kind} {prefix!r}: {len(hits)} matches in the source")
-    return hits[0], _extent(lines, kind, hits[0])
-
-
-def _units(lines: list[str], kind: str, heading: str) -> list[int]:
-    """Start lines of every section, group, or top-level bullet inside `heading`."""
-    start, end = _scope(lines, heading)
-    level = _level(lines[start])
-    if kind == "sections":
-        return [i for i in range(start + 1, end) if _level(lines[i]) == level + 1]
-    if kind == "bullets":
-        return [i for i in range(start + 1, end) if lines[i].startswith("- ")]
-    units = [i for i in range(start + 1, end) if GROUP_HEAD.match(lines[i])]
-    first = next((i for i in range(start + 1, end) if lines[i].strip()), None)
-    if first is not None and first not in units:
-        units.insert(0, first)
-    return units
-
-
-def _trim(chunk: list[str]) -> list[str]:
-    while chunk and not chunk[-1].strip():
-        chunk = chunk[:-1]
-    return chunk
-
-
-def fill_template(template: str, source: str, subs: dict[str, str], label: str) -> str:
-    """Replace each import: directive with the part of `source` it names; check coverage."""
-    lines = source.split("\n")
-    out: list[str] = []
-    starts: dict[int, str] = {}
-    covers: list[tuple[str, str]] = []
-    for line in template.split("\n"):
-        d = DIRECTIVE.match(line)
-        if not d:
-            for key, value in subs.items():
-                line = line.replace("{{" + key + "}}", value)
-            out.append(line)
-            continue
-        kind, prefix = d.groups()
-        if kind.startswith("cover-"):
-            covers.append((kind[len("cover-"):], prefix))
-            continue
-        stays = kind.startswith("stays-")
-        base = kind[len("stays-"):] if stays else kind
-        start, end = _locate(lines, base, prefix)
-        if start in starts:
-            fail(f"{label}: {prefix!r} and {starts[start]!r} name the same part")
-        starts[start] = prefix
-        if not stays:
-            out.extend(_trim(lines[start:end]))
-    for kind, heading in covers:
-        for i in _units(lines, kind, heading):
-            if i not in starts:
-                fail(f"{label}: under {heading!r}, {lines[i][:70]!r} is neither moved nor marked as staying")
-    text = "\n".join(out)
-    while "\n\n\n" in text:
-        text = text.replace("\n\n\n", "\n\n")
-    return text
-
-
-LINK_MD = re.compile(r"(\]\()(<[^>]+>|[^)\s]+)")
-LINK_REF = re.compile(r"^(\[[^\]]+\]:\s*)(\S+)", re.M)
-LINK_HTML = re.compile(r'((?:href|src|srcset)=")([^"]+)')
-
-
-def rewrite_links(text: str, base: str, keep, workspace_url: str | None, unresolved: list[str]) -> str:
-    """Relative links whose target is not product content become links to the workspace repository."""
-
-    def fix(m: re.Match[str]) -> str:
-        lead, target = m.group(1), m.group(2)
-        bare = target[1:-1] if target.startswith("<") else target
-        if re.match(r"^[a-z][a-z0-9+.-]*:", bare, re.I) or bare.startswith(("#", "/")) or not re.match(r"^[\w.~%-]", bare) or re.search(r"['\"]", bare):
-            return m.group(0)
-        path, _, anchor = bare.partition("#")
-        if not path:
-            return m.group(0)
-        norm = posixpath.normpath(posixpath.join(base, unquote(path)))
-        if norm.startswith("..") or keep(norm):
-            return m.group(0)
-        if workspace_url is None:
-            unresolved.append(norm)
-            return m.group(0)
-        return lead + f"{workspace_url}/blob/main/{quote(norm, safe='/')}" + (f"#{anchor}" if anchor else "")
-
-    # Only outside code: fenced blocks and inline code spans are text, not links.
-    out, fenced = [], False
-    for line in text.split("\n"):
-        if line.lstrip().startswith("```"):
-            fenced = not fenced
-            out.append(line)
-            continue
-        if fenced:
-            out.append(line)
-            continue
-        parts = line.split("`")
-        for k in range(0, len(parts), 2):
-            for pattern in (LINK_MD, LINK_REF, LINK_HTML):
-                parts[k] = pattern.sub(fix, parts[k])
-        out.append("`".join(parts))
-    return "\n".join(out)
+            problems.append(f"{path}: example file is named as {classes[path]}")
+    for path, cls in classes.items():
+        if cls in SHIP_CLASSES and tree[path].kind != "blob":
+            problems.append(f"{path}: a {tree[path].kind} (mode {tree[path].mode}) cannot be copied")
+        if cls in SHIP_CLASSES + ("S",) and m.must_be_absent(path):
+            problems.append(f"{path}: class {cls} ships it, but the rule's list says it must be absent")
+    for path in m.section("editions"):
+        if classes.get(path) != "S":
+            problems.append(f"edition {path}: not an S file at this commit")
+    for path, cls in classes.items():
+        if cls == "S" and path not in m.section("editions"):
+            problems.append(f"{path}: an S file with no edition")
+    return classes, problems, list(zip(m.named, counts))
 
 
 # ---------------------------------------------------------------- the expected tree
@@ -360,53 +255,100 @@ class Source:
         return load_manifest(self.kit("manifest.json").decode("utf-8"))
 
 
-def expected_tree(src: Source, m: Manifest, tree: dict[str, Entry], classes: dict[str, str], workspace_url: str | None) -> tuple[dict[str, Item], list[str]]:
-    """Every path of the export and what it must hold. `tree` must hold at least the named paths."""
+def fill(text: str, src: Source, workspace_url: str | None) -> str:
+    subs = {
+        "ORIGIN": f"[AI-Human-Research-OS]({workspace_url})" if workspace_url else "AI-Human-Research-OS",
+        "SOURCE_COMMIT": src.commit,
+        "SOURCE_SHORT": src.commit[:7],
+    }
+    for key, value in subs.items():
+        text = text.replace("{{" + key + "}}", value)
+    left = re.findall(r"\{\{[A-Z_]+\}\}", text)
+    if left:
+        fail(f"unknown placeholder(s) {sorted(set(left))}")
+    return text
+
+
+def expected_tree(src: Source, m: Manifest, tree: dict[str, Entry], classes: dict[str, str], workspace_url: str | None, rehearsal: bool) -> dict[str, Item]:
+    """Every path of the export in this mode and what it must hold, from the commit's whole tree."""
     items: dict[str, Item] = {}
     for path, cls in classes.items():
         if cls in SHIP_CLASSES:
             items[path] = Item("copy", tree[path].mode, tree[path].oid)
-    for path in m.example:
+    for path in m.example(rehearsal):
         items[path] = Item("example", tree[path].mode, tree[path].oid)
-    for path, rel in m.section("stubs").items():
-        items[path] = Item("stub", data=src.kit(rel))
-    for path, target in m.section("links").items():
-        items[path] = Item("link", "120000", target=target)
-    for path in m.section("generated"):
-        items[path] = Item("generated")
-    editions = m.section("editions")
-    for path in editions:
-        items[path] = Item("edition")
-
-    product = {p for p, it in items.items() if it.kind in ("copy", "example", "edition") or p == "os-build/import.md"}
-    dirs = {posixpath.dirname(p) for p in product}
-    for d in list(dirs):
-        while d:
-            d = posixpath.dirname(d)
-            dirs.add(d)
-
-    def keep(norm: str) -> bool:
-        return norm in product or norm.rstrip("/") in dirs
-
-    subs = {
-        "SOURCE_COMMIT": src.commit,
-        "SOURCE_SHORT": src.commit[:7],
-        "WORKSPACE_URL": workspace_url or "the AI-Human-Research-OS repository",
-    }
-    unresolved: list[str] = []
-    for path, spec in editions.items():
-        if "file" in spec:
-            data = src.kit(spec["file"])
-        else:
-            source_entry = tree.get(spec["source"])
-            if source_entry is None or classes.get(spec["source"]) != "S":
-                fail(f"edition {path}: source {spec['source']} is not an S file at this commit")
-            source = read_blobs(src.repo, {source_entry.oid})[source_entry.oid].decode("utf-8")
-            text = fill_template(src.kit(spec["template"]).decode("utf-8"), source, subs, path)
-            text = rewrite_links(text, posixpath.dirname(path), keep, workspace_url, unresolved)
-            data = text.encode("utf-8")
+    for path, spec in m.section("editions").items():
+        data = src.kit(spec["file"])
+        if rehearsal and "rehearsal_append" in spec:
+            data = data.rstrip(b"\n") + b"\n\n" + src.kit(spec["rehearsal_append"])
+        if spec.get("fill"):
+            data = fill(data.decode("utf-8"), src, workspace_url).encode("utf-8")
         items[path] = Item("edition", spec.get("mode", "100644"), data=data)
-    return items, sorted(set(unresolved))
+    if rehearsal:
+        for path, rel in m.section("rehearsal_workspace", "stubs").items():
+            items[path] = Item("stub", data=src.kit(rel))
+        for path, target in m.section("rehearsal_workspace", "links").items():
+            items[path] = Item("link", "120000", target=target)
+        for path in m.section("rehearsal_workspace", "generated"):
+            items[path] = Item("generated")
+    return items
+
+
+# ---------------------------------------------------------------- relative links
+
+
+LINK_MD = re.compile(r"\]\((<[^>]+>|[^)\s]+)")
+LINK_REF = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*(\S+)", re.M)
+LINK_HTML = re.compile(r'(?:href|src|srcset)="([^"]+)"')
+
+
+def relative_links(text: str) -> list[str]:
+    """Relative link targets in Markdown text, outside fenced blocks and inline code."""
+    found: list[str] = []
+    fenced = False
+    for line in text.split("\n"):
+        if line.lstrip().startswith(("```", "~~~")):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
+        parts = line.split("`")
+        for k in range(0, len(parts), 2):
+            for pattern in (LINK_MD, LINK_REF, LINK_HTML):
+                for target in pattern.findall(parts[k]):
+                    found.append(target)
+    out = []
+    for raw in found:
+        bare = raw[1:-1] if raw.startswith("<") else raw
+        bare = bare.split()[0] if bare.split() else bare
+        if re.match(r"^[a-z][a-z0-9+.-]*:", bare, re.I) or not re.match(r"^[\w.~%-]", bare) or re.search(r"['\"]", bare):
+            continue  # an address, an anchor, an absolute path, or text that only looks like a link
+        path = bare.split("#", 1)[0].split("?", 1)[0]
+        if path:
+            out.append(unquote(path))
+    return out
+
+
+def dangling_links(items: dict[str, Item], content: dict[str, bytes]) -> dict[str, list[str]]:
+    """Per Markdown file of the export, the relative links whose target the export does not hold."""
+    dirs: set[str] = set()
+    for p in items:
+        d = posixpath.dirname(p)
+        while d:
+            dirs.add(d)
+            d = posixpath.dirname(d)
+    out: dict[str, list[str]] = {}
+    for rel, data in sorted(content.items()):
+        if not rel.endswith(".md"):
+            continue
+        base = posixpath.dirname(rel)
+        for target in relative_links(data.decode("utf-8", errors="replace")):
+            norm = posixpath.normpath(posixpath.join(base, target))
+            if norm == ".":
+                continue
+            if norm.startswith("../") or norm == ".." or (norm not in items and norm.rstrip("/") not in dirs):
+                out.setdefault(rel, []).append(norm)
+    return out
 
 
 # ---------------------------------------------------------------- ignore rules (for the end-of-run check)

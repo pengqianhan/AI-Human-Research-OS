@@ -1,42 +1,57 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-lockup-white.png">
-    <source media="(prefers-color-scheme: light)" srcset="docs/brand/logo-lockup.png">
-    <img src="docs/brand/logo-lockup-on-paper.png" alt="Research OS" width="480">
-  </picture>
-</p>
-
 # SuperResearch OS
-
-[![The os-ui desktop showing the Dashboard, Skill Store, Paper Wiki, and Projects windows](docs/screenshots/os-ui-desktop.png)](os-ui/README.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-The source of the **Research OS** desktop app: a local app for researchers who
-already use Claude Code or Codex, over a workspace of plain files. This
-repository holds the app, its plugins, what every new workspace is made from,
-the example project `nanochat_cpu`, CI, and the development record. It holds no
-one's research: a workspace is a folder of its own. It was created from
-{{WORKSPACE_URL}} at commit `{{SOURCE_SHORT}}` ([os-build/import.md](os-build/import.md)).
+A desktop app for macOS, Windows, and Linux for researchers who already use a
+coding agent, Claude Code or Codex. It opens a workspace, a folder of plain
+files, and shows its projects, papers, and skills; you talk to the agents from
+the app, and the files stay the only research state. The app has no model or agent of
+its own ([ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md)).
 
-<!-- import:section "## Current Design Stance" -->
+## What you need
 
-## Quick Start
+| | For |
+|---|---|
+| Node.js 22.18 or later, with npm | building the app |
+| [uv](https://docs.astral.sh/uv/) | the snapshot, the harness, and every script; it fetches the Python in [`.python-version`](.python-version) |
+| Git 2.45 or later | the Code view |
+| [Claude Code](https://docs.claude.com/en/docs/claude-code/setup) or [Codex](https://developers.openai.com/codex/cli), signed in | agent conversations |
+| bash (on Windows, from Git for Windows) | the example project's scripts |
 
-Install the desktop client for your OS as [os-ui/client/README.md](os-ui/client/README.md)
-says, or build it from this checkout: `npm ci`, then `npm start`, in `os-ui/client`.
-Until step 3's PR 9 a development run opens this repository's root, a
-transitional workspace of stubs with the example project
-([AGENTS.md](AGENTS.md)).
+## Build and run
 
-Run [`./verify.sh`](verify.sh) from the repository root to check the brand
-copies and the transitional workspace. It requires a working `uv` and the Python
-version in [`.python-version`](.python-version) already installed. Exit codes:
-`0` = all passed, `1` = a check failed, `2` = runtime error left checks incomplete.
+From `os-ui/client`:
 
-<!-- import:section "## Optional Layers" -->
+```bash
+npm ci
+npm start             # build, then open the app
+npm run package       # an installer for this OS, in release/
+```
 
-<!-- import:section "## Contributing" -->
+[os-ui/client/README.md](os-ui/client/README.md) covers installing a build,
+the first start, and the per-OS installers.
+
+## Check
+
+From the repository root, `./verify.sh`; then the steps of
+[CI](.github/workflows/ci.yml), which also runs the Python unit tests and the
+frontend's build and tests. In `os-ui/client`: `npm test` and
+`npm run test:e2e`. [CONTRIBUTING.md](CONTRIBUTING.md) says how a change lands.
+
+## Layout
+
+| Path | What |
+|---|---|
+| [os-ui/client/](os-ui/client/README.md) | The Electron app |
+| [os-ui/frontend/](os-ui/frontend/README.md) | Its pages, plugins, and shared endpoints |
+| [os-ui/generator/](os-ui/generator/README.md) | The snapshot generator, which reads a workspace |
+| [os-harness/](os-harness/README.md) | Runs one Claude Code or Codex turn and records its result, for the app and for `project-dispatch` |
+| [research-skills-hub/open-paper-skills/](research-skills-hub/open-paper-skills/) | The five skills a workspace gets |
+| [projects-folder/templates/](projects-folder/templates/) | The project template |
+| [projects-folder/nanochat_cpu/](projects-folder/nanochat_cpu/index.md) | The example project |
+| [docs/adr/](docs/adr/) | ADR-0005 (the desktop client) and ADR-0006 (workspace, trunk, and plugins) |
+| [docs/brand/](docs/brand/README.md) | Logo, icon, and palette |
+| [CONTEXT.md](CONTEXT.md) | Shared vocabulary |
 
 ## License
 
@@ -45,6 +60,4 @@ Vendored third-party files keep their upstream licence and attribution, recorded
 beside them (for example the Paper view's PDF.js and the paper wiki viewer's
 libraries, each in its `vendor/` folder).
 
-<!-- import:section "## Roadmap" -->
-
-<!-- import:section "## Similar Projects" -->
+Imported from {{ORIGIN}} at commit `{{SOURCE_COMMIT}}`, without its history.

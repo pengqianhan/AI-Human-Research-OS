@@ -1,7 +1,7 @@
 # Paper Wiki
 
-The transitional workspace's paper wiki (until step 3's PR 9): empty, with the
-indexes `paper-wiki-manager` requires. Use that skill for additions.
+The rehearsal workspace's paper wiki, a placeholder that only a rehearsal
+export holds: empty, with the indexes `paper-wiki-manager` requires. Use that skill for additions.
 
 ## Sections
 

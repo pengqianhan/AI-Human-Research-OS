@@ -8,10 +8,11 @@
 # A non-zero exit is 1 for failed checks or 2 when the runtime prevents
 # complete checking.
 #
-# Until step 3's PR 9 the repository root is also a transitional workspace
-# (AGENTS.md; os-build/import.md): its stub paper wiki, the example project,
-# its five skill links, and the generator are checked here as a workspace's
-# are. PR 9 replaces those checks with workspaces built by new_workspace.py.
+# Checks 1 to 4 read a workspace at the repository root: its paper wiki, its
+# portfolio and the example project, its five skill links, and the generator's
+# snapshot of it. This repository holds no workspace; step 3 is to give these
+# checks workspaces built by new_workspace.py instead. A rehearsal export of the
+# source repository adds a placeholder workspace at the root so they can run.
 
 set -u
 cd "$(dirname "$0")"
@@ -72,21 +73,21 @@ if [ -n "$runtime_problem" ]; then
 else
   echo "  OK    Python runtime ($PYTHON_VERSION)"
 
-  # 1. The transitional workspace's stub paper wiki, viz.html included.
-  check "paper-wiki validation (transitional workspace)" \
+  # 1. The workspace's paper wiki, viz.html included.
+  check "paper-wiki validation (workspace at the root)" \
     "${PYTHON[@]}" "$PWM_HUB/scripts/validate_paper_wiki.py" paper-wiki
 
   # 2. Project contract: the example's Snapshot, its portfolio row, its idea.
-  check "project contract (transitional workspace)" \
+  check "project contract (workspace at the root)" \
     "${PYTHON[@]}" "$RPM_HUB/scripts/manage_research_project.py" validate
 
-  # 3. The generator reads the transitional workspace and validates its snapshot.
-  check "generator (transitional workspace)" \
+  # 3. The generator reads the workspace and validates its snapshot.
+  check "generator (workspace at the root)" \
     "${PYTHON[@]}" os-ui/generator/generate.py
 fi
 
-# 4. Installed-skill integrity (ADR 0002): the transitional workspace's links
-#    to the five shipped skills. Same rules as a workspace's verify.sh.
+# 4. Installed-skill integrity: the workspace's links to the five shipped
+#    skills. Same rules as a workspace's verify.sh.
 verify_installs() {
   local rc=0 target entry name src coll form
   for target in .claude/skills .agents/skills .claude/skills/.disabled .agents/skills/.disabled; do
@@ -118,7 +119,7 @@ verify_installs() {
   done
   return "$rc"
 }
-check "installed skills (transitional workspace)" verify_installs
+check "installed skills (workspace at the root)" verify_installs
 
 # 5. Brand copies. os-ui serves its tab icons from tracked copies of the
 #    docs/brand originals; a changed original must be copied again.

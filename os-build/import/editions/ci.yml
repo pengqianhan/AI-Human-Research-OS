@@ -1,15 +1,14 @@
 name: CI
 
-# The product's gate for main (SuperResearch OS). Whether a ruleset can require
-# the `checks` job on this private repository depends on the account's plan
-# (design §8 Q20). It runs on every PR with no path filter, because a required
-# check that is skipped never reports and would block the PR forever.
+# The product's gate for main (SuperResearch OS). It runs on every PR with no
+# path filter, because a required check that is skipped never reports and would
+# block the PR forever.
 #
 # Fork PRs run on `pull_request` (never `pull_request_target`), so contributed
 # code gets the read-only token below and no secrets.
 #
-# Until step 3's PR 9 the steps below run on the transitional workspace at the
-# repository root (os-build/import.md).
+# verify.sh and the generator step read a workspace at the repository root,
+# which this repository does not hold (verify.sh says which checks).
 
 on:
   pull_request:

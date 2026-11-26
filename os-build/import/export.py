@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
-"""Write the product repository's first tree into a plain folder (§5.7, §7 R1 and R3).
+"""Write the product repository's first tree into a plain folder.
 
-    uv run --no-project --python 3.12 -- python os-build/import/export.py --dest <empty folder outside the repository>
+    uv run --no-project --python 3.12 -- python os-build/import/export.py --dest <empty folder outside the repository> [--rehearsal-workspace]
 
-Reads the source repository only through Git, at --commit (default HEAD), and
-only the paths manifest.json names: its allowlist (M, B, R, Dv), the example's
-files, and the S files the editions are cut from. It writes those files at
-their paths byte for byte, the product editions of the S files, the
-transitional workspace's stubs and skill links, a stub wiki's viz.html
-rendered by the export's own generator, and os-build/import.md. It never runs
-`git init`, never writes inside the source repository, and never deletes a
-folder unless --replace names one an earlier export made. Then run
-import_check.py on the same folder.
+Reads the source repository only through Git, at --commit (default HEAD): the
+whole tree's paths, modes, and blob ids, and the content of the files it
+writes. It writes the M and B files and the example's files at their paths
+byte for byte, and the product editions of the S files.
+
+- Default, the real import: nothing else. No workspace at the root: no
+  memory/, ideas/, inbox/, paper-wiki/, skill links, or projects-folder/index.md.
+- --rehearsal-workspace: also the placeholder workspace of the manifest's
+  rehearsal_workspace section (stubs, the five skill links, the stub wiki's
+  viz.html rendered by the export's own generator), the example's idea file,
+  and the AGENTS.md edition's rehearsal section, so the product's checks that
+  still read a workspace at the root can run today. Never the import.
+
+It never runs `git init`, never writes inside the source repository, and
+never deletes anything: --dest must be empty or absent. Then run
+import_check.py on the same folder with the same mode.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
-import shutil
 import subprocess
 import sys
 from collections import Counter
@@ -27,21 +33,21 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import importkit as kit  # noqa: E402
 
-RECORD = "os-build/import.md"
-RESULT_START = "<!-- import-check:result -->"
-RESULT_END = "<!-- /import-check:result -->"
+
+def add_source_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[2], help="the source repository (default: the one holding this script)")
+    p.add_argument("--commit", default="HEAD", help="the source commit (default HEAD)")
+    p.add_argument("--kit-from-worktree", action="store_true", help="read the manifest, editions, and stubs from the working tree instead of the commit (for iterating)")
+    p.add_argument("--rehearsal-workspace", action="store_true", help="add the placeholder workspace (rehearsal only; the default is the real import)")
+    url = p.add_mutually_exclusive_group()
+    url.add_argument("--workspace-url", help="web address of this repository for the README's origin note (default: from the source's origin remote)")
+    url.add_argument("--no-workspace-url", action="store_true", help="name this repository in the origin note without an address")
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--dest", required=True, type=Path, help="the folder to write; empty or absent")
-    p.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[2], help="the source repository (default: the one holding this script)")
-    p.add_argument("--commit", default="HEAD", help="the source commit (default HEAD)")
-    p.add_argument("--kit-from-worktree", action="store_true", help="read manifest, editions, and stubs from the working tree instead of the commit (for iterating; the record says so)")
-    url = p.add_mutually_exclusive_group()
-    url.add_argument("--workspace-url", help="web address of the workspace repository for rewritten links (default: from the source's origin remote)")
-    url.add_argument("--no-workspace-url", action="store_true", help="leave links into workspace content as they are")
-    p.add_argument("--replace", action="store_true", help="remove --dest first, only if it holds an earlier export (its os-build/import.md)")
+    add_source_args(p)
     return p.parse_args()
 
 
@@ -51,14 +57,12 @@ def workspace_url(args: argparse.Namespace, repo: Path) -> str | None:
     return (args.workspace_url or kit.origin_web_url(repo) or "").rstrip("/") or None
 
 
-def prepare_dest(dest: Path, repo: Path, replace: bool) -> None:
+def prepare_dest(dest: Path, repo: Path) -> None:
     dest_r, repo_r = dest.resolve(), repo.resolve()
     if dest_r == repo_r or repo_r in dest_r.parents or dest_r in repo_r.parents:
         kit.fail("--dest must be outside the source repository, and must not contain it")
     if dest.exists() and any(dest.iterdir()):
-        if not (replace and (dest / RECORD).is_file()):
-            kit.fail("--dest is not empty (pass --replace to overwrite an earlier export)")
-        shutil.rmtree(dest)
+        kit.fail("--dest is not empty; choose an empty or new folder")
     dest.mkdir(parents=True, exist_ok=True)
 
 
@@ -69,56 +73,8 @@ def write_file(dest: Path, rel: str, data: bytes, mode: str) -> None:
     os.chmod(path, 0o755 if mode == "100755" else 0o644)
 
 
-def record_text(src: kit.Source, url: str | None, items: dict[str, kit.Item], classes: dict[str, str], unresolved: list[str]) -> str:
-    by_kind: dict[str, list[str]] = {}
-    for path, it in sorted(items.items()):
-        label = classes.get(path, "") if it.kind == "copy" else it.kind
-        by_kind.setdefault(label, []).append(path)
-    titles = [
-        ("M", "Moved (M)"),
-        ("B", "Both (B): product source, a copy stays in every workspace"),
-        ("R", "Development record (R)"),
-        ("Dv-product", "Development only, product side (Dv)"),
-        ("Dv-both", "Development only, both sides (Dv)"),
-        ("edition", "Product editions of the split files (S)"),
-        ("example", "The example nanochat_cpu and its idea file, copied from the workspace"),
-        ("stub", "Transitional workspace: stubs"),
-        ("link", "Transitional workspace: skill links"),
-        ("generated", "Generated by the export"),
-    ]
-    repo_line = f"AI-Human-Research-OS ({url})" if url else "AI-Human-Research-OS"
-    lines = [
-        "# The import",
-        "",
-        "This repository's first commit is a copy of files from another repository, made",
-        "with no history (os-build/step3-split-and-git.md §5.7, \"How the new repository is",
-        "born\"). This file is its record.",
-        "",
-        f"- **Source repository:** {repo_line}, which stays the Human Owner's workspace.",
-        f"- **Source commit:** `{src.commit}`.",
-        "- **Made by:** `os-build/import/export.py` from `os-build/import/manifest.json`,"
-        + (" with the kit read from an uncommitted working tree." if src.kit_from_worktree else " both read from that commit."),
-        "- **Pull-request numbers and commit hashes** in any document dated before the import",
-        "  (a `#42`, a `6a5ab1b`, a `git show <hash>`) refer to AI-Human-Research-OS, not to",
-        "  this repository: read them there.",
-        f"- **Files:** {len(items)}.",
-        "",
-        "## Check",
-        "",
-        RESULT_START,
-        "`import_check.py` has not been run on this tree.",
-        RESULT_END,
-        "",
-        "## What was imported",
-        "",
-    ]
-    if unresolved:
-        lines += ["Links left relative although their target is not product content:", ""]
-        lines += [f"- `{p}`" for p in unresolved] + [""]
-    for key, title in titles:
-        paths = by_kind.get(key, [])
-        lines += [f"### {title}: {len(paths)}", ""] + [f"- `{p}`" for p in paths] + [""]
-    return "\n".join(lines)
+def label(classes: dict[str, str], path: str, it: kit.Item) -> str:
+    return classes.get(path, "") if it.kind == "copy" else it.kind
 
 
 def main() -> int:
@@ -126,15 +82,15 @@ def main() -> int:
     repo = args.repo.resolve()
     src = kit.Source(repo, args.commit, args.kit_from_worktree)
     m = src.manifest()
-    prepare_dest(args.dest, repo, args.replace)
+    prepare_dest(args.dest, repo)
     dest = args.dest.resolve()
 
-    named = kit.ls_tree(repo, src.commit, m.named_paths())
-    classes, problems, _ = kit.classify(m, named)
+    tree = kit.ls_tree(repo, src.commit)
+    classes, problems, _ = kit.classify(m, tree)
     if problems:
         kit.fail("the manifest does not fit this commit:\n  " + "\n  ".join(problems))
     url = workspace_url(args, repo)
-    items, unresolved = kit.expected_tree(src, m, named, classes, url)
+    items = kit.expected_tree(src, m, tree, classes, url, args.rehearsal_workspace)
 
     blobs = kit.read_blobs(repo, {it.oid for it in items.values() if it.oid})
     for rel, it in sorted(items.items()):
@@ -146,23 +102,23 @@ def main() -> int:
             (dest / rel).parent.mkdir(parents=True, exist_ok=True)
             os.symlink(it.target, dest / rel)
 
-    viz = subprocess.run(
-        [sys.executable, "research-skills-hub/open-paper-skills/paper-wiki-manager/scripts/generate_viz.py", "paper-wiki", "--output", "paper-wiki/viz.html"],
-        cwd=dest, capture_output=True, text=True,
-    )
-    if viz.returncode != 0:
-        print(viz.stdout + viz.stderr, file=sys.stderr)
-        kit.fail("generate_viz.py failed on the stub wiki (see above)")
-    write_file(dest, RECORD, record_text(src, url, items, classes, unresolved).encode("utf-8"), "100644")
+    if args.rehearsal_workspace:
+        viz = subprocess.run(
+            [sys.executable, "research-skills-hub/open-paper-skills/paper-wiki-manager/scripts/generate_viz.py", "paper-wiki", "--output", "paper-wiki/viz.html"],
+            cwd=dest, capture_output=True, text=True,
+        )
+        if viz.returncode != 0:
+            print(viz.stdout + viz.stderr, file=sys.stderr)
+            kit.fail("generate_viz.py failed on the stub wiki (see above)")
 
-    kinds = Counter(classes.get(p, "") if it.kind == "copy" else it.kind for p, it in items.items())
+    kinds = Counter(label(classes, p, it) for p, it in items.items())
     size = sum((dest / p).lstat().st_size for p in items)
-    print(f"export: {len(items)} files ({size / 1e6:.1f} MB) from {src.commit[:12]}" + (" (kit from the working tree)" if src.kit_from_worktree else ""))
-    for k in ("M", "B", "R", "Dv-product", "Dv-both", "edition", "example", "stub", "link", "generated"):
-        print(f"  {k:<11} {kinds.get(k, 0)}")
-    if unresolved:
-        print(f"  {len(unresolved)} link(s) into workspace content left relative (no workspace address)")
-    print("  workspace links rewritten to: " + ("the workspace repository's address" if url else "nothing (left relative)"))
+    print(f"export ({kit.mode_name(args.rehearsal_workspace)}): {len(items)} files ({size / 1e6:.1f} MB) from {src.commit[:12]}"
+          + (" (kit from the working tree)" if src.kit_from_worktree else ""))
+    for k in ("M", "B", "edition", "example", "stub", "link", "generated"):
+        if kinds.get(k) or k in ("M", "B", "edition", "example"):
+            print(f"  {k:<10} {kinds.get(k, 0)}")
+    print("  README origin note: " + ("this repository's address" if url else "this repository's name, no address"))
     return 0
 
 

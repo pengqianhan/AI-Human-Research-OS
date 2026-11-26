@@ -1,9 +1,10 @@
 # Research Memory (Global)
 
-> The transitional workspace's global memory (until step 3's PR 9). It has the
-> shape a workspace's programs read: the generator and `research-project-manager`
-> read and write these tables. The one portfolio row is the example project's,
-> as `research-project-manager sync` writes it.
+> The rehearsal workspace's global memory, a placeholder that only a rehearsal
+> export holds, never the import. It has the shape a workspace's programs read:
+> the generator and `research-project-manager` read and write these tables. The
+> one portfolio row is the example project's, as `research-project-manager sync`
+> writes it.
 
 ## Long-Term Research Goals
 

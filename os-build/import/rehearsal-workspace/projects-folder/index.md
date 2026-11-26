@@ -1,6 +1,7 @@
 # Projects
 
-The transitional workspace's projects (until step 3's PR 9): the example the app ships.
+The rehearsal workspace's projects, a placeholder index that only a rehearsal
+export holds: the example the app ships.
 
 * [nanochat_cpu](nanochat_cpu/index.md) - Reproduce OpenResearch's default nanochat demo at a CPU-sized scale: an end-to-end tokenizer, pretraining, SFT, and chat baseline plus its learning-rate and vocabulary probes.
 

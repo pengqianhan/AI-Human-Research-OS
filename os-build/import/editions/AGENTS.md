@@ -1,9 +1,10 @@
 # SuperResearch OS: development instructions
 
-This repository is the source of the Research OS desktop app for researchers who
-run their own coding agents ([ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md)):
-the app and its plugins, the files every new workspace gets, the example
-project, CI, and the development record. A user's research lives in a
+This repository is the source of the SuperResearch OS desktop app, for
+researchers who run their own coding agents
+([ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md)): the app and
+its plugins, the agent harness, the skills and project template every new
+workspace gets, the example project, and CI. A user's research lives in a
 workspace, a folder of its own; this repository holds none.
 
 ## Execution contract
@@ -13,45 +14,27 @@ workspace, a folder of its own; this repository holds none.
 - Continue authorized, safe local work without routine confirmation. Ask only
   for a necessary user choice or destructive, external, protected-data,
   substantial-cost, or scope-expanding actions not already authorized.
-- The Human Owner owns direction, consequential choices, publication, and final
+- The maintainer owns direction, consequential choices, publication, and final
   acceptance. Agent verification is part of delivery.
-- Repository evidence outranks summaries and handoffs. Report checks as passed,
-  failed, or unrun.
-
-## The transitional workspace
-
-Until step 3's PR 9, this repository's root is also a workspace, so the
-generator, the project contract, and the end-to-end suite have one to open
-([os-build/import.md](os-build/import.md); design §7 R3). `memory/`, `ideas/`,
-`inbox/`, `paper-wiki/`, `projects-folder/index.md`, and the five links in
-`.claude/skills/` and `.agents/skills/` are stubs; `projects-folder/nanochat_cpu/`
-is the example the app ships. Change them only as product changes; never put a
-person's own research, notes, or context here.
+- Repository evidence outranks summaries. Report checks as passed, failed, or
+  unrun.
 
 ## Read by task
 
 | When | Read |
 |---|---|
-| Resume cross-session work or revisit a settled decision | [HANDOFF.md](HANDOFF.md), Active Work and Decisions |
-| Direction, milestones, and step designs | [os-build/index.md](os-build/index.md), [os-build/GOAL.md](os-build/GOAL.md) |
-| Architecture decisions | [docs/adr/](docs/adr/) |
+| Architecture decisions | [ADR-0005](docs/adr/0005-desktop-client.md), [ADR-0006](docs/adr/0006-desktop-workspace-trunk-and-plugins.md) |
 | Shared vocabulary | [CONTEXT.md](CONTEXT.md) |
 | The app and its plugins | [os-ui/index.md](os-ui/index.md), [os-ui/client/DESIGN.md](os-ui/client/DESIGN.md), [os-ui/PLUGINS.md](os-ui/PLUGINS.md) |
 | The agent harness | [os-harness/README.md](os-harness/README.md) |
-| How this repository was created | [os-build/import.md](os-build/import.md) |
+| How changes are checked and merged | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-## The Human Owner's context
-
-The Human Owner's cognition cache lives in their own workspace, not in this
-repository. The session that directs product work starts there, reads the cache,
-writes each brief with what an implementing agent needs, and records cognition
-there at the end. A session started directly in this repository works without
-the cache and creates none.
+This repository keeps no handoff file: the product's progress, decisions, and
+open work are recorded by its maintainer outside it.
 
 ## Build and check
 
-- `./verify.sh` from the repository root: brand copies, and the transitional
-  workspace's paper wiki, project contract, installed skills, and generator.
+- `./verify.sh` from the repository root.
 - Python unit tests, as [CI](.github/workflows/ci.yml) runs them, with `uv` and
   the version in `.python-version`.
 - `os-ui/frontend`: `npm ci`, `npm run build` (type-check and build), `npm test`.
