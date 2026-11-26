@@ -175,8 +175,9 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       Paper view's WebAssembly probe: on macOS arm64 its trims removed
       nothing in one scratch run, other platforms were not checked. The
       full end-to-end suite runs on three CI jobs (linux-x64,
-      macos-arm64, windows-x64); the other three run three named cases
-      against the packaged app. A third red, on the same branch: the
+      macos-arm64, windows-x64); the other three run a pattern of three names
+      against the packaged app, of which two match a case (the third,
+      "opens the desktop", matches none; found 2026-11-26). A third red, on the same branch: the
       case "Skills at 1440 × 900 and 1000 × 720…" failed macos-arm64
       twice in a row at `50e7337`, after 10 passes there. One failure
       was the skill's panel staying open after Close was clicked; that
@@ -261,6 +262,21 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       dispatch, run, and report on `nanochat_cpu` without help. The tester gets a
       CI artifact only on the Human Owner's explicit word, and the instructions
       name uv and Python as prerequisites until step 4.
+      Design started 2026-11-26 (Human Owner: 「开始第 3 步设计」): the working
+      design is [os-build/step3-split-and-git.md](os-build/step3-split-and-git.md)
+      and the clickable mockup of its screens is
+      [`os-ui/mockups/step3/workspace.html`](os-ui/mockups/step3/workspace.html)
+      (it opens from disk). The Human Owner decided the same day that the
+      product gets a repository of its own, SuperResearch OS, and answered six
+      of the design's questions (row "Two repositories" in Decisions). Next, in
+      the design's §7 order: this design merges; a rehearsal of the import in a
+      scratch folder; then the Human Owner creates the private repository
+      `SuperResearch-OS` by hand and gives the word for the import, each at the
+      moment it is done. Nothing has been created, moved, or untracked yet.
+      Waiting on the Human Owner: the three choices in the mockup (how New
+      workspace is offered, how a turn shows its commit, the Open menu item's
+      label) and the design's open questions (§8, fourteen, each with a
+      default).
 - [ ] Step 4, agent layer: the harness ported to TypeScript with a command-line
       entry, the Agents page, one resident process per conversation with
       permission requests relayed to the UI, and an ACP adapter. Acceptance: one
@@ -786,6 +802,7 @@ and third-party plugins may not ship host-side code although Q29 said 「允许�
 | Plugin authoring | Load from a local folder with reload; a plugin-authoring skill and template so the user's own agent writes the plugin; bundled plugins use the same contract. Git and npm sources come after step 3 | Remove local-folder loading |
 | Plugin code and data | A plugin is code on the app side; its data are plain workspace files, so removing a plugin deletes no notes | Let plugins own private stores |
 | Product and workspace | Separated. The app creates a workspace from an empty template; this repository becomes one workspace instance. **Supersedes** the "Scope is this repository" row (2026-07-22) | Keep one repository and add a script that clears personal content |
+| Two repositories | Decided by the Human Owner on 2026-11-26, during step 3's design. On whether this repository keeps both roles: 「本仓库主要作为产品源码，我的工作区相关的文件可以放在human 这个文件夹下；你来评估一下，如果拆成两个仓库更合适的话可以拆」; then 「那就拆成两个仓库，把research os 客户端的仓库命名为SuperResearch OS」; then, correcting the agent, who had read that as renaming this repository, 「SuperResearch OS 是客户端的仓库的名字，本仓库可以继续保留AI-Human-Research-OS的名字不用动」; and 「对」 to "this repository is from now on your workspace, and the product's source moves to the new repository". So the product (the desktop client and what it ships) moves to a new repository, SuperResearch OS, and this repository keeps its name and stays the Human Owner's workspace; the "Product and workspace" row above stands, now with the product outside. Answered the same day (「1 接受默认，你可以参考OpenResearch 的做法，默认带一个nanochat的demo，3接受默认，你也可以参考OpenResearch的做法，5接受 7 接受默认 D  SuperResearch-OS 先private  E 接受默认，但是我建议尽快新建仓库」): the example ships inside the app, with a nanochat demo by default; the app never commits for the user; a new workspace is itself a Git repository; this workspace's `nanochat_cpu` becomes its own repository whose first commit the Human Owner makes; the new repository is written `SuperResearch-OS` and is private at first; it is created soon. Not decided, on the agent's defaults in [os-build/step3-split-and-git.md](os-build/step3-split-and-git.md) §8: the app's displayed name stays "Research OS" (the "Name" row), the new repository starts with no history from this one, and where each development-record file goes. Creating the repository, the import, and every move or untracking of tracked files each wait for the Human Owner's explicit word when they are done | Before the import: drop the new repository from the design and build step 3 here ("the other order" in the design's §7). After it: copy the product's files back from the new repository and archive it |
 | Project repositories | Each project is its own Git repository. D8's location, `projects-folder/<ProjectName>/`, is unchanged; what ends is tracking project files in the workspace repository. `research-project-manager new` initializes the repository from step 3 | Keep projects in the workspace repository |
 | Git | Required. Step one: each run records its commit, and the Code view shows files and changes. Step two, only when parallel runs are needed: a branch per experiment and a worktree per conversation. **Supersedes** idea I4 and the "Product boundary" row as amended 2026-07-18 (Git as an optional enhancement) | Restore the no-Git mode in the generator and client |
 | Agents built in | Claude Code and Codex, detected automatically with version, sign-in, and usage; switched on when signed in; an installation guide when missing | Add or remove a built-in adapter |
