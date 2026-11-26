@@ -725,7 +725,8 @@ nothing beyond the named prerequisites.
   - add `/projects-folder/<Name>/` to the workspace's `.gitignore` when the workspace
     is a Git repository. `new` adds the same line.
 
-  This instance needs `adopt` (PR 10), and so does any workspace made before step 3.
+  This instance needs `adopt` (W10, after the refresh W5 brings it here), and so does
+  any workspace made before step 3.
 - The **example** is a `git clone` of the bundle (§5.3), not an init.
   `new_workspace.py` then runs `adopt nanochat_cpu`, which finds the `.git` and only
   registers the project.
@@ -955,7 +956,7 @@ until `adopt`.
 
 | Option | Cost | Breaks |
 |---|---|---|
-| **Ignored**, one line per project (`/projects-folder/<Name>/`, written by `new` and `adopt`) (default) | One line per project. A folder made by hand, without the manager, shows as untracked until it is adopted | Nothing known. A single `/projects-folder/*/` rule was considered and set aside: in this repository it would hide new files inside `nanochat_cpu` while that folder is still tracked (PRs 5 to 10) |
+| **Ignored**, one line per project (`/projects-folder/<Name>/`, written by `new` and `adopt`) (default) | One line per project. A folder made by hand, without the manager, shows as untracked until it is adopted | Nothing known. A single `/projects-folder/*/` rule was considered and set aside: in this repository it would hide new files inside `nanochat_cpu` while that folder is still tracked (until W10) |
 | Submodule | Each project needs a URL. A clone of the workspace cannot restore projects that have no remote | The Code view: a submodule's `.git` is a file, which the handler refuses (`codeGit.ts:407`) |
 | Nothing | No rule | Every `git status` at the root lists each project as untracked. A `git add -A` or `git add .` at the root records the project as an embedded-repository entry (Git's documented behaviour; not run here, §9) |
 
@@ -1038,7 +1039,7 @@ side whose work it governs, once; the other side links to it.
 | `docs/adr/` (6), `docs/index.md`, `docs/presentAHROS.md` | product | Moved whole |
 | `CONTEXT.md` | product | Moved whole. Its terms (Research Workspace, Paper Wiki) describe workspaces; this workspace's `AGENTS.md` links the product's copy |
 | `CONTRIBUTING.md`, `CHANGELOG.md` (empty) | product | Moved. This workspace keeps its pull-request rule in its own `AGENTS.md` |
-| `HANDOFF.md` | split | By section and decision group, at the import. Product: Active Work's "Repositioning" (`:22-277`), "Research OS construction" (`:279-338`), "os-ui — read-only monitor UI" (`:340-357`), "os-ui desktop client" (`:359-380`); the Decisions groups os-ui shell (`:442`), pi product-shell (`:479`), Direction (`:497`), route-map (`:555`), Project-management (`:572`), Route-map deletion (`:601`), Agent-harness (`:637`), Project-template (`:665`), Example-project (`:677`), Desktop client (`:717`), Positioning and architecture (`:747`); "Deviations" (`:807`) and "Intentionally not done" (`:838`) except their workspace items. Here: the normalization table D1-D10 and its follow-ups (`:418-440`), Research-environment (`:448`), circle_packing (`:461`), Orphan-skills (`:491`), Skill-management (`:505`), Paper-wiki (`:519`), map-then-territory (`:530`), Navigation-index (`:566`), Portfolio scope (`:659`), Paper reading-status (`:687`), CI gate (`:697`), Public site (`:708`), Mirror install form (`:738`). "Next session" (`:382-414`) is split by bullet: the environment facts of your machine (`:400-405`) and the `nanochat_cpu` acceptance (`:395-399`) stay; the rest moves. Each moved group leaves a one-line pointer here, and the reverse. The CI gate group stays because it governs this repository's `main`; the product's gate is a new row there (§8 Q20) |
+| `HANDOFF.md` | split | By section and decision group, at the import. Product: Active Work's "Repositioning" (`HANDOFF.md:22-277`), "Research OS construction" (`:279-338`), "os-ui — read-only monitor UI" (`:340-357`), "os-ui desktop client" (`:359-380`); the Decisions groups os-ui shell (`:442`), pi product-shell (`:479`), Direction (`:497`), route-map (`:555`), Project-management (`:572`), Route-map deletion (`:601`), Agent-harness (`:637`), Project-template (`:665`), Example-project (`:677`), Desktop client (`:717`), Positioning and architecture (`:747`); "Deviations" (`:807`) and "Intentionally not done" (`:838`) except their workspace items. Here: the normalization table D1-D10 and its follow-ups (`:418-440`), Research-environment (`:448`), circle_packing (`:461`), Orphan-skills (`:491`), Skill-management (`:505`), Paper-wiki (`:519`), map-then-territory (`:530`), Navigation-index (`:566`), Portfolio scope (`:659`), Paper reading-status (`:687`), CI gate (`:697`), Public site (`:708`), Mirror install form (`:738`). "Next session" (`:382-414`) is split by bullet: the environment facts of your machine (`:400-405`) and the `nanochat_cpu` acceptance (`:395-399`) stay; the rest moves. Each moved group leaves a one-line pointer here, and the reverse. The CI gate group stays because it governs this repository's `main`; the product's gate is a new row there (§8 Q20) |
 | `memory/MEMORY.md` | here | Stays whole. Its Key Decisions rows about building the OS stay as this workspace's history; their eight links into product files become links to the product repository |
 
 The Human Owner's quotations in moved rows move with them. They are already public
