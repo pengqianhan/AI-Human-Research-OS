@@ -29,8 +29,8 @@ the harness is [os-harness](../os-harness/README.md).
 > lines, and the mockup changed, so every `path:line` in any other file reads the
 > same at both commits.
 >
-> **Revised so far:** §4. The other sections still describe one repository until
-> this line lists them.
+> **Revised so far:** §4, §5. The other sections still describe one repository
+> until this line lists them.
 
 ## 1. Outcome
 
@@ -570,9 +570,25 @@ established.
 
 **Default: A.** The Python lives in the workspace at the paths it has today.
 
-**Updates.** Not in step 3. The tester's workspace is fresh, and step 4 replaces the
-Python. A later update would be `new_workspace.py --update <dir>`, run by the app or
-in a terminal.
+**Updates.** A tester's workspace is fresh, and step 4 replaces the Python, so
+updating a workspace from a newer *app* stays out of step 3. This workspace is the
+exception the split creates. Its harness, generator, project template, and five
+skills become copies of product source (the B class of §4), and step 3 itself
+changes that source: PR 2's Git record, PR 5's `adopt` and `validate --absent-ok`.
+The app runs the workspace's copies, not its own (`index.ts:143-148`,
+`chat.ts:124-126`), so without a refresh this workspace would never show a run's
+commit and could not run `adopt` on its own `nanochat_cpu`.
+
+- **Default:** step 3 adds one narrow command, `new_workspace.py --refresh <dir>`
+  (PR 6), run from a product checkout. It rewrites only the files the manifest marks
+  as copies, never a stub and never any other file, and prints each file it changed.
+- In this repository a refresh is a pull request whose message names the product
+  commit it came from (W5 and W9 in §7). Between refreshes the copies are frozen; the
+  drift is the kind the client already accepts (`DESIGN.md:726-728`).
+- The same command, run from the installed app's resources, is the later update for
+  any workspace.
+- **Reversal:** copy the files by hand in each refresh pull request; the manifest
+  still says which.
 
 **Reversal.** At step 4 the TypeScript entry can move to B or C. The port already has
 to replace these files.
@@ -591,7 +607,7 @@ to replace these files.
 
 | Option | Cost | Breaks |
 |---|---|---|
-| **A. One Python script, `new_workspace.py`, in the product source** (`os-ui/workspace-template/`), shipped in the installer's resources | More Python to port at step 4. The app runs bundled Python for the first time | Nothing. Without the app, the same command runs from a clone of the product repository, or from the installed app's resources folder (`uv run --no-project --python 3.12 -- python new_workspace.py <dir> [--example nanochat_cpu]`). From a clone there is no bundle yet, so the script builds the example's commit itself, the same way `build.mjs` asks it to (§5.3) |
+| **A. One Python script, `new_workspace.py`, in the product source** (`os-ui/workspace-template/`), shipped in the installer's resources | More Python to port at step 4. The app runs bundled Python for the first time | Nothing. Without the app, the same command runs from a clone of the product repository (while it is private, §8 Q12, only for people it is shared with), or from the installed app's resources folder (`uv run --no-project --python 3.12 -- python new_workspace.py <dir> [--example nanochat_cpu]`). From a clone there is no bundle yet, so the script builds the example's commit itself, the same way `build.mjs` asks it to (§5.3) |
 | B. TypeScript in the app only | No new Python | The Bare-CLI row, unless option D is written as well |
 | C. The app as a command (`"Research OS" --new-workspace <dir>`) | A second command-line surface before step 4's; the single-instance lock (`index.ts:498-503`) has to let it through | Works only where the app is installed |
 | D. Written manual steps (copy a folder, `git init`) | No code | Error-prone: the template is assembled from several sources, and nothing tests the steps |
@@ -625,9 +641,17 @@ both callers.
 
 **Facts.**
 
-- 73 tracked files (§3). The Project repositories row ends their tracking in the
-  workspace repository (`HANDOFF.md:789`).
-- What uses it today:
+- 73 tracked files (§3), every one mode 100644, its `runs/*.sh` scripts included
+  (`git ls-files -s`); the example runs them with `bash` (`Code/README.md:36-39`).
+- It is a port of OpenResearch's default demo, `demo/nanochat` at OpenResearch's
+  commit `27cb342` (`projects-folder/nanochat_cpu/PROJECT_MEMORY.md:13`;
+  `HANDOFF.md:316`).
+- The Project repositories row ends its tracking in the workspace repository
+  (`HANDOFF.md:789`).
+- Decided on 2026-11-26 (§8): the example ships inside the app with a nanochat demo
+  by default (Q1), and your own copy stops being tracked here and becomes its own
+  repository, whose first commit you make (Q7).
+- What uses it today, all in this repository:
   - **End-to-end suite.** It copies this repository and works in its
     `nanochat_cpu` (`app.test.ts:53-70`, `:176`).
   - **CI's packaged-app cases.** They run inside the same `describe` and use the
@@ -640,24 +664,28 @@ both callers.
 
 **What happens to each (proposed).**
 
-1. **The example's source.** Until PR 10 the template's manifest names the example
-   at its present path. PR 10 copies the 73 files to
-   `os-ui/workspace-template/examples/nanochat_cpu/`, with a copy of its idea file
-   beside it, and points the manifest there. That copy is product source, not a
-   project of this workspace: it is not under `projects-folder/` and not in the
-   portfolio. Whether that satisfies "what ends is tracking project files" is §8 Q7.
+1. **The example's source, in the product repository.** The import (§7, step R3)
+   copies the 73 files and the idea file into the product repository. Until PR 9
+   they sit at `projects-folder/nanochat_cpu/` and `ideas/nanochat-cpu-baseline.md`
+   inside the transitional workspace at the product root (§7), so the suite and the
+   generator step run there as they do here today. PR 9 moves them to
+   `os-ui/workspace-template/examples/nanochat_cpu/`, with the idea file beside it,
+   and points the manifest there. Either way the copy is product source, and no
+   workspace tracks it. The question the old Q7 asked (is a product copy acceptable
+   under "what ends is tracking project files in the workspace repository"?) no
+   longer arises: the copy is in the product repository, which is no workspace.
 2. **The installer.** One Python step, `new_workspace.py --build-example-bundle`,
-   turns the example *as committed in this repository* into one commit:
+   turns the example *as committed in the product repository* into one commit:
    - in a temporary repository;
    - with a fixed author ("Research OS example") and a fixed date;
    - from the committed files, not the checkout, so Windows line endings cannot
-     change it.
+     change it; the modes stay 100644.
 
    It writes that commit as `nanochat_cpu.bundle`. Three callers use the same step:
    - `build.mjs`, for the installer (Python is installed on every `desktop.yml` row,
      `desktop.yml:70-72`);
-   - `ci.yml`'s template check (PR 6);
-   - `new_workspace.py` itself, when run from a clone of this repository.
+   - the product's `ci.yml` template check (PR 6);
+   - `new_workspace.py` itself, when run from a clone of the product repository.
 
    New workspace clones the bundle into `projects-folder/nanochat_cpu/`, removes the
    clone's `origin`, and runs `adopt nanochat_cpu`.
@@ -666,41 +694,75 @@ both callers.
    - Every machine gets the same commit hash for the same app build, so you can
      match the hash in a tester's report to a build. This is a claim for the build
      PR to show: build on two OS rows and compare the hashes.
-3. **Your own `projects-folder/nanochat_cpu/`.**
-   - This repository stops tracking it (`git rm --cached`, which leaves the files
-     on disk).
+3. **Your own `projects-folder/nanochat_cpu/` (Q7, decided).** In this repository,
+   in its own pull request (W10 in §7):
+   - This repository stops tracking it (`git rm --cached -r`, which leaves the
+     files on disk).
    - `adopt nanochat_cpu` then gives it its own repository and adds
      `/projects-folder/nanochat_cpu/` to this repository's `.gitignore`. You make its
      first commit.
    - The old history stays in this repository's log.
    - On your other machines, pulling that commit deletes the tracked files there.
-     Their ignored `.venv/` and `.cache/` stay. Each machine then copies the
-     example back and runs `adopt`. PR 10's runbook says so.
-4. **End-to-end suite and packaged cases.** They build their workspace with
-   `new_workspace.py --example nanochat_cpu` instead of copying this repository. The
-   Code view case starts from a project that already has a commit
-   (`app.test.ts:799` expects "No history to show" today and changes).
-5. **`./verify.sh`.** Under CI the portfolio row and the idea point to a folder the
-   checkout cannot have. `validate` gets a `--absent-ok` flag, which `verify.sh`
-   passes only when `CI` is `true`:
-   - with the flag, a registered project whose folder is missing, and whose line is
-     in the workspace's `.gitignore`, is a warning, `project_not_in_checkout`, not a
-     `phantom_row` or `promoted_idea_without_project` error;
-   - on your machine, without the flag, a missing folder stays an error.
-
-   The flag and the `verify.sh` edit land in PR 5, together with `new`'s ignore
-   line. From that merge, a project an agent creates here is its own repository, so
-   CI must already tolerate its absence. §8 Q10 asks about this.
+     Their ignored `.venv/` and `.cache/` stay. Each machine then copies the folder
+     back and runs `adopt`. W10's runbook says so.
+   - `adopt` exists here only after the refresh that follows PR 5 (W5, §5.1).
+4. **End-to-end suite and packaged cases**, in the product repository. Until PR 9
+   they copy the product checkout, whose transitional workspace holds the example.
+   From PR 9 they build their workspace with `new_workspace.py --example
+   nanochat_cpu`. The Code view case then starts from a project that already has a
+   commit (`app.test.ts:799` expects "No history to show" today and changes).
+5. **`./verify.sh`, in this repository.** After W10 the portfolio row and the idea
+   point to a folder that a CI checkout of this repository cannot have. The flag of
+   the old plan is still needed, but only here: the product's CI never validates
+   your portfolio.
+   - `validate` gets `--absent-ok` (PR 5, in the product's copy of the skill). With
+     it, a registered project whose folder is missing, and whose line is in the
+     workspace's `.gitignore`, is a warning, `project_not_in_checkout`, not a
+     `phantom_row` or `promoted_idea_without_project` error.
+   - This workspace's `verify.sh` passes the flag only when `CI` is `true`; on your
+     machine a missing folder stays an error. The edit lands with the refresh that
+     brings the flag (W5), before W10.
+   - Any workspace a user keeps in Git meets the same case once its projects are
+     ignored, so the flag belongs in the skill, not in this repository. §8 Q10.
 6. **The tester.** They get the bundle (§2).
 
-**Options for the tester's copy** (§8 Q1):
+**What the two-repository form removes from the old plan.**
 
-- **the bundle (default);**
-- plain files copied and committed with the tester's identity, which needs a Git name
-  and email;
-- a new public repository the app clones, which needs repository creation and
-  network;
-- none: the tester makes a project, which is not the acceptance.
+- PR 10's copy of the example into `os-ui/workspace-template/examples/` inside this
+  repository: the import makes that copy, in the other repository.
+- The question whether a product copy may sit in the workspace repository (old Q7's
+  second bullet).
+- The product CI's dependence on your portfolio: from the import, nothing the
+  product's CI runs reads `memory/MEMORY.md` of this repository.
+- Landing the flag together with PR 5 "because a project an agent creates here is
+  its own repository from that merge": a merge in the product repository changes
+  nothing here until a refresh brings it, so the flag arrives here with W5.
+
+**The tester's copy** is decided (Q1): inside the app. How the app writes it stays
+this design's choice:
+
+- **the bundle (default):** one commit, built once per app build;
+- **built on the user's machine from plain files,** as OpenResearch does: embedded
+  files, `git init`, and commits with a fixed name, email, and date, with global and
+  system configuration ignored and hooks and signing off, checked afterwards
+  against hashes stored in the app (`src/local/demo.rs:65-74`, `:1790-1871`,
+  `:1727-1775` at `e9b80a6`). It needs Git at the moment of creation, which S2
+  requires anyway, and it puts the fixed identity into the user's repository either
+  way. Kept as the alternative for the build PR.
+
+**Suggestions from OpenResearch for the build PR** (not decided; ideas to reimplement,
+not code to copy):
+
+- Build in a temporary folder and rename it into place, refuse an existing
+  unrecognised folder, and return the existing example when it is already there
+  (`src/local/demo.rs:1560-1597`). S2 already builds under a temporary name (§6);
+  the build PR can add the second and third rules for the example's folder.
+- After the clone, compare the example's head with the hash the build recorded, and
+  fail with a fixed message when they differ (`src/local/demo.rs:1727-1775`).
+- Tell the agent, in the example's own files, what the example leaves out and what
+  running it downloads (OpenResearch's demo says so on every demo turn,
+  `src/local/demo.rs:75-77`, `:310-312`). `nanochat_cpu`'s `Code/README.md:20-22`
+  already gives the downloads.
 
 ### 5.4 What "runs record their commit" means
 
@@ -710,11 +772,17 @@ both callers.
 - The generator's rounds carry no commit (`generate.py:543-566`).
 - The Idea view shows a commit only when an agent writes it (`logic.ts:955`).
 - `project-dispatch` leaves commits to you (`SKILL.md:57-58`, `:95-96`).
-- What OpenResearch does is recorded only as "a run is pinned to a commit"
-  (`docs/adr/0006-desktop-workspace-trunk-and-plugins.md:54-55`). `os-build/references/`
-  adds nothing: OpenResearch appears only as "the closest reference"
-  (`related-projects.md:164-167`). Who commits there, when, and under which name is
-  not recorded, so this design claims nothing about it.
+- ADR-0006 records OpenResearch only as "a run is pinned to a commit"
+  (`docs/adr/0006-desktop-workspace-trunk-and-plugins.md:54-55`). Read since at its
+  commit `e9b80a6` (§3, "OpenResearch"): its run is an experiment launch, not an
+  agent turn. The commit is the experiment branch's tip at submission, archived with
+  `git archive`, so uncommitted files are never part of a run. The agent makes the
+  experiment commits; the app writes none per run or per turn, and stores no Git
+  state per chat turn.
+- So this design's run differs on purpose. The Git row's step one names a run's
+  commit (`HANDOFF.md:790`), and the step's sense of a run is a harness turn (§3),
+  so the record is taken per turn and says what was left uncommitted, which an
+  archived branch tip cannot show.
 
 **Definition (proposed).** A run is one harness turn (an Agent Run). It records the
 state of the Git repository at its working folder twice: in its `prompt` record
@@ -837,59 +905,273 @@ cover each item below and pin each with a test, in CI, against hostile fixtures:
     there needs more guarding than that already concedes. The app's reads on open,
     and `new_workspace.py`, need the full set.
 
-### 5.7 This repository after the split
+### 5.7 Two repositories
 
 **Facts.**
 
 - The Product and workspace row says "this repository becomes one workspace
-  instance". Its reversal reads "Keep one repository and add a script that clears
-  personal content" (`HANDOFF.md:788`).
-- This repository holds the product's whole source and is the workspace the
+  instance" (`HANDOFF.md:788`). The Human Owner's decision of 2026-11-26 (§8 Q6)
+  keeps that sentence and puts the product in a repository of its own, named
+  SuperResearch OS; this repository keeps its name.
+- The new repository is `SuperResearch-OS`, private at first (§8 Q12). This one is
+  public on GitHub (read by the directing agent with `gh repo view`), so `human/`
+  (without `human/private/`), `memory/`, and `HANDOFF.md` are published with it,
+  history included.
+- The app's displayed name is "Research OS" (`os-ui/client/electron-builder.yml:4`,
+  `os-ui/client/package.json:3`). Its `appId` holds no repository name
+  (`electron-builder.yml:3`). The Name row says "Unchanged: AI-Human Research OS"
+  (`HANDOFF.md:800`).
+- Today this repository holds the product's whole source and is the workspace a
   development run opens (`workspace.ts:43-47`).
 
-**Least disruptive form (default): one repository with two roles.**
+**The form.** SuperResearch OS holds the product: the app, its plugins, the template
+a new workspace is made from, the example, CI, and the product's development
+record. This repository, AI-Human-Research-OS, holds your workspace: `human/`,
+`memory/`, `ideas/`, `inbox/`, the paper wiki, your projects (each its own
+repository), your skills and the mirrors, and the copies of product files that
+every workspace has. §4 classes every file.
 
-- **Product source** stays where it is: `os-ui/`, `os-harness/`,
-  `research-skills-hub/`, `projects-folder/templates/`, `docs/`, `.github/`,
-  `verify.sh`.
-- **New: `os-ui/workspace-template/`.** It holds:
-  - a manifest of what is copied from where;
-  - the stubs;
-  - `new_workspace.py` and `check_separation.py`, with their tests;
-  - `examples/nanochat_cpu/` and its idea file.
+**The development record, file by file (default).** One rule: a record lives on the
+side whose work it governs, once; the other side links to it.
 
-  It sits under `os-ui/`, so `desktop.yml`'s filter already covers it
-  (`desktop.yml:16-29`) and no top-level entry or `FILETREE.md` line changes.
-- **Instance content stays where it is:** `human/`, `memory/`, `HANDOFF.md`,
-  `ideas/`, `inbox/`, the paper-wiki notes, the skill links, and the ignored
-  `projects-folder/<P>/` repositories.
-- **Separation is an allowlist.** Only what the manifest names can reach a workspace
-  or the installer, and the §4 check proves it. That is not "a script that clears
-  personal content", which would be a denylist over a copy of this repository.
+| File | Goes to | How |
+|---|---|---|
+| `os-build/GOAL.md`, `README.md`, `index.md`, this file | product | Moved whole. `os-build/references/` stays here (§4) |
+| `docs/adr/` (6), `docs/index.md`, `docs/presentAHROS.md` | product | Moved whole |
+| `CONTEXT.md` | product | Moved whole. Its terms (Research Workspace, Paper Wiki) describe workspaces; this workspace's `AGENTS.md` links the product's copy |
+| `CONTRIBUTING.md`, `CHANGELOG.md` (empty) | product | Moved. This workspace keeps its pull-request rule in its own `AGENTS.md` |
+| `HANDOFF.md` | split | By section and decision group, at the import. Product: Active Work's "Repositioning" (`:22-277`), "Research OS construction" (`:279-338`), "os-ui — read-only monitor UI" (`:340-357`), "os-ui desktop client" (`:359-380`); the Decisions groups os-ui shell (`:442`), pi product-shell (`:479`), Direction (`:497`), route-map (`:555`), Project-management (`:572`), Route-map deletion (`:601`), Agent-harness (`:637`), Project-template (`:665`), Example-project (`:677`), Desktop client (`:717`), Positioning and architecture (`:747`); "Deviations" (`:807`) and "Intentionally not done" (`:838`) except their workspace items. Here: the normalization table D1-D10 and its follow-ups (`:418-440`), Research-environment (`:448`), circle_packing (`:461`), Orphan-skills (`:491`), Skill-management (`:505`), Paper-wiki (`:519`), map-then-territory (`:530`), Navigation-index (`:566`), Portfolio scope (`:659`), Paper reading-status (`:687`), CI gate (`:697`), Public site (`:708`), Mirror install form (`:738`). "Next session" (`:382-414`) is split by bullet: the environment facts of your machine (`:400-405`) and the `nanochat_cpu` acceptance (`:395-399`) stay; the rest moves. Each moved group leaves a one-line pointer here, and the reverse. The CI gate group stays because it governs this repository's `main`; the product's gate is a new row there (§8 Q20) |
+| `memory/MEMORY.md` | here | Stays whole. Its Key Decisions rows about building the OS stay as this workspace's history; their eight links into product files become links to the product repository |
 
-**CI after the split.**
+The Human Owner's quotations in moved rows move with them. They are already public
+in this repository; the product repository is private until you say otherwise
+(§8 Q17).
 
-- `ci.yml` gains the template build and check, and the client build for `out/` (§4).
-  Its existing `discover` lines pick up the new harness and project-manager tests.
-- `verify.sh` passes `--absent-ok` under CI, from PR 5 (§5.3).
-- `desktop.yml` builds its test workspace with `new_workspace.py` and fixes the
-  smoke-step pattern (§3).
-- `pages.yml` is untouched. What it publishes stays your call (`HANDOFF.md:775`).
+**This repository afterwards (a workspace like any other).**
 
-**Alternative: two repositories.** A public product repository, and a private one
-for your workspace that holds `human/`, `memory/`, `HANDOFF.md`, `ideas/`, `inbox/`,
-and the notes. This keeps your files out of the product's history. It costs:
+- **Markers.** It still passes `workspace.ts:5`: its `AGENTS.md` (the workspace
+  edition) and its copies of `os-harness/harness.py` and
+  `os-ui/generator/generate.py` stay.
+- **Product files that stay, as this workspace's copies:** the 65 B files of §4:
+  the harness runtime (7), the generator (5), the project template (15), the five
+  shipped skills (35), `.python-version`, `.env.example`, `LICENSE`. They are
+  refreshed from the product, never edited here (§5.1).
+- **Product files that leave:** the M, R, and product-side Dv files of §4 (285),
+  in one pull request here after the product repository's CI has passed and you
+  have built the app from it (W-R in §7). Until then both copies exist and the
+  product repository's is the one that changes; this repository's are frozen.
+  Their history stays in this repository's log. §8 Q17.
+- **`AGENTS.md`.** The workspace edition: the "Read by task" rows for memory,
+  projects, ideas, the paper wiki, the hub, and `human/`; the Human cognition
+  section as it is; research integrity; maintenance and completion checks for this
+  repository. The row "Build the Research OS" points to the product repository
+  instead of `os-build/`. The template's workspace `AGENTS.md` (PR 6) is the same
+  edition without this instance's lines.
+- **`memory/MEMORY.md`.** Unchanged, apart from the links above. It keeps the
+  portfolio and the Research Policy.
+- **`README.md`.** A short page: what this workspace holds, how to open it in the
+  app, and a link to the product repository. Today's product sections (Quick Start,
+  Current Design Stance, Roadmap, Similar Projects) go to the product's README.
+- **`FILETREE.md`.** Regenerated by `filetree-simple` from this repository's
+  top-level entries; `os-ui/` and `os-harness/` keep entries for the workspace
+  copies, `docs/` leaves.
+- **`verify.sh`.** The workspace edition keeps the paper-wiki validation
+  (`verify.sh:82-83`), the FILETREE lint (`:86-87`), the project contract (`:93-94`,
+  with `--absent-ok` under CI from W5), and the installed-skills check (`:97-140`).
+  The brand-copies check (`:142-154`) goes to the product.
+- **The skills hub.** The product owns the canonical copy of the five shipped
+  skills; their tests run in the product's CI. This repository's copies of the five
+  are workspace copies, refreshed like the harness, and its links point at them as
+  today. Every other skill (your own 68 files, `filetree-simple` and
+  `session-handoff` among them) and the four mirrors stay canonical here. The
+  installer keeps working here unchanged: it reads `research-skills-hub/` of the
+  workspace it runs in.
 
-- creating a repository;
-- splitting history;
-- moving CI;
-- every link from `HANDOFF.md` and memory into product files;
-- the development run's "open the checkout" rule.
+**The product repository afterwards.**
 
-It is §8 Q6. This repository is public on GitHub (read by the directing agent
-with `gh repo view`), so `human/` (without `human/private/`), `memory/`, and
-`HANDOFF.md` are already published with it, history included; the alternative
-would change that only from the move onward.
+- **`AGENTS.md`.** A development edition: how to build, test, and review the
+  product; the record files; and one paragraph on the Human Owner's context (next
+  point). It names no file of `human/`.
+- **`README.md`.** Today's product sections, with the client's install steps.
+- **`FILETREE.md`: none at first.** Its lint needs `filetree-simple`, which stays
+  canonical here; the README's layout section and the per-directory `index.md` files
+  are the map. Reversal: copy `filetree-simple` into the product as a development
+  tool and generate one.
+- **`verify.sh`.** The product edition: the brand-copies check, and the project
+  contract and generator on the transitional workspace (§7), then on workspaces
+  built by `new_workspace.py`. No paper-wiki validation of your notes and no
+  installed-skills check: the product repository has neither.
+- **The five skills** at their present paths, `research-skills-hub/open-paper-skills/<name>/`,
+  so the template's manifest, `ci.yml`'s `discover` lines, and `desktop.yml`'s path
+  filter keep their paths. The collection's `index.md` there lists only the five.
+
+**Where sessions that build the product get `human/`.** `AGENTS.md` has every
+session skim the cognition cache at startup and capture cognition at the end
+("Human cognition"). The cache stays here, and nothing of it is copied into the
+product repository.
+
+- **Default:** the session that directs product work starts in this workspace, as
+  this one does. It reads the cache at startup, writes each brief with what an
+  implementing agent needs, and runs the capture at the end, here. Implementing
+  agents work in a product checkout from the brief.
+- The product's `AGENTS.md` says that the Human Owner's cognition cache lives in
+  their workspace, not in this repository, and that a session started directly in
+  the product works without it and creates none.
+- **Where the product checkout lives:** a sibling folder of this checkout, outside
+  both repositories. Nothing is nested, so nothing needs an ignore line, and no
+  agent finds this workspace's `AGENTS.md` above the product's (whether agents look
+  upward is not established, §5.8 e).
+- **Cost for this session's agents.** Their worktrees are made under this checkout's
+  `.claude/worktrees/` (shown: this revision's own), so they are worktrees of this
+  repository. For product work the directing agent makes worktrees of the product
+  clone itself (`git -C <product clone> worktree add <path> -b <branch>`) and hands
+  the path to the implementing agent, as this brief handed a path.
+- **Alternative:** start product sessions in the product checkout, with a line in
+  your own user-level agent instructions that points at the cache. That file is
+  yours; an agent writes it only on your word.
+- **Reversal:** either way, nothing in either repository changes.
+
+**The product repository's root is not a workspace.** It still holds `AGENTS.md`,
+`os-harness/harness.py`, and `os-ui/generator/generate.py`, so it passes the three
+markers (`workspace.ts:5`), and a development run would open it
+(`checkoutOf`, `workspace.ts:43-47`, `:94-95`).
+
+| Option | Cost | Breaks |
+|---|---|---|
+| **A. A rule that the product's source is not a workspace** (default): a folder that holds `os-ui/client/package.json` is refused with "This is the Research OS source, not a workspace" | One rule in `missingMarkers`, and its cases in `test/workspace.test.ts:26-29` | The checkout fallback then finds nothing in a product checkout. A development run opens `--workspace`, `OS_CLIENT_WORKSPACE`, or the saved folder (`workspace.ts:82-93`), else S1. The README's "npm start … open the app on this checkout" (`os-ui/client/README.md:79`, `:53`) changes |
+| B. Drop `checkoutOf` | Removes the fallback and its tests | Same as A for development runs, but a user who opens the product folder by hand gets no clear refusal |
+| C. A development workspace made on `npm start` with `new_workspace.py` in an ignored folder | A script and an ignore line | Needs PR 6 first |
+
+During the transition (from the import to PR 9) the product root is a workspace on
+purpose: the transitional workspace of §7, which holds no file of yours, so a
+development run opens it. Option A lands in PR 9, with that workspace's removal.
+You open your own workspace in a development build once with **Open a workspace…**;
+from then on the saved folder is tried before the checkout (`workspace.ts:85`, `:94`).
+
+**How the new repository is born.**
+
+- **The import is an allowlist.** The files of §4's M, R, product-side and shared
+  Dv, and B classes, at their present paths; the product editions of the 7 S files;
+  the example's 73 files and its idea file; and the transitional workspace's stubs
+  (§7, R3). The list is written once, kept in the import's record
+  (`os-build/import.md` in the product repository: the source repository, its
+  commit, the list, and the check's result), and checked by `import_check.py` (§4).
+- **No history** (default, §8 Q15). The first commit holds the import's tree and no
+  parent. Nothing of this repository's past, and so none of `human/`, `memory/`, or
+  `HANDOFF.md` as it was, is in the new repository.
+- **Who commits, and as whom** (§8 Q18). The directing agent prepares the tree in a
+  scratch folder (a copy, no Git), runs the check and the rehearsal (§7 R1), and,
+  on your go-ahead, makes the one commit in a fresh clone of the empty repository
+  and pushes it. Before committing it shows the name and email the commit would
+  carry. On macOS, Git with no identity set does not refuse a commit: it writes the
+  account's name and an email made of the account's short name and the machine's
+  host name (§3, "Git experiments"). So if none is set, nothing is committed until
+  you set one. Default: your GitHub no-reply address, so no personal address enters
+  the new history. This repository's recent commits carry personal addresses (shown
+  by `git log`, not copied here).
+- **What you do by hand on GitHub**, in this order (none of it can be done by an
+  agent under this design's rules):
+  1. Create `SuperResearch-OS`, private, empty: no README, licence, or ignore
+     file, so the import is the first commit.
+  2. Actions: enabled. Whether the account's plan runs `desktop.yml`'s six rows on
+     a private repository is not established: macOS and Windows minutes count
+     several times over against a private repository's quota, and the
+     `ubuntu-24.04-arm` and `windows-11-arm` rows (`desktop.yml:51`, `:53`) use
+     arm64 runners whose free use GitHub states for public repositories (GitHub's
+     terms as recalled, not checked here). §8 Q20.
+  3. The ruleset on `main` that requires the `checks` job, as this repository has
+     (CI gate decision, `HANDOFF.md:697-706`). Whether a private repository on the
+     account's plan can have one is not established. §8 Q20.
+  4. The secret `CLAUDE_CODE_OAUTH_TOKEN`, if the two review workflows go along
+     (`claude.yml:37`, `claude-code-review.yml:38`), and the Claude GitHub app on the
+     new repository. These are the only `secrets.` references in
+     `.github/workflows/*.yml` (shown by search).
+  5. Pages: off. `pages.yml` stays here (§8 Q16).
+  6. Nothing for the bot workflows: both stay here, with their settings (pull
+     requests from Actions, auto-merge, `sync-mattpocock-skills.yml:79`).
+- **Visibility later.** Making it public is yours to say; the Distribution row says
+  free and open-source (`HANDOFF.md:765`).
+
+**CI on each side (proposed).**
+
+| Today (`ci.yml` unless named) | Product repository | This repository |
+|---|---|---|
+| Checkout, uv, pinned Python (`:35-42`) | yes | yes |
+| `verify.sh` (`:44-45`) | its edition | its edition |
+| Unit tests: paper-wiki-manager, research-project-manager, paper-search, research-skill-installer (`:51-54`) | yes: canonical source | no: copies of tested code |
+| Unit tests: filetree-simple (`:55`) | no | yes |
+| Unit tests: os-harness (`:57`) | yes | no |
+| Unit tests: `.github/scripts` (`:58`) | no | yes: the scan script stays |
+| `viz.html` regenerated (`:62-70`) | no | yes |
+| `state.json` generates (`:74-75`) | on the transitional workspace, then on built workspaces (PR 6) | yes: this workspace, with its copies, still opens |
+| Frontend type-check and build (`:77-87`) | yes | no, unless §8 Q16 keeps Pages building it |
+| Endpoint tests (`:93-95`) | yes | no |
+| New: client build, installer allowlist, template check (§4) | yes | no |
+| `desktop.yml` (all steps) | yes | no |
+| `pages.yml` | no | §8 Q16 |
+| `claude.yml`, `claude-code-review.yml` | yes, with the secret | yes |
+| `scan-related-projects.yml`, `sync-mattpocock-skills.yml` | no | yes |
+
+What this repository's CI still checks once the product has left: the paper wiki
+(validation and `viz.html`), the project contract with `--absent-ok`, the installed
+skills, the FILETREE, the two skills' tests that stay, and that the generator still
+reads this workspace.
+
+**Links that cross the boundary.** Counted by a script over every tracked Markdown
+file's relative links, after §4's classes (the third-party mirrors excluded; none
+of the hub's other files links across):
+
+| Direction | Links | Files |
+|---|---|---|
+| Product documents to workspace content | 7 | ADR-0006 → `related-projects.md` (1); `os-build/GOAL.md` → `memory/MEMORY.md` (1); `os-build/index.md` → `references/index.md` (1); `os-ui/DESIGN.md` → `research-skills-hub/MANAGING-SKILLS.md` (1); `os-ui/PLUGINS.md` → `nanochat_cpu/idea_graph.md` (1); `os-ui/README.md` → `pages.yml`, `memory/paper-sources.json` (2) |
+| Workspace documents to product files | 13 | `memory/MEMORY.md` (8: `GOAL.md` 6, `CONTEXT.md` 1, ADR-0006 1); `ideas/idea_example/` (2, `GOAL.md`); `related-projects.md` (2: ADR-0006, `os-ui/README.md`); `projects-folder/index.md` (1, `os-ui/index.md`) |
+| Template copies to product-only files | 4 | `os-harness/README.md` → ADR-0003; `os-harness/index.md` → `os-harness/tests`; `os-ui/generator/README.md` → `os-ui/DESIGN.md`; `project-dispatch/SKILL.md` → `CONTEXT.md` |
+| Template copies to workspace-only files | 5 | `projects-folder/templates/index.md` → `memory/MEMORY.md`, `projects-folder/index.md`; `paper-search/SKILL.md` → `memory/paper-sources.json`; `research-skill-installer/SKILL.md` → `MANAGING-SKILLS.md`, the hub's ADR 0002 |
+| Into `HANDOFF.md` | 27 | From product documents 17 (`os-ui/PLUGINS.md` 7, `GOAL.md` 4, one each from ADR-0006, `os-build/README.md`, this file, `os-ui/client/DESIGN.md`, `os-ui/frontend/README.md`, the PDF.js `vendor/README.md`); from workspace documents 10 (`memory/MEMORY.md` 8, `sepo-讲解与启发.md` 1, `projects-folder/index.md` 1) |
+| Inside the split files | 116 | `HANDOFF.md` 52 (47 to product files, 5 to workspace files), `README.md` 43 (15, 28), `FILETREE.md` 11 (4, 7), `AGENTS.md` 10 (3, 7) |
+
+What becomes of each kind (default):
+
+- **The 20 one-way links between documents** become absolute links to the file in
+  the other repository on `main`. A link from this public workspace into the
+  private product 404s for anyone without access until it is public.
+- **The 4 template links to product-only files** break in every workspace today
+  already, this one included after the move. PR 6 makes them absolute links to the
+  product repository.
+- **The 5 template links to workspace files:** the three into `memory/` and
+  `projects-folder/` resolve in every workspace (the template has those stubs). The
+  installer's two links into the hub's own documents become plain text naming them;
+  a new workspace has neither document.
+- **The 27 links into `HANDOFF.md`** resolve to the edition on their own side. Each
+  one whose row moved to the other side becomes an absolute link; which ones moved
+  is checked row by row when the two editions are written (not established here).
+- **The 116 inside split files** are rewritten with their edition: each keeps the
+  links to its own side and turns the rest into absolute links.
+
+**Pull-request numbers and commit hashes in moved documents.** With no history in
+the new repository, a moved document's `#42` or `` `6a5ab1b` `` names this
+repository's pull request or commit. Counted by pattern (a `#` and up to three
+digits; a 7-to-40-character hex word in backquotes or after `git show`), so a few
+are other repositories' commits, such as the example's OpenResearch `27cb342`:
+`HANDOFF.md` 24 numbers and 25 hashes, `os-ui/PLUGINS.md` 7 and 9, `os-build/GOAL.md`
+0 and 6, `os-build/README.md` 0 and 2, `os-ui/client/DESIGN.md` 1 and 0, ADR-0001 0
+and 1, `os-ui/frontend/plugins/fixtures/` READMEs 0 and 11, the PDF.js
+`vendor/README.md` 0 and 2, and this file. Code comments were not counted.
+
+- **What they mean afterwards:** this repository keeps its name and its whole
+  history, so every one of them stays resolvable here: `#42` at
+  `github.com/<owner>/AI-Human-Research-OS/pull/42`, a hash with `git show` in a
+  checkout of this repository. In the new repository the same `#42` would name a
+  different pull request once it has 42, and `git show 6a5ab1b` fails there.
+  Whether GitHub turns them into links in rendered files was not checked.
+- **Default:** the moved text is not rewritten. The import's record
+  (`os-build/import.md`) says that every pull-request number and commit hash in a
+  document dated before the import refers to AI-Human-Research-OS, and gives the
+  import's source commit. The moved `HANDOFF.md` and `os-build/README.md` repeat
+  that line where they explain `git show`. After the import, new citations in the
+  product name its own pull requests.
+- **Reversal:** rewrite them as absolute links in one pass; the counts above say
+  where.
 
 ### 5.8 Questions the brief did not list
 
@@ -898,14 +1180,18 @@ a. **The generator fails on an empty workspace.** Shown on the scratch workspace
    the example opens on a failed snapshot (`generator.ts:53-61`).
    - **Default:** zero rows becomes a warning.
    - The other two rules stay, because the template satisfies them.
-   - CI on this repository is unaffected; its portfolio has a row.
-   - Must land before New workspace (PR 1).
+   - This workspace's CI is unaffected; its portfolio has a row. The product's CI
+     needs it before the transitional workspace goes (PR 9), because workspaces
+     built without the example then have none.
+   - Must land before New workspace (PR 1, in the product repository).
 
-b. **Untracking `nanochat_cpu` reds required CI.**
+b. **Untracking `nanochat_cpu` reds this workspace's required CI.** After the split
+   this concerns only this repository; the product's CI never reads your portfolio.
    - Keep its portfolio row and `validate` reports `phantom_row` and
      `promoted_idea_without_project`.
-   - Drop the row and point (a) fails `ci.yml:74-75`.
-   - Hence PR 1 and PR 5 before PR 10.
+   - Drop the row and the generator step (`ci.yml:74-75`, kept here, §5.7) fails
+     until this workspace's generator copy has PR 1's rule.
+   - Hence the refresh with PR 1 and PR 5 (W5) before W10.
 
 c. **A project repository is dirty after every run.**
    - A nested repository does not use the workspace's ignore rules, so `*.log` and
@@ -941,8 +1227,7 @@ g. **`project-dispatch` has to change.**
    - **Default:** the baseline is the harness's start record plus `git -C
      projects-folder/<P> status --porcelain`; the review compares against that.
    - A project with no `.git` of its own keeps today's commands. That is this
-     instance's `nanochat_cpu` between PR 5 and PR 10, and any project not yet
-     adopted.
+     instance's `nanochat_cpu` until W10, and any project not yet adopted.
    - A change outside the project is still found with the workspace's own `git
      status`.
    - `H` goes through uv, not a bare `python` (§2 row 9).
@@ -953,7 +1238,39 @@ h. **The harness finds Git differently from the app.**
      install dialog.
 
 i. **Instance lines inside the example** (§3 `nanochat_cpu`). Ship them as they are,
-   with the idea file, or ship an edition without them: §8 Q2.
+   with the idea file, or ship an edition without them: §8 Q2. With two
+   repositories the edition, if chosen, is written once in the product repository
+   at the import, and your own copy here keeps its lines.
+
+j. **The app's links point at this repository.** The Help link
+   (`os-ui/client/src/main/index.ts:43`, this repository's `os-ui/client/README.md`),
+   the About panel's website (`index.ts:442`), the package's `homepage`
+   (`os-ui/client/package.json:14`), and today's welcome page (`StateMissing.tsx:5`)
+   name this repository. After W-R the README they open is gone from here; pointed
+   at the product repository, they 404 for anyone without access while it is
+   private, a tester included. §8 Q19.
+
+k. **Three names.** The Name row says "Unchanged: AI-Human Research OS"
+   (`HANDOFF.md:800`); the app shows "Research OS" (`electron-builder.yml:4`); its
+   Settings page says "AI-Human Research OS has no model of its own…"
+   (`os-ui/frontend/src/pages/SettingsPage.tsx:17`); the product repository is now
+   SuperResearch OS. Default: the displayed name stays "Research OS" and nothing in
+   the app changes for the repository's name (§8 Q14).
+
+l. **What a private repository changes** (§8 Q12, Q20): the required check, Actions
+   minutes and arm64 runners for `desktop.yml`, Pages, the app's links (j), and who
+   can download a run's installer artifact (people with read access; you send the
+   file to the tester, as §1 already says). Each depends on the account's plan,
+   which was not established.
+
+m. **`pages.yml` needs both sides.** It builds the frontend (product) with this
+   workspace's snapshot and `paper-wiki/` (`pages.yml:46-50`, `:59-63`), deployed
+   from `autoreadpaper` (`:14-16`; its latest run succeeded on 2026-11-23, read with
+   `gh run list`). Once the frontend leaves (W-R), it cannot build here as it is.
+   What Pages publishes is yours (`HANDOFF.md:775`): §8 Q16.
+
+n. **The development run opens the product checkout.** §5.7, "The product
+   repository's root is not a workspace".
 
 ## 6. Every new or changed screen
 
