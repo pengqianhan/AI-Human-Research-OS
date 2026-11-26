@@ -307,8 +307,8 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       step 3 is built here first and imported after; the app is renamed
       "SuperResearch OS". That reverses the design's order (§7) and its
       classes R and Dv (§4). The kit's manifest is rewritten to that rule, and
-      the export has two modes: the real import (416 files, no workspace at
-      the root) and a rehearsal that adds a placeholder workspace (440 files).
+      the export has two modes: the real import (421 files, no workspace at
+      the root) and a rehearsal that adds a placeholder workspace (445 files).
       **The import's condition** is the command sequence in
       [os-build/import/README.md](os-build/import/README.md), run on the real
       import. On 2026-11-27 it stops at the product's `verify.sh`: its
@@ -319,9 +319,15 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       placeholder workspace everything passes (end-to-end 83 of 83). Also to
       mend before the import: 77 relative links in 25 exported files point at
       files that stay here (`HANDOFF.md`, `os-build/GOAL.md`, ADR-0003, and
-      workspace files; the check lists them). Next, in this repository: step
-      3's pull requests, starting with the rename, each page after its
-      mockup. Every step 3 pull request that adds or removes a product file
+      workspace files; the check lists them). The rename is in code (row "App
+      rename" in Decisions): the app's name, id, executable, package, artifact,
+      and installer names, its internal address `app://superresearch-os`, and
+      a lockup of its own in [docs/brand/](docs/brand/README.md). Not renamed
+      and not yet put to the Human Owner: the shell marker
+      `__RESEARCH_OS_ENV__` and the client name the harness sends to Codex.
+      The example project's `AGENTS.md` keeps the template's earlier sentence
+      ("inside the AI-Human Research OS"). Next, in this repository: step
+      3's remaining pull requests, each page after its mockup. Every step 3 pull request that adds or removes a product file
       updates [`os-build/import/manifest.json`](os-build/import/manifest.json)
       in the same pull request. The import, making the repository public,
       and removing the product's files from here each wait for the Human

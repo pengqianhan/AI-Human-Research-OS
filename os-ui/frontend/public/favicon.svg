@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="AI-Human Research OS favicon">
-  <title>AI-Human Research OS</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="SuperResearch OS favicon">
+  <title>SuperResearch OS</title>
   <!-- small sizes keep only the pair: human dot and agent ring, joined -->
   <rect width="64" height="64" rx="14" fill="#17262E"/>
   <line x1="27" y1="32" x2="37" y2="32" stroke="#F2F4F3" stroke-width="4" stroke-linecap="round"/>
