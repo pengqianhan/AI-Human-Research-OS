@@ -1380,6 +1380,14 @@ n. **The development run opens the product checkout.** §5.7, "The product
 The mockup is drawn from this list. Words in quotation marks are proposed text.
 The clickable mockup is [os-ui/mockups/step3/workspace.html](../os-ui/mockups/step3/workspace.html).
 
+**Chosen by the Human Owner on 2026-11-26** from that mockup, by accepting its three
+recommendations (「全按推荐」): **S1 with S2, alternative A**, New workspace is a
+separate step after Welcome, so one S2 serves Welcome and the File menu; **S5,
+alternative A**, a turn shows its commit as a text line in the type of the lines
+around it, not a chip; **S3, alternative B**, the File menu's item reads "Open
+Workspace…". Where the text below still says a choice is yours, it is made. To
+reverse one, build the other alternative from the same mockup.
+
 Revised 2026-11-26 in two ways. The points where the mockup departed from this
 list, and the gaps it found, are adopted here (each marked *adopted from the
 mockup*); the words it suggested are adopted too. The split itself changes no
