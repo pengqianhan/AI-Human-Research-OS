@@ -285,11 +285,18 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       end-to-end suite passed 83 of 83 from the export once two cases stopped
       relying on this workspace's own skills and papers (the suite now writes
       what it reads into its copy). Not explained: two end-to-end runs on the
-      developer's Mac in which the app's state changed with no action from the
-      suite (a details panel found open; a switch to Home), both while the
-      machine was in use; the same tree passed before and after. On Windows
-      and Linux the export has not been run.
-      On 2026-11-27 the Human Owner had the empty private repository
+      developer's Mac in which, by the implementing agent's reading of the
+      traces (since deleted: a trace holds the launch environment), the app's
+      state changed with no action from the suite. In one a Skills details
+      panel was found open; in the other the app went from Skills to Home two
+      seconds after local midnight (2026-11-27 00:00:02) and twelve cases
+      failed after it. The same tree passed before and after. In the shell
+      only `navigate` changes the page, no timer and nothing keyed on the date
+      calls it, and the Skills frame was not reloaded, so the Home item was
+      activated; by what is not established (a real key or click reaching the
+      test window, or something at the date change, are both open). On
+      Windows and Linux the export has not been run.
+      On 2026-11-26 the Human Owner had the empty private repository
       `SuperResearch-OS` created on GitHub (「你来建」), with an empty local
       repository beside this checkout, not inside it (R2). Nothing has been
       imported, moved, or untracked. Next: the import (R3), on the Human
