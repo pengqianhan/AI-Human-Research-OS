@@ -27,7 +27,7 @@
     {"class": "M", "path": "os-ui/start.sh", "count": 1, "note": "the rule names os-ui/ whole; this launcher of the browser dev server copies ../paper-wiki/, a workspace folder"},
     {"class": "M", "prefix": "os-ui/client/", "count": 39},
     {"class": "M", "prefix": "os-ui/frontend/", "count": 196},
-    {"class": "M", "prefix": "os-ui/mockups/", "count": 4},
+    {"class": "M", "prefix": "os-ui/mockups/", "count": 5},
     {"class": "B", "path": ".env.example", "count": 1},
     {"class": "B", "path": ".python-version", "count": 1},
     {"class": "B", "path": "LICENSE", "count": 1},

@@ -278,8 +278,9 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       The import was rehearsed on 2026-11-26 and 27 (design §7, R1) with the
       kit in [os-build/import/](os-build/import/README.md): a manifest that
       names what the product takes, an export script, and a check. The
-      exported tree (482 files, a plain folder outside this repository) passed
-      its import check, `verify.sh`, the unit tests, the generator, the
+      exported tree (482 files, a plain folder outside this repository, with a
+      placeholder workspace at its root) passed its import check, `verify.sh`,
+      the unit tests, the generator, the
       frontend and client builds and tests, and, in a disposable copy made
       into a Git repository, `verify.sh` and the generator again. The
       end-to-end suite passed 83 of 83 from the export once two cases stopped
@@ -320,9 +321,11 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       files that stay here (`HANDOFF.md`, `os-build/GOAL.md`, ADR-0003, and
       workspace files; the check lists them). Next, in this repository: step
       3's pull requests, starting with the rename, each page after its
-      mockup. The import, making the repository public, and removing the
-      product's files from here each wait for the Human Owner's word at the
-      moment they are done.
+      mockup. Every step 3 pull request that adds or removes a product file
+      updates [`os-build/import/manifest.json`](os-build/import/manifest.json)
+      in the same pull request. The import, making the repository public,
+      and removing the product's files from here each wait for the Human
+      Owner's word at the moment they are done.
 - [ ] Step 4, agent layer: the harness ported to TypeScript with a command-line
       entry, the Agents page, one resident process per conversation with
       permission requests relayed to the UI, and an ACP adapter. Acceptance: one
