@@ -18,6 +18,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20261014-001 - A gate that needs routine human clearing is removed, not staffed: for the skill mirror sync, twice dropped a manual safeguard for automation plus an audit trail, while keeping the machine-enforced CI gate; medium confidence.
 - cog-20261121-001 - The running product outranks its documents: checks the agent's claims about a reference product against the installed app and answers with screenshots; medium confidence.
 - cog-20261122-001 - Reading surface before conversation: for the desktop layout, chose the document-first mockup over the conversation-centred one the agent recommended; low confidence.
+- cog-20261126-001 - OpenResearch as the worked example for product mechanics: when a mechanism is open (the Git binding, the bundled demo, whether the app commits), points the agent to how OpenResearch does it, while keeping the decision their own.
 
 ## Entries
 
@@ -165,3 +166,24 @@ timestamp: 2026-07-04T00:00:00+12:00
   - When recommending against it, show the alternative as a mockup; a recommendation in prose did not move the choice.
 - related:
   - [cog-20260927-001](known_knowns.md#cog-20260927-001-glance-first-gui-visual-state-text-on-click)
+
+## cog-20261126-001 OpenResearch as the worked example for product mechanics
+
+- content: For how the desktop app should do a concrete thing, the human reaches for OpenResearch as the worked example. They do not hand it the decision: they accept or set the default themselves and add that the agent may look at how OpenResearch does it. It works for them as a source of proven mechanics, not as a product to copy whole.
+- source: inferred
+- confidence: medium
+- evidence: 2026-11-21, in the repositioning session, they took only its Git binding (「openresearch 的git 绑定我觉得很适合ressearch」) and described the wedge as 「openresearch 和 ohmygame的结合版」. 2026-11-26, answering step 3's design questions, they accepted two defaults and attached the same pointer to each: 「1 接受默认，你可以参考OpenResearch 的做法，默认带一个nanochat的demo，3接受默认，你也可以参考OpenResearch的做法」. Three statements across two sessions, all about mechanics.
+- created: 2026-11-26
+- last_updated: 2026-11-26
+- status: active
+- domain: product design of the Research OS desktop app
+- scope: Mechanics of the app (Git binding, example project, run records). No claim about its experiment tree, compute dispatch, or database, which the human set aside on 2026-11-21, or about visual design.
+- evidence_type: explanation
+- last_verified: 2026-11-26
+- freshness: current
+- responsibility_relevance:
+  - When a design question is about how a mechanism should work, read what OpenResearch does first and put it beside the options as fact, cited at a commit, before recommending.
+  - Say plainly where a recommended default differs from OpenResearch's practice, so the human chooses knowing the difference.
+  - Reuse ideas by reimplementation only; its code and text are not copied.
+- related:
+  - [cog-20261121-001](unknown_knowns.md#cog-20261121-001-the-running-product-outranks-its-documents)
