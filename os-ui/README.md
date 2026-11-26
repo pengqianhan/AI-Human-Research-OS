@@ -1,7 +1,7 @@
-# os-ui - Research OS App
+# os-ui - SuperResearch OS App
 
-`os-ui/` is the app of the AI-Human Research OS: it shows the repository's
-current state and holds the agent conversations. It ships as an app for
+`os-ui/` is SuperResearch OS, the app: it shows the repository's current
+state and holds the agent conversations. It ships as an app for
 macOS, Windows, and Linux, the [desktop client](client/README.md), and runs in a
 browser as its development shell. Apart from the narrow writes listed in
 [DESIGN.md](DESIGN.md), it does not execute actions or write source files; the

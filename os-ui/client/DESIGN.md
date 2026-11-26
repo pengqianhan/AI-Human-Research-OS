@@ -1,4 +1,4 @@
-# Research OS Desktop Client — Design
+# SuperResearch OS Desktop Client — Design
 
 The desktop client is one installable app for macOS, Windows, and Linux that
 opens the os-ui desktop on a Research OS folder, with its live features (agent
@@ -709,12 +709,13 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 
 | OS | Target | Arch | First open |
 |---|---|---|---|
-| macOS | `dmg` | arm64, x64 | Ad-hoc signed (`identity: "-"`, no hardened runtime). macOS 15+: open once, then System Settings → Privacy & Security → **Open Anyway**; fallback `xattr -dr com.apple.quarantine "/Applications/Research OS.app"` |
+| macOS | `dmg` | arm64, x64 | Ad-hoc signed (`identity: "-"`, no hardened runtime). macOS 15+: open once, then System Settings → Privacy & Security → **Open Anyway**; fallback `xattr -dr com.apple.quarantine "/Applications/SuperResearch OS.app"` |
 | Windows | `nsis` (per user, folder choosable, one installer per arch) | x64, arm64 | Unsigned: SmartScreen → More info → Run anyway |
 | Linux | `deb`, `AppImage` | x64, arm64 | The `.deb` installs an AppArmor profile, so the sandbox works on Ubuntu 24.04; the AppImage needs `libfuse2` (`libfuse2t64`) and runs without Chromium's sandbox where user namespaces are restricted |
 
-- App id `io.github.pengqianhan.researchos`, product **Research OS**, Linux
-  executable `research-os`, artifacts `Research-OS-<version>-<os>-<arch>.<ext>`.
+- App id `io.github.pengqianhan.superresearchos`, product **SuperResearch OS**,
+  Linux executable `superresearch-os`, artifacts
+  `SuperResearch-OS-<version>-<os>-<arch>.<ext>`.
 - Icon: `docs/brand/app-icon.png` (1024 px), copied to `out/icon.png` at build;
   electron-builder derives `.icns` and `.ico` from it.
 - The package holds `out/main.cjs`, `out/preload.cjs`, `out/renderer/` (the

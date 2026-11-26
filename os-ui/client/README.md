@@ -1,4 +1,4 @@
-# Research OS Desktop Client
+# SuperResearch OS Desktop Client
 
 A desktop app for macOS, Windows, and Linux that opens the
 [os-ui](../README.md) app on your Research OS folder, with everything the
@@ -32,24 +32,24 @@ There are no published releases (DESIGN.md §0). Get an installer from a run of
 the [Desktop client workflow](../../.github/workflows/desktop.yml) (Actions →
 Desktop client → a run → Artifacts), or build one yourself (below).
 
-- **macOS** (`Research-OS-<v>-mac-arm64.dmg` for Apple silicon, `-x64` for
+- **macOS** (`SuperResearch-OS-<v>-mac-arm64.dmg` for Apple silicon, `-x64` for
   Intel): drag the app to Applications and open it. The build is ad-hoc
   signed, not notarized, so macOS blocks the first launch: open
   **System Settings → Privacy & Security** and click **Open Anyway**. If macOS
   says the app is damaged, run
-  `xattr -dr com.apple.quarantine "/Applications/Research OS.app"` once.
-- **Windows** (`Research-OS-<v>-win-x64.exe`, or `-arm64`): run the installer
+  `xattr -dr com.apple.quarantine "/Applications/SuperResearch OS.app"` once.
+- **Windows** (`SuperResearch-OS-<v>-win-x64.exe`, or `-arm64`): run the installer
   (per user; you can choose the folder). It is unsigned, so SmartScreen may
   warn: **More info → Run anyway**.
 - **Linux** (`.deb` or `.AppImage`, x64 or arm64): on Ubuntu and Debian prefer
-  `sudo apt install ./Research-OS-<v>-linux-amd64.deb`, which also installs an
+  `sudo apt install ./SuperResearch-OS-<v>-linux-amd64.deb`, which also installs an
   AppArmor profile so Chromium's sandbox works on Ubuntu 24.04. The AppImage
   needs `libfuse2` (`sudo apt install libfuse2t64` on Ubuntu 24.04), then
   `chmod +x` and run it.
 
 ## First start
 
-1. Open **Research OS**. On first start it asks for your Research OS folder
+1. Open **SuperResearch OS**. On first start it asks for your Research OS folder
    (the one containing `AGENTS.md`); a development run (`npm start`) opens its own clone.
 2. Confirm the folder once: the app runs that folder's scripts (the snapshot
    generator now; os-harness and skill scripts when you use them).

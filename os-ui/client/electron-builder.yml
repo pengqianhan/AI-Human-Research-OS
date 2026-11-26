@@ -40,7 +40,7 @@ nsis:
 
 linux:
   category: Development
-  synopsis: Desktop client for the AI-Human Research OS
+  synopsis: "SuperResearch OS: a desktop app for researchers who already use a coding agent"
   executableName: superresearch-os
   syncDesktopName: true
   maintainer: SuperResearch OS contributors <pengqianhan@users.noreply.github.com>

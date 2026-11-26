@@ -1,6 +1,6 @@
-# os-ui — Research OS 应用界面
+# os-ui — SuperResearch OS 应用界面
 
-AI-Human Research OS 的应用界面:呈现仓库的真实状态,并承载与 agent 的对话。它以
+`os-ui/` 就是 SuperResearch OS 应用本身:呈现仓库的真实状态,并承载与 agent 的对话。它以
 [桌面客户端](client/README.md)(macOS、Windows、Linux)发布,开发时也在浏览器里运行。
 除 [DESIGN.md](DESIGN.md) 列出的几项窄写入外,它不执行动作、不写源文件——文件系统
 仍是唯一事实源;删掉整个 `os-ui/` 目录,OS 本体毫无感知。
