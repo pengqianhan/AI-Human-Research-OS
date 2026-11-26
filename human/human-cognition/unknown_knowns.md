@@ -19,6 +19,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20261121-001 - The running product outranks its documents: checks the agent's claims about a reference product against the installed app and answers with screenshots; medium confidence.
 - cog-20261122-001 - Reading surface before conversation: for the desktop layout, chose the document-first mockup over the conversation-centred one the agent recommended; low confidence.
 - cog-20261126-001 - OpenResearch as the worked example for product mechanics: when a mechanism is open (the Git binding, the bundled demo, whether the app commits), points the agent to how OpenResearch does it, while keeping the decision their own.
+- cog-20261127-002 - The product is its code, not its paper trail: a file belongs in the product repository only if building, running, or understanding the app needs it; planning, history, and superseded artifacts stay out or are deleted.
 
 ## Entries
 
@@ -187,3 +188,25 @@ timestamp: 2026-07-04T00:00:00+12:00
   - Reuse ideas by reimplementation only; its code and text are not copied.
 - related:
   - [cog-20261121-001](unknown_knowns.md#cog-20261121-001-the-running-product-outranks-its-documents)
+
+## cog-20261127-002 The product is its code, not its paper trail
+
+- content: The human holds a boundary the agent had not: the product repository is the client's code and what it ships, and the record of how it was planned and built is not part of the product. An artifact that pictures or documents an earlier form of the system belongs to that earlier system, and one nothing uses any more is deleted, not carried along. They state the boundary by reacting to a concrete item that crosses it, not as a rule in advance.
+- source: inferred
+- confidence: medium
+- evidence: 2026-11-27, after an import rehearsal whose inventory classed the development record (HANDOFF, step designs, old ADRs, a screenshot) as going with the product, the human corrected one item and named the criterion: 「superagent-os是客户端相关的代码，旧截图应该是human ai research os 的截图，这个截图完全不用放在superagent-os 里的」. Asked next for a rule, they accepted "only what building, testing, running, and understanding the app needs", and that the product repository has no HANDOFF. In the same session, unprompted, on an old mockup the agent had proposed to check before deciding: 「os-ui/mockup.html 已经完全没用了,可以删除」. The rule's wording was the agent's and was accepted with a batch of recommendations (see cog-20260923-002), so the boundary's exact line is less certain than its direction.
+- created: 2026-11-27
+- last_updated: 2026-11-27
+- status: active
+- domain: repository layout and scope of the Research OS product
+- scope: What belongs in the product repository against this workspace repository, and whether superseded artifacts are kept. No claim about how they treat research records, results, or papers, where the repository's rules preserve originals.
+- evidence_type: explanation
+- last_verified: 2026-11-27
+- freshness: current
+- responsibility_relevance:
+  - When sorting files between the product and the workspace, class by what the app needs, and leave out anything that only records how it came to be; when unsure, leave it out and say so.
+  - Show a sorting as a short list of concrete files per class before building on it: the human corrects from examples, and a class name such as "development record" hid the disagreement for a day.
+  - When an artifact is superseded, ask whether to delete it, instead of proposing to carry or re-check it.
+- related:
+  - [cog-20261121-001](unknown_knowns.md#cog-20261121-001-the-running-product-outranks-its-documents)
+  - [cog-20260923-002](known_knowns.md#cog-20260923-002-recommended-defaults-in-grilling-rounds-are-accepted-without-close-reading)

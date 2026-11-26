@@ -305,11 +305,24 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       only what building, testing, running, and understanding the app needs;
       step 3 is built here first and imported after; the app is renamed
       "SuperResearch OS". That reverses the design's order (§7) and its
-      classes R and Dv (§4). Next, in this repository: the kit's manifest
-      rewritten to that rule; then step 3's pull requests, starting with the
-      rename, each page after its mockup. The import, making the repository
-      public, and removing the product's files from here each wait for the
-      Human Owner's word at the moment they are done.
+      classes R and Dv (§4). The kit's manifest is rewritten to that rule, and
+      the export has two modes: the real import (415 files, no workspace at
+      the root) and a rehearsal that adds a placeholder workspace (439 files).
+      **The import's condition** is the command sequence in
+      [os-build/import/README.md](os-build/import/README.md), run on the real
+      import. On 2026-11-27 it stops at the product's `verify.sh`: its
+      paper-wiki validation, project contract, and generator each need a
+      workspace at the root (the generator: "portfolio has 0 rows"), and the
+      end-to-end suite cannot start without one. The unit tests and the
+      frontend's and client's builds and tests already pass there; with the
+      placeholder workspace everything passes (end-to-end 83 of 83). Also to
+      mend before the import: 77 relative links in 25 exported files point at
+      files that stay here (`HANDOFF.md`, `os-build/GOAL.md`, ADR-0003, and
+      workspace files; the check lists them). Next, in this repository: step
+      3's pull requests, starting with the rename, each page after its
+      mockup. The import, making the repository public, and removing the
+      product's files from here each wait for the Human Owner's word at the
+      moment they are done.
 - [ ] Step 4, agent layer: the harness ported to TypeScript with a command-line
       entry, the Agents page, one resident process per conversation with
       permission requests relayed to the UI, and an ACP adapter. Acceptance: one
