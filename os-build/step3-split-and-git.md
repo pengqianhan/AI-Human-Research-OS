@@ -76,9 +76,9 @@ must build (**build**) or change (**change**).
 | 4 | No folder is saved, so the welcome page appears. Today it says to clone this repository (`os-ui/frontend/src/components/StateMissing.tsx:52-63`) | **change** to screen S1 (§6): **New workspace…** and **Open a workspace…** |
 | 5 | They click **New workspace…**, choose an empty folder, keep the example ticked, and click **Create** | Screen S2: **build**. The app runs the template's `new_workspace.py` with the Python it already chose (`os-ui/client/src/main/index.ts:134`, `python.ts`) from the installer's resources: **build** (PRs 6, 7, 8) |
 | 6 | The folder now holds the workspace (list below) | `new_workspace.py`: **build** (PR 6) |
-| 7 | The app opens it without the trust question (it wrote the folder itself), runs the snapshot generator, and Home shows the `nanochat_cpu` card | Opening exists (`index.ts:130-196`, `:209-215`); the trust question (`index.ts:241-254`): **change** to skip a folder the app just created. The generator passes here because the example gives the portfolio one row; an empty workspace fails today (§5.8 a) |
+| 7 | The app opens it without the trust question (it wrote the folder itself), runs the snapshot generator, and Home shows the `nanochat_cpu` card | Opening exists (`index.ts:130-196`, `:209-215`); the trust question (`index.ts:241-254`): **change** to skip a folder the app just created. The generator passes here because `new_workspace.py` registers the example with `adopt`, which writes its portfolio row and index bullet (§5.2); an empty workspace fails today (§5.8 a) |
 | 8 | **Dispatch.** They type into Home's root-agent bar, for example "Run the nanochat_cpu example and report". The app starts one harness turn at the workspace root, in mode `full` | `os-ui/frontend/src/components/AgentChat.tsx:166` (mode `full`), `os-ui/frontend/server/chat.ts:124-126`, `:159-161` (exist) |
-| 9 | The root agent reads the workspace's `AGENTS.md` and the `project-dispatch` skill, proposes a brief, and dispatches when the tester says yes: `python os-harness/harness.py run --agent claude --cwd projects-folder/nanochat_cpu --mode full --detach -` | Skill text exists (`research-skills-hub/open-paper-skills/project-dispatch/SKILL.md:35-43`). The workspace edition of `AGENTS.md`: **build** (PR 6). Its baseline step (`SKILL.md:31-34`) reads the workspace repository: **change** to read the project's repository (PR 5) |
+| 9 | The root agent reads the workspace's `AGENTS.md` and the `project-dispatch` skill, proposes a brief, and dispatches when the tester says yes: `python os-harness/harness.py run --agent claude --cwd projects-folder/nanochat_cpu --mode full --detach -` | Skill text exists (`research-skills-hub/open-paper-skills/project-dispatch/SKILL.md:35-43`). **change** (PR 5): the skill's `H` is a bare `python os-harness/harness.py` (`SKILL.md:14-15`). The app itself avoids a bare Python (`os-ui/client/DESIGN.md:592-599`), and a clean machine with only uv may have no `python` on PATH (not established, §9), so `H` becomes `uv run --no-project --python 3.12 -- python os-harness/harness.py`. Its baseline step (`SKILL.md:31-34`) reads the workspace repository: **change** to read the project's own repository when it has one (PR 5). The workspace edition of `AGENTS.md`: **build** (PR 6) |
 | 10 | **Run.** The harness writes the project repository's state into the turn's first record. The project agent runs `bash runs/runcpu_small.sh all` from `Code/nanochat/` and writes `Code/results/` and a Progress Log line. The harness writes the end state into the turn's last record. A notification shows when the turn ends | The run command (`Code/README.md:36-39`) and notification (`os-ui/client/DESIGN.md` §7) exist. The state records: **build** (PR 2); today the first record holds only the prompt and a process id (`os-harness/core.py:362`) |
 | 11 | **Report.** They ask the root agent how it went. It reads the trace, checks the work, and reports files changed, each criterion met or not, and the commit the run started and ended on | Track and Review exist (`SKILL.md:67-91`); the review's diff (`SKILL.md:83-85`): **change** to the project's repository (PR 5) |
 | 12 | They also see it themselves: in `nanochat_cpu`'s workspace, under **Conversations**, the run's lines show the commits; the **Code** tab's **Changes** lists the commit | Turn lines exist (`AgentChat.tsx:714-725`): **change** (PR 3). Changes reads a project's own repository first (`os-ui/frontend/server/codeGit.ts:529-536`, exists; needs Git 2.45 or later, `HANDOFF.md:803`) |
@@ -93,21 +93,21 @@ must build (**build**) or change (**change**).
    | Path | Origin |
    |---|---|
    | `.git/` | `git init`, no commit (§8 Q5) |
-   | `.gitignore` | stub: `/projects-folder/*/` except `templates/` and `index.md`; `.env`; `os-harness/sessions/`; `os-ui/frontend/public/state.json*`; `.venv/`, `__pycache__/`, `.DS_Store` |
+   | `.gitignore` | stub: `.env`; `os-harness/sessions/`; `os-ui/frontend/public/state.json*`; `.venv/`, `__pycache__/`, `.DS_Store`; then one line per registered project, `/projects-folder/<Name>/`, written by `adopt` or `new` (§5.6) |
    | `.python-version`, `.env.example` | copy |
    | `AGENTS.md` | stub: the workspace edition (marker, `os-ui/client/src/main/workspace.ts:5`) |
    | `.claude/skills/<5>`, `.agents/skills/<5>` | links into the hub copy below, one per skill (§5.8 d on Windows) |
    | `os-harness/harness.py`, `core.py`, `adapter_claude.py`, `adapter_codex.py`, `README.md`, `index.md`, `.gitignore` | copy (marker `os-harness/harness.py`) |
    | `os-ui/generator/generate.py`, `README.md`, `pyproject.toml`, `uv.lock` | copy (marker `os-ui/generator/generate.py`) |
    | `os-ui/frontend/public/state.json` | written by the generator on first open (`os-ui/generator/generate.py:1093-1108`), ignored |
-   | `memory/index.md`, `memory/MEMORY.md`, `memory/paper-sources.json` | stubs: empty Research Policy (human-led defaults), Active Projects, and Key Decisions tables; paper-search's default switches |
+   | `memory/index.md`, `memory/MEMORY.md`, `memory/paper-sources.json` | stubs: empty Research Policy (human-led defaults), Active Projects, and Key Decisions tables; paper-search's default switches. With the example, `adopt` then writes its Active Projects row |
    | `ideas/index.md`, `ideas/log.md`, `inbox/index.md` | stubs, empty |
    | `ideas/nanochat-cpu-baseline.md` | copy, with the example only (its project's `Started` links to it, and `validate` requires the file: `research-project-manager/scripts/manage_research_project.py:749-753`) |
    | `paper-wiki/index.md` and its collections' empty `index.md` files, `paper-wiki/viz.html` | stubs; `viz.html` rendered from the empty wiki at creation (not established that the renderer accepts an empty wiki, §9) |
    | `research-skills-hub/open-paper-skills/{project-dispatch, research-project-manager, research-skill-installer, paper-search, paper-wiki-manager}/` | copy (§8 Q8) |
-   | `projects-folder/index.md` | stub, then one bullet added for the example |
+   | `projects-folder/index.md` | stub; with the example, `adopt` adds its bullet |
    | `projects-folder/templates/index.md`, `templates/ai_research_template/` (14 files today, plus a `.gitignore`, PR 4) | copy |
-   | `projects-folder/nanochat_cpu/` | cloned from a Git bundle in the installer: the 73 tracked files of today plus `.git/` with one commit (§5.3) |
+   | `projects-folder/nanochat_cpu/` | cloned from a Git bundle in the installer: the 73 tracked files of today plus `.git/` with one commit (§5.3); then registered with `adopt` |
    | `os-harness/sessions/` | created by the first turn (`core.py:323-324`), ignored |
 
 3. **Where `nanochat_cpu` comes from.** From the installer, as one Git bundle file
@@ -219,6 +219,20 @@ All shown unless marked.
 - The app and bare-CLI dispatch both reach agents only through `harness.py`
   (`chat.ts:124-126`; `project-dispatch/SKILL.md:14-15`, `:37-43`). It is the one
   place both pass through.
+- Who reads a trace today:
+  - the conversation endpoint, which lists and replays sessions by working folder
+    (`chat.ts:89-110`), for `AgentChat`, which draws the events
+    (`AgentChat.tsx:673-728`);
+  - the notifier, which looks for a new `done` record
+    (`os-ui/client/src/main/notifier.ts:38`, `:92`, `:112`);
+  - `project-dispatch`, through `H sessions --json` and `H show`
+    (`project-dispatch/SKILL.md:67-73`).
+
+  The generator reads none: its `agent_activity` is always empty
+  (`generate.py:1088`).
+- `project-dispatch` calls the harness with a bare `python`
+  (`project-dispatch/SKILL.md:14-15`). The app instead runs it through uv, or through
+  a system Python it has probed (`DESIGN.md:592-599`).
 - "Run" means three things in the repository today:
   - an Agent Run, one harness turn (`CONTEXT.md:71-72`);
   - a round, `Code/runs/<id>/result.json`, which the generator reads as `id`,
@@ -378,10 +392,12 @@ today, plus `resources/workspace-template/`:
 - `new_workspace.py`;
 - `examples/nanochat_cpu.bundle`.
 
-The template folder goes outside the asar archive (electron-builder's
-`extraResources`). The reason is known Electron behaviour, not tested here: a Python
-process cannot open files inside `app.asar`, which only Electron's own file
-functions read.
+`build.mjs` assembles that folder as `out/workspace-template/`. It copies what the
+manifest names and calls `new_workspace.py --build-example-bundle` for the bundle
+(§5.3). electron-builder then copies `out/workspace-template/` outside the asar
+archive with `extraResources`. The reason is known Electron behaviour, not tested
+here: a Python process cannot open files inside `app.asar`, which only Electron's
+own file functions read.
 
 **The check that proves separation (proposed, run by `ci.yml`).** A script,
 `os-ui/workspace-template/check_separation.py`, does four things and fails on any
@@ -401,7 +417,9 @@ hit.
    - empty files such as `.gitkeep`, whose hash every empty file shares.
 3. **Allowlist.** Fail if `os-ui/client/out/` holds a path outside a fixed list:
    `main.cjs`, `preload.cjs`, `renderer/**`, `plugins/<bundled id>/**`, `icon.png`,
-   and the template folder as its manifest lists it.
+   and `workspace-template/` as its manifest lists it. Also fail if
+   `electron-builder.yml` names any `files` or `extraResources` source outside
+   `out/` and `package.json`, so nothing can reach the installer around the check.
 4. **The workspace works.** Run the generator and
    `manage_research_project.py --repo <tmp> validate` on both workspaces. Both
    must pass.
@@ -421,8 +439,9 @@ Step 3 needs the client's `out/` in the required job, so `ci.yml` gains
 - The Bare-CLI row requires a workspace to stay "fully usable from Claude Code or
   Codex with no app running" (`HANDOFF.md:781`). The port to TypeScript is step 4
   (`HANDOFF.md:264-269`, `:795`).
-- An AppImage's files are reachable only through its mount while it runs
-  (`DESIGN.md:589-591`).
+- An AppImage runs from a mount, whose paths the client strips from child processes
+  (`DESIGN.md:589-591`). That the mount, and the files in it, are gone while the app
+  is not running is known AppImage behaviour, not shown here.
 - The harness puts traces beside itself (`core.py:52`). The generator finds the root
   two levels above itself (`generate.py:40-54`).
 
@@ -457,7 +476,7 @@ to replace these files.
 
 | Option | Cost | Breaks |
 |---|---|---|
-| **A. One Python script, `new_workspace.py`, in the product source** (`os-ui/workspace-template/`), shipped in the installer's resources | More Python to port at step 4. The app runs bundled Python for the first time | Nothing. Without the app, the same command runs from a clone of the product repository, or from the installed app's resources folder (`uv run --no-project --python 3.12 -- python new_workspace.py <dir> [--example nanochat_cpu]`) |
+| **A. One Python script, `new_workspace.py`, in the product source** (`os-ui/workspace-template/`), shipped in the installer's resources | More Python to port at step 4. The app runs bundled Python for the first time | Nothing. Without the app, the same command runs from a clone of the product repository, or from the installed app's resources folder (`uv run --no-project --python 3.12 -- python new_workspace.py <dir> [--example nanochat_cpu]`). From a clone there is no bundle yet, so the script builds the example's commit itself, the same way `build.mjs` asks it to (§5.3) |
 | B. TypeScript in the app only | No new Python | The Bare-CLI row, unless option D is written as well |
 | C. The app as a command (`"Research OS" --new-workspace <dir>`) | A second command-line surface before step 4's; the single-instance lock (`index.ts:498-503`) has to let it through | Works only where the app is installed |
 | D. Written manual steps (copy a folder, `git init`) | No code | Error-prone: the template is assembled from several sources, and nothing tests the steps |
@@ -469,10 +488,18 @@ nothing beyond the named prerequisites.
 
 - For a **workspace**, `new_workspace.py` (§8 Q5).
 - For a **new project**, `research-project-manager new`, as the row says. Its
-  repository function is shared with a new `adopt <Name>` command, which turns an
-  existing project folder into its own repository without a commit. This instance
-  needs `adopt` (PR 10); so does any workspace made before step 3.
+  repository function is shared with a new `adopt <Name>` command for a project
+  folder that already exists. `adopt` does four things:
+  - `git init` when the folder has no `.git` of its own, with no commit;
+  - write its portfolio row, as `sync` does (`manage_research_project.py:484`);
+  - add its index bullet, as `new` does (`:543`); `sync` adds none (`:1039-1055`);
+  - add `/projects-folder/<Name>/` to the workspace's `.gitignore` when the workspace
+    is a Git repository. `new` adds the same line.
+
+  This instance needs `adopt` (PR 10), and so does any workspace made before step 3.
 - The **example** is a `git clone` of the bundle (§5.3), not an init.
+  `new_workspace.py` then runs `adopt nanochat_cpu`, which finds the `.git` and only
+  registers the project.
 
 The app calls only `new_workspace.py`. Agents call the project manager.
 
@@ -504,15 +531,21 @@ both callers.
    beside it, and points the manifest there. That copy is product source, not a
    project of this workspace: it is not under `projects-folder/` and not in the
    portfolio. Whether that satisfies "what ends is tracking project files" is §8 Q7.
-2. **The installer.** At build time, `build.mjs` turns the example *as committed in
-   this repository* into one commit:
+2. **The installer.** One Python step, `new_workspace.py --build-example-bundle`,
+   turns the example *as committed in this repository* into one commit:
    - in a temporary repository;
    - with a fixed author ("Research OS example") and a fixed date;
    - from the committed files, not the checkout, so Windows line endings cannot
      change it.
 
-   It writes that commit as `nanochat_cpu.bundle`. New workspace clones the bundle
-   into `projects-folder/nanochat_cpu/` and removes the clone's `origin`.
+   It writes that commit as `nanochat_cpu.bundle`. Three callers use the same step:
+   - `build.mjs`, for the installer (Python is installed on every `desktop.yml` row,
+     `desktop.yml:70-72`);
+   - `ci.yml`'s template check (PR 6);
+   - `new_workspace.py` itself, when run from a clone of this repository.
+
+   New workspace clones the bundle into `projects-folder/nanochat_cpu/`, removes the
+   clone's `origin`, and runs `adopt nanochat_cpu`.
    - The tester's project then has a commit without a Git name or email, and
      offline.
    - Every machine gets the same commit hash for the same app build, so you can
@@ -520,9 +553,10 @@ both callers.
      PR to show: build on two OS rows and compare the hashes.
 3. **Your own `projects-folder/nanochat_cpu/`.**
    - This repository stops tracking it (`git rm --cached`, which leaves the files
-     on disk) and ignores `/projects-folder/*/`.
-   - `adopt nanochat_cpu` then gives it its own repository; you make its first
-     commit.
+     on disk).
+   - `adopt nanochat_cpu` then gives it its own repository and adds
+     `/projects-folder/nanochat_cpu/` to this repository's `.gitignore`. You make its
+     first commit.
    - The old history stays in this repository's log.
    - On your other machines, pulling that commit deletes the tracked files there.
      Their ignored `.venv/` and `.cache/` stay. Each machine then copies the
@@ -534,12 +568,14 @@ both callers.
 5. **`./verify.sh`.** Under CI the portfolio row and the idea point to a folder the
    checkout cannot have. `validate` gets a `--absent-ok` flag, which `verify.sh`
    passes only when `CI` is `true`:
-   - with the flag, a registered project whose folder is missing and ignored is a
-     warning, `project_not_in_checkout`, not a `phantom_row` or
-     `promoted_idea_without_project` error;
+   - with the flag, a registered project whose folder is missing, and whose line is
+     in the workspace's `.gitignore`, is a warning, `project_not_in_checkout`, not a
+     `phantom_row` or `promoted_idea_without_project` error;
    - on your machine, without the flag, a missing folder stays an error.
 
-   §8 Q10 asks about this.
+   The flag and the `verify.sh` edit land in PR 5, together with `new`'s ignore
+   line. From that merge, a project an agent creates here is its own repository, so
+   CI must already tolerate its absence. §8 Q10 asks about this.
 6. **The tester.** They get the bundle (§2).
 
 **Options for the tester's copy** (§8 Q1):
@@ -636,7 +672,7 @@ until `adopt`.
 
 | Option | Cost | Breaks |
 |---|---|---|
-| **Ignored** (`/projects-folder/*/`, with `templates/` and `index.md` kept) (default) | One rule | Nothing known |
+| **Ignored**, one line per project (`/projects-folder/<Name>/`, written by `new` and `adopt`) (default) | One line per project. A folder made by hand, without the manager, shows as untracked until it is adopted | Nothing known. A single `/projects-folder/*/` rule was considered and set aside: in this repository it would hide new files inside `nanochat_cpu` while that folder is still tracked (PRs 5 to 10) |
 | Submodule | Each project needs a URL. A clone of the workspace cannot restore projects that have no remote | The Code view: a submodule's `.git` is a file, which the handler refuses (`codeGit.ts:407`) |
 | Nothing | No rule | Every `git status` at the root lists each project as untracked. A `git add -A` or `git add .` at the root records the project as an embedded-repository entry (Git's documented behaviour; not run here, §9) |
 
@@ -718,7 +754,7 @@ cover each item below and pin each with a test, in CI, against hostile fixtures:
 
 - `ci.yml` gains the template build and check, and the client build for `out/` (§4).
   Its existing `discover` lines pick up the new harness and project-manager tests.
-- `verify.sh` passes `--absent-ok` under CI (§5.3).
+- `verify.sh` passes `--absent-ok` under CI, from PR 5 (§5.3).
 - `desktop.yml` builds its test workspace with `new_workspace.py` and fixes the
   smoke-step pattern (§3).
 - `pages.yml` is untouched. What it publishes stays your call (`HANDOFF.md:775`).
@@ -784,8 +820,12 @@ g. **`project-dispatch` has to change.**
    - With the project ignored there, they see no change at all.
    - **Default:** the baseline is the harness's start record plus `git -C
      projects-folder/<P> status --porcelain`; the review compares against that.
+   - A project with no `.git` of its own keeps today's commands. That is this
+     instance's `nanochat_cpu` between PR 5 and PR 10, and any project not yet
+     adopted.
    - A change outside the project is still found with the workspace's own `git
      status`.
+   - `H` goes through uv, not a bare `python` (§2 row 9).
 
 h. **The harness finds Git differently from the app.**
    - The harness has no check for the macOS stub (point 2 of the review list).
@@ -920,12 +960,12 @@ page or changes one waits for your choice from the mockup.
 | 2 | Harness records the repository state at a turn's start and end (§5.4), with the read guards of §5.6 and the stub check (§5.8 h) | New offline tests: clean, changed, no commit yet, no repository, a project without `.git` inside a workspace with one, no Git; the existing 18 offline tests still pass | none visible | no (the existing `discover` line runs the tests) |
 | 3 | S5 in the conversation, after the mockup | An end-to-end case: a project repository with one commit; a turn shows "on <short> · clean" | A checklist line: send a project turn, read the line | no |
 | 4 | `.gitignore` for the project template, and `nanochat_cpu`'s gains the rules of §5.8 c | `./verify.sh` passes | none | no (edits, no moves) |
-| 5 | `research-project-manager`: `new` runs a guarded `git init` (no commit); `adopt <Name>`; `validate --absent-ok`. `project-dispatch` text: baseline, review, and Accept in the project's repository | Unit tests in the skill's `scripts/`: hostile fixtures (hooks, `fsmonitor`, a `.gitattributes` filter, a `.git` file or link, a templateDir); `./verify.sh` passes | none until PR 10 | no |
-| 6 | `os-ui/workspace-template/`: manifest (naming the example at `projects-folder/nanochat_cpu/` for now), stubs, the workspace `AGENTS.md`, `new_workspace.py`, `check_separation.py` (canary, content, workspace-works parts) | `ci.yml` builds two workspaces into temporary folders and checks them (§4) | none visible | **Word**: new `ci.yml` step |
-| 7 | The installer carries the template and `nanochat_cpu.bundle` (built from the example as committed); `check_separation.py`'s allowlist part runs on `out/` in `ci.yml` | The bundle builds on two `desktop.yml` rows with the same hash; the payload check passes in `ci.yml` | none visible | **Word**: changes what the installer contains and what CI runs |
+| 5 | `research-project-manager`: `new` runs a guarded `git init` (no commit) and writes the project's ignore line; `adopt <Name>`; `validate --absent-ok`. `verify.sh` passes the flag when `CI` is `true`. `project-dispatch` text: `H` through uv; baseline, review, and Accept in the project's own repository when it has one, today's commands when it has none | Unit tests in the skill's `scripts/`: hostile fixtures (hooks, `fsmonitor`, a `.gitattributes` filter, a `.git` file or link, a templateDir); a project absent from a checkout passes with the flag and fails without it; `./verify.sh` passes | none until PR 10. The skills are linked into this workspace, so `new` makes repositories here from the merge on | **Word**: changes what `verify.sh` checks in CI |
+| 6 | `os-ui/workspace-template/`: manifest (naming the example at `projects-folder/nanochat_cpu/` for now), stubs, the workspace `AGENTS.md`, `new_workspace.py` with `--build-example-bundle`, `check_separation.py` (canary, content, workspace-works parts) | `ci.yml` builds the example's bundle and two workspaces into temporary folders and checks them (§4) | none visible | **Word**: new `ci.yml` step |
+| 7 | `build.mjs` assembles `out/workspace-template/` and calls `new_workspace.py --build-example-bundle`; `electron-builder.yml` copies it with `extraResources`; `check_separation.py`'s allowlist part runs on `out/` and `electron-builder.yml` in `ci.yml` | The bundle builds on two `desktop.yml` rows with the same hash; the payload check passes in `ci.yml` | none visible | **Word**: changes what the installer contains and what CI runs |
 | 8 | S1, S2, S3, S4, S6 after the mockup; the trust question skipped for a folder the app made | End-to-end cases: S2 makes a workspace with the example, Home shows the card, a project turn shows S5's line; each S2 failure (no Git, folder not empty) | Checklist lines for New workspace, its failures, and the Settings rows | no |
 | 9 | End-to-end and packaged cases build their workspace with `new_workspace.py`; the smoke pattern names real cases; `desktop.yml` stops copying this repository | The three full rows pass; the packaged rows run the cases they name | none | **Word**: changes what CI runs |
-| 10 | This instance: copy `nanochat_cpu` and its idea file to `os-ui/workspace-template/examples/` and point the manifest there; `git rm --cached -r projects-folder/nanochat_cpu`; the ignore rule; a runbook for `adopt` on each of your machines | `./verify.sh` passes in CI with `--absent-ok`; on your machine, after `adopt` | You run the runbook, open the app on this repository, and see `nanochat_cpu`'s Code tab list your first commit | **Word**: untracks tracked files |
+| 10 | This instance: copy `nanochat_cpu` and its idea file to `os-ui/workspace-template/examples/` and point the manifest there; `git rm --cached -r projects-folder/nanochat_cpu`; `adopt nanochat_cpu`, which writes its ignore line; a runbook for `adopt` on each of your machines | `./verify.sh` passes in CI with `--absent-ok`; on your machine, after `adopt` | You run the runbook, open the app on this repository, and see `nanochat_cpu`'s Code tab list your first commit | **Word**: untracks tracked files |
 | 11 | Tester sheet; client README "What you need" and checklist; `DESIGN.md` §0, §4, §8 for Git required and the new write; HANDOFF by the directing agent | Links resolve (`./verify.sh`) | You read the tester sheet | no |
 
 **After PR 11:**
@@ -991,8 +1031,8 @@ Each has a default that holds if you do not answer, and a way back.
      runbook once.
    - Is a product copy under `os-ui/` acceptable under "what ends is tracking project
      files in the workspace repository"?
-   - **Reverse:** track `projects-folder/nanochat_cpu/` again and remove the ignore
-     rule.
+   - **Reverse:** track `projects-folder/nanochat_cpu/` again and remove its ignore
+     line.
 
 8. **Which skills ship in a new workspace?**
    - **Default:** the five the app and the root agent need: project-dispatch,
@@ -1041,8 +1081,9 @@ Each has a default that holds if you do not answer, and a way back.
 6. **`research-project-manager` against the Project repositories row.** Its text says
    commits happen at session end and importing a repository is out of scope
    (`SKILL.md:100-106`). The row makes `new` initialize a repository.
-7. **Bare-CLI against product code only in the app.** Impossible for an AppImage that
-   is not running, and for an uninstalled app (§5.1 B).
+7. **Bare-CLI against product code only in the app.** Impossible for an uninstalled
+   app, and, by known AppImage behaviour not shown here, for an AppImage that is not
+   running (§5.1 B).
 8. **Submodules against the Code view.** A submodule's `.git` is a file, which the
    handler refuses (`codeGit.ts:407`). The Git row's later "worktree per
    conversation" meets the same refusal (`:407`, `:433`). That is beyond step 3, but
@@ -1092,6 +1133,13 @@ Each has a default that holds if you do not answer, and a way back.
 - **Agents in nested repositories.** Whether Claude Code and Codex read the
   workspace's root `AGENTS.md` when the working folder is its own repository
   (§5.8 e).
+- **A first turn on a clean account.** The first headless `full` turn in a folder
+  neither agent has seen, on an account with no earlier use, was not tried for
+  either agent. One such turn, root and project, belongs before the tester gets the
+  file.
+- **A bare `python` on a clean machine.** Whether a machine with only uv has
+  `python` on PATH for the root agent's shell. If not, today's `H`
+  (`project-dispatch/SKILL.md:14-15`) fails at dispatch.
 - **Windows links.** Whether links can be made on Windows by `new_workspace.py`
   without Developer Mode (§5.8 d).
 - **Paper wiki.** Whether `generate_viz.py` and `validate_paper_wiki.py` accept an
