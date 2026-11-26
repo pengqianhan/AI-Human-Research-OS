@@ -29,17 +29,17 @@ the harness is [os-harness](../os-harness/README.md).
 > lines, and the mockup changed, so every `path:line` in any other file reads the
 > same at both commits.
 >
-> **Revised so far:** §4, §5, §7, §8. The other sections still describe one
-> repository until this line lists them.
+> **Revised so far:** §1, §2, §3 (facts added), §4, §5, §6, §7, §8. §9 still
+> describes one repository until this line lists it.
 
 ## 1. Outcome
 
-**What the tester does.** You send one person an installer from a CI run, and only
-when you say so. Before they open it, they install uv, Git, and Claude Code or
-Codex, signed in. On Windows, Git for Windows also gives them bash, which the
-example needs. They open the app, click **New workspace**, pick an empty folder, and
-leave **Add the example project nanochat_cpu** ticked. The app fills the folder from
-a template built into the app:
+**What the tester does.** You send one person an installer from a CI run of the
+product repository, SuperResearch OS, and only when you say so. Before they open
+it, they install uv, Git, and Claude Code or Codex, signed in. On Windows, Git for
+Windows also gives them bash, which the example needs. They open the app, click
+**New workspace**, pick an empty folder, and leave **Add the example project
+nanochat_cpu** ticked. The app fills the folder from a template built into the app:
 
 - the scripts the agents use;
 - five skills;
@@ -53,31 +53,42 @@ On Home they ask the root agent to run the example. The root agent hands the wor
 done, they ask the root agent for the report. Every agent turn now notes three
 things: the commit the project was on when the turn started, the commit when it
 ended, and how many files were left uncommitted. The conversation shows that line
-and the report quotes it.
+and the report quotes it. Nothing the tester sees names a repository.
 
-**What changes for your own workspace.** This repository stays one repository, and
-your files stay where they are. Three things change:
+**What changes for your own workspace.** This repository keeps its name and becomes
+your workspace only; your files stay where they are. The product's source moves to a
+new repository, SuperResearch OS (`SuperResearch-OS` on GitHub, private at first).
+Four things change here:
 
-- `nanochat_cpu` stops being tracked here. A copy becomes the example the app ships.
-  Your own `projects-folder/nanochat_cpu/` becomes a Git repository of its own, which
-  this repository ignores.
-- CI stops copying this repository, with `human/`, `memory/`, and `HANDOFF.md`, into
-  its test folders. It builds a fresh workspace instead.
-- A new CI check fails if any file of yours could reach an installer or a new
-  workspace.
+- The product's code, design record, and CI move to the new repository, which
+  starts with one commit and none of this repository's history. What stays of the
+  product here is what every workspace has: the agent scripts, the generator, the
+  project template, and five skills, refreshed from the product by pull requests
+  you approve.
+- `HANDOFF.md` is split: the product's work and decisions go with the product, and
+  this workspace's stay here, with a pointer each way.
+- `nanochat_cpu` stops being tracked here and becomes its own repository, whose
+  first commit you make. A copy is the example the app ships.
+- CI here checks only workspace content: the paper wiki, your portfolio, your
+  skills, and that the app's scripts still read this folder. The product's CI builds
+  fresh workspaces and never sees your files.
 
-**What needs your answer.** There are eleven questions in §8. These four decide the
-most:
+**What you do by hand.** On GitHub: create `SuperResearch-OS`, private and empty,
+then turn on Actions, the required check if your plan allows it on a private
+repository, and the review secret (§5.7). Each step that creates or changes a
+repository, moves tracked files, or changes what CI runs or what the installer
+holds waits for your yes at the moment it is done (§7).
 
-- whether the app ever makes a commit for the user. Default: never during runs; the
-  example arrives already committed.
-- where the tester's example comes from. Default: inside the app.
-- whether this repository may keep both roles, the product's source and your
-  workspace. Default: yes.
-- which prerequisites the tester is told about.
+**What needs your answer.** Seven of §8's questions are decided; fourteen are open,
+each with a default. These four decide the most:
 
-Moving `nanochat_cpu`'s files, changing what CI runs, and changing what the installer
-holds each wait for your word before they are built (§7).
+- what GitHub Pages publishes once the product leaves this repository (Q16).
+  Default: the paper wiki's own viewer alone;
+- what your GitHub plan allows on a private repository: the required check, and
+  the desktop builds on macOS, Windows, and arm64 (Q20);
+- whether the example ships with the lines that name you (Q2). Default: as it is;
+- which prerequisites the tester sheet names (Q9). Default: all of them, on a sheet
+  that stands alone while the product repository is private.
 
 ## 2. The tester's path
 
@@ -86,10 +97,10 @@ must build (**build**) or change (**change**).
 
 | # | What happens | Done by |
 |---|---|---|
-| 1 | They receive one installer file from a run of the Desktop client workflow, only on your explicit word (`HANDOFF.md:261-262`), with a one-page tester sheet | Artifact upload exists (`.github/workflows/desktop.yml:145-154`). The tester sheet: **build** (PR 11) |
+| 1 | They receive one installer file from a run of the product repository's Desktop client workflow, downloaded and sent by you (a private repository's artifacts are open only to people with access), only on your explicit word (`HANDOFF.md:261-262`), with a one-page tester sheet that stands alone | Artifact upload exists (`.github/workflows/desktop.yml:145-154`; the workflow moves to the product repository, §5.7). The tester sheet: **build** (PR 11) |
 | 2 | They have installed beforehand: uv, which fetches the pinned Python 3.12 (`os-ui/client/src/main/python.ts:53-55`, `.python-version`); Git; Claude Code or Codex, signed in; bash (`projects-folder/nanochat_cpu/Code/README.md:29-30`; on Windows from Git for Windows); network for about 0.2 GB of data and 0.2 GB of Python wheels (`Code/README.md:20-21`) and about 1 GB of disk (`:22`). The Decisions name only uv and Python (`HANDOFF.md:262-263`); §8 Q9 asks about the rest | Settings' prerequisite rows exist (`os-ui/client/src/main/doctor.ts:101-105` for Git, which is "not required" today): **change** Git to required |
 | 3 | They install and open the app as the README says for their OS | `os-ui/client/README.md:29-48` (exists) |
-| 4 | No folder is saved, so the welcome page appears. Today it says to clone this repository (`os-ui/frontend/src/components/StateMissing.tsx:52-63`) | **change** to screen S1 (§6): **New workspace…** and **Open a workspace…** |
+| 4 | No folder is saved, so the welcome page appears. Today it says to clone this repository (`os-ui/frontend/src/components/StateMissing.tsx:52-63`), which after the split would hand them your workspace | **change** to screen S1 (§6): **New workspace…** and **Open a workspace…**, with no link to any repository |
 | 5 | They click **New workspace…**, choose an empty folder, keep the example ticked, and click **Create** | Screen S2: **build**. The app runs the template's `new_workspace.py` with the Python it already chose (`os-ui/client/src/main/index.ts:134`, `python.ts`) from the installer's resources: **build** (PRs 6, 7, 8) |
 | 6 | The folder now holds the workspace (list below) | `new_workspace.py`: **build** (PR 6) |
 | 7 | The app opens it without the trust question (it wrote the folder itself), runs the snapshot generator, and Home shows the `nanochat_cpu` card | Opening exists (`index.ts:130-196`, `:209-215`); the trust question (`index.ts:241-254`): **change** to skip a folder the app just created. The generator passes here because `new_workspace.py` registers the example with `adopt`, which writes its portfolio row and index bullet (§5.2); an empty workspace fails today (§5.8 a) |
@@ -103,8 +114,9 @@ must build (**build**) or change (**change**).
 
 1. **What they receive and need.** One installer file and the tester sheet (rows 1, 2).
 2. **What is on disk after New workspace (proposed).** Paths are inside the chosen
-   folder; "copy" means copied from this repository through the installer, "stub" a
-   new file kept in the template.
+   folder; "copy" means copied from the product repository through the installer,
+   "stub" a new file kept in the template. The list is the same for two
+   repositories: it was always built from an allowlist.
 
    | Path | Origin |
    |---|---|
@@ -144,7 +156,9 @@ must build (**build**) or change (**change**).
 Each item is neither on the tester's path nor required by a Decisions row.
 
 - **Updating an existing workspace's scripts from a newer app.** The tester's
-  workspace is fresh, and step 4 replaces the Python.
+  workspace is fresh, and step 4 replaces the Python. This workspace's refresh from
+  a product checkout is in step 3, because the split makes its scripts copies
+  (§5.1).
 - **A New project screen.** The tester uses the example; agents create projects with
   `research-project-manager new`.
 - **A branch per experiment and a worktree per conversation.** The Git row puts them
@@ -165,7 +179,10 @@ Each item is neither on the tester's path nor required by a Decisions row.
   first (§8 Q8).
 - **Letting the Code view read a `.git` file or a linked worktree.** Only the Git
   row's second step needs it (§9, item 8).
-- **Changing what GitHub Pages publishes.** It is yours (`HANDOFF.md:775`).
+- **Changing what GitHub Pages publishes before W-R.** It is yours
+  (`HANDOFF.md:775`); §8 Q16 asks what it becomes when the frontend leaves.
+- **Making the product repository public.** It is private at first, and when it
+  opens is yours (§8 Q12).
 
 ## 3. Facts
 
@@ -350,6 +367,86 @@ All shown unless marked.
     (`PROJECT_MEMORY.md:10`);
   - `Origin` says it was requested by the Human Owner (`:13`);
   - an open to-do names your review and a session id (`:38`).
+
+**Two repositories (added 2026-11-26)**
+
+- Tracked files: 1,890 at `b5fa10f`, classed in §4. Ten of them are links to other
+  repositories (mode 160000) under `os-build/references/`, with no `.gitmodules`.
+- The only `secrets.` references in `.github/workflows/*.yml` are
+  `CLAUDE_CODE_OAUTH_TOKEN` in `claude.yml:37` and `claude-code-review.yml:38`
+  (shown by search). `desktop.yml` says it "has no secrets to expose"
+  (`desktop.yml:63`).
+- `ci.yml` is the required gate, with no path filter (`ci.yml:3-6`). The two bot
+  workflows open pull requests and then dispatch `ci.yml` on their branch
+  (`scan-related-projects.yml:57-62`, `sync-mattpocock-skills.yml:71-79`); the
+  mirror's sync also turns on auto-merge (`:79`).
+- `pages.yml` builds the frontend with this repository's snapshot and its
+  `paper-wiki/` (`pages.yml:46-50`, `:59-63`) and deploys from `autoreadpaper`
+  (`:14-16`). Its three latest runs, on 2026-11-19, -20, and -23, succeeded (`gh run
+  list`).
+- The app names this repository in four places: the Help link
+  (`os-ui/client/src/main/index.ts:43`), the About panel's website (`:442`), the
+  package's `homepage` (`os-ui/client/package.json:14`), and today's welcome page
+  (`os-ui/frontend/src/components/StateMissing.tsx:5`). The generator's docstring
+  does too (`generate.py:4`).
+- The displayed name is "Research OS" (`electron-builder.yml:4`, `package.json:3`);
+  the Settings page says "AI-Human Research OS" (`SettingsPage.tsx:17`); the Name row
+  says the name is unchanged, AI-Human Research OS (`HANDOFF.md:800`).
+- No pull request was open on 2026-11-26 (`gh pr list`); #53 to #60 are merged.
+- This repository's recent commits carry personal email addresses (shown by `git
+  log`; not copied here).
+- Markdown links that would cross the boundary, by file: §5.7, "Links".
+
+**OpenResearch (read 2026-11-26)** at `alphaXiv/OpenResearch` commit `e9b80a6`
+(`e9b80a661ef260729816b3e2675f2143f64ffa34`, the head of its `main` that day),
+public and MIT-licensed. A subagent read it with `gh api` GET requests only and sent
+nothing about this project; one search was sent as `gh api -X GET … -f q=…`, a read
+with the query as a field. Code search misses large files, so no claim below that it
+"never" does something rests on a search. `nanochat_cpu` was ported from its
+`demo/nanochat` at an earlier commit, `27cb342` (`PROJECT_MEMORY.md:13`). Each
+path is at `e9b80a6`.
+
+- **The demo's files** are plain folders under `demo/nanochat/` (`base/`,
+  `experiment/`, `quick/`, `figures/`, `evidence/`, and others: 76 files, about
+  3.6 MB, summed from the tree listing), not a repository, bundle, or submodule.
+  Five folders are compiled into the app (`src/local/demo.rs:169-187`). The module
+  calls it the first-run project, with "deterministic local Git history"
+  (`src/local/demo.rs:1-2`).
+- **Its repository is built on the user's machine:** `git init`, then three commits
+  on four branches from `base/`, `experiment/`, and `quick/`
+  (`src/local/demo.rs:1601-1671`), as author and committer "OpenResearch Demo" with
+  dates fixed at 2026-08-04 12:00 UTC (`:1790-1812`, `:1865-1870`). Hooks and signing
+  are off, and global and system configuration are ignored (`:1814-1871`). The
+  resulting hashes are constants in the source (`:65-74`), and the installed
+  repository is checked against them (`:1727-1775`).
+- **Where and when.** It goes under the app's data folder,
+  `<data_dir>/repos/openresearch-demo/nanochat` (`src/local/git.rs:49-55`), with a
+  local bare `origin` (`src/local/demo.rs:287-288`). It is built in a temporary
+  folder and renamed into place; an unrecognised folder already there is refused and
+  kept (`:1560-1597`). The app prepares it in the background at start while
+  onboarding is unfinished, and installs it when the last onboarding button is
+  pressed (`src/commands/up.rs:299-308`, `:2065-2079`;
+  `ui/src/components/Onboarding.tsx:232-251`). Installing needs no network; running
+  some of it downloads data (`src/local/demo.rs:107`, `:524`).
+- **A run** is an experiment launch, not an agent turn. Each experiment is a branch
+  (`src/store.rs:1424-1439`; `src/local/git.rs:1970-1980`). At submission the tip of
+  the experiment's branch is archived with `git archive` into a content-addressed
+  file and stored as the run's `commit_sha` (`src/compute.rs:40-49`, `:126-150`;
+  `src/engine/runtime.rs:1587`). A run record's fields are in `src/store.rs:286-309`.
+- **Uncommitted files are never part of a run**; its agent skill tells the agent to
+  check that `git status --short` is empty before launching
+  (`agent-skills/orx-git/SKILL.md:33-36`). The agent makes the experiment commits
+  (`:24-31`). The app's own commits found are the demo's and three imports': a new project from a plain folder, a paper's snapshot, and a repository from GitHub (`src/local/git.rs:748-790`, `:1616-1650`, `:1535-1585`); none per run or per turn.
+- **Per chat turn no Git state is stored**: the `chat_turns` table has no Git
+  column (`src/store.rs:1473-1492`). A live view computes a chat's branch, changed
+  files, and diff on request (`src/commands/up.rs:4424-4456`). Each chat gets a
+  worktree under the data folder (`src/local/git.rs:71-77`).
+- **Where the commit is shown:** the command line prints it with each experiment
+  (`src/plane/local_plane.rs:244-249`); the run's popover shows a diff stat against
+  the parent experiment (`ui/src/components/run/RunStatus.tsx:46`, `:128`).
+
+What this design takes from it is in §5.3 and §8 Q1 and Q3, marked as suggestions
+apart from what is decided. No code or text of it is copied.
 
 **Git experiments.** The design agent ran none: the worktree guard of its session
 refused any Git command with `HOME` or `GIT_CONFIG_GLOBAL` redirected. The directing
@@ -1277,6 +1374,12 @@ n. **The development run opens the product checkout.** §5.7, "The product
 The mockup is drawn from this list. Words in quotation marks are proposed text.
 The clickable mockup is [os-ui/mockups/step3/workspace.html](../os-ui/mockups/step3/workspace.html).
 
+Revised 2026-11-26 in two ways. The points where the mockup departed from this
+list, and the gaps it found, are adopted here (each marked *adopted from the
+mockup*); the words it suggested are adopted too. The split itself changes no
+screen's behaviour: no screen of step 3 names a repository. **What the mockup must
+change to match** is listed at the end of this section.
+
 **S1. Welcome (no workspace open).**
 
 - **For:** a first start, or a start after the saved folder became unusable.
@@ -1285,62 +1388,92 @@ The clickable mockup is [os-ui/mockups/step3/workspace.html](../os-ui/mockups/st
 - **Shows:**
   - the title "Start with a workspace";
   - the sentence "Research OS has no model of its own: it starts your own Claude
-    Code or Codex, on your own plan" (the Distribution row's first-run sentence,
+    Code or Codex, on your own plan." (the Distribution row's first-run sentence,
     `HANDOFF.md:765`);
   - the problem with the saved folder, if there is one;
-  - the prerequisite rows (S4).
+  - the prerequisite rows (S4), as they read before any workspace is open: no
+    Folder row; Claude Code and Codex read "Checked once a workspace is open." in
+    the neutral state, not today's "error" with "Needs a Research OS folder and
+    Python to check." (`doctor.ts:108-111`); the header says "ready" when uv or
+    Python and Git are found, since nothing else can be checked yet.
+- **Where a workspace comes from.** S1 names no repository and has no link to clone
+  one. Today's "No folder yet? Get the Research OS and clone it first", which links
+  this repository (`StateMissing.tsx:5`, `:57-63`), is gone: after the split, that
+  link would hand a user your workspace. A workspace comes from **New workspace…**,
+  or is one the user already has, opened with **Open a workspace…**.
 - **Can do:** **New workspace…** (opens S2), **Open a workspace…** (today's folder
-  picker), and **Check again** on the prerequisites.
+  picker), and **Check again** on the prerequisites, which renames today's
+  "re-check" (`DesktopStatus.tsx:78`).
 - **Failures:**
   - *No Git:* New workspace is disabled, beside "Git is needed for projects and
-    runs. Install it, then Check again", with the download link. Open still works.
-  - *No uv or Python:* both buttons are disabled with today's row text and link;
-    nothing runs without Python.
+    runs. Install it, then Check again.", with the Git row's link, which keeps
+    today's text "How to install" (*adopted from the mockup*). Open still works.
+  - *No uv or Python:* both buttons are disabled with today's row text and a link
+    to uv's installation page in place of python.org; nothing runs without Python.
   - *No Git identity:* nothing changes here (S4 shows it).
   - *Folder not empty:* not applicable.
 
 **S2. New workspace.**
 
 - **For:** creating a workspace.
-- **When:** from S1, or from File → **New Workspace…** (S3).
+- **When:** from S1, or from File → **New Workspace…** (S3). From the menu it is a
+  dialog over the open workspace, and **Cancel** returns there. Whether S2 is a step
+  after S1 (alternative A, the mockup's recommendation) or part of S1's card (B) is
+  your choice in the mockup; in B the form has no **Cancel**, because there is
+  nothing to go back to (*adopted from the mockup*).
 - **Shows:**
-  - a field for the folder, with **Choose…**. The folder may not exist yet; if it
-    exists, it must be empty, hidden files included;
+  - the heading "New workspace" (*adopted from the mockup*);
+  - a field labelled "Folder", with **Choose…**. The folder may not exist yet; if
+    it exists, it must be empty, hidden files included;
   - a ticked box "Add the example project nanochat_cpu (a three-minute training
     run; it downloads about 0.4 GB when you run it)";
-  - a short list of what will be written: "agent scripts, five skills, empty memory,
-    ideas, inbox and paper wiki, the project template, and the example as its own
-    Git repository";
+  - under the label "Will be written" (*adopted from the mockup*), a short list:
+    "agent scripts, five skills, empty memory, ideas, inbox and paper wiki, the
+    project template, and the example as its own Git repository". With the box
+    unticked it ends "…, and the project template" (*adopted from the mockup*);
   - the line "The workspace and the example are Git repositories. Nothing is
-    committed under your name";
+    committed under your name."; unticked, "The workspace is a Git repository.
+    Nothing is committed under your name." (*adopted from the mockup*);
+  - the prerequisite rows (S4), as on S1 (*adopted from the mockup*: S4 already
+    said its rows appear inside S2);
   - **Create** and **Cancel**.
 - **While creating:** a line of progress ("Copying files…", "Making the example's
-  repository…", "Reading the workspace…"). **Cancel** is disabled.
+  repository…", "Reading the workspace…"; unticked, without the second). **Create**
+  and **Cancel** are both disabled (*adopted from the mockup*).
 - **After:**
   - success: the app opens the new workspace on Home;
-  - failure: the screen stays, with the message and **Show log**.
+  - failure: the progress stops, and the screen stays with the message and
+    **Show log**.
   - The folder is built under a temporary name beside the target and renamed at the
     end, so a failure leaves nothing at the chosen path.
 - **Failures:**
   - *No Git:* **Create** is disabled with S1's sentence.
-  - *No uv or Python:* **Create** is disabled with the row's text and link.
-  - *Folder not empty:* "This folder is not empty. Choose an empty or new folder";
+  - *No uv or Python:* **Create** is disabled with the row's text and uv's link.
+  - *Folder not empty:* "This folder is not empty. Choose an empty or new folder.";
     **Create** is disabled. The app never writes into a folder with files in it.
   - *No Git identity:* nothing is blocked, because no commit needs it. The line
     under the list reads "Your Git name and email are not set; you will need them to
-    commit your own work (see Settings)".
-  - *Cannot write there:* "Research OS cannot write to this folder: <reason>".
+    commit your own work (see Git name and email below)." On a first start there is
+    no Settings page to point to, and the row is on the same screen (*the mockup's
+    suggested words*).
+  - *Cannot write there:* found when **Create** runs, not when the folder is
+    chosen: the progress stops, and "Research OS cannot write to this folder:
+    <reason>." shows with **Show log** (*adopted from the mockup*).
   - *Folder inside another Git repository:* a warning, not a block: "This folder is
     inside the Git repository at <path>; the new workspace will be a repository
-    inside it".
+    inside it." **Create** stays enabled.
 
 **S3. File menu.**
 
 - **For:** reaching S2 when a workspace is already open.
-- **Shows:** "New Workspace…" above today's "Open Research OS Folder…"
-  (`menu.ts:56`).
-- **Can do:** open S2. Whether the "Open…" label changes to "Open Workspace…" is for
-  the mockup.
+- **Shows:** "New Workspace…", with the shortcut CmdOrCtrl+N (⌘N on macOS), above
+  today's "Open Research OS Folder…" (`menu.ts:56`). The menu uses CmdOrCtrl+O and
+  CmdOrCtrl+Shift+R today (`menu.ts:56`, `:67`); whether the renderer binds
+  CmdOrCtrl+N was not checked.
+- **Your choice in the mockup:** the Open item keeps "Open Research OS Folder…" (A)
+  or becomes "Open Workspace…" (B, the mockup's recommendation, so that the menu and
+  S1 name the same thing the same way) (*adopted from the mockup*).
+- **Can do:** open S2.
 - **Failures:** as S2.
 
 **S4. Settings → prerequisites (changed rows).**
@@ -1349,28 +1482,43 @@ The clickable mockup is [os-ui/mockups/step3/workspace.html](../os-ui/mockups/st
 - **When:** in Settings, and inside S1 and S2.
 - **Shows:**
   - **Git** becomes required, "needed for projects and runs; the Code tab's
-    Changes needs 2.45 or later" (today `doctor.ts:101-105`);
+    Changes needs 2.45 or later" (today `doctor.ts:101-105`). The tiles' "ready"
+    then needs Git too; today's rule needs only the folder, Python, and one agent
+    (*adopted from the mockup*);
   - a new row, **Git name and email**: *ok* with the two values, or *not set* with
-    the two `git config --global user.name "…"` and `user.email "…"` lines to copy.
-    It is not required. The app never sets them.
+    the two lines `git config --global user.name "Your Name"` and
+    `git config --global user.email "you@example.com"` and the button "Copy the two
+    lines" (*adopted from the mockup*; the placeholders are its suggestion). It is
+    not required. The app never sets them.
 - **Can do:** copy the two lines, and **Check again**.
 - **Failures:** *No Git:* the Git row is *missing* and the identity row reads
-  "needs Git". *No uv or Python:* as today.
+  "needs Git". *No uv or Python:* as today, with uv's link.
 
 **S5. Conversation turn lines (changed).**
 
 - **For:** showing the commit a run started and ended on.
-- **When:** in every conversation, Home's root agent and each project's.
+- **When:** in every conversation, Home's root agent and each project's. The root
+  agent's turns read "no commit yet" until you commit in the workspace's own
+  repository, because a new workspace starts with no commit (§8 Q5, decided).
 - **Shows:**
-  - under the existing "model · login" line of a turn (`AgentChat.tsx:714-719`):
-    "on c4d4a85 · clean", or "on c4d4a85 · 3 changed, 1 new", or "no commit yet", or
-    "not a Git repository", or "Git not found";
-  - after "done · 12.3 s" (`:720-725`): "ended on c4d4a85 · 7 changed, not
-    committed", or "ended on 9f1e2b0 (new commit)" when the agent committed.
-- **Can do:** click the short hash to copy the full one, if the mockup keeps that.
+  - under the existing "model · login" line of a turn (`AgentChat.tsx:714-719`),
+    in that line's size and font but the muted colour, not its faint one (*adopted
+    from the mockup*): "on c4d4a85 · clean", or "on c4d4a85 · 3 changed, 1 new", or
+    "no commit yet", or "not a Git repository", or "Git not found";
+  - after "done · 12.3 s" (`:720-725`): "ended on c4d4a85 · <n> changed, not
+    committed", with ", <m> new" before "not committed" when the turn leaves
+    untracked files, or "ended on 9f1e2b0 (new commit)" when the agent committed.
+    The counts are whatever the run left; which files a real run of the example
+    changes was not established. A turn with no commit, no repository, or no Git
+    repeats its start words after "done" (*adopted from the mockup*).
+- **Can do:** click the short hash to copy the full one (the mockup keeps it, in
+  both alternatives).
 - **Failures:**
   - *No Git:* "Git not found"; the turn runs as before.
-  - *No uv or Python:* no turn starts at all; the conversation's existing error shows.
+  - *No uv or Python:* no turn starts. In a workspace that already has a snapshot,
+    the conversation's existing error shows; where no snapshot can be made, the app
+    stays on today's "Preparing the snapshot" card (`StateMissing.tsx:49`) and no
+    conversation is reachable (*a gap the mockup found*).
   - *Folder not empty:* not applicable.
   - *No Git identity:* nothing changes; recording needs none.
   - A trace from before step 3 has no field and shows nothing.
@@ -1384,6 +1532,32 @@ The clickable mockup is [os-ui/mockups/step3/workspace.html](../os-ui/mockups/st
 - **Can do:** use the root-agent bar as today.
 - **Failures:** none of its own. No Git or no uv or Python shows as on any Home
   today; a non-empty folder and a missing Git identity do not apply.
+
+**Not a screen of step 3, but changed by the split:** the Help link and the About
+panel's website, which name this repository today (§5.8 j, §8 Q19), and the
+Settings sentence "AI-Human Research OS has no model of its own…"
+(`SettingsPage.tsx:17`), which stays unless you rename the app (§8 Q14). The card
+of the shipped example shows this workspace's lines to a tester (§8 Q2).
+
+**What the mockup must change to match this section:**
+
+1. S2's identity line ends "(see Git name and email below)." instead of "(see
+   Settings)".
+2. S1 and S2 before a workspace is open: no Folder row; Claude Code and Codex read
+   "Checked once a workspace is open." in the neutral state; the header's "ready"
+   counts only uv or Python and Git.
+3. S5's end line gains ", <m> new" when the turn leaves untracked files, and one of
+   the line choices shows such an end line.
+4. File → New Workspace… shows the shortcut ⌘N.
+5. Every sentence of §6 ends with a full stop: S1's sentence, the No Git line, Folder
+   not empty, the two Git lines, the identity line, Cannot write there, and the
+   nested warning.
+6. The No uv or Python link goes to uv's installation page, not python.org.
+7. The identity row's two lines read `user.name "Your Name"` and
+   `user.email "you@example.com"`.
+
+Everything else the mockup draws now agrees with this section, the end count "3
+changed" included, which is a sample of "<n> changed".
 
 ## 7. Build sequence
 
