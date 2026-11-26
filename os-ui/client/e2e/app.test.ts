@@ -7,6 +7,15 @@
  *   OS_CLIENT_E2E_EXECUTABLE=release npm run test:e2e   (the unpacked app electron-builder left in release/)
  *   OS_CLIENT_E2E_EXECUTABLE=<path to an app binary> npm run test:e2e
  *   OS_CLIENT_E2E_DEREFERENCE=1 npm run test:e2e        (copy the workspace as on Windows: links replaced by what they point at)
+ *   OS_CLIENT_E2E_TRACE=<file.zip> npm run test:e2e     (a Playwright trace of the main suite: each action, with DOM snapshots and screenshots)
+ *
+ * A trace records the app's launch environment, every variable of the shell
+ * that ran the suite included: keep it private, and never upload one.
+ *
+ * The suite holds on any workspace that has the product's files: what it reads
+ * beyond them (the example project, the templates, the five shipped skills, the
+ * plugins' fixtures) it writes into the copy first, never relying on a
+ * workspace's own skills, papers, or projects.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -24,6 +33,7 @@ import { _electron as electron } from "playwright-core";
 import type { ElectronApplication, Frame, Locator, Page } from "playwright-core";
 import { sizeWords } from "../../frontend/plugins/assets-view/site/logic.ts";
 import { PLUGIN_CSP } from "../src/main/protocol.ts";
+import { choosePython } from "../src/main/python.ts";
 import { HIDDEN_RUNS, hiddenPdf, HOSTILE_TITLE, HOSTILE_URI, hostilePdf, IMAGE_PAGE, imagePdf, manyPagesPdf, nestedFormsPdf, noPagesPdf, notAPdf, oddSizesPdf, passwordPdf, REMAP, transparencyGroupsPdf } from "./pdfFixtures.ts";
 
 const CLIENT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -46,6 +56,9 @@ const SKIP_PATHS = new Set([
 function tempDir(prefix: string): string {
   return realpathSync.native(mkdtempSync(join(tmpdir(), prefix)));
 }
+
+/** Where OS_CLIENT_E2E_TRACE asks the main suite's Playwright trace to be written, if it does. */
+const TRACE = process.env.OS_CLIENT_E2E_TRACE || undefined;
 
 /** The workspace is copied as on Windows, links replaced by what they point at: there, or anywhere with OS_CLIENT_E2E_DEREFERENCE=1. */
 const DEREFERENCE = process.platform === "win32" || process.env.OS_CLIENT_E2E_DEREFERENCE === "1";
@@ -373,6 +386,8 @@ function ideaFixtures(workspace: string): void {
  * skills with one name (TWINS), two of them byte for byte the same, as a copy
  * made the Windows way lists a collection's links to its own skills.
  */
+/** A hub skill every workspace has: the page's commands run its script. The panel cases open it, and never toggle it. */
+const SHIPPED_SKILL = "research-skill-installer";
 const SKILLS_COLLECTION = "e2e-copy";
 const COPIED_SKILL = "e2e-copied";
 const MARKUP_SKILL = "e2e-markup";
@@ -430,6 +445,42 @@ function skillsFixtures(workspace: string): void {
     const twin = join(workspace, "research-skills-hub", TWINS_COLLECTION, folder, TWIN_SKILL);
     mkdirSync(twin, { recursive: true });
     writeFileSync(join(twin, "SKILL.md"), skillMd(TWIN_SKILL, description));
+  }
+}
+
+/** The Paper Wiki's fixture note, whose reading status the suite sets; paper-wiki-manager's set_status.py takes its id. */
+const WIKI_NOTE = "papers/e2e-reading-status";
+
+/**
+ * The Paper Wiki's fixture, in the temporary workspace only: one paper note,
+ * and the wiki's page (viz.html, which embeds the notes) rebuilt in the copy by
+ * the copy's own generate_viz.py, run with the Python the app chooses and a
+ * throwaway home, so the viewer lists the note whatever the wiki holds.
+ */
+async function wikiFixtures(workspace: string): Promise<void> {
+  const wiki = join(workspace, "paper-wiki");
+  mkdirSync(join(wiki, "papers"), { recursive: true });
+  writeFileSync(
+    join(wiki, `${WIKI_NOTE}.md`),
+    "---\ntype: Paper\ntitle: An end-to-end fixture paper\ndescription: A paper note the end-to-end suite sets the reading status of.\nsubmitted: 2026-11-20\nstatus: unread\ntimestamp: 2026-11-20T12:00:00Z\n---\n\n# An end-to-end fixture paper\n\nAn end-to-end fixture.\n",
+  );
+  const python = await choosePython({
+    repoRoot: workspace,
+    path: process.env.PATH ?? "",
+    probe: async ([bin, ...args]) => {
+      const run = spawnSync(bin!, args, { encoding: "utf8" });
+      return { code: run.status ?? -1, output: `${run.stdout ?? ""}${run.stderr ?? ""}` };
+    },
+  });
+  if (python.prefix === null) throw new Error(`the Paper Wiki fixture needs the Python the app runs the wiki's scripts with: ${python.detail}`);
+  const home = isolatedHome();
+  try {
+    const [bin, ...args] = python.prefix;
+    const script = join(workspace, "research-skills-hub", "open-paper-skills", "paper-wiki-manager", "scripts", "generate_viz.py");
+    const run = spawnSync(bin, [...args, script, wiki], { cwd: workspace, env: { ...(process.env as Record<string, string>), ...home }, encoding: "utf8" });
+    if (run.status !== 0) throw new Error(`generate_viz.py failed in the copy: ${run.stderr || run.stdout || run.error?.message}`);
+  } finally {
+    rmSync(home.HOME!, { recursive: true, force: true });
   }
 }
 
@@ -562,6 +613,7 @@ describe("desktop client on a Research OS folder", () => {
     assetsFixtures(workspace);
     ideaFixtures(workspace);
     skillsFixtures(workspace);
+    await wikiFixtures(workspace);
     userData = tempDir("os-client-data-");
     sessions = tempDir("os-client-sessions-");
     ({ app, page, logs } = await launch({
@@ -570,10 +622,15 @@ describe("desktop client on a Research OS folder", () => {
       OS_HARNESS_SESSIONS: sessions,
       OS_HARNESS_CLAUDE: JSON.stringify([findPython(), join(workspace, "os-harness", "tests", "fake_claude.py")]),
     }));
+    if (TRACE) await app.context().tracing.start({ title: "desktop client on a Research OS folder", screenshots: true, snapshots: true });
   }, SLOW);
 
   after(async () => {
-    await app?.close();
+    try {
+      if (TRACE && app) await app.context().tracing.stop({ path: TRACE });
+    } finally {
+      await app?.close();
+    }
     if (process.env.OS_CLIENT_E2E_KEEP !== "1") {
       for (const dir of [workspace, userData, sessions, gitHome]) if (dir) rmSync(dir, { recursive: true, force: true });
     }
@@ -3537,7 +3594,7 @@ describe("desktop client on a Research OS folder", () => {
 
   test("Skills: a card's details slide in over the Skills area only; the left menu stays bright and clickable, and the panel is still open on return", SLOW, async () => {
     const { section, sh } = await openSkills();
-    const name = "filetree-simple";
+    const name = SHIPPED_SKILL;
     const collection = snapshot().store.collections.find((c) => c.skills.some((s) => s.name === name))!.name;
     const panel = await openSkill(sh, name);
     assert.equal((await focused(sh)).text, "Close", "the focus moves to Close");
@@ -3869,7 +3926,7 @@ describe("desktop client on a Research OS folder", () => {
         await shot(page, `skills-${w}-panel-open-scrolled-list`);
         await closeSkill(sh);
         assert.ok(await scroller.evaluate((b) => b.scrollTop > 0), `${w}: the list kept its place`);
-        const panel = await openSkill(sh, "filetree-simple");
+        const panel = await openSkill(sh, SHIPPED_SKILL);
         await sh.locator(".drawer").evaluate((d) => Promise.all(d.getAnimations().map((a) => a.finished)).then(() => true));
         const area = (await section.boundingBox())!;
         const drawer = (await sh.locator(".drawer").boundingBox())!;
@@ -4127,8 +4184,9 @@ describe("desktop client on a Research OS folder", () => {
     await frame.evaluate(() => {
       location.hash = "#timeline";
     });
-    const row = frame.locator('#timeline-list .tl-row[data-id^="papers/"]').first();
-    const id = (await row.getAttribute("data-id"))!;
+    // The suite's own note (wikiFixtures), so the case holds whatever the workspace's wiki holds.
+    const id = WIKI_NOTE;
+    const row = frame.locator(`#timeline-list .tl-row[data-id="${id}"]`);
     await row.click();
     const choices = frame.locator("#detail-status .status-choices button");
     await choices.first().waitFor({ timeout: 30_000 });

@@ -127,7 +127,6 @@ os-ui/
   README.md          # 本文件:界面介绍、启动流程、理念与 TODO
   start.sh           # 一键启动脚本(可选 --watch)
   DESIGN.md          # 施工图:架构、schema、状态语义、布局与视觉规格
-  mockup.html        # 2026-07-04 视觉稿(面板内容的规格;色板与外壳已被取代)
   generator/         # Python + uv 只读扫描器 → state.json(gitignored)
   frontend/          # Vite + React + TS + Tailwind 前端;含新手 README
 ```

@@ -15,6 +15,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20260926-001 - Is subscription reuse seen as a technical question only? Hypothesis: provider terms, not code, may bound what a distributed product can do with users' subscriptions.
 - cog-20261020-001 - Is LLM-led research and RSI a change to the OS's north star? Partly answered 2026-11-21: human-led now, agent-led later. Still open: where RSI sits and what evaluator would judge it.
 - cog-20261121-002 - Does a product for other researchers need the human's own real research on it first? Hypothesis: the audience moved to outside users while the portfolio holds one example and no research project.
+- cog-20261127-001 - Is how one Git repository sits inside another familiar? Hypothesis: step 3 nests each project's repository in the workspace's, and what the outer repository then sees may not be in view.
 
 ## Entries
 
@@ -99,4 +100,24 @@ timestamp: 2026-07-04T00:00:00+12:00
 - next_learning_edge: At the step 2 check, ask whether the five views would have helped a past project of theirs, and whether they want a real project of their own in the workspace before the outside test.
 - related:
   - [cog-20260716-002](known_knowns.md#cog-20260716-002-outcome-level-research-os-vision)
+  - [cog-20260923-002](known_knowns.md#cog-20260923-002-recommended-defaults-in-grilling-rounds-are-accepted-without-close-reading)
+
+## cog-20261127-001 Is how one Git repository sits inside another familiar?
+
+- content: Hypothesis, not a finding. Step 3 makes each project its own Git repository inside the workspace's repository, with an ignore line so the outer one does not see it. The human may not have in view what a repository placed inside another does to the outer one: an untracked entry, `git add -A` failing or recording a link, and this repository's own checks reading the new folder as a top-level area.
+- source: inferred
+- confidence: low
+- evidence: 2026-11-26, one action: asked to prepare the product's repository, the human made its folder inside this repository's checkout and asked for `git init` there. Told the four effects the agent had measured (among them `./verify.sh` already failing on the folder), they chose to move it beside the checkout in one reply (「移到旁边」). The first placement may have been convenience and not a gap; they had decided the same day that the product gets a repository of its own.
+- created: 2026-11-27
+- last_updated: 2026-11-27
+- status: active
+- domain: Git and repository layout
+- scope: Repositories placed inside other repositories, in this workspace and in step 3's design. No claim about everyday Git use (branches, pull requests, merging), which the human does routinely.
+- last_verified: 2026-11-27
+- freshness: current
+- responsibility_relevance:
+  - When a step puts a repository inside another (a project becoming its own repository, the example's first commit), say first what the outer repository will show and which command would go wrong, then ask for the word.
+  - Do not read the step 3 answers on project repositories (design §8, questions 5 and 7) as showing this is understood; they accepted defaults.
+- next_learning_edge: When `nanochat_cpu` becomes its own repository, show `git status` of the workspace before and after the ignore line, and ask what they expect `git add -A` to do there.
+- related:
   - [cog-20260923-002](known_knowns.md#cog-20260923-002-recommended-defaults-in-grilling-rounds-are-accepted-without-close-reading)

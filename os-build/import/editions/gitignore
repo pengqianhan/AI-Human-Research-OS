@@ -1,0 +1,48 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local environment
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Runtime caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+node_modules/
+
+# Local scratch space
+scratch/
+tmp/
+temp/
+
+# Code agent local data
+.antigravitycli/
+
+# LaTeX build output
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+
+# os-ui/, os-ui/client/, os-harness/, and the example project keep their own
+# .gitignore files beside their code (build output, the snapshot, session traces).
