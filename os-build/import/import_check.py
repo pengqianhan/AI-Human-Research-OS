@@ -163,6 +163,8 @@ def main() -> int:
             continue
         if it.kind in ("edition", "stub") and data != it.data:
             failures.append(f"{rel}: differs from what the kit gives ({it.kind})")
+        if it.kind in ("edition", "stub") and executable != (it.mode == "100755"):
+            failures.append(f"{rel}: mode differs from the manifest ({it.kind})")
         if oid != kit.EMPTY_BLOB and oid in w_ids:
             failures.append(f"{rel}: has the content of a W file ({it.kind})")
         if oid != kit.EMPTY_BLOB and oid in s_ids:
