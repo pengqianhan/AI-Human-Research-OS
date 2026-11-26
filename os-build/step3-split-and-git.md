@@ -863,6 +863,7 @@ i. **Instance lines inside the example** (§3 `nanochat_cpu`). Ship them as they
 ## 6. Every new or changed screen
 
 The mockup is drawn from this list. Words in quotation marks are proposed text.
+The clickable mockup is [os-ui/mockups/step3/workspace.html](../os-ui/mockups/step3/workspace.html).
 
 **S1. Welcome (no workspace open).**
 

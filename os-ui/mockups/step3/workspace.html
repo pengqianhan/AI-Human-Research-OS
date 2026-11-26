@@ -1,0 +1,1446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-Human Research OS · Step 3 mockup · New workspace and run commits</title>
+<link rel="icon" href="data:,"><!-- an empty inline icon, so nothing asks for /favicon.ico -->
+<!--
+  Clickable mockup of step 3's screens, S1 to S6 of os-build/step3-split-and-git.md §6,
+  for the Human Owner to choose how each looks before anything is built.
+  Look: os-ui/mockups/step1/c-document.html (mockup C, "document first").
+  Form of the alternatives: os-ui/mockups/step2/views.html and skills.html (a striped strip
+  that is not part of the app). Screens as built today, where step 3 changes them:
+  os-ui/frontend/src/components/StateMissing.tsx (welcome), DesktopStatus.tsx (prerequisite
+  tiles), AgentChat.tsx (a turn's lines), pages/SystemPage.tsx and SettingsPage.tsx (Settings),
+  HomePage.tsx and ProjectCard.tsx (Home), and os-ui/client/src/main/menu.ts (File menu).
+  The example's facts come from projects-folder/nanochat_cpu (PROJECT_MEMORY.md, Code/README.md).
+  Conversations are samples and hashes are made up; nothing reads or writes Git.
+  Open it from disk by double-click: no server, no network, no external file.
+  Choices are kept in the address after #, e.g. #screen=project&s5=B&state=nogit.
+-->
+<style>
+/* ================= tokens: mockup C's, plus the app's signal/danger/bubble (index.css) ================= */
+:root{
+  --bg:#f3eee5; --side:#ece5d8; --paper:#faf7f1; --card:#fffdf9; --ink:#1c1a17; --ink2:#4a453d;
+  --muted:#6f675b; --faint:#b0a796; --line:rgba(70,55,30,.10); --line2:rgba(70,55,30,.18); --hover:rgba(60,45,20,.06);
+  --accent:#1e5a56; --accent-ink:#164542; --accent-soft:#dcebe8; --accent-tint:#eef4f2; --on-accent:#f8f4ec;
+  --warn:#86581a; --warn-soft:#f3e6cc; --signal:#a4462c; --signal-soft:#f6e2d9;
+  --danger:#a33a2f; --danger-soft:#f6e3df; --mute-soft:rgba(60,45,20,.06); --bubble:#ece4d5;
+  --sample:#7a5a1e; --sample-bg:#f1e5cb; --night:#22211e; --on-night:#f5efe4;
+  --sh1:0 1px 2px rgba(60,44,20,.07),0 1px 1px rgba(60,44,20,.04);
+  --sh2:0 1px 3px rgba(60,44,20,.06),0 10px 26px rgba(60,44,20,.07);
+  --sh3:0 4px 10px rgba(60,44,20,.08),0 20px 44px rgba(60,44,20,.11);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --r:14px; --sbw:192px;
+  /* mockup-only chrome (as in os-ui/mockups/step2/) */
+  --mk-ink:#5b4416; --mk-line:#b8955a; --mk-bg:#f6edd6;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+code,.mono{font-family:var(--mono);font-size:.92em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.sm{width:14px;height:14px}
+.label{font:600 10.5px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ================= MOCKUP-ONLY STRIP (not part of the app) ================= */
+.mock{flex:none;display:flex;flex-direction:column;gap:6px;padding:6px 12px 7px;background:repeating-linear-gradient(135deg,#efe2c2 0 9px,#f4ead3 9px 18px);border-bottom:2px dashed var(--mk-line);color:var(--mk-ink);font:12px/1.35 var(--sans);position:relative;z-index:40}
+.mock-row{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;min-width:0}
+.mock-tag{display:flex;flex-direction:column;gap:1px;flex:none}
+.mock-tag b{font:800 10.5px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase}
+.mock-tag span{font-size:11px;opacity:.85}
+.mock-grp{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:0}
+.mock-grp .lab{font:800 10px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-right:2px}
+.mock-step{display:inline-flex;align-items:center;gap:5px;border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:99px;padding:2px 9px 2px 4px;font:600 11.5px/1.4 var(--sans);color:var(--mk-ink);cursor:pointer;white-space:nowrap}
+.mock-step:hover{background:#fffaf0}
+.mock-step .n{min-width:17px;height:17px;border-radius:99px;display:grid;place-items:center;background:#efe2c2;font:800 10px var(--sans);padding:0 4px}
+.mock-step.plain{padding-left:9px}
+.mock-step.on{border-style:solid;border-color:var(--mk-ink);background:var(--mk-ink);color:#fbf3df}
+.mock-step.on .n{background:#fbf3df;color:var(--mk-ink)}
+.mock-end{margin-left:auto;display:flex;gap:6px;align-items:center}
+.mock-btn{border:1.5px solid var(--mk-ink);background:#fffaf0;color:var(--mk-ink);border-radius:9px;padding:4px 10px;font:700 12px var(--sans);cursor:pointer;white-space:nowrap}
+.mock-btn:hover{background:#fff}
+.mock-btn.live{background:var(--mk-ink);color:#fbf3df}
+.mock-alt{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mock-q{font:700 12px/1.35 var(--sans)}
+.mock-q .why{font-weight:500;opacity:.92}
+.mock-opts{display:flex;gap:8px;min-width:0}
+.mock-opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 8px;align-items:start;text-align:left;border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:10px;padding:4px 10px 5px 6px;cursor:pointer;flex:1 1 0;min-width:0;color:var(--mk-ink);font:11.5px/1.35 var(--sans)}
+.mock-opt:hover{background:#fffaf0}
+.mock-opt .L{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:800 12px var(--sans);background:#efe2c2}
+.mock-opt .t{font:700 12px/1.35 var(--sans)}
+.mock-opt .d{opacity:.92}
+.mock-opt .rec{display:inline-block;margin:0 2px 0 4px;font:800 9px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;padding:2px 5px;border-radius:99px;border:1px solid var(--mk-ink);vertical-align:1px}
+.mock-opt.on{border-style:solid;border-color:var(--mk-ink);background:#fffaf0;box-shadow:0 0 0 2px rgba(91,68,22,.16)}
+.mock-opt.on .L{background:var(--mk-ink);color:#fbf3df}
+.mock-lab{font:700 11.5px var(--sans)}
+.mock-sel{font:600 12px var(--sans);color:var(--mk-ink);background:#fffaf0;border:1.5px solid var(--mk-line);border-radius:8px;padding:2px 6px;max-width:100%}
+.mock-forced{font:600 12px var(--sans);font-style:italic}
+.mock-note{font:11.5px/1.3 var(--sans);opacity:.9}
+.mock-one{margin:0;font:12px/1.4 var(--sans);max-width:900px}
+.mock-seg{display:inline-flex;border:1.5px solid var(--mk-line);border-radius:8px;overflow:hidden}
+.mock-seg button{border:0;background:#fbf6e8;color:var(--mk-ink);font:700 11.5px var(--sans);padding:2px 8px;cursor:pointer}
+.mock-seg button[aria-pressed="true"]{background:var(--mk-ink);color:#fbf3df}
+/* the states panel */
+.mock-pop{position:absolute;top:calc(100% + 4px);right:12px;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 150px);overflow:auto;background:var(--mk-bg);border:2px dashed var(--mk-line);border-radius:12px;box-shadow:var(--sh3);padding:10px 12px 12px;z-index:70;color:var(--mk-ink)}
+.mock-pop h2{font:800 11px/1.3 var(--sans);letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}
+.mock-pop p.hint{margin:0 0 8px;font-size:12px}
+.st-row{display:grid;grid-template-columns:minmax(0,210px) minmax(0,1fr);gap:4px 10px;align-items:center;padding:5px 0;border-top:1px dashed rgba(91,68,22,.28)}
+.st-btn{display:flex;align-items:center;gap:7px;text-align:left;border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:9px;padding:4px 8px;font:700 12px/1.25 var(--sans);color:var(--mk-ink);cursor:pointer;min-width:0}
+.st-btn::before{content:"";width:10px;height:10px;border-radius:50%;border:1.5px solid var(--mk-ink);flex:none}
+.st-btn[aria-pressed="true"]{border-style:solid;border-color:var(--mk-ink);background:#fffaf0}
+.st-btn[aria-pressed="true"]::before{background:var(--mk-ink);box-shadow:inset 0 0 0 2px #fffaf0}
+.st-on{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:11.5px}
+.mock .go{border:1px solid var(--mk-line);background:#fffaf0;color:var(--mk-ink);border-radius:99px;padding:1px 7px;font:700 11px var(--sans);cursor:pointer}
+.mock .go:hover{background:#fff}
+.mock .go.here{background:var(--mk-ink);color:#fbf3df;border-color:var(--mk-ink)}
+.mock .also{opacity:.9}
+.mock-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:11.5px;padding-top:4px;border-top:1px dashed rgba(91,68,22,.35)}
+/* the notes panel */
+.mock-modal{position:fixed;inset:0;background:rgba(40,30,10,.38);display:grid;place-items:center;z-index:80;padding:20px}
+.mock-panel{width:min(980px,100%);max-height:100%;display:flex;flex-direction:column;background:var(--mk-bg);border:2px dashed var(--mk-line);border-radius:14px;box-shadow:var(--sh3);color:var(--mk-ink);overflow:hidden}
+.mock-panel header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1.5px dashed var(--mk-line);background:repeating-linear-gradient(135deg,#efe2c2 0 9px,#f4ead3 9px 18px)}
+.mock-panel header h2{font:700 14px var(--sans);margin:0;flex:1}
+.mock-panel .body{overflow:auto;padding:12px 18px 18px;font:13px/1.5 var(--sans)}
+.mock-panel h3{font:800 11.5px var(--sans);letter-spacing:.07em;text-transform:uppercase;margin:16px 0 6px}
+.mock-panel h3:first-child{margin-top:4px}
+.mock-panel p{margin:0 0 8px;max-width:92ch}
+.mock-panel ul,.mock-panel ol{margin:0 0 8px;padding-left:20px;max-width:92ch}
+.mock-panel li{margin:0 0 4px}
+.mock-panel code{background:rgba(91,68,22,.09);padding:0 3px;border-radius:3px}
+.mock-tagline{display:inline-block;font:800 9.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--mk-ink);background:repeating-linear-gradient(135deg,#efe2c2 0 5px,#f6ecd4 5px 10px);border:1px dashed var(--mk-line);padding:3px 6px;border-radius:99px;white-space:nowrap}
+.mock-toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;background:var(--mk-bg);color:var(--mk-ink);border:1.5px dashed var(--mk-line);padding:8px 14px;border-radius:10px;font:12.5px/1.4 var(--sans);box-shadow:var(--sh2);z-index:90;max-width:min(620px,92vw)}
+.mock-toast.show{opacity:1;transform:translate(-50%,0)}
+.mock-inline{margin:8px 0 0;padding:8px 10px;border:1.5px dashed var(--mk-line);border-radius:9px;background:var(--mk-bg);color:var(--mk-ink);font:12px/1.4 var(--sans)}
+
+/* ================= the app ================= */
+.app{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:var(--sbw) minmax(0,1fr);transition:grid-template-columns .18s ease}
+.app.sb-collapsed{--sbw:62px}
+.app.no-ws{grid-template-columns:minmax(0,1fr)}
+.app.no-ws .sidebar{display:none}
+.sidebar{background:var(--side);display:flex;flex-direction:column;gap:2px;padding:14px 10px 12px;min-height:0;overflow:hidden auto;box-shadow:inset -1px 0 0 var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#f6f1e7;display:grid;place-items:center;flex:none}
+.brand-mark .ic{width:17px;height:17px;stroke-width:1.6}
+.brand-text{font:500 15px/1.12 var(--serif);color:var(--ink)}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:9px;background:none;color:var(--ink2);font:500 13.5px var(--sans);cursor:pointer;text-align:left;white-space:nowrap}
+.nav-btn:hover{background:var(--hover)}
+.nav-btn.active{background:var(--card);color:var(--ink);box-shadow:var(--sh1)}
+.nav-btn.active>.ic{color:var(--accent)}
+.nav-btn .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.qa-mark{width:18px;height:18px;border-radius:5px;background:var(--accent-soft);color:var(--accent-ink);font:700 10px/18px var(--sans);text-align:center;flex:none}
+.sec-label{padding:18px 10px 6px}
+.spacer{flex:1;min-height:12px}
+.snap{margin:0 2px 4px;border-radius:10px;background:var(--card);padding:8px 10px;box-shadow:var(--sh1)}
+.snap .row1{display:flex;align-items:center;gap:6px;font:500 12px var(--sans);color:var(--ink2)}
+.snap .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.snap .ln{padding-left:13px;font:11px/1.5 var(--sans);color:var(--muted)}
+.snap .ln.t{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.snap .ln b{font-weight:600;color:var(--signal)}
+.snap .regen{display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;padding:4px 6px;border:0;background:none;border-radius:8px;font:12px/1.25 var(--sans);color:var(--ink2);text-align:left;cursor:pointer}
+.snap .regen:hover{background:var(--hover);color:var(--ink)}
+.app.sb-collapsed .sidebar .lbl,.app.sb-collapsed .brand-text,.app.sb-collapsed .sec-label,.app.sb-collapsed .snap{display:none}
+.app.sb-collapsed .nav-btn{justify-content:center;padding:9px 0}
+.app.sb-collapsed .brand{justify-content:center;padding:4px 0 18px}
+.app.sb-collapsed #sbToggle .ic{transform:rotate(180deg)}
+.main{position:relative;min-width:0;min-height:0;overflow:hidden}
+.screen{position:absolute;inset:0;overflow:auto}
+
+/* ---------- shared pieces ---------- */
+.page{max-width:1080px;margin:0 auto;padding:30px 40px 64px}
+.eyebrow{font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+h1.title{font:500 31px/1.15 var(--serif);margin:6px 0 6px;letter-spacing:-.01em}
+h1:focus{outline:none}
+h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.lede{color:var(--ink2);font:15.5px/1.55 var(--serif);max-width:64ch;margin:0}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh2)}
+.card-flat{background:var(--card);border-radius:11px;box-shadow:var(--sh1),inset 0 0 0 1px var(--line)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;border:0;background:var(--card);box-shadow:var(--sh1),inset 0 0 0 1px var(--line);color:var(--ink);font:500 13px var(--sans);cursor:pointer;white-space:nowrap}
+.btn:hover{box-shadow:var(--sh2),inset 0 0 0 1px var(--line2)}
+.btn.primary{background:var(--accent);color:var(--on-accent);box-shadow:var(--sh1)}
+.btn.primary:hover{background:var(--accent-ink)}
+.btn:disabled,.btn.primary:disabled{color:var(--faint);cursor:not-allowed;background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.btn.sm{padding:4px 9px;font-size:12px;border-radius:7px}
+.btn.ghost{background:none;box-shadow:none;color:var(--accent);padding:4px 8px}
+.btn.ghost:hover{background:var(--accent-tint)}
+.btn.danger{background:var(--danger);color:#fff;box-shadow:var(--sh1)}
+.linkb{border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit;font-size:12.5px}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 11.5px/1 var(--sans);padding:5px 9px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink);white-space:nowrap}
+.pill.neutral{background:var(--mute-soft);color:var(--ink2)}
+.chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:99px;padding:3px 8px;font:600 11px/1 var(--sans)}
+.chip.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
+.chip.ok{background:var(--accent-tint);color:var(--accent-ink)}
+.chip.ok.dot::before{background:var(--accent)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.signal{background:var(--signal-soft);color:var(--signal)}
+.chip.mute{background:var(--mute-soft);color:var(--muted)}
+.chip.mute.dot::before{background:var(--faint)}
+.badge{display:inline-block;border-radius:5px;padding:1px 6px;font:600 11px/1.45 var(--sans)}
+.badge.ok{background:var(--accent-tint);color:var(--accent-ink)}
+.badge.signal{background:var(--signal-soft);color:var(--signal)}
+.badge.mute{background:var(--mute-soft);color:var(--muted)}
+.src-note{font:11.5px var(--sans);color:var(--faint)}
+.danger-t{color:var(--danger)}
+.warn-t{color:var(--warn)}
+.cmd-block{background:var(--night);color:var(--on-night);font:11.5px/1.6 var(--mono);border-radius:9px;padding:8px 12px;margin:6px 0 0;white-space:pre-wrap;word-break:break-all}
+.sample{display:inline-flex;align-items:center;gap:5px;font:700 10px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--sample);background:var(--sample-bg);padding:4px 8px;border-radius:99px;white-space:nowrap}
+.sample::before{content:"";width:6px;height:6px;border-radius:50%;border:1.5px dashed currentColor}
+.sample-band{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font:12px/1.4 var(--sans);color:var(--sample);background:#f7efdc;border-radius:9px;padding:6px 10px;margin:0 auto 12px;max-width:72ch}
+
+/* ---------- S1 and S2: the welcome card (StateMissing.tsx: centred, no left menu) ---------- */
+.welcome{position:absolute;inset:0;overflow:auto;display:flex;padding:40px 24px}
+.wcard{width:100%;max-width:680px;margin:auto;padding:30px 32px 32px}
+.wtitle{font:500 24px/1.2 var(--serif);margin:0;color:var(--ink)}
+.wsub{font:500 19px/1.25 var(--serif);margin:22px 0 0;padding-top:18px;box-shadow:inset 0 1px 0 var(--line)}
+.prose{font:15px/1.55 var(--serif);color:var(--ink2);margin:8px 0 0}
+.problem{margin:8px 0 0;font-size:13px;color:var(--danger)}
+.w-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin-top:16px}
+.why{font-size:13px;color:var(--ink2);flex:1 1 220px;min-width:0}
+.why .linkb{margin-left:4px}
+.s2-field{margin-top:16px}
+.s2-field>.label{display:block;margin-bottom:5px}
+.fld{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.inp{flex:1 1 260px;min-width:0;font:13px var(--mono);background:var(--paper);padding:9px 12px;border-radius:9px;border:0;box-shadow:inset 0 0 0 1px var(--line2);color:var(--ink)}
+.inp:focus{outline:none;box-shadow:inset 0 0 0 1.5px var(--accent)}
+.inp:disabled{color:var(--muted)}
+.fmsg{margin:6px 0 0;font-size:13px}
+.check{display:flex;gap:9px;align-items:flex-start;margin-top:16px;font:14px/1.45 var(--sans);color:var(--ink);cursor:pointer}
+.check input{margin:3px 0 0;width:15px;height:15px;accent-color:var(--accent);flex:none}
+.s2-list{margin-top:14px}
+.s2-list p{margin:3px 0 0;font:14.5px/1.5 var(--serif);color:var(--ink2)}
+.s2-line{margin:10px 0 0;font-size:13px;color:var(--ink2)}
+.s2-line.warn-t{color:var(--warn)}
+.progress{display:flex;align-items:center;gap:8px;margin:14px 0 0;font-size:13px;color:var(--ink2)}
+.progress:focus{outline:none}
+.spin{width:13px;height:13px;border-radius:50%;border:2px solid var(--accent-soft);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.failbox{margin:14px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13px;color:var(--danger)}
+.or-line{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:22px;padding-top:16px;box-shadow:inset 0 1px 0 var(--line);font-size:13px;color:var(--ink2)}
+.pq-wrap{margin-top:24px}
+
+/* ---------- S4: prerequisite tiles (DesktopStatus.tsx PrerequisiteGrid) ---------- */
+.pq-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pq-head .btn{margin-left:auto}
+.pq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;list-style:none;margin:0;padding:0;align-items:start}
+@media (max-width:640px){.pq{grid-template-columns:minmax(0,1fr)}}
+.tile{padding:9px 14px 10px;min-width:0}
+.tile summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;min-width:0}
+.tile summary::-webkit-details-marker{display:none}
+.tile .chev{width:12px;height:12px;flex:none;color:var(--faint);transition:transform .15s}
+.tile details[open] .chev{transform:rotate(90deg)}
+.tile .nm{font:500 13.5px var(--sans);color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .opt{font-size:11px;color:var(--muted)}
+.tile .right{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none}
+.tile .ver{font:11px var(--mono);color:var(--ink2)}
+.tile .det{margin:8px 0 0;font:11.5px/1.55 var(--mono);color:var(--ink2);word-break:break-word;white-space:pre-wrap}
+.tile .det.sans{font-family:var(--sans);font-size:12.5px}
+.tile .help{margin-top:4px}
+.tile.changed{box-shadow:var(--sh1),inset 0 0 0 1.5px rgba(184,149,90,.55)}
+.tile .mk{margin-top:8px}
+
+/* ---------- Home (mockup C, HomePage.tsx) ---------- */
+.rootbar{padding:16px 18px;margin:22px 0 38px}
+.rb-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rb-title{display:flex;align-items:center;gap:8px;font:600 14px var(--sans);margin:0}
+.rb-title .ic{color:var(--accent)}
+.rb-head .btn{margin-left:auto}
+.rb-head .btn .ic{transition:transform .15s}
+.rb-head .btn[aria-expanded="true"] .ic{transform:rotate(180deg)}
+.rb-latest{margin:10px 0 12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font:15.5px/1.5 var(--serif);color:var(--ink2)}
+.rb-latest .label{margin-right:4px}
+.rb-latest .meta{font:12px var(--sans);color:var(--muted)}
+.rb-body{margin-top:14px;height:min(64vh,640px);min-height:400px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);display:flex;background:var(--paper);overflow:hidden}
+.rb-list{width:240px;flex:none;display:flex;flex-direction:column;background:var(--side);border-right:1px solid var(--line)}
+@media (max-width:1100px){.rb-list{width:200px}}
+.rb-list .lh{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
+.crow-btn{display:block;width:calc(100% - 12px);margin:0 6px;text-align:left;border:0;background:none;border-radius:9px;padding:8px 10px;cursor:pointer}
+.crow-btn:hover{background:var(--hover)}
+.crow-btn.on{background:var(--card);box-shadow:var(--sh1)}
+.crow-btn .r1{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted)}
+.crow-btn .r2{margin-top:2px;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow-btn .r3{font-size:11px;color:var(--muted)}
+.empty-small{padding:10px 12px;font-size:12.5px;color:var(--muted);margin:0}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 16px;flex-wrap:wrap}
+.sec-head h2{font:500 22px var(--serif);margin:0}
+.sec-head .count{font:13px var(--sans);color:var(--muted)}
+.sec-head .section-src{margin-left:8px;font-size:11.5px;color:var(--faint)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.pcard{position:relative;display:flex;flex-direction:column;padding:20px 24px 18px;min-height:270px;transition:transform .15s ease,box-shadow .15s ease}
+.pcard:hover,.pcard:focus-within{transform:translateY(-2px);box-shadow:var(--sh3)}
+.pcard .top{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-width:0}
+.pcard .path{font:11.5px var(--mono);color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard h3{font:500 25px/1.2 var(--serif);margin:0;letter-spacing:-.005em}
+.pcard .rule{height:1px;background:var(--accent);opacity:.35;margin:12px 0}
+.pcard .purpose{font:15px/1.55 var(--serif);color:var(--ink2);margin:0 0 16px}
+.facts{display:grid;grid-template-columns:94px minmax(0,1fr);gap:8px 14px;margin:0;font-size:13px;line-height:1.45}
+.facts dt{font:600 10px/1.9 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.facts dd{margin:0;color:var(--ink)}
+.clamp1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clamp2,.clamp3{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+.clamp2{-webkit-line-clamp:2}.clamp3{-webkit-line-clamp:3}
+.pcard .foot{margin-top:auto;padding-top:16px;display:flex;align-items:center;gap:10px}
+.pcard .open{border:0;background:none;padding:0;color:var(--accent);font:600 13px var(--sans);display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.pcard .open::after{content:"";position:absolute;inset:0;border-radius:inherit}
+.pcard .open:focus-visible{outline:none}
+.pcard .open:focus-visible::after{outline:2px solid var(--accent);outline-offset:2px}
+.pcard .foot .src-note{margin-left:auto}
+.empty-card{padding:20px 24px;font:15px/1.55 var(--serif);color:var(--ink2);margin:0}
+
+/* ---------- conversations (AgentChat.tsx) ---------- */
+.chat{display:flex;flex-direction:column;min-width:0;min-height:0;flex:1}
+.chat-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 14px;border-bottom:1px solid var(--line);flex:none}
+.chat-head .meta{font-size:12px;color:var(--ink2)}
+.chat-head .end{margin-left:auto;display:flex;align-items:center;gap:8px}
+.chat-head label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+.chat-head select{font:12px var(--sans);background:var(--card);border:0;border-radius:7px;box-shadow:inset 0 0 0 1px var(--line2);padding:3px 6px;color:var(--ink)}
+.thread{flex:1;min-height:0;overflow:auto;padding:12px 16px}
+.intro{max-width:60ch;margin:0 auto;padding:16px 0;font:15px/1.6 var(--serif);color:var(--ink2)}
+.intro p{margin:0;color:var(--ink)}
+.intro ul{margin:10px 0 0;padding-left:20px}
+.intro li{margin:0 0 4px}
+.ev{list-style:none;margin:0 auto;padding:0;max-width:72ch;display:flex;flex-direction:column;gap:10px}
+.ev-you{text-align:right}
+.ev-you .label{margin-bottom:4px}
+.ev-you .bub{display:inline-block;max-width:88%;white-space:pre-wrap;text-align:left;border-radius:13px 13px 4px 13px;background:var(--bubble);padding:8px 12px;font-size:13.5px;color:var(--ink)}
+.ev-text .label{margin-bottom:4px}
+.ev-text .tx{white-space:pre-wrap;font:15px/1.6 var(--serif);color:var(--ink)}
+.ev-tool{font:11.5px/1.45 var(--mono);background:var(--mute-soft);border-radius:8px;padding:6px 10px;color:var(--muted);overflow-wrap:anywhere}
+.ev-res{padding-left:8px}
+.ev-res summary{cursor:pointer;font:11px/1.5 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.ev-res pre{margin:4px 0 0;max-height:200px;overflow:auto;white-space:pre-wrap;border-radius:8px;background:var(--card);padding:8px;font:10.5px/1.5 var(--mono);color:var(--ink2);box-shadow:inset 0 0 0 1px var(--line)}
+.ev-started{padding-left:8px;font:10.5px/1.5 var(--mono);color:var(--faint)}
+.ev-done{padding-left:8px;font:11.5px/1.5 var(--sans);color:var(--accent)}
+.ev-working{font:500 12px var(--sans);color:var(--accent)}
+/* S5, alternative A: a text line in the type of the line it sits under */
+.g5a{color:var(--muted);overflow-wrap:anywhere}
+.ev-started .g5a{font:11px/1.5 var(--mono)}
+.ev-done .g5a{font:11.5px/1.5 var(--sans)}
+/* S5, alternative B: a small chip */
+.g5b{margin-top:4px}
+.gchip{display:inline-flex;align-items:center;gap:5px;max-width:100%;border-radius:99px;padding:3px 10px 3px 7px;font:600 11px/1.35 var(--sans);background:var(--accent-tint);color:var(--accent-ink);white-space:normal}
+.gchip.mute{background:var(--mute-soft);color:var(--muted)}
+.gchip .ic{width:13px;height:13px}
+.hash{border:0;background:none;padding:0;font:inherit;font-family:var(--mono);color:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+.hash:hover{color:var(--accent)}
+.composer-f{padding:8px 12px 12px;flex:none}
+.composer{display:flex;flex-direction:column;gap:6px;background:var(--paper);border-radius:12px;padding:8px 8px 8px 13px;box-shadow:inset 0 0 0 1px var(--line2)}
+.composer:focus-within{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.composer .crow{display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;min-width:0;border:0;background:transparent;resize:none;font:14px/1.5 var(--sans);color:var(--ink);outline:none;min-height:44px;padding:2px 0}
+.composer textarea::placeholder{color:var(--faint)}
+.composer textarea:disabled{opacity:.6}
+.send{width:32px;height:32px;border-radius:9px;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;cursor:pointer;flex:none}
+.send:hover{background:var(--accent-ink)}
+.send:disabled{opacity:.4;cursor:not-allowed}
+.send .ic{width:16px;height:16px}
+.cfoot{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.agent-chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink);font:500 11.5px var(--sans);white-space:nowrap}
+.agent-chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.c-err{margin:0 0 8px;font-size:12px;color:var(--danger)}
+
+/* ---------- a project's workspace (mockup C, WorkspacePage.tsx) ---------- */
+.ws{display:flex;flex-direction:column;overflow:hidden}
+.ws-top{display:flex;align-items:center;gap:12px;padding:13px 22px 12px;flex:none;min-width:0;flex-wrap:wrap}
+.crumbs{display:flex;align-items:center;gap:6px;font:13px var(--sans);color:var(--muted)}
+.crumbs button{border:0;background:none;padding:2px 4px;border-radius:5px;color:var(--muted);cursor:pointer}
+.crumbs button:hover{color:var(--accent);background:var(--accent-tint)}
+.ws-title{font:500 22px/1.2 var(--serif);margin:0 4px 0 2px}
+.ws-top .right{margin-left:auto;display:flex;gap:10px;align-items:center;min-width:0}
+.ws-top .right .mono{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-body{flex:1;min-height:0;display:grid;grid-template-columns:clamp(300px,28vw,360px) minmax(0,1fr);gap:14px;padding:0 14px 14px}
+.ws.conv-collapsed .ws-body{grid-template-columns:44px minmax(0,1fr)}
+.conv{min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.conv-head{display:flex;align-items:center;gap:8px;padding:12px 10px 8px 16px;flex:none}
+.conv-head h2{font:600 13.5px var(--sans);margin:0;flex:1;min-width:0}
+.icon-btn{width:30px;height:30px;border-radius:8px;border:0;background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none}
+.icon-btn:hover{background:rgba(60,45,20,.07);color:var(--ink)}
+.conv-box{margin:0 10px 10px;flex:1;min-height:0;border-radius:11px;box-shadow:inset 0 0 0 1px var(--line);background:var(--paper);display:flex;flex-direction:column;overflow:hidden}
+.conv-box .ev-text .tx{font-size:14.5px}
+.strip{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0;border:0;background:none;width:100%;height:100%;cursor:pointer;color:var(--ink2);border-radius:var(--r)}
+.strip:hover{background:var(--accent-tint)}
+.strip .vert{writing-mode:vertical-rl;transform:rotate(180deg);font:600 12.5px var(--sans);letter-spacing:.02em}
+.views{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;align-items:flex-end;gap:2px;padding:6px 14px 0;box-shadow:inset 0 -1px 0 var(--line);flex:none;overflow-x:auto;scrollbar-width:none}
+.tab{display:inline-flex;align-items:center;gap:7px;padding:10px 12px 11px;border:0;border-bottom:2px solid transparent;background:none;font:500 13.5px var(--sans);color:var(--ink2);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+@media (max-width:1100px){.tab{padding:10px 9px 11px}}
+.standin{padding:34px 32px;max-width:560px;font:15px/1.6 var(--serif);color:var(--ink2)}
+.standin h3{font:500 20px var(--serif);margin:8px 0 8px;color:var(--ink)}
+.standin p{margin:0 0 8px}
+
+/* ---------- Settings ---------- */
+.set-card{padding:20px 24px;margin-top:18px}
+.set-card h2{font:500 19px var(--serif);margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.set-card p.t{font:14.5px/1.55 var(--serif);color:var(--ink2);margin:4px 0 12px;max-width:66ch}
+.field{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.field .val{flex:1;min-width:0;font:13px var(--mono);background:var(--paper);padding:9px 12px;border-radius:9px;box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step-badge{font:700 9.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:99px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+.foot-note{margin-top:20px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+
+/* ---------- S3: the File menu and S2 as a dialog ---------- */
+#overlay{display:contents}/* its children are placed over the app, not in the app's grid */
+.ovl-catch{position:absolute;inset:0;z-index:28;background:rgba(30,25,15,.06)}
+.menubar{position:absolute;left:0;right:0;top:0;height:26px;z-index:29;display:flex;align-items:center;gap:2px;padding:0 10px;background:rgba(238,236,233,.97);box-shadow:0 1px 0 rgba(0,0,0,.12);font:13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d1d1f}
+.menubar span{padding:5px 9px;border-radius:5px}
+.menubar span.app-n{font-weight:700}
+.menubar span.on{background:rgba(0,0,0,.12)}
+.menu-dd{position:absolute;top:27px;left:118px;z-index:30;min-width:290px;padding:5px;border-radius:8px;background:rgba(246,246,246,.98);box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 10px 30px rgba(0,0,0,.22);font:13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d1d1f}
+.mi{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;padding:4px 10px;border:0;background:none;border-radius:4px;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.mi:hover,.mi:focus-visible{background:#2b67d1;color:#fff;outline:none}
+.mi .acc{opacity:.6}
+.mi:hover .acc,.mi:focus-visible .acc{opacity:.9}
+.msep{height:1px;margin:5px 8px;background:rgba(0,0,0,.12)}
+.menu-dd .mock-inline{margin:6px 4px 2px;font-size:11.5px}
+.dlg-wrap{position:absolute;inset:0;z-index:32;background:rgba(40,30,10,.30);display:flex;padding:20px;overflow:auto}
+.dlg{width:100%;max-width:660px;margin:auto;padding:26px 30px 28px}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-projects" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13.5h8M8 16.5h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5M8 7.5h8M8 11h6"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M9 4h3a2 2 0 1 1 4 0h3v5a2 2 0 1 0 0 4v6h-5a2 2 0 1 0-4 0H5v-5a2 2 0 1 0 0-4V4z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+  <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 12.5a7.5 7.5 0 0 1-11 6.6L4 20.5l1.4-4.6A7.5 7.5 0 1 1 20 12.5z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></symbol>
+  <symbol id="i-git" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M3 12h5.8M15.2 12H21"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4v4.3h-4.3"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M9.5 4v16M15 10l-2 2 2 2"/></symbol>
+  <symbol id="i-panel-open" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M9.5 4v16M13 10l2 2-2 2"/></symbol>
+</svg>
+
+<!-- ================= MOCKUP-ONLY STRIP: not part of the app ================= -->
+<div class="mock" id="mock" role="region" aria-label="Mockup controls, not part of the app">
+  <div class="mock-row">
+    <div class="mock-tag"><b>Mockup only</b><span>not part of the app</span></div>
+    <!-- the tester's path (§2), in the order a first-time user meets it -->
+    <div class="mock-grp" role="group" aria-label="The tester's path">
+      <span class="lab">Path</span>
+      <button type="button" class="mock-step" data-jump="p1" data-k="p1"><span class="n">1</span>Welcome</button>
+      <button type="button" class="mock-step" data-jump="p2" data-k="p2"><span class="n">2</span>New workspace</button>
+      <button type="button" class="mock-step" data-jump="p3" data-k="p3"><span class="n">3</span>Creating</button>
+      <button type="button" class="mock-step" data-jump="p4" data-k="p4"><span class="n">4</span>Home</button>
+      <button type="button" class="mock-step" data-jump="p5" data-k="p5"><span class="n">5</span>Dispatch</button>
+      <button type="button" class="mock-step" data-jump="p6" data-k="p6"><span class="n">6</span>Project run</button>
+    </div>
+    <!-- the screens off the path -->
+    <div class="mock-grp" role="group" aria-label="Other places">
+      <span class="lab">Other places</span>
+      <button type="button" class="mock-step plain" data-jump="S3" data-k="oS3">S3 File menu</button>
+      <button type="button" class="mock-step plain" data-jump="S4" data-k="oS4">S4 Settings</button>
+      <button type="button" class="mock-step plain" data-jump="S6" data-k="oS6">S6 No projects</button>
+    </div>
+    <!-- on a conversation: which S5 line values to show, and whether the run has finished -->
+    <div class="mock-grp" id="mockExtra" role="group" aria-label="S5 line values" hidden></div>
+    <div class="mock-end">
+      <button type="button" class="mock-btn" id="statesBtn" aria-expanded="false" aria-controls="statesPop" title="Failure states">States <span id="stateName">▾</span></button>
+      <button type="button" class="mock-btn" id="notesBtn" aria-haspopup="dialog">Notes</button>
+    </div>
+  </div>
+  <!-- the alternatives for the screen on show -->
+  <div class="mock-alt" id="mockAlt"></div>
+  <!-- the picked failure state and the screens it changes -->
+  <div class="mock-state" id="mockState" hidden></div>
+  <!-- the failure states: one at a time -->
+  <div class="mock-pop" id="statesPop" role="dialog" aria-label="Failure states, mockup only" hidden></div>
+</div>
+
+<!-- ================= THE APP ================= -->
+<div class="app no-ws" id="app">
+  <nav class="sidebar" id="sidebar" aria-label="Main navigation"></nav>
+  <main class="main" id="main"></main>
+  <div id="overlay"></div><!-- S3's menu and S2's dialog are drawn here -->
+</div>
+
+<!-- ================= MOCKUP-ONLY: notes (collapsed by default) ================= -->
+<div class="mock-modal" id="notes" role="dialog" aria-modal="true" aria-labelledby="notesTitle" hidden>
+  <div class="mock-panel">
+    <header><h2 id="notesTitle">Mockup only · Notes on this mockup</h2><button type="button" class="mock-btn" id="notesClose">Close</button></header>
+    <div class="body" tabindex="0">
+      <h3>How to read it</h3>
+      <ul>
+        <li>The striped strip is not part of the app. <b>Path</b> walks §2's tester path in order; on each app screen the obvious button also takes you to the next one. <b>Other places</b> opens S3 (the File menu), S4 (the Settings rows), and S6 (Home with no projects; also reached by unticking the example on S2).</li>
+        <li>The strip's second row shows the alternatives for the screen you are on, labelled A and B, with the recommended one marked. <b>States</b> switches one failure state at a time; a line under the strip then names it and the screens it changes. On a conversation, the first row also picks which S5 line values the project run shows (every value §6 gives) and whether the run is done or still running.</li>
+        <li>Choices are kept in the address after <code>#</code>, so a link reopens the same view.</li>
+        <li>Conversations are samples, not from a real session. Hashes are made up: <code>e81c4f7</code> stands for the example's one commit, <code>5a2d9e3</code> for a commit an agent makes. Nothing reads or writes Git, and no message is sent.</li>
+      </ul>
+
+      <h3>What each screen is drawn from</h3>
+      <ul>
+        <li><b>S1 Welcome</b>: §6 S1, in the place and shape of today's welcome card (<code>StateMissing.tsx:40-92</code>): one centred card, no left menu.</li>
+        <li><b>S2 New workspace</b>: §6 S2. In A it replaces the Welcome card; in B it is part of it. From the File menu it is a dialog over the open workspace, in both.</li>
+        <li><b>S3 File menu</b>: §6 S3 over today's File menu (<code>menu.ts:54-59</code>), drawn as the macOS menu bar.</li>
+        <li><b>S4 Settings rows</b>: §6 S4 inside today's Settings page (<code>SystemPage.tsx</code>) and prerequisite tiles (<code>DesktopStatus.tsx:62-114</code>; labels and details from <code>doctor.ts</code>).</li>
+        <li><b>S5 turn lines</b>: §6 S5 inside today's turn rows (<code>AgentChat.tsx:714-725</code>): under "model · login" and after "done · … s". The short hash is a button that copies the full one, in both alternatives: §6 leaves that to the mockup, and the mockup keeps it.</li>
+        <li><b>S6 Home with no projects</b>: §6 S6 in place of today's empty Projects text (<code>HomePage.tsx:53-57</code>).</li>
+        <li><b>Home's card</b>: today's project card (<code>ProjectCard.tsx</code>) filled from nanochat_cpu's <code>PROJECT_MEMORY.md</code> as it would ship (§8 Q2 default). The run command, its 2 min 57 s, and the 0.2 GB of data plus 0.2 GB of wheels are from <code>Code/README.md</code>.</li>
+        <li><b>The root agent's turns</b>: §2 rows 8 and 9, with the harness command in its uv form (§2 row 9).</li>
+      </ul>
+
+      <h3>Recommended</h3>
+      <ul>
+        <li><b>S1 with S2: A, a separate step.</b> File → New Workspace… needs S2 on its own anyway, so one S2 serves both ways in.</li>
+        <li><b>S5: A, a text line.</b> It is §6's proposal, and the commit reads as one more fact of the turn, in the type of the lines around it.</li>
+        <li><b>S3: B, "Open Workspace…".</b> The menu and the Welcome page then name the same thing the same way.</li>
+      </ul>
+
+      <h3>Where the mockup departs from §6</h3>
+      <ol>
+        <li>S2 has a heading, "New workspace", a field label, "Folder", and a label over the list, "Will be written". §6 gives S2 none of these.</li>
+        <li>With the example unticked, the list and the Git line drop their example part ("…, and the project template"; "The workspace is a Git repository. Nothing is committed under your name"), and the progress skips "Making the example's repository…". §6 gives only the ticked words.</li>
+        <li>Create is disabled while creating, as well as Cancel; §6 names only Cancel.</li>
+        <li>"Cannot write there" is drawn as a failure of Create: the progress stops, and the message and Show log appear. §6 does not say whether it is found when the folder is chosen.</li>
+        <li>After "done", a turn with no commit, no repository, or no Git repeats its start words ("no commit yet", "not a Git repository", "Git not found"). §6 gives an end line only for a repository with a commit.</li>
+        <li>The run's end line says "3 changed" (<code>Code/results/summary.json</code>, <code>Code/results/training_metrics.csv</code>, <code>PROJECT_MEMORY.md</code>), not §6's example "7 changed". Which files a real run changes was not established; the two figures in <code>Figs/</code> may change too. §6's own "3 changed, 1 new" and "7 changed" are under the S5 line choices.</li>
+        <li>The S5 start line uses the muted colour, not the faint colour of "model · login", so it can be read; its size and font are that line's.</li>
+        <li>The two changed prerequisite tiles open by default and carry a striped "changed in step 3" tag, which is mockup chrome; in the app they open on a click like the others.</li>
+        <li>The Git row's "download link" keeps today's link text, "How to install".</li>
+        <li>The tiles' "ready" also needs Git, because §6 makes Git required. Today's rule (<code>doctor.ts</code>) needs only the folder, Python, and one agent.</li>
+        <li>Home's draft "Run the nanochat_cpu example and report" (§2 row 8's example) is typed in for you; the app starts with an empty box.</li>
+        <li>S2 opened from the File menu is drawn as a dialog over the open workspace, and Cancel returns there. §6 says neither.</li>
+      </ol>
+
+      <h3>Where it departs from mockup C</h3>
+      <ul>
+        <li>Mockup C has no welcome or New workspace page; these follow today's welcome card.</li>
+        <li>Home's card shows today's facts (Status, Next action, Evaluator, Owner), not mockup C's "Last change".</li>
+        <li>The left menu has today's snapshot box, and Skills is enabled (built in step 2).</li>
+        <li>Conversations follow today's <code>AgentChat</code>: a header with "Conversations", "+ New", agent, model, and mode, and a status badge. Mockup C's static thread had none.</li>
+        <li>Settings is today's page (Workspace folder, Snapshot, Prerequisites and logins), not mockup C's Git and Agents cards.</li>
+      </ul>
+
+      <h3>Suggested word changes (the mockup keeps §6's words)</h3>
+      <ul>
+        <li>S2's identity line ends "(see Settings)", but on a first start there is no Settings page, only the welcome card, and the row is on the same page. Perhaps "(see Git name and email below)".</li>
+        <li>§6's sentences have no final full stop ("…on your own plan", "…Choose an empty or new folder", "…Install it, then Check again"); the app's other sentences have one.</li>
+        <li>With no uv or Python, today's link goes to python.org (<code>doctor.ts</code> <code>HELP.python</code>), while the tester sheet asks for uv; uv's installation page would match.</li>
+        <li>The two copy lines keep §6's <code>"…"</code> placeholders; <code>"Your Name"</code> and <code>"you@example.com"</code> would show what to type.</li>
+        <li>"Check again" renames today's "re-check" on the tiles' header (§6 S1 and S4); the e2e cases that press it would change.</li>
+      </ul>
+
+      <h3>What §6 leaves open, or gets wrong</h3>
+      <ul>
+        <li>S4 says its rows appear inside S1 and S2, but S2's "Shows" does not list them. The mockup puts the tiles in S2 as well.</li>
+        <li>On a first start no folder is open, so today's tiles show the folder as "missing", Claude Code and Codex as "error" ("Needs a Research OS folder and Python to check.", <code>doctor.ts:112-114</code>), and the header as "not ready". §6 does not say whether S1 hides or rewords these rows.</li>
+        <li>"Cannot write there": §6 does not say whether it comes before or after Create, or whether Show log comes with it.</li>
+        <li>The end line has no "new" count, though the start line does, and no words for no commit, no repository, or no Git.</li>
+        <li>No keyboard shortcut is given for New Workspace…; today Open has ⌘O (Ctrl+O on Windows and Linux).</li>
+        <li>§6 does not say where Cancel returns when S2 was opened from the File menu.</li>
+        <li>With no uv or Python the generator cannot run, so a workspace cannot be created or read, and the app shows its "Preparing the snapshot" card rather than Home (<code>StateMissing.tsx:49</code>). S5's "the conversation's existing error" is then reachable only in a workspace that already has a snapshot.</li>
+        <li>Home's card shows this instance's lines to a tester: "awaiting Human Owner review" and "accepting the 2026-09-26 dispatch run also completes GOAL.md H2", and a new workspace has no <code>GOAL.md</code>. That is §8 Q2.</li>
+        <li>Root-agent turns read "no commit yet" on every turn until the user commits in the workspace's own repository (§8 Q5 default: <code>git init</code>, no commit). Under Q5's alternative they would read "not a Git repository".</li>
+      </ul>
+
+      <h3>What it does not show</h3>
+      <ul>
+        <li>The folder picker, the log file, the trust question (skipped for a folder the app made, §5.8 f), the snapshot running, and native notifications.</li>
+        <li>The root agent's report after the run (§2 row 11) and the Code tab's Changes (§2 row 12).</li>
+        <li>Windows and Linux menus: the File menu is drawn as on macOS.</li>
+        <li>The other project views, which step 3 does not change; Home's "Workspace status" section; the Papers control in a conversation's header.</li>
+        <li>A dark appearance (mockup C has none).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="mock-toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* =================================================================
+     §6's proposed words, copied as written (os-build/step3-split-and-git.md §6).
+     <reason> and <path> are filled in below. In the S5 lines {h} stands for
+     §6's c4d4a85 and {n} for its 9f1e2b0.
+     ================================================================= */
+  const W = {
+    s1Title: "Start with a workspace",
+    s1Sentence: "Research OS has no model of its own: it starts your own Claude Code or Codex, on your own plan",
+    newBtn: "New workspace…",
+    openBtn: "Open a workspace…",
+    checkAgain: "Check again",
+    noGit: "Git is needed for projects and runs. Install it, then Check again",
+    choose: "Choose…",
+    example: "Add the example project nanochat_cpu (a three-minute training run; it downloads about 0.4 GB when you run it)",
+    list: "agent scripts, five skills, empty memory, ideas, inbox and paper wiki, the project template, and the example as its own Git repository",
+    gitLine: "The workspace and the example are Git repositories. Nothing is committed under your name",
+    create: "Create",
+    cancel: "Cancel",
+    prog: ["Copying files…", "Making the example's repository…", "Reading the workspace…"],
+    showLog: "Show log",
+    notEmpty: "This folder is not empty. Choose an empty or new folder",
+    noIdent: "Your Git name and email are not set; you will need them to commit your own work (see Settings)",
+    noWrite: "Research OS cannot write to this folder: <reason>",
+    nested: "This folder is inside the Git repository at <path>; the new workspace will be a repository inside it",
+    menuNew: "New Workspace…",
+    menuOpen: { A: "Open Research OS Folder…", B: "Open Workspace…" },
+    gitRow: "needed for projects and runs; the Code tab's Changes needs 2.45 or later",
+    identRow: "Git name and email",
+    identOk: "ok", identNotSet: "not set", identNeedsGit: "needs Git",
+    identCmds: ['git config --global user.name "…"', 'git config --global user.email "…"'],
+    s5: {
+      clean: "on {h} · clean",
+      dirty: "on {h} · 3 changed, 1 new",
+      nocommit: "no commit yet",
+      norepo: "not a Git repository",
+      nogit: "Git not found",
+      endDirty: "ended on {h} · 7 changed, not committed",
+      endNew: "ended on {n} (new commit)"
+    },
+    s6: "No projects yet. Ask the root agent to start one, for example: Start a project called …"
+  };
+  /* Derived by the mockup, not in §6: the S2 words with the example unticked, and the run's end count. */
+  const D = {
+    list: "agent scripts, five skills, empty memory, ideas, inbox and paper wiki, and the project template",
+    gitLine: "The workspace is a Git repository. Nothing is committed under your name",
+    endPath: "ended on {h} · 3 changed, not committed"
+  };
+  /* Today's words, from the built app (doctor.ts, index.ts, agentCopy.ts, AgentChat.tsx). */
+  const T = {
+    pyMissing: "uv not found and no Python 3.11+ on PATH",
+    pyError: "uv not found and no Python 3.11+ on PATH; install uv from https://docs.astral.sh/uv/",
+    uvMissing: "Not found; a system Python is used instead.",
+    noAgentCheck: "Needs a Research OS folder and Python to check.",
+    rootIntro: "Talk to the root agent. Each message runs one turn at the repository root, on your own login; it reads AGENTS.md and hands project work to project agents through os-harness.",
+    rootExamples: ["What is the state of the portfolio?", "Have nanochat_cpu rerun the vocabulary probe with 8,192 tokens.", "How is the nanochat_cpu run going?"],
+    projIntro: "Talk to this project's agent directly. Each message runs one turn inside projects-folder/nanochat_cpu/, on your own login. Runs the root agent dispatched here appear in the list too, and can be continued with your feedback.",
+    projExamples: ["Summarize the current state of this project from PROJECT_MEMORY.md.", "Run the validation commands in Code/README.md and report the results.", "Add a Progress Log bullet for what you just did."],
+    working: "The agent is working; wait for it to finish or stop it.",
+    placeholder: "Message Claude Code (Enter to send, Shift+Enter for a new line)"
+  };
+  /* The mockup's own filled-in values (no real person, host, or home folder). */
+  const FOLDER = '~/Research/my-workspace', OUTER = '~/Research', REASON = 'permission denied';
+  const BADSAVED = '~/Research/old-workspace does not exist or is not a folder.';
+  const HASH = { h: ['e81c4f7', 'e81c4f7b2a90d5e3c61f84a7d09b3e2c5f716a48'], n: ['5a2d9e3', '5a2d9e31c7b04f8e92d6a5c3b1e07f49d82c6a15'] };
+  const MODEL = 'claude-sonnet-4-5';
+  const HELP = { git: 'https://git-scm.com/downloads', python: 'https://www.python.org/downloads/', uv: 'https://docs.astral.sh/uv/getting-started/installation/',
+    claude: 'https://docs.claude.com/en/docs/claude-code/setup', codex: 'https://developers.openai.com/codex/cli' };   // doctor.ts HELP
+  const HOME_DRAFT = 'Run the nanochat_cpu example and report';
+
+  /* =================================================================
+     The mockup's choices: the alternatives, the states, the S5 line cases
+     ================================================================= */
+  const Q = {
+    s12: { q: 'S1 with S2 · how New workspace is offered', recommended: 'A',
+      rec: 'Recommended: A, because File → New Workspace… needs S2 on its own anyway, so one S2 serves both ways in.',
+      A: { t: 'Separate step.', d: 'Welcome offers New workspace… and Open a workspace…; S2 replaces the card. Costs one more click before Create.' },
+      B: { t: 'One page.', d: "Welcome holds S2's form. Saves a click, but the first page is longer, and S2 is laid out twice: the File menu needs it alone." } },
+    s5: { q: 'S5 · how a turn shows its commit', recommended: 'A',
+      rec: "Recommended: A, §6's proposal: one more fact of the turn, in the type of the lines around it.",
+      A: { t: 'Text line.', d: 'A line under "model · login" and one after "done · … s", in their small type. Nothing new to build, but quiet and easy to pass over.' },
+      B: { t: 'Chip.', d: 'The same words in a small tinted chip with a Git mark. Seen at a glance, but a new element, and long values wrap in a narrow conversation.' } },
+    s3: { q: "S3 · the Open item's label (§6 leaves it to the mockup)", recommended: 'B',
+      rec: 'Recommended: B, so the menu and the Welcome page name the same thing the same way.',
+      A: { t: 'Open Research OS Folder…', d: "Today's label, kept. Nothing else changes, but the menu then says \"Folder\" under \"New Workspace…\"." },
+      B: { t: 'Open Workspace…', d: 'Matches New Workspace… and the Welcome page. Costs a change to menu.ts, its test, and the client README and DESIGN that quote the old label.' } }
+  };
+  /* One failure state at a time. `on`: the screens it changes (§6). */
+  const STATES = {
+    none: { t: 'None', d: "The tester's path: every prerequisite present.", on: [] },
+    nogit: { t: 'No Git', on: ['S1', 'S2', 'S3', 'S4', 'S5'], also: 'S6 and Home: as on any Home today.' },
+    nopy: { t: 'No uv or Python', on: ['S1', 'S2', 'S4', 'S5'], also: 'S5: no turn starts; the existing error shows when you send.' },
+    notempty: { t: 'Folder not empty', on: ['S2'], also: 'S1 and S5: not applicable.' },
+    noident: { t: 'No Git name and email', on: ['S2', 'S4'], also: 'S1 and S5: nothing changes.' },
+    nowrite: { t: 'Cannot write there', on: ['S2'], also: 'Drawn as a failure of Create.' },
+    nested: { t: 'Folder inside another Git repository', on: ['S2'], also: 'A warning; Create stays enabled.' },
+    oldtrace: { t: 'A trace from before step 3', on: ['S5'], also: 'The turn shows no commit line.' },
+    badsaved: { t: 'Saved folder unusable', on: ['S1'], also: "§6 S1's \"problem with the saved folder\"; not one of the brief's seven." }
+  };
+  /* Every value §6 S5 gives a turn line; `clean` is the tester's path. */
+  const CASES = {
+    clean: { t: 'clean → 3 changed (path)', start: W.s5.clean, end: D.endPath },
+    dirty: { t: '3 changed, 1 new → 7', start: W.s5.dirty, end: W.s5.endDirty },
+    committed: { t: 'agent committed', start: W.s5.clean, end: W.s5.endNew },
+    nocommit: { t: 'no commit yet', start: W.s5.nocommit, end: W.s5.nocommit },
+    norepo: { t: 'not a Git repository', start: W.s5.norepo, end: W.s5.norepo },
+    nogit: { t: 'Git not found', start: W.s5.nogit, end: W.s5.nogit }
+  };
+
+  /* =================================================================
+     State: everything the screens draw from. Part of it is kept in the hash.
+     ================================================================= */
+  const S = {
+    screen: 'welcome',        // welcome | new | home | project | settings
+    s12: 'A', s5: 'A', s3: 'B',
+    state: 'none', s5case: 'clean',
+    ws: false, wsExample: true, // a workspace is open, and it was made with the example
+    example: true, folder: '',
+    creating: -1, progLines: W.prog, createError: false,
+    root: 0, rootOpen: false, draftRoot: HOME_DRAFT, draftProj: '', rootError: false, projError: false,
+    run: 'done', projList: false, convCollapsed: false, tab: 'overview', sb: false,
+    menu: false, dialog: false, statesOpen: false,
+    pqOpen: new Set(['git', 'ident']), checking: false
+  };
+
+  function readHash() {
+    const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const pick = (key, allowed, dflt) => (allowed.indexOf(p.get(key)) >= 0 ? p.get(key) : dflt);
+    S.screen = pick('screen', ['welcome', 'new', 'home', 'project', 'settings'], 'welcome');
+    S.s12 = pick('s12', ['A', 'B'], 'A');
+    S.s5 = pick('s5', ['A', 'B'], 'A');
+    S.s3 = pick('s3', ['A', 'B'], 'B');
+    S.state = pick('state', Object.keys(STATES), 'none');
+    S.s5case = pick('case', Object.keys(CASES), 'clean');
+    S.wsExample = p.get('ex') !== '0';
+    S.root = Number(pick('root', ['0', '1', '2'], '0'));
+    S.run = pick('run', ['done', 'running'], 'done');
+    S.ws = ['home', 'project', 'settings'].indexOf(S.screen) >= 0;
+    if (!S.ws) S.root = 0;
+    if (!S.wsExample) S.root = 0;
+    S.rootOpen = S.root > 0;
+    S.draftRoot = S.wsExample ? [HOME_DRAFT, 'Yes, dispatch it.', ''][S.root] : '';
+    if (S.screen === 'new') S.folder = p.get('folder') === '1' ? FOLDER : '';
+  }
+  function writeHash() {
+    const p = ['screen=' + S.screen, 's12=' + S.s12, 's5=' + S.s5, 's3=' + S.s3, 'state=' + S.state, 'case=' + S.s5case];
+    if (S.ws) p.push('ex=' + (S.wsExample ? 1 : 0), 'root=' + S.root, 'run=' + S.run);
+    if (S.screen === 'new' && S.folder) p.push('folder=1');
+    const h = '#' + p.join('&');
+    if (location.hash !== h) history.replaceState(null, '', h);
+  }
+
+  /* =================================================================
+     Small helpers
+     ================================================================= */
+  const icon = (id, cls) => '<svg class="ic ' + (cls || '') + '" aria-hidden="true"><use href="#i-' + id + '"/></svg>';
+  const k = key => ' data-k="' + key + '"';   // a stable key, so focus survives a redraw
+  const dis = off => (off ? ' disabled' : '');
+  const linkBtn = (id, where) => '<button type="button" class="linkb" data-link="' + id + '"' + k('link-' + where + '-' + id) + '>How to install</button>';
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+  function copyText(text, okMsg) {
+    const fail = () => toast('Copying is not available here. The text: ' + text);
+    try {
+      const p = navigator.clipboard && navigator.clipboard.writeText(text);
+      if (p && typeof p.then === 'function') p.then(() => toast(okMsg), fail); else fail();
+    } catch (_) { fail(); }
+  }
+
+  /* =================================================================
+     S4: the prerequisite tiles, as DesktopStatus.tsx draws them
+     ================================================================= */
+  const WORD = { ok: 'ok', warn: 'check', missing: 'missing', error: 'error', notset: W.identNotSet, needsgit: W.identNeedsGit };
+  const TONE = { ok: 'ok', warn: 'warn', missing: 'signal', error: 'signal', notset: 'warn', needsgit: 'mute' };
+
+  function checks(where) {                // where: 'welcome' (no folder open) or 'settings'
+    const st = S.state, open = where === 'settings';
+    const rows = [];
+    rows.push(open
+      ? { id: 'workspace', label: 'Research OS folder', req: true, state: 'ok', det: FOLDER }
+      : { id: 'workspace', label: 'Research OS folder', req: true, state: 'missing', det: st === 'badsaved' ? BADSAVED : 'No folder chosen yet.' });
+    rows.push(st === 'nopy'
+      ? { id: 'uv', label: 'uv', req: false, state: 'warn', det: T.uvMissing, help: 'uv' }
+      : { id: 'uv', label: 'uv', req: false, state: 'ok', ver: '0.9.7', det: '/usr/local/bin/uv' });
+    rows.push(st === 'nopy'
+      ? { id: 'python', label: 'Python ≥ 3.11', req: true, state: 'missing', det: T.pyMissing, help: 'python' }
+      : { id: 'python', label: 'Python ≥ 3.11', req: true, state: 'ok', ver: '3.12.11', det: 'uv with Python 3.12 (.python-version)' });
+    rows.push(st === 'nogit'
+      ? { id: 'git', label: 'Git', req: true, state: 'missing', det: W.gitRow, sans: true, help: 'git', changed: true }
+      : { id: 'git', label: 'Git', req: true, state: 'ok', ver: '2.47.1', det: W.gitRow, sans: true, path: '/usr/bin/git', changed: true });
+    rows.push(st === 'nogit'
+      ? { id: 'ident', label: W.identRow, req: false, state: 'needsgit', det: W.identNeedsGit, sans: true, changed: true }
+      : st === 'noident'
+        ? { id: 'ident', label: W.identRow, req: false, state: 'notset', cmds: true, changed: true }
+        : { id: 'ident', label: W.identRow, req: false, state: 'ok', det: 'Your Name\nyou@example.com', changed: true });
+    // doctor.ts:112-114: with no folder open (or no Python) the agents cannot be checked
+    const agentsKnown = open && st !== 'nopy';
+    rows.push(agentsKnown
+      ? { id: 'claude', label: 'Claude Code', req: false, state: 'ok', ver: '2.1.4', det: 'logged in: claude.ai, pro' }
+      : { id: 'claude', label: 'Claude Code', req: false, state: 'error', det: T.noAgentCheck, help: 'claude' });
+    rows.push(agentsKnown
+      ? { id: 'codex', label: 'Codex', req: false, state: 'missing', det: 'not found', help: 'codex' }
+      : { id: 'codex', label: 'Codex', req: false, state: 'error', det: T.noAgentCheck, help: 'codex' });
+    return rows;
+  }
+  function gridHtml(where) {
+    const rows = checks(where);
+    const by = id => rows.find(r => r.id === id);
+    // Today: the folder, Python, and one agent. With Git required, Git too (a departure, see Notes).
+    const ready = by('workspace').state === 'ok' && by('python').state === 'ok' && by('git').state === 'ok' && (by('claude').state === 'ok' || by('codex').state === 'ok');
+    let h = '<section aria-label="Prerequisites"><div class="pq-head"><h3 class="label" style="margin:0">Prerequisites</h3>' +
+      '<span class="chip dot ' + (ready ? 'ok' : 'warn') + '">' + (ready ? 'ready' : 'not ready') + '</span>' +
+      '<button type="button" class="btn sm" data-act="recheck"' + k('recheck-' + where) + dis(S.checking) + '>' + (S.checking ? 'checking…' : esc(W.checkAgain)) + '</button></div><ul class="pq">';
+    rows.forEach(r => {
+      const isOpen = S.pqOpen.has(r.id);
+      h += '<li class="card-flat tile' + (r.changed ? ' changed' : '') + '" data-check="' + r.id + '"><details data-pq="' + r.id + '"' + (isOpen ? ' open' : '') + '>' +
+        '<summary' + k('pq-' + where + '-' + r.id) + '><svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5 7.5 6 4 9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '<span class="nm">' + esc(r.label) + '</span>' + (r.req ? '' : '<span class="opt">optional</span>') +
+        '<span class="right">' + (r.ver ? '<span class="ver">' + esc(r.ver) + '</span>' : '') +
+        '<span class="chip dot ' + TONE[r.state] + '">' + esc(WORD[r.state]) + '</span></span></summary>';
+      if (r.cmds) {
+        h += '<pre class="cmd-block">' + esc(W.identCmds.join('\n')) + '</pre>' +
+          '<button type="button" class="btn sm" style="margin-top:6px" data-act="copyIdent"' + k('copyIdent-' + where) + '>Copy the two lines</button>';
+      } else {
+        h += '<p class="det' + (r.sans ? ' sans' : '') + '">' + esc(r.det) + '</p>';
+        if (r.path) h += '<p class="det">' + esc(r.path) + '</p>';
+      }
+      if (r.help && r.state !== 'ok') h += '<div class="help">' + linkBtn(r.help, 'tile-' + where) + '</div>';
+      if (r.changed) h += '<div class="mk"><span class="mock-tagline">mockup: changed in step 3</span></div>';
+      h += '</details></li>';
+    });
+    return h + '</ul></section>';
+  }
+
+  /* =================================================================
+     S1 and S2
+     ================================================================= */
+  const isBlockedCreate = () => S.state === 'nopy' || S.state === 'nogit' || (S.state === 'notempty' && S.folder.trim() !== '');
+  function blockHtml(where) {
+    if (S.state === 'nopy') return '<span class="why">' + esc(T.pyMissing) + linkBtn('python', where) + '</span>';
+    if (S.state === 'nogit') return '<span class="why">' + esc(W.noGit) + linkBtn('git', where) + '</span>';
+    return '';
+  }
+  function folderMsgHtml() {
+    if (S.folder.trim() === '') return '';
+    if (S.state === 'notempty') return '<p class="fmsg danger-t" role="alert">' + esc(W.notEmpty) + '</p>';
+    if (S.state === 'nested') return '<p class="fmsg warn-t" role="status">' + esc(W.nested.replace('<path>', OUTER)) + '</p>';
+    return '';
+  }
+  function problemHtml() {
+    return S.state === 'badsaved' ? '<p class="problem">' + esc(BADSAVED) + '</p>' : '';
+  }
+
+  function s1Html() {
+    const nopy = S.state === 'nopy', nogit = S.state === 'nogit';
+    return '<h1 class="wtitle" tabindex="-1" data-focus>' + esc(W.s1Title) + '</h1>' +
+      '<p class="prose">' + esc(W.s1Sentence) + '</p>' + problemHtml() +
+      '<div class="w-actions">' +
+        '<button type="button" class="btn primary" data-act="toNew"' + k('s1new') + dis(nopy || nogit) + '>' + esc(W.newBtn) + '</button>' +
+        '<button type="button" class="btn" data-act="openWs"' + k('s1open') + dis(nopy) + '>' + esc(W.openBtn) + '</button>' +
+        blockHtml('s1') +
+      '</div>' +
+      '<div class="pq-wrap">' + gridHtml('welcome') + '</div>';
+  }
+
+  /* S2's form. ctx: 'page' (A: after Welcome), 'dialog' (from the File menu), 'inline' (B: inside Welcome) */
+  function s2Html(ctx) {
+    const creating = S.creating >= 0;
+    const canCreate = S.folder.trim() !== '' && !isBlockedCreate() && !creating;
+    let h = ctx === 'inline'
+      ? '<h2 class="wsub">New workspace</h2>'
+      : '<h1 class="wtitle" tabindex="-1" data-focus' + (ctx === 'dialog' ? ' id="dlgTitle"' : '') + '>New workspace</h1>';
+    h += '<div class="s2-field"><label class="label" for="folder-' + ctx + '">Folder</label>' +
+      '<div class="fld"><input id="folder-' + ctx + '" class="inp" data-folder type="text" spellcheck="false" autocomplete="off" value="' + esc(S.folder) + '"' + k('folder-' + ctx) + dis(creating) + '>' +
+      '<button type="button" class="btn" data-act="choose"' + k('choose-' + ctx) + dis(creating) + '>' + esc(W.choose) + '</button></div>' +
+      '<div data-folder-msg>' + folderMsgHtml() + '</div></div>';
+    h += '<label class="check"><input type="checkbox" data-chk="example"' + k('example-' + ctx) + (S.example ? ' checked' : '') + dis(creating) + '><span>' + esc(W.example) + '</span></label>';
+    h += '<div class="s2-list"><div class="label">Will be written</div><p>' + esc(S.example ? W.list : D.list) + '</p></div>';
+    h += S.state === 'noident'
+      ? '<p class="s2-line warn-t">' + esc(W.noIdent) + '</p>'
+      : '<p class="s2-line">' + esc(S.example ? W.gitLine : D.gitLine) + '</p>';
+    if (creating) h += '<p class="progress" role="status" tabindex="-1" id="prog-' + ctx + '"><span class="spin" aria-hidden="true"></span>' + esc(S.progLines[S.creating]) + '</p>';
+    if (S.createError) h += '<div class="failbox" role="alert" tabindex="-1" id="fail-' + ctx + '"><span>' + esc(W.noWrite.replace('<reason>', REASON)) + '</span>' +
+      '<button type="button" class="btn sm" data-act="showLog"' + k('showLog-' + ctx) + '>' + esc(W.showLog) + '</button></div>';
+    h += '<div class="w-actions"><button type="button" class="btn primary" data-act="create" data-create' + k('create-' + ctx) + dis(!canCreate) + '>' + esc(W.create) + '</button>' +
+      (ctx === 'inline' ? '' : '<button type="button" class="btn" data-act="cancel"' + k('cancel-' + ctx) + dis(creating) + '>' + esc(W.cancel) + '</button>') +
+      blockHtml('s2' + ctx) + '</div>';
+    return h;
+  }
+
+  function welcomeHtml() {
+    let inner;
+    if (S.s12 === 'B') {
+      const nopy = S.state === 'nopy';
+      inner = '<h1 class="wtitle" tabindex="-1" data-focus>' + esc(W.s1Title) + '</h1>' +
+        '<p class="prose">' + esc(W.s1Sentence) + '</p>' + problemHtml() +
+        s2Html('inline') +
+        '<div class="or-line"><button type="button" class="btn" data-act="openWs"' + k('bopen') + dis(nopy) + '>' + esc(W.openBtn) + '</button>' +
+          (nopy ? '<span class="why">' + esc(T.pyMissing) + linkBtn('python', 'bopen') + '</span>' : '') + '</div>' +
+        '<div class="pq-wrap">' + gridHtml('welcome') + '</div>';
+    } else if (S.screen === 'new') {
+      inner = s2Html('page') + '<div class="pq-wrap">' + gridHtml('welcome') + '</div>';
+    } else {
+      inner = s1Html();
+    }
+    return '<section class="welcome" aria-label="Welcome" data-testid="desktop-welcome"><div class="card wcard">' + inner + '</div></section>';
+  }
+
+  /* =================================================================
+     S5: the commit lines inside a turn (AgentChat.tsx EventRow)
+     ================================================================= */
+  function lineCase(where) {          // where: 'root' or 'proj'
+    if (S.state === 'oldtrace') return null;
+    if (S.state === 'nogit') return CASES.nogit;
+    if (where === 'root') return CASES.nocommit;   // a new workspace: git init, no commit
+    return CASES[S.s5case];
+  }
+  function fillHash(text) {
+    return esc(text).replace(/\{([hn])\}/g, (_, key) =>
+      '<button type="button" class="hash" data-hash="' + key + '" title="Copy the full hash">' + HASH[key][0] + '</button>');
+  }
+  function s5Html(text) {
+    if (text === null) return '';
+    const hasHash = /\{[hn]\}/.test(text);
+    if (S.s5 === 'A') return '<div class="g5a">' + fillHash(text) + '</div>';
+    return '<div class="g5b"><span class="gchip' + (hasHash ? '' : ' mute') + '">' + icon('git') + '<span>' + fillHash(text) + '</span></span></div>';
+  }
+  function startedHtml(c) { return '<li class="ev-started">' + MODEL + ' · subscription' + s5Html(c ? c.start : null) + '</li>'; }
+  function doneHtml(sec, c) { return '<li class="ev-done">done · ' + sec + ' s' + s5Html(c ? c.end : null) + '</li>'; }
+  const you = text => '<li class="ev-you"><div class="label">You</div><div class="bub">' + esc(text) + '</div></li>';
+  const said = text => '<li class="ev-text"><div class="label">Claude Code</div><div class="tx">' + esc(text) + '</div></li>';
+  const tool = (name, input) => {
+    const flat = JSON.stringify(input).replace(/\s+/g, ' ');
+    return '<li class="ev-tool">→ ' + esc(name) + ': ' + esc(flat.length > 160 ? flat.slice(0, 159) + '…' : flat) + '</li>';
+  };
+  const result = (out, key) => '<li class="ev-res"><details><summary' + k(key) + '>← ok: ' + esc(out.split('\n')[0]) + '</summary><pre>' + esc(out) + '</pre></details></li>';
+  const sampleBand = '<div class="sample-band"><span class="sample">sample conversation</span>Illustrative messages, not from a real session.</div>';
+
+  function rootEvents() {
+    const c = lineCase('root');
+    let h = you(HOME_DRAFT) + startedHtml(c) +
+      tool('Read', { file_path: 'AGENTS.md' }) +
+      tool('Read', { file_path: '.claude/skills/project-dispatch/SKILL.md' }) +
+      tool('Read', { file_path: 'projects-folder/nanochat_cpu/Code/README.md' }) +
+      said("I can hand this to nanochat_cpu's own agent. The brief I would send:\n- Run the example end to end: from Code/nanochat/, bash runs/runcpu_small.sh all.\n- Done when every stage exits 0 and base val bpb falls.\n- Then add one Progress Log line to PROJECT_MEMORY.md, and commit nothing.\nCode/README.md measured 2 min 57 s for the whole example on an Intel i7-12700; the first run downloads about 0.2 GB of data and 0.2 GB of Python wheels. Shall I dispatch it?") +
+      doneHtml('24.8', c);
+    if (S.root >= 2) {
+      h += you('Yes, dispatch it.') + startedHtml(c) +
+        tool('Bash', { command: "uv run --no-project --python 3.12 -- python os-harness/harness.py run --agent claude --cwd projects-folder/nanochat_cpu --mode full --detach - <<'BRIEF' Run the example end to end …" }) +
+        result('20261126-101716-claude-5307', 'res-root') +
+        said("Dispatched. nanochat_cpu's agent is running the example in its own conversation; open the project to follow it. Ask me for the report when it has finished.") +
+        doneHtml('11.6', c);
+    }
+    return h;
+  }
+  const RUN_PROMPT = 'Run the example end to end: from Code/nanochat/, bash runs/runcpu_small.sh all. Done when every stage exits 0 and base val bpb falls. Then add one Progress Log line to PROJECT_MEMORY.md; do not commit.';
+  function projEvents() {
+    const c = lineCase('proj');
+    let h = you(RUN_PROMPT) + startedHtml(c) + tool('Bash', { command: 'cd Code/nanochat && bash runs/runcpu_small.sh all' });
+    if (S.run === 'running') return h + '<li class="ev-working">working…</li>';
+    h += result('[summary] wrote Code/results/summary.json and Code/results/training_metrics.csv\nall stages exited 0', 'res-proj') +
+      tool('Edit', { file_path: 'PROJECT_MEMORY.md' }) +
+      said('All stages exited 0. Base val bpb fell from 3.456 to 2.288 and SFT from 2.289 to 2.146, as in Code/README.md; the chat reply is nonsense, as expected. I added one Progress Log line and committed nothing.') +
+      doneHtml('236.0', c);
+    return h;
+  }
+
+  /* The composer, as AgentChat.tsx draws it */
+  function composerHtml(where, draft, started, running) {
+    const err = where === 'root' ? S.rootError : S.projError;
+    return '<div class="composer-f">' + (err ? '<p class="c-err" role="alert">' + esc(T.pyError) + '</p>' : '') +
+      '<div class="composer"><div class="crow">' +
+        '<textarea rows="2" id="' + where + 'Input" data-composer="' + where + '"' + k('ta-' + where) + ' aria-label="Message ' + (where === 'root' ? 'Root agent conversation' : 'nanochat_cpu agent') + '" placeholder="' + esc(running ? T.working : T.placeholder) + '"' + dis(running) + '>' + esc(draft) + '</textarea>' +
+        '<button type="button" class="send" data-act="send-' + where + '"' + k('send-' + where) + ' aria-label="Send" title="Send (Enter)"' + dis(running || draft.trim() === '') + '>' + icon('send') + '</button>' +
+      '</div><div class="cfoot"><span class="agent-chip">Claude Code</span><span>' + (started ? 'continues this conversation · full' : 'new conversation · full') + '</span></div></div></div>';
+  }
+  function newHeaderHtml() {
+    return '<label>via <select' + k('sel-agent') + '><option>Claude Code</option><option>Codex</option></select></label>' +
+      '<label title="edits and commands">mode <select' + k('sel-mode') + '><option>full</option><option>workspace</option><option>read-only</option></select></label>';
+  }
+  function introHtml(text, examples) {
+    return '<div class="intro"><p>' + esc(text) + '</p><ul>' + examples.map(e => '<li>' + esc(e) + '</li>').join('') + '</ul></div>';
+  }
+
+  /* =================================================================
+     Home (with the example, or S6 without)
+     ================================================================= */
+  function rootBarHtml() {
+    const started = S.root > 0 && S.state !== 'nopy';
+    const open = S.rootOpen;
+    let h = '<section class="card rootbar" aria-label="Root agent"><div class="rb-head">' +
+      '<h2 class="rb-title">' + icon('chat') + 'Root agent</h2>' +
+      '<button type="button" class="btn" data-act="rootToggle" aria-expanded="' + open + '"' + k('rootToggle') + '>' + (open ? 'Close conversation' : 'Open conversation') + icon('chev-down', 'sm') + '</button></div>';
+    if (!open) {
+      h += '<p class="rb-latest"><b class="label">Latest conversation</b>' + (started
+        ? '<span>' + esc(HOME_DRAFT) + '</span><span class="meta">' + S.root + ' turn' + (S.root === 1 ? '' : 's') + ' · just now</span><span class="badge ok">ok</span><button type="button" class="btn ghost sm" data-act="rootToggle"' + k('rootContinue') + '>Continue</button>'
+        : '<span class="meta" style="font-size:15px;font-family:var(--serif)">No conversations here yet.</span>') + '</p>';
+      return h + composerHtml('root', S.draftRoot, started, false) + '</section>';
+    }
+    h += '<div class="rb-body"><aside class="rb-list" aria-label="Conversations"><div class="lh"><span class="label">Conversations</span><button type="button" class="btn sm" data-hint="Starts a new conversation. Not drawn in this mockup."' + k('rootNew') + '>+ New</button></div>' +
+      (started
+        ? '<button type="button" class="crow-btn on" aria-pressed="true"' + k('rootRow') + ' data-hint="The one conversation in this workspace is already open."><div class="r1"><span>Claude Code · full</span><span class="badge ok">ok</span></div><div class="r2">' + esc(HOME_DRAFT) + '</div><div class="r3">' + S.root + ' turn' + (S.root === 1 ? '' : 's') + ' · just now</div></button>'
+        : '<p class="empty-small">No conversations here yet.</p>') +
+      '</aside><section class="chat" aria-label="Root agent conversation"><header class="chat-head">' +
+      (started ? '<span class="meta">Claude Code · ' + MODEL + ' · full</span><span class="end"><span class="badge ok">ok</span></span>' : newHeaderHtml() + '<span class="end"><span class="badge mute">new</span></span>') +
+      '</header><div class="thread" data-thread>' +
+      (started ? sampleBand + '<ol class="ev">' + rootEvents() + '</ol>' : introHtml(T.rootIntro, T.rootExamples)) +
+      '</div>' + composerHtml('root', S.draftRoot, started, false) + '</section></div>';
+    return h + '</section>';
+  }
+  function homeHtml() {
+    let h = '<section class="screen" aria-label="Home"><div class="page">' +
+      '<div class="eyebrow">Workspace · my-workspace</div><h1 class="title" tabindex="-1" data-focus>Home</h1>' +
+      '<p class="lede">One root agent moves every project forward. Each project below opens its own workspace, with its own conversation and views.</p>' +
+      rootBarHtml() +
+      '<section aria-labelledby="home-projects"><div class="sec-head"><h2 id="home-projects">Projects</h2><span class="count">' + (S.wsExample ? 1 : 0) + ' registered<span class="section-src">memory/MEMORY.md · PROJECT_MEMORY.md</span></span></div>';
+    if (!S.wsExample) {
+      h += '<p class="card-flat empty-card">' + esc(W.s6) + '</p>';
+    } else {
+      h += '<div class="grid"><article class="card pcard">' +
+        '<div class="top"><span class="path">projects-folder/nanochat_cpu</span><span class="pill">Stage · probe</span><span class="pill neutral">P1</span></div>' +
+        '<h3>nanochat_cpu</h3><div class="rule"></div>' +
+        '<p class="purpose">Is the ~3-minute d1 example (0.84M params) the right first-run example for Research OS users, and should it be verified on another machine or OS?</p>' +
+        '<dl class="facts">' +
+          '<dt>Status</dt><dd class="clamp2">runnable example with a short paper, 2026-09-29. bash runs/runcpu_small.sh all runs every stage in ~3 min on the i7-12700 CPU (see Code/README.md); paper in paper/main.pdf; awaiting Human Owner review</dd>' +
+          '<dt>Next action</dt><dd class="clamp3">Human Owner reviews the README, figures, and short paper, then accepts or revises; accepting the 2026-09-26 dispatch run also completes GOAL.md H2</dd>' +
+          '<dt>Evaluator</dt><dd class="clamp2">nanochat\'s own val bpb (base and SFT) from the logged runs, in Code/results/summary.json; no separate evaluator. Success criterion: every stage completes and base val bpb falls (3.456 → 2.288)</dd>' +
+          '<dt>Owner</dt><dd class="clamp1">mixed</dd>' +
+        '</dl><div class="foot"><button type="button" class="open" data-act="openProject" aria-label="Open workspace: nanochat_cpu"' + k('openProject') + '>Open workspace ' + icon('arrow', 'sm') + '</button>' +
+        '<span class="src-note">from PROJECT_MEMORY.md · just now</span></div></article></div>';
+    }
+    return h + '</section></div></section>';
+  }
+
+  /* =================================================================
+     The project's workspace: its conversation, with S5's lines
+     ================================================================= */
+  const TABS = [['overview', 'Overview'], ['idea', 'Idea'], ['code', 'Code'], ['skeleton', 'Skeleton'], ['assets', 'Assets'], ['paper', 'Paper']];
+  const STANDIN = {
+    overview: 'The project overview as built: round scores, Evaluations, OS Feedback, and Local skills.',
+    idea: 'The Idea view as built in step 2, drawn from idea_graph.md.',
+    code: 'The Code view as built. Its Changes reads this project\'s own repository (codeGit.ts:529-536; Git 2.45 or later), so in a new workspace it lists the example\'s one commit, e81c4f7, by "Research OS example" (§5.3).',
+    skeleton: 'The Skeleton view as built in step 2: the claims table with its evidence.',
+    assets: 'The Assets view as built in step 2.',
+    paper: 'The Paper view as built: paper/main.pdf, read-only.'
+  };
+  function projConvHtml() {
+    const started = S.root >= 2 && S.state !== 'nopy';
+    const running = started && S.run === 'running';
+    if (S.projList) {     // the conversation list, in place of the thread (stacked layout)
+      return '<section class="chat" aria-label="nanochat_cpu agent"><header class="chat-head">' +
+        '<button type="button" class="btn sm" data-act="projList" aria-expanded="true"' + k('projListBtn') + '>Conversations <span style="color:var(--muted)">' + (started ? 1 : 0) + '</span>' + icon('chev-down', 'sm') + '</button>' +
+        '<button type="button" class="btn sm" data-hint="Starts a new conversation. Not drawn in this mockup."' + k('projNew') + '>+ New</button></header>' +
+        '<div class="thread">' + (started
+          ? '<button type="button" class="crow-btn on" data-act="projList" aria-pressed="true"' + k('projRow') + '><div class="r1"><span>Claude Code · full</span><span class="badge ' + (running ? 'signal' : 'ok') + '">' + (running ? 'running' : 'ok') + '</span></div><div class="r2">' + esc(RUN_PROMPT) + '</div><div class="r3">1 turn · 4 min ago</div></button>'
+          : '<p class="empty-small">No conversations here yet.</p>') + '</div></section>';
+    }
+    let h = '<section class="chat" aria-label="nanochat_cpu agent"><header class="chat-head">';
+    if (started) {
+      h += '<button type="button" class="btn sm" data-act="projList" aria-expanded="false"' + k('projListBtn') + '>Conversations <span style="color:var(--muted)">1</span>' + icon('chev-down', 'sm') + '</button>' +
+        '<button type="button" class="btn sm" data-hint="Starts a new conversation. Not drawn in this mockup."' + k('projNew') + '>+ New</button>' +
+        '<span class="meta">Claude Code · ' + MODEL + ' · full</span><span class="end"><span class="badge ' + (running ? 'signal' : 'ok') + '">' + (running ? 'running' : 'ok') + '</span>' +
+        (running ? '<button type="button" class="btn sm danger" data-hint="Stops the turn. Not drawn in this mockup."' + k('stop') + '>Stop</button>' : '') + '</span>';
+    } else {
+      h += '<button type="button" class="btn sm" data-act="projList" aria-expanded="false"' + k('projListBtn') + '>Conversations <span style="color:var(--muted)">0</span>' + icon('chev-down', 'sm') + '</button>' +
+        newHeaderHtml() + '<span class="end"><span class="badge mute">new</span></span>';
+    }
+    h += '</header><div class="thread" data-thread>' +
+      (started ? sampleBand + '<ol class="ev">' + projEvents() + '</ol>' : introHtml(T.projIntro, T.projExamples)) +
+      '</div>' + composerHtml('proj', S.draftProj, started, running) + '</section>';
+    return h;
+  }
+  function projectHtml() {
+    const tabs = TABS.map(([id, label]) => '<button type="button" class="tab" role="tab" aria-selected="' + (S.tab === id) + '" data-tab="' + id + '"' + k('tab-' + id) + '>' + label + '</button>').join('');
+    const label = (TABS.find(t => t[0] === S.tab) || TABS[0])[1];
+    return '<section class="screen ws' + (S.convCollapsed ? ' conv-collapsed' : '') + '" aria-label="nanochat_cpu workspace">' +
+      '<header class="ws-top"><nav class="crumbs" aria-label="Breadcrumb"><button type="button" data-hint="The Projects page is not drawn: step 3 does not change it."' + k('crumbProjects') + '>Projects</button>' + icon('chev-right', 'sm') + '</nav>' +
+      '<h1 class="ws-title" tabindex="-1" data-focus>nanochat_cpu</h1><span class="pill">Stage · probe</span><span class="pill neutral">P1</span>' +
+      '<span class="right"><span class="mono">projects-folder/nanochat_cpu</span><span class="pill neutral">owner mixed</span></span></header>' +
+      '<div class="ws-body"><aside class="card conv" aria-label="Project conversation">' +
+      (S.convCollapsed
+        ? '<button type="button" class="strip" data-act="conv" aria-expanded="false" title="Open conversation"' + k('convOpen') + '>' + icon('panel-open') + '<span class="vert">Project conversation</span></button>'
+        : '<div class="conv-head"><h2>Project conversation</h2><button type="button" class="icon-btn" data-act="conv" aria-expanded="true" aria-label="Collapse conversation" title="Collapse conversation"' + k('convClose') + '>' + icon('panel') + '</button></div><div class="conv-box">' + projConvHtml() + '</div>') +
+      '</aside><div class="card views"><div class="tabs" role="tablist" aria-label="Project views">' + tabs + '</div>' +
+      '<div class="standin" role="tabpanel"><span class="pill neutral">As built</span><h3>' + label + '</h3><p>' + esc(STANDIN[S.tab]) + '</p><p class="src-note">Not redrawn in this mockup: step 3 does not change this view.</p></div></div></div></section>';
+  }
+
+  /* =================================================================
+     Settings (S4's rows in today's page)
+     ================================================================= */
+  function settingsHtml() {
+    return '<section class="screen" aria-label="Settings"><div class="page">' +
+      '<div class="eyebrow">Preferences</div><h1 class="title" tabindex="-1" data-focus>Settings</h1>' +
+      '<p class="lede">AI-Human Research OS has no model of its own. It launches your own coding agent, on your own plan.</p>' +
+      '<section class="card set-card"><h2>Workspace folder</h2><p class="t">The folder this app opens. Projects live under <code>projects-folder/</code> inside it.</p>' +
+        '<div class="field"><span class="val">' + esc(FOLDER) + '</span><button type="button" class="btn primary" data-hint="Opens today\'s folder picker. Not drawn in this mockup."' + k('change') + '>Change…</button></div></section>' +
+      '<section class="card set-card"><h2>Snapshot</h2><p class="t">The data this app shows is read from the folder\'s files into one snapshot, refreshed when they change.</p>' +
+        '<div class="field"><span class="label">Last run</span><span class="chip dot ok">10:15:04 · 2.4 s</span></div></section>' +
+      '<section class="card set-card"><h2>Prerequisites and logins</h2><p class="t">What this app needs on your machine, and which coding agents are signed in.</p>' + gridHtml('settings') + '</section>' +
+      '<p class="foot-note"><span class="step-badge">step 4</span>Agent selection arrives in step 4; until then each conversation picks Claude Code or Codex in its own header.</p>' +
+      '</div></section>';
+  }
+
+  /* =================================================================
+     The left menu (as built), the File menu (S3), and S2 as a dialog
+     ================================================================= */
+  function sidebarHtml() {
+    const nav = (target, label, ic, hint) => '<button type="button" class="nav-btn' + (target && S.screen === target ? ' active' : '') + '" title="' + label + '"' +
+      (target ? ' data-nav="' + target + '"' : ' data-hint="' + esc(hint) + '"') + k('nav-' + label) + (target && S.screen === target ? ' aria-current="page"' : '') + '>' + ic + '<span class="lbl">' + label + '</span></button>';
+    const notDrawn = 'Not drawn in this mockup: step 3 does not change this page.';
+    return '<div class="brand"><div class="brand-mark">' + icon('book') + '</div><div class="brand-text">AI-Human<br>Research OS</div></div>' +
+      nav('home', 'Home', icon('home')) +
+      nav(null, 'Projects', icon('projects'), notDrawn) +
+      nav(null, 'Paper wiki', icon('book'), notDrawn) +
+      nav(null, 'Skills', icon('spark'), notDrawn) +
+      nav(null, 'Plugins', icon('puzzle'), notDrawn) +
+      (S.wsExample ? '<div class="label sec-label">Quick access</div>' + nav('project', 'nanochat_cpu', '<span class="qa-mark" aria-hidden="true">n</span>') : '') +
+      '<div class="spacer" aria-hidden="true"></div>' +
+      '<div class="snap"><div class="row1"><span class="dot" aria-hidden="true"></span>Snapshot</div><div class="ln t">2026-11-26 10:15</div><div class="ln">Desktop client</div><div class="ln">agent-led <b>off</b></div>' +
+      '<button type="button" class="regen" data-hint="Regenerating the snapshot is not drawn in this mockup."' + k('regen') + '>' + icon('refresh', 'sm') + '<span>Regenerate</span></button></div>' +
+      nav('settings', 'Settings', icon('gear')) +
+      '<button type="button" class="nav-btn" id="sbToggle" data-act="sb" aria-expanded="' + !S.sb + '" title="' + (S.sb ? 'Expand sidebar' : 'Collapse sidebar') + '"' + k('sb') + '>' + icon('chev-left') + '<span class="lbl">Collapse</span></button>';
+  }
+  function menuHtml() {
+    return '<div class="ovl-catch" data-act="menuClose"></div>' +
+      '<div class="menubar" aria-hidden="true"><span class="app-n">Research OS</span><span class="on">File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span></div>' +
+      '<div class="menu-dd" role="menu" aria-label="File">' +
+        '<button type="button" class="mi" role="menuitem" data-act="menuNew"' + k('miNew') + '><span>' + esc(W.menuNew) + '</span><span class="acc"></span></button>' +
+        '<button type="button" class="mi" role="menuitem" data-act="menuOpen"' + k('miOpen') + '><span>' + esc(W.menuOpen[S.s3]) + '</span><span class="acc">⌘O</span></button>' +
+        '<button type="button" class="mi" role="menuitem" data-hint="Open Recent lists ~/Research/my-workspace (§5.8 f). Not drawn further."' + k('miRecent') + '><span>Open Recent</span><span class="acc">▸</span></button>' +
+        '<div class="msep" role="separator"></div>' +
+        '<button type="button" class="mi" role="menuitem" data-hint="Shows the workspace folder in Finder. Not drawn in this mockup."' + k('miReveal') + '><span>Reveal Folder in Finder</span><span class="acc"></span></button>' +
+        '<p class="mock-inline">Mockup: the macOS menu bar, drawn over the window. On Windows and Linux the same File menu is in the window.</p>' +
+      '</div>';
+  }
+  function dialogHtml() {
+    return '<div class="dlg-wrap"><div class="card dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">' + s2Html('dialog') + '<div class="pq-wrap">' + gridHtml('settings') + '</div></div></div>';
+  }
+
+  /* =================================================================
+     The strip: path highlight, alternatives for this screen, states
+     ================================================================= */
+  function currentStep() {
+    if (S.menu) return 'S3';
+    if (S.dialog) return S.creating >= 0 ? 'p3' : 'S3';
+    if (!S.ws) {
+      if (S.creating >= 0 || S.createError) return 'p3';
+      if (S.s12 === 'B') return S.folder ? 'p2' : 'p1';
+      return S.screen === 'new' ? 'p2' : 'p1';
+    }
+    if (S.screen === 'settings') return 'S4';
+    if (S.screen === 'project') return 'p6';
+    if (!S.wsExample) return 'S6';
+    return S.root >= 1 ? 'p5' : 'p4';
+  }
+  /* Which §6 screen is on show, for the states panel */
+  function shownScreen() {
+    if (S.menu) return 'S3';
+    if (S.dialog) return 'S2';
+    if (!S.ws) return (S.s12 === 'B' ? (S.folder ? 'S2' : 'S1') : (S.screen === 'new' ? 'S2' : 'S1'));
+    if (S.screen === 'settings') return 'S4';
+    if (S.screen === 'project') return 'S5';
+    if (!S.wsExample) return 'S6';
+    return S.root >= 1 ? 'S5' : 'Home';
+  }
+  function altContext() {
+    if (S.menu) return 's3';
+    if (S.dialog || !S.ws) return 's12';
+    if (S.screen === 'project') return 's5';
+    if (S.screen === 'home' && S.rootOpen && S.root >= 1) return 's5';
+    return null;
+  }
+  function questionHtml(key) {
+    const q = Q[key];
+    const dialogNote = key === 's12' && S.dialog ? ' From the File menu, S2 is this dialog in both.' : '';
+    return '<div class="mock-q">' + esc(q.q) + ' <span class="why">· ' + esc(q.rec + dialogNote) + '</span></div><div class="mock-opts">' +
+      ['A', 'B'].map(v => {
+        const on = S[key] === v;
+        return '<button type="button" class="mock-opt' + (on ? ' on' : '') + '" data-alt="' + key + ':' + v + '" aria-pressed="' + on + '"' + k('alt-' + key + v) + '>' +
+          '<span class="L">' + v + '</span><span><span class="t">' + esc(q[v].t) + '</span>' + (q.recommended === v ? '<span class="rec">recommended</span>' : '') + ' <span class="d">' + esc(q[v].d) + '</span></span></button>';
+      }).join('') + '</div>';
+  }
+  /* In the first row, on a conversation: S5's line values (every value §6 gives) and the run's phase */
+  function extrasHtml() {
+    if (altContext() !== 's5' || (S.screen === 'project' && S.root < 2)) return '';
+    const forced = S.state === 'nogit' ? 'Git not found (state)' : S.state === 'oldtrace' ? 'none (state)' : S.state === 'nopy' ? 'no turn (state)' : null;
+    let h = forced
+      ? '<span class="lab">S5 lines</span><span class="mock-forced">' + esc(forced) + '</span>'
+      : '<label class="lab" for="caseSel">S5 lines</label><select id="caseSel" class="mock-sel" title="The project run\'s lines; root-agent turns read &quot;no commit yet&quot; (a new workspace is git init, no commit)"' + k('caseSel') + '>' +
+        Object.keys(CASES).map(c => '<option value="' + c + '"' + (S.s5case === c ? ' selected' : '') + '>' + esc(CASES[c].t) + '</option>').join('') + '</select>';
+    if (S.screen === 'project' && S.state !== 'nopy') {
+      h += '<span class="lab" style="margin-left:6px">Run</span><span class="mock-seg" role="group" aria-label="The run">' +
+        '<button type="button" data-run="done" aria-pressed="' + (S.run === 'done') + '"' + k('run-done') + '>done</button>' +
+        '<button type="button" data-run="running" aria-pressed="' + (S.run === 'running') + '"' + k('run-running') + '>running</button></span>';
+    }
+    return h;
+  }
+  function altHtml() {
+    const ctx = altContext();
+    if (ctx === 's12' || ctx === 's3') return questionHtml(ctx);
+    if (ctx === 's5') {
+      if (S.screen === 'project' && S.root < 2) {
+        return '<p class="mock-one">This project has no conversation yet: the run appears once the root agent dispatches it from Home (path step 5). <button type="button" class="mock-btn" data-jump="p6"' + k('dispatchForMe') + '>Dispatch it for me</button></p>';
+      }
+      return questionHtml('s5');
+    }
+    if (S.screen === 'project') {
+      return '<p class="mock-one">This project has no conversation yet: the run appears once the root agent dispatches it from Home (path step 5). <button type="button" class="mock-btn" data-jump="p6"' + k('dispatchForMe') + '>Dispatch it for me</button></p>';
+    }
+    if (S.screen === 'settings') return '<p class="mock-one">Nothing to choose here: S4\'s two rows are drawn as §6 proposes. Pick No Git or No Git name and email under States.</p>';
+    if (S.screen === 'home' && !S.wsExample) return '<p class="mock-one">S6: the workspace was made without the example. Nothing to choose here; the root-agent bar works as today.</p>';
+    return '<p class="mock-one">Nothing to choose on Home before a conversation. Send the typed-in message to the root agent (path step 5) to see S5\'s lines in its turns.</p>';
+  }
+  function statesHtml() {
+    let h = '<h2>Mockup only · failure states</h2><p class="hint">One at a time. Picking one takes you to a screen it changes; the buttons go to the others.</p>';
+    Object.keys(STATES).forEach(key => {
+      const s = STATES[key], on = S.state === key;
+      h += '<div class="st-row"><button type="button" class="st-btn" data-state="' + key + '" aria-pressed="' + on + '"' + k('st-' + key) + '>' + esc(s.t) + '</button><div class="st-on">' +
+        (s.on.length ? '<span>Shows on</span>' + s.on.map(sc => '<button type="button" class="go" data-state-go="' + key + ':' + sc + '"' + k('go-' + key + sc) + '>' + sc + '</button>').join('') : '') +
+        '<span class="also">' + esc(s.d || s.also || '') + '</span></div></div>';
+    });
+    return h;
+  }
+  /* The strip's state line: which screens the picked state changes */
+  function stateLineHtml() {
+    if (S.state === 'none') return '';
+    const s = STATES[S.state], here = shownScreen();
+    return '<span class="mock-lab">State: ' + esc(s.t) + '</span><span>shows on</span>' +
+      s.on.map(sc => '<button type="button" class="go' + (sc === here ? ' here' : '') + '" data-state-go="' + S.state + ':' + sc + '"' + k('sgo-' + sc) + (sc === here ? ' aria-current="true"' : '') + '>' + sc + '</button>').join('') +
+      '<span class="also">' + esc(s.also || '') + '</span>' +
+      '<button type="button" class="go" data-state="none"' + k('sclear') + '>Clear the state</button>';
+  }
+  function renderMock() {
+    const cur = currentStep();
+    $$('#mock .mock-row [data-jump]').forEach(b => {
+      const on = b.dataset.jump === cur;
+      b.classList.toggle('on', on);
+      if (on) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+    // the button stays short; the state line below the strip names the state that is on
+    $('#statesBtn').title = 'Failure states: ' + STATES[S.state].t;
+    $('#statesBtn').classList.toggle('live', S.state !== 'none');
+    $('#statesBtn').setAttribute('aria-expanded', String(S.statesOpen));
+    $('#mockAlt').innerHTML = altHtml();
+    const extra = extrasHtml();
+    $('#mockExtra').innerHTML = extra;
+    $('#mockExtra').hidden = extra === '';
+    $('#mockState').innerHTML = stateLineHtml();
+    $('#mockState').hidden = S.state === 'none';
+    $('#statesPop').hidden = !S.statesOpen;
+    if (S.statesOpen) $('#statesPop').innerHTML = statesHtml();
+  }
+
+  /* =================================================================
+     Render: one function draws everything from S
+     ================================================================= */
+  function render(focusSel) {
+    const a = document.activeElement;
+    const key = a && a.dataset ? a.dataset.k : null;
+    if (S.ws && (S.screen === 'welcome' || S.screen === 'new')) S.screen = 'home';
+    if (!S.ws && ['home', 'project', 'settings'].indexOf(S.screen) >= 0) S.screen = 'welcome';
+    const app = $('#app');
+    app.classList.toggle('no-ws', !S.ws);
+    app.classList.toggle('sb-collapsed', S.sb);
+    $('#sidebar').innerHTML = S.ws ? sidebarHtml() : '';
+    $('#main').innerHTML = !S.ws ? welcomeHtml() : S.screen === 'home' ? homeHtml() : S.screen === 'project' ? projectHtml() : settingsHtml();
+    $('#overlay').innerHTML = (S.menu ? menuHtml() : '') + (S.dialog ? dialogHtml() : '');
+    renderMock();
+    writeHash();
+    $$('[data-thread]').forEach(t => { t.scrollTop = t.scrollHeight; });   // a conversation shows its latest lines
+    let target = null;
+    if (focusSel) target = $(focusSel);
+    if (!target && key) target = $('[data-k="' + key + '"]');
+    if (target && !target.disabled) target.focus({ preventScroll: !focusSel });
+  }
+
+  /* =================================================================
+     Actions
+     ================================================================= */
+  let createTimer = 0;
+  function startCreate() {
+    clearTimeout(createTimer);
+    S.progLines = S.example ? W.prog : [W.prog[0], W.prog[2]];
+    S.createError = false; S.creating = 0;
+    const ctx = S.dialog ? 'dialog' : S.s12 === 'B' ? 'inline' : 'page';
+    render('#prog-' + ctx);
+    const step = () => {
+      if (S.state === 'nowrite') {          // the write fails; nothing is left at the chosen path
+        S.creating = -1; S.createError = true; render('#fail-' + ctx); return;
+      }
+      if (S.creating < S.progLines.length - 1) { S.creating++; render('#prog-' + ctx); createTimer = setTimeout(step, 1100); }
+      else finishCreate();
+    };
+    createTimer = setTimeout(step, 1100);
+  }
+  function stopCreate() { clearTimeout(createTimer); S.creating = -1; }
+  function openWs(withExample) {
+    stopCreate();
+    S.ws = true; S.wsExample = withExample; S.root = 0; S.rootOpen = false; S.rootError = false; S.projError = false;
+    S.draftRoot = withExample ? HOME_DRAFT : ''; S.draftProj = ''; S.projList = false; S.tab = 'overview'; S.run = 'done';
+    S.menu = false; S.dialog = false; S.createError = false;
+  }
+  function finishCreate() {
+    openWs(S.example);
+    S.screen = 'home';
+    render('[data-focus]');
+    toast(S.example ? 'The app opened the new workspace on Home (no trust question: it wrote the folder itself).' : 'The new workspace has no projects: this is S6.');
+  }
+  function closeWs() { stopCreate(); S.ws = false; S.menu = false; S.dialog = false; S.createError = false; S.root = 0; S.rootOpen = false; }
+
+  function jump(t) {
+    S.statesOpen = false; S.menu = false; S.dialog = false;
+    switch (t) {
+      case 'p1': case 'S1': closeWs(); S.screen = 'welcome'; S.folder = ''; S.example = true; break;
+      case 'p2': closeWs(); S.screen = 'new'; S.folder = ''; S.example = true; break;
+      case 'S2': closeWs(); S.screen = 'new'; S.folder = FOLDER; break;
+      case 'p3': closeWs(); S.screen = 'new'; S.folder = FOLDER; S.example = true; render(); startCreate(); return;
+      case 'p4': openWs(true); S.screen = 'home'; break;
+      case 'p5': openWs(true); S.root = 2; S.rootOpen = true; S.draftRoot = ''; S.screen = 'home'; break;
+      case 'p6': case 'S5': openWs(true); S.root = 2; S.draftRoot = ''; S.screen = 'project'; break;
+      case 'S3': if (!S.ws) openWs(true); if (S.screen !== 'project' && S.screen !== 'settings') S.screen = 'home'; S.menu = true; render('[data-k="miNew"]'); return;
+      case 'S4': if (!S.ws) openWs(true); S.screen = 'settings'; break;
+      case 'S6': openWs(false); S.screen = 'home'; S.example = false; break;
+    }
+    render('[data-focus]');
+  }
+  /* Pick a failure state: go to a screen it changes (unless one is on show); the strip then names the others. */
+  function pickState(key, screen) {
+    S.state = key;
+    S.rootError = false; S.projError = false; S.createError = false; stopCreate();
+    const on = STATES[key].on;
+    const target = screen || (on.length && on.indexOf(shownScreen()) < 0 ? on[0] : null);
+    if (target) jump(target); else { S.statesOpen = false; render('#statesBtn'); }
+    const now = shownScreen();
+    if (key === 'nowrite' && now === 'S2' && S.folder) startCreate();
+    if (key === 'nopy' && now === 'S5') { S.projError = S.screen === 'project'; S.rootError = S.screen === 'home'; render(); }
+  }
+
+  function send(where) {
+    if (S.state === 'nopy') {   // no turn starts; the conversation's existing error shows
+      if (where === 'root') S.rootError = true; else S.projError = true;
+      render('#' + where + 'Input'); return;
+    }
+    if (where === 'root' && S.wsExample && S.root < 2 && S.draftRoot.trim() !== '') {
+      S.root++; S.rootOpen = true; S.draftRoot = S.root === 1 ? 'Yes, dispatch it.' : '';
+      render('#rootInput');
+      if (S.root === 2) toast("Dispatched. The run is in nanochat_cpu's own conversation: open the project from its card or from Quick access.");
+      return;
+    }
+    toast('Mockup: messages are not sent anywhere.');
+  }
+
+  function act(a, t) {
+    switch (a) {
+      case 'toNew': S.screen = 'new'; S.folder = ''; render('[data-focus]'); break;
+      case 'openWs': toast("Opens today's folder picker. Not drawn in this mockup."); break;
+      case 'choose':
+        S.folder = FOLDER; render();
+        toast('Mockup: the system folder picker would open here; this mockup picks ' + FOLDER + '.');
+        break;
+      case 'create': if (S.folder.trim() !== '' && !isBlockedCreate()) startCreate(); break;
+      case 'cancel':
+        stopCreate(); S.createError = false;
+        if (S.dialog) { S.dialog = false; render('[data-focus]'); }
+        else { S.screen = 'welcome'; S.folder = ''; render('[data-focus]'); }
+        break;
+      case 'showLog': toast('Opens the log file, as Help → Show Log File does. Not drawn in this mockup.'); break;
+      case 'recheck': {
+        const key = t.dataset.k;           // the button is disabled while checking, so focus returns to it after
+        S.checking = true; render();
+        setTimeout(() => { S.checking = false; render('[data-k="' + key + '"]'); toast('Checked again. Mockup: a state stays until you change it under States.'); }, 700);
+        break;
+      }
+      case 'copyIdent': copyText(W.identCmds.join('\n'), 'Copied the two git config lines.'); break;
+      case 'rootToggle': S.rootOpen = !S.rootOpen; render(); break;
+      case 'send-root': send('root'); break;
+      case 'send-proj': send('proj'); break;
+      case 'openProject': S.screen = 'project'; render('[data-focus]'); break;
+      case 'projList': S.projList = !S.projList; render('[data-k="projListBtn"]'); break;
+      case 'conv': S.convCollapsed = !S.convCollapsed; render(S.convCollapsed ? '[data-k="convOpen"]' : '[data-k="convClose"]'); break;
+      case 'sb': S.sb = !S.sb; render('#sbToggle'); break;
+      case 'menuClose': S.menu = false; render(); break;
+      case 'menuNew':
+        S.menu = false; S.dialog = true; S.folder = ''; S.example = true; S.createError = false;
+        render('#dlgTitle'); break;
+      case 'menuOpen': S.menu = false; render(); toast("Opens today's folder picker. Not drawn in this mockup."); break;
+    }
+  }
+
+  /* =================================================================
+     Events: one listener per kind, reading data-* attributes
+     ================================================================= */
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-jump],[data-alt],[data-state],[data-state-go],[data-run],[data-act],[data-nav],[data-hint],[data-link],[data-hash],[data-tab],#statesBtn,#notesBtn,#notesClose');
+    if (!t) return;
+    const d = t.dataset;
+    if (t.id === 'statesBtn') { S.statesOpen = !S.statesOpen; renderMock(); if (S.statesOpen) { const b = $('#statesPop .st-btn[aria-pressed="true"]'); if (b) b.focus(); } return; }
+    if (t.id === 'notesBtn') { openNotes(); return; }
+    if (t.id === 'notesClose') { closeNotes(); return; }
+    if (d.jump) { jump(d.jump); return; }
+    if (d.alt) { const [key, v] = d.alt.split(':'); S[key] = v; render(); return; }
+    if (d.state) { pickState(d.state); return; }
+    if (d.stateGo) { const [key, sc] = d.stateGo.split(':'); S.statesOpen = false; pickState(key, sc); return; }
+    if (d.run) { S.run = d.run; render(); return; }
+    if (d.hint !== undefined) { toast(d.hint); return; }
+    if (d.link) { toast('Opens ' + (HELP[d.link] || 'the install page') + ' in your browser. Not followed: this mockup makes no network requests.'); return; }
+    if (d.hash) { copyText(HASH[d.hash][1], 'Copied the full hash, ' + HASH[d.hash][1] + '.'); return; }
+    if (d.tab) { S.tab = d.tab; render('[data-k="tab-' + d.tab + '"]'); return; }
+    if (d.nav) { S.screen = d.nav; S.menu = false; render('[data-focus]'); return; }
+    if (d.act) act(d.act, t);
+  });
+  // A press outside the states panel closes it; the strip's own buttons are left to their click.
+  document.addEventListener('pointerdown', e => {
+    if (S.statesOpen && !$('#statesPop').contains(e.target) && !$('#statesBtn').contains(e.target)) { S.statesOpen = false; renderMock(); }
+  }, true);
+  document.addEventListener('input', e => {
+    const t = e.target;
+    if (t.matches('[data-folder]')) {          // typed folder: update only the message and Create, so the caret stays
+      S.folder = t.value; S.createError = false;
+      const box = t.closest('.wcard, .dlg');
+      $('[data-folder-msg]', box).innerHTML = folderMsgHtml();
+      $('[data-create]', box).disabled = S.folder.trim() === '' || isBlockedCreate();
+      renderMock();
+    }
+    if (t.matches('[data-composer]')) {
+      if (t.dataset.composer === 'root') S.draftRoot = t.value; else S.draftProj = t.value;
+      const b = t.parentNode.querySelector('.send'); if (b) b.disabled = t.value.trim() === '';
+    }
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.matches('[data-chk="example"]')) { S.example = t.checked; render(); }
+    if (t.id === 'caseSel') { S.s5case = t.value; render(); }
+  });
+  document.addEventListener('toggle', e => {      // keep the tiles open or closed across redraws
+    const d = e.target;
+    if (d.dataset && d.dataset.pq) { if (d.open) S.pqOpen.add(d.dataset.pq); else S.pqOpen.delete(d.dataset.pq); }
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (!$('#notes').hidden) { closeNotes(); return; }
+      if (S.statesOpen) { S.statesOpen = false; renderMock(); $('#statesBtn').focus(); return; }
+      if (S.menu) { S.menu = false; render(); return; }
+      if (S.dialog && S.creating < 0) { S.dialog = false; S.createError = false; render('[data-focus]'); return; }
+      return;
+    }
+    const t = e.target;
+    if (e.key === 'Enter' && !e.shiftKey && t.matches && t.matches('[data-composer]')) { e.preventDefault(); send(t.dataset.composer); return; }
+    if (e.key === 'Tab') trapFocus(e);
+  });
+  /* Tab stays inside an open dialog (the notes, or S2 from the File menu) */
+  function trapFocus(e) {
+    const box = !$('#notes').hidden ? $('#notes .mock-panel') : S.dialog ? $('.dlg') : null;
+    if (!box) return;
+    const f = $$('button:not([disabled]),input:not([disabled]),select,textarea,summary,[tabindex="0"]', box).filter(el => el.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !box.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !box.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+  }
+  let notesReturn = null;
+  function openNotes() { notesReturn = document.activeElement; $('#notes').hidden = false; $('#notesClose').focus(); }
+  function closeNotes() { $('#notes').hidden = true; if (notesReturn && document.contains(notesReturn)) notesReturn.focus(); }
+  $('#notes').addEventListener('click', e => { if (e.target.id === 'notes') closeNotes(); });
+  window.addEventListener('hashchange', () => { readHash(); render(); });
+
+  /* ---------- start ---------- */
+  readHash();
+  render();
+})();
+</script>
+</body>
+</html>
