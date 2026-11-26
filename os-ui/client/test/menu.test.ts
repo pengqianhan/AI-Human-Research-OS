@@ -33,9 +33,9 @@ const click = (item: MenuItemConstructorOptions | undefined, checked?: boolean) 
   (item!.click as unknown as (i: { checked?: boolean }) => void)({ checked });
 
 test("macOS gets an app menu; others get Quit and About under File and Help", () => {
-  const base = { appName: "Research OS", recent: [], hasWorkspace: true, notifications: true, actions: actions([]) };
+  const base = { appName: "SuperResearch OS", recent: [], hasWorkspace: true, notifications: true, actions: actions([]) };
   const mac = menuTemplate({ ...base, platform: "darwin" });
-  assert.equal(mac[0]!.label, "Research OS");
+  assert.equal(mac[0]!.label, "SuperResearch OS");
   const win = menuTemplate({ ...base, platform: "win32" });
   assert.equal(win[0]!.label, "File");
   assert.ok((win[0]!.submenu as MenuItemConstructorOptions[]).some((i) => i.role === "quit"));
@@ -46,7 +46,7 @@ test("macOS gets an app menu; others get Quit and About under File and Help", ()
 
 test("items call their actions", () => {
   const log: string[] = [];
-  const items = menuTemplate({ platform: "linux", appName: "Research OS", recent: ["/a", "/b"], hasWorkspace: true, notifications: false, actions: actions(log) });
+  const items = menuTemplate({ platform: "linux", appName: "SuperResearch OS", recent: ["/a", "/b"], hasWorkspace: true, notifications: false, actions: actions(log) });
   click(find(items, "Open Research OS Folder…"));
   click(find(items, "/b"));
   click(find(items, "Regenerate Snapshot"));

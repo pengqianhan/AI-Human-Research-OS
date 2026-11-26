@@ -126,10 +126,10 @@ function releasedExecutable(): string {
   const dirs = existsSync(release) ? readdirSync(release) : [];
   const candidates =
     process.platform === "darwin"
-      ? dirs.filter((d) => d.startsWith("mac")).map((d) => join(release, d, "Research OS.app", "Contents", "MacOS", "Research OS"))
+      ? dirs.filter((d) => d.startsWith("mac")).map((d) => join(release, d, "SuperResearch OS.app", "Contents", "MacOS", "SuperResearch OS"))
       : process.platform === "win32"
-        ? dirs.filter((d) => /^win.*unpacked$/.test(d)).map((d) => join(release, d, "Research OS.exe"))
-        : dirs.filter((d) => /^linux.*unpacked$/.test(d)).map((d) => join(release, d, "research-os"));
+        ? dirs.filter((d) => /^win.*unpacked$/.test(d)).map((d) => join(release, d, "SuperResearch OS.exe"))
+        : dirs.filter((d) => /^linux.*unpacked$/.test(d)).map((d) => join(release, d, "superresearch-os"));
   const found = candidates.find((c) => existsSync(c));
   if (found === undefined) throw new Error(`no unpacked app in ${release}; run electron-builder first`);
   return found;
@@ -657,7 +657,7 @@ describe("desktop client on a Research OS folder", () => {
     await screen(page, "home").getByRole("heading", { name: "Projects", exact: true }).waitFor();
     assert.equal(await nav(page, "Home").getAttribute("aria-current"), "page");
     const title = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.getTitle());
-    assert.equal(title, "Research OS");
+    assert.equal(title, "SuperResearch OS");
     assert.equal(page.url(), "app://superresearch-os/");
   });
 
@@ -4142,7 +4142,7 @@ describe("desktop client on a Research OS folder", () => {
     });
     assert.deepEqual(results, { form: 415, plain: 415, skillToggle: 404, noToken: 401, withToken: 200, state: 200, traversal: 404, wikiHere: 404 });
     const body = await page.evaluate(async () => (await fetch("/..%2f..%2fpackage.json")).text());
-    assert.ok(!body.includes("research-os-desktop"), "a file outside the renderer must not be served");
+    assert.ok(!body.includes("superresearch-os"), "a file outside the renderer must not be served");
   });
 
   test("the Paper Wiki runs on its own origin, sealed off from the app", SLOW, async () => {

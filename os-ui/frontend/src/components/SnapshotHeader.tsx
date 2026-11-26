@@ -40,7 +40,7 @@ export function SnapshotHeader({ meta, policy }: Props) {
         className="font-mono-heading whitespace-nowrap text-[13px] font-semibold tracking-[.04em]"
         title="Read-only desktop: the file system is the source of truth; this UI executes nothing"
       >
-        AI-HUMAN RESEARCH OS
+        SuperResearch OS
         <small className="ml-2 hidden font-normal text-ink-soft sm:inline">
           {DESKTOP ? "Desktop client" : LIVE ? "Read-only desktop" : "Public snapshot · view only"}
         </small>

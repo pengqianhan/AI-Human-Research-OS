@@ -1,7 +1,7 @@
 {
-  "name": "research-os-desktop",
-  "productName": "Research OS",
-  "desktopName": "research-os.desktop",
+  "name": "superresearch-os",
+  "productName": "SuperResearch OS",
+  "desktopName": "superresearch-os.desktop",
   "version": "0.1.0",
   "description": "Desktop client for the AI-Human Research OS: the os-ui desktop with its agent conversations, on macOS, Windows, and Linux.",
   "private": true,

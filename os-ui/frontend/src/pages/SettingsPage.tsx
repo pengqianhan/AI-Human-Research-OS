@@ -14,7 +14,7 @@ export function SettingsPage() {
       <PageHeader
         eyebrow="Preferences"
         title="Settings"
-        lede="AI-Human Research OS has no model of its own. It launches your own coding agent, on your own plan."
+        lede="SuperResearch OS has no model of its own. It launches your own coding agent, on your own plan."
       />
       {DESKTOP ? (
         <SystemPage />

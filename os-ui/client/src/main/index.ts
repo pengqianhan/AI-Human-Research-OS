@@ -1,5 +1,5 @@
 /**
- * Research OS desktop client: the Electron main process. It owns the window,
+ * SuperResearch OS desktop client: the Electron main process. It owns the window,
  * the app:// protocol (renderer files, workspace files, each bundled plugin's
  * origin, and the shared os-ui endpoints from the plugin registry), the
  * snapshot generator, agent-turn notifications, and the
@@ -39,7 +39,7 @@ import type { ResolvedEnv } from "./shellEnv.ts";
 import { canonical, describeProblem, initialWorkspace, missingMarkers, workspaceArgument } from "./workspace.ts";
 import { MIN_SIZE, restoreBounds } from "./windowState.ts";
 
-const APP_ID = "io.github.pengqianhan.researchos";
+const APP_ID = "io.github.pengqianhan.superresearchos";
 const DOCS_URL = "https://github.com/pengqianhan/AI-Human-Research-OS/blob/main/os-ui/client/README.md";
 /**
  * This launch's token for the token-gated endpoints, as on the dev server. The
@@ -351,7 +351,7 @@ function createWindow(): void {
     minWidth: MIN_SIZE.width,
     minHeight: MIN_SIZE.height,
     show: false,
-    title: "Research OS",
+    title: "SuperResearch OS",
     backgroundColor: "#f3eee5", // the layout's page background, --bg in os-ui/frontend/src/index.css
     ...(process.platform === "linux" && existsSync(icon) ? { icon } : {}),
     webPreferences: {
@@ -366,7 +366,7 @@ function createWindow(): void {
   });
   win = w;
   if (settings.window?.maximized) w.maximize();
-  w.on("page-title-updated", (event) => event.preventDefault()); // keep "Research OS"
+  w.on("page-title-updated", (event) => event.preventDefault()); // keep "SuperResearch OS"
   w.once("ready-to-show", () => w.show());
 
   const contents = w.webContents;
@@ -436,7 +436,7 @@ function registerIpc(): void {
 async function start(): Promise<void> {
   if (process.platform === "win32") app.setAppUserModelId(APP_ID);
   app.setAboutPanelOptions({
-    applicationName: "Research OS",
+    applicationName: "SuperResearch OS",
     applicationVersion: app.getVersion(),
     copyright: "MIT License",
     website: "https://github.com/pengqianhan/AI-Human-Research-OS",

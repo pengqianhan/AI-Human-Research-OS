@@ -128,7 +128,7 @@ jobs:
       - name: Verify the macOS signature
         if: runner.os == 'macOS'
         working-directory: os-ui/client
-        run: codesign --verify --deep --strict release/mac*/"Research OS.app"
+        run: codesign --verify --deep --strict release/mac*/"SuperResearch OS.app"
 
       - name: Smoke-test the packaged app
         working-directory: os-ui/client
@@ -144,7 +144,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: research-os-${{ matrix.name }}
+          name: superresearch-os-${{ matrix.name }}
           path: |
             os-ui/client/release/*.dmg
             os-ui/client/release/*.exe
