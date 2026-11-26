@@ -2,8 +2,10 @@
 
 Read-only design, written 2026-11-26 against `main` at commit `6a5ab1b`. Nothing in
 the repository was changed, built, or committed for it apart from this file and its
-line in [index.md](index.md). Every `path:line` refers to that commit and is relative
-to the repository root. **Shown** means I read the file or ran the command;
+line in [index.md](index.md). Every `path:line` is relative to the repository root
+and refers to that commit; the revision of 2026-11-26 below was checked against
+`b5fa10f`, at which every file but this one, two `index.md` lines, and the mockup
+reads as it does at `6a5ab1b`. **Shown** means I read the file or ran the command;
 **not established** means I did not, and says what would settle it. **Proposed**
 means this design chooses it. The settled rows this design builds on are in
 [HANDOFF.md](../HANDOFF.md) Decisions, "Positioning and architecture decisions
@@ -29,8 +31,7 @@ the harness is [os-harness](../os-harness/README.md).
 > lines, and the mockup changed, so every `path:line` in any other file reads the
 > same at both commits.
 >
-> **Revised so far:** §1, §2, §3 (facts added), §4, §5, §6, §7, §8. §9 still
-> describes one repository until this line lists it.
+> **Revised:** every section listed above, §9 included.
 
 ## 1. Outcome
 
@@ -1855,7 +1856,8 @@ Their answer to the six questions, verbatim: 「1 接受默认，你可以参考
    updates the text under the Product and workspace row.
 3. **An empty workspace fails the generator** (`generate.py:1188-1190`), shown on a
    scratch workspace, while New workspace makes empty workspaces.
-4. **Untracking `nanochat_cpu` reds required CI either way** (§5.8 b).
+4. **Untracking `nanochat_cpu` reds this workspace's required CI either way**
+   (§5.8 b). After the split the product's CI is not affected.
 5. **`project-dispatch` against nested repositories.** It reads the workspace
    repository for its baseline and review (`SKILL.md:31-34`, `:83-85`), which sees
    nothing of an ignored project.
@@ -1871,7 +1873,8 @@ Their answer to the six questions, verbatim: 「1 接受默认，你可以参考
    the handler would have to change first.
 9. **The welcome page sends a new user to clone this repository**
    (`StateMissing.tsx:52-63`; `os-ui/client/README.md:20`), which would hand them
-   your `human/`, `memory/`, and `HANDOFF.md`.
+   your `human/`, `memory/`, and `HANDOFF.md`. After the split it would hand them
+   your workspace and no product source at all.
 10. **The smoke pattern.** "opens the desktop" matches no test name (`desktop.yml:138`).
     `HANDOFF.md:177-179` says three named cases run against the packaged app; two
     do.
@@ -1884,9 +1887,10 @@ Their answer to the six questions, verbatim: 「1 接受默认，你可以参考
     the only runtime a command-line twin can count on before step 4. Step 4 has that
     much more to port.
 13. **The Product and workspace row's reversal text** ("Keep one repository and add a
-    script that clears personal content", `HANDOFF.md:788`) can be read as ruling
-    out one repository. This design keeps one repository but builds workspaces from
-    an allowlist, not by clearing a copy (§5.7, §8 Q6).
+    script that clears personal content", `HANDOFF.md:788`) could be read as ruling
+    out one repository. Resolved: the Human Owner chose two repositories (§8 Q6), and
+    the row's sentence "this repository becomes one workspace instance" now holds as
+    written.
 14. **`nanochat_cpu`'s README** says the repository ignores `*.log`
     (`Code/README.md:125-126`). That stops being true once it is its own repository,
     unless PR 4 lands first.
@@ -1902,7 +1906,44 @@ Their answer to the six questions, verbatim: 「1 接受默认，你可以参考
     account's name and the machine's host name into it (§3 "Git experiments"). So
     §5.4's "An Accept commit fails with Git's own message" does not hold there, and
     any commit the root agent offers should first show the name and email it would
-    carry.
+    carry. The import's commit is held to the same rule (§5.7).
+18. **The Name row against the new repository's name.** "Unchanged: AI-Human
+    Research OS" (`HANDOFF.md:800`), while the product's repository is now
+    SuperResearch OS and the app shows "Research OS" (`electron-builder.yml:4`).
+    The decision names only the repository; the default keeps the app's name
+    (§5.8 k, §8 Q14).
+19. **A private product repository against the app's own links and the tester's
+    help.** The Help link, About's website, and the package's homepage would open a
+    page a tester cannot see (§5.8 j, §8 Q19), and the tester cannot read the
+    product's README (§8 Q9).
+20. **A private repository against the CI gate and `desktop.yml`, possibly.**
+    `main` accepts changes only through pull requests whose CI passes (CI gate
+    decision, `HANDOFF.md:697-706`; `AGENTS.md`, "Completion checks"). Whether the
+    account's plan allows a ruleset, the macOS and Windows minutes, and the two arm64
+    rows on a private repository was not established (§5.8 l, §8 Q20).
+21. **The product's own checkout is a workspace by today's rule.** Its root keeps
+    all three markers (`workspace.ts:5`), so a development run would open it
+    (`workspace.ts:43-47`). §5.7 adds a rule against it in PR 9.
+22. **`pages.yml` needs both repositories.** It builds the product's frontend from
+    this workspace's snapshot and paper wiki (§5.8 m), and what it publishes is the
+    Human Owner's (`HANDOFF.md:775`, §8 Q16).
+23. **The brief against `os-build/references/`.** The brief calls some entries
+    "other projects' code"; at `b5fa10f` the ten repositories there are commit
+    pointers with no `.gitmodules` and no tracked content, and a licence is recorded
+    for two of them (§4).
+24. **"Updating a workspace's scripts is not in step 3" against the split.** This
+    workspace's scripts become copies of product source that step 3 changes, so step
+    3 needs a refresh here (§5.1).
+25. **An early import against CI's use of this repository as its own fixture.**
+    `ci.yml:74-75` runs the generator at the root, `verify.sh` validates the paper
+    wiki and your portfolio, and the end-to-end suite copies the whole checkout
+    (`app.test.ts:53-70`). An import without your content is red at its first commit
+    unless it carries a workspace of its own: the transitional workspace of R3.
+26. **The cognition cache against sessions in another repository.** `AGENTS.md` has
+    every session read and capture cognition in `human/human-cognition/`, and the
+    Existing milestones row keeps the cache a workspace skill (`HANDOFF.md:799`). A
+    session that works in the product repository has no `human/`; §5.7 keeps the
+    directing session in this workspace (§8 Q21).
 
 ### Not read or not established
 
@@ -1928,7 +1969,24 @@ Their answer to the six questions, verbatim: 「1 接受默认，你可以参考
 - **Windows links.** Whether links can be made on Windows by `new_workspace.py`
   without Developer Mode (§5.8 d).
 - **Paper wiki.** Whether `generate_viz.py` and `validate_paper_wiki.py` accept an
-  empty wiki, and which index files it must hold. Not run.
+  empty wiki, and which index files it must hold. Not run. The same question decides
+  whether the transitional workspace's stub wiki passes the product's CI (R1), and
+  whether `viz.html` works as a site on its own (§8 Q16).
+- **Which tests read the checkout's own content.** Many frontend and client test
+  files name `projects-folder`, `paper-wiki`, `memory/MEMORY`, or `HANDOFF`
+  (shown by `git grep -l`); whether they read the real checkout or fixtures was not
+  read. The rehearsal (R1) settles it.
+- **The GitHub plan.** What a private repository allows on the Human Owner's
+  account: a ruleset, Actions minutes, arm64 runners, Pages (§8 Q20).
+- **Links.** Which of the 27 links into `HANDOFF.md` target a group that moves
+  (§5.7); whether GitHub renders `#N` in Markdown files as links; whether the
+  renderer binds CmdOrCtrl+N (S3).
+- **OpenResearch beyond what was read.** Its other chat files and its harness
+  modules were not read, nor where its tour labels render (§3).
+- **Branches.** Local `main` (`dc3c269`) and `origin/main` (`6a5ab1b`) differ in this
+  checkout; squash merges hide whether a branch's work is on `main`, so "every branch
+  named in Active Work is merged" rests on the pull requests' states (`gh pr list
+  --state all`), not on Git.
 - **Installer contents.** Whether the renderer bundle contains text from this
   instance's files: the bundle was not read; the §4 check compares whole files, so a
   string check would be its own addition. Whether electron-builder packs a licence
@@ -1942,7 +2000,13 @@ Their answer to the six questions, verbatim: 「1 接受默认，你可以参考
     first cases, the Code view's Git case, and the two packaged cases. So which other
     cases depend on `HANDOFF.md` or `memory/` content is not established;
   - `os-ui/PLUGINS.md` beyond Part 2's Gap 1 and parts of Part 4;
-  - `os-build/references/` beyond a search of `related-projects.md`;
-  - `GOAL.md`, the root `README.md`, `human/`, and the mockups;
-  - every `HANDOFF.md` row outside the Active Work steps and the Decisions rows
-    cited here.
+  - `os-build/references/` beyond searches of its notes for licences and of
+    `related-projects.md`;
+  - `GOAL.md`; the root `README.md` beyond its headings, its licence section, and
+    its links; `human/` beyond its file list (`human/private/` not at all);
+  - the mockup beyond its word table, its notes, and the strings it draws;
+  - every `HANDOFF.md` row outside the Active Work steps, the Next session list, the
+    Decisions groups' headings, and the rows cited here.
+- **Revision scope.** The revision of 2026-11-26 re-checked the `path:line`
+  references it added or kept in the sections it rewrote, against `b5fa10f`; files
+  other than this design are unchanged since `6a5ab1b`.
