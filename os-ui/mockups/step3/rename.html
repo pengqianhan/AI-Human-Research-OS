@@ -191,7 +191,13 @@ svg.lk{display:block;width:100%;height:auto}
 .reads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
 .read{border-radius:10px;padding:8px 10px 10px;background:#fffdf7;box-shadow:inset 0 0 0 1px rgba(184,149,90,.45);min-width:0}
 .read.is-rec{box-shadow:inset 0 0 0 2px var(--mk-ink)}
-.read-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:800 10.5px/1.2 var(--sans);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.read-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:19px;font:800 10.5px/1.2 var(--sans);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.sbs{display:flex;flex-wrap:wrap;gap:10px}
+.sb-alt{width:192px;max-width:100%;min-width:0}
+.sb-cap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:700 11.5px/1.3 var(--sans);color:var(--mk-ink);margin-bottom:5px;min-height:24px}
+.sb-cap .L{width:20px;height:20px;font-size:11px}
+.sb-alt.is-rec .sb{box-shadow:inset -1px 0 0 var(--line),0 0 0 2px var(--mk-ink)}
+.sb-why{margin:8px 0 0;font:12px/1.45 var(--sans);color:var(--mk-ink)}
 .read .why{font:11.5px/1.45 var(--sans);margin:6px 0 0}
 .doc{border-radius:8px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;color:var(--ink)}
 .doc-f{font:600 10.5px/1.3 var(--mono);color:var(--muted);padding:4px 9px;background:var(--paper);box-shadow:inset 0 -1px 0 var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -215,7 +221,7 @@ svg.lk{display:block;width:100%;height:auto}
 .tbl th,.tbl td{text-align:left;vertical-align:top;padding:5px 8px;border-bottom:1px dashed rgba(91,68,22,.3);overflow-wrap:anywhere}
 .tbl th{font:800 10.5px/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase;background:#f3e6c8}
 .tbl tr:last-child td{border-bottom:0}
-.tbl.ids col.c1{width:13%}.tbl.ids col.c2{width:17%}.tbl.ids col.c3{width:19%}.tbl.ids col.c4{width:17%}.tbl.ids col.c5{width:34%}
+.tbl.ids col.c1{width:12%}.tbl.ids col.c2{width:18%}.tbl.ids col.c3{width:21%}.tbl.ids col.c4{width:14%}.tbl.ids col.c5{width:35%}
 .tbl.nums col.c1{width:40%}
 .tbl.nums td.n,.tbl.nums th.n{text-align:right;font-variant-numeric:tabular-nums}
 
@@ -314,7 +320,7 @@ svg.lk{display:block;width:100%;height:auto}
   <div class="mock-in">
     <div class="mock-tag"><b>Mockup only</b><span>not part of the app</span></div>
     <h1>Step 3 · Renaming the app to SuperResearch OS: what you choose</h1>
-    <p>Four questions, each with its alternatives side by side; the recommended one is marked <span class="rec">Recommended</span>. Part 5 holds the notes. Nothing here is built: the app still says "Research OS" until you choose and the rename's pull request lands.</p>
+    <p>Four parts to answer, each with its alternatives side by side; the recommended one is marked <span class="rec">Recommended</span>. Part 5 holds the notes. Nothing here is built: the app still says "Research OS" until you choose and the rename's pull request lands.</p>
     <nav class="toc" aria-label="Parts of this mockup">
       <a href="#p1"><span class="n">1</span>The wordmark</a>
       <a href="#p2"><span class="n">2</span>New or redrawn logo files</a>
@@ -462,7 +468,8 @@ svg.lk{display:block;width:100%;height:auto}
 <section class="part" id="p3" aria-labelledby="p3h">
   <div class="q">
     <h2 id="p3h">3 · Where the name shows in the app, today and after the rename</h2>
-    <p>Only places that exist today, with the words read from the code (each row says where). The changed words are highlighted. Nothing here is a choice except the left menu's line break, which follows from the name's length; the places where the name sits in a sentence that could go either way are in part 4.</p>
+    <p>Only places that exist today, with the words read from the code (each row says where). The changed words are highlighted. The one choice here is the left menu's line break (a or b), which the name's length forces; the places where the name sits in a sentence that could go either way are in part 4.</p>
+    <p class="rec-line">Recommended for the left menu: a, because it keeps the name at the size of today's and breaks after a word, as today's does.</p>
   </div>
   <div class="places">
 
@@ -513,7 +520,7 @@ svg.lk{display:block;width:100%;height:auto}
     </div>
 
     <div class="place">
-      <div class="place-l"><b>The left menu</b>From <code>Sidebar.tsx:45-56</code>: the book icon, then the name in 15 px serif, drawn at the menu's real width, 192 px. Today's name breaks after "AI-Human"; the new name does not fit on one line beside the icon and breaks after "SuperResearch".</div>
+      <div class="place-l"><b>The left menu</b>From <code>Sidebar.tsx:45-56</code>: the book icon, then the name in 15 px serif, drawn at the menu's real width, 192 px. Today's name breaks after "AI-Human". At 15 px the new name does not fit on one line beside the icon, so this row is a small choice: a or b.</div>
       <div class="ta"><div class="ta-h">Today</div>
         <div class="sb" aria-label="Today's left menu">
           <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text">AI-Human<br>Research OS</div></div>
@@ -521,12 +528,22 @@ svg.lk{display:block;width:100%;height:auto}
           <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
         </div>
       </div>
-      <div class="ta"><div class="ta-h after">After</div>
-        <div class="sb" aria-label="The left menu after the rename">
-          <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text"><span class="hl">SuperResearch OS</span></div></div>
-          <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>Home</div>
-          <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
+      <div class="ta"><div class="ta-h after">After: a or b</div>
+        <div class="sbs">
+          <div class="sb-alt is-rec"><div class="sb-cap"><span class="L">a</span>As it falls, 15 px <span class="rec">Recommended</span></div>
+            <div class="sb" aria-label="The left menu after the rename, a: the name breaks where it falls">
+              <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text"><span class="hl">SuperResearch OS</span></div></div>
+              <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+              <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
+            </div></div>
+          <div class="sb-alt"><div class="sb-cap"><span class="L">b</span>One line, 13.5 px</div>
+            <div class="sb" aria-label="The left menu after the rename, b: the name on one line, smaller">
+              <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text" style="font-size:13.5px"><span class="hl">SuperResearch OS</span></div></div>
+              <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+              <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
+            </div></div>
         </div>
+        <p class="sb-why">a keeps the name's size, and breaks after a word as today's name does; b keeps the name whole on one line, at the menu items' size.</p>
       </div>
     </div>
 
@@ -751,7 +768,7 @@ svg.lk{display:block;width:100%;height:auto}
       <h3>How to read it</h3>
       <ul>
         <li>One page with no script: every alternative is drawn, and nothing is clickable except the links to the parts. It reads the same in a preview that runs no scripts.</li>
-        <li>Parts 1 and 2 are choices between alternatives (A, B, C); part 3 shows what the rename changes, with no choice but the left menu's line break; part 4 asks rename or keep for each sentence.</li>
+        <li>Parts 1 and 2 are choices between alternatives (A, B, C); part 3 shows what the rename changes, with one small choice, the left menu's line break (a or b); part 4 asks rename or keep for each sentence.</li>
         <li>Yellow marks the words that change. The striped and dashed boxes are this mockup's, not the app's.</li>
       </ul>
 
