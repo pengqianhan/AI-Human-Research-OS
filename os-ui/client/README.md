@@ -107,6 +107,7 @@ Useful variables:
 | `OS_CLIENT_E2E_EXECUTABLE` | run the E2E suite against a packaged app (`release` = the unpacked one in `release/`) |
 | `OS_CLIENT_E2E_NO_SANDBOX=1` | tests only: start Electron with `--no-sandbox` (automatic as root) |
 | `OS_CLIENT_E2E_DEREFERENCE=1` | tests only: copy the workspace as the E2E suite does on Windows, links replaced by what they point at |
+| `OS_CLIENT_E2E_TRACE=<file.zip>` | tests only: write a Playwright trace of the main E2E suite; the trace holds the whole launch environment, so keep it private and never upload one |
 
 The log is `<userData>/logs/main.log` (**Help → Show Log File**): where the
 environment came from, which Python is used, generator failures, and turn

@@ -268,17 +268,36 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       [`os-ui/mockups/step3/workspace.html`](os-ui/mockups/step3/workspace.html)
       (it opens from disk). The Human Owner decided the same day that the
       product gets a repository of its own, SuperResearch OS, and answered six
-      of the design's questions (row "Two repositories" in Decisions). Next, in
-      the design's §7 order: this design merges; a rehearsal of the import in a
-      scratch folder; then the Human Owner creates the private repository
-      `SuperResearch-OS` by hand and gives the word for the import, each at the
-      moment it is done. Nothing has been created, moved, or untracked yet.
+      of the design's questions (row "Two repositories" in Decisions).
       The Human Owner merged the design (#61) and chose from the mockup the
       same day, by accepting its three recommendations (「全按推荐」): New
       workspace as a separate step after Welcome, a turn's commit as a text
       line, and the menu item "Open Workspace…" (row "Step 3 screens" in
       Decisions). Waiting on the Human Owner: the design's open questions
       (§8, fourteen, each with a default).
+      The import was rehearsed on 2026-11-26 and 27 (design §7, R1) with the
+      kit in [os-build/import/](os-build/import/README.md): a manifest that
+      names what the product takes, an export script, and a check. The
+      exported tree (482 files, a plain folder outside this repository) passed
+      its import check, `verify.sh`, the unit tests, the generator, the
+      frontend and client builds and tests, and, in a disposable copy made
+      into a Git repository, `verify.sh` and the generator again. The
+      end-to-end suite passed 83 of 83 from the export once two cases stopped
+      relying on this workspace's own skills and papers (the suite now writes
+      what it reads into its copy). Not explained: two end-to-end runs on the
+      developer's Mac in which the app's state changed with no action from the
+      suite (a details panel found open; a switch to Home), both while the
+      machine was in use; the same tree passed before and after. On Windows
+      and Linux the export has not been run.
+      On 2026-11-27 the Human Owner had the empty private repository
+      `SuperResearch-OS` created on GitHub (「你来建」), with an empty local
+      repository beside this checkout, not inside it (R2). Nothing has been
+      imported, moved, or untracked. Next: the import (R3), on the Human
+      Owner's word at the moment it is done. To settle before it, because they
+      go into the first commit: the app id (it carries the GitHub account's
+      name and cannot change once installed), the app's links that point at
+      this repository, the package's author and maintainer, and whether the
+      old screenshot in `docs/screenshots/` ships.
 - [ ] Step 4, agent layer: the harness ported to TypeScript with a command-line
       entry, the Agents page, one resident process per conversation with
       permission requests relayed to the UI, and an ACP adapter. Acceptance: one
