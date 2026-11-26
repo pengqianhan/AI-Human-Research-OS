@@ -53,7 +53,6 @@
     {"class": "M", "prefix": "os-ui/frontend/", "count": 196},
     {"class": "B", "prefix": "os-ui/generator/", "count": 5},
     {"class": "R", "side": "product", "path": "os-ui/index.md", "count": 1},
-    {"class": "Dv", "side": "product", "path": "os-ui/mockup.html", "count": 1},
     {"class": "Dv", "side": "product", "prefix": "os-ui/mockups/", "count": 4},
     {"class": "Dv", "side": "product", "path": "os-ui/start.sh", "count": 1},
     {"class": "B", "prefix": "projects-folder/templates/", "count": 15},

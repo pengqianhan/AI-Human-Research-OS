@@ -14,7 +14,7 @@ interface Props {
 /**
  * Skill detail drawer: role=dialog, aria-modal, focus moves to the close
  * button on open and returns to the trigger card on close; Escape and
- * backdrop click both close it. Matches mockup.html's #drawer semantics.
+ * backdrop click both close it. Matches the first dashboard mockup's #drawer semantics.
  */
 export function SkillDrawer({ skill, targets, triggerRef, onClose }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement>(null);

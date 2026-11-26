@@ -242,7 +242,6 @@ os-ui/
   README_zh.md       # Chinese overview retained for reference
   start.sh           # one-command launcher
   DESIGN.md          # architecture, schema, state semantics, and visual spec
-  mockup.html        # 2026-07-04 visual mockup with fake data (panel content; palette superseded)
   generator/         # Python read-only scanner -> state.json
   frontend/          # Vite + React + TypeScript + Tailwind app UI
     server/          # the endpoints, shared by the dev server and the client

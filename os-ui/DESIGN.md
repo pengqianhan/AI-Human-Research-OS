@@ -3,9 +3,9 @@
 This document is the implementation contract for `os-ui/`. The layout and the
 visual tokens in force follow mockup C, "document first"
 ([mockups/step1/c-document.html](mockups/step1/c-document.html)), which the Human Owner chose on
-2026-11-21 (§4, §7). The earlier static mockup, [mockup.html](mockup.html),
-still specifies the content of the dashboard panels; its palette and its tab
-shell are superseded.
+2026-11-21 (§4, §7). The earlier static mockup, `os-ui/mockup.html`, was
+removed on 2026-11-27 on the Human Owner's word that nothing uses it any more;
+it is in Git history, last at commit `49788ee`.
 
 Authorization boundary: the human authorized a read-only monitor UI on
 2026-07-04. That exception applies only to observation. On 2026-07-22 the Human
