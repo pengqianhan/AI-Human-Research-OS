@@ -530,7 +530,7 @@ svg.lk{display:block;width:100%;height:auto}
       </div>
       <div class="ta"><div class="ta-h after">After: a or b</div>
         <div class="sbs">
-          <div class="sb-alt is-rec"><div class="sb-cap"><span class="L">a</span>As it falls, 15 px <span class="rec">Recommended</span></div>
+          <div class="sb-alt is-rec"><div class="sb-cap"><span class="L">a</span>As it falls <span class="rec">Recommended</span></div>
             <div class="sb" aria-label="The left menu after the rename, a: the name breaks where it falls">
               <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text"><span class="hl">SuperResearch OS</span></div></div>
               <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>Home</div>
@@ -543,7 +543,7 @@ svg.lk{display:block;width:100%;height:auto}
               <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
             </div></div>
         </div>
-        <p class="sb-why">a keeps the name's size, and breaks after a word as today's name does; b keeps the name whole on one line, at the menu items' size.</p>
+        <p class="sb-why">a keeps today's 15 px and breaks after a word, as today's name does; b keeps the name whole on one line, at the menu items' 13.5 px.</p>
       </div>
     </div>
 
@@ -795,7 +795,7 @@ svg.lk{display:block;width:100%;height:auto}
           <tr><td><code>appId</code></td><td><code>io.github.&lt;account&gt;.researchos</code></td><td><code>io.github.&lt;account&gt;.superresearchos</code></td><td><code>electron-builder.yml:3</code></td><td><code>APP_ID</code>; <code>client/DESIGN.md:715</code>. The macOS bundle id (permissions, the Open Anyway approval) and the Windows installer's GUID, derived from it: a new id installs beside the old app, not over it.</td></tr>
           <tr><td><code>APP_ID</code></td><td>the same</td><td>the same</td><td><code>index.ts:42</code></td><td><code>appId</code>; Windows taskbar grouping and notifications.</td></tr>
           <tr><td><code>productName</code></td><td><code>Research OS</code></td><td><code>SuperResearch OS</code></td><td><code>package.json:3</code> and <code>electron-builder.yml:4</code></td><td>Each other. Names <code>SuperResearch OS.app</code> and <code>.exe</code>, the install folders, the macOS app menu, and the settings folder below. The window title (<code>index.ts:354</code>) and the About name (<code>:439</code>) are written out, so they change by hand. Also <code>e2e/app.test.ts:129, 131, 660</code>, <code>desktop.yml:131</code>, <code>client/README.md:40</code>, <code>DESIGN.md:711</code>.</td></tr>
-          <tr><td><code>executableName</code> (Linux)</td><td><code>research-os</code></td><td><code>superresearch-os</code></td><td><code>electron-builder.yml:44</code></td><td><code>e2e/app.test.ts:132</code>, <code>DESIGN.md:716</code>; the launcher's command.</td></tr>
+          <tr><td><code>executable<wbr>Name</code> (Linux)</td><td><code>research-os</code></td><td><code>superresearch-os</code></td><td><code>electron-builder.yml:44</code></td><td><code>e2e/app.test.ts:132</code>, <code>DESIGN.md:716</code>; the launcher's command.</td></tr>
           <tr><td><code>desktopName</code></td><td><code>research-os.desktop</code></td><td><code>superresearch-os.desktop</code></td><td><code>package.json:4</code></td><td>With <code>syncDesktopName</code>, the installed launcher file and the window's class on Linux.</td></tr>
           <tr><td>package <code>name</code></td><td><code>research-os-desktop</code></td><td><code>superresearch-os</code> (or <code>superresearch-os-desktop</code>, today's pattern)</td><td><code>package.json:2</code></td><td><code>package-lock.json:2, 8</code>, <code>e2e/app.test.ts:4145</code>. It is also the Linux package's name: apt treats a new one as another package.</td></tr>
           <tr><td>CI artifact</td><td><code>research-os-${{ matrix.name }}</code></td><td><code>superresearch-os-${{ matrix.name }}</code></td><td><code>desktop.yml:147</code></td><td>What a tester downloads; nothing in the code.</td></tr>
