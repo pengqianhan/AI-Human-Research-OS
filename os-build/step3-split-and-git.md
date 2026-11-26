@@ -335,10 +335,30 @@ All shown unless marked.
   - `Origin` says it was requested by the Human Owner (`:13`);
   - an open to-do names your review and a session id (`:38`).
 
-**Git experiments: none ran.** The worktree guard of this session refused any Git
-command with `HOME` or `GIT_CONFIG_GLOBAL` redirected. Without a redirect, Git would
-read your real configuration, which the brief forbids. The behaviours that need a
-probe are listed in §9.
+**Git experiments.** The design agent ran none: the worktree guard of its session
+refused any Git command with `HOME` or `GIT_CONFIG_GLOBAL` redirected. The directing
+agent ran these afterwards, in a throwaway folder outside the repository, on macOS
+with Git 2.54.0 and no global or system configuration (shown, that one machine):
+
+- **A nested repository with no ignore line.** `git status` at the outer root lists
+  the folder as untracked. `git add -A` there **fails outright** while the inner
+  repository has no commit ("does not have a commit checked out … adding files
+  failed"), so nothing else is staged either. Once the inner repository has a
+  commit, `git add -A` warns "adding embedded git repository" and records it as a
+  link entry (mode 160000) with none of its files.
+- **With the line `/projects-folder/P/` in the outer `.gitignore`.** `git status` no
+  longer lists it, and `git clean -ndx` says "Would skip repository".
+- **A commit with no name or email set.** Git did not refuse. It made the commit
+  with a name taken from the operating-system account and an email made of the
+  account's short name and the machine's host name, and printed a notice. Windows
+  and Linux were not tried.
+- **A bundle.** A commit made with a fixed author, committer, and date was written
+  to a bundle file, cloned from it into a new folder, and `git remote remove origin`
+  left a repository with that one commit and a clean status. Whether two operating
+  systems give the same hash was not tried.
+
+Not run: `git submodule add` on an existing nested repository, and anything on
+Windows or Linux (§9).
 
 ## 4. The inventory
 
@@ -639,9 +659,11 @@ decide, as today (`SKILL.md:95-96`). Committing on the user's behalf is yours to
 decide: §8 Q3.
 
 **No Git identity.** Option a needs none, and neither does the bundle clone. An
-Accept commit fails with Git's own message. The root agent then shows the two `git
-config` commands for the human to run, and does not run them itself. Whether Git
-guesses an identity on a given machine was not established (§9).
+Accept commit is another matter: on macOS, Git does not refuse it but writes the
+account's name and the machine's host name into the commit (§3 "Git experiments";
+Windows and Linux not tried). So before the root agent offers a commit, it shows the
+name and email the commit would carry, and when none is set it shows the two `git
+config` commands for the human to run and does not run them itself.
 
 **Reversal.** Option b can be added later behind a workspace setting. The fields
 stay, so old traces still read.
@@ -769,7 +791,10 @@ and the notes. This keeps your files out of the product's history. It costs:
 - every link from `HANDOFF.md` and memory into product files;
 - the development run's "open the checkout" rule.
 
-It is §8 Q6. Whether this repository is public was not checked (§9).
+It is §8 Q6. This repository is public on GitHub (read by the directing agent
+with `gh repo view`), so `human/` (without `human/private/`), `memory/`, and
+`HANDOFF.md` are already published with it, history included; the alternative
+would change that only from the move onward.
 
 ### 5.8 Questions the brief did not list
 
@@ -1109,25 +1134,29 @@ Each has a default that holds if you do not answer, and a way back.
 14. **`nanochat_cpu`'s README** says the repository ignores `*.log`
     (`Code/README.md:125-126`). That stops being true once it is its own repository,
     unless PR 4 lands first.
-15. **The brief against this session's guard.** The brief asks for Git experiments
-    with `HOME` redirected. The worktree guard refused both `HOME` and
-    `GIT_CONFIG_GLOBAL` redirects, so none ran.
+15. **The brief against the design agent's guard.** The brief asks for Git
+    experiments with `HOME` redirected. The worktree guard refused both `HOME` and
+    `GIT_CONFIG_GLOBAL` redirects for the design agent, so it ran none; the
+    directing agent ran them afterwards (§3 "Git experiments").
+16. **A new project with no commit breaks `git add -A` at the workspace root** unless
+    its ignore line is already there (§3 "Git experiments"). So `new` and `adopt`
+    must write the ignore line before, or together with, the `git init`, and a
+    project folder made by hand is not harmless.
+17. **A commit with no identity set is not refused on macOS.** Git writes the
+    account's name and the machine's host name into it (§3 "Git experiments"). So
+    §5.4's "An Accept commit fails with Git's own message" does not hold there, and
+    any commit the root agent offers should first show the name and email it would
+    carry.
 
 ### Not read or not established
 
-- **Git behaviours, no experiment run** (contradiction 15). Each probe runs in a
-  throwaway folder with `HOME` and `GIT_CONFIG_GLOBAL` pointed at empty ones:
-  - `git init` an outer repository, then `git init` a folder inside it. `git status`
-    in the outer: expect `?? projects-folder/P/`. `git add -A`: expect an
-    embedded-repository warning and a gitlink. Repeat with `/projects-folder/*/`
-    ignored: expect a clean status.
-  - `git clean -fdx` in the outer with the inner repository ignored. Git's
-    documentation says a nested repository is kept unless `-f` is given twice; not
-    checked.
-  - A commit with no `user.name` or `user.email` on macOS, Windows, and Ubuntu:
-    whether Git guesses an identity or refuses.
-  - `git clone` from a bundle file, then `git remote remove origin`; and building the
-    example commit from the committed tree on two OSes, comparing hashes.
+- **Git behaviours beyond one Mac.** §3 "Git experiments" lists what was run, on
+  macOS only. Still open, each to be run in a throwaway folder with `HOME` and
+  `GIT_CONFIG_GLOBAL` pointed at empty ones:
+  - the same probes on Windows and Ubuntu, above all the commit with no
+    `user.name` or `user.email`: whether Git guesses an identity there or refuses;
+  - building the example commit from the committed tree on two operating systems
+    and comparing hashes;
   - `git submodule add` on an existing nested repository: whether its `.git` stays a
     folder.
 - **Agents in nested repositories.** Whether Claude Code and Codex read the
@@ -1149,8 +1178,6 @@ Each has a default that holds if you do not answer, and a way back.
   string check would be its own addition. Whether electron-builder packs a licence
   file.
 - **CI cost.** What building the client in `ci.yml` adds to the job's time.
-- **Repository visibility.** Whether this repository is public; `gh repo` was not
-  run, as the brief requires.
 - **Bash time limits.** Whether a Claude Code shell call outlives the example's
   three-minute `all` (the brief template tells the agent to split long commands,
   `SKILL.md:59-60`).
