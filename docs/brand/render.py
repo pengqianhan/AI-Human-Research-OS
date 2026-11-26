@@ -29,6 +29,9 @@ JOBS = [
     ("logo-lockup.svg", "logo-lockup.png", None, None),
     ("logo-lockup.svg", "logo-lockup-on-paper.png", None, PAPER),
     ("logo-lockup-white.svg", "logo-lockup-white.png", None, None),
+    ("superresearch-lockup.svg", "superresearch-lockup.png", None, None),
+    ("superresearch-lockup.svg", "superresearch-lockup-on-paper.png", None, PAPER),
+    ("superresearch-lockup-white.svg", "superresearch-lockup-white.png", None, None),
 ]
 
 
