@@ -29,10 +29,29 @@ py os-build/import/import_check.py --export <that folder> --patterns <file> --js
   `label<TAB>text` per line: the owner's names, email addresses, home folder,
   and host names, derived at run time. Never commit it. The check prints files
   and line counts only.
-- Then run the product's checks inside the folder: its `verify.sh`, the unit
-  tests of its `ci.yml`, the generator, and the `os-ui/frontend` and
-  `os-ui/client` steps. Run `import_check.py` again at the end: files the checks
-  created are allowed only where the product's `.gitignore` files ignore them.
+- The file holds every written form of each name, one line each: joined and
+  spaced (a credit line writes a name with a space where a login joins it),
+  with hyphen or dot where one is used, and in every other script the person
+  writes it in. The search compares bytes line by line, folding ASCII case
+  only, so it finds exactly the forms listed. It cannot see text inside images
+  or compressed streams (a PDF's, an archive's), text in another encoding
+  (UTF-16, escapes such as `\u…` or `&#…;`), a name broken across two lines,
+  or a name in a script or spelling the file does not hold; a clean result
+  covers the listed forms in plain text only.
+- Then run the product's checks inside the folder, each with a throwaway
+  `HOME` (and `USERPROFILE`), `CODEX_HOME` and `CLAUDE_CONFIG_DIR` unset: its
+  `verify.sh`, the unit tests of its `ci.yml`, the generator, and the
+  `os-ui/frontend` and `os-ui/client` steps. Run `import_check.py` again at the
+  end: files the checks created are allowed only where the product's
+  `.gitignore` files ignore them.
+- The export is a plain folder, but the import makes a repository of it, and
+  `verify.sh` and the generator read Git when a `.git` is there. So also copy
+  the final export to a disposable folder, run `git init` and one commit there
+  with a made-up identity on the command line
+  (`git -c user.name=Rehearsal -c user.email=rehearsal@example.invalid commit …`)
+  and no remote, and run `verify.sh` and the generator in that copy; report
+  them apart from the plain folder's results. Never run `git init` in the
+  export itself.
 
 Every relative link in the `HANDOFF.md` and `README.md` editions whose target is
 not product content becomes a link to the workspace repository, whose address
