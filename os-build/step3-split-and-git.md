@@ -16,6 +16,22 @@ they are cited, not repeated. The client as built is in
 and [research-project-manager](../research-skills-hub/open-paper-skills/research-project-manager/SKILL.md);
 the harness is [os-harness](../os-harness/README.md).
 
+> **Revision of 2026-11-26: two repositories.** After this design was written, the
+> Human Owner decided §8 Q6. The product moves to a new repository named
+> SuperResearch OS (`SuperResearch-OS` on GitHub, private at first), and this
+> repository keeps its name and stays their workspace. The same day they answered
+> Q1, Q3, Q5, Q7, and two questions the split raised (§8 Q12, Q13). The design's
+> default for Q6, one repository with two roles, is withdrawn. This revision rewrites
+> §1, §2 where it changes, §4, §5 (5.1, 5.3, 5.7, 5.8), §6, §7, §8, and §9 for the
+> two-repository form, and adds facts to §3, including how OpenResearch ships its
+> demo and pins a run to a commit. It was written against commit `b5fa10f` of branch
+> `step3-design`. Between `6a5ab1b` and `b5fa10f` only this file, two `index.md`
+> lines, and the mockup changed, so every `path:line` in any other file reads the
+> same at both commits.
+>
+> **Revised so far:** §4. The other sections still describe one repository until
+> this line lists them.
+
 ## 1. Outcome
 
 **What the tester does.** You send one person an installer from a CI run, and only
@@ -362,53 +378,119 @@ Windows or Linux (§9).
 
 ## 4. The inventory
 
-The brief's three classes do not cover CI, design documents, and tests, which ship
-neither in the app nor in a workspace. I added a fourth:
+Redone for two repositories (revision of 2026-11-26). Counts are tracked files at
+`b5fa10f` (`git ls-files`: 1,890 in all, 20 of them symbolic links and 10 of them
+links to other repositories, mode 160000). The product repository keeps today's
+paths for everything it receives, so its tests, manifests, and internal links stay
+valid at the import (§5.7).
 
-- **P**: ships in the app as app code.
-- **T**: ships in the app as template and is copied on New workspace, either as a
-  *copy* of a file here or as a *stub*, a new file kept in the template.
-- **I**: this instance only; never ships.
-- **D**: development source; ships in neither.
+The classes:
 
-| Entry | Tracked files | Class | Note |
+- **M**: moves to the product repository, SuperResearch OS, and later leaves this
+  one (§5.7, "This repository afterwards").
+- **W**: stays here as this workspace's own content. It never enters the product
+  repository.
+- **B**: both. The product repository holds the source. This repository keeps the
+  copy that any workspace gets from the template; the files are named.
+- **R**: the product's development record: documents, not code. The side that
+  keeps it is named.
+- **Dv**: development only: CI, tests, mockups, preview settings. The side is
+  named.
+- **S**: split. One file holds a product part and a workspace part. Each repository
+  gets its own edition, written as §5.7 says; no S file is moved whole.
+
+| Entry | Files | Class | Note |
 |---|---|---|---|
-| `.agents/skills/`, `.claude/skills/` | 20 links each | I | This instance's install set; the template writes its own five links |
-| `.claude/launch.json` | 1 | D | Preview servers for mockups |
-| `.env.example` | 1 | T copy | Paper-search key names, no values |
-| `.gitattributes` | 1 | D | Rules for this repository's `paper-wiki/viz.html` and the vendored PDF.js |
-| `.github/` | 10 | D | |
-| `.gitignore` | 1 | I/D | This repository's; the template has its own stub |
-| `.nojekyll` | 1 | D | Pages |
-| `.python-version` | 1 | T copy | The app reads it from the workspace (`python.ts:53-55`) |
-| `AGENTS.md` | 1 | I | Marker; its text names `os-build/`, `HANDOFF.md`, `human/`. The template has a workspace stub |
-| `CHANGELOG.md`, `CONTRIBUTING.md`, `README.md`, `FILETREE.md`, `verify.sh` | 5 | D | |
-| `LICENSE` | 1 | D, should be P | Not packed today (§3 Installer) |
-| `CONTEXT.md` | 1 | D | |
-| `HANDOFF.md` | 1 | I | The generator reads it when present and only warns when absent (scratch run) |
-| `docs/` | 25 | D | Except `docs/brand/app-icon.png`, which becomes `out/icon.png`: P |
-| `human/` | 8 (`human/private/` ignored, `.gitignore:38`) | I | Includes the cognition cache `human/human-cognition/` (5) |
-| `ideas/` | 7 | mixed | `index.md`, `log.md`: T stub (empty). `nanochat-cpu-baseline.md`: I, and a copy goes with the example. `idea_example/` (3): I |
-| `inbox/` | 2 | mixed | `index.md`: T stub. Content: I |
-| `memory/` | 3 | mixed | `MEMORY.md` and `paper-sources.json`: I. The template has stubs with the same headings and the skill's defaults, because the generator and the project manager need them (`generate.py:188-221`; `project-contract.toml:36-38`). `index.md`: T stub |
-| `os-build/` | 19 | D | `references/` read-only |
-| `os-harness/` | 11 | mixed | The four `.py` files, `README.md`, `index.md`, `.gitignore`: T copy (Python until step 4). `tests/` (4): D |
-| `os-ui/client/` | 39 | P / D | Source of the app; `DESIGN.md`, `README.md`, `e2e/`, `test/`: D |
-| `os-ui/frontend/` | 196 | P / D | Renderer and plugin sites: P. Server code is compiled into `main.cjs`: P. Tests and fixtures: D |
-| `os-ui/generator/` | 5 | T copy | `generate.py`, `README.md`, `pyproject.toml`, `uv.lock` |
-| `os-ui/mockups/`, `DESIGN.md`, `PLUGINS.md`, `README*.md`, `index.md`, `mockup.html`, `start.sh`, `.gitignore` | 11 | D | |
-| `paper-wiki/` | 224 | mixed | Notes (`papers/` 90, `papers_zh/` 78, `topics/` 27, `concepts/` 24, `sources/` 3) and `viz.html`: I. `index.md` and collection indexes: T stub |
-| `projects-folder/index.md` | 1 | I | Lists `nanochat_cpu`; the template has a stub |
-| `projects-folder/templates/` | 15 | T copy | Also this instance's template |
-| `projects-folder/nanochat_cpu/` | 73 | I, and the source of the bundled example (T) | §5.3 |
-| `research-skills-hub/open-paper-skills/` | 103 (1.6 MB) | T copy for five skills; D for the rest | §8 Q8 |
-| `research-skills-hub/claude-science-skills/`, `science-skills/`, `collected-skills/`, `mattpocock-skills/` | 480, 229, 282, 84 (30 MB, 3.2 MB, 5.9 MB, 0.46 MB) | D | Third-party mirrors; licences to review before any ships |
-| `research-skills-hub/` top files and `docs/` | 6 | D | |
+| `.agents/skills/`, `.claude/skills/` | 20 links each | W | This workspace's installs. Five point at B copies below, fifteen at W skills (shown with `readlink`). The product repository has none |
+| `.claude/launch.json` | 1 | Dv, product | Preview servers for the dev server and the mockups (`.claude/launch.json:5`, `:11`) |
+| `.env.example` | 1 | B | Paper-search key names, no values |
+| `.gitattributes` | 1 | S | The `paper-wiki/viz.html` rule (`.gitattributes:1-8`) stays; the PDF.js rules (`:10-16`) go to the product's edition |
+| `.github/workflows/ci.yml` | 1 | S | Split by step (§5.7, "CI on each side") |
+| `.github/workflows/desktop.yml` | 1 | Dv, product | |
+| `.github/workflows/claude.yml`, `claude-code-review.yml` | 2 | Dv, both | Pull-request review on each side; both use the secret `CLAUDE_CODE_OAUTH_TOKEN` (`claude.yml:37`, `claude-code-review.yml:38`) |
+| `.github/pull_request_template.md` | 1 | Dv, both | |
+| `.github/workflows/pages.yml`, `.nojekyll` | 2 | W, with a question | Builds the frontend (product) with `paper-wiki/` and this workspace's snapshot (`pages.yml:46-50`, `:59-63`), from the `autoreadpaper` branch (`:14-16`). It cannot simply move: §8 Q16 |
+| `.github/workflows/scan-related-projects.yml`, `.github/scripts/` (2) | 3 | W | Appends to `os-build/references/related-projects.md` (`scan-related-projects.yml:53`), which stays |
+| `.github/workflows/sync-mattpocock-skills.yml` | 1 | W | Refreshes the mirror, which stays (`sync-mattpocock-skills.yml:38`) |
+| `.gitignore` | 1 | S | Lines 1-36 and 40-48 are general and go to both editions; `human/private/` (`:38`) stays here only. The product's edition adds `os-ui/`'s own rules |
+| `.python-version` | 1 | B | The app reads it from the workspace (`python.ts:53-55`) |
+| `AGENTS.md` | 1 | S | Marker (`workspace.ts:5`). Two editions (§5.7) |
+| `CHANGELOG.md` | 1 | R, product | Empty (0 lines) |
+| `CONTEXT.md` | 1 | R, product | The domain language; `project-dispatch` links it (`SKILL.md:15`) |
+| `CONTRIBUTING.md` | 1 | R, product | This workspace keeps its two-line pull-request rule in its own `AGENTS.md` |
+| `FILETREE.md` | 1 | W | Regenerated here by `filetree-simple`. The product repository has none at first (§5.7) |
+| `HANDOFF.md` | 1 | S (R) | Split by section and decision group: §5.7, "The development record" |
+| `LICENSE` | 1 | B | MIT; the product needs it, and this repository's own content stays MIT (`README.md:170`) |
+| `README.md` | 1 | S | Two editions (§5.7) |
+| `verify.sh` | 1 | S | Two editions: §5.7, "verify.sh" |
+| `docs/adr/` | 6 | R, product | |
+| `docs/index.md`, `docs/presentAHROS.md` | 2 | R, product | The presentation draft is a seven-line narrative of the product |
+| `docs/brand/` | 16 | M | `app-icon.png` becomes `out/icon.png`; `verify.sh:142-154` checks two copies in `os-ui/frontend/public/` |
+| `docs/screenshots/` | 1 | M | The product README's image |
+| `human/` | 8 | W | `PROFILE.md`, `inbox.md`, `index.md`, and the cognition cache (5). `human/private/` is ignored (`.gitignore:38`) and was not read. §5.7 says how product sessions reach it |
+| `ideas/` | 7 | W | `nanochat-cpu-baseline.md` also goes, as a copy, with the example (§5.3) |
+| `inbox/` | 2 | W | |
+| `memory/` | 3 | W | The product's template gets new stubs, not copies (§2 answer 2) |
+| `os-build/GOAL.md`, `README.md`, `index.md`, `step3-split-and-git.md` | 4 | R, product | |
+| `os-build/references/` | 16 | W, read-only | Its own row, below |
+| `os-harness/` runtime: `harness.py`, `core.py`, `adapter_claude.py`, `adapter_codex.py`, `README.md`, `index.md`, `.gitignore` | 7 | B | Marker `os-harness/harness.py`. The workspace's copy is refreshed from the product (§5.1) |
+| `os-harness/tests/` | 4 | Dv, product | |
+| `os-ui/client/` | 39 | M | The app's source, with its `DESIGN.md`, `README.md`, `e2e/`, and `test/` |
+| `os-ui/frontend/` | 196 | M | Renderer, plugins, server code, tests, fixtures |
+| `os-ui/generator/` | 5 | B | `generate.py`, `README.md`, `pyproject.toml`, `uv.lock`, `.python-version`. Marker `os-ui/generator/generate.py` |
+| `os-ui/DESIGN.md`, `PLUGINS.md`, `README.md`, `README_zh.md`, `index.md` | 5 | R, product | |
+| `os-ui/mockup.html`, `mockups/` (4), `start.sh`, `.gitignore` | 7 | Dv, product | |
+| `paper-wiki/` | 224 | W | Notes (`papers/` 90, `papers_zh/` 78, `topics/` 27, `concepts/` 24, `sources/` 3), indexes, and `viz.html`. The template's stubs are new files |
+| `projects-folder/index.md` | 1 | W | Lists `nanochat_cpu`; the template has a stub |
+| `projects-folder/templates/` | 15 | B | The project template |
+| `projects-folder/nanochat_cpu/` | 73 | W | Your project. It becomes its own repository here (§5.3, Q7). A copy of its 73 files is the example's source in the product (§5.3) |
+| `research-skills-hub/open-paper-skills/` five shipped skills: `project-dispatch` (1), `research-project-manager` (5), `research-skill-installer` (5), `paper-search` (3), `paper-wiki-manager` (21) | 35 | B | The product owns the canonical copy (§5.7, "The skills hub") |
+| `research-skills-hub/open-paper-skills/`, the other skills and the collection's `README.md` and `index.md` | 68 | W | Your own skills, canonical here. They include `filetree-simple`, `session-handoff`, `human-cognition-cache`, and `map-then-territory`; the last two "stay the Human Owner's own workspace skills" (`HANDOFF.md:799`) |
+| `research-skills-hub/claude-science-skills/`, `science-skills/`, `collected-skills/`, `mattpocock-skills/` | 480, 229, 282, 84 | W | Third-party mirrors under their upstream terms (`README.md:170-181`) |
+| `research-skills-hub/` top files and `docs/` | 6 | W | `MANAGING-SKILLS.md` and the hub's ADR 0002, which the installer's `SKILL.md` links (§5.7, "Links") |
 
-**What the installer bundles after step 3 (proposed).** Everything `out/` holds
-today, plus `resources/workspace-template/`:
+**Totals by class (1,890):** W 1,530; M 252; B 65; R 20; Dv 16 (13 on the
+product side, 3 on both); S 7. In words: the product repository receives the
+252 M files, the 20 records, 13 development files, 3 shared development files,
+and the 65 B files: 353 of today's files. It also gets a copy of the example's 73
+files and its idea file, its own editions of the 7 S files, and new files (the
+template of PR 6 and the transitional workspace of §7 step R3). This repository keeps 1,530 files as they are,
+the 65 B files as its workspace copies, its editions of the 7 S files, and its
+copies of the 3 shared development files: 1,605 files.
 
-- the T copies and stubs above;
+**`os-build/references/` (W, read-only).** Sixteen entries, in two kinds:
+
+- **Ten links to other repositories** (mode 160000, shown by `git ls-files -s`):
+  `AutoR`, `EurekAgent`, `Harness_Handbook`, `agentos`, `awesome-AI-for-research`,
+  `maka-agent-pq`, `ml-intern`, `openscience`, `repo` (sepo), `tau-pq`. There is no
+  `.gitmodules` at `b5fa10f`, so the repository records no URL for them, and a
+  checkout holds an empty folder for each. The brief calls some entries "other
+  projects' code"; at this commit none of their code is tracked here, only the ten
+  commit pointers.
+- **Six notes:** `index.md`, `related-projects.md`, and four guided notes in Chinese
+  (`EurekAgent-讲解与启发.md`, `agentos-讲解与启发.md`, `sepo-讲解与启发.md`,
+  `并行-自进化-经验共享-调研与启发.md`).
+
+Each entry's licence, as the repository records it:
+
+| Entry | Licence recorded |
+|---|---|
+| `EurekAgent` | AGPL-3.0 (`EurekAgent-讲解与启发.md:345`) |
+| `agentos` | Apache-2.0 (`agentos-讲解与启发.md:30`) |
+| `AutoR` | not recorded; the upstream returned 404 on 2026-09-29 and the entry is "a submodule pointer without content" (`related-projects.md:29-31`) |
+| `awesome-AI-for-research` | not recorded; the Human Owner's own field map (`related-projects.md:272-275`) |
+| `Harness_Handbook`, `maka-agent-pq`, `ml-intern`, `openscience`, `repo`, `tau-pq` | not recorded |
+| the six notes | this repository's MIT (`README.md:170`); `index.md:25` says the repositories' contents and licences "remain owned by their upstream projects" |
+
+Default: the whole folder stays here, read-only, with the weekly scan that writes to
+it. Product documents that cite it keep their links as links into this repository
+(§5.7, "Links"). Ten pointers with no URL cannot be carried by a file-copy import
+anyway: a copy of a checkout holds ten empty folders.
+
+**What the installer bundles after step 3 (proposed).** Unchanged by the split.
+Everything `out/` holds today, plus `resources/workspace-template/`:
+
+- the T copies and stubs of §2 answer 2, built from the product repository;
 - `new_workspace.py`;
 - `examples/nanochat_cpu.bundle`.
 
@@ -419,34 +501,47 @@ archive with `extraResources`. The reason is known Electron behaviour, not teste
 here: a Python process cannot open files inside `app.asar`, which only Electron's
 own file functions read.
 
-**The check that proves separation (proposed, run by `ci.yml`).** A script,
-`os-ui/workspace-template/check_separation.py`, does four things and fails on any
-hit.
+**The separation check, after the split (proposed).** The old check proved that
+nothing of yours could leave a repository that held both. With two repositories,
+the product repository holds no file of yours by construction, so most of that
+proof moves to one moment, the import. What remains to prove:
 
-1. **Canaries.** Copy the sources the template draws from into a temporary root.
-   Plant one canary file with a unique token in each of: `human/`,
-   `human/private/`, `human/human-cognition/`, `memory/`, `ideas/`, `inbox/`,
-   `paper-wiki/papers/`, `paper-wiki/topics/`, and the root (`HANDOFF.md`). Run
-   `new_workspace.py` from that root twice, with and without the example. Fail if
-   the token appears in either workspace. This proves the builder reads nothing it
-   should not, whatever the real files say.
-2. **Real content.** Hash every tracked file of this repository in the I class
-   (table above). Fail if any file of the two workspaces, or of `os-ui/client/out/`,
-   has the same SHA-256. Two exceptions, both explicit in the manifest:
-   - the example's own files, its idea file included, which are meant to ship;
-   - empty files such as `.gitkeep`, whose hash every empty file shares.
-3. **Allowlist.** Fail if `os-ui/client/out/` holds a path outside a fixed list:
-   `main.cjs`, `preload.cjs`, `renderer/**`, `plugins/<bundled id>/**`, `icon.png`,
-   and `workspace-template/` as its manifest lists it. Also fail if
-   `electron-builder.yml` names any `files` or `extraResources` source outside
-   `out/` and `package.json`, so nothing can reach the installer around the check.
-4. **The workspace works.** Run the generator and
-   `manage_research_project.py --repo <tmp> validate` on both workspaces. Both
-   must pass.
+1. **At the import, once (step R3 of §7).** `import_check.py`, run by the directing
+   agent in a scratch folder and kept with the import's record:
+   - **Allowlist.** Every file of the import is on the allowlist (§5.7, "How the
+     new repository is born"); nothing else is copied. A path outside it fails.
+   - **Real content.** Hash every W-class file of this repository at the import's
+     source commit. Fail if any file of the import has the same SHA-256. Two
+     exceptions, both named in the allowlist: the example's 73 files and its idea
+     file, which are meant to ship, and empty files, whose hash every empty file
+     shares.
+   - **No history.** The new repository has exactly one commit, whose tree is the
+     import (`git rev-list --count HEAD` is 1).
+   - **The workspace works.** The steps of today's `ci.yml` run on the import
+     before it is committed (the rehearsal, step R1).
+2. **Afterwards, in the product's CI, on every pull request:**
+   - **Installer allowlist** (part 3 of the old check): fail if
+     `os-ui/client/out/` holds a path outside `main.cjs`, `preload.cjs`,
+     `renderer/**`, `plugins/<bundled id>/**`, `icon.png`, and `workspace-template/`
+     as its manifest lists it, or if `electron-builder.yml` names any `files` or
+     `extraResources` source outside `out/` and `package.json`.
+   - **The workspace works** (part 4): the generator and `validate` pass on two
+     fresh workspaces, with and without the example.
+   - **The builder reads only its own repository.** `new_workspace.py` refuses a
+     manifest entry that resolves outside the product checkout. This replaces the
+     canaries: with no instance content in the product repository, a canary planted
+     there proves nothing, and a manifest that points outside it is the only way
+     instance content could reach a workspace.
+3. **No longer needed:** the canaries in `human/`, `memory/`, and the rest, and the
+   hash comparison on every pull request. Both tested a mix that the product
+   repository no longer holds.
 
-Step 3 needs the client's `out/` in the required job, so `ci.yml` gains
-`ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci --prefix os-ui/client && npm run build
---prefix os-ui/client`. What that adds to the job's time was not established.
+This repository's CI keeps no separation step: nothing here is packaged.
+
+Step 3 still needs the client's `out/` in the product's required job, so its
+`ci.yml` gains `ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci --prefix os-ui/client && npm
+run build --prefix os-ui/client`. What that adds to the job's time was not
+established.
 
 ## 5. Design
 
