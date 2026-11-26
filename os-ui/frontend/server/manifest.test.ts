@@ -78,7 +78,7 @@ describe("parseManifest", () => {
   test("id, name, version, and description", () => {
     for (const id of ["abc", "paper-wiki", "a1-b2", "a".repeat(32)]) assert.deepEqual(problems(minimal({ id })), [], id);
     for (const id of ["ab", "Abc", "1abc", "abc-", "-abc", "a_b", "a.b", "a".repeat(33), 7]) refused(minimal({ id }), /^id must match/);
-    refused(minimal({ id: "research-os" }), /^id "research-os" is reserved$/);
+    refused(minimal({ id: "superresearch-os" }), /^id "superresearch-os" is reserved$/);
     for (const id of ["xn--abc", "ab--c", "zz--9"]) refused(minimal({ id }), /has "--" as its third and fourth characters/);
     for (const id of ["a--b", "abc--d"]) assert.deepEqual(problems(minimal({ id })), [], id);
     assert.deepEqual(problems(minimal({ name: "n".repeat(40) })), []);

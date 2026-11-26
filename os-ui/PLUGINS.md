@@ -1801,7 +1801,7 @@ export const CONTRACT = { major: 1, minor: 0 } as const;
 export type PluginSource = "bundled" | "local";       // "local" loads from step 2; validated from day one
 export interface PluginManifest {
   contract: string;              // "^1.0": this major, at least this minor
-  id: string;                    // /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/, not "research-os"; host of app://<id>; permanent
+  id: string;                    // /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/, not "superresearch-os"; host of app://<id>; permanent
   name: string;                  // 1–40 chars (Plugins page)
   version: string;               // free text
   description?: string;          // ≤ 200 chars
@@ -1876,7 +1876,7 @@ export function loadPlugins(root: string, ids: readonly string[], source: Plugin
   taken: { trunk: readonly TrunkMount[]; plugins: readonly LoadedPlugin[] }): { plugins: LoadedPlugin[]; problems: string[] };
 export interface Registry {
   plugins: readonly LoadedPlugin[];
-  app: readonly Mount[];                            // app://research-os: trunk only
+  app: readonly Mount[];                            // app://superresearch-os: trunk only
   byPlugin: ReadonlyMap<string, readonly Mount[]>;  // app://<id>: its handlers only, always token: false
   all: readonly Mount[];                            // dev server's single origin: trunk, then plugins
 }
@@ -1916,7 +1916,7 @@ export function pluginSites(plugins: readonly LoadedPlugin[]): ReadonlyMap<strin
 export function appCsp(hosts: readonly string[]): string;   // frame-src app://<id> per host
 export function allowedNavigation(url: string, isMainFrame: boolean, hosts: readonly string[]): boolean; // from index.ts
 export type Route =
-  | { kind: "api"; pathname: string; host: string }        // "research-os" → registry.app, else byPlugin.get(host)
+  | { kind: "api"; pathname: string; host: string }        // "superresearch-os" → registry.app, else byPlugin.get(host)
   | { kind: "file"; root: string; rel: string; fallback: string | null; csp: string | null; confined: boolean }
   | { kind: "read"; site: PluginSite; rel: string; list: boolean }
   | { kind: "not-found" };
@@ -2920,7 +2920,7 @@ What the pull request holds:
   `SecurityError`; `paper_skeleton.md` is 200, while `AGENTS.md`,
   `Code/README.md`, `.env`, and a listing of the project are 404;
   `/api/code-view/git`, `/api/chat/sessions`, and `/api/paper-wiki/status` are
-  404; fetches to `app://research-os` and `app://paper-wiki` are blocked; an
+  404; fetches to `app://superresearch-os` and `app://paper-wiki` are blocked; an
   inline script does not run; and a CSP violation inside the frame is seen.
 - **Checklist** (`client/README.md`):
   - the sentence at `:131-133` now marks only **Idea** and **Assets** "step 2";
@@ -3226,7 +3226,7 @@ document says it. "Proposed" means this design chooses it.
     (`os-ui/frontend/src/useOsState.ts:5-87`).
 - Where `./state.json` comes from:
   - dev server and static build: the file in `public/`;
-  - desktop: `app://research-os/state.json`, served from the workspace
+  - desktop: `app://superresearch-os/state.json`, served from the workspace
     (`os-ui/client/src/main/protocol.ts:287-290`).
 - Before the first good load the whole app shows "Loading…" or the missing-snapshot
   page (`os-ui/frontend/src/App.tsx:12-22`). The Skills page therefore never shows a
@@ -3279,7 +3279,7 @@ to Skills (`TRUNK_SCREENS`, `:29`).
 
 | Build | What the Skills page does |
 |---|---|
-| Desktop client | live (`DESKTOP`); posts to `app://research-os/api/skill/toggle` |
+| Desktop client | live (`DESKTOP`); posts to `app://superresearch-os/api/skill/toggle` |
 | Dev server (`start.sh`) | live (`import.meta.env.DEV`); posts to the dev server's `/api/skill/toggle` |
 | Static build, the Pages copy | `LIVE` false: installed rows show the word "enabled" or "disabled", with no button, no "install ⧉", and no live note (`SkillInstalls.tsx:115-121`, `:163`); the left menu says "Public snapshot · view only" (`os-ui/frontend/src/shell/SnapshotStatus.tsx:12`) |
 
@@ -3316,7 +3316,7 @@ to Skills (`TRUNK_SCREENS`, `:29`).
   - Copy form: renames `SKILL.md` ↔ `SKILL.md.disabled` (`:544-557`).
   - "not installed here" and "already …" exit 0, so they answer 200 with no change.
 - **Transport:**
-  - client: on `app://research-os` only, 503 with no folder, 404, then 415 for a
+  - client: on `app://superresearch-os` only, 503 with no folder, 404, then 415 for a
     non-JSON write, then 401 for token mounts (`protocol.ts:647-663`);
   - dev server: no 415, and any body is parsed as JSON
     (`os-ui/frontend/server/node.ts:11-15`; `devServer.test.ts:79` posts a `text/plain`
@@ -3638,7 +3638,7 @@ breaks `npm run build`. S8 deletes them with the dock shell.
 | Catch-all 500 | `:67-69` | unchanged |
 | JSON-only writes (415), 503 with no folder | `protocol.ts:649-655` | unchanged, now on `app://skills-hub` |
 | No token | `api.ts:21` | unchanged: plugin mounts are always `token: false` |
-| Which origin reaches it | `app://research-os` (and the dev server's one origin) | **narrowed** to `app://skills-hub`; the dev server, none (Q2 default) |
+| Which origin reaches it | `app://superresearch-os` (and the dev server's one origin) | **narrowed** to `app://skills-hub`; the dev server, none (Q2 default) |
 | Installer's own checks (hub skill, target table, `ensure_safe`, no content created) | installer `:178-214`, `:496-557` | unchanged |
 
 ### 3.9 Proposed hardening (optional; no user can see it)
@@ -3840,7 +3840,7 @@ Open the pull request as a draft until it is reviewed.
     - in the real-registry block (`:671`), `app://skills-hub/api/skills-hub/toggle`
       POST JSON reaches the fake runner with the installer's argv;
     - `text/plain` is 415, GET is 405;
-    - `app://research-os/api/skills-hub/toggle` is 404 JSON;
+    - `app://superresearch-os/api/skills-hub/toggle` is 404 JSON;
     - `app://paper-wiki/api/skills-hub/toggle` and `app://skills-hub/api/skill/toggle`
       are plain 404;
     - `app://skills-hub/_os/files?path=os-ui/frontend/public/state.json` is 200;
@@ -3960,7 +3960,7 @@ Open the pull request as a draft until it is reviewed.
          - `/api/skills-hub/toggle` with `text/plain` is 415 and GET is 405;
          - `/api/skill/toggle`, `/api/chat/sessions`, `/api/paper-wiki/status`, and
            `/api/code-view/git` are 404;
-         - `app://research-os/...` is blocked;
+         - `app://superresearch-os/...` is blocked;
          - `_os/files?path=AGENTS.md` is 404 and `?path=os-ui/frontend/public/state.json`
            is 200;
          - an inline script does not run;

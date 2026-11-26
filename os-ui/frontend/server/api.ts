@@ -11,7 +11,7 @@ export interface Mount {
 }
 
 /**
- * The app's own endpoints, on app://research-os. Plugin handlers are not
+ * The app's own endpoints, on app://superresearch-os. Plugin handlers are not
  * listed here: the registry (registry.ts) adds them from each bundled
  * plugin's plugin.json. The dev server mounts the registry on its one
  * origin; the desktop client serves it per origin (client/src/main/protocol.ts).

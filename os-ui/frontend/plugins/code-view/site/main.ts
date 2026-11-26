@@ -49,7 +49,7 @@ import {
 import type { DiffRow, Selection, Words } from "./logic.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
-const HOST = "app://research-os";
+const HOST = "app://superresearch-os";
 
 interface Entry {
   name: string;
