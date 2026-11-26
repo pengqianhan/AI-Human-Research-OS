@@ -9,6 +9,9 @@
  *   OS_CLIENT_E2E_DEREFERENCE=1 npm run test:e2e        (copy the workspace as on Windows: links replaced by what they point at)
  *   OS_CLIENT_E2E_TRACE=<file.zip> npm run test:e2e     (a Playwright trace of the main suite: each action, with DOM snapshots and screenshots)
  *
+ * A trace records the app's launch environment, every variable of the shell
+ * that ran the suite included: keep it private, and never upload one.
+ *
  * The suite holds on any workspace that has the product's files: what it reads
  * beyond them (the example project, the templates, the five shipped skills, the
  * plugins' fixtures) it writes into the copy first, never relying on a
