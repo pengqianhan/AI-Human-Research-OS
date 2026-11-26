@@ -230,7 +230,9 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
 .pq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;list-style:none;margin:0;padding:0;align-items:start}
 @media (max-width:640px){.pq{grid-template-columns:minmax(0,1fr)}}
 .tile{padding:9px 14px 10px;min-width:0}
-.tile summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;min-width:0}
+.tile summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;cursor:pointer;list-style:none;min-width:0}
+.tile .right.later{flex-basis:calc(100% - 20px);margin-left:20px}/* the neutral sentence sits under the name */
+.tile .right.later .chip{white-space:normal;line-height:1.3}
 .tile summary::-webkit-details-marker{display:none}
 .tile .chev{width:12px;height:12px;flex:none;color:var(--faint);transition:transform .15s}
 .tile details[open] .chev{transform:rotate(90deg)}
@@ -477,16 +479,18 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         <li>The striped strip is not part of the app. <b>Path</b> walks §2's tester path in order; on each app screen the obvious button also takes you to the next one. <b>Other places</b> opens S3 (the File menu), S4 (the Settings rows), and S6 (Home with no projects; also reached by unticking the example on S2).</li>
         <li>The strip's second row shows the alternatives for the screen you are on, labelled A and B, with the recommended one marked. <b>States</b> switches one failure state at a time; a line under the strip then names it and the screens it changes. On a conversation, the first row also picks which S5 line values the project run shows (every value §6 gives) and whether the run is done or still running.</li>
         <li>Choices are kept in the address after <code>#</code>, so a link reopens the same view.</li>
-        <li>Conversations are samples, not from a real session. Hashes are made up: <code>e81c4f7</code> stands for the example's one commit, <code>5a2d9e3</code> for a commit an agent makes. The tiles' versions and paths, the model id, the login text, the session ids, and the turn durations are illustrative too. Nothing reads or writes Git, and no message is sent.</li>
+        <li>Conversations are samples, not from a real session. Hashes are made up: <code>e81c4f7</code> stands for the example's one commit, <code>5a2d9e3</code> for a commit an agent makes. The counts in the end lines ("3 changed", "7 changed, 1 new") are samples of §6's "&lt;n&gt; changed" and ", &lt;m&gt; new". The tiles' versions and paths, the model id, the login text, the session ids, and the turn durations are illustrative too. Nothing reads or writes Git, and no message is sent.</li>
+        <li>Opening nanochat_cpu before the root agent has dispatched shows its empty conversation, as the app would; the strip then offers to dispatch for you.</li>
+        <li>The words are those of §6 as revised on 2026-11-26, which adopted this mockup's earlier departures and suggested words.</li>
       </ul>
 
       <h3>What each screen is drawn from</h3>
       <ul>
-        <li><b>S1 Welcome</b>: §6 S1, in the place and shape of today's welcome card (<code>StateMissing.tsx:40-92</code>): one centred card, no left menu.</li>
-        <li><b>S2 New workspace</b>: §6 S2. In A it replaces the Welcome card; in B it is part of it. From the File menu it is a dialog over the open workspace, in both.</li>
-        <li><b>S3 File menu</b>: §6 S3 over today's File menu (<code>menu.ts:54-59</code>), drawn as the macOS menu bar.</li>
+        <li><b>S1 Welcome</b>: §6 S1, in the place and shape of today's welcome card (<code>StateMissing.tsx:40-92</code>): one centred card, no left menu. Its prerequisite rows are those before any workspace is open: no Folder row, Claude Code and Codex in the neutral state, and "ready" counting only uv or Python, and Git.</li>
+        <li><b>S2 New workspace</b>: §6 S2. In A it replaces the Welcome card; in B it is part of it. From the File menu it is a dialog over the open workspace, in both, with a workspace's full rows.</li>
+        <li><b>S3 File menu</b>: §6 S3 over today's File menu (<code>menu.ts:54-59</code>), drawn as the macOS menu bar, so the shortcut reads ⌘N.</li>
         <li><b>S4 Settings rows</b>: §6 S4 inside today's Settings page (<code>SystemPage.tsx</code>) and prerequisite tiles (<code>DesktopStatus.tsx:62-114</code>; labels and details from <code>doctor.ts</code>).</li>
-        <li><b>S5 turn lines</b>: §6 S5 inside today's turn rows (<code>AgentChat.tsx:714-725</code>): under "model · login" and after "done · … s". The short hash is a button that copies the full one, in both alternatives: §6 leaves that to the mockup, and the mockup keeps it.</li>
+        <li><b>S5 turn lines</b>: §6 S5 inside today's turn rows (<code>AgentChat.tsx:714-725</code>): under "model · login" and after "done · … s". Root-agent turns read "no commit yet" (§8 Q5, decided). With No uv or Python, the project conversation is drawn as in a workspace that already has a snapshot.</li>
         <li><b>S6 Home with no projects</b>: §6 S6 in place of today's empty Projects text (<code>HomePage.tsx:54-58</code>).</li>
         <li><b>Home's card</b>: today's project card (<code>ProjectCard.tsx</code>) filled from nanochat_cpu's <code>PROJECT_MEMORY.md</code> as it would ship (§8 Q2 default). The run command, its 2 min 57 s, and the 0.2 GB of data plus 0.2 GB of wheels are from <code>Code/README.md</code>.</li>
         <li><b>The root agent's turns</b>: §2 rows 8 and 9, with the harness command in its uv form (§2 row 9).</li>
@@ -499,23 +503,10 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         <li><b>S3: B, "Open Workspace…".</b> The menu and the Welcome page then name the same thing the same way.</li>
       </ul>
 
-      <h3>Where the mockup departs from §6</h3>
+      <h3>Where the mockup still departs from §6</h3>
       <ol>
-        <li>S2 has a heading, "New workspace", a field label, "Folder", and a label over the list, "Will be written". §6 gives S2 none of these.</li>
-        <li>With the example unticked, the list and the Git line drop their example part ("…, and the project template"; "The workspace is a Git repository. Nothing is committed under your name"), and the progress skips "Making the example's repository…". §6 gives only the ticked words.</li>
-        <li>Create is disabled while creating, as well as Cancel; §6 names only Cancel.</li>
-        <li>"Cannot write there" is drawn as a failure of Create: the progress stops, and the message and Show log appear. §6 does not say whether it is found when the folder is chosen.</li>
-        <li>After "done", a turn with no commit, no repository, or no Git repeats its start words ("no commit yet", "not a Git repository", "Git not found"). §6 gives an end line only for a repository with a commit.</li>
-        <li>The run's end line says "3 changed" (<code>Code/results/summary.json</code>, <code>Code/results/training_metrics.csv</code>, <code>PROJECT_MEMORY.md</code>), not §6's example "7 changed". Which files a real run changes was not established; the two figures in <code>Figs/</code> may change too. §6's own "3 changed, 1 new" and "7 changed" are under the S5 line choices.</li>
-        <li>The S5 start line uses the muted colour, not the faint colour of "model · login", so it can be read; its size and font are that line's.</li>
-        <li>The two changed prerequisite tiles open by default and carry a striped "changed in step 3" tag, which is mockup chrome; in the app they open on a click like the others.</li>
-        <li>The Git row's "download link" keeps today's link text, "How to install".</li>
-        <li>The tiles' "ready" also needs Git, because §6 makes Git required. Today's rule (<code>doctor.ts</code>) needs only the folder, Python, and one agent.</li>
+        <li>The Git and Git name and email tiles open by default, and every changed tile carries a striped "changed in step 3" tag; both are mockup chrome. In the app a tile opens on a click like the others.</li>
         <li>Home's draft "Run the nanochat_cpu example and report" (§2 row 8's example), and then "Yes, dispatch it.", are typed in for you; the app starts with an empty box.</li>
-        <li>S2 opened from the File menu is drawn as a dialog over the open workspace, and Cancel returns there. §6 says neither.</li>
-        <li>In B, the form inside the Welcome card has no Cancel, because there is nothing to go back to.</li>
-        <li>The identity row's button is labelled "Copy the two lines"; §6 says only that the lines can be copied.</li>
-        <li>Opening nanochat_cpu before the root agent has dispatched shows its empty conversation, as the app would; the strip then offers to dispatch for you.</li>
       </ol>
 
       <h3>Where it departs from mockup C</h3>
@@ -527,31 +518,19 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         <li>Settings is today's page (Workspace folder, Snapshot, Prerequisites and logins), not mockup C's Git and Agents cards.</li>
       </ul>
 
-      <h3>Suggested word changes (the mockup keeps §6's words)</h3>
+      <h3>What §6 leaves open, and how the mockup reads it</h3>
       <ul>
-        <li>S2's identity line ends "(see Settings)", but on a first start there is no Settings page, only the welcome card, and the row is on the same page. Perhaps "(see Git name and email below)".</li>
-        <li>§6's sentences have no final full stop ("…on your own plan", "…Choose an empty or new folder", "…Install it, then Check again"); the app's other sentences have one.</li>
-        <li>With no uv or Python, today's link goes to python.org (<code>doctor.ts</code> <code>HELP.python</code>), while the tester sheet asks for uv; uv's installation page would match.</li>
-        <li>The two copy lines keep §6's <code>"…"</code> placeholders; <code>"Your Name"</code> and <code>"you@example.com"</code> would show what to type.</li>
-        <li>"Check again" renames today's "re-check" on the tiles' header (§6 S1 and S4; <code>DesktopStatus.tsx:78</code>).</li>
-      </ul>
-
-      <h3>What §6 leaves open, or gets wrong</h3>
-      <ul>
-        <li>S4 says its rows appear inside S1 and S2, but S2's "Shows" does not list them. The mockup puts the tiles in S2 as well.</li>
-        <li>On a first start no folder is open, so today's tiles show the folder as "missing", Claude Code and Codex as "error" ("Needs a Research OS folder and Python to check.", <code>doctor.ts:108-111</code>), and the header as "not ready". §6 does not say whether S1 hides or rewords these rows.</li>
-        <li>"Cannot write there": §6 does not say whether it comes before or after Create, or whether Show log comes with it.</li>
-        <li>The end line has no "new" count, though the start line does, and no words for no commit, no repository, or no Git.</li>
-        <li>No keyboard shortcut is given for New Workspace…; today Open has ⌘O (Ctrl+O on Windows and Linux).</li>
-        <li>§6 does not say where Cancel returns when S2 was opened from the File menu.</li>
-        <li>With no uv or Python the generator cannot run, so a workspace cannot be created or read, and the app shows its "Preparing the snapshot" card rather than Home (<code>StateMissing.tsx:49</code>). S5's "the conversation's existing error" is then reachable only in a workspace that already has a snapshot.</li>
-        <li>Home's card shows this instance's lines to a tester: "awaiting Human Owner review" and "accepting the 2026-09-26 dispatch run also completes GOAL.md H2", and a new workspace has no <code>GOAL.md</code>. That is §8 Q2.</li>
-        <li>Root-agent turns read "no commit yet" on every turn until the user commits in the workspace's own repository (§8 Q5 default: <code>git init</code>, no commit). Under Q5's alternative they would read "not a Git repository".</li>
+        <li>Before any workspace is open, Claude Code and Codex "read 'Checked once a workspace is open.' in the neutral state". §6 does not say where the sentence goes; the mockup puts it in the row's grey (neutral) chip, on its own line under the name.</li>
+        <li>Those two rows keep today's "How to install" link inside them, because today's rule shows it for any state other than ok (<code>DesktopStatus.tsx:102</code>). §6 does not say.</li>
+        <li>Whether the renderer binds CmdOrCtrl+N was not checked (§6 S3).</li>
+        <li>Home's card shows this workspace's lines to a tester: "awaiting Human Owner review" and "accepting the 2026-09-26 dispatch run also completes GOAL.md H2", and a new workspace has no <code>GOAL.md</code>. §6 notes it; it is §8 Q2, still open.</li>
       </ul>
 
       <h3>What it does not show</h3>
       <ul>
         <li>The folder picker, the log file, the trust question (skipped for a folder the app made, §5.8 f), the snapshot running, and native notifications.</li>
+        <li>The "Preparing the snapshot" card (<code>StateMissing.tsx:49</code>), where the app stays when no uv or Python means no snapshot can be made (§6 S5).</li>
+        <li>What the split changes outside step 3's screens: the Help link, the About panel's website, and a renamed app (§8 Q14, open). Names are drawn as today.</li>
         <li>The root agent's report after the run (§2 row 11) and the Code tab's Changes (§2 row 12).</li>
         <li>Windows and Linux menus: the File menu is drawn as on macOS.</li>
         <li>The other project views, which step 3 does not change; Home's "Workspace status" section; the Papers control in a conversation's header.</li>
@@ -571,51 +550,55 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   /* =================================================================
-     §6's proposed words, copied as written (os-build/step3-split-and-git.md §6).
-     <reason> and <path> are filled in below. In the S5 lines {h} stands for
-     §6's c4d4a85 and {n} for its 9f1e2b0.
+     §6's proposed words, copied as written (os-build/step3-split-and-git.md §6,
+     revised 2026-11-26). <reason> and <path> are filled in below. In the S5 lines
+     {h} stands for §6's c4d4a85 and {n} for its 9f1e2b0; §6's "<n> changed" and
+     ", <m> new" are filled with sample counts.
      ================================================================= */
   const W = {
     s1Title: "Start with a workspace",
-    s1Sentence: "Research OS has no model of its own: it starts your own Claude Code or Codex, on your own plan",
+    s1Sentence: "Research OS has no model of its own: it starts your own Claude Code or Codex, on your own plan.",
     newBtn: "New workspace…",
     openBtn: "Open a workspace…",
     checkAgain: "Check again",
-    noGit: "Git is needed for projects and runs. Install it, then Check again",
+    noGit: "Git is needed for projects and runs. Install it, then Check again.",
+    agentLater: "Checked once a workspace is open.",
+    newHeading: "New workspace",
+    folderLabel: "Folder",
     choose: "Choose…",
     example: "Add the example project nanochat_cpu (a three-minute training run; it downloads about 0.4 GB when you run it)",
+    listLabel: "Will be written",
     list: "agent scripts, five skills, empty memory, ideas, inbox and paper wiki, the project template, and the example as its own Git repository",
-    gitLine: "The workspace and the example are Git repositories. Nothing is committed under your name",
+    listNoExample: "agent scripts, five skills, empty memory, ideas, inbox and paper wiki, and the project template",
+    gitLine: "The workspace and the example are Git repositories. Nothing is committed under your name.",
+    gitLineNoExample: "The workspace is a Git repository. Nothing is committed under your name.",
     create: "Create",
     cancel: "Cancel",
     prog: ["Copying files…", "Making the example's repository…", "Reading the workspace…"],
     showLog: "Show log",
-    notEmpty: "This folder is not empty. Choose an empty or new folder",
-    noIdent: "Your Git name and email are not set; you will need them to commit your own work (see Settings)",
-    noWrite: "Research OS cannot write to this folder: <reason>",
-    nested: "This folder is inside the Git repository at <path>; the new workspace will be a repository inside it",
+    notEmpty: "This folder is not empty. Choose an empty or new folder.",
+    noIdent: "Your Git name and email are not set; you will need them to commit your own work (see Git name and email below).",
+    noWrite: "Research OS cannot write to this folder: <reason>.",
+    nested: "This folder is inside the Git repository at <path>; the new workspace will be a repository inside it.",
     menuNew: "New Workspace…",
+    menuNewKey: "⌘N",
     menuOpen: { A: "Open Research OS Folder…", B: "Open Workspace…" },
     gitRow: "needed for projects and runs; the Code tab's Changes needs 2.45 or later",
     identRow: "Git name and email",
     identOk: "ok", identNotSet: "not set", identNeedsGit: "needs Git",
-    identCmds: ['git config --global user.name "…"', 'git config --global user.email "…"'],
+    identCmds: ['git config --global user.name "Your Name"', 'git config --global user.email "you@example.com"'],
+    identCopy: "Copy the two lines",
     s5: {
       clean: "on {h} · clean",
       dirty: "on {h} · 3 changed, 1 new",
       nocommit: "no commit yet",
       norepo: "not a Git repository",
       nogit: "Git not found",
-      endDirty: "ended on {h} · 7 changed, not committed",
+      end: "ended on {h} · 3 changed, not committed",            // <n> changed (a sample count)
+      endWithNew: "ended on {h} · 7 changed, 1 new, not committed", // <n> changed, <m> new
       endNew: "ended on {n} (new commit)"
     },
     s6: "No projects yet. Ask the root agent to start one, for example: Start a project called …"
-  };
-  /* Derived by the mockup, not in §6: the S2 words with the example unticked, and the run's end count. */
-  const D = {
-    list: "agent scripts, five skills, empty memory, ideas, inbox and paper wiki, and the project template",
-    gitLine: "The workspace is a Git repository. Nothing is committed under your name",
-    endPath: "ended on {h} · 3 changed, not committed"
   };
   /* Today's words, from the built app (doctor.ts, index.ts, agentCopy.ts, AgentChat.tsx). */
   const T = {
@@ -663,15 +646,15 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
     nopy: { t: 'No uv or Python', on: ['S1', 'S2', 'S4', 'S5'], also: 'S5: no turn starts; the existing error shows when you send.' },
     notempty: { t: 'Folder not empty', on: ['S2'], also: 'S1 and S5: not applicable.' },
     noident: { t: 'No Git name and email', on: ['S2', 'S4'], also: 'S1 and S5: nothing changes.' },
-    nowrite: { t: 'Cannot write there', on: ['S2'], also: 'Drawn as a failure of Create.' },
+    nowrite: { t: 'Cannot write there', on: ['S2'], also: 'Found when Create runs.' },
     nested: { t: 'Folder inside another Git repository', on: ['S2'], also: 'A warning; Create stays enabled.' },
     oldtrace: { t: 'A trace from before step 3', on: ['S5'], also: 'The turn shows no commit line.' },
     badsaved: { t: 'Saved folder unusable', on: ['S1'], also: "§6 S1's \"problem with the saved folder\"; not one of the brief's seven." }
   };
   /* Every value §6 S5 gives a turn line; `clean` is the tester's path. */
   const CASES = {
-    clean: { t: 'clean → 3 changed (path)', start: W.s5.clean, end: D.endPath },
-    dirty: { t: '3 changed, 1 new → 7', start: W.s5.dirty, end: W.s5.endDirty },
+    clean: { t: 'clean → 3 changed (path)', start: W.s5.clean, end: W.s5.end },
+    dirty: { t: '3 changed, 1 new → 7, 1 new', start: W.s5.dirty, end: W.s5.endWithNew },
     committed: { t: 'agent committed', start: W.s5.clean, end: W.s5.endNew },
     nocommit: { t: 'no commit yet', start: W.s5.nocommit, end: W.s5.nocommit },
     norepo: { t: 'not a Git repository', start: W.s5.norepo, end: W.s5.norepo },
@@ -746,20 +729,20 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
   /* =================================================================
      S4: the prerequisite tiles, as DesktopStatus.tsx draws them
      ================================================================= */
-  const WORD = { ok: 'ok', warn: 'check', missing: 'missing', error: 'error', notset: W.identNotSet, needsgit: W.identNeedsGit };
-  const TONE = { ok: 'ok', warn: 'warn', missing: 'signal', error: 'signal', notset: 'warn', needsgit: 'mute' };
+  /* the chip's word and colour for each state; 'later' is §6's neutral state before any workspace is open */
+  const WORD = { ok: 'ok', warn: 'check', missing: 'missing', error: 'error', notset: W.identNotSet, needsgit: W.identNeedsGit, later: W.agentLater };
+  const TONE = { ok: 'ok', warn: 'warn', missing: 'signal', error: 'signal', notset: 'warn', needsgit: 'mute', later: 'mute' };
 
-  function checks(where) {                // where: 'welcome' (no folder open) or 'settings'
+  function checks(where) {                // where: 'welcome' (no workspace open: S1, S2) or 'settings' (S4, and S2 from the menu)
     const st = S.state, open = where === 'settings';
     const rows = [];
-    rows.push(open
-      ? { id: 'workspace', label: 'Research OS folder', req: true, state: 'ok', det: FOLDER }
-      : { id: 'workspace', label: 'Research OS folder', req: true, state: 'missing', det: st === 'badsaved' ? BADSAVED : 'No folder chosen yet.' });
+    // §6 S1: before any workspace is open there is no Folder row
+    if (open) rows.push({ id: 'workspace', label: 'Research OS folder', req: true, state: 'ok', det: FOLDER });
     rows.push(st === 'nopy'
       ? { id: 'uv', label: 'uv', req: false, state: 'warn', det: T.uvMissing, help: 'uv' }
       : { id: 'uv', label: 'uv', req: false, state: 'ok', ver: '0.9.7', det: '/usr/local/bin/uv' });
-    rows.push(st === 'nopy'
-      ? { id: 'python', label: 'Python ≥ 3.11', req: true, state: 'missing', det: T.pyMissing, help: 'python' }
+    rows.push(st === 'nopy'    // §6: the link goes to uv's installation page, not python.org
+      ? { id: 'python', label: 'Python ≥ 3.11', req: true, state: 'missing', det: T.pyMissing, help: 'uv', changed: true }
       : { id: 'python', label: 'Python ≥ 3.11', req: true, state: 'ok', ver: '3.12.11', det: 'uv with Python 3.12 (.python-version)' });
     rows.push(st === 'nogit'
       ? { id: 'git', label: 'Git', req: true, state: 'missing', det: W.gitRow, sans: true, help: 'git', changed: true }
@@ -769,21 +752,29 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
       : st === 'noident'
         ? { id: 'ident', label: W.identRow, req: false, state: 'notset', cmds: true, changed: true }
         : { id: 'ident', label: W.identRow, req: false, state: 'ok', det: 'Your Name\nyou@example.com', changed: true });
-    // doctor.ts:108-111: with no folder open (or no Python) the agents cannot be checked
-    const agentsKnown = open && st !== 'nopy';
-    rows.push(agentsKnown
-      ? { id: 'claude', label: 'Claude Code', req: false, state: 'ok', ver: '2.1.4', det: 'logged in: claude.ai, pro' }
-      : { id: 'claude', label: 'Claude Code', req: false, state: 'error', det: T.noAgentCheck, help: 'claude' });
-    rows.push(agentsKnown
-      ? { id: 'codex', label: 'Codex', req: false, state: 'missing', det: 'not found', help: 'codex' }
-      : { id: 'codex', label: 'Codex', req: false, state: 'error', det: T.noAgentCheck, help: 'codex' });
+    // The agents need a workspace to be checked (doctor.ts:108-111). §6 S1: before one is open they read
+    // "Checked once a workspace is open." in the neutral state; with no Python in an open one, today's "error".
+    if (!open) {
+      rows.push({ id: 'claude', label: 'Claude Code', req: false, state: 'later', help: 'claude', changed: true });
+      rows.push({ id: 'codex', label: 'Codex', req: false, state: 'later', help: 'codex', changed: true });
+    } else if (st === 'nopy') {
+      rows.push({ id: 'claude', label: 'Claude Code', req: false, state: 'error', det: T.noAgentCheck, help: 'claude' });
+      rows.push({ id: 'codex', label: 'Codex', req: false, state: 'error', det: T.noAgentCheck, help: 'codex' });
+    } else {
+      rows.push({ id: 'claude', label: 'Claude Code', req: false, state: 'ok', ver: '2.1.4', det: 'logged in: claude.ai, pro' });
+      rows.push({ id: 'codex', label: 'Codex', req: false, state: 'missing', det: 'not found', help: 'codex' });
+    }
     return rows;
   }
   function gridHtml(where) {
     const rows = checks(where);
     const by = id => rows.find(r => r.id === id);
-    // Today: the folder, Python, and one agent. With Git required, Git too (a departure, see Notes).
-    const ready = by('workspace').state === 'ok' && by('python').state === 'ok' && by('git').state === 'ok' && (by('claude').state === 'ok' || by('codex').state === 'ok');
+    const ok = id => by(id).state === 'ok';
+    // §6 S4: with a workspace open, "ready" needs the folder, Python, Git, and one agent (today's rule plus Git).
+    // §6 S1: before one is open, it counts only uv or Python, and Git.
+    const ready = where === 'settings'
+      ? ok('workspace') && ok('python') && ok('git') && (ok('claude') || ok('codex'))
+      : (ok('uv') || ok('python')) && ok('git');
     let h = '<section aria-label="Prerequisites"><div class="pq-head"><h3 class="label" style="margin:0">Prerequisites</h3>' +
       '<span class="chip dot ' + (ready ? 'ok' : 'warn') + '">' + (ready ? 'ready' : 'not ready') + '</span>' +
       '<button type="button" class="btn sm" data-act="recheck"' + k('recheck-' + where) + dis(S.checking) + '>' + (S.checking ? 'checking…' : esc(W.checkAgain)) + '</button></div><ul class="pq">';
@@ -792,12 +783,12 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
       h += '<li class="card-flat tile' + (r.changed ? ' changed' : '') + '" data-check="' + r.id + '"><details data-pq="' + r.id + '"' + (isOpen ? ' open' : '') + '>' +
         '<summary' + k('pq-' + where + '-' + r.id) + '><svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2.5 7.5 6 4 9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
         '<span class="nm">' + esc(r.label) + '</span>' + (r.req ? '' : '<span class="opt">optional</span>') +
-        '<span class="right">' + (r.ver ? '<span class="ver">' + esc(r.ver) + '</span>' : '') +
+        '<span class="right' + (r.state === 'later' ? ' later' : '') + '">' + (r.ver ? '<span class="ver">' + esc(r.ver) + '</span>' : '') +
         '<span class="chip dot ' + TONE[r.state] + '">' + esc(WORD[r.state]) + '</span></span></summary>';
       if (r.cmds) {
         h += '<pre class="cmd-block">' + esc(W.identCmds.join('\n')) + '</pre>' +
-          '<button type="button" class="btn sm" style="margin-top:6px" data-act="copyIdent"' + k('copyIdent-' + where) + '>Copy the two lines</button>';
-      } else {
+          '<button type="button" class="btn sm" style="margin-top:6px" data-act="copyIdent"' + k('copyIdent-' + where) + '>' + esc(W.identCopy) + '</button>';
+      } else if (r.det) {
         h += '<p class="det' + (r.sans ? ' sans' : '') + '">' + esc(r.det) + '</p>';
         if (r.path) h += '<p class="det">' + esc(r.path) + '</p>';
       }
@@ -813,7 +804,7 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
      ================================================================= */
   const isBlockedCreate = () => S.state === 'nopy' || S.state === 'nogit' || (S.state === 'notempty' && S.folder.trim() !== '');
   function blockHtml(where) {
-    if (S.state === 'nopy') return '<span class="why">' + esc(T.pyMissing) + linkBtn('python', where) + '</span>';
+    if (S.state === 'nopy') return '<span class="why">' + esc(T.pyMissing) + linkBtn('uv', where) + '</span>';
     if (S.state === 'nogit') return '<span class="why">' + esc(W.noGit) + linkBtn('git', where) + '</span>';
     return '';
   }
@@ -844,17 +835,17 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
     const creating = S.creating >= 0;
     const canCreate = S.folder.trim() !== '' && !isBlockedCreate() && !creating;
     let h = ctx === 'inline'
-      ? '<h2 class="wsub">New workspace</h2>'
-      : '<h1 class="wtitle" tabindex="-1" data-focus' + (ctx === 'dialog' ? ' id="dlgTitle"' : '') + '>New workspace</h1>';
-    h += '<div class="s2-field"><label class="label" for="folder-' + ctx + '">Folder</label>' +
+      ? '<h2 class="wsub">' + esc(W.newHeading) + '</h2>'
+      : '<h1 class="wtitle" tabindex="-1" data-focus' + (ctx === 'dialog' ? ' id="dlgTitle"' : '') + '>' + esc(W.newHeading) + '</h1>';
+    h += '<div class="s2-field"><label class="label" for="folder-' + ctx + '">' + esc(W.folderLabel) + '</label>' +
       '<div class="fld"><input id="folder-' + ctx + '" class="inp" data-folder type="text" spellcheck="false" autocomplete="off" value="' + esc(S.folder) + '"' + k('folder-' + ctx) + dis(creating) + '>' +
       '<button type="button" class="btn" data-act="choose"' + k('choose-' + ctx) + dis(creating) + '>' + esc(W.choose) + '</button></div>' +
       '<div data-folder-msg>' + folderMsgHtml() + '</div></div>';
     h += '<label class="check"><input type="checkbox" data-chk="example"' + k('example-' + ctx) + (S.example ? ' checked' : '') + dis(creating) + '><span>' + esc(W.example) + '</span></label>';
-    h += '<div class="s2-list"><div class="label">Will be written</div><p>' + esc(S.example ? W.list : D.list) + '</p></div>';
+    h += '<div class="s2-list"><div class="label">' + esc(W.listLabel) + '</div><p>' + esc(S.example ? W.list : W.listNoExample) + '</p></div>';
     h += S.state === 'noident'
       ? '<p class="s2-line warn-t">' + esc(W.noIdent) + '</p>'
-      : '<p class="s2-line">' + esc(S.example ? W.gitLine : D.gitLine) + '</p>';
+      : '<p class="s2-line">' + esc(S.example ? W.gitLine : W.gitLineNoExample) + '</p>';
     if (creating) h += '<p class="progress" role="status" tabindex="-1" id="prog-' + ctx + '"><span class="spin" aria-hidden="true"></span>' + esc(S.progLines[S.creating]) + '</p>';
     if (S.createError) h += '<div class="failbox" role="alert" tabindex="-1" id="fail-' + ctx + '"><span>' + esc(W.noWrite.replace('<reason>', REASON)) + '</span>' +
       '<button type="button" class="btn sm" data-act="showLog"' + k('showLog-' + ctx) + '>' + esc(W.showLog) + '</button></div>';
@@ -872,7 +863,7 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
         '<p class="prose">' + esc(W.s1Sentence) + '</p>' + problemHtml() +
         s2Html('inline') +
         '<div class="or-line"><button type="button" class="btn" data-act="openWs"' + k('bopen') + dis(nopy) + '>' + esc(W.openBtn) + '</button>' +
-          (nopy ? '<span class="why">' + esc(T.pyMissing) + linkBtn('python', 'bopen') + '</span>' : '') + '</div>' +
+          (nopy ? '<span class="why">' + esc(T.pyMissing) + linkBtn('uv', 'bopen') + '</span>' : '') + '</div>' +
         '<div class="pq-wrap">' + gridHtml('welcome') + '</div>';
     } else if (S.screen === 'new') {
       inner = s2Html('page') + '<div class="pq-wrap">' + gridHtml('welcome') + '</div>';
@@ -1104,7 +1095,7 @@ h1:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radiu
     return '<div class="ovl-catch" data-act="menuClose"></div>' +
       '<div class="menubar" aria-hidden="true"><span class="app-n">Research OS</span><span class="on">File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span></div>' +
       '<div class="menu-dd" role="menu" aria-label="File">' +
-        '<button type="button" class="mi" role="menuitem" data-act="menuNew"' + k('miNew') + '><span>' + esc(W.menuNew) + '</span><span class="acc"></span></button>' +
+        '<button type="button" class="mi" role="menuitem" data-act="menuNew"' + k('miNew') + '><span>' + esc(W.menuNew) + '</span><span class="acc">' + esc(W.menuNewKey) + '</span></button>' +
         '<button type="button" class="mi" role="menuitem" data-act="menuOpen"' + k('miOpen') + '><span>' + esc(W.menuOpen[S.s3]) + '</span><span class="acc">⌘O</span></button>' +
         '<button type="button" class="mi" role="menuitem" data-hint="Open Recent lists ~/Research/my-workspace (§5.8 f). Not drawn further."' + k('miRecent') + '><span>Open Recent</span><span class="acc">▸</span></button>' +
         '<div class="msep" role="separator"></div>' +
