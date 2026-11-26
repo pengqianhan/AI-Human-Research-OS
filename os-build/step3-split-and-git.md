@@ -121,13 +121,13 @@ must build (**build**) or change (**change**).
 
    | Path | Origin |
    |---|---|
-   | `.git/` | `git init`, no commit (§8 Q5) |
+   | `.git/` | `git init`, no commit (§8 Q5, decided) |
    | `.gitignore` | stub: `.env`; `os-harness/sessions/`; `os-ui/frontend/public/state.json*`; `.venv/`, `__pycache__/`, `.DS_Store`; then one line per registered project, `/projects-folder/<Name>/`, written by `adopt` or `new` (§5.6) |
    | `.python-version`, `.env.example` | copy |
    | `AGENTS.md` | stub: the workspace edition (marker, `os-ui/client/src/main/workspace.ts:5`) |
    | `.claude/skills/<5>`, `.agents/skills/<5>` | links into the hub copy below, one per skill (§5.8 d on Windows) |
    | `os-harness/harness.py`, `core.py`, `adapter_claude.py`, `adapter_codex.py`, `README.md`, `index.md`, `.gitignore` | copy (marker `os-harness/harness.py`) |
-   | `os-ui/generator/generate.py`, `README.md`, `pyproject.toml`, `uv.lock` | copy (marker `os-ui/generator/generate.py`) |
+   | `os-ui/generator/generate.py`, `README.md`, `pyproject.toml`, `uv.lock`, `.python-version` | copy (marker `os-ui/generator/generate.py`) |
    | `os-ui/frontend/public/state.json` | written by the generator on first open (`os-ui/generator/generate.py:1093-1108`), ignored |
    | `memory/index.md`, `memory/MEMORY.md`, `memory/paper-sources.json` | stubs: empty Research Policy (human-led defaults), Active Projects, and Key Decisions tables; paper-search's default switches. With the example, `adopt` then writes its Active Projects row |
    | `ideas/index.md`, `ideas/log.md`, `inbox/index.md` | stubs, empty |
@@ -140,7 +140,7 @@ must build (**build**) or change (**change**).
    | `os-harness/sessions/` | created by the first turn (`core.py:323-324`), ignored |
 
 3. **Where `nanochat_cpu` comes from.** From the installer, as one Git bundle file
-   holding one commit of the example (§5.3, §8 Q1).
+   holding one commit of the example (§5.3; §8 Q1, decided: inside the app).
 4. **What runs dispatch, and from where.** The root agent, in a harness turn whose
    working folder is the workspace root, runs `os-harness/harness.py` from the
    workspace's own copy (rows 8-9). The same command works in a terminal with no app
@@ -164,8 +164,8 @@ Each item is neither on the tester's path nor required by a Decisions row.
   `research-project-manager new`.
 - **A branch per experiment and a worktree per conversation.** The Git row puts them
   in its second step, "only when parallel runs are needed" (`HANDOFF.md:790`).
-- **Commits made automatically before or after runs.** §5.4 default a; it is your
-  decision (§8 Q3).
+- **Commits made automatically before or after runs.** Decided: the app does not
+  commit for the user (§8 Q3; §5.4 default a).
 - **Remotes, pushing, or any GitHub repository for projects.** No row asks for them,
   and they need network and accounts.
 - **Run records written into the project (`Code/runs/`).** The session trace already
@@ -477,7 +477,8 @@ Windows or Linux (§9).
 ## 4. The inventory
 
 Redone for two repositories (revision of 2026-11-26). Counts are tracked files at
-`b5fa10f` (`git ls-files`: 1,890 in all, 20 of them symbolic links and 10 of them
+`b5fa10f` (`git ls-files`: 1,890 in all, 69 of them symbolic links (the 40 install links and 29 inside
+`claude-science-skills/`) and 10 of them
 links to other repositories, mode 160000). The product repository keeps today's
 paths for everything it receives, so its tests, manifests, and internal links stay
 valid at the import (§5.7).
@@ -552,7 +553,8 @@ product side, 3 on both); S 7. In words: the product repository receives the
 252 M files, the 20 records, 13 development files, 3 shared development files,
 and the 65 B files: 353 of today's files. It also gets a copy of the example's 73
 files and its idea file, its own editions of the 7 S files, and new files (the
-template of PR 6 and the transitional workspace of §7 step R3). This repository keeps 1,530 files as they are,
+template of PR 6 and the transitional workspace of §7 step R3). This repository keeps 1,530 files as they are (73 of them, your `nanochat_cpu`,
+stop being tracked at W10 and stay on disk as its own repository),
 the 65 B files as its workspace copies, its editions of the 7 S files, and its
 copies of the 3 shared development files: 1,605 files.
 
@@ -588,7 +590,7 @@ anyway: a copy of a checkout holds ten empty folders.
 **What the installer bundles after step 3 (proposed).** Unchanged by the split.
 Everything `out/` holds today, plus `resources/workspace-template/`:
 
-- the T copies and stubs of §2 answer 2, built from the product repository;
+- the copies and stubs of §2 answer 2, built from the product repository;
 - `new_workspace.py`;
 - `examples/nanochat_cpu.bundle`.
 
@@ -917,8 +919,8 @@ before the agent starts, and in its `done` record after the agent ends.
 
 **Default a.** Nobody commits automatically. On Accept, the root agent offers to
 commit in the project's repository (`git -C projects-folder/<P> commit`), and you
-decide, as today (`SKILL.md:95-96`). Committing on the user's behalf is yours to
-decide: §8 Q3.
+decide, as today (`SKILL.md:95-96`). Decided on 2026-11-26: the app does not commit
+on the user's behalf (§8 Q3).
 
 **No Git identity.** Option a needs none, and neither does the bundle clone. An
 Accept commit is another matter: on macOS, Git does not refuse it but writes the
@@ -937,10 +939,10 @@ The inventory and the check are in §4. Three findings shape it:
 - **It cannot be only the three markers.** Handlers run hub scripts (§3). The root
   agent dispatches only through the skill links. The generator fails without a hub
   skill and the installer (scratch run).
-- **Every I-class file has a T stub where a program needs the shape.**
+- **Every workspace file a program needs has a stub with its shape.**
   `memory/MEMORY.md` is the case: the generator and the project manager read and
   write its tables. The stub is a new file with empty tables, not a cleaned copy of
-  yours. So the check can compare by content.
+  yours. So the import check can compare by content (§4).
 - **The empty workspace must pass the generator** (§5.8 a).
 
 ### 5.6 Which repository the Code view reads
@@ -1098,8 +1100,10 @@ in this repository; the product repository is private until you say otherwise
   tool and generate one.
 - **`verify.sh`.** The product edition: the brand-copies check, and the project
   contract and generator on the transitional workspace (§7), then on workspaces
-  built by `new_workspace.py`. No paper-wiki validation of your notes and no
-  installed-skills check: the product repository has neither.
+  built by `new_workspace.py`. From PR 9 it has no paper-wiki
+  validation and no installed-skills check, because the product repository then has
+  neither; until PR 9 the transitional workspace's stub wiki and its five links are
+  checked as this repository's are today.
 - **The five skills** at their present paths, `research-skills-hub/open-paper-skills/<name>/`,
   so the template's manifest, `ci.yml`'s `discover` lines, and `desktop.yml`'s path
   filter keep their paths. The collection's `index.md` there lists only the five.
@@ -1601,7 +1605,7 @@ mockup.
 | 8 | product | S1, S2, S3, S4, S6 after the mockup; the trust question skipped for a folder the app made | End-to-end cases: S2 makes a workspace with the example, Home shows the card, a project turn shows S5's line; each S2 failure (no Git, folder not empty) | Checklist lines for New workspace, its failures, and the Settings rows | no |
 | 9 | product | End-to-end and packaged cases build their workspace with `new_workspace.py`; the smoke pattern names real cases; the transitional workspace leaves the root and the example moves to `os-ui/workspace-template/examples/` (§5.3); the rule that the product's source is not a workspace (§5.7, option A) | The three full rows pass; the packaged rows run the cases they name; a development run of a product checkout shows S1 | none | **Word**: changes what CI runs and moves the example |
 | W9 | here | **Second refresh**, with `new_workspace.py --refresh` from a product checkout at PR 9 | `./verify.sh` passes; the pull request names the product commit | none | **Word** |
-| W10 | here | This workspace's `nanochat_cpu`: `git rm --cached -r projects-folder/nanochat_cpu`; `adopt nanochat_cpu`, which writes its ignore line; a runbook for `adopt` on each of your machines | `./verify.sh` passes in CI with `--absent-ok`; on your machine, after `adopt` | You run the runbook, open the app on this repository, and see `nanochat_cpu`'s Code tab list your first commit | **Word**: untracks tracked files |
+| W10 | here | This workspace's `nanochat_cpu`: `git rm --cached -r projects-folder/nanochat_cpu`; `adopt nanochat_cpu`, which writes its ignore line; a runbook for `adopt` on each of your machines | This repository's whole `checks` job passes on a checkout without the folder: `./verify.sh` with `--absent-ok`, and also the generator step and the frozen frontend and endpoint tests, which still run here until W-R. Whether those two pass with a portfolio row whose folder is absent was not established; if not, W10 waits for W-R. On your machine, `./verify.sh` passes after `adopt` | You run the runbook, open the app on this repository, and see `nanochat_cpu`'s Code tab list your first commit | **Word**: untracks tracked files |
 | 11 | product | Tester sheet; client README "What you need" and checklist; `DESIGN.md` §0, §4, §8 for Git required and the new write; the product's `HANDOFF.md` by the directing agent | Links resolve | You read the tester sheet | no |
 | W-R | here | Product files leave this repository: the M, R, and product-side Dv files of §4 (285); this repository's editions of `README.md`, `verify.sh`, `ci.yml`, `.gitignore`, `.gitattributes`, and `FILETREE.md`; the links of §5.7 rewritten; `pages.yml` as you answer §8 Q16 | `./verify.sh` and this repository's CI pass; the app opens this workspace from an installer built in the product repository | You open this workspace in the app built from SuperResearch OS | **Word**: deletes tracked files here (their history stays) |
 
@@ -2008,6 +2012,8 @@ Their answer to the six questions, verbatim: 「1 接受默认，你可以参考
   - the mockup beyond its word table, its notes, and the strings it draws;
   - every `HANDOFF.md` row outside the Active Work steps, the Next session list, the
     Decisions groups' headings, and the rows cited here.
-- **Revision scope.** The revision of 2026-11-26 re-checked the `path:line`
-  references it added or kept in the sections it rewrote, against `b5fa10f`; files
-  other than this design are unchanged since `6a5ab1b`.
+- **Revision scope.** The revision of 2026-11-26 checked with a script that every
+  `path:line` in this file names a file of this repository and a line within it at
+  `b5fa10f` (OpenResearch's paths excluded; they are at `e9b80a6`), and read the
+  lines behind the references it added. References kept from the first version
+  were not re-read one by one; their files are unchanged since `6a5ab1b`.
