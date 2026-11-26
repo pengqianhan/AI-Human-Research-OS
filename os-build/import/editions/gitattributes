@@ -1,0 +1,7 @@
+# The Paper view's vendored PDF.js, byte for byte as published on npm: its
+# README records each file's SHA-256 and vendor.test.ts checks them, so no
+# checkout may convert line endings (core.autocrlf on Windows would), and the
+# minified files stay out of diffs.
+os-ui/frontend/plugins/paper-view/site/vendor/pdf.min.mjs binary
+os-ui/frontend/plugins/paper-view/site/vendor/pdf.worker.min.mjs binary
+os-ui/frontend/plugins/paper-view/site/vendor/LICENSE binary
