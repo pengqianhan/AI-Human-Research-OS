@@ -33,6 +33,25 @@ the harness is [os-harness](../os-harness/README.md).
 >
 > **Revised:** every section listed above, §9 included.
 
+> **Superseded in part on 2026-11-27.** The Human Owner then settled what the
+> product repository takes and when; the record, with their words, is
+> [HANDOFF.md](../HANDOFF.md) Decisions, row "Product repository: contents and
+> timing". Where this design differs, that row holds:
+>
+> - **§4, §5.7:** the product repository takes only what building, testing,
+>   running, and understanding the app needs. The classes R (development
+>   record) and most of Dv stay in this repository; the product repository has
+>   no `HANDOFF.md`.
+> - **§7:** step 3 is built here first and imported after. "The other order"
+>   at the end of §7 is the order; R3's transitional workspace is not part of
+>   the import, and W5 and W9 are not needed.
+> - **§8:** Q13 (import early) is reversed; the app is renamed "SuperResearch
+>   OS" and its id follows; the repository becomes public at the import.
+>
+> The rest stands: the tester's path (§2), the facts (§3), the workspace and
+> Git design (§5.1 to §5.6, §5.8), and the screens (§6). The sections above
+> are not rewritten; read them with this note.
+
 ## 1. Outcome
 
 **What the tester does.** You send one person an installer from a CI run of the
