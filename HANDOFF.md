@@ -160,7 +160,22 @@ below). GOAL.md §3's table is left as its 2026-07-04 snapshot and says so.
       five at n against one reading at 4n); why macos-x64's two Assets
       cases went red is not established, so the next red there is read
       by its rounds before any choice between smaller sizes and skipping
-      the timed cases on that runner, which is the Human Owner's. 2.4, the idea files, is on branch
+      the timed cases on that runner, which is the Human Owner's. A
+      second kind of red, also on unchanged code: on #59 the client's
+      end-to-end case "no Content-Security-Policy violations in the app
+      or its plugins' frames" failed once on macos-arm64 and passed on a
+      rerun. The line it printed carries the hash of the suite's own
+      inline-script probe, so it was a probe's report that arrived after
+      the probe's fixed 300 ms wait; which of the six probes, and why it
+      was late, is not established. Since 2026-11-26 (branch
+      `e2e-csp-probe`, asked for by the Human Owner, 「修 CSP 用例」) the
+      final check knows those reports by that hash and the six waits are
+      gone; the suite is 83 cases. One wait of the same shape stays, the
+      Paper view's WebAssembly probe: on macOS arm64 its trims removed
+      nothing in one scratch run, other platforms were not checked. The
+      full end-to-end suite runs on three CI jobs (linux-x64,
+      macos-arm64, windows-x64); the other three run three named cases
+      against the packaged app. 2.4, the idea files, is on branch
       `step2-idea-graph-files`, which starts from `step2-idea-view` (a
       draft pull request until #54 is merged): `nanochat_cpu`'s
       `idea_graph.md`, written from the project's files with each row's
