@@ -93,28 +93,30 @@ the export itself.
 
 ## The import condition
 
-The import may happen, on the Human Owner's word, when every command below
-exits 0 at the commit to import. Run it from the repository root with a
-throwaway `HOME` (and `USERPROFILE`), `CODEX_HOME` and `CLAUDE_CONFIG_DIR`
-unset; `<out>` is an empty folder outside the repository and `<patterns>` the
-file above.
+The import may happen, on the Human Owner's word, when the commands below run
+to the end at the commit to import: `set -e` stops them at the first command
+that fails. Run them in bash from the repository root with a throwaway `HOME`
+(and `USERPROFILE`), `CODEX_HOME` and `CLAUDE_CONFIG_DIR` unset, and with `OUT`
+naming an empty folder outside the repository and `PATTERNS` the file above.
 
 ```bash
 set -e
+out=${OUT:?an empty folder outside the repository}
+patterns=${PATTERNS:?the patterns file, outside the repository}
 py() { uv run --no-project --python 3.12 -- python "$@"; }
-out=<out>
 py os-build/import/export.py --dest "$out"
-py os-build/import/import_check.py --export "$out" --patterns <patterns>
+py os-build/import/import_check.py --export "$out" --patterns "$patterns"
 (cd "$out" && ./verify.sh)
-(cd "$out" && hub=research-skills-hub/open-paper-skills &&
-  for s in paper-wiki-manager research-project-manager paper-search research-skill-installer; do
-    py -m unittest discover -s "$hub/$s/scripts" -p 'test_*.py'
-  done && py -m unittest discover -s os-harness/tests)
+(cd "$out" && for s in paper-wiki-manager research-project-manager paper-search research-skill-installer; do
+  py -m unittest discover -s "research-skills-hub/open-paper-skills/$s/scripts" -p 'test_*.py' || exit 1
+done)
+(cd "$out" && py -m unittest discover -s os-harness/tests)
 (cd "$out" && py os-ui/generator/generate.py)
 (cd "$out/os-ui/frontend" && npm ci && npm run typecheck && npm run build && npm test)
 (cd "$out/os-ui/client" && npm ci && npx tsc --noEmit -p . && npm test && npm run build)
 (cd "$out/os-ui/client" && npm run test:e2e)
-py os-build/import/import_check.py --export "$out" --patterns <patterns>
+py os-build/import/import_check.py --export "$out" --patterns "$patterns"
+echo "import condition: met"
 ```
 
 These are the steps of the product's `ci.yml` and the client's own, run on
