@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SuperResearch OS · Step 3 mockup · Renaming the app</title>
+<link rel="icon" href="data:,"><!-- an empty inline icon, so nothing asks for /favicon.ico -->
+<!--
+  Mockup for renaming the desktop app to "SuperResearch OS" (HANDOFF.md Decisions, row
+  "Product repository: contents and timing", 2026-11-27), for the Human Owner to choose from
+  before any code changes. One scrolling page with no script: every alternative is drawn side by side.
+  Look: os-ui/mockups/step1/c-document.html (mockup C); the mockup-only chrome and the form of the
+  alternatives follow os-ui/mockups/step3/workspace.html and step2/skills.html.
+  The mark, the lockups, and the app icon are copied from docs/brand/*.svg (render.py exports them).
+  The app's words are read from os-ui/client/src/main/index.ts and menu.ts,
+  os-ui/frontend/src/shell/Sidebar.tsx, pages/SettingsPage.tsx, components/StateMissing.tsx, and
+  os-ui/client/electron-builder.yml and package.json; part 5 lists each source.
+  Open it from disk: no server, no network, no external file, font, or script.
+-->
+<style>
+/* ================= tokens: mockup C's (os-ui/frontend/src/index.css), the brand's (docs/brand/README.md) ================= */
+:root{
+  --bg:#f3eee5; --side:#ece5d8; --paper:#faf7f1; --card:#fffdf9; --ink:#1c1a17; --ink2:#4a453d;
+  --muted:#6f675b; --faint:#b0a796; --line:rgba(70,55,30,.10); --line2:rgba(70,55,30,.18); --hover:rgba(60,45,20,.06);
+  --accent:#1e5a56; --accent-ink:#164542; --accent-soft:#dcebe8; --accent-tint:#eef4f2; --on-accent:#f8f4ec;
+  --warn:#86581a; --warn-soft:#f3e6cc; --signal:#a4462c; --signal-soft:#f6e2d9; --danger:#a33a2f;
+  --sh1:0 1px 2px rgba(60,44,20,.07),0 1px 1px rgba(60,44,20,.04);
+  --sh2:0 1px 3px rgba(60,44,20,.06),0 10px 26px rgba(60,44,20,.07);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  /* mockup-only chrome (as in os-ui/mockups/step2/ and step3/workspace.html) */
+  --mk-ink:#5b4416; --mk-line:#b8955a; --mk-bg:#f6edd6;
+  /* the brand (docs/brand/README.md, Colors and type) */
+  --b-ink:#17262E; --b-paper:#F2F4F3; --b-signal:#E8590C; --b-soft:#52646E; --b-mist:#9FB0B8;
+  /* GitHub's README pages, where the lockup is shown */
+  --gh-light:#ffffff; --gh-dark:#0d1117; --gh-ink:#1f2328; --gh-ink-d:#e6edf3; --gh-line:#d1d9e0; --gh-line-d:#3d444d;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+code,.mono{font-family:var(--mono);font-size:.92em}
+a{color:var(--accent)}
+svg.lk{display:block;width:100%;height:auto}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ================= MOCKUP-ONLY CHROME (not part of the app) ================= */
+.mock{background:repeating-linear-gradient(135deg,#efe2c2 0 9px,#f4ead3 9px 18px);border-bottom:2px dashed var(--mk-line);color:var(--mk-ink)}
+.mock-in{max-width:1240px;margin:0 auto;padding:10px 24px 12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px}
+.mock-tag b{font:800 10.5px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase;display:block}
+.mock-tag span{font-size:11px;opacity:.85}
+.mock h1{font:700 16px/1.3 var(--sans);margin:0}
+.mock p{margin:0;font:12.5px/1.45 var(--sans);flex-basis:100%;max-width:110ch}
+.toc{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;margin-top:4px}
+.toc a{display:inline-flex;align-items:center;gap:5px;border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:99px;padding:2px 10px 2px 4px;font:600 11.5px/1.4 var(--sans);color:var(--mk-ink);text-decoration:none;white-space:nowrap}
+.toc a:hover{background:#fffaf0}
+.toc .n{min-width:17px;height:17px;border-radius:99px;display:inline-grid;place-items:center;background:#efe2c2;font:800 10px var(--sans);padding:0 4px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px 64px}
+.part{margin-top:34px;scroll-margin-top:12px}
+.q{border:2px dashed var(--mk-line);background:var(--mk-bg);color:var(--mk-ink);border-radius:12px;padding:10px 14px 11px;margin-bottom:14px}
+.q h2{font:800 12px/1.3 var(--sans);letter-spacing:.07em;text-transform:uppercase;margin:0 0 3px}
+.q p{margin:0;font:13px/1.5 var(--sans);max-width:120ch}
+.q p+p{margin-top:5px}
+.rec-line{margin-top:6px!important;font-weight:700}
+.sub{font:800 11px/1.3 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--mk-ink);margin:22px 0 8px}
+.alts{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.alts.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.alt{border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:12px;padding:10px 12px 12px;min-width:0;color:var(--mk-ink)}
+.alt.is-rec{border-style:solid;border-color:var(--mk-ink);box-shadow:0 0 0 2px rgba(91,68,22,.14)}
+.alt-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.L{width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;font:800 12.5px var(--sans);background:#efe2c2;flex:none}
+.is-rec .L{background:var(--mk-ink);color:#fbf3df}
+.alt-t{font:700 13px/1.3 var(--sans)}
+.rec{display:inline-block;font:800 9.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;padding:3px 6px;border-radius:99px;border:1px solid var(--mk-ink);background:#fffaf0;white-space:nowrap}
+.alt p{margin:0 0 4px;font:12.5px/1.45 var(--sans)}
+.alt p b{font-weight:700}
+.tile{border-radius:9px;padding:14px 14px;margin-top:8px}
+.tile.l{background:var(--gh-light);box-shadow:inset 0 0 0 1px var(--gh-line)}
+.tile.d{background:var(--gh-dark)}
+.cap{font:600 10.5px/1.3 var(--sans);letter-spacing:.04em;color:var(--mk-ink);opacity:.85;margin-top:8px}
+.true{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,480px))}
+.true .tile{padding:14px 0;margin-top:0}
+.row-label{font:700 12px/1.3 var(--sans);color:var(--mk-ink);margin:12px 0 5px}
+.row-label span{font-weight:500;opacity:.85}
+.narrow{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,320px))}
+.narrow .tile{padding:10px 0;margin-top:0}
+.chrome-note{border:1.5px dashed var(--mk-line);border-radius:9px;background:var(--mk-bg);color:var(--mk-ink);font:12px/1.45 var(--sans);padding:7px 10px;margin-top:10px}
+
+/* ================= README frames (GitHub's page, drawn small) ================= */
+.gh{border-radius:9px;overflow:hidden;margin-top:6px;box-shadow:inset 0 0 0 1px var(--gh-line);background:var(--gh-light);color:var(--gh-ink)}
+.gh-bar{display:flex;align-items:center;gap:6px;padding:5px 10px;font:600 11px/1.3 var(--sans);background:#f6f8fa;box-shadow:inset 0 -1px 0 var(--gh-line);color:#59636e;min-width:0}
+.gh-bar .path{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gh-body{padding:12px 16px 14px}
+.gh-pic{max-width:260px;margin:0 auto 8px}
+.gh h3{font:600 20px/1.25 var(--sans);margin:4px 0 6px;padding-bottom:5px;box-shadow:inset 0 -1px 0 var(--gh-line)}
+.gh p{margin:0;font:12.5px/1.5 var(--sans);color:var(--gh-ink)}
+.gh .flag{display:inline-block;margin-top:6px;font:700 10.5px/1.3 var(--sans);color:var(--danger);background:#f6e3df;border-radius:6px;padding:3px 7px}
+.gh .would{border:1.5px dashed var(--mk-line);border-radius:8px;padding:6px 8px;margin:0 auto 8px;max-width:280px}
+.gh .would .wtag{font:700 10px/1.3 var(--sans);color:var(--mk-ink);text-align:center;margin-bottom:4px}
+.app-line{margin-top:8px;font:12.5px/1.45 var(--sans);color:var(--mk-ink)}
+.files{margin:4px 0 0;padding-left:18px;font:12px/1.5 var(--sans)}
+.files li{margin:0 0 2px}
+.files code{overflow-wrap:anywhere}
+
+/* ================= part 3: today and after ================= */
+.places{display:flex;flex-direction:column;gap:12px}
+.place{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;border-top:1.5px dashed rgba(184,149,90,.6);padding-top:12px}
+.place-l{color:var(--mk-ink);font:12px/1.45 var(--sans);min-width:0}
+.place-l b{display:block;font:700 13px/1.3 var(--sans);margin-bottom:3px}
+.place-l code{overflow-wrap:anywhere}
+.ta{min-width:0}
+.ta-h{font:800 10px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--mk-ink);margin-bottom:5px}
+.ta-h.after{color:var(--accent-ink)}
+.hl{background:#fff1a8;border-radius:3px;box-shadow:0 0 0 1px rgba(184,149,90,.55);padding:0 1px}
+.dark-hl{background:rgba(255,224,102,.28);border-radius:3px;padding:0 1px}
+
+/* macOS menu bar, menu, window title, About panel, Dock: drawn after the system's look */
+.mac{font:13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d1d1f}
+.mac-stage{background:linear-gradient(160deg,#c9d3dc,#aebcc8);border-radius:10px;padding:0 0 12px;overflow:hidden;min-width:0}
+.menubar{display:flex;align-items:center;gap:1px;height:24px;padding:0 8px;background:rgba(238,236,233,.97);box-shadow:0 1px 0 rgba(0,0,0,.12);white-space:nowrap;overflow:hidden}
+.menubar span{padding:4px 7px;border-radius:5px}
+.menubar .app-n{font-weight:700}
+.menubar .on{background:rgba(0,0,0,.12)}
+.menu-dd{margin:1px 0 0 8px;width:max-content;max-width:calc(100% - 16px);padding:5px;border-radius:8px;background:rgba(246,246,246,.98);box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.2)}
+.mi{display:flex;justify-content:space-between;gap:22px;padding:3px 10px;border-radius:4px;white-space:nowrap}
+.mi .acc{opacity:.55}
+.mi.dim{opacity:.45}
+.msep{height:1px;margin:4px 8px;background:rgba(0,0,0,.12)}
+.mac-win{margin:12px 12px 0;border-radius:10px;overflow:hidden;background:var(--bg);box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 8px 22px rgba(0,0,0,.18)}
+.mac-tb{display:flex;align-items:center;height:28px;padding:0 10px;background:#ebe7e1;box-shadow:inset 0 -1px 0 rgba(0,0,0,.08);position:relative}
+.lights{display:flex;gap:7px;flex:none}
+.lights i{width:11px;height:11px;border-radius:50%;display:block}
+.lights i:nth-child(1){background:#ff5f57}.lights i:nth-child(2){background:#febc2e}.lights i:nth-child(3){background:#28c840}
+.lights.off i:nth-child(2),.lights.off i:nth-child(3){background:#d6d3ce}
+.mac-tb .ttl{position:absolute;left:70px;right:70px;text-align:center;font:600 13px/28px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#4d4d4d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mac-body{height:46px;display:flex;align-items:center;gap:8px;padding:0 12px;font:12px var(--sans);color:var(--muted)}
+.mac-body .sbar{width:44px;height:100%;background:var(--side);box-shadow:inset -1px 0 0 var(--line)}
+.about{width:268px;max-width:100%;margin:0 auto;border-radius:10px;background:#ececec;box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 10px 26px rgba(0,0,0,.2);padding:10px 14px 18px;text-align:center}
+.about .lights{margin-bottom:6px}
+.about svg{width:64px;height:64px;display:block;margin:2px auto 8px}
+.about .nm{font:700 13px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.about .ver{font:11px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#555;margin-top:2px}
+.about .cpy{font:10px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#777;margin-top:6px}
+.dock-stage{background:linear-gradient(160deg,#c9d3dc,#aebcc8);border-radius:10px;padding:34px 10px 10px;position:relative;overflow:hidden}
+.dock{display:flex;justify-content:center;align-items:flex-end;gap:7px;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.42);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.6),0 4px 14px rgba(0,0,0,.12);width:max-content;max-width:100%;margin:0 auto}
+.dock .gen{width:38px;height:38px;border-radius:9px;background:linear-gradient(150deg,#e7e7e7,#bdbdbd);flex:none}
+.dock .me{position:relative;flex:none}
+.dock .me svg{width:46px;height:46px;display:block}
+.dock .tip{position:absolute;bottom:54px;left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(240,240,240,.97);color:#1d1d1f;font:12px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:4px 9px;border-radius:6px;box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 3px 10px rgba(0,0,0,.15)}
+.fl{list-style:none;margin:8px 0 0;padding:0;border-radius:9px;background:var(--card);box-shadow:var(--sh1),inset 0 0 0 1px var(--line);overflow:hidden}
+.fl li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;padding:5px 10px;font:12px/1.45 var(--sans);box-shadow:inset 0 -1px 0 var(--line)}
+.fl li:last-child{box-shadow:none}
+.fl .k{color:var(--muted);font-size:11px;line-height:1.6}
+.fl .v{font:11.5px/1.5 var(--mono);color:var(--ink);overflow-wrap:anywhere}
+
+/* the app's own pieces (mockup C, as built: Sidebar.tsx, PageHeader, StateMissing.tsx) */
+.sb{width:192px;max-width:100%;background:var(--side);border-radius:10px;padding:14px 10px 10px;box-shadow:inset -1px 0 0 var(--line),var(--sh1)}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.brand-mark .ic{width:17px;height:17px}
+.brand-text{font:500 15px/1.12 var(--serif);color:var(--ink);min-width:0}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--ink2);font:500 13.5px var(--sans)}
+.nav.on{background:var(--card);color:var(--ink);box-shadow:var(--sh1)}
+.nav.on .ic{color:var(--accent)}
+.pg{background:var(--bg);border-radius:10px;padding:16px 18px 18px;box-shadow:inset 0 0 0 1px var(--line)}
+.eyebrow{font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.pg-title{font:500 26px/1.15 var(--serif);margin:4px 0 6px;letter-spacing:-.01em}
+.lede{color:var(--ink2);font:15px/1.55 var(--serif);margin:0;max-width:64ch}
+.wcard{background:var(--card);border-radius:14px;box-shadow:var(--sh2);padding:18px 20px 18px}
+.wtitle{font:500 21px/1.2 var(--serif);margin:0;color:var(--ink)}
+.prose{font:14px/1.55 var(--serif);color:var(--ink2);margin:6px 0 0}
+.small{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+.small a{color:var(--accent)}
+.btn{display:inline-flex;align-items:center;padding:6px 12px;border-radius:9px;background:var(--card);box-shadow:var(--sh1),inset 0 0 0 1px var(--line);font:500 12.5px var(--sans);color:var(--ink);margin-top:10px}
+.dlg{background:#ececec;border-radius:10px;box-shadow:0 0 0 .5px rgba(0,0,0,.25),0 8px 22px rgba(0,0,0,.18);font:12.5px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d1d1f;overflow:hidden}
+.dlg-tb{text-align:center;font-weight:600;font-size:12.5px;padding:6px 10px;background:#e2e2e2;box-shadow:inset 0 -1px 0 rgba(0,0,0,.08)}
+.dlg-b{padding:10px 12px}
+.prow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--card);border-radius:11px;box-shadow:var(--sh1),inset 0 0 0 1px var(--line);padding:8px 12px;font:500 13px var(--sans)}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:3px 8px;font:600 11px/1 var(--sans);background:var(--accent-tint);color:var(--accent-ink);margin-left:auto}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+/* ================= part 4: the sentences ================= */
+.us{display:flex;flex-direction:column;gap:14px}
+.u{border:1.5px dashed var(--mk-line);background:#fbf6e8;border-radius:12px;padding:10px 12px 12px;color:var(--mk-ink);min-width:0}
+.u-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.u-id{font:800 11px/1 var(--sans);letter-spacing:.06em;background:var(--mk-ink);color:#fbf3df;border-radius:99px;padding:4px 7px;flex:none}
+.u-t{font:700 13px/1.35 var(--sans)}
+.u-where{font:12px/1.45 var(--sans);margin:4px 0 0}
+.u-where code{overflow-wrap:anywhere}
+.u-why{font:12px/1.45 var(--sans);margin:3px 0 0;opacity:.92}
+.reads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+.read{border-radius:10px;padding:8px 10px 10px;background:#fffdf7;box-shadow:inset 0 0 0 1px rgba(184,149,90,.45);min-width:0}
+.read.is-rec{box-shadow:inset 0 0 0 2px var(--mk-ink)}
+.read-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:19px;font:800 10.5px/1.2 var(--sans);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.sbs{display:flex;flex-wrap:wrap;gap:10px}
+.sb-alt{width:192px;max-width:100%;min-width:0}
+.sb-cap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:700 11.5px/1.3 var(--sans);color:var(--mk-ink);margin-bottom:5px;min-height:24px}
+.sb-cap .L{width:20px;height:20px;font-size:11px}
+.sb-alt.is-rec .sb{box-shadow:inset -1px 0 0 var(--line),0 0 0 2px var(--mk-ink)}
+.sb-why{margin:8px 0 0;font:12px/1.45 var(--sans);color:var(--mk-ink)}
+.read .why{font:11.5px/1.45 var(--sans);margin:6px 0 0}
+.doc{border-radius:8px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;color:var(--ink)}
+.doc-f{font:600 10.5px/1.3 var(--mono);color:var(--muted);padding:4px 9px;background:var(--paper);box-shadow:inset 0 -1px 0 var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-b{padding:7px 10px 8px;font:13px/1.5 var(--sans);overflow-wrap:anywhere}
+.doc-b.md-h{font:600 17px/1.3 var(--sans)}
+.doc-b.serif{font:500 16px/1.35 var(--serif)}
+.doc-b.code{font:12px/1.5 var(--mono)}
+.stack{display:flex;flex-direction:column;gap:6px}
+
+/* ================= part 5: notes ================= */
+.notes{border:2px dashed var(--mk-line);background:var(--mk-bg);color:var(--mk-ink);border-radius:14px;overflow:hidden}
+.notes>header{padding:10px 16px;border-bottom:1.5px dashed var(--mk-line);background:repeating-linear-gradient(135deg,#efe2c2 0 9px,#f4ead3 9px 18px)}
+.notes>header h2{font:700 14px var(--sans);margin:0}
+.notes .body{padding:4px 18px 18px;font:13px/1.5 var(--sans)}
+.notes h3{font:800 11.5px var(--sans);letter-spacing:.07em;text-transform:uppercase;margin:18px 0 6px}
+.notes p{margin:0 0 8px;max-width:110ch}
+.notes ul{margin:0 0 8px;padding-left:20px;max-width:110ch}
+.notes li{margin:0 0 4px}
+.notes code{background:rgba(91,68,22,.09);padding:0 3px;border-radius:3px;overflow-wrap:anywhere}
+.tbl{width:100%;border-collapse:collapse;table-layout:fixed;font:12px/1.45 var(--sans);background:#fffaf0;border-radius:8px;overflow:hidden}
+.tbl th,.tbl td{text-align:left;vertical-align:top;padding:5px 8px;border-bottom:1px dashed rgba(91,68,22,.3);overflow-wrap:anywhere}
+.tbl th{font:800 10.5px/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase;background:#f3e6c8}
+.tbl tr:last-child td{border-bottom:0}
+.tbl.ids col.c1{width:12%}.tbl.ids col.c2{width:18%}.tbl.ids col.c3{width:21%}.tbl.ids col.c4{width:14%}.tbl.ids col.c5{width:35%}
+.tbl.nums col.c1{width:40%}
+.tbl.nums td.n,.tbl.nums th.n{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ================= narrower windows ================= */
+@media (max-width:1100px){
+  .mock-in,.wrap{padding-left:16px;padding-right:16px}
+  .alts{gap:10px}
+  .alt{padding:9px 10px 10px}
+  .tile{padding:12px 10px}
+  .place{grid-template-columns:150px minmax(0,1fr) minmax(0,1fr)}
+}
+@media (max-width:760px){
+  .alts,.alts.two,.reads,.true,.narrow{grid-template-columns:minmax(0,1fr)}
+  .place{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= shared drawings: the brand's mark, the lockups, the app icon, the app's icons ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- docs/brand/logo-mark.svg, unchanged -->
+    <g id="mk-l">
+      <rect x="10" y="14" width="108" height="100" rx="16" fill="#F2F4F3" stroke="#17262E" stroke-width="6"/>
+      <line x1="13" y1="40" x2="115" y2="40" stroke="#17262E" stroke-width="3"/>
+      <circle cx="26" cy="27" r="4" fill="#C4564A"/><circle cx="38" cy="27" r="4" fill="#B7791F"/><circle cx="50" cy="27" r="4" fill="#2F7D6D"/>
+      <g stroke="#17262E" stroke-width="4" stroke-linecap="round" fill="none">
+        <line x1="58" y1="62" x2="67.5" y2="62"/><line x1="64" y1="62" x2="64" y2="80"/><line x1="40" y1="80" x2="88" y2="80"/>
+        <line x1="40" y1="80" x2="40" y2="88"/><line x1="64" y1="80" x2="64" y2="88"/><line x1="88" y1="80" x2="88" y2="88"/>
+      </g>
+      <circle cx="50" cy="62" r="8" fill="#17262E"/>
+      <circle cx="78" cy="62" r="8" fill="#F2F4F3" stroke="#E8590C" stroke-width="5"/>
+      <rect x="34" y="88" width="12" height="12" rx="2.5" fill="#17262E"/><rect x="58" y="88" width="12" height="12" rx="2.5" fill="#17262E"/><rect x="82" y="88" width="12" height="12" rx="2.5" fill="#17262E"/>
+    </g>
+    <!-- docs/brand/logo-mark-white.svg, unchanged -->
+    <g id="mk-d">
+      <rect x="10" y="14" width="108" height="100" rx="16" fill="none" stroke="#F2F4F3" stroke-width="6"/>
+      <line x1="13" y1="40" x2="115" y2="40" stroke="#F2F4F3" stroke-width="3"/>
+      <circle cx="26" cy="27" r="4" fill="#C4564A"/><circle cx="38" cy="27" r="4" fill="#B7791F"/><circle cx="50" cy="27" r="4" fill="#2F7D6D"/>
+      <g stroke="#F2F4F3" stroke-width="4" stroke-linecap="round" fill="none">
+        <line x1="58" y1="62" x2="67.5" y2="62"/><line x1="64" y1="62" x2="64" y2="80"/><line x1="40" y1="80" x2="88" y2="80"/>
+        <line x1="40" y1="80" x2="40" y2="88"/><line x1="64" y1="80" x2="64" y2="88"/><line x1="88" y1="80" x2="88" y2="88"/>
+      </g>
+      <circle cx="50" cy="62" r="8" fill="#F2F4F3"/>
+      <circle cx="78" cy="62" r="8" fill="none" stroke="#E8590C" stroke-width="5"/>
+      <rect x="34" y="88" width="12" height="12" rx="2.5" fill="#F2F4F3"/><rect x="58" y="88" width="12" height="12" rx="2.5" fill="#F2F4F3"/><rect x="82" y="88" width="12" height="12" rx="2.5" fill="#F2F4F3"/>
+    </g>
+
+    <!-- today: docs/brand/logo-lockup.svg and logo-lockup-white.svg (viewBox -5 0 460 128) -->
+    <g id="lk-now-l"><use href="#mk-l"/>
+      <text x="150" y="58" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="22" font-weight="500" letter-spacing="4" fill="#52646E">AI-HUMAN</text>
+      <text x="150" y="98" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#17262E">RESEARCH <tspan fill="#E8590C">OS</tspan></text></g>
+    <g id="lk-now-d"><use href="#mk-d"/>
+      <text x="150" y="58" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="22" font-weight="500" letter-spacing="4" fill="#9FB0B8">AI-HUMAN</text>
+      <text x="150" y="98" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#F2F4F3">RESEARCH <tspan fill="#E8590C">OS</tspan></text></g>
+
+    <!-- A: today's structure, "SUPER" in the quiet tone (viewBox -5 0 460 128, as today) -->
+    <g id="lk-a-l"><use href="#mk-l"/>
+      <text x="150" y="58" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="22" font-weight="500" letter-spacing="4" fill="#52646E">SUPER</text>
+      <text x="150" y="98" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#17262E">RESEARCH <tspan fill="#E8590C">OS</tspan></text></g>
+    <g id="lk-a-d"><use href="#mk-d"/>
+      <text x="150" y="58" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="22" font-weight="500" letter-spacing="4" fill="#9FB0B8">SUPER</text>
+      <text x="150" y="98" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#F2F4F3">RESEARCH <tspan fill="#E8590C">OS</tspan></text></g>
+
+    <!-- B: one line, mixed case, today's size and weight (viewBox -5 0 570 128: 16 characters at 0.6 em + 1 px tracking need about 400 px from x = 150) -->
+    <g id="lk-b-l"><use href="#mk-l"/>
+      <text x="150" y="78" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#17262E">SuperResearch <tspan fill="#E8590C">OS</tspan></text></g>
+    <g id="lk-b-d"><use href="#mk-d"/>
+      <text x="150" y="78" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#F2F4F3">SuperResearch <tspan fill="#E8590C">OS</tspan></text></g>
+
+    <!-- C: one line, capitals, three tones (viewBox -5 0 570 128, as B) -->
+    <g id="lk-c-l"><use href="#mk-l"/>
+      <text x="150" y="80" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#17262E"><tspan fill="#52646E">SUPER</tspan>RESEARCH <tspan fill="#E8590C">OS</tspan></text></g>
+    <g id="lk-c-d"><use href="#mk-d"/>
+      <text x="150" y="80" font-family="'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="40" font-weight="700" letter-spacing="1" fill="#F2F4F3"><tspan fill="#9FB0B8">SUPER</tspan>RESEARCH <tspan fill="#E8590C">OS</tspan></text></g>
+
+    <!-- docs/brand/app-icon.svg, unchanged (ids renamed so they cannot collide) -->
+    <pattern id="ai-dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="8" cy="8" r="1.1" fill="#F2F4F3" fill-opacity="0.16"/></pattern>
+    <clipPath id="ai-tile"><rect width="256" height="256" rx="56"/></clipPath>
+    <g id="appicon">
+      <rect width="256" height="256" rx="56" fill="#17262E"/>
+      <rect width="256" height="256" fill="url(#ai-dots)" clip-path="url(#ai-tile)"/>
+      <g transform="translate(28 28) scale(1.5625)"><use href="#mk-d"/></g>
+    </g>
+
+    <!-- the app's icons (os-ui/frontend/src/shell/icons.tsx, as the mockups draw them) -->
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5M8 7.5h8M8 11h6"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-projects" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 13.5h8M8 16.5h5"/></symbol>
+  </defs>
+</svg>
+
+<!-- ================= MOCKUP-ONLY STRIP: not part of the app ================= -->
+<header class="mock" role="region" aria-label="Mockup only, not part of the app">
+  <div class="mock-in">
+    <div class="mock-tag"><b>Mockup only</b><span>not part of the app</span></div>
+    <h1>Step 3 · Renaming the app to SuperResearch OS: what you choose</h1>
+    <p>Four parts to answer, each with its alternatives side by side; the recommended one is marked <span class="rec">Recommended</span>. Part 5 holds the notes. Nothing here is built: the app still says "Research OS" until you choose and the rename's pull request lands.</p>
+    <nav class="toc" aria-label="Parts of this mockup">
+      <a href="#p1"><span class="n">1</span>The wordmark</a>
+      <a href="#p2"><span class="n">2</span>New or redrawn logo files</a>
+      <a href="#p3"><span class="n">3</span>Where the name shows in the app</a>
+      <a href="#p4"><span class="n">4</span>Sentences that could go either way</a>
+      <a href="#p5"><span class="n">5</span>Notes</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ================= 1. THE WORDMARK ================= -->
+<section class="part" id="p1" aria-labelledby="p1h">
+  <div class="q">
+    <h2 id="p1h">1 · The wordmark beside the mark</h2>
+    <p>Today's lockup reads AI-HUMAN / RESEARCH OS in three tones. It is used in one place: this repository's README, 480 px wide, in a light and a dark version that GitHub switches by the reader's appearance. The app shows no lockup; its left menu, title bar, About panel, and Dock show the name as text (part 3). The mark, the window with the dot, the ring, and the three squares, does not change in any alternative.</p>
+    <p class="rec-line">Recommended: B, because it writes the name the way the title bar, the menus, and the About panel will write it: one word, mixed case.</p>
+  </div>
+
+  <div class="alts" role="list">
+    <article class="alt" role="listitem" aria-label="Alternative A">
+      <div class="alt-h"><span class="L">A</span><span class="alt-t">Today's structure, first word changed</span></div>
+      <p><b>What differs:</b> "SUPER" in the quiet tone where "AI-HUMAN" was; "RESEARCH" in ink and "OS" in orange stay as they are.</p>
+      <p><b>What it costs:</b> nothing moves, but it reads as three words, Super Research OS, while the name is one word, SuperResearch.</p>
+      <div class="tile l"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="Alternative A on light: SUPER, RESEARCH OS"><use href="#lk-a-l"/></svg></div>
+      <div class="tile d"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="Alternative A on dark"><use href="#lk-a-d"/></svg></div>
+    </article>
+    <article class="alt is-rec" role="listitem" aria-label="Alternative B, recommended">
+      <div class="alt-h"><span class="L">B</span><span class="alt-t">One word, mixed case</span><span class="rec">Recommended</span></div>
+      <p><b>What differs:</b> the name on one line as it is written, "SuperResearch" in ink and "OS" in orange, at today's size and weight.</p>
+      <p><b>What it costs:</b> the lockup gets 24% wider, so at the README's 480 px the mark draws 19% smaller; the capitals and the quiet tone go.</p>
+      <div class="tile l"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="Alternative B on light: SuperResearch OS"><use href="#lk-b-l"/></svg></div>
+      <div class="tile d"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="Alternative B on dark"><use href="#lk-b-d"/></svg></div>
+    </article>
+    <article class="alt" role="listitem" aria-label="Alternative C">
+      <div class="alt-h"><span class="L">C</span><span class="alt-t">One word, capitals, three tones</span></div>
+      <p><b>What differs:</b> SUPERRESEARCH OS on one line; "SUPER" in the quiet tone, "RESEARCH" in ink, "OS" in orange.</p>
+      <p><b>What it costs:</b> as wide as B, and a run of thirteen capitals with a double R reads harder than B's mixed case.</p>
+      <div class="tile l"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="Alternative C on light: SUPERRESEARCH OS"><use href="#lk-c-l"/></svg></div>
+      <div class="tile d"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="Alternative C on dark"><use href="#lk-c-d"/></svg></div>
+    </article>
+  </div>
+
+  <h3 class="sub">At the README's width, 480 px: light page and dark page</h3>
+  <div class="row-label">Today <span>· for comparison, <code>logo-lockup.png</code> and <code>logo-lockup-white.png</code></span></div>
+  <div class="true">
+    <div class="tile l"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="Today's lockup on light: AI-HUMAN, RESEARCH OS"><use href="#lk-now-l"/></svg></div>
+    <div class="tile d"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="Today's lockup on dark"><use href="#lk-now-d"/></svg></div>
+  </div>
+  <div class="row-label">A <span>· today's structure, first word changed</span></div>
+  <div class="true">
+    <div class="tile l"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="A at 480 px on light"><use href="#lk-a-l"/></svg></div>
+    <div class="tile d"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="A at 480 px on dark"><use href="#lk-a-d"/></svg></div>
+  </div>
+  <div class="row-label">B <span>· one word, mixed case (recommended)</span></div>
+  <div class="true">
+    <div class="tile l"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="B at 480 px on light"><use href="#lk-b-l"/></svg></div>
+    <div class="tile d"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="B at 480 px on dark"><use href="#lk-b-d"/></svg></div>
+  </div>
+  <div class="row-label">C <span>· one word, capitals, three tones</span></div>
+  <div class="true">
+    <div class="tile l"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="C at 480 px on light"><use href="#lk-c-l"/></svg></div>
+    <div class="tile d"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="C at 480 px on dark"><use href="#lk-c-d"/></svg></div>
+  </div>
+
+  <h3 class="sub">Scaled down, as GitHub shows the README in a narrow window: 320 px</h3>
+  <div class="narrow">
+    <div><div class="row-label">A</div><div class="tile l"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="A at 320 px"><use href="#lk-a-l"/></svg></div></div>
+    <div><div class="row-label">B</div><div class="tile l"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="B at 320 px"><use href="#lk-b-l"/></svg></div></div>
+    <div><div class="row-label">C</div><div class="tile l"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="C at 320 px"><use href="#lk-c-l"/></svg></div></div>
+  </div>
+  <div class="chrome-note">The wordmarks are drawn in this computer's monospace font, because the page loads none; the exported PNGs use IBM Plex Mono (<code>render.py</code>), so the letter shapes there differ a little. B's and C's wider frame is sized from IBM Plex Mono's character width.</div>
+</section>
+
+<!-- ================= 2. NEW OR REDRAWN FILES ================= -->
+<section class="part" id="p2" aria-labelledby="p2h">
+  <div class="q">
+    <h2 id="p2h">2 · New logo files, or the existing ones redrawn</h2>
+    <p>This repository keeps its name, and its README opens with the AI-HUMAN RESEARCH OS lockup: <code>logo-lockup.png</code>, <code>logo-lockup-white.png</code>, and <code>logo-lockup-on-paper.png</code>, exported from two SVGs in <code>docs/brand/</code>. The product repository, SuperResearch-OS, takes <code>docs/brand/</code> whole. The drawings below use wordmark B; any of A to C works the same here.</p>
+    <p class="rec-line">Recommended: A, because adding is the non-destructive default: nothing this repository shows changes, and each README shows its own name.</p>
+  </div>
+  <div class="alts two" role="list">
+    <article class="alt is-rec" role="listitem" aria-label="Alternative A, recommended">
+      <div class="alt-h"><span class="L">A</span><span class="alt-t">Add new lockup files beside the old ones</span><span class="rec">Recommended</span></div>
+      <p><b>What differs:</b> five new files in <code>docs/brand/</code> (names proposed); the five old ones are not touched.</p>
+      <ul class="files">
+        <li><code>superresearch-lockup.svg</code>, <code>superresearch-lockup-white.svg</code></li>
+        <li><code>superresearch-lockup.png</code>, <code>superresearch-lockup-white.png</code>, <code>superresearch-lockup-on-paper.png</code> (three more lines in <code>render.py</code>)</li>
+      </ul>
+      <p><b>What it costs:</b> <code>docs/brand/</code> grows from 16 to 21 files, and the product repository carries the old AI-HUMAN lockup too, unless the import kit leaves those five files here.</p>
+      <div class="cap">This repository's README would show</div>
+      <div class="gh" aria-label="This repository's README under A">
+        <div class="gh-bar"><span class="path">AI-Human-Research-OS / README.md</span></div>
+        <div class="gh-body">
+          <div class="gh-pic"><svg class="lk" viewBox="-5 0 460 128" role="img" aria-label="Today's lockup"><use href="#lk-now-l"/></svg></div>
+          <h3>AI-Human Research OS</h3>
+          <p>A lightweight, folder-based research operating system for humans working with code agents such as Codex and Claude Code.</p>
+        </div>
+      </div>
+      <div class="cap">The product repository's README would show</div>
+      <div class="gh" aria-label="The product repository's README under A">
+        <div class="gh-bar"><span class="path">SuperResearch-OS / README.md</span></div>
+        <div class="gh-body">
+          <div class="would"><div class="wtag">the README edition has no picture today; drawn as it would look with one</div><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="The new lockup, superresearch-lockup.png"><use href="#lk-b-l"/></svg></div>
+          <h3>SuperResearch OS</h3>
+          <p>A desktop app for macOS, Windows, and Linux for researchers who already use a coding agent, Claude Code or Codex.</p>
+        </div>
+      </div>
+      <div class="app-line"><b>The app:</b> unchanged by this choice. It shows no lockup; its icon is <code>app-icon.png</code> (part 3).</div>
+    </article>
+    <article class="alt" role="listitem" aria-label="Alternative B">
+      <div class="alt-h"><span class="L">B</span><span class="alt-t">Redraw the existing lockup files</span></div>
+      <p><b>What differs:</b> the same five files are drawn again with the new name; no file is added.</p>
+      <ul class="files">
+        <li><code>logo-lockup.svg</code>, <code>logo-lockup-white.svg</code> (redrawn)</li>
+        <li><code>logo-lockup.png</code>, <code>logo-lockup-white.png</code>, <code>logo-lockup-on-paper.png</code> (exported again)</li>
+      </ul>
+      <p><b>What it costs:</b> this repository's README then shows SuperResearch OS above the heading AI-Human Research OS, and the old lockup survives only in Git history.</p>
+      <div class="cap">This repository's README would show</div>
+      <div class="gh" aria-label="This repository's README under B">
+        <div class="gh-bar"><span class="path">AI-Human-Research-OS / README.md</span></div>
+        <div class="gh-body">
+          <div class="gh-pic"><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="The redrawn lockup"><use href="#lk-b-l"/></svg></div>
+          <h3>AI-Human Research OS</h3>
+          <p>A lightweight, folder-based research operating system for humans working with code agents such as Codex and Claude Code.</p>
+          <span class="flag">the picture and the heading now name two different things</span>
+        </div>
+      </div>
+      <div class="cap">The product repository's README would show</div>
+      <div class="gh" aria-label="The product repository's README under B">
+        <div class="gh-bar"><span class="path">SuperResearch-OS / README.md</span></div>
+        <div class="gh-body">
+          <div class="would"><div class="wtag">the README edition has no picture today; drawn as it would look with one</div><svg class="lk" viewBox="-5 0 570 128" role="img" aria-label="The redrawn lockup, logo-lockup.png"><use href="#lk-b-l"/></svg></div>
+          <h3>SuperResearch OS</h3>
+          <p>A desktop app for macOS, Windows, and Linux for researchers who already use a coding agent, Claude Code or Codex.</p>
+        </div>
+      </div>
+      <div class="app-line"><b>The app:</b> unchanged by this choice. It shows no lockup; its icon is <code>app-icon.png</code> (part 3).</div>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 3. WHERE THE NAME SHOWS IN THE APP ================= -->
+<section class="part" id="p3" aria-labelledby="p3h">
+  <div class="q">
+    <h2 id="p3h">3 · Where the name shows in the app, today and after the rename</h2>
+    <p>Only places that exist today, with the words read from the code (each row says where). The changed words are highlighted. The one choice here is the left menu's line break (a or b), which the name's length forces; the places where the name sits in a sentence that could go either way are in part 4.</p>
+    <p class="rec-line">Recommended for the left menu: a, because it keeps the name at the size of today's and breaks after a word, as today's does.</p>
+  </div>
+  <div class="places">
+
+    <div class="place">
+      <div class="place-l"><b>Menu bar and window title (macOS)</b>The app menu takes the app's name (<code>menu.ts:27-44</code>, <code>app.name</code>, from <code>productName</code>); macOS writes About, Hide, and Quit with it. The window's title is set in <code>index.ts:354</code>.</div>
+      <div class="ta"><div class="ta-h">Today</div>
+        <div class="mac mac-stage" aria-label="Today's menu bar, app menu, and window title">
+          <div class="menubar"><span class="app-n on">Research OS</span><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span></div>
+          <div class="menu-dd">
+            <div class="mi"><span>About Research OS</span></div><div class="msep"></div>
+            <div class="mi"><span>Services</span><span class="acc">›</span></div><div class="msep"></div>
+            <div class="mi"><span>Hide Research OS</span><span class="acc">⌘H</span></div>
+            <div class="mi"><span>Hide Others</span><span class="acc">⌥⌘H</span></div>
+            <div class="mi dim"><span>Show All</span></div><div class="msep"></div>
+            <div class="mi"><span>Quit Research OS</span><span class="acc">⌘Q</span></div>
+          </div>
+          <div class="mac-win"><div class="mac-tb"><div class="lights"><i></i><i></i><i></i></div><div class="ttl">Research OS</div></div><div class="mac-body"><div class="sbar"></div>Home</div></div>
+        </div>
+      </div>
+      <div class="ta"><div class="ta-h after">After</div>
+        <div class="mac mac-stage" aria-label="The menu bar, app menu, and window title after the rename">
+          <div class="menubar"><span class="app-n on"><span class="hl">SuperResearch OS</span></span><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span></div>
+          <div class="menu-dd">
+            <div class="mi"><span>About <span class="hl">SuperResearch OS</span></span></div><div class="msep"></div>
+            <div class="mi"><span>Services</span><span class="acc">›</span></div><div class="msep"></div>
+            <div class="mi"><span>Hide <span class="hl">SuperResearch OS</span></span><span class="acc">⌘H</span></div>
+            <div class="mi"><span>Hide Others</span><span class="acc">⌥⌘H</span></div>
+            <div class="mi dim"><span>Show All</span></div><div class="msep"></div>
+            <div class="mi"><span>Quit <span class="hl">SuperResearch OS</span></span><span class="acc">⌘Q</span></div>
+          </div>
+          <div class="mac-win"><div class="mac-tb"><div class="lights"><i></i><i></i><i></i></div><div class="ttl"><span class="hl">SuperResearch OS</span></div></div><div class="mac-body"><div class="sbar"></div>Home</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="place">
+      <div class="place-l"><b>About panel (macOS)</b>From <code>index.ts:438-443</code>: name, version, and copyright. The icon is <code>app-icon.png</code>, unchanged. The website line is shown on Linux only, so it is not drawn.</div>
+      <div class="ta"><div class="ta-h">Today</div>
+        <div class="mac about" aria-label="Today's About panel"><div class="lights off"><i></i><i></i><i></i></div>
+          <svg viewBox="0 0 256 256" aria-hidden="true"><use href="#appicon"/></svg>
+          <div class="nm">Research OS</div><div class="ver">Version 0.1.0</div><div class="cpy">MIT License</div></div>
+      </div>
+      <div class="ta"><div class="ta-h after">After</div>
+        <div class="mac about" aria-label="The About panel after the rename"><div class="lights off"><i></i><i></i><i></i></div>
+          <svg viewBox="0 0 256 256" aria-hidden="true"><use href="#appicon"/></svg>
+          <div class="nm"><span class="hl">SuperResearch OS</span></div><div class="ver">Version 0.1.0</div><div class="cpy">MIT License</div></div>
+      </div>
+    </div>
+
+    <div class="place">
+      <div class="place-l"><b>The left menu</b>From <code>Sidebar.tsx:45-56</code>: the book icon, then the name in 15 px serif, drawn at the menu's real width, 192 px. Today's name breaks after "AI-Human". At 15 px the new name does not fit on one line beside the icon, so this row is a small choice: a or b.</div>
+      <div class="ta"><div class="ta-h">Today</div>
+        <div class="sb" aria-label="Today's left menu">
+          <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text">AI-Human<br>Research OS</div></div>
+          <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+          <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
+        </div>
+      </div>
+      <div class="ta"><div class="ta-h after">After: a or b</div>
+        <div class="sbs">
+          <div class="sb-alt is-rec"><div class="sb-cap"><span class="L">a</span>As it falls <span class="rec">Recommended</span></div>
+            <div class="sb" aria-label="The left menu after the rename, a: the name breaks where it falls">
+              <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text"><span class="hl">SuperResearch OS</span></div></div>
+              <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+              <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
+            </div></div>
+          <div class="sb-alt"><div class="sb-cap"><span class="L">b</span>One line, 13.5 px</div>
+            <div class="sb" aria-label="The left menu after the rename, b: the name on one line, smaller">
+              <div class="brand"><div class="brand-mark"><svg class="ic"><use href="#i-book"/></svg></div><div class="brand-text" style="font-size:13.5px"><span class="hl">SuperResearch OS</span></div></div>
+              <div class="nav on"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+              <div class="nav"><svg class="ic"><use href="#i-projects"/></svg>Projects</div>
+            </div></div>
+        </div>
+        <p class="sb-why">a keeps today's 15 px and breaks after a word, as today's name does; b keeps the name whole on one line, at the menu items' 13.5 px.</p>
+      </div>
+    </div>
+
+    <div class="place">
+      <div class="place-l"><b>Settings</b>The page's lede, <code>SettingsPage.tsx:17</code>. It is about the app, so it is renamed. Drawn narrower than the page, so it wraps sooner.</div>
+      <div class="ta"><div class="ta-h">Today</div>
+        <div class="pg" aria-label="Today's Settings header"><div class="eyebrow">Preferences</div><div class="pg-title">Settings</div>
+          <p class="lede">AI-Human Research OS has no model of its own. It launches your own coding agent, on your own plan.</p></div>
+      </div>
+      <div class="ta"><div class="ta-h after">After</div>
+        <div class="pg" aria-label="The Settings header after the rename"><div class="eyebrow">Preferences</div><div class="pg-title">Settings</div>
+          <p class="lede"><span class="hl">SuperResearch OS</span> has no model of its own. It launches your own coding agent, on your own plan.</p></div>
+      </div>
+    </div>
+
+    <div class="place">
+      <div class="place-l"><b>Dock, installers, and the build a tester downloads</b>Names electron-builder derives from <code>productName</code>, <code>artifactName</code>, <code>executableName</code>, and the package name (<code>electron-builder.yml</code>, <code>package.json</code>), and the CI artifact (<code>desktop.yml:147</code>); version 0.1.0 from <code>package.json</code>. The icon is unchanged.</div>
+      <div class="ta"><div class="ta-h">Today</div>
+        <div class="dock-stage" aria-label="Today's Dock">
+          <div class="dock"><span class="gen"></span><span class="gen"></span><span class="me"><span class="tip">Research OS</span><svg viewBox="0 0 256 256" aria-hidden="true"><use href="#appicon"/></svg></span><span class="gen"></span></div>
+        </div>
+        <ul class="fl" aria-label="Today's file and package names">
+          <li><span class="k">Applications</span><span class="v">Research OS.app</span></li>
+          <li><span class="k">macOS installer</span><span class="v">Research-OS-0.1.0-mac-arm64.dmg</span></li>
+          <li><span class="k">Windows</span><span class="v">Research-OS-0.1.0-win-x64.exe · Start menu: Research OS</span></li>
+          <li><span class="k">Linux</span><span class="v">Research-OS-0.1.0-linux-amd64.deb · package research-os-desktop · command research-os</span></li>
+          <li><span class="k">CI artifact</span><span class="v">research-os-macos-arm64</span></li>
+        </ul>
+      </div>
+      <div class="ta"><div class="ta-h after">After</div>
+        <div class="dock-stage" aria-label="The Dock after the rename">
+          <div class="dock"><span class="gen"></span><span class="gen"></span><span class="me"><span class="tip"><span class="hl">SuperResearch OS</span></span><svg viewBox="0 0 256 256" aria-hidden="true"><use href="#appicon"/></svg></span><span class="gen"></span></div>
+        </div>
+        <ul class="fl" aria-label="The file and package names after the rename">
+          <li><span class="k">Applications</span><span class="v"><span class="hl">SuperResearch OS</span>.app</span></li>
+          <li><span class="k">macOS installer</span><span class="v"><span class="hl">SuperResearch-OS</span>-0.1.0-mac-arm64.dmg</span></li>
+          <li><span class="k">Windows</span><span class="v"><span class="hl">SuperResearch-OS</span>-0.1.0-win-x64.exe · Start menu: <span class="hl">SuperResearch OS</span></span></li>
+          <li><span class="k">Linux</span><span class="v"><span class="hl">SuperResearch-OS</span>-0.1.0-linux-amd64.deb · package <span class="hl">superresearch-os</span> · command <span class="hl">superresearch-os</span></span></li>
+          <li><span class="k">CI artifact</span><span class="v"><span class="hl">superresearch-os</span>-macos-arm64</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="place">
+      <div class="place-l"><b>The Welcome card</b>Before a workspace is open (<code>StateMissing.tsx:46-64</code>). The name stands here in three lines: two that could go either way (part 4, U2 and U3), and "your Research OS checkout", a clone of this repository, which is kept. So it is drawn unchanged. Step 3's S1 replaces this card with "Start with a workspace".</div>
+      <div class="ta"><div class="ta-h">Today</div>
+        <div class="wcard" aria-label="Today's Welcome card">
+          <p class="wtitle">Open your Research OS folder</p>
+          <p class="prose">Choose the folder of your Research OS checkout (the one with AGENTS.md).</p>
+          <p class="small">No folder yet? <a href="#u3">Get the Research OS</a> and clone it first.</p>
+          <span class="btn">Choose folder…</span>
+        </div>
+      </div>
+      <div class="ta"><div class="ta-h after">After</div>
+        <div class="wcard" aria-label="The Welcome card after the rename, unchanged">
+          <p class="wtitle">Open your Research OS folder</p>
+          <p class="prose">Choose the folder of your Research OS checkout (the one with AGENTS.md).</p>
+          <p class="small">No folder yet? <a href="#u3">Get the Research OS</a> and clone it first.</p>
+          <span class="btn">Choose folder…</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= 4. THE UNCLEAR SENTENCES ================= -->
+<section class="part" id="p4" aria-labelledby="p4h">
+  <div class="q">
+    <h2 id="p4h">4 · Sentences that could go either way: rename or keep</h2>
+    <p>The rule: the app's name is renamed; "Research OS" as the system or the workspace, and this repository's own name, are kept. These ten sentences fit both readings. Each is shown where it stands, with both readings side by side and one proposed; say rename or keep for each.</p>
+  </div>
+  <div class="us">
+
+    <article class="u" id="u1">
+      <div class="u-h"><span class="u-id">U1</span><span class="u-t">os-ui's own documents call os-ui the app "of the Research OS"</span></div>
+      <p class="u-where">6 lines: <code>os-ui/README.md:3</code> and its Chinese pair <code>README_zh.md:3</code>; <code>os-ui/index.md:1, 3</code> ("# Research OS UI", "Research OS interface: …"); <code>os-ui/DESIGN.md:1</code> ("# os-ui Design - Research OS Read-only Dashboard"); <code>os-ui/frontend/README.md:3</code> ("the user interface of the Research OS").</p>
+      <p class="u-why">os-ui is the app, but each sentence names the system the app belongs to; all of them go to the product repository.</p>
+      <div class="reads">
+        <div class="read is-rec"><div class="read-h">Rename <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">os-ui/README.md</div><div class="doc-b"><code>os-ui/</code> is <span class="hl">SuperResearch OS, the app</span>: it shows the repository's current state and holds the agent conversations.</div></div>
+          <p class="why">In the product repository, "AI-Human Research OS" would name another repository.</p></div>
+        <div class="read"><div class="read-h">Keep</div>
+          <div class="doc"><div class="doc-f">os-ui/README.md</div><div class="doc-b"><code>os-ui/</code> is the app of the AI-Human Research OS: it shows the repository's current state and holds the agent conversations.</div></div></div>
+      </div>
+    </article>
+
+    <article class="u" id="u2">
+      <div class="u-h"><span class="u-id">U2</span><span class="u-t">"Research OS folder", wherever the app says it</span></div>
+      <p class="u-where">36 lines, one answer for all: the Welcome card's heading (<code>StateMissing.tsx:49</code>), the open dialog's title and the trust question (<code>index.ts:219, 249</code>), the error box (<code>index.ts:282, 284, 511</code>), "No Research OS folder is open." (<code>:257</code>), the Settings row and its detail (<code>doctor.ts:77-78, 111</code>), the folder check (<code>workspace.ts:21</code>), the server and Code view messages (<code>protocol.ts:664</code>, <code>logic.ts:209</code>), the File menu (<code>menu.ts:56</code>), and the docs, tests, and comments that quote them.</p>
+      <p class="u-why">The folder is a workspace, not the app, but these are what the renamed app says to a tester first. Step 3 already replaces the menu item ("Open Workspace…", decided) and the Welcome card (S1).</p>
+      <div class="reads">
+        <div class="read"><div class="read-h">Rename</div>
+          <div class="stack">
+            <div class="wcard"><p class="wtitle">Open your <span class="hl">SuperResearch OS</span> folder</p></div>
+            <div class="dlg"><div class="dlg-tb">Open a <span class="hl">SuperResearch OS</span> folder</div><div class="dlg-b">Not a <span class="hl">SuperResearch OS</span> folder</div></div>
+            <div class="prow"><span><span class="hl">SuperResearch OS</span> folder</span><span class="chip">ok</span></div>
+          </div></div>
+        <div class="read is-rec"><div class="read-h">Keep <span class="rec">Proposed</span></div>
+          <div class="stack">
+            <div class="wcard"><p class="wtitle">Open your Research OS folder</p></div>
+            <div class="dlg"><div class="dlg-tb">Open a Research OS folder</div><div class="dlg-b">Not a Research OS folder</div></div>
+            <div class="prow"><span>Research OS folder</span><span class="chip">ok</span></div>
+          </div>
+          <p class="why">The folder belongs to the workspace, and step 3 moves these words to "workspace" anyway; renaming them now changes them twice.</p></div>
+      </div>
+    </article>
+
+    <article class="u" id="u3">
+      <div class="u-h"><span class="u-id">U3</span><span class="u-t">The Welcome card's link</span></div>
+      <p class="u-where">1 line: <code>StateMissing.tsx:60</code>. The link opens this repository.</p>
+      <p class="u-why">What you clone there is this repository, which keeps its name; but the line reads as getting the app.</p>
+      <div class="reads">
+        <div class="read"><div class="read-h">Rename</div>
+          <div class="wcard"><p class="small" style="margin:0">No folder yet? <a href="#u3">Get <span class="hl">SuperResearch OS</span></a> and clone it first.</p></div></div>
+        <div class="read is-rec"><div class="read-h">Keep <span class="rec">Proposed</span></div>
+          <div class="wcard"><p class="small" style="margin:0">No folder yet? <a href="#u3">Get the Research OS</a> and clone it first.</p></div>
+          <p class="why">The link goes to this repository, and step 3's S1 replaces the line.</p></div>
+      </div>
+    </article>
+
+    <article class="u" id="u4">
+      <div class="u-h"><span class="u-id">U4</span><span class="u-t">The package's description</span></div>
+      <p class="u-where">2 lines: the Linux package's synopsis (<code>electron-builder.yml:43</code>) and the description in <code>os-ui/client/package.json:6</code>, which carries the same words.</p>
+      <p class="u-why">A Linux installer shows it beside the new name, but it names the system the client serves.</p>
+      <div class="reads">
+        <div class="read is-rec"><div class="read-h">Rename <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">apt show superresearch-os</div><div class="doc-b code">Description: <span class="hl">SuperResearch OS: a desktop app for researchers who already use a coding agent</span></div></div>
+          <p class="why">An installer shows it next to the new name, and the product repository has no "AI-Human Research OS". The words are the product README's.</p></div>
+        <div class="read"><div class="read-h">Keep</div>
+          <div class="doc"><div class="doc-f">apt show superresearch-os</div><div class="doc-b code">Description: Desktop client for the AI-Human Research OS</div></div></div>
+      </div>
+    </article>
+
+    <article class="u" id="u5">
+      <div class="u-h"><span class="u-id">U5</span><span class="u-t">The example project's own words</span></div>
+      <p class="u-where">11 lines here, all copies: 7 in <code>os-ui/frontend/plugins/fixtures/</code>, 3 in frontend tests, 1 in the end-to-end suite. Their source is the example, <code>projects-folder/nanochat_cpu/</code> (its paper title, paper skeleton, <code>Code/README.md</code>, and memory), which this rename's files do not include.</p>
+      <p class="u-why">The example ships inside the app, so a tester reads it; but it is a research artifact with its own history.</p>
+      <div class="reads">
+        <div class="read"><div class="read-h">Rename</div>
+          <div class="doc"><div class="doc-f">Skeleton view · working title</div><div class="doc-b serif">nanochat on a Laptop CPU: a Three-Minute End-to-End Example for <span class="hl">SuperResearch OS</span></div></div></div>
+        <div class="read is-rec"><div class="read-h">Keep <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">Skeleton view · working title</div><div class="doc-b serif">nanochat on a Laptop CPU: a Three-Minute End-to-End Example for the AI-Human Research OS</div></div>
+          <p class="why">It is the example's paper, outside the rename's files; it would change in the example first, when step 3 moves it, and the copies follow.</p></div>
+      </div>
+    </article>
+
+    <article class="u" id="u6">
+      <div class="u-h"><span class="u-id">U6</span><span class="u-t">The project template's first rule</span></div>
+      <p class="u-where">1 line: <code>projects-folder/templates/ai_research_template/AGENTS.md:6</code>. Every new workspace gets this file.</p>
+      <p class="u-why">"AI-Human" names this repository, but a tester's project lives in the tester's own workspace.</p>
+      <div class="reads">
+        <div class="read is-rec"><div class="read-h">Rename <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">AGENTS.md</div><div class="doc-b">These rules govern agent work in this project directory, whether the project lives inside <span class="hl">a SuperResearch OS workspace</span> or stands alone as its own repository.</div></div>
+          <p class="why">In a workspace the app made, "the AI-Human Research OS" names a repository the tester never cloned.</p></div>
+        <div class="read"><div class="read-h">Keep</div>
+          <div class="doc"><div class="doc-f">AGENTS.md</div><div class="doc-b">These rules govern agent work in this project directory, whether the project lives inside the AI-Human Research OS or stands alone as its own repository.</div></div></div>
+      </div>
+    </article>
+
+    <article class="u" id="u7">
+      <div class="u-h"><span class="u-id">U7</span><span class="u-t">A skill's credit line</span></div>
+      <p class="u-where">1 line: the last line of <code>research-project-manager/SKILL.md</code> (line 130). The author's name is left out here.</p>
+      <p class="u-why">It says where the skill was written, but the skill ships with SuperResearch OS and lands in every workspace.</p>
+      <div class="reads">
+        <div class="read"><div class="read-h">Rename</div>
+          <div class="doc"><div class="doc-f">SKILL.md</div><div class="doc-b"><i>Original skill, ‹author›. Part of <span class="hl">SuperResearch OS</span>.</i></div></div></div>
+        <div class="read is-rec"><div class="read-h">Keep <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">SKILL.md</div><div class="doc-b"><i>Original skill, ‹author›. Part of the AI-Human Research OS.</i></div></div>
+          <p class="why">A credit records where the work was done.</p></div>
+      </div>
+    </article>
+
+    <article class="u" id="u8">
+      <div class="u-h"><span class="u-id">U8</span><span class="u-t">The vocabulary's title</span></div>
+      <p class="u-where">1 line: <code>CONTEXT.md:1</code>. The product repository takes this file as it is.</p>
+      <p class="u-why">Here the title names this repository; in the product repository it would name the wrong one.</p>
+      <div class="reads">
+        <div class="read"><div class="read-h">Rename</div>
+          <div class="doc"><div class="doc-f">CONTEXT.md</div><div class="doc-b md-h"><span class="hl">SuperResearch OS</span></div></div></div>
+        <div class="read is-rec"><div class="read-h">Keep <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">CONTEXT.md</div><div class="doc-b md-h">AI-Human Research OS</div></div>
+          <p class="why">The file is still this repository's; the product's copy fits better as an edition at the import, as its README and AGENTS.md already are.</p></div>
+      </div>
+    </article>
+
+    <article class="u" id="u9">
+      <div class="u-h"><span class="u-id">U9</span><span class="u-t">The contributing guide's first line</span></div>
+      <p class="u-where">1 line: <code>CONTRIBUTING.md:3</code>. The product repository takes this file as it is.</p>
+      <p class="u-why">As U8: in the product repository, contributors build SuperResearch OS.</p>
+      <div class="reads">
+        <div class="read"><div class="read-h">Rename</div>
+          <div class="doc"><div class="doc-f">CONTRIBUTING.md</div><div class="doc-b">Thanks for helping build <span class="hl">SuperResearch OS</span>.</div></div></div>
+        <div class="read is-rec"><div class="read-h">Keep <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">CONTRIBUTING.md</div><div class="doc-b">Thanks for helping build the AI-Human Research OS.</div></div>
+          <p class="why">As U8: settle the product's copy at the import, as an edition.</p></div>
+      </div>
+    </article>
+
+    <article class="u" id="u10">
+      <div class="u-h"><span class="u-id">U10</span><span class="u-t">The mark's label</span></div>
+      <p class="u-where">6 lines: lines 1-2 of <code>logo-mark.svg</code>, <code>logo-mark-white.svg</code>, and <code>logo-mark-mono.svg</code> (the name a screen reader says, and the file's title).</p>
+      <p class="u-why">The mark does not change and both repositories use it, so its label can name either.</p>
+      <div class="reads">
+        <div class="read"><div class="read-h">Rename</div>
+          <div class="doc"><div class="doc-f">logo-mark.svg</div><div class="doc-b code">aria-label="<span class="hl">SuperResearch OS</span> mark"</div></div></div>
+        <div class="read is-rec"><div class="read-h">Keep <span class="rec">Proposed</span></div>
+          <div class="doc"><div class="doc-f">logo-mark.svg</div><div class="doc-b code">aria-label="AI-Human Research OS mark"</div></div>
+          <p class="why">With part 2's A, the old files stay this repository's and the new lockup files carry the new name.</p></div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ================= 5. NOTES (mockup only) ================= -->
+<section class="part" id="p5" aria-labelledby="p5h">
+  <div class="notes">
+    <header><h2 id="p5h">Mockup only · 5 · Notes on this mockup</h2></header>
+    <div class="body">
+
+      <h3>How to read it</h3>
+      <ul>
+        <li>One page with no script: every alternative is drawn, and nothing is clickable except the links to the parts. It reads the same in a preview that runs no scripts.</li>
+        <li>Parts 1 and 2 are choices between alternatives (A, B, C); part 3 shows what the rename changes, with one small choice, the left menu's line break (a or b); part 4 asks rename or keep for each sentence.</li>
+        <li>Yellow marks the words that change. The striped and dashed boxes are this mockup's, not the app's.</li>
+      </ul>
+
+      <h3>What each drawing is taken from</h3>
+      <ul>
+        <li><b>The mark, the lockups, the app icon:</b> copied from <code>docs/brand/logo-mark.svg</code>, <code>logo-mark-white.svg</code>, <code>logo-lockup.svg</code>, <code>logo-lockup-white.svg</code>, and <code>app-icon.svg</code>; the tones and type from <code>docs/brand/README.md</code>. A keeps the lockup's frame (viewBox 460 × 128); B and C widen it to 570 × 128 so sixteen characters fit at today's 40 px.</li>
+        <li><b>The README frames:</b> this repository's <code>README.md</code> (the <code>&lt;picture&gt;</code> at <code>width="480"</code>, the heading, the first sentence) and the import kit's product README, <code>os-build/import/editions/README.md</code>, which has no picture today. Light and dark are GitHub's page colours, where the lockup is shown.</li>
+        <li><b>Menu bar and app menu:</b> <code>os-ui/client/src/main/menu.ts:27-44</code>, labelled with <code>app.name</code>; Electron takes it from <code>productName</code> in <code>os-ui/client/package.json</code>. The About, Hide, and Quit labels are the macOS roles' own, which add the app's name.</li>
+        <li><b>Window title:</b> <code>index.ts:354</code> ("Research OS"), kept by <code>index.ts:369</code> against the page's own title.</li>
+        <li><b>About panel:</b> <code>index.ts:438-443</code>. Electron's docs mark <code>website</code> as Linux only, so the macOS drawing has no website line. The version is <code>package.json</code>'s 0.1.0; the panel is drawn after macOS's look, not captured.</li>
+        <li><b>Left menu:</b> <code>os-ui/frontend/src/shell/Sidebar.tsx:45-56</code>, at the width and type of <code>c-document.html</code>.</li>
+        <li><b>Settings:</b> <code>os-ui/frontend/src/pages/SettingsPage.tsx:14-18</code>.</li>
+        <li><b>Dock and names:</b> <code>electron-builder.yml</code> (<code>productName</code>, <code>artifactName</code>, <code>executableName</code>, <code>nsis.shortcutName</code>) and <code>package.json</code> (<code>name</code>, which is also the Linux package's name); the CI artifact from <code>.github/workflows/desktop.yml:147</code>.</li>
+        <li><b>Welcome card:</b> <code>os-ui/frontend/src/components/StateMissing.tsx:46-64</code>.</li>
+        <li><b>Part 4:</b> the inventory of every place the name stands, kept outside the repository; each card names its lines.</li>
+      </ul>
+
+      <h3>The one-way identifiers</h3>
+      <p>Free to change until the first tester installs; after that, each change makes a second app or loses something, as the last column says. <code>&lt;account&gt;</code> is the id's existing prefix, unchanged.</p>
+      <table class="tbl ids">
+        <colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"></colgroup>
+        <thead><tr><th>Identifier</th><th>Today</th><th>Proposed</th><th>Set in</th><th>What must match, and what it decides</th></tr></thead>
+        <tbody>
+          <tr><td><code>appId</code></td><td><code>io.github.&lt;account&gt;.researchos</code></td><td><code>io.github.&lt;account&gt;.superresearchos</code></td><td><code>electron-builder.yml:3</code></td><td><code>APP_ID</code>; <code>client/DESIGN.md:715</code>. The macOS bundle id (permissions, the Open Anyway approval) and the Windows installer's GUID, derived from it: a new id installs beside the old app, not over it.</td></tr>
+          <tr><td><code>APP_ID</code></td><td>the same</td><td>the same</td><td><code>index.ts:42</code></td><td><code>appId</code>; Windows taskbar grouping and notifications.</td></tr>
+          <tr><td><code>productName</code></td><td><code>Research OS</code></td><td><code>SuperResearch OS</code></td><td><code>package.json:3</code> and <code>electron-builder.yml:4</code></td><td>Each other. Names <code>SuperResearch OS.app</code> and <code>.exe</code>, the install folders, the macOS app menu, and the settings folder below. The window title (<code>index.ts:354</code>) and the About name (<code>:439</code>) are written out, so they change by hand. Also <code>e2e/app.test.ts:129, 131, 660</code>, <code>desktop.yml:131</code>, <code>client/README.md:40</code>, <code>DESIGN.md:711</code>.</td></tr>
+          <tr><td><code>executable<wbr>Name</code> (Linux)</td><td><code>research-os</code></td><td><code>superresearch-os</code></td><td><code>electron-builder.yml:44</code></td><td><code>e2e/app.test.ts:132</code>, <code>DESIGN.md:716</code>; the launcher's command.</td></tr>
+          <tr><td><code>desktopName</code></td><td><code>research-os.desktop</code></td><td><code>superresearch-os.desktop</code></td><td><code>package.json:4</code></td><td>With <code>syncDesktopName</code>, the installed launcher file and the window's class on Linux.</td></tr>
+          <tr><td>package <code>name</code></td><td><code>research-os-desktop</code></td><td><code>superresearch-os</code> (or <code>superresearch-os-desktop</code>, today's pattern)</td><td><code>package.json:2</code></td><td><code>package-lock.json:2, 8</code>, <code>e2e/app.test.ts:4145</code>. It is also the Linux package's name: apt treats a new one as another package.</td></tr>
+          <tr><td>CI artifact</td><td><code>research-os-${{ matrix.name }}</code></td><td><code>superresearch-os-${{ matrix.name }}</code></td><td><code>desktop.yml:147</code></td><td>What a tester downloads; nothing in the code.</td></tr>
+          <tr><td>installer files</td><td><code>Research-OS-${version}-${os}-${arch}.${ext}</code></td><td><code>SuperResearch-OS-${version}-${os}-${arch}.${ext}</code></td><td><code>electron-builder.yml:6</code></td><td><code>client/README.md:35, 41, 45</code>, <code>DESIGN.md:716</code>. The workflow uploads by extension, so it needs no change.</td></tr>
+          <tr><td>Windows shortcut</td><td><code>Research OS</code></td><td><code>SuperResearch OS</code></td><td><code>electron-builder.yml:39</code></td><td>The Start-menu and desktop shortcut.</td></tr>
+          <tr><td>settings folder</td><td>Electron's user-data folder, named <code>Research OS</code></td><td>named <code>SuperResearch OS</code></td><td>follows <code>productName</code> at run time</td><td>Holds the saved workspace, Open Recent, the window's size, the notification switch, the log, and the pages' stored layout. A renamed app starts empty; nothing moves over. No tester has one yet.</td></tr>
+          <tr><td>signature check</td><td><code>"Research OS.app"</code></td><td><code>"SuperResearch OS.app"</code></td><td><code>desktop.yml:131</code></td><td>Follows <code>productName</code>; the macOS job fails if it does not.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>The inventory, in numbers</h3>
+      <p>Every line in the brief's areas that names the app, the system, or this repository: <code>os-ui/</code>, <code>os-harness/</code>, the five shipped skills, the project template, <code>docs/brand/</code>, ADR-0005 and 0006, <code>CONTEXT.md</code>, <code>CONTRIBUTING.md</code>, the workflows, and the import kit's editions. "Unclear" includes the app's URL host (below) and the lines settled by part 2.</p>
+      <table class="tbl nums">
+        <colgroup><col class="c1"><col><col><col><col></colgroup>
+        <thead><tr><th>Area</th><th class="n">Rename</th><th class="n">Keep</th><th class="n">Unclear</th><th class="n">of which the host</th></tr></thead>
+        <tbody>
+          <tr><td><code>os-ui/client</code></td><td class="n">37</td><td class="n">4</td><td class="n">114</td><td class="n">79</td></tr>
+          <tr><td><code>os-ui/frontend</code></td><td class="n">7</td><td class="n">2</td><td class="n">40</td><td class="n">23</td></tr>
+          <tr><td>os-ui's docs, generator, and mockups</td><td class="n">2</td><td class="n">30</td><td class="n">15</td><td class="n">10</td></tr>
+          <tr><td><code>os-harness/</code></td><td class="n">0</td><td class="n">5</td><td class="n">1</td><td class="n">0</td></tr>
+          <tr><td>the five shipped skills</td><td class="n">0</td><td class="n">6</td><td class="n">1</td><td class="n">0</td></tr>
+          <tr><td>the project template</td><td class="n">0</td><td class="n">4</td><td class="n">1</td><td class="n">0</td></tr>
+          <tr><td><code>docs/brand/</code></td><td class="n">4</td><td class="n">1</td><td class="n">24</td><td class="n">0</td></tr>
+          <tr><td>ADR-0005, ADR-0006, <code>CONTEXT.md</code>, <code>CONTRIBUTING.md</code></td><td class="n">0</td><td class="n">9</td><td class="n">2</td><td class="n">0</td></tr>
+          <tr><td><code>.github/workflows/</code></td><td class="n">2</td><td class="n">4</td><td class="n">0</td><td class="n">0</td></tr>
+          <tr><td>the import kit's editions (already "SuperResearch OS")</td><td class="n">0</td><td class="n">5</td><td class="n">0</td><td class="n">0</td></tr>
+          <tr><td><b>All</b></td><td class="n"><b>52</b></td><td class="n"><b>70</b></td><td class="n"><b>198</b></td><td class="n"><b>112</b></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Not settled by this page</h3>
+      <ul>
+        <li><b>The app's URL host, <code>app://research-os</code></b> (112 lines: <code>protocol.ts:23</code>, the plugin id it reserves in <code>manifest.ts:54</code>, the five bundled plugins, <code>PLUGINS.md</code>, and the tests). No user ever sees it. Renaming it costs those lines and every plugin written against it; keeping it is proposed. Your call.</li>
+        <li><b>The package name's form:</b> <code>superresearch-os</code> or <code>superresearch-os-desktop</code>.</li>
+        <li><b>Two internal names:</b> the shell marker <code>__RESEARCH_OS_ENV__</code> (<code>shellEnv.ts:4</code>, never shown or stored) and the harness's client name sent to Codex (<code>adapter_codex.py:30</code>); keeping both is proposed.</li>
+        <li><b>The Help link and the About panel's website</b> still open this repository; they move at the import, with the documentation they point to.</li>
+        <li><b>Step 3's own words:</b> the design's S1 sentence ("Research OS has no model of its own: …") and S2's "Research OS cannot write to this folder" are about the app; when step 3 builds them they would take the new name.</li>
+      </ul>
+
+      <h3>Unchanged in every alternative</h3>
+      <ul>
+        <li>The app's icon, <code>docs/brand/app-icon.png</code> (the Dock, the About panel, the installers), and the mark (<code>logo-mark*.svg</code>): the window with the dot, the ring, and the three squares. The favicon too, except its label.</li>
+        <li>The left menu's book icon, and every page's words other than those in parts 3 and 4.</li>
+      </ul>
+
+      <h3>What this mockup does not show</h3>
+      <ul>
+        <li>Windows and Linux: their menus, About panel, installer windows, and taskbar; the drawings are macOS's.</li>
+        <li>The installer's own window (the disk image's title and background), a notification banner, the Linux launcher, and Finder's other views.</li>
+        <li>The real fonts: the page loads no font, so the wordmarks are in this computer's monospace, not IBM Plex Mono, and the app's serif is whatever this computer has for Iowan Old Style or Palatino.</li>
+        <li>What GitHub draws around a README beyond its first lines, and the README's screenshot and badges.</li>
+        <li>The renamed files' contents (part 2 shows what the READMEs and the app would display, not the SVG sources), and anything not built yet in step 3.</li>
+        <li>A dark appearance of the app (mockup C has none); only the lockups are drawn on dark.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>
