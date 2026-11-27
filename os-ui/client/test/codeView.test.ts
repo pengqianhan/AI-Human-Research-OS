@@ -50,7 +50,7 @@ describe("the Code view's Git history in the desktop client", () => {
     const own = await handler(new Request("app://code-view/api/code-view/git/log?project=Nope"));
     assert.equal(own.status, 404);
     assert.deepEqual(await own.json(), { error: "no registered project Nope" });
-    const app = await handler(new Request("app://research-os/api/code-view/git/log?project=Nope"));
+    const app = await handler(new Request("app://superresearch-os/api/code-view/git/log?project=Nope"));
     assert.equal(app.status, 404);
     assert.deepEqual(await app.json(), { error: "no endpoint /api/code-view/git/log" });
     for (const url of ["app://paper-wiki/api/code-view/git/log?project=Nope", "app://code-view/api/paper-wiki/status"]) {

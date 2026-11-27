@@ -64,7 +64,7 @@ import { DOCUMENT_OPTIONS, loadPdfJs, startWorker } from "./pdfjs.ts";
 import type { OutlineItem, PdfDocument, PdfJs, PdfPage, RenderTask, TextLayerTask, Viewport } from "./pdfjs.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
-const HOST = "app://research-os";
+const HOST = "app://superresearch-os";
 
 const project = projectFrom(location.search);
 const app = document.getElementById("app")!;

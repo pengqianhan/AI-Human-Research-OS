@@ -27,7 +27,7 @@ DECLINE = {
     "execCommandApproval": {"decision": "denied"},
     "applyPatchApproval": {"decision": "denied"},
 }
-CLIENT_INFO = {"name": "research-os-harness", "title": "Research OS harness", "version": "0.1.0"}
+CLIENT_INFO = {"name": "superresearch-os-harness", "title": "SuperResearch OS harness", "version": "0.1.0"}
 
 
 class CodexAdapter:

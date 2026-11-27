@@ -20,10 +20,13 @@ window's three traffic lights come from the os-ui desktop.
 | [logo-mark-mono.svg](logo-mark-mono.svg) | One-color mark; takes the surrounding `currentColor` (inline it, or set `color` on an `<img>` wrapper). For print, stamps, and disabled states. |
 | [logo-lockup.svg](logo-lockup.svg) | Mark plus wordmark, horizontal. Its text needs IBM Plex Mono installed; use the PNG where you cannot control fonts. |
 | [logo-lockup-white.svg](logo-lockup-white.svg) | The lockup for dark backgrounds: white mark and “RESEARCH”, mist-grey “AI-HUMAN”, orange ring and “OS”. |
+| [superresearch-lockup.svg](superresearch-lockup.svg) | The SuperResearch OS lockup: the same mark beside “SuperResearch” in ink and “OS” in orange, on one line. Its text needs IBM Plex Mono installed, as the other lockup's does. |
+| [superresearch-lockup-white.svg](superresearch-lockup-white.svg) | The SuperResearch OS lockup for dark backgrounds: white mark and “SuperResearch”, orange ring and “OS”. |
 | [app-icon.svg](app-icon.svg) | Ink tile with the OS's dot grid and the white mark. Rounded corners at 22%; masks well to a circle. |
 | [favicon.svg](favicon.svg) | The pair only (dot and ring) on an ink tile, for 16–48 px. |
 | [logo-mark.png](logo-mark.png), [logo-mark-white.png](logo-mark-white.png), [app-icon.png](app-icon.png) | 1024 px PNG exports, transparent background. |
 | [logo-lockup.png](logo-lockup.png), [logo-lockup-white.png](logo-lockup-white.png), [logo-lockup-on-paper.png](logo-lockup-on-paper.png) | PNG exports of the lockup at 4× its viewBox width: transparent for light backgrounds, transparent for dark backgrounds, and on the paper color (rendered from `logo-lockup.svg`). |
+| [superresearch-lockup.png](superresearch-lockup.png), [superresearch-lockup-white.png](superresearch-lockup-white.png), [superresearch-lockup-on-paper.png](superresearch-lockup-on-paper.png) | The same three exports of the SuperResearch OS lockup (the last rendered from `superresearch-lockup.svg`). |
 | [favicon-256.png](favicon-256.png) | 256 px PNG of the favicon. |
 
 Every PNG is rendered from its SVG by [render.py](render.py) (headless
@@ -32,6 +35,11 @@ after editing one, run `python docs/brand/render.py` from the repository root.
 
 ## Where the assets are used
 
+- Two lockups share one mark. The AI-HUMAN RESEARCH OS lockup
+  (`logo-lockup*`) is this repository's, for its README. The SuperResearch OS
+  lockup (`superresearch-lockup*`) is the desktop app's, for the product
+  repository, SuperResearch-OS. The mark, the app icon, and the favicon serve
+  both.
 - The repository [README](../../README.md) opens with the lockup:
   [logo-lockup.png](logo-lockup.png) in light mode and
   [logo-lockup-white.png](logo-lockup-white.png) in dark mode, switched by a
@@ -60,7 +68,9 @@ plus one brand-only tint for dark backgrounds:
 | mist (brand only) | `#9FB0B8` | — | “AI-HUMAN” |
 
 Wordmark: IBM Plex Mono, “AI-HUMAN” at 500 with wide tracking, “RESEARCH OS”
-at 700. Body text next to the logo: IBM Plex Sans.
+at 700. The SuperResearch OS wordmark is one line at 700, in mixed case:
+“SuperResearch” in ink (paper on dark) and “OS” in signal. Body text next to
+the logo: IBM Plex Sans.
 
 ## Usage
 

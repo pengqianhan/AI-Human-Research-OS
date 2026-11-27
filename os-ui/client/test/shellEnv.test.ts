@@ -18,7 +18,7 @@ describe("login-shell environment", () => {
   });
 
   test("probe command quotes the executable; a quote in the path is refused", () => {
-    assert.equal(probeCommand("/Applications/Research OS.app/Contents/MacOS/Research OS")?.startsWith("'/Applications/Research OS.app/"), true);
+    assert.equal(probeCommand("/Applications/SuperResearch OS.app/Contents/MacOS/SuperResearch OS")?.startsWith("'/Applications/SuperResearch OS.app/"), true);
     assert.equal(probeCommand("/tmp/it's/electron"), null);
   });
 

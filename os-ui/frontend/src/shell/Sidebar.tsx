@@ -48,9 +48,9 @@ export function Sidebar({ meta, policy, screen, openProject, projects, pluginIte
         </span>
         {!collapsed && (
           <span className="font-serif text-[15px] font-medium leading-[1.12] text-ink">
-            AI-Human
+            SuperResearch
             <br />
-            Research OS
+            OS
           </span>
         )}
       </div>

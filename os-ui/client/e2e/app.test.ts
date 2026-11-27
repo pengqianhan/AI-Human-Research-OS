@@ -126,10 +126,10 @@ function releasedExecutable(): string {
   const dirs = existsSync(release) ? readdirSync(release) : [];
   const candidates =
     process.platform === "darwin"
-      ? dirs.filter((d) => d.startsWith("mac")).map((d) => join(release, d, "Research OS.app", "Contents", "MacOS", "Research OS"))
+      ? dirs.filter((d) => d.startsWith("mac")).map((d) => join(release, d, "SuperResearch OS.app", "Contents", "MacOS", "SuperResearch OS"))
       : process.platform === "win32"
-        ? dirs.filter((d) => /^win.*unpacked$/.test(d)).map((d) => join(release, d, "Research OS.exe"))
-        : dirs.filter((d) => /^linux.*unpacked$/.test(d)).map((d) => join(release, d, "research-os"));
+        ? dirs.filter((d) => /^win.*unpacked$/.test(d)).map((d) => join(release, d, "SuperResearch OS.exe"))
+        : dirs.filter((d) => /^linux.*unpacked$/.test(d)).map((d) => join(release, d, "superresearch-os"));
   const found = candidates.find((c) => existsSync(c));
   if (found === undefined) throw new Error(`no unpacked app in ${release}; run electron-builder first`);
   return found;
@@ -548,7 +548,7 @@ function unexpectedCspReport(line: string): boolean {
     /Refused to|Content Security Policy/.test(line) &&
     // The isolation probes, which the policies are meant to refuse.
     !line.includes("example.com") &&
-    !line.includes("research-os/api") &&
+    !line.includes("superresearch-os/api") &&
     !line.includes("paper-wiki/api") &&
     !line.includes("code-view/api") &&
     !line.includes("skills-hub/api") &&
@@ -580,7 +580,7 @@ describe("the final policy check's filter, without the app", () => {
   test("the isolation probes' reports stay exempt", () => {
     for (const line of [
       "frame app://paper-wiki/viz.html: Fetch API cannot load https://example.com/. Refused to connect because it violates the document's Content Security Policy.",
-      `console.error: Connecting to 'app://research-os/api/chat/sessions?cwd=' violates the following Content Security Policy directive: "connect-src 'self'". The action has been blocked.`,
+      `console.error: Connecting to 'app://superresearch-os/api/chat/sessions?cwd=' violates the following Content Security Policy directive: "connect-src 'self'". The action has been blocked.`,
       `frame app://code-view/index.html?project=nanochat_cpu: Connecting to 'app://paper-wiki/api/paper-wiki/status' violates the following Content Security Policy directive: "connect-src 'self'". The action has been blocked.`,
       "console.error: Fetch API cannot load app://code-view/api/code-view/git/log?project=nanochat_cpu. Refused to connect because it violates the document's Content Security Policy.",
       `frame app://paper-wiki/viz.html: Connecting to 'app://skills-hub/api/skills-hub/toggle' violates the following Content Security Policy directive: "connect-src 'self'". The action has been blocked.`,
@@ -657,8 +657,8 @@ describe("desktop client on a Research OS folder", () => {
     await screen(page, "home").getByRole("heading", { name: "Projects", exact: true }).waitFor();
     assert.equal(await nav(page, "Home").getAttribute("aria-current"), "page");
     const title = await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.getTitle());
-    assert.equal(title, "Research OS");
-    assert.equal(page.url(), "app://research-os/");
+    assert.equal(title, "SuperResearch OS");
+    assert.equal(page.url(), "app://superresearch-os/");
   });
 
   test("Settings shows the folder and a working Python", SLOW, async () => {
@@ -820,7 +820,7 @@ describe("desktop client on a Research OS folder", () => {
       return {
         own: typeof (window as { osDesktop?: unknown }).osDesktop,
         parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
-        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        appApi: await outcome(async () => (await fetch("app://superresearch-os/api/chat/sessions?cwd=")).status),
         wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
       };
     });
@@ -1835,7 +1835,7 @@ describe("desktop client on a Research OS folder", () => {
       return {
         own: typeof (window as { osDesktop?: unknown }).osDesktop,
         parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
-        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        appApi: await outcome(async () => (await fetch("app://superresearch-os/api/chat/sessions?cwd=")).status),
         codeViewGit: await outcome(async () => (await fetch(`app://code-view/api/code-view/git/log?project=${project}`)).status),
       };
     }, PROJECT);
@@ -2197,7 +2197,7 @@ describe("desktop client on a Research OS folder", () => {
       return {
         own: typeof (window as { osDesktop?: unknown }).osDesktop,
         parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
-        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        appApi: await outcome(async () => (await fetch("app://superresearch-os/api/chat/sessions?cwd=")).status),
         wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
       };
     });
@@ -2866,7 +2866,7 @@ describe("desktop client on a Research OS folder", () => {
       return {
         own: typeof (window as { osDesktop?: unknown }).osDesktop,
         parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
-        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        appApi: await outcome(async () => (await fetch("app://superresearch-os/api/chat/sessions?cwd=")).status),
         wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
       };
     });
@@ -3423,7 +3423,7 @@ describe("desktop client on a Research OS folder", () => {
       return {
         own: typeof (window as { osDesktop?: unknown }).osDesktop,
         parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
-        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        appApi: await outcome(async () => (await fetch("app://superresearch-os/api/chat/sessions?cwd=")).status),
         wikiOrigin: await outcome(async () => (await fetch("app://paper-wiki/api/paper-wiki/status")).status),
       };
     });
@@ -3995,7 +3995,7 @@ describe("desktop client on a Research OS folder", () => {
       return {
         own: typeof (window as { osDesktop?: unknown }).osDesktop,
         parent: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
-        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        appApi: await outcome(async () => (await fetch("app://superresearch-os/api/chat/sessions?cwd=")).status),
       };
     });
     assert.equal(probe.own, "undefined");
@@ -4142,7 +4142,7 @@ describe("desktop client on a Research OS folder", () => {
     });
     assert.deepEqual(results, { form: 415, plain: 415, skillToggle: 404, noToken: 401, withToken: 200, state: 200, traversal: 404, wikiHere: 404 });
     const body = await page.evaluate(async () => (await fetch("/..%2f..%2fpackage.json")).text());
-    assert.ok(!body.includes("research-os-desktop"), "a file outside the renderer must not be served");
+    assert.ok(!body.includes("superresearch-os"), "a file outside the renderer must not be served");
   });
 
   test("the Paper Wiki runs on its own origin, sealed off from the app", SLOW, async () => {
@@ -4160,10 +4160,10 @@ describe("desktop client on a Research OS folder", () => {
       };
       return {
         bridge: await outcome(async () => typeof (window.parent as Window & { osDesktop?: unknown }).osDesktop),
-        appApi: await outcome(async () => (await fetch("app://research-os/api/chat/sessions?cwd=")).status),
+        appApi: await outcome(async () => (await fetch("app://superresearch-os/api/chat/sessions?cwd=")).status),
         appApiPost: await outcome(
           async () =>
-            (await fetch("app://research-os/api/chat/send", { method: "POST", mode: "no-cors", body: '{"text":"from the wiki"}' })).status,
+            (await fetch("app://superresearch-os/api/chat/send", { method: "POST", mode: "no-cors", body: '{"text":"from the wiki"}' })).status,
         ),
         ownChat: await outcome(async () => (await fetch("/api/chat/sessions")).status),
         web: await outcome(async () => (await fetch("https://example.com/")).status),
@@ -4225,26 +4225,26 @@ describe("desktop client on a Research OS folder", () => {
     // may become the app origin, nor the top frame the wiki origin.
     const { paper } = await openPaper();
     await paper.evaluate(() => {
-      location.href = "app://research-os/";
+      location.href = "app://superresearch-os/";
     });
     await page.waitForTimeout(800);
-    assert.ok(!paper.url().startsWith("app://research-os"), paper.url());
+    assert.ok(!paper.url().startsWith("app://superresearch-os"), paper.url());
     await nav(page, "Paper wiki").click();
     const frame = await wikiFrame(page);
     await frame.evaluate(() => {
-      location.href = "app://research-os/";
+      location.href = "app://superresearch-os/";
     });
     await page.waitForTimeout(800);
     // Blocked either by the guard (the frame stays) or by frame-src (an error page).
-    assert.ok(!frame.url().startsWith("app://research-os"), frame.url());
+    assert.ok(!frame.url().startsWith("app://superresearch-os"), frame.url());
     await page.evaluate(() => {
-      window.open("app://research-os/");
+      window.open("app://superresearch-os/");
       location.href = "app://paper-wiki/viz.html";
     });
     await page.waitForTimeout(800);
-    assert.equal(page.url(), "app://research-os/");
+    assert.equal(page.url(), "app://superresearch-os/");
     assert.equal(app.windows().length, 1);
-    assert.equal(await page.evaluate(() => location.href), "app://research-os/");
+    assert.equal(await page.evaluate(() => location.href), "app://superresearch-os/");
   });
 });
 

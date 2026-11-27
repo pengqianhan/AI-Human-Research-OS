@@ -220,7 +220,7 @@ describe("policies", () => {
   });
 
   test("app pages carry the policy for the sites the handler was given, in their order", () => {
-    const index = route("app://research-os/", { renderer, workspace }, twoSites);
+    const index = route("app://superresearch-os/", { renderer, workspace }, twoSites);
     assert.ok(index.kind === "file" && index.csp === appCsp(["paper-wiki", "code-view", "paper-view", "skeleton-view", "assets-view", "idea-view", "skills-hub", "demo"]));
   });
 
@@ -239,9 +239,9 @@ describe("policies", () => {
 describe("allowedNavigation", () => {
   const hosts = ["paper-wiki"];
   test("the top frame stays on the app's origin", () => {
-    assert.equal(allowedNavigation("app://research-os/", true, hosts), true);
-    assert.equal(allowedNavigation("app://research-os/projects/x", true, hosts), true);
-    for (const url of ["app://paper-wiki/viz.html", "app://research-os.evil/", "app://research-osx/", "about:blank", "https://example.com/"]) {
+    assert.equal(allowedNavigation("app://superresearch-os/", true, hosts), true);
+    assert.equal(allowedNavigation("app://superresearch-os/projects/x", true, hosts), true);
+    for (const url of ["app://paper-wiki/viz.html", "app://superresearch-os.evil/", "app://superresearch-osx/", "about:blank", "https://example.com/"]) {
       assert.equal(allowedNavigation(url, true, hosts), false, url);
     }
   });
@@ -251,7 +251,7 @@ describe("allowedNavigation", () => {
       assert.equal(allowedNavigation(url, false, hosts), true, url);
     }
     for (const url of [
-      "app://research-os/",
+      "app://superresearch-os/",
       "app://demo/index.html",
       "app://evil/",
       "app://paper-wiki.evil/",
@@ -280,7 +280,7 @@ describe("allowedNavigation", () => {
   test("a subframe stays on the plugin host the app gave it: another plugin's host only when the app's own page starts the navigation", () => {
     const hosts = ["paper-wiki", "skills-hub", "code-view", "paper-view"];
     // What the main process saw (will-frame-navigate): the app loads a new frame, "" so far, on a plugin's origin.
-    const byApp = (frame: string) => ({ frame, initiator: "app://research-os/" });
+    const byApp = (frame: string) => ({ frame, initiator: "app://superresearch-os/" });
     assert.equal(allowedNavigation("app://skills-hub/index.html", false, hosts, byApp("")), true, "the app's first load");
     assert.equal(allowedNavigation("app://code-view/index.html?project=P", false, hosts, byApp("")), true);
     assert.equal(allowedNavigation("app://paper-view/index.html?project=P", false, hosts, byApp("app://code-view/index.html?project=P")), true, "the app may point a frame elsewhere");
@@ -291,7 +291,7 @@ describe("allowedNavigation", () => {
         assert.equal(allowedNavigation(url, false, hosts, { frame: wiki, initiator }), true, `${url} from ${initiator}`);
       }
       // Never to another plugin's host: Paper wiki's frame would otherwise become a working Skills page (review, note 3).
-      for (const url of ["app://skills-hub/index.html", "app://skills-hub/", "app://code-view/index.html?project=P", "app://research-os/", "https://example.com/"]) {
+      for (const url of ["app://skills-hub/index.html", "app://skills-hub/", "app://code-view/index.html?project=P", "app://superresearch-os/", "https://example.com/"]) {
         assert.equal(allowedNavigation(url, false, hosts, { frame: wiki, initiator }), false, `${url} from ${initiator}`);
       }
     }
@@ -299,7 +299,7 @@ describe("allowedNavigation", () => {
     assert.equal(allowedNavigation("app://paper-wiki/viz.html", false, hosts, { frame: "app://skills-hub/index.html", initiator: wiki }), false);
     assert.equal(allowedNavigation("app://skills-hub/index.html", false, hosts, { frame: "app://skills-hub/index.html", initiator: wiki }), true);
     // A frame with no URL yet, started by no frame or by a plugin's, gets no plugin's host.
-    for (const initiator of [null, wiki, "app://research-os.evil/", "app://research-osx/"]) {
+    for (const initiator of [null, wiki, "app://superresearch-os.evil/", "app://superresearch-osx/"]) {
       assert.equal(allowedNavigation("app://skills-hub/index.html", false, hosts, { frame: "", initiator }), false, `from ${initiator}`);
     }
     // A host that is not loaded stays refused, even the frame's own; a look-alike of the frame's host is another host.
@@ -307,27 +307,27 @@ describe("allowedNavigation", () => {
     assert.equal(allowedNavigation("app://paper-wiki.evil/", false, [...hosts, "paper-wiki.evil"], { frame: wiki, initiator: wiki }), false);
     assert.equal(allowedNavigation("app://paper-wikix/", false, [...hosts, "paper-wikix"], { frame: wiki, initiator: wiki }), false);
     // The top frame's rule is unchanged.
-    assert.equal(allowedNavigation("app://research-os/", true, hosts, { frame: "app://research-os/", initiator: null }), true);
-    assert.equal(allowedNavigation("app://skills-hub/index.html", true, hosts, byApp("app://research-os/")), false);
+    assert.equal(allowedNavigation("app://superresearch-os/", true, hosts, { frame: "app://superresearch-os/", initiator: null }), true);
+    assert.equal(allowedNavigation("app://skills-hub/index.html", true, hosts, byApp("app://superresearch-os/")), false);
   });
 });
 
 describe("route", () => {
   const roots = { renderer, workspace };
   test("app origin", () => {
-    assert.deepEqual(route("app://research-os/api/chat/sessions?cwd=", roots, sites), { kind: "api", pathname: "/api/chat/sessions", host: "research-os" });
-    assert.equal(route("app://research-os/state.json", roots, sites).kind, "file");
-    const index = route("app://research-os/", roots, sites);
+    assert.deepEqual(route("app://superresearch-os/api/chat/sessions?cwd=", roots, sites), { kind: "api", pathname: "/api/chat/sessions", host: "superresearch-os" });
+    assert.equal(route("app://superresearch-os/state.json", roots, sites).kind, "file");
+    const index = route("app://superresearch-os/", roots, sites);
     assert.ok(index.kind === "file" && index.rel === "index.html" && index.csp === CSP && !index.confined);
-    const deep = route("app://research-os/projects/nanochat", roots, sites);
+    const deep = route("app://superresearch-os/projects/nanochat", roots, sites);
     assert.ok(deep.kind === "file" && deep.fallback === "index.html");
-    const asset = route("app://research-os/assets/app.js", roots, sites);
+    const asset = route("app://superresearch-os/assets/app.js", roots, sites);
     assert.ok(asset.kind === "file" && asset.fallback === null);
   });
   test("the app origin does not serve the wiki or workspace files", () => {
-    const r = route("app://research-os/paper-wiki/viz.html", roots, sites);
+    const r = route("app://superresearch-os/paper-wiki/viz.html", roots, sites);
     assert.ok(r.kind === "file" && r.root === renderer, "falls to the renderer, which has no such file");
-    assert.equal(route("app://research-os/..%2f.env", roots, sites).kind, "not-found");
+    assert.equal(route("app://superresearch-os/..%2f.env", roots, sites).kind, "not-found");
   });
   test("wiki origin", () => {
     const viz = route("app://paper-wiki/viz.html", roots, sites);
@@ -340,12 +340,12 @@ describe("route", () => {
   });
   test("no workspace: no state, no wiki", () => {
     const none = { renderer, workspace: null };
-    assert.equal(route("app://research-os/state.json", none, sites).kind, "not-found");
+    assert.equal(route("app://superresearch-os/state.json", none, sites).kind, "not-found");
     assert.equal(route("app://paper-wiki/viz.html", none, sites).kind, "not-found");
   });
   test("other hosts and schemes", () => {
     assert.equal(route("app://evil/state.json", roots, sites).kind, "not-found");
-    assert.equal(route("https://research-os/state.json", roots, sites).kind, "not-found");
+    assert.equal(route("https://superresearch-os/state.json", roots, sites).kind, "not-found");
     assert.equal(route("not a url", roots, sites).kind, "not-found");
   });
   test("a host with a port or in upper case is no loaded plugin's", () => {
@@ -354,8 +354,8 @@ describe("route", () => {
       "app://paper-wiki:80/api/paper-wiki/status",
       "app://PAPER-WIKI/viz.html",
       "app://Paper-Wiki/api/paper-wiki/status",
-      "app://RESEARCH-OS/state.json",
-      "app://research-os:443/state.json",
+      "app://SUPERRESEARCH-OS/state.json",
+      "app://superresearch-os:443/state.json",
     ]) {
       assert.equal(route(url, roots, sites).kind, "not-found", url);
     }
@@ -385,20 +385,20 @@ describe("handler", () => {
   });
 
   test("renderer files with the app CSP; fallback for routes", async () => {
-    const res = await fetchApp("app://research-os/");
+    const res = await fetchApp("app://superresearch-os/");
     assert.equal(res.status, 200);
     assert.equal(await res.text(), "<html>app</html>");
     assert.equal(res.headers.get("content-security-policy"), CSP);
     assert.equal(res.headers.get("x-content-type-options"), "nosniff");
-    const js = await fetchApp("app://research-os/assets/app.js");
+    const js = await fetchApp("app://superresearch-os/assets/app.js");
     assert.equal(js.headers.get("content-type"), "text/javascript; charset=utf-8");
     assert.equal(js.headers.get("content-security-policy"), null);
-    assert.equal(await (await fetchApp("app://research-os/dashboard")).text(), "<html>app</html>");
-    assert.equal((await fetchApp("app://research-os/missing.js")).status, 404);
+    assert.equal(await (await fetchApp("app://superresearch-os/dashboard")).text(), "<html>app</html>");
+    assert.equal((await fetchApp("app://superresearch-os/missing.js")).status, 404);
   });
 
   test("state.json and the wiki come from the workspace", async () => {
-    assert.equal(await (await fetchApp("app://research-os/state.json")).text(), '{"meta":{}}');
+    assert.equal(await (await fetchApp("app://superresearch-os/state.json")).text(), '{"meta":{}}');
     const viz = await fetchApp("app://paper-wiki/viz.html");
     assert.equal(await viz.text(), "<html>viz</html>");
     assert.equal(viz.headers.get("content-security-policy"), WORKSPACE_CSP);
@@ -425,41 +425,41 @@ describe("handler", () => {
       "app://paper-wiki/..%2f.env",
       "app://paper-wiki/papers",
       // The renderer and the workspace are sibling temp folders, so these name real files.
-      `app://research-os/..%2f${basename(workspace)}%2fAGENTS.md`,
-      `app://research-os/%2e%2e/${basename(workspace)}/AGENTS.md`,
+      `app://superresearch-os/..%2f${basename(workspace)}%2fAGENTS.md`,
+      `app://superresearch-os/%2e%2e/${basename(workspace)}/AGENTS.md`,
     ]) {
       assert.equal((await fetchApp(url)).status, 404, url);
     }
   });
 
   test("files are read-only", async () => {
-    assert.equal((await fetchApp("app://research-os/state.json", { method: "POST", body: "{}", headers: { "Content-Type": "application/json" } })).status, 405);
+    assert.equal((await fetchApp("app://superresearch-os/state.json", { method: "POST", body: "{}", headers: { "Content-Type": "application/json" } })).status, 405);
   });
 
   test("API: JSON writes only; token mounts need this launch's token", async () => {
     calls.length = 0;
-    const plain = await fetchApp("app://research-os/api/chat/send", { method: "POST", headers: { "Content-Type": "text/plain" }, body: '{"text":"x"}' });
+    const plain = await fetchApp("app://superresearch-os/api/chat/send", { method: "POST", headers: { "Content-Type": "text/plain" }, body: '{"text":"x"}' });
     assert.equal(plain.status, 415);
-    const form = await fetchApp("app://research-os/api/skill/toggle", { method: "POST", body: new URLSearchParams({ skill: "x" }) });
+    const form = await fetchApp("app://superresearch-os/api/skill/toggle", { method: "POST", body: new URLSearchParams({ skill: "x" }) });
     assert.equal(form.status, 415);
-    assert.equal((await fetchApp("app://research-os/api/chat/send", json({ text: "x" }))).status, 401);
-    assert.equal((await fetchApp("app://research-os/api/chat/send", json({ text: "x" }, "wrong"))).status, 401);
+    assert.equal((await fetchApp("app://superresearch-os/api/chat/send", json({ text: "x" }))).status, 401);
+    assert.equal((await fetchApp("app://superresearch-os/api/chat/send", json({ text: "x" }, "wrong"))).status, 401);
     assert.equal(calls.length, 0, "nothing reached a handler");
 
-    const ok = await fetchApp("app://research-os/api/chat/send", json({ text: "x" }, "t0k"));
+    const ok = await fetchApp("app://superresearch-os/api/chat/send", json({ text: "x" }, "t0k"));
     assert.equal(ok.status, 200);
     assert.deepEqual(await ok.json(), { prefix: "/api/chat", path: "/send", q: null });
     assert.deepEqual(calls.at(-1), { mount: "/api/chat", path: "/send", body: { text: "x" } });
 
-    const toggle = await fetchApp("app://research-os/api/skill/toggle", json({ skill: "s" }));
+    const toggle = await fetchApp("app://superresearch-os/api/skill/toggle", json({ skill: "s" }));
     assert.equal(toggle.status, 200, "an untokened mount needs only JSON");
-    const get = await fetchApp("app://research-os/api/chat/sessions?q=1", { headers: { "X-OS-UI-Token": "t0k" } });
+    const get = await fetchApp("app://superresearch-os/api/chat/sessions?q=1", { headers: { "X-OS-UI-Token": "t0k" } });
     assert.deepEqual(await get.json(), { prefix: "/api/chat", path: "/sessions", q: "1" });
-    assert.equal((await fetchApp("app://research-os/api/nothing")).status, 404);
+    assert.equal((await fetchApp("app://superresearch-os/api/nothing")).status, 404);
   });
 
   test("API: each origin reaches only its own endpoints", async () => {
-    assert.equal((await fetchApp("app://research-os/api/paper-wiki/status")).status, 404);
+    assert.equal((await fetchApp("app://superresearch-os/api/paper-wiki/status")).status, 404);
     const status = await fetchApp("app://paper-wiki/api/paper-wiki/status");
     assert.deepEqual(await status.json(), { prefix: "/api/paper-wiki/status", path: "/", q: null });
     assert.equal((await fetchApp("app://paper-wiki/api/chat/sessions", { headers: { "X-OS-UI-Token": "t0k" } })).status, 404);
@@ -467,7 +467,7 @@ describe("handler", () => {
 
   test("API: no workspace is a 503; a throwing handler is a 500", async () => {
     const empty = createHandler(() => ({ renderer, workspace: null, sites, registry: null, token: "t" }));
-    assert.equal((await empty(new Request("app://research-os/api/chat/sessions"))).status, 503);
+    assert.equal((await empty(new Request("app://superresearch-os/api/chat/sessions"))).status, 503);
     const throwing = createHandler(() => ({
       renderer,
       workspace,
@@ -475,7 +475,7 @@ describe("handler", () => {
       token: "t",
       registry: registryOf([{ prefix: "/api/skill/toggle", token: false, handler: async () => { throw new Error("boom"); } }], {}),
     }));
-    const res = await throwing(new Request("app://research-os/api/skill/toggle", json({})));
+    const res = await throwing(new Request("app://superresearch-os/api/skill/toggle", json({})));
     assert.equal(res.status, 500);
     assert.deepEqual(await res.json(), { error: "boom" });
   });
@@ -497,7 +497,7 @@ describe("handler", () => {
         ["app://demo/api/chat/sessions", { headers: { "X-OS-UI-Token": "t0k" } }],
         ["app://demo/api/skill/toggle", json({ skill: "s" })],
         ["app://paper-wiki/api/demo/echo", undefined],
-        ["app://research-os/api/demo/echo", undefined],
+        ["app://superresearch-os/api/demo/echo", undefined],
       ] as const) {
         assert.equal((await fetchTwo(url, init)).status, 404, url);
       }
@@ -726,17 +726,17 @@ describe("the real bundled plugins, registry, and handler together", () => {
   });
 
   test("the app's origin reaches the trunk, and not Paper Wiki's status nor a skill toggle", async () => {
-    const here = await fetchReal("app://research-os/api/paper-wiki/status");
+    const here = await fetchReal("app://superresearch-os/api/paper-wiki/status");
     assert.equal(here.status, 404);
     assert.deepEqual(await here.json(), { error: "no endpoint /api/paper-wiki/status" });
     // The trunk's toggle went with step 2.5: the app's origin, which holds the bridge, reaches no skill toggle.
     for (const path of ["/api/skill/toggle", "/api/skills-hub/toggle"]) {
-      const toggle = await fetchReal(`app://research-os${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"skill":"s","target":"repo-claude"}' });
+      const toggle = await fetchReal(`app://superresearch-os${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"skill":"s","target":"repo-claude"}' });
       assert.equal(toggle.status, 404, path);
       assert.deepEqual(await toggle.json(), { error: `no endpoint ${path}` });
     }
     assert.equal(runner.calls.length, 0);
-    const sessions = await fetchReal("app://research-os/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": "t0k" } });
+    const sessions = await fetchReal("app://superresearch-os/api/chat/sessions?cwd=", { headers: { "X-OS-UI-Token": "t0k" } });
     assert.equal(sessions.status, 200);
   });
 });
@@ -786,7 +786,7 @@ describe("Skills Hub's toggle and snapshot, on its own origin", () => {
 
   test("no other origin reaches it, and Skills Hub's origin reaches nothing else", async () => {
     const before = runner.calls.length;
-    const app = await fetchHub("app://research-os/api/skills-hub/toggle", json({ skill: "s", target: "repo-claude" }));
+    const app = await fetchHub("app://superresearch-os/api/skills-hub/toggle", json({ skill: "s", target: "repo-claude" }));
     assert.equal(app.status, 404);
     assert.deepEqual(await app.json(), { error: "no endpoint /api/skills-hub/toggle" });
     for (const [url, init] of [
@@ -1148,7 +1148,7 @@ describe("read channel", () => {
 
   test("rule 2: the app's origin and hosts that are no loaded plugin have no channel", async () => {
     // As before the channel: renderer paths, with index.html for extension-less ones.
-    for (const url of [`app://research-os/_os/files?path=${CODE}/run.py`, `app://research-os/_os/list?path=${CODE}`]) {
+    for (const url of [`app://superresearch-os/_os/files?path=${CODE}/run.py`, `app://superresearch-os/_os/list?path=${CODE}`]) {
       const r = route(url, roots, readSites);
       assert.ok(r.kind === "file" && r.root === renderer && r.fallback === "index.html", url);
       const page = await fetchRead(url);
@@ -1156,7 +1156,7 @@ describe("read channel", () => {
       assert.equal(await page.text(), "<html>app</html>", `${url}: the app's page, not the file`);
       assert.equal(page.headers.get("content-security-policy"), appCsp([...readSites.keys()]), url);
     }
-    assert.deepEqual(route(`app://research-os/_os/files/${CODE}/run.py`, roots, readSites), {
+    assert.deepEqual(route(`app://superresearch-os/_os/files/${CODE}/run.py`, roots, readSites), {
       kind: "file",
       root: renderer,
       rel: `_os/files/${CODE}/run.py`,
@@ -1164,7 +1164,7 @@ describe("read channel", () => {
       csp: null,
       confined: false,
     });
-    const file = await fetchRead(`app://research-os/_os/files/${CODE}/run.py`);
+    const file = await fetchRead(`app://superresearch-os/_os/files/${CODE}/run.py`);
     assert.equal(file.status, 404);
     assert.equal(await file.text(), "Not found");
     for (const url of [files(`${CODE}/run.py`, "nope-view"), list(CODE, "nope-view")]) {

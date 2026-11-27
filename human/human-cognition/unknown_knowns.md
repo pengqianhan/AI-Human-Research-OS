@@ -20,6 +20,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - cog-20261122-001 - Reading surface before conversation: for the desktop layout, chose the document-first mockup over the conversation-centred one the agent recommended; low confidence.
 - cog-20261126-001 - OpenResearch as the worked example for product mechanics: when a mechanism is open (the Git binding, the bundled demo, whether the app commits), points the agent to how OpenResearch does it, while keeping the decision their own.
 - cog-20261127-002 - The product is its code, not its paper trail: a file belongs in the product repository only if building, running, or understanding the app needs it; planning, history, and superseded artifacts stay out or are deleted.
+- cog-20261127-003 - One name everywhere: when the app was renamed, had the address no user sees renamed too, against the agent's advice to keep it for a smaller change; low confidence.
 
 ## Entries
 
@@ -210,3 +211,23 @@ timestamp: 2026-07-04T00:00:00+12:00
 - related:
   - [cog-20261121-001](unknown_knowns.md#cog-20261121-001-the-running-product-outranks-its-documents)
   - [cog-20260923-002](known_knowns.md#cog-20260923-002-recommended-defaults-in-grilling-rounds-are-accepted-without-close-reading)
+
+## cog-20261127-003 One name everywhere
+
+- content: When a thing is renamed, the human wants the new name to hold in the parts nobody sees as well as the parts shown, and counts that consistency as worth a larger change. The agent had weighed only who would see the old name and how many lines the change touches.
+- source: inferred
+- confidence: low
+- evidence: 2026-11-27, choosing from the rename mockup, the human accepted every recommendation except one. The mockup proposed keeping the app's internal address, because it touches 112 lines and no user sees it; they answered 「应用内部地址也改为app://superresearch-os 吧，这样可以保持一致性」. At a moment when the change was still free (nobody had the app installed). Later the same day, asked about the two internal names the rename had left (a shell marker and the client name sent to Codex), they answered 「都改名」.
+- created: 2026-11-27
+- last_updated: 2026-11-27
+- status: active
+- domain: naming in the Research OS product
+- scope: Identifiers derived from the product's name, at a rename made before anyone depends on the old ones. No claim about renames that would break installed copies or stored data, or about names outside the product.
+- evidence_type: explanation
+- last_verified: 2026-11-27
+- freshness: current
+- responsibility_relevance:
+  - When a rename leaves an internal identifier on the old name, put it to the human as a choice with its cost, and do not recommend keeping it on the ground that it is invisible.
+  - Expect "rename" for such leftovers unless the cost is real, and say what the cost is.
+- related:
+  - [cog-20261127-002](unknown_knowns.md#cog-20261127-002-the-product-is-its-code-not-its-paper-trail)

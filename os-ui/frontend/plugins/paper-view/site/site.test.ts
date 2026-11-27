@@ -98,9 +98,9 @@ describe("what the page reads", () => {
 
   test("no bridge, no storage, no other window but the app's, which is named exactly", () => {
     for (const { file, text } of sources) assert.doesNotMatch(text, /osDesktop|localStorage|sessionStorage|indexedDB|XMLHttpRequest|WebSocket|EventSource/, file);
-    // Unstripped: the comment pattern would take "//research-os" for a comment.
+    // Unstripped: the comment pattern would take "//superresearch-os" for a comment.
     const main = sources.find((s) => s.file === "main.ts")!.text;
-    assert.match(main, /const HOST = "app:\/\/research-os";/);
+    assert.match(main, /const HOST = "app:\/\/superresearch-os";/);
     assert.deepEqual([...main.matchAll(/postMessage\(([^)]*)\)/g)].map((m) => m[1]), ["message, HOST"]);
   });
 });

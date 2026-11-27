@@ -20,7 +20,7 @@ export { safeRelative };
 
 export const SCHEME = "app";
 /** The app itself: renderer, state.json, and the trunk's endpoints. */
-export const APP_HOST = "research-os";
+export const APP_HOST = "superresearch-os";
 export const ORIGIN = `${SCHEME}://${APP_HOST}`;
 export const HOME_URL = `${ORIGIN}/`;
 
@@ -266,9 +266,9 @@ function reserved(rel: string): boolean {
 
 /**
  * Where one app:// URL is served from.
- * - app://research-os/api/... → the trunk's endpoints;
- * - app://research-os/state.json → the workspace's generated snapshot;
- * - app://research-os/... → the bundled renderer, `index.html` as the
+ * - app://superresearch-os/api/... → the trunk's endpoints;
+ * - app://superresearch-os/state.json → the workspace's generated snapshot;
+ * - app://superresearch-os/... → the bundled renderer, `index.html` as the
  *   fallback for extension-less paths;
  * - app://<id>/api/<id>/... → that plugin's own endpoints, and no others;
  * - app://<id>/_os/files?path=... and app://<id>/_os/list?path=..., spelled

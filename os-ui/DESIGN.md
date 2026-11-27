@@ -1,4 +1,4 @@
-# os-ui Design - Research OS Read-only Dashboard
+# os-ui Design - SuperResearch OS Read-only Dashboard
 
 This document is the implementation contract for `os-ui/`. The layout and the
 visual tokens in force follow mockup C, "document first"

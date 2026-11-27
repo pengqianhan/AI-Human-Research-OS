@@ -27,7 +27,7 @@ describe("readSelect", () => {
 
   test("a forged origin or a forged source is ignored", () => {
     const data = { type: "os.select", label: "Code/a.py:1" };
-    for (const origin of ["app://research-os", "app://paper-wiki", "app://code-view.evil", "null", "https://example.com", "APP://CODE-VIEW"]) {
+    for (const origin of ["app://superresearch-os", "app://paper-wiki", "app://code-view.evil", "null", "https://example.com", "APP://CODE-VIEW"]) {
       assert.equal(readSelect(from(data, { origin }), page, frame), null, origin);
     }
     for (const source of [other, null, undefined, {}]) assert.equal(readSelect(from(data, { source }), page, frame), null, String(source));

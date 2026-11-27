@@ -41,7 +41,7 @@ import {
 import type { ClaimRow, ClaimsView, OpenClaim, RestSection, Selection, SnapLine, Words } from "./logic.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
-const HOST = "app://research-os";
+const HOST = "app://superresearch-os";
 
 const project = projectFrom(location.search);
 const app = document.getElementById("app")!;

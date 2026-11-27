@@ -1,9 +1,9 @@
-# electron-builder configuration for the Research OS desktop client.
+# electron-builder configuration for the SuperResearch OS desktop client.
 # Build: npm run package (this OS) — see README.md for per-OS commands.
-appId: io.github.pengqianhan.researchos
-productName: Research OS
+appId: io.github.pengqianhan.superresearchos
+productName: SuperResearch OS
 copyright: MIT License
-artifactName: Research-OS-${version}-${os}-${arch}.${ext}
+artifactName: SuperResearch-OS-${version}-${os}-${arch}.${ext}
 directories:
   output: release
   buildResources: resources
@@ -36,14 +36,14 @@ nsis:
   perMachine: false
   allowToChangeInstallationDirectory: true
   buildUniversalInstaller: false
-  shortcutName: Research OS
+  shortcutName: SuperResearch OS
 
 linux:
   category: Development
-  synopsis: Desktop client for the AI-Human Research OS
-  executableName: research-os
+  synopsis: "SuperResearch OS: a desktop app for researchers who already use a coding agent"
+  executableName: superresearch-os
   syncDesktopName: true
-  maintainer: Research OS contributors <pengqianhan@users.noreply.github.com>
+  maintainer: SuperResearch OS contributors <pengqianhan@users.noreply.github.com>
   target:
     - target: deb
       arch: [x64, arm64]

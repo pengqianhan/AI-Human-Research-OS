@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { basename, join } from "node:path";
 
-export const MARKER = "__RESEARCH_OS_ENV__";
+export const MARKER = "__SUPERRESEARCH_OS_ENV__";
 const SHELL_TIMEOUT_MS = 5000;
 
 /** Variables that describe the probe shell itself rather than the user's environment. */

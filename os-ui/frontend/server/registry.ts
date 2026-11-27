@@ -99,7 +99,7 @@ export function loadPlugins(
 
 export interface Registry {
   plugins: readonly LoadedPlugin[];
-  /** app://research-os: the trunk's endpoints only. */
+  /** app://superresearch-os: the trunk's endpoints only. */
   app: readonly Mount[];
   /** app://<id>: that plugin's handlers only, always without the token. */
   byPlugin: ReadonlyMap<string, readonly Mount[]>;

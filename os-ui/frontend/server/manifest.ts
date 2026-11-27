@@ -13,7 +13,7 @@ export type PluginSource = "bundled" | "local";
 export interface PluginManifest {
   /** "^1.0": this major, at least this minor. */
   contract: string;
-  /** /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/, not "research-os"; the host of app://<id>; permanent. */
+  /** /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/, not "superresearch-os"; the host of app://<id>; permanent. */
   id: string;
   /** 1–40 characters. */
   name: string;
@@ -50,8 +50,8 @@ export type Parsed = { ok: true; manifest: PluginManifest } | { ok: false; probl
 const ID = /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/;
 const PAGE_ID = /^[a-z][a-z0-9-]*$/;
 const RANGE = /^\^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
-/** The app's own host, app://research-os. */
-const RESERVED_IDS = new Set(["research-os"]);
+/** The app's own host, app://superresearch-os. */
+const RESERVED_IDS = new Set(["superresearch-os"]);
 /** URL paths below a plugin's origin that the host keeps for itself. */
 const RESERVED_ENTRIES = ["api", "_os"];
 

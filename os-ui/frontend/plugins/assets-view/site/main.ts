@@ -57,7 +57,7 @@ import { walk } from "./walk.ts";
 import type { Entry, ListAnswer } from "./walk.ts";
 
 /** The app's origin: the only window this page reports a selection to. */
-const HOST = "app://research-os";
+const HOST = "app://superresearch-os";
 
 const project = projectFrom(location.search);
 const app = document.getElementById("app")!;

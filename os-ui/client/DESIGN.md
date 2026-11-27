@@ -1,4 +1,4 @@
-# Research OS Desktop Client — Design
+# SuperResearch OS Desktop Client — Design
 
 The desktop client is one installable app for macOS, Windows, and Linux that
 opens the os-ui desktop on a Research OS folder, with its live features (agent
@@ -77,14 +77,15 @@ uses (TypeScript, plus the Python scripts it calls); Tauri would add Rust.
 │ python.ts     uv + pinned Python, else a probed system Python ≥ 3.11               │
 │ generator.ts  serialized runs of os-ui/generator/generate.py (120 s limit)         │
 │ inputs.ts     polls the files generate.py reads (4 s) → regenerate on change       │
-│ protocol.ts   app://research-os (app) and app://<plugin id> (sites) → files | API │
+│ protocol.ts   app://superresearch-os (app) and app://<plugin id> (sites)          │
+│               → files | API                                                       │
 │ ../frontend/server  the os-ui endpoints and plugin registry, shared with Vite     │
 │ notifier.ts   os-harness/sessions → native notification when a turn ends          │
 │ doctor.ts     uv, Python, Git, `harness.py check` (Claude Code, Codex)            │
 │ menu.ts, windowState.ts, log.ts                                                   │
 └────────────────────────────────────────────────────────────────────────────────────┘
         │ contextBridge (preload): window.osDesktop — six calls and this launch's token
-┌──────────── app://research-os — os-ui/frontend production build ────────────┐
+┌────────── app://superresearch-os — os-ui/frontend production build ──────────┐
 │ LIVE = dev server OR window.osDesktop present                                │
 │ Settings page (desktop only); Paper wiki iframe → app://paper-wiki/viz.html   │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -164,9 +165,9 @@ with the trunk's endpoints only.
 
 | URL | Served from |
 |---|---|
-| `app://research-os/api/...` | the trunk's endpoints (`TRUNK_MOUNTS`) |
-| `app://research-os/state.json` | `<workspace>/os-ui/frontend/public/state.json` |
-| `app://research-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
+| `app://superresearch-os/api/...` | the trunk's endpoints (`TRUNK_MOUNTS`) |
+| `app://superresearch-os/state.json` | `<workspace>/os-ui/frontend/public/state.json` |
+| `app://superresearch-os/...` | the bundled renderer; extension-less paths fall back to `index.html` |
 | `app://<id>/api/<id>/...` | that plugin's own handlers only (Paper Wiki: `/api/paper-wiki/status`; the Code view: `/api/code-view/git`; Skills Hub: `/api/skills-hub/toggle`, the skill toggle, the trunk's `/api/skill/toggle` until step 2.5); other `api/` paths are 404 |
 | `app://<id>/_os/files?path=<rel>`, `app://<id>/_os/list?path=<rel>` | the plugin's read channel: workspace files and folder listings inside the roots its manifest declares in `reads` (below); every other `_os/` path is 404 |
 | `app://<id>/...` | the plugin's site: a workspace folder in place (Paper Wiki: `<workspace>/paper-wiki/`, no cache copy), or the `site/` folder beside its `plugin.json` (the Code, Paper, Skeleton, Assets, and Idea views and Skills Hub: `index.html`, `style.css`, and `main.js`, which `scripts/build.mjs` bundles from the site's `main.ts`, no TypeScript ships; the Paper view also `vendor/`, PDF.js copied as it is) |
@@ -313,7 +314,7 @@ second layer). The Git handler is mounted on `app://code-view` only, with no tok
 client builds it on the git it finds (`src/main/codeView.ts`: the children's
 PATH, absolute entries outside the workspace, never the Command Line Tools
 stub) and logs what Git prints on a failure to `main.log`, which no endpoint
-serves. A selection in the page is posted to `app://research-os` as
+serves. A selection in the page is posted to `app://superresearch-os` as
 `{type: "os.select", label, quote?}`; the workspace accepts it only from the
 active view's frame at that view's origin, shows "Ask the agent about this",
 and answers `{type: "os.select.clear"}` at the view's origin when the user
@@ -521,7 +522,7 @@ Known limits of the channel, not yet handled:
   to the top frame only (`--os-desktop-token` argument), as the dev server
   needs `OS_UI_TOKEN`.
 - **Navigation:** `will-frame-navigate` and `will-redirect` keep the top frame
-  on `app://research-os/` and subframes on a loaded plugin's origin (or
+  on `app://superresearch-os/` and subframes on a loaded plugin's origin (or
   `about:blank`, `about:srcdoc`): another plugin's origin only when the app's
   own page starts the navigation, so a plugin's frame stays on the origin the
   app gave it and cannot turn itself into another plugin's page
@@ -532,7 +533,7 @@ Known limits of the channel, not yet handled:
 - **Downloads:** every session the app creates cancels `will-download`, so a
   frame sent to a file it cannot show (the read channel's
   `application/octet-stream`) saves nothing and opens no Save dialog.
-- **IPC** answers only the top frame of `app://research-os/`; no channel takes
+- **IPC** answers only the top frame of `app://superresearch-os/`; no channel takes
   a path.
 - **Permissions:** all denied except `clipboard-sanitized-write` (the copy
   buttons; Electron has no `prompt()` fallback). Native notifications come
@@ -708,12 +709,13 @@ display). A plain log lives in `<userData>/logs/main.log` (truncated past
 
 | OS | Target | Arch | First open |
 |---|---|---|---|
-| macOS | `dmg` | arm64, x64 | Ad-hoc signed (`identity: "-"`, no hardened runtime). macOS 15+: open once, then System Settings → Privacy & Security → **Open Anyway**; fallback `xattr -dr com.apple.quarantine "/Applications/Research OS.app"` |
+| macOS | `dmg` | arm64, x64 | Ad-hoc signed (`identity: "-"`, no hardened runtime). macOS 15+: open once, then System Settings → Privacy & Security → **Open Anyway**; fallback `xattr -dr com.apple.quarantine "/Applications/SuperResearch OS.app"` |
 | Windows | `nsis` (per user, folder choosable, one installer per arch) | x64, arm64 | Unsigned: SmartScreen → More info → Run anyway |
 | Linux | `deb`, `AppImage` | x64, arm64 | The `.deb` installs an AppArmor profile, so the sandbox works on Ubuntu 24.04; the AppImage needs `libfuse2` (`libfuse2t64`) and runs without Chromium's sandbox where user namespaces are restricted |
 
-- App id `io.github.pengqianhan.researchos`, product **Research OS**, Linux
-  executable `research-os`, artifacts `Research-OS-<version>-<os>-<arch>.<ext>`.
+- App id `io.github.pengqianhan.superresearchos`, product **SuperResearch OS**,
+  Linux executable `superresearch-os`, artifacts
+  `SuperResearch-OS-<version>-<os>-<arch>.<ext>`.
 - Icon: `docs/brand/app-icon.png` (1024 px), copied to `out/icon.png` at build;
   electron-builder derives `.icns` and `.ico` from it.
 - The package holds `out/main.cjs`, `out/preload.cjs`, `out/renderer/` (the

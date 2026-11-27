@@ -188,7 +188,7 @@ describe("the selection's limits", () => {
   test("only the parent window, at the app's origin, clears the selection", () => {
     const parent = { name: "the workspace" };
     const clear = { type: "os.select.clear" };
-    const HOST = "app://research-os";
+    const HOST = "app://superresearch-os";
     assert.equal(isHostClear({ source: parent, origin: HOST, data: clear }, parent, HOST), true);
     assert.equal(isHostClear({ source: {}, origin: HOST, data: clear }, parent, HOST), false, "another window");
     assert.equal(isHostClear({ source: parent, origin: "app://paper-wiki", data: clear }, parent, HOST), false, "another origin");

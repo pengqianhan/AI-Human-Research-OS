@@ -50,7 +50,7 @@ describe("what the page reads", () => {
 
   test("no bridge, no other window but the app's, which is named exactly", () => {
     for (const { file, text } of sources) assert.doesNotMatch(text, /osDesktop|localStorage|sessionStorage|indexedDB|window\.open|XMLHttpRequest|WebSocket|EventSource/, file);
-    assert.match(main, /const HOST = "app:\/\/research-os";/);
+    assert.match(main, /const HOST = "app:\/\/superresearch-os";/);
     assert.deepEqual([...main.matchAll(/postMessage\(([^)]*)\)/g)].map((m) => m[1]), ["message, HOST"]);
   });
 });

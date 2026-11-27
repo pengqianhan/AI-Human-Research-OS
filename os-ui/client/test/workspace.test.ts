@@ -70,7 +70,7 @@ describe("initial workspace", () => {
   test("a packaged app never adopts a folder above its install location", () => {
     // An AppImage mounts under /tmp; a planted /tmp/AGENTS.md (and friends) must not be opened.
     const planted = tempTree(WORKSPACE_FILES);
-    const installed = join(planted, ".mount_ResearchOS", "resources", "app.asar");
+    const installed = join(planted, ".mount_SuperResearchOS", "resources", "app.asar");
     mkdirSync(installed, { recursive: true });
     assert.equal(initialWorkspace({ ...base, appPath: null }).dir, null);
     assert.equal(initialWorkspace({ ...base, appPath: installed }).dir, null, "even if the path were passed");

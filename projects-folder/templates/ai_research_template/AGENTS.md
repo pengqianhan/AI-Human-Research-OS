@@ -3,7 +3,7 @@
 Based on the `ai_research_template` project template, last synced YYYY-MM-DD.
 
 These rules govern agent work in this project directory, whether the project
-lives inside the AI-Human Research OS or stands alone as its own repository.
+lives inside a SuperResearch OS workspace or stands alone as its own repository.
 If this directory is `projects-folder/templates/<name>/`, it is the template
 itself: edit it as a template and skip the project rules below.
 
