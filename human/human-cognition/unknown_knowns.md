@@ -217,7 +217,7 @@ timestamp: 2026-07-04T00:00:00+12:00
 - content: When a thing is renamed, the human wants the new name to hold in the parts nobody sees as well as the parts shown, and counts that consistency as worth a larger change. The agent had weighed only who would see the old name and how many lines the change touches.
 - source: inferred
 - confidence: low
-- evidence: 2026-11-27, choosing from the rename mockup, the human accepted every recommendation except one. The mockup proposed keeping the app's internal address, because it touches 112 lines and no user sees it; they answered 「应用内部地址也改为app://superresearch-os 吧，这样可以保持一致性」. One observation, at a moment when the change was still free (nobody had the app installed).
+- evidence: 2026-11-27, choosing from the rename mockup, the human accepted every recommendation except one. The mockup proposed keeping the app's internal address, because it touches 112 lines and no user sees it; they answered 「应用内部地址也改为app://superresearch-os 吧，这样可以保持一致性」. At a moment when the change was still free (nobody had the app installed). Later the same day, asked about the two internal names the rename had left (a shell marker and the client name sent to Codex), they answered 「都改名」.
 - created: 2026-11-27
 - last_updated: 2026-11-27
 - status: active
@@ -228,6 +228,6 @@ timestamp: 2026-07-04T00:00:00+12:00
 - freshness: current
 - responsibility_relevance:
   - When a rename leaves an internal identifier on the old name, put it to the human as a choice with its cost, and do not recommend keeping it on the ground that it is invisible.
-  - Two such names are still open after this rename (a shell marker and the client name sent to Codex); raise them, expecting "rename" unless the cost is real.
+  - Expect "rename" for such leftovers unless the cost is real, and say what the cost is.
 - related:
   - [cog-20261127-002](unknown_knowns.md#cog-20261127-002-the-product-is-its-code-not-its-paper-trail)
